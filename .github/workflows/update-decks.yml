@@ -24,12 +24,21 @@ jobs:
           USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
 
           echo "Fetching: $URL"
-          curl --fail-with-body --silent --show-error \
+          HTTP_CODE=$(curl --silent --show-error \
             -H 'Accept: application/json, text/plain, */*' \
             -H 'Referer: https://moxfield.com/' \
             -H "User-Agent: $USER_AGENT" \
             "$URL" \
-            -o raw.json
+            -w '%{http_code}' \
+            -o raw.json)
+
+          echo "HTTP status: $HTTP_CODE"
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "Unexpected response body preview:"
+            head -c 500 raw.json || true
+            exit 1
+          fi
 
           echo "Validating JSON structure..."
           jq -e '.data | arrays' raw.json > /dev/null
