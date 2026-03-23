@@ -245,8 +245,8 @@ function createVideoCard(video) {
         <span class="video-badge">${badge}</span>
         ${recent ? '<span class="new-badge new-badge-video">Just Added</span>' : ""}
       </div>
-      <div class="video-date">${formatVideoDate(video.publishedAtUtc)}</div>
       <div class="video-title">${video.title}</div>
+      <div class="video-date">${formatVideoDate(video.publishedAtUtc)}</div>
     </div>
   `;
 
