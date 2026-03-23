@@ -50,6 +50,16 @@ function findCommanderCardId(deckDetails) {
   return null;
 }
 
+function findCommanderName(deckDetails) {
+  for (const commander of Object.values(deckDetails?.commanders ?? {})) {
+    if (commander?.card?.name) {
+      return commander.card.name;
+    }
+  }
+
+  return null;
+}
+
 function buildScryfallImageUrl(scryfallId) {
   if (!scryfallId) {
     return null;
@@ -83,12 +93,14 @@ for (const [index, deck] of latestDecks.entries()) {
   }
 
   let previewImageUrl = null;
+  let commanderName = null;
 
   try {
     const deckDetails = await fetchJson(
       `https://api.moxfield.com/v2/decks/all/${deck.publicId}`
     );
     const commanderScryfallId = findCommanderCardId(deckDetails);
+    commanderName = findCommanderName(deckDetails);
     previewImageUrl = buildScryfallImageUrl(commanderScryfallId);
   } catch (error) {
     console.warn(
@@ -101,6 +113,7 @@ for (const [index, deck] of latestDecks.entries()) {
     publicId: deck.publicId ?? null,
     name: deck.name,
     url: deck.publicUrl,
+    commanderName,
     updatedAtUtc: toIsoDate(deck.lastUpdatedAtUtc || deck.createdAtUtc),
     createdAtUtc: toIsoDate(deck.createdAtUtc),
     format: deck.format ?? null,
