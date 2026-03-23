@@ -79,6 +79,10 @@ main {
   align-items: start;
 }
 
+.overview-grid > .card {
+  margin-bottom: 0;
+}
+
 .card {
   border: 1px solid rgba(154, 28, 32, 0.12);
   padding: 22px;
@@ -492,7 +496,13 @@ main {
   }
 
   .overview-grid {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .overview-card {
+    min-height: 0;
   }
 
   .section-heading {
@@ -518,6 +528,10 @@ main {
 
   .videos-grid {
     grid-template-columns: 1fr;
+  }
+
+  .section-actions {
+    margin-top: 18px;
   }
 }
 
