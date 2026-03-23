@@ -11,28 +11,31 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
       - name: Fetch Moxfield API
         run: |
-          set -e
+          set -euo pipefail
 
           URL="https://api.moxfield.com/v2/users/Duel_Commander_Piacenza/decks"
+          USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
 
           echo "Fetching: $URL"
-          RESPONSE=$(curl -s "$URL")
+          curl --fail-with-body --silent --show-error \
+            -H 'Accept: application/json, text/plain, */*' \
+            -H 'Referer: https://moxfield.com/' \
+            -H "User-Agent: $USER_AGENT" \
+            "$URL" \
+            -o raw.json
 
-          echo "$RESPONSE" > raw.json
-
-          echo "Validating JSON..."
-          echo "$RESPONSE" | jq '.' > /dev/null
+          echo "Validating JSON structure..."
+          jq -e '.data | arrays' raw.json > /dev/null
 
           echo "Transforming data..."
-
-          echo "$RESPONSE" | jq '
+          jq '
             .data | map({
               id: .id,
               name: .name,
@@ -46,13 +49,13 @@ jobs:
               updatedAt: .lastUpdatedAtUtc,
               mainboardCount: .mainboardCount
             })
-          ' > decks.json
+          ' raw.json > decks.json
 
           echo "Output preview:"
           cat decks.json
 
       - name: Upload result artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: moxfield-decks
           path: decks.json
