@@ -1,0 +1,31 @@
+name: Update Moxfield Decks
+
+on:
+  schedule:
+    - cron: "0 * * * *"   # every hour
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Fetch decks from Moxfield
+        run: |
+          curl -s "https://api.moxfield.com/v2/users/Duel_Commander_Piacenza/decks" \
+          | jq '.data | map({
+              name: .name,
+              commander: (.commanders[0].cardName // "Unknown"),
+              url: ("https://www.moxfield.com/decks/" + .publicId)
+            })' > decks.json
+
+      - name: Commit updated decks.json
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add decks.json
+          git commit -m "Update decks" || echo "No changes"
+          git push
