@@ -16,6 +16,18 @@ function buildPlaceholderLabel(deck) {
   return (words[0] || "Deck").slice(0, 2).toUpperCase();
 }
 
+function formatVideoDate(value) {
+  if (!value) {
+    return "";
+  }
+
+  return new Date(value).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric"
+  });
+}
+
 function createDeckCard(deck) {
   const article = document.createElement("article");
   article.className = "deck";
@@ -25,15 +37,15 @@ function createDeckCard(deck) {
 
   const media = deck.previewImageUrl
     ? `
-      <div class="deck-visual deck-preview">
+      <a class="deck-visual deck-preview" href="${deck.url}" target="_blank" rel="noopener noreferrer">
         <img src="${deck.previewImageUrl}" alt="Commander art for ${commanderName}" loading="lazy">
-      </div>
+      </a>
     `
     : `
-      <div class="deck-visual deck-placeholder" aria-hidden="true">
+      <a class="deck-visual deck-placeholder" href="${deck.url}" target="_blank" rel="noopener noreferrer" aria-label="Open ${deck.name} on Moxfield">
         <span class="deck-placeholder-mark">${buildPlaceholderLabel(deck)}</span>
         <span class="deck-placeholder-format">${badge}</span>
-      </div>
+      </a>
     `;
 
   article.innerHTML = `
@@ -42,12 +54,11 @@ function createDeckCard(deck) {
       <div class="deck-topline">
         <span class="deck-badge">${badge}</span>
       </div>
-      <div class="deck-title">${deck.name}</div>
+      <a class="deck-title" href="${deck.url}" target="_blank" rel="noopener noreferrer">${deck.name}</a>
       <div class="deck-commander">
         <span class="deck-commander-label">Commander</span>
         <span class="deck-commander-value">${commanderName}</span>
       </div>
-      <a class="deck-link" href="${deck.url}" target="_blank" rel="noopener noreferrer">View deck on Moxfield</a>
     </div>
   `;
 
@@ -114,16 +125,40 @@ function renderFilters(container, decks) {
   renderDecks(container, decks, selectedFilter);
 }
 
-async function loadDecks() {
-  const container = document.getElementById("decks");
+function createVideoCard(video) {
+  const article = document.createElement("article");
+  article.className = "video-card";
 
-  if (window.location.protocol === "file:") {
-    container.innerHTML = `
-      Local preview cannot load <code>decks.json</code> from <code>file://</code>.
-      Open this site through a small local web server instead.
-    `;
+  article.innerHTML = `
+    <a class="video-thumb" href="${video.url}" target="_blank" rel="noopener noreferrer">
+      <img src="${video.thumbnailUrl}" alt="Thumbnail for ${video.title}" loading="lazy">
+    </a>
+    <div class="video-body">
+      <div class="video-date">${formatVideoDate(video.publishedAtUtc)}</div>
+      <div class="video-title">${video.title}</div>
+    </div>
+  `;
+
+  return article;
+}
+
+function renderVideos(container, videos) {
+  container.innerHTML = "";
+
+  if (!Array.isArray(videos) || videos.length === 0) {
+    container.className = "";
+    container.textContent = "No videos available yet.";
     return;
   }
+
+  container.className = "videos-grid";
+  videos.forEach((video) => {
+    container.appendChild(createVideoCard(video));
+  });
+}
+
+async function loadDecks() {
+  const container = document.getElementById("decks");
 
   try {
     const res = await fetch("decks.json");
@@ -148,4 +183,38 @@ async function loadDecks() {
   }
 }
 
-loadDecks();
+async function loadVideos() {
+  const container = document.getElementById("videos");
+
+  try {
+    const res = await fetch("videos.json");
+    const videos = await res.json();
+    renderVideos(container, videos);
+  } catch (e) {
+    container.className = "";
+    container.innerHTML = "Failed to load videos.";
+    console.error(e);
+  }
+}
+
+if (window.location.protocol === "file:") {
+  const decksContainer = document.getElementById("decks");
+  const videosContainer = document.getElementById("videos");
+
+  if (decksContainer) {
+    decksContainer.innerHTML = `
+      Local preview cannot load <code>decks.json</code> from <code>file://</code>.
+      Open this site through a small local web server instead.
+    `;
+  }
+
+  if (videosContainer) {
+    videosContainer.innerHTML = `
+      Local preview cannot load <code>videos.json</code> from <code>file://</code>.
+      Open this site through a small local web server instead.
+    `;
+  }
+} else {
+  loadDecks();
+  loadVideos();
+}
