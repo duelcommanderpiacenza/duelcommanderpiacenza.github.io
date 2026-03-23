@@ -44,6 +44,14 @@ function extractChannelId(html) {
   throw new Error("Could not determine YouTube channel id from the channel page.");
 }
 
+function detectVideoCategory(title) {
+  if (/\bvs\b/i.test(title) || /\bversus\b/i.test(title)) {
+    return "Gameplay";
+  }
+
+  return "Others";
+}
+
 function parseFeedEntries(xml) {
   const entries = [...xml.matchAll(/<entry>([\s\S]*?)<\/entry>/g)];
 
@@ -66,6 +74,7 @@ function parseFeedEntries(xml) {
       url: link,
       publishedAtUtc: publishedAt,
       thumbnailUrl,
+      category: detectVideoCategory(title),
     };
   }).filter((video) => video.id && video.url);
 }
