@@ -10,6 +10,19 @@ function buildVideoBadge(video) {
   return video.category || "Others";
 }
 
+function isRecent(value) {
+  if (!value) {
+    return false;
+  }
+
+  const timestamp = new Date(value).getTime();
+  if (Number.isNaN(timestamp)) {
+    return false;
+  }
+
+  return Date.now() - timestamp <= 24 * 60 * 60 * 1000;
+}
+
 function buildPlaceholderLabel(deck) {
   const source = deck.commanderName || deck.name;
   const words = source
@@ -52,23 +65,31 @@ function createSectionLink(label, url) {
 }
 
 function createDeckCard(deck) {
-  const article = document.createElement("article");
-  article.className = "deck";
+  const article = document.createElement("a");
+  article.className = "deck card-link";
+  article.href = deck.url;
+  article.target = "_blank";
+  article.rel = "noopener noreferrer";
+  const recent = isRecent(deck.createdAtUtc);
 
   const badge = buildDeckBadge(deck);
   const commanderName = deck.commanderName || "Unknown commander";
 
+  if (recent) {
+    article.classList.add("is-new-deck");
+  }
+
   const media = deck.previewImageUrl
     ? `
-      <a class="deck-visual deck-preview" href="${deck.url}" target="_blank" rel="noopener noreferrer">
+      <div class="deck-visual deck-preview">
         <img src="${deck.previewImageUrl}" alt="Commander art for ${commanderName}" loading="lazy">
-      </a>
+      </div>
     `
     : `
-      <a class="deck-visual deck-placeholder" href="${deck.url}" target="_blank" rel="noopener noreferrer" aria-label="Open ${deck.name} on Moxfield">
+      <div class="deck-visual deck-placeholder" aria-hidden="true">
         <span class="deck-placeholder-mark">${buildPlaceholderLabel(deck)}</span>
         <span class="deck-placeholder-format">${badge}</span>
-      </a>
+      </div>
     `;
 
   article.innerHTML = `
@@ -76,8 +97,9 @@ function createDeckCard(deck) {
     <div class="deck-body">
       <div class="deck-topline">
         <span class="deck-badge">${badge}</span>
+        ${recent ? '<span class="new-badge new-badge-deck">Just Added</span>' : ""}
       </div>
-      <a class="deck-title" href="${deck.url}" target="_blank" rel="noopener noreferrer">${deck.name}</a>
+      <div class="deck-title">${deck.name}</div>
       <div class="deck-commander">
         <span class="deck-commander-label">Commander</span>
         <span class="deck-commander-value">${commanderName}</span>
@@ -202,17 +224,26 @@ function getFilteredVideos(videos, selectedFilter) {
 }
 
 function createVideoCard(video) {
-  const article = document.createElement("article");
-  article.className = "video-card";
+  const article = document.createElement("a");
+  article.className = "video-card card-link";
+  article.href = video.url;
+  article.target = "_blank";
+  article.rel = "noopener noreferrer";
   const badge = buildVideoBadge(video);
+  const recent = isRecent(video.publishedAtUtc);
+
+  if (recent) {
+    article.classList.add("is-new-video");
+  }
 
   article.innerHTML = `
-    <a class="video-thumb" href="${video.url}" target="_blank" rel="noopener noreferrer">
+    <div class="video-thumb">
       <img src="${video.thumbnailUrl}" alt="Thumbnail for ${video.title}" loading="lazy">
-    </a>
+    </div>
     <div class="video-body">
       <div class="video-topline">
         <span class="video-badge">${badge}</span>
+        ${recent ? '<span class="new-badge new-badge-video">Just Added</span>' : ""}
       </div>
       <div class="video-date">${formatVideoDate(video.publishedAtUtc)}</div>
       <div class="video-title">${video.title}</div>
