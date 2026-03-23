@@ -68,6 +68,18 @@ function buildScryfallImageUrl(scryfallId) {
   return `https://api.scryfall.com/cards/${scryfallId}?format=image&version=art_crop`;
 }
 
+function buildDeckUrl(deck) {
+  if (!deck?.publicUrl) {
+    return null;
+  }
+
+  if (deck.name?.startsWith("[PRIMER]")) {
+    return `${deck.publicUrl.replace(/\/$/, "")}/primer`;
+  }
+
+  return deck.publicUrl;
+}
+
 const payload = await fetchJson(apiUrl);
 const decks = Array.isArray(payload.data) ? payload.data : [];
 
@@ -112,7 +124,7 @@ for (const [index, deck] of latestDecks.entries()) {
     id: deck.id ?? null,
     publicId: deck.publicId ?? null,
     name: deck.name,
-    url: deck.publicUrl,
+    url: buildDeckUrl(deck),
     commanderName,
     updatedAtUtc: toIsoDate(deck.lastUpdatedAtUtc || deck.createdAtUtc),
     createdAtUtc: toIsoDate(deck.createdAtUtc),
