@@ -1,15 +1,12 @@
-name: Update Moxfield Decks
+name: Fetch Moxfield Decks
 
 on:
-  schedule:
-    - cron: "0 * * * *"   # every hour
   workflow_dispatch:
-
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  schedule:
+    - cron: "0 * * * *"  # optional: runs every hour
 
 jobs:
-  update:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,19 +16,43 @@ jobs:
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
-      - name: Fetch decks from Moxfield
+      - name: Fetch Moxfield API
         run: |
-          curl -s "https://api.moxfield.com/v2/users/Duel_Commander_Piacenza/decks" \
-          | jq '.data | map({
-              name: .name,
-              commander: (.commanders[0].cardName // "Unknown"),
-              url: ("https://www.moxfield.com/decks/" + .publicId)
-            })' > decks.json
+          set -e
 
-      - name: Commit updated decks.json
-        run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
-          git add decks.json
-          git commit -m "Update decks" || echo "No changes"
-          git push
+          URL="https://api.moxfield.com/v2/users/Duel_Commander_Piacenza/decks"
+
+          echo "Fetching: $URL"
+          RESPONSE=$(curl -s "$URL")
+
+          echo "$RESPONSE" > raw.json
+
+          echo "Validating JSON..."
+          echo "$RESPONSE" | jq '.' > /dev/null
+
+          echo "Transforming data..."
+
+          echo "$RESPONSE" | jq '
+            .data | map({
+              id: .id,
+              name: .name,
+              format: .format,
+              url: .publicUrl,
+              publicId: .publicId,
+              colors: .colors,
+              colorIdentity: .colorIdentity,
+              commander: .mainCardId,
+              createdAt: .createdAtUtc,
+              updatedAt: .lastUpdatedAtUtc,
+              mainboardCount: .mainboardCount
+            })
+          ' > decks.json
+
+          echo "Output preview:"
+          cat decks.json
+
+      - name: Upload result artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: moxfield-decks
+          path: decks.json
