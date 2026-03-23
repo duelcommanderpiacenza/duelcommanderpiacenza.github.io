@@ -17,7 +17,7 @@
     "updatedAtUtc": "2026-03-15T18:09:03.673Z",
     "createdAtUtc": "2026-03-14T21:55:04.710Z",
     "format": "duelCommander",
-    "previewImageUrl": null
+    "previewImageUrl": "https://api.scryfall.com/cards/25fbffba-7266-43f0-adb0-ca9bafeb782e?format=image&version=art_crop"
   },
   {
     "id": "xzwXBP",
@@ -27,7 +27,7 @@
     "updatedAtUtc": "2026-03-15T18:09:02.193Z",
     "createdAtUtc": "2026-03-14T20:20:58.390Z",
     "format": "duelCommander",
-    "previewImageUrl": null
+    "previewImageUrl": "https://api.scryfall.com/cards/a7a8b6b8-b95f-4014-b17a-a6d44d965995?format=image&version=art_crop"
   },
   {
     "id": "vzRX6w",
@@ -37,7 +37,7 @@
     "updatedAtUtc": "2026-03-15T18:09:00.067Z",
     "createdAtUtc": "2026-03-14T19:51:17.023Z",
     "format": "duelCommander",
-    "previewImageUrl": null
+    "previewImageUrl": "https://api.scryfall.com/cards/0ecbe097-ba51-42e5-957c-382eb66c08f0?format=image&version=art_crop"
   },
   {
     "id": "DgO89z",
@@ -47,7 +47,7 @@
     "updatedAtUtc": "2026-03-15T18:08:58.153Z",
     "createdAtUtc": "2026-03-15T18:08:22.007Z",
     "format": "duelCommander",
-    "previewImageUrl": null
+    "previewImageUrl": "https://api.scryfall.com/cards/69d0f5bd-ccea-49b2-bd79-ad5e4d850cf5?format=image&version=art_crop"
   },
   {
     "id": "Xna8mA",
@@ -57,7 +57,7 @@
     "updatedAtUtc": "2026-03-15T18:08:56.270Z",
     "createdAtUtc": "2026-03-14T21:55:21.063Z",
     "format": "duelCommander",
-    "previewImageUrl": null
+    "previewImageUrl": "https://api.scryfall.com/cards/09fd2d9c-1793-4beb-a3fb-7a869f660cd4?format=image&version=art_crop"
   },
   {
     "id": "wBPX6l",
@@ -67,7 +67,7 @@
     "updatedAtUtc": "2026-03-15T18:08:54.317Z",
     "createdAtUtc": "2026-03-14T19:51:34.363Z",
     "format": "duelCommander",
-    "previewImageUrl": null
+    "previewImageUrl": "https://api.scryfall.com/cards/3a6431fd-4b79-488e-a0c0-57731616bd08?format=image&version=art_crop"
   },
   {
     "id": "m6b4ar",
@@ -77,7 +77,7 @@
     "updatedAtUtc": "2026-03-15T18:08:50.967Z",
     "createdAtUtc": "2026-03-14T19:50:54.520Z",
     "format": "duelCommander",
-    "previewImageUrl": null
+    "previewImageUrl": "https://api.scryfall.com/cards/39c431d7-d94b-46c4-bb89-f3db56214ab4?format=image&version=art_crop"
   },
   {
     "id": "RKprBl",
@@ -87,7 +87,7 @@
     "updatedAtUtc": "2026-03-15T18:08:48.707Z",
     "createdAtUtc": "2026-03-14T22:10:24.540Z",
     "format": "duelCommander",
-    "previewImageUrl": null
+    "previewImageUrl": "https://api.scryfall.com/cards/90eaf94e-85a7-4958-aa58-8e2fe44db58d?format=image&version=art_crop"
   },
   {
     "id": "9z2PN1",
@@ -97,6 +97,6 @@
     "updatedAtUtc": "2026-02-16T08:24:30.113Z",
     "createdAtUtc": "2026-02-16T08:21:41.063Z",
     "format": "duelCommander",
-    "previewImageUrl": null
+    "previewImageUrl": "https://api.scryfall.com/cards/09fd2d9c-1793-4beb-a3fb-7a869f660cd4?format=image&version=art_crop"
   }
 ]
