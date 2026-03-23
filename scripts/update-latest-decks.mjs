@@ -4,6 +4,7 @@ const apiUrl =
   "https://api.moxfield.com/v2/users/Duel_Commander_Piacenza/decks?pageSize=100";
 const outputPath = new URL("../decks.json", import.meta.url);
 const userAgent = process.env.MOXFIELD_USER_AGENT;
+const minDelayBetweenRequestsMs = 2000;
 
 if (!userAgent) {
   throw new Error(
@@ -16,30 +17,66 @@ function toIsoDate(value) {
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
-function buildImageUrl(deck) {
-  if (typeof deck.previewImageUrl === "string" && deck.previewImageUrl) {
-    return deck.previewImageUrl;
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchJson(url) {
+  const response = await fetch(url, {
+    headers: {
+      "User-Agent": userAgent,
+      Accept: "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Request failed for ${url} with HTTP ${response.status}`);
   }
 
-  if (typeof deck.imageUrl === "string" && deck.imageUrl) {
-    return deck.imageUrl;
+  return response.json();
+}
+
+function findCommanderCardId(deckDetails) {
+  const boards = [deckDetails?.boards?.commanders, deckDetails?.boards?.signatureSpells];
+
+  for (const board of boards) {
+    if (!board || typeof board !== "object") {
+      continue;
+    }
+
+    for (const card of Object.values(board)) {
+      if (card?.card?.scryfall_id) {
+        return card.card.scryfall_id;
+      }
+
+      if (card?.card?.scryfallId) {
+        return card.card.scryfallId;
+      }
+    }
+  }
+
+  for (const card of Object.values(deckDetails?.mainboard ?? {})) {
+    if (card?.card?.scryfall_id && card?.quantity === 1) {
+      return card.card.scryfall_id;
+    }
+
+    if (card?.card?.scryfallId && card?.quantity === 1) {
+      return card.card.scryfallId;
+    }
   }
 
   return null;
 }
 
-const response = await fetch(apiUrl, {
-  headers: {
-    "User-Agent": userAgent,
-    Accept: "application/json",
-  },
-});
+function buildScryfallImageUrl(scryfallId) {
+  if (!scryfallId) {
+    return null;
+  }
 
-if (!response.ok) {
-  throw new Error(`Moxfield request failed with HTTP ${response.status}`);
+  return `https://api.scryfall.com/cards/${scryfallId}?format=image&version=art_crop`;
 }
 
-const payload = await response.json();
+const payload = await fetchJson(apiUrl);
 const decks = Array.isArray(payload.data) ? payload.data : [];
 
 const latestDecks = decks
@@ -54,8 +91,30 @@ const latestDecks = decks
 
     return rightTime - leftTime;
   })
-  .slice(0, 10)
-  .map((deck) => ({
+  .slice(0, 10);
+
+const outputDecks = [];
+
+for (const [index, deck] of latestDecks.entries()) {
+  if (index > 0) {
+    await sleep(minDelayBetweenRequestsMs);
+  }
+
+  let previewImageUrl = null;
+
+  try {
+    const deckDetails = await fetchJson(
+      `https://api.moxfield.com/v2/decks/all/${deck.publicId}`
+    );
+    const commanderScryfallId = findCommanderCardId(deckDetails);
+    previewImageUrl = buildScryfallImageUrl(commanderScryfallId);
+  } catch (error) {
+    console.warn(
+      `Could not enrich deck ${deck.publicId} with commander art: ${error.message}`
+    );
+  }
+
+  outputDecks.push({
     id: deck.id ?? null,
     publicId: deck.publicId ?? null,
     name: deck.name,
@@ -63,9 +122,10 @@ const latestDecks = decks
     updatedAtUtc: toIsoDate(deck.lastUpdatedAtUtc || deck.createdAtUtc),
     createdAtUtc: toIsoDate(deck.createdAtUtc),
     format: deck.format ?? null,
-    previewImageUrl: buildImageUrl(deck),
-  }));
+    previewImageUrl,
+  });
+}
 
-await writeFile(outputPath, `${JSON.stringify(latestDecks, null, 2)}\n`, "utf8");
+await writeFile(outputPath, `${JSON.stringify(outputDecks, null, 2)}\n`, "utf8");
 
-console.log(`Saved ${latestDecks.length} deck(s) to decks.json`);
+console.log(`Saved ${outputDecks.length} deck(s) to decks.json`);
