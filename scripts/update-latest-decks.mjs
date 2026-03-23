@@ -37,31 +37,13 @@ async function fetchJson(url) {
 }
 
 function findCommanderCardId(deckDetails) {
-  const boards = [deckDetails?.boards?.commanders, deckDetails?.boards?.signatureSpells];
-
-  for (const board of boards) {
-    if (!board || typeof board !== "object") {
-      continue;
+  for (const commander of Object.values(deckDetails?.commanders ?? {})) {
+    if (commander?.card?.scryfall_id) {
+      return commander.card.scryfall_id;
     }
 
-    for (const card of Object.values(board)) {
-      if (card?.card?.scryfall_id) {
-        return card.card.scryfall_id;
-      }
-
-      if (card?.card?.scryfallId) {
-        return card.card.scryfallId;
-      }
-    }
-  }
-
-  for (const card of Object.values(deckDetails?.mainboard ?? {})) {
-    if (card?.card?.scryfall_id && card?.quantity === 1) {
-      return card.card.scryfall_id;
-    }
-
-    if (card?.card?.scryfallId && card?.quantity === 1) {
-      return card.card.scryfallId;
+    if (commander?.card?.scryfallId) {
+      return commander.card.scryfallId;
     }
   }
 
