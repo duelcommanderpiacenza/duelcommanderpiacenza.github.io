@@ -1,5 +1,16 @@
 [
   {
+    "id": "bOj530",
+    "publicId": "gnS6K93lfUumMVAVufxdWA",
+    "name": "[PRIMER] Tasigur, the Golden Fang (BUGbite235)",
+    "url": "https://moxfield.com/decks/gnS6K93lfUumMVAVufxdWA/primer",
+    "commanderName": "Tasigur, the Golden Fang",
+    "updatedAtUtc": "2026-04-07T08:36:50.357Z",
+    "createdAtUtc": "2026-03-29T17:17:49.567Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/095b6fd9-d0e5-4026-895a-851a462cbf90?format=image&version=art_crop"
+  },
+  {
     "id": "WA042y",
     "publicId": "Q8_b8Qes1kyPoxx1OA55_A",
     "name": "[26-03-28] Rank 05/21 Cloud (DoctorDredge)",
@@ -97,16 +108,5 @@
     "createdAtUtc": "2026-03-21T09:24:00.203Z",
     "format": "duelCommander",
     "previewImageUrl": "https://api.scryfall.com/cards/39555a72-a57b-45ee-9222-ce3b9e8de126?format=image&version=art_crop"
-  },
-  {
-    "id": "9z2PN1",
-    "publicId": "HdhpfL8myEiIFSKThHUtyQ",
-    "name": "[PRIMER] Phlage, Titan of Fire's Fury (michele__f)",
-    "url": "https://moxfield.com/decks/HdhpfL8myEiIFSKThHUtyQ/primer",
-    "commanderName": "Phlage, Titan of Fire's Fury",
-    "updatedAtUtc": "2026-02-16T08:24:30.113Z",
-    "createdAtUtc": "2026-02-16T08:21:41.063Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/e419cd0b-2449-4cc5-9ead-b9e45e271700?format=image&version=art_crop"
   }
 ]
