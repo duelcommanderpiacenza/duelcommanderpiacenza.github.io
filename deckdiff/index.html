@@ -76,30 +76,6 @@
     button:hover:not(:disabled) { background: #d4aa4e; }
     button:disabled { opacity: 0.55; cursor: not-allowed; }
 
-    .refresh-bar {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 2rem;
-      padding-bottom: 1.5rem;
-      border-bottom: 1px solid #2a2a4a;
-    }
-
-    .btn-secondary {
-      background: transparent;
-      color: #c89b3c;
-      border: 1px solid #c89b3c;
-      padding: 0.45rem 1.2rem;
-      font-size: 0.85rem;
-      font-weight: 600;
-    }
-
-    .btn-secondary:hover:not(:disabled) { background: #c89b3c22; }
-
-    #refreshStatus {
-      font-size: 0.85rem;
-      color: #666;
-    }
 
     #error {
       color: #e05252;
@@ -155,11 +131,6 @@
   <main>
     <h1>Deck Diff</h1>
     <p class="subtitle">Select two decks to see what to swap to go from one to the other.</p>
-
-    <div class="refresh-bar">
-      <button id="refreshBtn" class="btn-secondary">↻ Refresh deck data</button>
-      <span id="refreshStatus">Opens GitHub Actions — click "Run workflow" then reload this page.</span>
-    </div>
 
     <div id="loading">Loading decks…</div>
 
@@ -220,23 +191,14 @@
     }
 
     (async () => {
-      const $             = id => document.getElementById(id);
-      const loading       = $("loading");
-      const controls      = $("controls");
-      const errorEl       = $("error");
-      const resultEl      = $("result");
-      const selectA       = $("deckA");
-      const selectB       = $("deckB");
-      const compareBtn    = $("compareBtn");
-      const refreshBtn    = $("refreshBtn");
-      const refreshStatus = $("refreshStatus");
-
-      refreshBtn.addEventListener("click", () => {
-        window.open(
-          "https://github.com/duelcommanderpiacenza/duelcommanderpiacenza.github.io/actions/workflows/update-deckdiff-data.yml",
-          "_blank"
-        );
-      });
+      const $          = id => document.getElementById(id);
+      const loading    = $("loading");
+      const controls   = $("controls");
+      const errorEl    = $("error");
+      const resultEl   = $("result");
+      const selectA    = $("deckA");
+      const selectB    = $("deckB");
+      const compareBtn = $("compareBtn");
 
       function showError(msg) { errorEl.textContent = msg; errorEl.hidden = false; }
       function clearError()   { errorEl.textContent = ""; errorEl.hidden = true; }
