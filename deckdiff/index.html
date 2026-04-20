@@ -93,10 +93,7 @@
 
     #result h2 strong { color: #e0e0e0; }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
+    table { width: 100%; border-collapse: collapse; }
 
     thead th {
       background: #16213e;
@@ -155,32 +152,11 @@
   </main>
 
   <script>
-    const BASE     = "https://api.moxfield.com/v2";
-    const USERNAME = "michele__f";
-
-    async function apiFetch(url) {
-      const res = await fetch(url, { headers: { Accept: "application/json" } });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.json();
-    }
-
-    function extractCards(details) {
-      const cards = {};
-      for (const section of ["commanders", "mainboard", "sideboard", "companions", "attractions"]) {
-        for (const entry of Object.values(details[section] || {})) {
-          const name = entry?.card?.name || entry?.name;
-          const qty  = entry?.quantity ?? 1;
-          if (name) cards[name] = (cards[name] || 0) + qty;
-        }
-      }
-      return cards;
-    }
-
-    function computeDiff(a, b) {
-      const all    = new Set([...Object.keys(a), ...Object.keys(b)]);
+    function computeDiff(cardsA, cardsB) {
+      const all    = new Set([...Object.keys(cardsA), ...Object.keys(cardsB)]);
       const remove = [], add = [];
       for (const name of [...all].sort()) {
-        const qa = a[name] || 0, qb = b[name] || 0;
+        const qa = cardsA[name] || 0, qb = cardsB[name] || 0;
         if (qa > qb) remove.push([name, qa - qb]);
         else if (qb > qa) add.push([name, qb - qa]);
       }
@@ -192,7 +168,7 @@
     }
 
     function renderTable(remove, add) {
-      const rows  = Math.max(remove.length, add.length);
+      const rows   = Math.max(remove.length, add.length);
       const totalR = remove.reduce((s, [, q]) => s + q, 0);
       const totalA = add.reduce((s, [, q]) => s + q, 0);
 
@@ -213,7 +189,7 @@
     }
 
     (async () => {
-      const $  = id => document.getElementById(id);
+      const $          = id => document.getElementById(id);
       const loading    = $("loading");
       const controls   = $("controls");
       const errorEl    = $("error");
@@ -222,91 +198,63 @@
       const selectB    = $("deckB");
       const compareBtn = $("compareBtn");
 
-      function showError(msg) {
-        errorEl.textContent = msg;
-        errorEl.hidden = false;
-      }
+      function showError(msg) { errorEl.textContent = msg; errorEl.hidden = false; }
+      function clearError()   { errorEl.textContent = ""; errorEl.hidden = true; }
 
-      function clearError() {
-        errorEl.textContent = "";
-        errorEl.hidden = true;
-      }
+      let decks = [];
 
       try {
-        const data  = await apiFetch(`${BASE}/users/${USERNAME}/decks?pageSize=100`);
-        const decks = data.data || [];
-
-        if (!decks.length) throw new Error("No decks found for this user.");
-
-        for (const deck of decks) {
-          for (const sel of [selectA, selectB]) {
-            const opt = document.createElement("option");
-            opt.value       = deck.publicId;
-            opt.textContent = deck.name;
-            sel.appendChild(opt);
-          }
-        }
-
-        // Default second dropdown to a different deck
-        if (selectB.options.length > 1) selectB.selectedIndex = 1;
-
-        loading.hidden   = true;
-        controls.hidden  = false;
+        const res = await fetch("decks-data.json");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        decks = await res.json();
+        if (!decks.length) throw new Error("Deck data not yet generated — run the GitHub Actions workflow first.");
       } catch (e) {
         loading.textContent = `Failed to load decks: ${e.message}`;
         return;
       }
 
-      compareBtn.addEventListener("click", async () => {
+      for (const deck of decks) {
+        for (const sel of [selectA, selectB]) {
+          const opt       = document.createElement("option");
+          opt.value       = deck.publicId;
+          opt.textContent = deck.name;
+          sel.appendChild(opt);
+        }
+      }
+
+      if (selectB.options.length > 1) selectB.selectedIndex = 1;
+
+      loading.hidden  = true;
+      controls.hidden = false;
+
+      compareBtn.addEventListener("click", () => {
         clearError();
         resultEl.hidden = true;
 
-        const idA   = selectA.value;
-        const idB   = selectB.value;
-        const nameA = selectA.options[selectA.selectedIndex].text;
-        const nameB = selectB.options[selectB.selectedIndex].text;
+        const idA = selectA.value;
+        const idB = selectB.value;
 
-        if (idA === idB) {
-          showError("Deck A and Deck B are the same deck.");
+        if (idA === idB) { showError("Deck A and Deck B are the same deck."); return; }
+
+        const deckA = decks.find(d => d.publicId === idA);
+        const deckB = decks.find(d => d.publicId === idB);
+
+        if (deckA.cardCount !== deckB.cardCount) {
+          showError(`Different card counts: "${deckA.name}" has ${deckA.cardCount}, "${deckB.name}" has ${deckB.cardCount}.`);
           return;
         }
 
-        compareBtn.disabled    = true;
-        compareBtn.textContent = "Loading…";
+        const { remove, add } = computeDiff(deckA.cards, deckB.cards);
 
-        try {
-          const [detA, detB] = await Promise.all([
-            apiFetch(`${BASE}/decks/all/${idA}`),
-            apiFetch(`${BASE}/decks/all/${idB}`),
-          ]);
-
-          const cardsA = extractCards(detA);
-          const cardsB = extractCards(detB);
-          const countA = Object.values(cardsA).reduce((s, q) => s + q, 0);
-          const countB = Object.values(cardsB).reduce((s, q) => s + q, 0);
-
-          if (countA !== countB) {
-            showError(`Different card counts: "${nameA}" has ${countA}, "${nameB}" has ${countB}.`);
-            return;
-          }
-
-          const { remove, add } = computeDiff(cardsA, cardsB);
-
-          if (!remove.length && !add.length) {
-            resultEl.innerHTML = `<p class="identical">These decks are identical — nothing to change.</p>`;
-          } else {
-            resultEl.innerHTML = `
-              <h2><strong>${nameA}</strong> → <strong>${nameB}</strong></h2>
-              ${renderTable(remove, add)}
-            `;
-          }
-          resultEl.hidden = false;
-        } catch (e) {
-          showError(`Error: ${e.message}`);
-        } finally {
-          compareBtn.disabled    = false;
-          compareBtn.textContent = "Compare";
+        if (!remove.length && !add.length) {
+          resultEl.innerHTML = `<p class="identical">These decks are identical — nothing to change.</p>`;
+        } else {
+          resultEl.innerHTML = `
+            <h2><strong>${deckA.name}</strong> → <strong>${deckB.name}</strong></h2>
+            ${renderTable(remove, add)}
+          `;
         }
+        resultEl.hidden = false;
       });
     })();
   </script>
