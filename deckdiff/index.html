@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deck Diff</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding: 2.5rem 1.5rem;
+    }
+
+    main { max-width: 960px; margin: 0 auto; }
+
+    h1 {
+      font-size: 1.8rem;
+      color: #c89b3c;
+      margin-bottom: 0.4rem;
+    }
+
+    .subtitle {
+      color: #888;
+      margin-bottom: 2rem;
+      font-size: 0.95rem;
+    }
+
+    #loading { color: #888; }
+
+    .selectors {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.2rem;
+    }
+
+    .selectors label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      font-size: 0.82rem;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    select {
+      background: #16213e;
+      border: 1px solid #3a3a5a;
+      color: #e0e0e0;
+      padding: 0.55rem 0.85rem;
+      border-radius: 5px;
+      font-size: 0.95rem;
+      min-width: 300px;
+      cursor: pointer;
+    }
+
+    select:focus { outline: 2px solid #c89b3c; border-color: transparent; }
+
+    button {
+      background: #c89b3c;
+      color: #1a1a2e;
+      border: none;
+      padding: 0.6rem 1.8rem;
+      border-radius: 5px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    button:hover:not(:disabled) { background: #d4aa4e; }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    #error {
+      color: #e05252;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+
+    #result { margin-top: 2rem; }
+
+    #result h2 {
+      font-size: 1rem;
+      color: #aaa;
+      font-weight: 400;
+      margin-bottom: 1rem;
+    }
+
+    #result h2 strong { color: #e0e0e0; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead th {
+      background: #16213e;
+      padding: 0.6rem 1rem;
+      text-align: left;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #888;
+      border-bottom: 2px solid #2a2a4a;
+    }
+
+    tbody td {
+      padding: 0.42rem 1rem;
+      border-bottom: 1px solid #22223a;
+      font-size: 0.9rem;
+    }
+
+    tbody tr:last-child td { border-bottom: none; }
+
+    .remove { color: #e07070; }
+    .add    { color: #68c47a; }
+
+    .summary {
+      margin-top: 1rem;
+      color: #777;
+      font-size: 0.83rem;
+    }
+
+    .identical { color: #888; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Deck Diff</h1>
+    <p class="subtitle">Select two decks to see what to swap to go from one to the other.</p>
+
+    <div id="loading">Loading decks…</div>
+
+    <div id="controls" hidden>
+      <div class="selectors">
+        <label>
+          Deck A — starting deck
+          <select id="deckA"></select>
+        </label>
+        <label>
+          Deck B — target deck
+          <select id="deckB"></select>
+        </label>
+      </div>
+      <button id="compareBtn">Compare</button>
+    </div>
+
+    <div id="error" hidden></div>
+    <div id="result" hidden></div>
+  </main>
+
+  <script>
+    const BASE     = "https://api.moxfield.com/v2";
+    const USERNAME = "michele__f";
+
+    async function apiFetch(url) {
+      const res = await fetch(url, { headers: { Accept: "application/json" } });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    }
+
+    function extractCards(details) {
+      const cards = {};
+      for (const section of ["commanders", "mainboard", "sideboard", "companions", "attractions"]) {
+        for (const entry of Object.values(details[section] || {})) {
+          const name = entry?.card?.name || entry?.name;
+          const qty  = entry?.quantity ?? 1;
+          if (name) cards[name] = (cards[name] || 0) + qty;
+        }
+      }
+      return cards;
+    }
+
+    function computeDiff(a, b) {
+      const all    = new Set([...Object.keys(a), ...Object.keys(b)]);
+      const remove = [], add = [];
+      for (const name of [...all].sort()) {
+        const qa = a[name] || 0, qb = b[name] || 0;
+        if (qa > qb) remove.push([name, qa - qb]);
+        else if (qb > qa) add.push([name, qb - qa]);
+      }
+      return { remove, add };
+    }
+
+    function fmt([name, qty]) {
+      return qty > 1 ? `${qty}× ${name}` : name;
+    }
+
+    function renderTable(remove, add) {
+      const rows  = Math.max(remove.length, add.length);
+      const totalR = remove.reduce((s, [, q]) => s + q, 0);
+      const totalA = add.reduce((s, [, q]) => s + q, 0);
+
+      let html = `<table>
+        <thead><tr><th>Cards to remove</th><th>Cards to add</th></tr></thead>
+        <tbody>`;
+      for (let i = 0; i < rows; i++) {
+        const r = i < remove.length ? fmt(remove[i]) : "";
+        const a = i < add.length    ? fmt(add[i])    : "";
+        html += `<tr>
+          <td class="remove">${r}</td>
+          <td class="add">${a}</td>
+        </tr>`;
+      }
+      html += `</tbody></table>
+        <p class="summary">Remove ${totalR} card(s) · Add ${totalA} card(s)</p>`;
+      return html;
+    }
+
+    (async () => {
+      const $  = id => document.getElementById(id);
+      const loading    = $("loading");
+      const controls   = $("controls");
+      const errorEl    = $("error");
+      const resultEl   = $("result");
+      const selectA    = $("deckA");
+      const selectB    = $("deckB");
+      const compareBtn = $("compareBtn");
+
+      function showError(msg) {
+        errorEl.textContent = msg;
+        errorEl.hidden = false;
+      }
+
+      function clearError() {
+        errorEl.textContent = "";
+        errorEl.hidden = true;
+      }
+
+      try {
+        const data  = await apiFetch(`${BASE}/users/${USERNAME}/decks?pageSize=100`);
+        const decks = data.data || [];
+
+        if (!decks.length) throw new Error("No decks found for this user.");
+
+        for (const deck of decks) {
+          for (const sel of [selectA, selectB]) {
+            const opt = document.createElement("option");
+            opt.value       = deck.publicId;
+            opt.textContent = deck.name;
+            sel.appendChild(opt);
+          }
+        }
+
+        // Default second dropdown to a different deck
+        if (selectB.options.length > 1) selectB.selectedIndex = 1;
+
+        loading.hidden   = true;
+        controls.hidden  = false;
+      } catch (e) {
+        loading.textContent = `Failed to load decks: ${e.message}`;
+        return;
+      }
+
+      compareBtn.addEventListener("click", async () => {
+        clearError();
+        resultEl.hidden = true;
+
+        const idA   = selectA.value;
+        const idB   = selectB.value;
+        const nameA = selectA.options[selectA.selectedIndex].text;
+        const nameB = selectB.options[selectB.selectedIndex].text;
+
+        if (idA === idB) {
+          showError("Deck A and Deck B are the same deck.");
+          return;
+        }
+
+        compareBtn.disabled    = true;
+        compareBtn.textContent = "Loading…";
+
+        try {
+          const [detA, detB] = await Promise.all([
+            apiFetch(`${BASE}/decks/all/${idA}`),
+            apiFetch(`${BASE}/decks/all/${idB}`),
+          ]);
+
+          const cardsA = extractCards(detA);
+          const cardsB = extractCards(detB);
+          const countA = Object.values(cardsA).reduce((s, q) => s + q, 0);
+          const countB = Object.values(cardsB).reduce((s, q) => s + q, 0);
+
+          if (countA !== countB) {
+            showError(`Different card counts: "${nameA}" has ${countA}, "${nameB}" has ${countB}.`);
+            return;
+          }
+
+          const { remove, add } = computeDiff(cardsA, cardsB);
+
+          if (!remove.length && !add.length) {
+            resultEl.innerHTML = `<p class="identical">These decks are identical — nothing to change.</p>`;
+          } else {
+            resultEl.innerHTML = `
+              <h2><strong>${nameA}</strong> → <strong>${nameB}</strong></h2>
+              ${renderTable(remove, add)}
+            `;
+          }
+          resultEl.hidden = false;
+        } catch (e) {
+          showError(`Error: ${e.message}`);
+        } finally {
+          compareBtn.disabled    = false;
+          compareBtn.textContent = "Compare";
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
