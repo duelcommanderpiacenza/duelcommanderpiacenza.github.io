@@ -1,4 +1,4 @@
-name: Update Site Data
+name: Update Deckdiff Data
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  update-site-data:
+  update-deckdiff-data:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,19 +21,16 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Fetch latest decks from Moxfield
+      - name: Fetch full deck data from Moxfield
         env:
           MOXFIELD_USER_AGENT: ${{ secrets.MOXFIELD_USER_AGENT }}
-        run: node scripts/update-latest-decks.mjs
+        run: node scripts/update-deckdiff-data.mjs
 
-      - name: Fetch latest videos from YouTube
-        run: node scripts/update-latest-videos.mjs
-
-      - name: Commit updated site data
+      - name: Commit updated deck data
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add decks.json videos.json
+          git add deckdiff/decks-data.json
           git diff --cached --quiet && exit 0
-          git commit -m "Update latest site data"
+          git commit -m "Update deckdiff data"
           git push
