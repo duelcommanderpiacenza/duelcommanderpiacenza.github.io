@@ -524,7 +524,6 @@
       "Walking Ballista": 1,
       "Sylvan Library": 1,
       "Verduran Enchantress": 1,
-      "Wrath of God": 1,
       "Banishing Light": 1,
       "Sungrass Prairie": 1,
       "Ghostly Prison": 1,
@@ -536,7 +535,6 @@
       "Celestial Ancient": 1,
       "Enlightened Tutor": 1,
       "Mesa Enchantress": 1,
-      "Smothering Tithe": 1,
       "Conclave Tribunal": 1,
       "Temple Garden": 1,
       "Windswept Heath": 1,
@@ -575,7 +573,9 @@
       "Flare of Fortitude": 1,
       "Strength of the Harvest // Haven of the Harvest": 1,
       "Razorgrass Ambush // Razorgrass Field": 1,
-      "Valgavoth's Lair": 1
+      "Valgavoth's Lair": 1,
+      "Wrath of God": 1,
+      "Smothering Tithe": 1
     }
   },
   {
@@ -747,7 +747,6 @@
       "Animate Dead": 3,
       "Cabal Therapy": 4,
       "Dark Ritual": 4,
-      "Lotus Petal": 4,
       "Underground River": 4,
       "City of Brass": 4,
       "Exhume": 4,
@@ -757,47 +756,18 @@
       "Putrid Imp": 4,
       "Gemstone Mine": 4,
       "Akroma, Angel of Wrath": 4,
+      "Lotus Petal": 4,
       "Rorix Bladewing": 2,
-      "Life // Death": 1,
       "Undiscovered Paradise": 2,
       "Multani, Maro-Sorcerer": 2,
       "Hapless Researcher": 2,
+      "Life // Death": 1,
       "Iridescent Angel": 2,
       "Visara the Dreadful": 2,
-      "Oath of Druids": 4,
       "Naturalize": 2,
       "Crumble": 2,
+      "Oath of Druids": 4,
       "Duress": 3
-    }
-  },
-  {
-    "publicId": "L2yaNQdNaU-MnsCpbhouWQ",
-    "name": "PAUPER - Rakdos Burn",
-    "format": "pauper",
-    "cardCount": 75,
-    "cards": {
-      "Mountain": 2,
-      "Faithless Looting": 4,
-      "Fiery Temper": 4,
-      "Galvanic Blast": 4,
-      "Great Furnace": 4,
-      "Lightning Bolt": 4,
-      "Kitchen Imp": 4,
-      "Drossforge Bridge": 4,
-      "Voldaren Epicure": 4,
-      "Vampire's Kiss": 4,
-      "Demand Answers": 2,
-      "Jagged Barrens": 4,
-      "Sneaky Snacker": 4,
-      "Grab the Prize": 3,
-      "Rakdos Carnarium": 1,
-      "Alms of the Vein": 4,
-      "Vault of Whispers": 4,
-      "Gorilla Shaman": 2,
-      "Contaminated Ground": 3,
-      "Nihil Spellbomb": 3,
-      "Smash to Smithereens": 4,
-      "Trespasser's Curse": 3
     }
   }
 ]
