@@ -1,5 +1,93 @@
 [
   {
+    "id": "KZ0QXo",
+    "publicId": "G3YiXXg8kk6z5oYKfE-EMw",
+    "name": "[26-04-19] [Master of Duel] 08 Rank 5-8/47 Re Lich (BUGbite235)",
+    "url": "https://moxfield.com/decks/G3YiXXg8kk6z5oYKfE-EMw",
+    "commanderName": "Acererak the Archlich",
+    "updatedAtUtc": "2026-04-21T14:06:43.417Z",
+    "createdAtUtc": "2026-04-20T15:29:50.143Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/dd52d0bd-3abd-401c-9f56-ee911613da3b?format=image&version=art_crop"
+  },
+  {
+    "id": "P9eDnl",
+    "publicId": "OkCZlLswT0mrTl9f1CnaoQ",
+    "name": "[26-04-19] [Master of Duel] 07  Rank 5-8/47 Raph & Mikey, Troublemakers",
+    "url": "https://moxfield.com/decks/OkCZlLswT0mrTl9f1CnaoQ",
+    "commanderName": "Raph & Mikey, Troublemakers",
+    "updatedAtUtc": "2026-04-21T14:06:19.993Z",
+    "createdAtUtc": "2026-04-20T18:35:40.167Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/8795fba4-0ff3-4c04-a81c-60408608a00c?format=image&version=art_crop"
+  },
+  {
+    "id": "3bvgz3",
+    "publicId": "RmXO7c-lzkOhtBUCQEGy9g",
+    "name": "[26-04-19] [Master of Duel] 06 Rank 5-8/47 🌊SURFING IN TEFERIFE🌊 (Voja)",
+    "url": "https://moxfield.com/decks/RmXO7c-lzkOhtBUCQEGy9g",
+    "commanderName": "Teferi, Temporal Archmage",
+    "updatedAtUtc": "2026-04-21T14:05:49.183Z",
+    "createdAtUtc": "2026-04-20T13:58:21.990Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/368c6e60-804c-447c-bc2b-ac9dc4cab5e7?format=image&version=art_crop"
+  },
+  {
+    "id": "qz9PO3",
+    "publicId": "o2sUKX1KtUeSy6-pTqZR1Q",
+    "name": "[26-04-19] [Master of Duel] 05 Rank 5-8/47 Tivit, Seller of Secrets",
+    "url": "https://moxfield.com/decks/o2sUKX1KtUeSy6-pTqZR1Q",
+    "commanderName": "Tivit, Seller of Secrets",
+    "updatedAtUtc": "2026-04-21T14:05:30.677Z",
+    "createdAtUtc": "2026-04-20T14:06:01.420Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/9235977e-a999-4ed0-83a3-742be87b13bb?format=image&version=art_crop"
+  },
+  {
+    "id": "ejeqry",
+    "publicId": "KfYBR19aoEWRb5BEE3PM-Q",
+    "name": "[26-04-19] [Master of Duel] 04 Rank 1-4/47 Tasigur 19/04/2026 (OvettoKiller)",
+    "url": "https://moxfield.com/decks/KfYBR19aoEWRb5BEE3PM-Q",
+    "commanderName": "Tasigur, the Golden Fang",
+    "updatedAtUtc": "2026-04-21T14:05:01.307Z",
+    "createdAtUtc": "2026-04-20T14:14:02.833Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/175ad810-3cdd-43c7-99a9-8a2e8ad6dbae?format=image&version=art_crop"
+  },
+  {
+    "id": "dgeqma",
+    "publicId": "bHARYIikq067f43cZiB0GA",
+    "name": "[26-04-19] [Master of Duel] 03 Rank 1-4/47 Spider-Man 2099 Control  (Alexanderiz1993)",
+    "url": "https://moxfield.com/decks/bHARYIikq067f43cZiB0GA",
+    "commanderName": "Spider-Man 2099",
+    "updatedAtUtc": "2026-04-21T14:04:42.843Z",
+    "createdAtUtc": "2026-04-20T13:44:21.417Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/b680a089-5cf0-494a-98e8-23d28315f572?format=image&version=art_crop"
+  },
+  {
+    "id": "123VRz",
+    "publicId": "E3r58SD0UU2JuYlKtWdh4A",
+    "name": "[26-04-19] [Master of Duel] 01 Rank 1-4/47 Nuvola (Gus)",
+    "url": "https://moxfield.com/decks/E3r58SD0UU2JuYlKtWdh4A",
+    "commanderName": "Cloud, Midgar Mercenary",
+    "updatedAtUtc": "2026-04-21T14:04:08.237Z",
+    "createdAtUtc": "2026-04-20T13:59:38.893Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/2903fbcf-1f10-4518-9f7f-6b61d9b6552d?format=image&version=art_crop"
+  },
+  {
+    "id": "n0wn1x",
+    "publicId": "C9zIJvWCtEGFriJrJsBFpg",
+    "name": "[26-04-19] [Master of Duel] 02 Rank 1-4/47 {DC} The Greatful Deadpool 💀 (duplicated from Sancho182)",
+    "url": "https://moxfield.com/decks/C9zIJvWCtEGFriJrJsBFpg",
+    "commanderName": "Deadpool, Trading Card",
+    "updatedAtUtc": "2026-04-21T14:03:28.517Z",
+    "createdAtUtc": "2026-04-20T14:07:44.440Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/3a14d6c5-cfd1-4860-834a-5a0dc9df0320?format=image&version=art_crop"
+  },
+  {
     "id": "bOj530",
     "publicId": "gnS6K93lfUumMVAVufxdWA",
     "name": "[PRIMER] Tasigur, the Golden Fang (BUGbite235)",
@@ -20,93 +108,5 @@
     "createdAtUtc": "2026-03-28T20:03:02.863Z",
     "format": "duelCommander",
     "previewImageUrl": "https://api.scryfall.com/cards/2cf7e8a3-fad7-413d-b17c-7519a9cf5fb5?format=image&version=art_crop"
-  },
-  {
-    "id": "m6ao7z",
-    "publicId": "aaYGnCAM-0KKzSlKWKOqjw",
-    "name": "[26-03-28] Rank 06/21 toph 25/3/26 (stantuffodado88)",
-    "url": "https://moxfield.com/decks/aaYGnCAM-0KKzSlKWKOqjw",
-    "commanderName": "Toph, Greatest Earthbender",
-    "updatedAtUtc": "2026-03-30T06:14:51.757Z",
-    "createdAtUtc": "2026-03-28T20:39:04.987Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/b15acc09-dd32-4e93-a788-7c0ae965a0c8?format=image&version=art_crop"
-  },
-  {
-    "id": "a98lqb",
-    "publicId": "xP0v0wtNOECw-aVkGhhwTQ",
-    "name": "[26-03-28] Rank 03/21 Yoshimaru Jeskai (LukeTMS97)",
-    "url": "https://moxfield.com/decks/xP0v0wtNOECw-aVkGhhwTQ",
-    "commanderName": "Yoshimaru, Ever Faithful",
-    "updatedAtUtc": "2026-03-30T05:58:58.607Z",
-    "createdAtUtc": "2026-03-30T05:52:53.277Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/aa409269-3698-42a2-8c51-75557b27a6f6?format=image&version=art_crop"
-  },
-  {
-    "id": "WA04Oy",
-    "publicId": "dGuUIhtWXEippDTwYPpyIA",
-    "name": "[26-03-28] Rank 08/21 ⚡️ATRAXA SUPER CONTROL⚡️ (Monello)",
-    "url": "https://moxfield.com/decks/dGuUIhtWXEippDTwYPpyIA",
-    "commanderName": "Atraxa, Grand Unifier",
-    "updatedAtUtc": "2026-03-30T05:58:11.857Z",
-    "createdAtUtc": "2026-03-28T20:05:31.723Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/e51e5d02-d3d0-45e5-a589-1fe25ff5082b?format=image&version=art_crop"
-  },
-  {
-    "id": "7D29wb",
-    "publicId": "cBFEREVKaEOsSZuym7LAzA",
-    "name": "[26-03-28] Rank 07/21 [DC] Tasigur, the Golden Fang (BUGbite235)",
-    "url": "https://moxfield.com/decks/cBFEREVKaEOsSZuym7LAzA",
-    "commanderName": "Tasigur, the Golden Fang",
-    "updatedAtUtc": "2026-03-30T05:57:30.243Z",
-    "createdAtUtc": "2026-03-28T20:06:13.593Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/095b6fd9-d0e5-4026-895a-851a462cbf90?format=image&version=art_crop"
-  },
-  {
-    "id": "KZo7Xz",
-    "publicId": "NpxKJxBIqkOdr7EtmkoD1Q",
-    "name": "[26-03-28] Rank 04/21 ComBear (Marinels)",
-    "url": "https://moxfield.com/decks/NpxKJxBIqkOdr7EtmkoD1Q",
-    "commanderName": "Lumra, Bellow of the Woods",
-    "updatedAtUtc": "2026-03-30T05:57:25.733Z",
-    "createdAtUtc": "2026-03-28T20:07:00.030Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/5c7a4e18-04a1-49f1-ad73-c93f9d0c9b11?format=image&version=art_crop"
-  },
-  {
-    "id": "05V94m",
-    "publicId": "-Ebdz0SvyEWoW64LKUu01w",
-    "name": "[26-03-28] Rank 02/21 Light-Paws Voltron (LazerGoat)",
-    "url": "https://moxfield.com/decks/-Ebdz0SvyEWoW64LKUu01w",
-    "commanderName": "Light-Paws, Emperor's Voice",
-    "updatedAtUtc": "2026-03-30T05:57:21.913Z",
-    "createdAtUtc": "2026-03-28T20:07:27.567Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/76614523-e51a-44ff-83ad-5be9e322697a?format=image&version=art_crop"
-  },
-  {
-    "id": "Vx9vBx",
-    "publicId": "Xq1Vk7GhFUWrTIUUbkNWZQ",
-    "name": "[26-03-28] Rank 01/21 Tivit",
-    "url": "https://moxfield.com/decks/Xq1Vk7GhFUWrTIUUbkNWZQ",
-    "commanderName": "Tivit, Seller of Secrets",
-    "updatedAtUtc": "2026-03-30T05:57:20.413Z",
-    "createdAtUtc": "2026-03-28T20:04:42.393Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/9235977e-a999-4ed0-83a3-742be87b13bb?format=image&version=art_crop"
-  },
-  {
-    "id": "j0jayB",
-    "publicId": "TJ5GVZgmK0mFlKDwS4ZStw",
-    "name": "[PRIMER] Light-Paws, Emperor's Voice (lex_luthor)",
-    "url": "https://moxfield.com/decks/TJ5GVZgmK0mFlKDwS4ZStw/primer",
-    "commanderName": "Light-Paws, Emperor's Voice",
-    "updatedAtUtc": "2026-03-21T09:25:24.640Z",
-    "createdAtUtc": "2026-03-21T09:24:00.203Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/39555a72-a57b-45ee-9222-ce3b9e8de126?format=image&version=art_crop"
   }
 ]
