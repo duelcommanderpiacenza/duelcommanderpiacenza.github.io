@@ -1,7 +1,7 @@
 import { writeFile } from "node:fs/promises";
 
 const apiUrl =
-  "https://api.moxfield.com/v2/users/Duel_Commander_Piacenza/decks?pageSize=100";
+  "https://api.moxfield.com/v2/decks/search?authorUserNames=Duel_Commander_Piacenza&pageSize=100";
 const outputPath = new URL("../decks.json", import.meta.url);
 const userAgent = process.env.MOXFIELD_USER_AGENT;
 const minDelayBetweenRequestsMs = 2000;
