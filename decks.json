@@ -1,5 +1,16 @@
 [
   {
+    "id": "Xn7jrD",
+    "publicId": "fnQu7tMqv0uk6xeCKBqOcQ",
+    "name": "Ertai Hates You (Random_Raven_Man)",
+    "url": "https://moxfield.com/decks/fnQu7tMqv0uk6xeCKBqOcQ",
+    "commanderName": "Ertai Resurrected",
+    "updatedAtUtc": "2026-05-28T13:23:49.473Z",
+    "createdAtUtc": "2026-05-18T14:13:04.600Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/7f7e780e-fbc5-4dc0-b5c7-efcb8645c7c6?format=image&version=art_crop"
+  },
+  {
     "id": "vz3lGw",
     "publicId": "4bdDZy81hkeS151cA2IEXA",
     "name": "[26-05-23] Rank 08/25 Meliranxious (AveCesare88)",
@@ -97,16 +108,5 @@
     "createdAtUtc": "2026-05-04T13:11:33.450Z",
     "format": "duelCommander",
     "previewImageUrl": "https://api.scryfall.com/cards/b15acc09-dd32-4e93-a788-7c0ae965a0c8?format=image&version=art_crop"
-  },
-  {
-    "id": "bOj530",
-    "publicId": "gnS6K93lfUumMVAVufxdWA",
-    "name": "[PRIMER] Tasigur, the Golden Fang (BUGbite235)",
-    "url": "https://moxfield.com/decks/gnS6K93lfUumMVAVufxdWA/primer",
-    "commanderName": "Tasigur, the Golden Fang",
-    "updatedAtUtc": "2026-04-07T08:36:50.357Z",
-    "createdAtUtc": "2026-03-29T17:17:49.567Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/095b6fd9-d0e5-4026-895a-851a462cbf90?format=image&version=art_crop"
   }
 ]
