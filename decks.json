@@ -1,5 +1,93 @@
 [
   {
+    "id": "ONJnXo",
+    "publicId": "zOqeAR1o1Xi9P44oFHUVFg",
+    "name": "[26-06-20] Rank 02/08 {DC} The Greatful Deadpool 💀 (Sancho182)",
+    "url": "https://moxfield.com/decks/zOqeAR1o1Xi9P44oFHUVFg",
+    "commanderName": "Deadpool, Trading Card",
+    "updatedAtUtc": "2026-06-21T20:33:02.073Z",
+    "createdAtUtc": "2026-06-21T15:28:45.087Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/3a14d6c5-cfd1-4860-834a-5a0dc9df0320?format=image&version=art_crop"
+  },
+  {
+    "id": "RbmPez",
+    "publicId": "zeqeARGkqHCHbqpE-fDtew",
+    "name": "[26-06-20] Rank 08/08 cloud 2 (Devian)",
+    "url": "https://moxfield.com/decks/zeqeARGkqHCHbqpE-fDtew",
+    "commanderName": "Cloud, Midgar Mercenary",
+    "updatedAtUtc": "2026-06-21T20:30:58.960Z",
+    "createdAtUtc": "2026-06-21T15:30:05.970Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/2cf7e8a3-fad7-413d-b17c-7519a9cf5fb5?format=image&version=art_crop"
+  },
+  {
+    "id": "PgdB3p",
+    "publicId": "zuqeAUmUV3u6lTCX6ZVnTQ",
+    "name": "[26-06-20] Rank 07/08 Toph (Akuma86)",
+    "url": "https://moxfield.com/decks/zuqeAUmUV3u6lTCX6ZVnTQ",
+    "commanderName": "Toph, Greatest Earthbender",
+    "updatedAtUtc": "2026-06-21T20:30:57.153Z",
+    "createdAtUtc": "2026-06-21T15:31:07.467Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/b15acc09-dd32-4e93-a788-7c0ae965a0c8?format=image&version=art_crop"
+  },
+  {
+    "id": "M3Ajd6",
+    "publicId": "1uqeAV0Ii3i933OnDJnVqw",
+    "name": "[26-06-20] Rank 03/08 [DC] Light-Paws v19.2 (lex_luthor)",
+    "url": "https://moxfield.com/decks/1uqeAV0Ii3i933OnDJnVqw",
+    "commanderName": "Light-Paws, Emperor's Voice",
+    "updatedAtUtc": "2026-06-21T20:30:54.950Z",
+    "createdAtUtc": "2026-06-21T15:39:15.933Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/39555a72-a57b-45ee-9222-ce3b9e8de126?format=image&version=art_crop"
+  },
+  {
+    "id": "8qb8ly",
+    "publicId": "yeqeAazcaXe88Ic2kKdr2A",
+    "name": "[26-06-20] Rank 01/08 [DC] Tifa Lockhart 20.05.2026 (DC League Finals) 👑 (lord78)",
+    "url": "https://moxfield.com/decks/yeqeAazcaXe88Ic2kKdr2A",
+    "commanderName": "Tifa Lockhart",
+    "updatedAtUtc": "2026-06-21T20:30:44.853Z",
+    "createdAtUtc": "2026-06-21T15:25:58.317Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/fb781323-2746-405d-a9b2-e778c037a6e9?format=image&version=art_crop"
+  },
+  {
+    "id": "vV1K2V",
+    "publicId": "6euoxam8Qk6f72a6LBVtEQ",
+    "name": "[26-06-20] Rank 04/08 Toph, Greatest Earthbender",
+    "url": "https://moxfield.com/decks/6euoxam8Qk6f72a6LBVtEQ",
+    "commanderName": "Toph, Greatest Earthbender",
+    "updatedAtUtc": "2026-06-21T15:42:13.633Z",
+    "createdAtUtc": "2026-06-21T15:42:13.597Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/b15acc09-dd32-4e93-a788-7c0ae965a0c8?format=image&version=art_crop"
+  },
+  {
+    "id": "M3AjVK",
+    "publicId": "pIiXwR9aKU242cIMCAOCDg",
+    "name": "[26-06-20] Rank 05/08 Spider-Man 2099",
+    "url": "https://moxfield.com/decks/pIiXwR9aKU242cIMCAOCDg",
+    "commanderName": "Spider-Man 2099",
+    "updatedAtUtc": "2026-06-21T15:34:24.333Z",
+    "createdAtUtc": "2026-06-21T15:34:24.267Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/2a72c7e7-34f5-4cb0-9959-35516e398e49?format=image&version=art_crop"
+  },
+  {
+    "id": "pJ0Vpq",
+    "publicId": "7Lf0qFWvO0Cw_g1nU3KV5Q",
+    "name": "[26-06-20] Rank 06/08 Tivit, Seller of Secrets",
+    "url": "https://moxfield.com/decks/7Lf0qFWvO0Cw_g1nU3KV5Q",
+    "commanderName": "Tivit, Seller of Secrets",
+    "updatedAtUtc": "2026-06-21T15:33:12.037Z",
+    "createdAtUtc": "2026-06-21T15:33:11.963Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/9235977e-a999-4ed0-83a3-742be87b13bb?format=image&version=art_crop"
+  },
+  {
     "id": "ozKvMZ",
     "publicId": "T2R763SdOk-mfw6tzduc9Q",
     "name": "[PRIMER] Toph, Greatest Earthbender (stantuffodado88)",
@@ -20,93 +108,5 @@
     "createdAtUtc": "2026-05-18T14:13:04.600Z",
     "format": "duelCommander",
     "previewImageUrl": "https://api.scryfall.com/cards/7f7e780e-fbc5-4dc0-b5c7-efcb8645c7c6?format=image&version=art_crop"
-  },
-  {
-    "id": "QjgaQ2",
-    "publicId": "Mp6eAaC8CXqNN4mtnrBduw",
-    "name": "[26-06-06] Rank 07/28 {DC} The Greatful Deadpool 💀 (Sancho182)",
-    "url": "https://moxfield.com/decks/Mp6eAaC8CXqNN4mtnrBduw",
-    "commanderName": "Deadpool, Trading Card",
-    "updatedAtUtc": "2026-06-08T10:49:41.507Z",
-    "createdAtUtc": "2026-06-06T18:29:45.760Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/3a14d6c5-cfd1-4860-834a-5a0dc9df0320?format=image&version=art_crop"
-  },
-  {
-    "id": "rPwRvZ",
-    "publicId": "WwtDbI_r9E-5biXoGs9BEQ",
-    "name": "[26-06-06] Rank 01/28 Tivit, Seller of Secrets ",
-    "url": "https://moxfield.com/decks/WwtDbI_r9E-5biXoGs9BEQ",
-    "commanderName": "Tivit, Seller of Secrets",
-    "updatedAtUtc": "2026-06-08T10:47:59.867Z",
-    "createdAtUtc": "2026-06-07T17:58:33.187Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/9235977e-a999-4ed0-83a3-742be87b13bb?format=image&version=art_crop"
-  },
-  {
-    "id": "3jmpyl",
-    "publicId": "SJ6eARVJPXejo2Z7-iDAIA",
-    "name": "[26-06-06] Rank 08/28 Acererak, the Archlich (Ronnol0)",
-    "url": "https://moxfield.com/decks/SJ6eARVJPXejo2Z7-iDAIA",
-    "commanderName": "Acererak the Archlich",
-    "updatedAtUtc": "2026-06-08T10:37:32.003Z",
-    "createdAtUtc": "2026-06-06T18:53:17.973Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/cdfd08aa-0e6b-42e1-aa4a-a2bd09581a70?format=image&version=art_crop"
-  },
-  {
-    "id": "pJw1pq",
-    "publicId": "3qCeAf-g5nOeEw8CR_FBdw",
-    "name": "[26-06-06] Rank 06/28 Al Vulpon (Andredax)",
-    "url": "https://moxfield.com/decks/3qCeAf-g5nOeEw8CR_FBdw",
-    "commanderName": "Light-Paws, Emperor's Voice",
-    "updatedAtUtc": "2026-06-08T10:37:21.070Z",
-    "createdAtUtc": "2026-06-07T06:56:45.310Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/39555a72-a57b-45ee-9222-ce3b9e8de126?format=image&version=art_crop"
-  },
-  {
-    "id": "4z1yD6",
-    "publicId": "HJ6eAcs5bnWMqrYzBhphGQ",
-    "name": "[26-06-06] Rank 05/28 [DC] Deadpool, Trading Card (jacopo_ghezzi)",
-    "url": "https://moxfield.com/decks/HJ6eAcs5bnWMqrYzBhphGQ",
-    "commanderName": "Deadpool, Trading Card",
-    "updatedAtUtc": "2026-06-08T10:37:19.660Z",
-    "createdAtUtc": "2026-06-06T18:05:10.477Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/3a14d6c5-cfd1-4860-834a-5a0dc9df0320?format=image&version=art_crop"
-  },
-  {
-    "id": "KlO2jz",
-    "publicId": "M56eAeRMXHWx-dnI-A0_5w",
-    "name": "[26-06-06] Rank 04/28 Toph (Akuma86)",
-    "url": "https://moxfield.com/decks/M56eAeRMXHWx-dnI-A0_5w",
-    "commanderName": "Toph, Greatest Earthbender",
-    "updatedAtUtc": "2026-06-08T10:37:18.000Z",
-    "createdAtUtc": "2026-06-06T18:30:22.693Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/b15acc09-dd32-4e93-a788-7c0ae965a0c8?format=image&version=art_crop"
-  },
-  {
-    "id": "AqM2KJ",
-    "publicId": "Mp6eAc415Ha0qaiSDlWfHA",
-    "name": "[26-06-06] Rank 03/28 Najeela Good Stuff (Marinels)",
-    "url": "https://moxfield.com/decks/Mp6eAc415Ha0qaiSDlWfHA",
-    "commanderName": "Najeela, the Blade-Blossom",
-    "updatedAtUtc": "2026-06-08T10:37:16.507Z",
-    "createdAtUtc": "2026-06-06T18:29:11.247Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/08eb1bef-b00d-490b-a631-2849e0d1fd8e?format=image&version=art_crop"
-  },
-  {
-    "id": "5j1WOb",
-    "publicId": "Gp6eAUaN1XWPihBP4amDkA",
-    "name": "[26-06-06] Rank 02/28 DC - Phlage (duplicated from michele__f)",
-    "url": "https://moxfield.com/decks/Gp6eAUaN1XWPihBP4amDkA",
-    "commanderName": "Phlage, Titan of Fire's Fury",
-    "updatedAtUtc": "2026-06-08T10:37:14.497Z",
-    "createdAtUtc": "2026-06-06T18:03:20.773Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/e419cd0b-2449-4cc5-9ead-b9e45e271700?format=image&version=art_crop"
   }
 ]
