@@ -1,25 +1,14 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-YHHSDZM0SD"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-
-    gtag('config', 'G-YHHSDZM0SD');
-  </script>
   <meta charset="UTF-8">
-  <title>Duel Commander Piacenza</title>
+  <title>Commander - Duel Commander Piacenza</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="view-transition" content="same-origin">
-
   <link rel="icon" type="image/png" href="dc_pc.png">
   <link rel="stylesheet" href="styles.css">
 </head>
-
-<body data-active-nav="current">
+<body data-active-nav="commanders">
 
 <header class="site-header">
   <a class="site-header-brand" href="index.html">
@@ -40,15 +29,31 @@
   </div>
 </nav>
 
-<main class="page-main">
-  <div class="page-heading">
-    <h1>Lega in corso</h1>
-  </div>
-  <p class="page-subtitle">La lega attualmente in corso per la community Duel Commander Piacenza.</p>
+<main class="page-main" id="commander-content">
+  <a class="breadcrumb-link" href="commanders.html">&larr; Tutti i comandanti</a>
 
-  <div id="current-league-content">
-    <p class="page-loading">Caricamento...</p>
+  <div class="page-heading">
+    <h1 id="commander-title">Caricamento...</h1>
   </div>
+
+  <h2>Winrate</h2>
+  <div class="filter-bar">
+    <div class="field">
+      <label for="commander-league-filter">Lega</label>
+      <select id="commander-league-filter"><option value="">Tutte le leghe</option></select>
+    </div>
+    <div class="field">
+      <label for="commander-event-filter">Evento</label>
+      <select id="commander-event-filter"><option value="">Tutti gli eventi</option></select>
+    </div>
+  </div>
+  <div id="commander-winrate" class="stat-grid page-loading">Caricamento...</div>
+
+  <h2 style="margin-top:28px;">Giocatori</h2>
+  <div id="commander-players" class="page-loading">Caricamento...</div>
+
+  <h2 style="margin-top:28px;">Storico partite</h2>
+  <div id="commander-matches" class="page-loading">Caricamento...</div>
 </main>
 
 <footer>
@@ -63,7 +68,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script type="module" src="js/layout.js"></script>
-<script type="module" src="js/home.js"></script>
+<script type="module" src="js/commander-detail.js"></script>
 
 </body>
 </html>

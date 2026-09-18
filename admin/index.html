@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - Duel Commander Piacenza</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/png" href="../dc_pc.png">
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<header class="site-header">
+  <a class="site-header-brand" href="index.html">
+    <img src="../dc_pc.png" alt="" class="site-logo-sm">
+    <span>Duel Commander Piacenza &mdash; Admin</span>
+  </a>
+</header>
+
+<div id="login-view" class="login-wrap">
+  <div class="login-card">
+    <img src="../dc_pc.png" alt="">
+    <h1>Area riservata</h1>
+    <p class="hint">Accesso limitato agli amministratori del club.</p>
+    <form id="login-form">
+      <div class="field">
+        <label for="login-email">Email</label>
+        <input type="email" id="login-email" required autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="login-password">Password</label>
+        <input type="password" id="login-password" required autocomplete="current-password">
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn-primary" style="width:100%;">Accedi</button>
+      </div>
+      <p id="login-error" class="form-message is-error"></p>
+    </form>
+  </div>
+</div>
+
+<div id="admin-view" class="admin-shell" hidden>
+  <div class="admin-topbar">
+    <h1 style="margin:0;font-size:1.4rem;">Gestione dati</h1>
+    <div>
+      <span class="whoami" id="whoami"></span>
+      <button type="button" class="btn-secondary" id="logout-btn" style="margin-left:10px;">Esci</button>
+    </div>
+  </div>
+
+  <div class="admin-tabs">
+    <button type="button" class="admin-tab" data-tab="players">Giocatori</button>
+    <button type="button" class="admin-tab" data-tab="commanders">Comandanti</button>
+    <button type="button" class="admin-tab" data-tab="leagues">Leghe</button>
+  </div>
+
+  <!-- Giocatori: piatto, sempre modificabile -->
+  <section class="admin-panel" id="panel-players">
+    <div class="admin-panel-layout">
+      <div class="admin-form-card">
+        <h3>Nuovo / modifica giocatore</h3>
+        <form id="players-admin-form">
+          <input type="hidden" id="players-admin-id">
+          <div class="field">
+            <label for="players-admin-name">Nome</label>
+            <input type="text" id="players-admin-name" required>
+          </div>
+          <div class="field">
+            <label for="players-admin-handle">Handle (per omonimi)</label>
+            <input type="text" id="players-admin-handle" placeholder="es. tag Discord, soprannome">
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Salva</button>
+            <button type="button" class="btn-secondary" id="players-admin-cancel">Annulla</button>
+          </div>
+          <p class="form-message" id="players-admin-message"></p>
+        </form>
+      </div>
+      <div id="players-admin-list"><p class="page-loading">Caricamento...</p></div>
+    </div>
+  </section>
+
+  <!-- Comandanti: piatto, sempre modificabile -->
+  <section class="admin-panel" id="panel-commanders">
+    <div class="admin-panel-layout">
+      <div class="admin-form-card">
+        <h3>Nuovo / modifica comandante</h3>
+        <form id="commanders-admin-form">
+          <input type="hidden" id="commanders-admin-id">
+          <div class="field">
+            <label for="commanders-admin-name">Nome</label>
+            <input type="text" id="commanders-admin-name" required>
+          </div>
+          <div class="field">
+            <label>Identit&agrave; di colore</label>
+            <div class="checkbox-row">
+              <label><input type="checkbox" name="commanders-admin-color" value="W"> Bianco</label>
+              <label><input type="checkbox" name="commanders-admin-color" value="U"> Blu</label>
+              <label><input type="checkbox" name="commanders-admin-color" value="B"> Nero</label>
+              <label><input type="checkbox" name="commanders-admin-color" value="R"> Rosso</label>
+              <label><input type="checkbox" name="commanders-admin-color" value="G"> Verde</label>
+              <label><input type="checkbox" id="commanders-admin-colorless"> Incolore</label>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Salva</button>
+            <button type="button" class="btn-secondary" id="commanders-admin-cancel">Annulla</button>
+          </div>
+          <p class="form-message" id="commanders-admin-message"></p>
+        </form>
+      </div>
+      <div id="commanders-admin-list"><p class="page-loading">Caricamento...</p></div>
+    </div>
+  </section>
+
+  <!-- Leghe: piramide di drill-down — lega -> eventi -> iscritti/partite -->
+  <section class="admin-panel" id="panel-leagues">
+
+    <!-- Livello 1: tutte le leghe -->
+    <div class="admin-subview" id="subview-leagues-list">
+      <div class="admin-panel-layout">
+        <div class="admin-form-card">
+          <h3>Nuova / modifica lega</h3>
+          <form id="leagues-admin-form">
+            <input type="hidden" id="leagues-admin-id">
+            <div class="field">
+              <label for="leagues-admin-name">Nome</label>
+              <input type="text" id="leagues-admin-name" required>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn-primary">Salva</button>
+              <button type="button" class="btn-secondary" id="leagues-admin-cancel">Annulla</button>
+            </div>
+            <p class="form-message" id="leagues-admin-message"></p>
+          </form>
+        </div>
+        <div id="leagues-admin-list"><p class="page-loading">Caricamento...</p></div>
+      </div>
+    </div>
+
+    <!-- Livello 2: eventi di una lega -->
+    <div class="admin-subview" id="subview-league-detail" hidden>
+      <a href="#" class="breadcrumb-link" id="league-detail-back">&larr; Tutte le leghe</a>
+      <h3 id="league-detail-title" style="margin-top:0;"></h3>
+      <div class="admin-panel-layout">
+        <div class="admin-form-card">
+          <h3>Nuovo / modifica evento</h3>
+          <form id="events-admin-form">
+            <input type="hidden" id="events-admin-id">
+            <div class="field">
+              <label for="events-admin-name">Nome</label>
+              <input type="text" id="events-admin-name" required>
+            </div>
+            <div class="field">
+              <label for="events-admin-date">Data</label>
+              <input type="date" id="events-admin-date">
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn-primary">Salva</button>
+              <button type="button" class="btn-secondary" id="events-admin-cancel">Annulla</button>
+            </div>
+            <p class="form-message" id="events-admin-message"></p>
+          </form>
+        </div>
+        <div id="events-admin-list"><p class="page-loading">Caricamento...</p></div>
+      </div>
+    </div>
+
+    <!-- Livello 3: iscritti di un evento -->
+    <div class="admin-subview" id="subview-event-detail" hidden>
+      <a href="#" class="breadcrumb-link" id="event-detail-back">&larr; Torna agli eventi</a>
+      <div class="page-heading">
+        <h3 id="event-detail-title" style="margin-top:0;"></h3>
+        <button type="button" class="btn-secondary" id="open-matches-btn">Gestisci partite &rarr;</button>
+      </div>
+
+      <h4>Iscritti</h4>
+      <p class="page-subtitle">I punti bonus di lega sono opzionali e servono solo per aggiustamenti eccezionali (es. un bonus di un torneo speciale non coperto dalle regole standard).</p>
+      <div class="admin-panel-layout">
+        <div class="admin-form-card">
+          <h3>Nuovo / modifica iscritto</h3>
+          <form id="entries-admin-form">
+            <input type="hidden" id="entries-admin-id">
+            <div class="field">
+              <label for="entries-admin-player">Giocatore</label>
+              <select id="entries-admin-player" required></select>
+            </div>
+            <div class="field">
+              <label for="entries-admin-commander">Commander</label>
+              <select id="entries-admin-commander" required></select>
+            </div>
+            <div class="field">
+              <label for="entries-admin-archetype">Archetipo</label>
+              <select id="entries-admin-archetype" required>
+                <option value="aggro">Aggro</option>
+                <option value="control">Control</option>
+                <option value="combo">Combo</option>
+                <option value="tempo">Tempo</option>
+                <option value="midrange">Midrange</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="entries-admin-bonus">Punti bonus di lega</label>
+              <input type="number" id="entries-admin-bonus" value="0" step="1">
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn-primary">Salva</button>
+              <button type="button" class="btn-secondary" id="entries-admin-cancel">Annulla</button>
+            </div>
+            <p class="form-message" id="entries-admin-message"></p>
+          </form>
+        </div>
+        <div id="entries-admin-list"><p class="page-empty">Nessun iscritto ancora.</p></div>
+      </div>
+    </div>
+
+    <!-- Livello 4: partite, divise in tab per turno, di un evento -->
+    <div class="admin-subview" id="subview-matches-detail" hidden>
+      <a href="#" class="breadcrumb-link" id="matches-detail-back">&larr; Torna agli iscritti</a>
+      <h3 id="matches-detail-title" style="margin-top:0;"></h3>
+
+      <div class="round-tabs" id="matches-round-tabs"></div>
+
+      <div class="admin-panel-layout">
+        <div class="admin-form-card">
+          <h3>Nuova / modifica partita</h3>
+          <form id="matches-admin-form">
+            <input type="hidden" id="matches-admin-id">
+            <div class="field">
+              <label for="matches-admin-player1">Giocatore 1</label>
+              <select id="matches-admin-player1" required></select>
+            </div>
+            <div class="field">
+              <label for="matches-admin-player2">Giocatore 2</label>
+              <select id="matches-admin-player2" required></select>
+            </div>
+            <div class="score-input-row">
+              <div class="field">
+                <label for="matches-admin-p1wins">Vittorie G1</label>
+                <input type="number" id="matches-admin-p1wins" min="0" max="3" step="1" value="0" required>
+              </div>
+              <div class="field">
+                <label for="matches-admin-draws">Pareggi</label>
+                <input type="number" id="matches-admin-draws" min="0" max="3" step="1" value="0" required>
+              </div>
+              <div class="field">
+                <label for="matches-admin-p2wins">Vittorie G2</label>
+                <input type="number" id="matches-admin-p2wins" min="0" max="3" step="1" value="0" required>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn-primary">Salva</button>
+              <button type="button" class="btn-secondary" id="matches-admin-cancel">Annulla</button>
+            </div>
+            <p class="form-message" id="matches-admin-message"></p>
+          </form>
+        </div>
+        <div id="matches-admin-list"><p class="page-empty">Nessuna partita ancora.</p></div>
+      </div>
+    </div>
+
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script type="module" src="js/app.js"></script>
+
+</body>
+</html>

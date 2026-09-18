@@ -1,0 +1,144 @@
+-- Duel Commander Piacenza — events & leagues tracker
+-- Run this in the Supabase SQL editor for your project.
+-- This file is checked into the repo as documentation of the DB schema;
+-- it is NOT auto-deployed by anything.
+--
+-- This version replaces the earlier schema: the standalone "decks" catalog
+-- is gone (a deck is now just "player + commander + archetype" recorded
+-- directly on the entry), events now always belong to exactly one league,
+-- an event's name only needs to be unique within its own league, and a
+-- match now records a best-of-3 game score (player1_wins/draws/player2_wins)
+-- instead of a single win/loss/draw result.
+-- Re-running this drops and recreates every table, so it wipes existing
+-- rows — expected while there's only test data.
+
+create extension if not exists pgcrypto;
+
+drop table if exists matches cascade;
+drop table if exists event_entries cascade;
+drop table if exists decks cascade;
+drop table if exists events cascade;
+drop table if exists leagues cascade;
+drop table if exists players cascade;
+drop table if exists commanders cascade;
+drop type if exists deck_archetype;
+drop type if exists match_result;
+
+create type deck_archetype as enum ('aggro', 'control', 'combo', 'tempo', 'midrange');
+
+-- ---------------------------------------------------------------------------
+-- Tables
+-- ---------------------------------------------------------------------------
+
+create table commanders (
+  id uuid primary key default gen_random_uuid(),
+  name text not null unique,
+  color_identity text not null default '', -- subset of the letters W U B R G, e.g. "BR"
+  created_at timestamptz not null default now()
+);
+
+create table players (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,      -- duplicates allowed (homonyms)
+  handle text,              -- optional disambiguator shown next to the name when it collides
+  created_at timestamptz not null default now()
+);
+
+create table leagues (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  is_open boolean not null default true, -- true while ongoing; the "current" league shown on the homepage
+  created_at timestamptz not null default now()
+);
+
+create table events (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  event_date date,
+  league_id uuid not null references leagues(id) on delete cascade, -- every event belongs to exactly one league
+  rounds integer not null default 1, -- number of turns/rounds, set manually by the admin
+  is_open boolean not null default true, -- while open, the event's data is admin-only; closing it publishes it
+  created_at timestamptz not null default now(),
+  constraint events_unique_name_per_league unique (league_id, name) -- same name OK across leagues, not within one
+);
+
+create table event_entries ( -- a player's commander + archetype for one event
+  id uuid primary key default gen_random_uuid(),
+  event_id uuid not null references events(id) on delete cascade,
+  player_id uuid not null references players(id) on delete restrict,
+  commander_id uuid not null references commanders(id) on delete restrict,
+  archetype deck_archetype not null,
+  bonus_points integer not null default 0, -- manual one-off league-point adjustment (e.g. a special-tournament bonus)
+  created_at timestamptz not null default now(),
+  constraint event_entries_one_per_player unique (event_id, player_id)
+);
+
+create table matches ( -- one round pairing between two players, scored as a best-of-3 game count
+  id uuid primary key default gen_random_uuid(),
+  event_id uuid not null references events(id) on delete cascade,
+  round integer not null default 1,
+  player1_id uuid not null,
+  player2_id uuid not null,
+  player1_wins integer not null default 0,
+  draws integer not null default 0,
+  player2_wins integer not null default 0,
+  created_at timestamptz not null default now(),
+  constraint matches_player1_id_fkey foreign key (player1_id) references players(id) on delete restrict,
+  constraint matches_player2_id_fkey foreign key (player2_id) references players(id) on delete restrict,
+  constraint matches_players_distinct check (player1_id <> player2_id),
+  constraint matches_score_valid check (
+    player1_wins >= 0 and draws >= 0 and player2_wins >= 0
+    and (player1_wins + draws + player2_wins) between 1 and 3
+  )
+);
+
+create index events_league_id_idx on events (league_id);
+create index event_entries_event_id_idx on event_entries (event_id);
+create index event_entries_commander_id_idx on event_entries (commander_id);
+create index matches_event_id_idx on matches (event_id);
+
+-- ---------------------------------------------------------------------------
+-- Row Level Security: public read (with the open/closed publishing rule
+-- below), admin-only write. "authenticated" = signed in via Supabase Auth.
+-- Public sign-up must be disabled in the Supabase dashboard (Authentication
+-- > Providers > Email) so only the manually-created admin account(s) can
+-- ever be "authenticated".
+--
+-- Publishing rule: a league is visible whether it's open or closed (an
+-- ongoing league still shows on the public site). An *event*'s data
+-- (its entries and matches) is only visible to anonymous visitors once the
+-- event itself is closed — admins (authenticated) always see everything,
+-- open or closed, so they can keep editing it before publishing.
+-- ---------------------------------------------------------------------------
+
+do $$
+declare
+  t text;
+begin
+  foreach t in array array['commanders', 'players', 'leagues', 'events', 'event_entries', 'matches']
+  loop
+    execute format('alter table %I enable row level security;', t);
+    execute format('create policy "%I_admin_insert" on %I for insert with check (auth.role() = ''authenticated'');', t, t);
+    execute format('create policy "%I_admin_update" on %I for update using (auth.role() = ''authenticated'');', t, t);
+    execute format('create policy "%I_admin_delete" on %I for delete using (auth.role() = ''authenticated'');', t, t);
+  end loop;
+end $$;
+
+create policy "commanders_public_read" on commanders for select using (true);
+create policy "players_public_read" on players for select using (true);
+create policy "leagues_public_read" on leagues for select using (true);
+
+create policy "events_public_read" on events for select
+  using (is_open = false or auth.role() = 'authenticated');
+
+create policy "event_entries_public_read" on event_entries for select
+  using (
+    auth.role() = 'authenticated'
+    or exists (select 1 from events e where e.id = event_entries.event_id and e.is_open = false)
+  );
+
+create policy "matches_public_read" on matches for select
+  using (
+    auth.role() = 'authenticated'
+    or exists (select 1 from events e where e.id = matches.event_id and e.is_open = false)
+  );
