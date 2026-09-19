@@ -1,4 +1,5 @@
 import { getSession, signIn, signOut, onAuthChange } from "./auth.js";
+import { setupThemeToggle } from "../../js/theme.js";
 import { initPlayersAdmin } from "./players-admin.js";
 import { initCommandersAdmin } from "./commanders-admin.js";
 import { initLeaguesAdmin } from "./leagues-admin.js";
@@ -188,3 +189,5 @@ getSession().then((session) => {
   if (session) showAdmin(session);
   else showLogin();
 });
+
+setupThemeToggle();

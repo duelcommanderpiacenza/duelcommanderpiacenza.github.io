@@ -305,3 +305,19 @@
     min-width: 90px;
   }
 }
+
+/* Admin has no public-style footer (its chrome is deliberately minimal) —
+   just a thin bar to hold the theme toggle, always visible regardless of
+   login state since it's outside both #login-view and #admin-view. */
+.admin-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 14px 20px;
+}
+
+:root[data-theme="dark"] .login-card,
+:root[data-theme="dark"] .admin-form-card,
+:root[data-theme="dark"] .admin-tab,
+:root[data-theme="dark"] .round-tab {
+  background: rgba(255, 255, 255, 0.05);
+}

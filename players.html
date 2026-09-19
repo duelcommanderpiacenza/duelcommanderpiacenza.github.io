@@ -2,6 +2,17 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (t !== "light" && t !== "dark") {
+          t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+        document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    })();
+  </script>
   <title>Giocatori - Duel Commander Piacenza</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="view-transition" content="same-origin">
@@ -45,13 +56,17 @@
 </main>
 
 <footer>
-  <div>&copy; 2026 Duel Commander Piacenza</div>
-  <div class="footer-credit">
-    Creato da Michele Ferri
-    <a href="https://www.instagram.com/michele__f/" target="_blank" rel="noopener noreferrer" aria-label="Instagram di Michele Ferri">
-      <img src="instagram.png" alt="Instagram" width="16" height="16">
-    </a>
+  <div class="footer-spacer" aria-hidden="true"></div>
+  <div class="footer-center">
+    <div>&copy; 2026 Duel Commander Piacenza</div>
+    <div class="footer-credit">
+      Creato da Michele Ferri
+      <a href="https://www.instagram.com/michele__f/" target="_blank" rel="noopener noreferrer" aria-label="Instagram di Michele Ferri">
+        <img src="instagram.png" alt="Instagram" width="16" height="16">
+      </a>
+    </div>
   </div>
+  <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="false" aria-label="Cambia tema"></button>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

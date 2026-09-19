@@ -12,6 +12,8 @@
 // couldn't participate in that cross-fade at all since it didn't exist yet
 // when the transition snapshot was taken.
 
+import { setupThemeToggle } from "./theme.js";
+
 const NAV_PILL_KEY = "navPillFrom";
 
 function placePill(pill, link, container, instant) {
@@ -108,3 +110,4 @@ function setupNavPill() {
 }
 
 setupNavPill();
+setupThemeToggle();

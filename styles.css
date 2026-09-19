@@ -736,14 +736,30 @@ main {
 
 footer {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 6px;
-  text-align: center;
+  justify-content: space-between;
+  gap: 12px;
   padding: 18px;
   background: rgba(245, 241, 240, 0.95);
   color: var(--text-muted-2);
   view-transition-name: site-footer;
+}
+
+/* Three-part bar: an invisible spacer the same width as the toggle keeps
+   the center block visually centered instead of drifting left once the
+   toggle occupies the right edge. */
+.footer-spacer {
+  width: 36px;
+  flex-shrink: 0;
+}
+
+.footer-center {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
 }
 
 .footer-credit {
@@ -1289,4 +1305,161 @@ table.data-table tbody tr:hover {
   table.data-table td {
     padding: 10px 10px;
   }
+}
+
+/* ==========================================================================
+   Dark mode — toggled by the switch in the footer (js/theme.js sets
+   <html data-theme="dark">, persisted in localStorage; a tiny inline script
+   in every page's <head> applies it before first paint to avoid a flash of
+   the wrong theme). The header keeps its exact red gradient in both themes
+   — that and the brand red used on solid blocks (buttons, the nav pill,
+   badges) are untouched here on purpose. Only the cream/white surfaces and
+   their text switch, plus the couple of red *text* colors (never used as a
+   background fill) that needed brightening to stay legible once the page
+   behind them goes dark. */
+
+:root[data-theme="dark"] {
+  /* Lets native controls we don't fully re-style ourselves — checkbox
+     ticks, date-picker popups, select dropdowns, scrollbars — draw with
+     dark chrome instead of staying light regardless of our own CSS. */
+  color-scheme: dark;
+
+  --bg-cream-1: #1b1315;
+  --bg-cream-2: #150f11;
+  --bg-cream-3: #120d0e;
+
+  --text-body: #ecdcdf;
+  --text-title: #fbf2f3;
+  --text-muted: #b0888f;
+  --text-muted-2: #9c7981;
+  --text-value: #ddc3c8;
+
+  --hairline: rgba(255, 255, 255, 0.1);
+  --hairline-hover: rgba(255, 110, 110, 0.32);
+  --hairline-hover-strong: rgba(255, 110, 110, 0.42);
+
+  --shadow-soft: 0 18px 42px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 12px 28px rgba(0, 0, 0, 0.4);
+  --shadow-card-hover: 0 18px 36px rgba(0, 0, 0, 0.5);
+  --shadow-pill: 0 18px 34px rgba(0, 0, 0, 0.45);
+
+  /* Pure text-role colors (never a solid background fill), so — unlike
+     --brand-red itself — safe and necessary to brighten for contrast. */
+  --brand-red-deep: #ff7a7e;
+  --brand-red-darker: #ff8489;
+}
+
+:root[data-theme="dark"] .site-nav {
+  background: rgba(20, 14, 16, 0.92);
+}
+
+:root[data-theme="dark"] .nav-link:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+:root[data-theme="dark"] footer {
+  background: #140f10;
+}
+
+/* Cards, tiles, tables, charts: the "white surface on a cream page" pieces
+   become a faint light-on-dark surface instead. */
+:root[data-theme="dark"] .card,
+:root[data-theme="dark"] .stat-tile,
+:root[data-theme="dark"] .entity-card,
+:root[data-theme="dark"] .data-table-wrap,
+:root[data-theme="dark"] .pie-chart-wrap,
+:root[data-theme="dark"] .deck,
+:root[data-theme="dark"] .video-card {
+  background: rgba(255, 255, 255, 0.045);
+}
+
+:root[data-theme="dark"] table.data-table th {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+:root[data-theme="dark"] table.data-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+:root[data-theme="dark"] .rank-cell,
+:root[data-theme="dark"] .stat-tile-value {
+  color: #ff6a6e;
+}
+
+:root[data-theme="dark"] .field input,
+:root[data-theme="dark"] .field select,
+:root[data-theme="dark"] .field textarea,
+:root[data-theme="dark"] .btn-secondary,
+:root[data-theme="dark"] .btn-danger,
+:root[data-theme="dark"] .expand-button,
+:root[data-theme="dark"] .section-link,
+:root[data-theme="dark"] .deck-filter,
+:root[data-theme="dark"] .video-filter,
+:root[data-theme="dark"] .social-strip,
+:root[data-theme="dark"] .social-link {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+:root[data-theme="dark"] .btn-secondary:hover,
+:root[data-theme="dark"] .btn-danger:hover,
+:root[data-theme="dark"] .expand-button:hover,
+:root[data-theme="dark"] .section-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme="dark"] .btn-danger,
+:root[data-theme="dark"] .form-message.is-error {
+  color: #ff8a80;
+}
+
+:root[data-theme="dark"] .deck-title,
+:root[data-theme="dark"] .video-title {
+  color: var(--text-title);
+}
+
+:root[data-theme="dark"] .deck-commander-label,
+:root[data-theme="dark"] .video-date {
+  color: var(--text-muted);
+}
+
+:root[data-theme="dark"] .deck-commander-value {
+  color: var(--text-value);
+}
+
+:root[data-theme="dark"] .color-pip {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+:root[data-theme="dark"] .color-swatch-colorless {
+  background: repeating-linear-gradient(45deg, #2a2224 0, #2a2224 5px, #362c2e 5px, #362c2e 10px);
+}
+
+/* Theme toggle switch — sits in the footer bar. A plain icon button rather
+   than a sliding track: it shows the icon for the theme a click would
+   switch *to*, so its own look doesn't need to itself be theme-aware. */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid var(--hairline);
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--text-body);
+  font-size: 16px;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
+}
+
+.theme-toggle:hover {
+  transform: translateY(-1px);
+  border-color: var(--hairline-hover);
+}
+
+:root[data-theme="dark"] .theme-toggle {
+  background: rgba(255, 255, 255, 0.08);
 }
