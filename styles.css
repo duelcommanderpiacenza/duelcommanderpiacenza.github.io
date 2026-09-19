@@ -141,6 +141,22 @@ a:hover {
   gap: 8px;
 }
 
+/* Below desktop width, seven tabs wrapping to two uneven lines looks messy —
+   a single horizontally-scrollable row (swipe on touch, drag-scroll with a
+   mouse) reads much cleaner and still reaches every tab. */
+@media (max-width: 900px) {
+  .site-nav-inner {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .nav-link {
+    flex-shrink: 0;
+  }
+}
+
 /* Absolutely-positioned pill that js/layout.js slides under the active
    nav-link. Positioned/sized in JS; only the motion is CSS. */
 .nav-pill {
@@ -909,11 +925,6 @@ footer {
   margin-bottom: 36px;
 }
 
-.league-group + .league-group {
-  padding-top: 28px;
-  border-top: 1px solid var(--hairline);
-}
-
 .league-group-title {
   display: flex;
   align-items: center;
@@ -1006,6 +1017,7 @@ table.data-table tbody tr:hover {
 
 .badge-status-open { background: var(--accent-green-2); }
 .badge-status-closed { background: var(--text-muted); }
+.badge-topdeck { background: var(--accent-blue-2); }
 
 .entity-card .badge-status {
   margin-top: 10px;
@@ -1100,6 +1112,27 @@ table.data-table tbody tr:hover {
   letter-spacing: 0.05em;
 }
 
+.checkbox-field {
+  margin-bottom: 14px;
+}
+
+.checkbox-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-body);
+  cursor: pointer;
+}
+
+.checkbox-inline input {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: var(--brand-red);
+}
+
 .field input,
 .field select,
 .field textarea {
@@ -1118,20 +1151,65 @@ table.data-table tbody tr:hover {
   border-color: var(--hairline-hover-strong);
 }
 
-.checkbox-row {
+/* Commander color-identity picker: a round WUBRG-colored swatch per option
+   instead of a checkbox + color name, sized as a comfortable touch target. */
+
+.color-swatch-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 12px;
 }
 
-.checkbox-row label {
-  display: inline-flex;
+.color-swatch {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+}
+
+.color-swatch:hover {
+  transform: translateY(-2px);
+}
+
+.color-swatch input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.color-swatch:has(input:checked) {
+  border-color: var(--brand-red);
+  box-shadow: 0 0 0 3px rgba(220, 24, 28, 0.25);
+  transform: scale(1.08);
+}
+
+.color-swatch:has(input:checked)::after {
+  content: "\2713";
+  position: absolute;
+  inset: 0;
+  display: flex;
   align-items: center;
-  gap: 6px;
-  font-weight: 700;
-  color: var(--text-body);
-  text-transform: none;
-  font-size: 0.9rem;
+  justify-content: center;
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+
+.color-swatch-W { background: #f8f6d8; }
+.color-swatch-U { background: #0e68ab; }
+.color-swatch-B { background: #3a3a3a; }
+.color-swatch-R { background: #d3202a; }
+.color-swatch-G { background: #00733e; }
+
+.color-swatch-colorless {
+  background: repeating-linear-gradient(45deg, #ddd 0, #ddd 5px, #eee 5px, #eee 10px);
 }
 
 .form-actions {

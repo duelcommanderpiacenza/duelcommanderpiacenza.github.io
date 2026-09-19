@@ -1,8 +1,8 @@
 import { Commanders, EventEntries, Matches } from "./db.js";
-import { matchRoundOutcome } from "./leaderboard.js";
+import { matchRoundOutcome, isBye } from "./leaderboard.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { tallyOutcome, renderWinrateTiles } from "./winrate.js";
-import { escapeHtml, playerLabel, commanderLabel, colorIdentityPips, showError } from "./ui.js";
+import { escapeHtml, playerLabel, commanderLabel, commanderPairLabel, colorIdentityPips, showError } from "./ui.js";
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
@@ -48,8 +48,15 @@ async function init() {
       return;
     }
 
-    const playedKeys = new Set(playedEntries.map((e) => `${e.event_id}_${e.player_id}`));
+    const playedEntryByKey = new Map(playedEntries.map((e) => [`${e.event_id}_${e.player_id}`, e]));
     const eventIds = [...new Set(playedEntries.map((e) => e.event_id))];
+
+    // The other commander in this commander's own entry (its partner, if it
+    // was the primary, or the primary, if it was the partner) — null if solo.
+    function pairedWith(entry) {
+      if (!entry) return null;
+      return entry.commander?.id === id ? entry.partner_commander ?? null : entry.commander ?? null;
+    }
 
     const [allEntries, matches] = await Promise.all([
       EventEntries.listByEvents(eventIds),
@@ -71,26 +78,35 @@ async function init() {
     // mirror match (both sides on this commander) legitimately yields two rows.
     const rows = [];
     for (const m of matches) {
-      if (playedKeys.has(`${m.event_id}_${m.player1_id}`)) {
+      const selfEntry1 = playedEntryByKey.get(`${m.event_id}_${m.player1_id}`);
+      if (selfEntry1) {
         const oppEntry = entryByKey.get(`${m.event_id}_${m.player2_id}`);
         rows.push({
           event: m.event,
           self: m.player1,
+          pairedWith: pairedWith(selfEntry1),
           opponent: m.player2,
+          isBye: isBye(m),
           outcome: outcomeFor(m, true),
-          scoreLabel: selfScoreLabel(m, true),
+          scoreLabel: isBye(m) ? "Bye" : selfScoreLabel(m, true),
           oppCommander: oppEntry?.commander ?? null,
+          oppPartner: oppEntry?.partner_commander ?? null,
         });
       }
-      if (playedKeys.has(`${m.event_id}_${m.player2_id}`)) {
+      // player2_id is null for a bye, so this lookup naturally never matches
+      // one — a bye can only ever be "self as player1" above.
+      const selfEntry2 = playedEntryByKey.get(`${m.event_id}_${m.player2_id}`);
+      if (selfEntry2) {
         const oppEntry = entryByKey.get(`${m.event_id}_${m.player1_id}`);
         rows.push({
           event: m.event,
           self: m.player2,
+          pairedWith: pairedWith(selfEntry2),
           opponent: m.player1,
           outcome: outcomeFor(m, false),
           scoreLabel: selfScoreLabel(m, false),
           oppCommander: oppEntry?.commander ?? null,
+          oppPartner: oppEntry?.partner_commander ?? null,
         });
       }
     }
@@ -99,16 +115,17 @@ async function init() {
       rows.length === 0
         ? '<p class="page-empty">Nessuna partita registrata.</p>'
         : `<div class="data-table-wrap"><table class="data-table">
-            <thead><tr><th>Giocatore</th><th>Evento</th><th>Avversario</th><th>Commander avversario</th><th>Risultato</th></tr></thead>
+            <thead><tr><th>Evento</th><th>Giocatore</th><th>Commander</th><th>Avversario</th><th>Commander avversario</th><th>Risultato</th></tr></thead>
             <tbody>
               ${rows
                 .map(
                   (r) => `
                 <tr>
-                  <td>${playerLabel(r.self)}</td>
                   <td>${r.event ? `<a href="event.html?id=${r.event.id}">${escapeHtml(r.event.name)}</a>` : "—"}</td>
-                  <td>${playerLabel(r.opponent)}</td>
-                  <td>${commanderLabel(r.oppCommander)}</td>
+                  <td>${playerLabel(r.self)}</td>
+                  <td>${commanderLabel(r.pairedWith)}</td>
+                  <td>${r.isBye ? "Bye" : playerLabel(r.opponent)}</td>
+                  <td>${r.isBye ? "—" : commanderPairLabel(r.oppCommander, r.oppPartner)}</td>
                   <td>${r.scoreLabel}</td>
                 </tr>`
                 )
@@ -121,6 +138,9 @@ async function init() {
       const bucket = { wins: 0, draws: 0, losses: 0 };
       for (const r of rows) {
         if (r.event && !scoped.has(r.event.id)) continue;
+        // A bye is a free win for the player, not a "victory" for the
+        // commander — it never actually beat anything.
+        if (r.isBye) continue;
         tallyOutcome(bucket, r.outcome);
       }
       renderWinrateTiles(winrateEl, bucket);

@@ -1,13 +1,15 @@
 import { Players, EventEntries, Matches } from "./db.js";
-import { matchRoundOutcome } from "./leaderboard.js";
-import { escapeHtml, commanderLabel, colorIdentityPips, showError } from "./ui.js";
+import { matchRoundOutcome, isBye } from "./leaderboard.js";
+import { escapeHtml, commanderPairLabel, colorIdentityPips, showError } from "./ui.js";
 
+// Keyed by the commander+partner pair, not just the primary commander, so
+// "Thrasios / Tymna" and "Thrasios / Vial Smasher" count as different decks.
 function mostUsedCommander(entries) {
-  const counts = new Map(); // commanderId -> { commander, count }
+  const counts = new Map(); // "commanderId_partnerId" -> { commander, partner, count }
   for (const e of entries) {
     if (!e.commander) continue;
-    const key = e.commander.id;
-    if (!counts.has(key)) counts.set(key, { commander: e.commander, count: 0 });
+    const key = `${e.commander.id}_${e.partner_commander?.id ?? ""}`;
+    if (!counts.has(key)) counts.set(key, { commander: e.commander, partner: e.partner_commander ?? null, count: 0 });
     counts.get(key).count += 1;
   }
   let best = null;
@@ -16,11 +18,26 @@ function mostUsedCommander(entries) {
       best = v;
     }
   }
-  return best?.commander ?? null;
+  return best;
+}
+
+function renderRow(r) {
+  return `
+    <tr>
+      <td><a href="player.html?id=${r.id}">${r.nameHtml}</a></td>
+      <td>${r.eventsPlayed}</td>
+      <td>${r.wins}-${r.draws}-${r.losses}</td>
+      <td>${r.rate}</td>
+      <td>${r.topCommanderHtml}</td>
+    </tr>`;
 }
 
 async function init() {
   const listEl = document.getElementById("players-list");
+  const searchInput = document.getElementById("players-search");
+
+  let rows = [];
+
   try {
     const [players, entries, matches] = await Promise.all([Players.list(), EventEntries.listAll(), Matches.listAll()]);
 
@@ -42,6 +59,10 @@ async function init() {
     }
     for (const m of matches) {
       const r1 = ensureRecord(m.player1_id);
+      if (isBye(m)) {
+        r1.wins += 1;
+        continue;
+      }
       const r2 = ensureRecord(m.player2_id);
       const outcome = matchRoundOutcome(m);
       if (outcome === "player1") {
@@ -56,33 +77,48 @@ async function init() {
       }
     }
 
-    listEl.innerHTML = `<div class="data-table-wrap"><table class="data-table">
-      <thead><tr><th>Giocatore</th><th>Eventi</th><th>V-P-S</th><th>Winrate</th><th>Commander pi&ugrave; usato</th></tr></thead>
-      <tbody>
-        ${players
-          .map((p) => {
-            const playerEntries = entriesByPlayer.get(p.id) ?? [];
-            const eventsPlayed = new Set(playerEntries.map((e) => e.event_id)).size;
-            const record = recordByPlayer.get(p.id) ?? { wins: 0, draws: 0, losses: 0 };
-            const played = record.wins + record.draws + record.losses;
-            const rate = played > 0 ? `${((record.wins / played) * 100).toFixed(1)}%` : "—";
-            const name = p.handle ? `${escapeHtml(p.name)} (${escapeHtml(p.handle)})` : escapeHtml(p.name);
-            const topCommander = mostUsedCommander(playerEntries);
-            return `
-          <tr>
-            <td><a href="player.html?id=${p.id}">${name}</a></td>
-            <td>${eventsPlayed}</td>
-            <td>${record.wins}-${record.draws}-${record.losses}</td>
-            <td>${rate}</td>
-            <td>${topCommander ? `${commanderLabel(topCommander)} ${colorIdentityPips(topCommander.color_identity)}` : "—"}</td>
-          </tr>`;
-          })
-          .join("")}
-      </tbody>
-    </table></div>`;
+    rows = players.map((p) => {
+      const playerEntries = entriesByPlayer.get(p.id) ?? [];
+      const eventsPlayed = new Set(playerEntries.map((e) => e.event_id)).size;
+      const record = recordByPlayer.get(p.id) ?? { wins: 0, draws: 0, losses: 0 };
+      const played = record.wins + record.draws + record.losses;
+      const topCommander = mostUsedCommander(playerEntries);
+      return {
+        id: p.id,
+        searchText: `${p.name} ${p.handle ?? ""}`.toLowerCase(),
+        nameHtml: p.handle ? `${escapeHtml(p.name)} (${escapeHtml(p.handle)})` : escapeHtml(p.name),
+        eventsPlayed,
+        wins: record.wins,
+        draws: record.draws,
+        losses: record.losses,
+        rate: played > 0 ? `${((record.wins / played) * 100).toFixed(1)}%` : "—",
+        topCommanderHtml: topCommander
+          ? `${commanderPairLabel(topCommander.commander, topCommander.partner)} ${colorIdentityPips(
+              (topCommander.commander.color_identity ?? "") + (topCommander.partner?.color_identity ?? "")
+            )}`
+          : "—",
+      };
+    });
+
+    renderList();
   } catch (err) {
     showError(listEl, err);
+    return;
   }
+
+  function renderList() {
+    const term = searchInput.value.trim().toLowerCase();
+    const visible = term ? rows.filter((r) => r.searchText.includes(term)) : rows;
+    listEl.innerHTML =
+      visible.length === 0
+        ? '<p class="page-empty">Nessun giocatore corrisponde alla ricerca.</p>'
+        : `<div class="data-table-wrap"><table class="data-table">
+      <thead><tr><th>Giocatore</th><th>Eventi</th><th>V-P-S</th><th>Winrate</th><th>Commander pi&ugrave; usato</th></tr></thead>
+      <tbody>${visible.map(renderRow).join("")}</tbody>
+    </table></div>`;
+  }
+
+  searchInput.addEventListener("input", renderList);
 }
 
 init();

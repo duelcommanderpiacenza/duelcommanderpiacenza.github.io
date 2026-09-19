@@ -1,7 +1,7 @@
 import { Players, EventEntries, Matches } from "./db.js";
-import { matchRoundOutcome } from "./leaderboard.js";
+import { matchRoundOutcome, isBye } from "./leaderboard.js";
 import { tallyOutcome, renderWinrateTiles } from "./winrate.js";
-import { escapeHtml, playerLabel, commanderLabel, colorIdentityPips, showError } from "./ui.js";
+import { escapeHtml, playerLabel, commanderPairLabel, colorIdentityPips, showError } from "./ui.js";
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
@@ -41,11 +41,16 @@ async function init() {
     const entries = await EventEntries.listByPlayer(id);
 
     // Commander giocati: a plain, de-duplicated list — not split by event.
+    // Keyed by the commander+partner pair, so "X / Y" and "X / Z" both show.
     const uniqueCommanders = new Map();
     for (const e of entries) {
-      if (e.commander) uniqueCommanders.set(e.commander.id, e.commander);
+      if (!e.commander) continue;
+      const key = `${e.commander.id}_${e.partner_commander?.id ?? ""}`;
+      uniqueCommanders.set(key, { commander: e.commander, partner: e.partner_commander ?? null });
     }
-    const commanderList = Array.from(uniqueCommanders.values()).sort((a, b) => a.name.localeCompare(b.name));
+    const commanderList = Array.from(uniqueCommanders.values()).sort((a, b) =>
+      a.commander.name.localeCompare(b.commander.name)
+    );
     commandersEl.innerHTML =
       commanderList.length === 0
         ? '<p class="page-empty">Nessun dato registrato per questo giocatore.</p>'
@@ -53,7 +58,11 @@ async function init() {
             <thead><tr><th>Commander</th></tr></thead>
             <tbody>
               ${commanderList
-                .map((c) => `<tr><td>${commanderLabel(c)} ${colorIdentityPips(c.color_identity)}</td></tr>`)
+                .map(
+                  (c) => `<tr><td>${commanderPairLabel(c.commander, c.partner)} ${colorIdentityPips(
+                    (c.commander.color_identity ?? "") + (c.partner?.color_identity ?? "")
+                  )}</td></tr>`
+                )
                 .join("")}
             </tbody>
           </table></div>`;
@@ -75,19 +84,24 @@ async function init() {
       return {
         event: m.event,
         opponent,
+        isBye: isBye(m),
         outcome: matchOutcome(m, viewerIsP1),
-        scoreLabel: viewerScoreLabel(m, viewerIsP1),
+        scoreLabel: isBye(m) ? "Bye" : viewerScoreLabel(m, viewerIsP1),
         myCommander: myEntry?.commander ?? null,
+        myPartner: myEntry?.partner_commander ?? null,
         oppCommander: oppEntry?.commander ?? null,
+        oppPartner: oppEntry?.partner_commander ?? null,
       };
     });
 
     // Filters: the two dropdowns narrow the same rows already loaded above,
     // updating the winrate tiles in place instead of separate breakdown tables.
+    // The commander filter matches either seat (primary or partner).
     const commanderOptions = new Map();
     const leagueOptions = new Map();
     for (const r of rows) {
       if (r.myCommander) commanderOptions.set(r.myCommander.id, r.myCommander.name);
+      if (r.myPartner) commanderOptions.set(r.myPartner.id, r.myPartner.name);
       const league = r.event?.league;
       if (league) leagueOptions.set(league.id, league.name);
     }
@@ -109,7 +123,7 @@ async function init() {
       const leagueId = leagueFilter.value;
       const bucket = { wins: 0, draws: 0, losses: 0 };
       for (const r of rows) {
-        if (commanderId && r.myCommander?.id !== commanderId) continue;
+        if (commanderId && r.myCommander?.id !== commanderId && r.myPartner?.id !== commanderId) continue;
         if (leagueId && r.event?.league?.id !== leagueId) continue;
         tallyOutcome(bucket, r.outcome);
       }
@@ -123,16 +137,16 @@ async function init() {
       rows.length === 0
         ? '<p class="page-empty">Nessuna partita registrata.</p>'
         : `<div class="data-table-wrap"><table class="data-table">
-            <thead><tr><th>Evento</th><th>Avversario</th><th>Mio commander</th><th>Commander avversario</th><th>Risultato</th></tr></thead>
+            <thead><tr><th>Evento</th><th>Commander</th><th>Avversario</th><th>Commander avversario</th><th>Risultato</th></tr></thead>
             <tbody>
               ${rows
                 .map(
                   (r) => `
                 <tr>
                   <td>${r.event ? `<a href="event.html?id=${r.event.id}">${escapeHtml(r.event.name)}</a>` : "—"}</td>
-                  <td>${playerLabel(r.opponent)}</td>
-                  <td>${commanderLabel(r.myCommander)}</td>
-                  <td>${commanderLabel(r.oppCommander)}</td>
+                  <td>${commanderPairLabel(r.myCommander, r.myPartner)}</td>
+                  <td>${r.isBye ? "Bye" : playerLabel(r.opponent)}</td>
+                  <td>${r.isBye ? "—" : commanderPairLabel(r.oppCommander, r.oppPartner)}</td>
                   <td>${r.scoreLabel}</td>
                 </tr>`
                 )

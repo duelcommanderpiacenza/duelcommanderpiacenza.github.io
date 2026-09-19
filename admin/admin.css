@@ -72,6 +72,18 @@
   padding-bottom: 14px;
 }
 
+@media (max-width: 640px) {
+  .admin-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-tab {
+    flex-shrink: 0;
+  }
+}
+
 .admin-tab {
   border: 1px solid var(--hairline);
   background: #fff;
@@ -262,5 +274,34 @@
 @media (prefers-reduced-motion: reduce) {
   .subview-enter {
     animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-shell {
+    padding: 18px 14px 36px;
+  }
+
+  .admin-topbar h1 {
+    font-size: 1.15rem;
+  }
+
+  .login-card {
+    padding: 20px;
+  }
+
+  .round-tab,
+  .round-tab-add,
+  .admin-tab {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+
+  .score-input-row {
+    flex-wrap: wrap;
+  }
+
+  .score-input-row .field {
+    min-width: 90px;
   }
 }

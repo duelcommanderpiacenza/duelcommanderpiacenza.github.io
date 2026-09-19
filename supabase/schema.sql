@@ -5,10 +5,16 @@
 --
 -- This version replaces the earlier schema: the standalone "decks" catalog
 -- is gone (a deck is now just "player + commander + archetype" recorded
--- directly on the entry), events now always belong to exactly one league,
--- an event's name only needs to be unique within its own league, and a
--- match now records a best-of-3 game score (player1_wins/draws/player2_wins)
--- instead of a single win/loss/draw result.
+-- directly on the entry, with an optional partner/background commander), an
+-- event may belong to a league or stand alone (league_id nullable), an
+-- event's name only needs to be unique within its own league (or among
+-- standalone events), a match now records a best-of-3 game score
+-- (player1_wins/draws/player2_wins) instead of a single win/loss/draw result
+-- and can be a bye (player2_id null, an automatic win for player1), a league
+-- row can be flagged as a "Topdeck" series (is_topdeck) — the same shape,
+-- just without a points leaderboard, only one league/topdeck row can be
+-- open at a time, and an entry can carry a manual_rank tiebreak override for
+-- its event's standings.
 -- Re-running this drops and recreates every table, so it wipes existing
 -- rows — expected while there's only test data.
 
@@ -48,6 +54,8 @@ create table leagues (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   is_open boolean not null default true, -- true while ongoing; the "current" league shown on the homepage
+  is_topdeck boolean not null default false, -- a "Topdeck" series: same shape as a league (a bucket of
+    -- events), listed alongside leagues, but has no points leaderboard and never powers the homepage
   created_at timestamptz not null default now()
 );
 
@@ -55,21 +63,33 @@ create table events (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   event_date date,
-  league_id uuid not null references leagues(id) on delete cascade, -- every event belongs to exactly one league
+  league_id uuid references leagues(id) on delete cascade, -- null = standalone event, not part of any league
   rounds integer not null default 1, -- number of turns/rounds, set manually by the admin
   is_open boolean not null default true, -- while open, the event's data is admin-only; closing it publishes it
   created_at timestamptz not null default now(),
   constraint events_unique_name_per_league unique (league_id, name) -- same name OK across leagues, not within one
 );
 
-create table event_entries ( -- a player's commander + archetype for one event
+-- Postgres treats every NULL as distinct for a plain unique constraint, so
+-- events_unique_name_per_league above doesn't actually stop two standalone
+-- (league_id is null) events from sharing a name — this partial index covers
+-- that case specifically.
+create unique index events_unique_standalone_name on events (name) where league_id is null;
+
+create table event_entries ( -- a player's commander(s) + archetype for one event
   id uuid primary key default gen_random_uuid(),
   event_id uuid not null references events(id) on delete cascade,
   player_id uuid not null references players(id) on delete restrict,
-  commander_id uuid not null references commanders(id) on delete restrict,
+  commander_id uuid not null,
+  partner_commander_id uuid, -- optional partner/background commander; entry reads as "Commander / Partner"
   archetype deck_archetype not null,
   bonus_points integer not null default 0, -- manual one-off league-point adjustment (e.g. a special-tournament bonus)
+  manual_rank integer, -- admin override for this player's place within their tied-on-points group in the
+    -- event standings (lower = better); null everywhere the computed MTG tiebreakers are left as-is
   created_at timestamptz not null default now(),
+  constraint event_entries_commander_id_fkey foreign key (commander_id) references commanders(id) on delete restrict,
+  constraint event_entries_partner_commander_id_fkey foreign key (partner_commander_id) references commanders(id) on delete restrict,
+  constraint event_entries_partner_distinct check (partner_commander_id is null or partner_commander_id <> commander_id),
   constraint event_entries_one_per_player unique (event_id, player_id)
 );
 
@@ -78,7 +98,7 @@ create table matches ( -- one round pairing between two players, scored as a bes
   event_id uuid not null references events(id) on delete cascade,
   round integer not null default 1,
   player1_id uuid not null,
-  player2_id uuid not null,
+  player2_id uuid, -- null = a bye: player1 had no opponent this round and is scored an automatic win
   player1_wins integer not null default 0,
   draws integer not null default 0,
   player2_wins integer not null default 0,
@@ -92,9 +112,16 @@ create table matches ( -- one round pairing between two players, scored as a bes
   )
 );
 
+-- At most one league/topdeck row can have is_open = true at a time (a
+-- partial unique index on a column that's always true for the rows it
+-- covers means at most one such row can exist). The app closes every other
+-- row before opening one, but this is the actual guarantee.
+create unique index leagues_only_one_open_idx on leagues (is_open) where is_open;
+
 create index events_league_id_idx on events (league_id);
 create index event_entries_event_id_idx on event_entries (event_id);
 create index event_entries_commander_id_idx on event_entries (commander_id);
+create index event_entries_partner_commander_id_idx on event_entries (partner_commander_id);
 create index matches_event_id_idx on matches (event_id);
 
 -- ---------------------------------------------------------------------------

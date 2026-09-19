@@ -4,31 +4,52 @@
 const POINTS = { win: 3, draw: 1, loss: 0 };
 
 /**
+ * A bye: player1 had no opponent this round (an odd number of entrants) and
+ * is scored an automatic win, regardless of whatever placeholder score got
+ * saved alongside it.
+ */
+export function isBye(m) {
+  return m.player2_id == null;
+}
+
+/**
  * A match stores a best-of-3 game score (player1_wins/draws/player2_wins);
  * the round is won by whoever won more games, or a draw if tied (including
- * an all-draws score like 0-3-0).
+ * an all-draws score like 0-3-0). A bye is always a win for player1.
  * @returns {"player1"|"player2"|"draw"}
  */
 export function matchRoundOutcome(m) {
+  if (isBye(m)) return "player1";
   if (m.player1_wins > m.player2_wins) return "player1";
   if (m.player2_wins > m.player1_wins) return "player2";
   return "draw";
 }
 
+// Standard Magic tournament tiebreaker floor: a player's (or their
+// opponents') win percentage is never treated as less than this, so a
+// single bad round (or a weak opponent) doesn't disproportionately tank it.
+const MIN_WIN_PCT = 1 / 3;
+
 /**
- * Event leaderboard: fixed rule per spec — 3 pts win / 1 pt draw / 0 pt loss.
+ * Event leaderboard: 3 pts win / 1 pt draw / 0 pt loss, ties broken by the
+ * standard Magic tournament tiebreakers — opponents' match-win %, then own
+ * game-win %, then opponents' game-win % — with an optional per-entry
+ * manual_rank that overrides those computed tiebreakers when the admin has
+ * explicitly reordered a tie group (see admin/js/matches-admin.js).
  * @param {Array} matches - rows from `matches` for one event.
  * @param {Array} entries - rows from `event_entries` for the same event (with player/commander joined).
- * @returns {Array} standings sorted by points desc, then wins desc, then name.
+ * @returns {Array} standings sorted by points desc, then tiebreakers, then name.
  */
 export function computeEventLeaderboard(matches, entries) {
   const byPlayer = new Map();
 
   for (const entry of entries) {
     byPlayer.set(entry.player_id, {
+      entryId: entry.id,
       player: entry.player,
       commander: entry.commander,
       archetype: entry.archetype,
+      manualRank: entry.manual_rank ?? null,
       points: 0,
       wins: 0,
       draws: 0,
@@ -40,9 +61,11 @@ export function computeEventLeaderboard(matches, entries) {
   const ensure = (playerId, playerObj) => {
     if (!byPlayer.has(playerId)) {
       byPlayer.set(playerId, {
+        entryId: null,
         player: playerObj,
         commander: null,
         archetype: null,
+        manualRank: null,
         points: 0,
         wins: 0,
         draws: 0,
@@ -53,11 +76,31 @@ export function computeEventLeaderboard(matches, entries) {
     return byPlayer.get(playerId);
   };
 
+  // Matches involving each player, kept for the game-win% / opponents'
+  // win% tiebreakers below (a bye has no real opponent, so it's excluded
+  // from opponent-facing averages, but still counts for the player's own
+  // game-win% — a bye is treated as a clean 2-0 per the official rules).
+  const matchesByPlayer = new Map();
+  function trackMatch(playerId, m) {
+    if (!matchesByPlayer.has(playerId)) matchesByPlayer.set(playerId, []);
+    matchesByPlayer.get(playerId).push(m);
+  }
+
   for (const m of matches) {
     const p1 = ensure(m.player1_id, m.player1);
-    const p2 = ensure(m.player2_id, m.player2);
     p1.played += 1;
+    trackMatch(m.player1_id, m);
+
+    if (isBye(m)) {
+      // A bye has no opponent to credit/debit — it's a plain win for player1.
+      p1.points += POINTS.win;
+      p1.wins += 1;
+      continue;
+    }
+
+    const p2 = ensure(m.player2_id, m.player2);
     p2.played += 1;
+    trackMatch(m.player2_id, m);
 
     const outcome = matchRoundOutcome(m);
     if (outcome === "player1") {
@@ -76,9 +119,65 @@ export function computeEventLeaderboard(matches, entries) {
     }
   }
 
+  function matchWinPct(playerId) {
+    const row = byPlayer.get(playerId);
+    if (!row || row.played === 0) return MIN_WIN_PCT;
+    return Math.max(row.points / (row.played * POINTS.win), MIN_WIN_PCT);
+  }
+
+  function gameWinPct(playerId) {
+    const pMatches = matchesByPlayer.get(playerId) ?? [];
+    let won = 0;
+    let total = 0;
+    for (const m of pMatches) {
+      if (isBye(m)) {
+        won += 2;
+        total += 2;
+        continue;
+      }
+      const isP1 = m.player1_id === playerId;
+      won += isP1 ? m.player1_wins : m.player2_wins;
+      total += m.player1_wins + m.draws + m.player2_wins;
+    }
+    return total > 0 ? Math.max(won / total, MIN_WIN_PCT) : MIN_WIN_PCT;
+  }
+
+  function opponentIdsOf(playerId) {
+    const pMatches = matchesByPlayer.get(playerId) ?? [];
+    const opponents = [];
+    for (const m of pMatches) {
+      if (isBye(m)) continue;
+      const oppId = m.player1_id === playerId ? m.player2_id : m.player1_id;
+      if (oppId) opponents.push(oppId);
+    }
+    return opponents;
+  }
+
+  function average(ids, fn) {
+    return ids.length > 0 ? ids.reduce((sum, id) => sum + fn(id), 0) / ids.length : 0;
+  }
+
+  for (const row of byPlayer.values()) {
+    const id = row.player?.id;
+    const opponents = id ? opponentIdsOf(id) : [];
+    row.gameWinPct = id ? gameWinPct(id) : MIN_WIN_PCT;
+    row.opponentsMatchWinPct = average(opponents, matchWinPct);
+    row.opponentsGameWinPct = average(opponents, gameWinPct);
+  }
+
   return Array.from(byPlayer.values()).sort((a, b) => {
     if (b.points !== a.points) return b.points - a.points;
-    if (b.wins !== a.wins) return b.wins - a.wins;
+
+    // A manual override only settles ties among the entries the admin has
+    // actually assigned a rank to; anyone left unranked (Infinity) still
+    // sorts by the computed tiebreakers below, among themselves.
+    const aManual = a.manualRank ?? Infinity;
+    const bManual = b.manualRank ?? Infinity;
+    if (aManual !== bManual) return aManual - bManual;
+
+    if (b.opponentsMatchWinPct !== a.opponentsMatchWinPct) return b.opponentsMatchWinPct - a.opponentsMatchWinPct;
+    if (b.gameWinPct !== a.gameWinPct) return b.gameWinPct - a.gameWinPct;
+    if (b.opponentsGameWinPct !== a.opponentsGameWinPct) return b.opponentsGameWinPct - a.opponentsGameWinPct;
     return (a.player?.name ?? "").localeCompare(b.player?.name ?? "");
   });
 }

@@ -1,5 +1,5 @@
 import { Events } from "./db.js";
-import { escapeHtml, formatDate, leagueStatusBadge, showError } from "./ui.js";
+import { escapeHtml, formatDate, leagueStatusBadge, topdeckBadge, showError } from "./ui.js";
 
 async function init() {
   const listEl = document.getElementById("events-list");
@@ -12,24 +12,23 @@ async function init() {
 
     // Grouped by league, in the order each league's most recent event first
     // appears (events.list() is already sorted by date desc), so the
-    // currently-active league naturally floats to the top.
-    const groups = new Map();
+    // currently-active league naturally floats to the top. Standalone events
+    // (no league) are pulled into their own trailing section instead, so
+    // they read as a distinct group rather than being interleaved by date.
+    const leagueGroups = new Map();
+    const standaloneEvents = [];
     for (const ev of events) {
-      const key = ev.league?.id ?? "none";
-      if (!groups.has(key)) groups.set(key, { league: ev.league, events: [] });
-      groups.get(key).events.push(ev);
+      if (!ev.league) {
+        standaloneEvents.push(ev);
+        continue;
+      }
+      if (!leagueGroups.has(ev.league.id)) leagueGroups.set(ev.league.id, { league: ev.league, events: [] });
+      leagueGroups.get(ev.league.id).events.push(ev);
     }
 
-    listEl.innerHTML = Array.from(groups.values())
-      .map(
-        (g) => `
-      <section class="league-group">
-        <h2 class="league-group-title">
-          ${g.league ? `<a href="league.html?id=${g.league.id}">${escapeHtml(g.league.name)}</a>` : "Senza lega"}
-          ${g.league ? leagueStatusBadge(g.league.is_open) : ""}
-        </h2>
-        <div class="entity-grid">
-          ${g.events
+    function renderEventGrid(evs) {
+      return `<div class="entity-grid">
+          ${evs
             .map(
               (ev) => `
             <a class="entity-card" href="event.html?id=${ev.id}">
@@ -38,10 +37,32 @@ async function init() {
             </a>`
             )
             .join("")}
-        </div>
+        </div>`;
+    }
+
+    const leagueSections = Array.from(leagueGroups.values())
+      .map(
+        (g) => `
+      <section class="league-group">
+        <h2 class="league-group-title">
+          <a href="league.html?id=${g.league.id}">${escapeHtml(g.league.name)}</a>
+          ${leagueStatusBadge(g.league.is_open)} ${topdeckBadge(g.league.is_topdeck)}
+        </h2>
+        ${renderEventGrid(g.events)}
       </section>`
       )
       .join("");
+
+    const standaloneSection =
+      standaloneEvents.length === 0
+        ? ""
+        : `
+      <section class="league-group">
+        <h2 class="league-group-title">Eventi standalone</h2>
+        ${renderEventGrid(standaloneEvents)}
+      </section>`;
+
+    listEl.innerHTML = leagueSections + standaloneSection;
   } catch (err) {
     showError(listEl, err);
   }

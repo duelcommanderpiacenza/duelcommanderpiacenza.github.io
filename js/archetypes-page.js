@@ -1,4 +1,4 @@
-import { EventEntries, Matches } from "./db.js";
+import { Events, EventEntries, Matches } from "./db.js";
 import { computeGroupedStats } from "./stats.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { renderPieChart } from "./metagame-chart.js";
@@ -31,6 +31,28 @@ async function init() {
   const listEl = document.getElementById("archetypes-list");
   const leagueSelect = document.getElementById("archetypes-league-filter");
   const eventSelect = document.getElementById("archetypes-event-filter");
+  const dateFromInput = document.getElementById("archetypes-date-from");
+
+  let eventDateById = new Map();
+  let lastScopeEventIds = [];
+  try {
+    const events = await Events.list();
+    eventDateById = new Map(events.map((e) => [e.id, e.event_date]));
+  } catch (err) {
+    showError(listEl, err);
+    return;
+  }
+
+  // The date filter narrows whichever event ids the league/event scope
+  // filter last reported, rather than replacing it — the two combine.
+  function effectiveEventIds() {
+    const from = dateFromInput.value;
+    if (!from) return lastScopeEventIds;
+    return lastScopeEventIds.filter((id) => {
+      const d = eventDateById.get(id);
+      return d && d >= from;
+    });
+  }
 
   async function render(eventIds) {
     listEl.innerHTML = '<p class="page-loading">Caricamento...</p>';
@@ -86,7 +108,16 @@ async function init() {
     }
   }
 
-  initScopeFilter({ leagueSelect, eventSelect, onChange: render });
+  dateFromInput.addEventListener("change", () => render(effectiveEventIds()));
+
+  initScopeFilter({
+    leagueSelect,
+    eventSelect,
+    onChange: (eventIds) => {
+      lastScopeEventIds = eventIds;
+      render(effectiveEventIds());
+    },
+  });
 }
 
 init();

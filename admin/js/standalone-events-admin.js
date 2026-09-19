@@ -4,29 +4,25 @@ import { renderTable, setMessage } from "./crud-ui.js";
 import { on } from "./bus.js";
 
 /**
- * Middle of the pyramid: events always belong to whichever league was just
- * opened (no league picker — that's implicit from being drilled into). Each
- * row offers a "Manage entries/matches" action that drills further in, plus
- * an open/closed toggle: while open, the event's data stays admin-only;
- * closing it publishes it on the public site (enforced by RLS, not by any
- * filtering here).
+ * A flat list of events that don't belong to any league (league_id null) —
+ * same shape as the per-league events list, just without a league to be
+ * nested under. Drilling into "Gestisci iscritti/partite" hands the event
+ * off to the same shared entries/matches flow the league pyramid uses.
  */
-export function initEventsAdmin({ onOpenEvent }) {
-  const listEl = document.getElementById("events-admin-list");
-  const form = document.getElementById("events-admin-form");
-  const idField = document.getElementById("events-admin-id");
-  const nameField = document.getElementById("events-admin-name");
-  const dateField = document.getElementById("events-admin-date");
-  const msgEl = document.getElementById("events-admin-message");
-  const cancelBtn = document.getElementById("events-admin-cancel");
+export function initStandaloneEventsAdmin({ onOpenEvent }) {
+  const listEl = document.getElementById("standalone-events-admin-list");
+  const form = document.getElementById("standalone-events-admin-form");
+  const idField = document.getElementById("standalone-events-admin-id");
+  const nameField = document.getElementById("standalone-events-admin-name");
+  const dateField = document.getElementById("standalone-events-admin-date");
+  const msgEl = document.getElementById("standalone-events-admin-message");
+  const cancelBtn = document.getElementById("standalone-events-admin-cancel");
 
-  let currentLeague = null;
   let events = [];
 
   async function refresh() {
-    if (!currentLeague) return;
     try {
-      events = await Events.listByLeague(currentLeague.id);
+      events = await Events.listStandalone();
       renderTable(
         listEl,
         events,
@@ -96,11 +92,10 @@ export function initEventsAdmin({ onOpenEvent }) {
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    if (!currentLeague) return;
     const payload = {
       name: nameField.value.trim(),
       event_date: dateField.value || null,
-      league_id: currentLeague.id,
+      league_id: null,
     };
     if (!payload.name) return;
     try {
@@ -111,7 +106,7 @@ export function initEventsAdmin({ onOpenEvent }) {
       setMessage(msgEl, "Salvato.", false);
     } catch (err) {
       if (err?.code === "23505") {
-        setMessage(msgEl, "Esiste già un evento con questo nome in questa lega.", true);
+        setMessage(msgEl, "Esiste già un evento standalone con questo nome.", true);
       } else {
         setMessage(msgEl, "Errore nel salvataggio.", true);
       }
@@ -123,15 +118,9 @@ export function initEventsAdmin({ onOpenEvent }) {
   // The event's open/closed state can also be toggled from the Matches
   // view (drilled further in), so this list needs to catch up when that
   // happens instead of showing a stale "Chiudi"/"Riapri" label.
-  on("events:changed", () => {
-    if (currentLeague) refresh();
-  });
+  on("events:changed", refresh);
 
-  function openLeague(league) {
-    currentLeague = league;
-    resetForm();
-    refresh();
-  }
+  refresh();
 
-  return { openLeague };
+  return {};
 }

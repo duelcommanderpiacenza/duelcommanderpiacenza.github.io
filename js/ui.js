@@ -30,6 +30,13 @@ export function commanderLabel(commander) {
   return commander.id ? `<a href="commander.html?id=${commander.id}">${name}</a>` : name;
 }
 
+// An entry's commander, shown as "Commander / Partner" when a partner
+// (background) commander was recorded alongside the primary one.
+export function commanderPairLabel(commander, partner) {
+  if (!commander) return "—";
+  return partner ? `${commanderLabel(commander)} / ${commanderLabel(partner)}` : commanderLabel(commander);
+}
+
 export function archetypeBadge(archetype) {
   if (!archetype) return "";
   return `<span class="badge-archetype badge-archetype-${escapeHtml(archetype)}">${escapeHtml(archetype)}</span>`;
@@ -60,6 +67,12 @@ export function leagueStatusBadge(isOpen) {
   return isOpen
     ? '<span class="badge-status badge-status-open">In corso</span>'
     : '<span class="badge-status badge-status-closed">Conclusa</span>';
+}
+
+// Only shown for Topdeck series — a normal league needs no label, it's the
+// default/expected case.
+export function topdeckBadge(isTopdeck) {
+  return isTopdeck ? '<span class="badge-status badge-topdeck">Topdeck</span>' : "";
 }
 
 export function showError(el, err) {

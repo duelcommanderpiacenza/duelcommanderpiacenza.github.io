@@ -49,10 +49,12 @@
     </div>
   </div>
 
+  <div id="admin-tabs-view">
   <div class="admin-tabs">
     <button type="button" class="admin-tab" data-tab="players">Giocatori</button>
     <button type="button" class="admin-tab" data-tab="commanders">Comandanti</button>
     <button type="button" class="admin-tab" data-tab="leagues">Leghe</button>
+    <button type="button" class="admin-tab" data-tab="standalone-events">Eventi standalone</button>
   </div>
 
   <!-- Giocatori: piatto, sempre modificabile -->
@@ -94,13 +96,25 @@
           </div>
           <div class="field">
             <label>Identit&agrave; di colore</label>
-            <div class="checkbox-row">
-              <label><input type="checkbox" name="commanders-admin-color" value="W"> Bianco</label>
-              <label><input type="checkbox" name="commanders-admin-color" value="U"> Blu</label>
-              <label><input type="checkbox" name="commanders-admin-color" value="B"> Nero</label>
-              <label><input type="checkbox" name="commanders-admin-color" value="R"> Rosso</label>
-              <label><input type="checkbox" name="commanders-admin-color" value="G"> Verde</label>
-              <label><input type="checkbox" id="commanders-admin-colorless"> Incolore</label>
+            <div class="color-swatch-row">
+              <label class="color-swatch color-swatch-W" title="Bianco">
+                <input type="checkbox" name="commanders-admin-color" value="W" aria-label="Bianco">
+              </label>
+              <label class="color-swatch color-swatch-U" title="Blu">
+                <input type="checkbox" name="commanders-admin-color" value="U" aria-label="Blu">
+              </label>
+              <label class="color-swatch color-swatch-B" title="Nero">
+                <input type="checkbox" name="commanders-admin-color" value="B" aria-label="Nero">
+              </label>
+              <label class="color-swatch color-swatch-R" title="Rosso">
+                <input type="checkbox" name="commanders-admin-color" value="R" aria-label="Rosso">
+              </label>
+              <label class="color-swatch color-swatch-G" title="Verde">
+                <input type="checkbox" name="commanders-admin-color" value="G" aria-label="Verde">
+              </label>
+              <label class="color-swatch color-swatch-colorless" title="Incolore">
+                <input type="checkbox" id="commanders-admin-colorless" aria-label="Incolore">
+              </label>
             </div>
           </div>
           <div class="form-actions">
@@ -127,6 +141,12 @@
             <div class="field">
               <label for="leagues-admin-name">Nome</label>
               <input type="text" id="leagues-admin-name" required>
+            </div>
+            <div class="checkbox-field">
+              <label class="checkbox-inline">
+                <input type="checkbox" id="leagues-admin-topdeck">
+                &Egrave; una serie Topdeck (nessuna classifica punti)
+              </label>
             </div>
             <div class="form-actions">
               <button type="submit" class="btn-primary">Salva</button>
@@ -167,7 +187,42 @@
       </div>
     </div>
 
-    <!-- Livello 3: iscritti di un evento -->
+  </section>
+
+  <!-- Eventi standalone: eventi non legati a nessuna lega, stesso livello delle leghe -->
+  <section class="admin-panel" id="panel-standalone-events">
+    <div class="admin-panel-layout">
+      <div class="admin-form-card">
+        <h3>Nuovo / modifica evento standalone</h3>
+        <form id="standalone-events-admin-form">
+          <input type="hidden" id="standalone-events-admin-id">
+          <div class="field">
+            <label for="standalone-events-admin-name">Nome</label>
+            <input type="text" id="standalone-events-admin-name" required>
+          </div>
+          <div class="field">
+            <label for="standalone-events-admin-date">Data</label>
+            <input type="date" id="standalone-events-admin-date">
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Salva</button>
+            <button type="button" class="btn-secondary" id="standalone-events-admin-cancel">Annulla</button>
+          </div>
+          <p class="form-message" id="standalone-events-admin-message"></p>
+        </form>
+      </div>
+      <div id="standalone-events-admin-list"><p class="page-loading">Caricamento...</p></div>
+    </div>
+  </section>
+
+  </div>
+
+  <!-- Shared entries/matches flow: reached by drilling into an event, either
+       from inside a league (subview-league-detail) or from the standalone
+       events list — the event itself doesn't care which. -->
+  <div id="admin-event-flow" hidden>
+
+    <!-- Iscritti di un evento -->
     <div class="admin-subview" id="subview-event-detail" hidden>
       <a href="#" class="breadcrumb-link" id="event-detail-back">&larr; Torna agli eventi</a>
       <div class="page-heading">
@@ -189,6 +244,10 @@
             <div class="field">
               <label for="entries-admin-commander">Commander</label>
               <select id="entries-admin-commander" required></select>
+            </div>
+            <div class="field">
+              <label for="entries-admin-partner">Partner (opzionale)</label>
+              <select id="entries-admin-partner"><option value="">&mdash; nessuno &mdash;</option></select>
             </div>
             <div class="field">
               <label for="entries-admin-archetype">Archetipo</label>
@@ -215,7 +274,7 @@
       </div>
     </div>
 
-    <!-- Livello 4: partite, divise in tab per turno, di un evento -->
+    <!-- Partite, divise in tab per turno, di un evento -->
     <div class="admin-subview" id="subview-matches-detail" hidden>
       <a href="#" class="breadcrumb-link" id="matches-detail-back">&larr; Torna agli iscritti</a>
       <h3 id="matches-detail-title" style="margin-top:0;"></h3>
@@ -227,15 +286,21 @@
           <h3>Nuova / modifica partita</h3>
           <form id="matches-admin-form">
             <input type="hidden" id="matches-admin-id">
-            <div class="field">
-              <label for="matches-admin-player1">Giocatore 1</label>
-              <select id="matches-admin-player1" required></select>
+            <div class="checkbox-field" id="matches-admin-bye-field" hidden>
+              <label class="checkbox-inline">
+                <input type="checkbox" id="matches-admin-bye">
+                Bye (unico giocatore rimasto senza avversario in questo turno)
+              </label>
             </div>
             <div class="field">
+              <label for="matches-admin-player1" id="matches-admin-player1-label">Giocatore 1</label>
+              <select id="matches-admin-player1" required></select>
+            </div>
+            <div class="field" id="matches-admin-player2-field">
               <label for="matches-admin-player2">Giocatore 2</label>
               <select id="matches-admin-player2" required></select>
             </div>
-            <div class="score-input-row">
+            <div class="score-input-row" id="matches-admin-score-row">
               <div class="field">
                 <label for="matches-admin-p1wins">Vittorie G1</label>
                 <input type="number" id="matches-admin-p1wins" min="0" max="3" step="1" value="0" required>
@@ -258,9 +323,22 @@
         </div>
         <div id="matches-admin-list"><p class="page-empty">Nessuna partita ancora.</p></div>
       </div>
+
+      <div style="margin-top:32px;">
+        <div class="page-heading">
+          <h3 style="margin:0;">Classifica evento</h3>
+          <button type="button" class="btn-secondary" id="matches-toggle-event-open">Chiudi evento</button>
+        </div>
+        <p class="page-subtitle">
+          Anteprima calcolata dai turni inseriti finora, con i tiebreak MTG standard (percentuale vittorie
+          avversari, percentuale partite vinte). Usa le frecce per correggere manualmente l'ordine tra
+          giocatori a pari punti. Chiudendo l'evento la classifica diventa visibile pubblicamente.
+        </p>
+        <div id="matches-event-leaderboard"><p class="page-loading">Caricamento...</p></div>
+      </div>
     </div>
 
-  </section>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

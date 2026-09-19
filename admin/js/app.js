@@ -3,6 +3,7 @@ import { initPlayersAdmin } from "./players-admin.js";
 import { initCommandersAdmin } from "./commanders-admin.js";
 import { initLeaguesAdmin } from "./leagues-admin.js";
 import { initEventsAdmin } from "./events-admin.js";
+import { initStandaloneEventsAdmin } from "./standalone-events-admin.js";
 import { initEntriesAdmin } from "./entries-admin.js";
 import { initMatchesAdmin } from "./matches-admin.js";
 
@@ -13,6 +14,8 @@ const loginError = document.getElementById("login-error");
 const whoamiEl = document.getElementById("whoami");
 const logoutBtn = document.getElementById("logout-btn");
 
+const adminTabsView = document.getElementById("admin-tabs-view");
+const adminEventFlow = document.getElementById("admin-event-flow");
 const subviewLeaguesList = document.getElementById("subview-leagues-list");
 const subviewLeagueDetail = document.getElementById("subview-league-detail");
 const subviewEventDetail = document.getElementById("subview-event-detail");
@@ -28,11 +31,17 @@ const openMatchesBtn = document.getElementById("open-matches-btn");
 let modulesInitialized = false;
 let currentEvent = null;
 
-// Shows one subview and re-triggers its entrance animation every time
-// (removing the class, forcing a reflow, then re-adding it) since simply
-// toggling `hidden` wouldn't replay a CSS `animation` on its own.
-function showSubview(target) {
-  [subviewLeaguesList, subviewLeagueDetail, subviewEventDetail, subviewMatchesDetail].forEach((el) => {
+// Shows one subview among a group and re-triggers its entrance animation
+// every time (removing the class, forcing a reflow, then re-adding it)
+// since simply toggling `hidden` wouldn't replay a CSS `animation` on its
+// own. The leagues pyramid and the shared entries/matches flow are two
+// separate groups now that they live in separate top-level containers —
+// toggling one must never touch the other's `hidden` state, or returning
+// from the event flow would leave the leagues panel's own subviews stuck
+// hidden (this used to be a single group spanning both, which did exactly
+// that).
+function showSubview(group, target) {
+  group.forEach((el) => {
     el.hidden = el !== target;
   });
   target.classList.remove("subview-enter");
@@ -40,20 +49,39 @@ function showSubview(target) {
   target.classList.add("subview-enter");
 }
 
+const leaguesSubviews = [subviewLeaguesList, subviewLeagueDetail];
+const eventFlowSubviews = [subviewEventDetail, subviewMatchesDetail];
+
+// Drilling into an event's entries/matches works the same whether the event
+// came from inside a league or from the standalone events list, so both
+// paths hand off to this one shared flow — hiding the tab area (whichever
+// tab/subview was active there is left untouched, so "back" just reveals it
+// again) and showing the entries/matches subviews in its place.
+function enterEventFlow() {
+  adminTabsView.hidden = true;
+  adminEventFlow.hidden = false;
+  showEventDetailSubview();
+}
+
+function exitEventFlow() {
+  adminEventFlow.hidden = true;
+  adminTabsView.hidden = false;
+}
+
 function showLeaguesListSubview() {
-  showSubview(subviewLeaguesList);
+  showSubview(leaguesSubviews, subviewLeaguesList);
 }
 
 function showLeagueDetailSubview() {
-  showSubview(subviewLeagueDetail);
+  showSubview(leaguesSubviews, subviewLeagueDetail);
 }
 
 function showEventDetailSubview() {
-  showSubview(subviewEventDetail);
+  showSubview(eventFlowSubviews, subviewEventDetail);
 }
 
 function showMatchesDetailSubview() {
-  showSubview(subviewMatchesDetail);
+  showSubview(eventFlowSubviews, subviewMatchesDetail);
 }
 
 function initTabs() {
@@ -84,14 +112,15 @@ function showAdmin(session) {
     const entriesCtl = initEntriesAdmin();
     const matchesCtl = initMatchesAdmin();
 
-    const eventsCtl = initEventsAdmin({
-      onOpenEvent: (event) => {
-        currentEvent = event;
-        eventDetailTitle.textContent = event.name;
-        entriesCtl.openEvent(event);
-        showEventDetailSubview();
-      },
-    });
+    function openEvent(event) {
+      currentEvent = event;
+      eventDetailTitle.textContent = event.name;
+      entriesCtl.openEvent(event);
+      enterEventFlow();
+    }
+
+    const eventsCtl = initEventsAdmin({ onOpenEvent: openEvent });
+    initStandaloneEventsAdmin({ onOpenEvent: openEvent });
 
     initLeaguesAdmin({
       onOpenLeague: (league) => {
@@ -108,7 +137,7 @@ function showAdmin(session) {
 
     eventDetailBack.addEventListener("click", (e) => {
       e.preventDefault();
-      showLeagueDetailSubview();
+      exitEventFlow();
     });
 
     openMatchesBtn.addEventListener("click", () => {

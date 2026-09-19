@@ -47,6 +47,12 @@ function setupNavPill() {
   const activeLink = links.find((link) => link.dataset.nav === active);
   if (!activeLink) return;
 
+  // On narrow screens the nav scrolls horizontally instead of wrapping, so
+  // the active tab could start off-screen. "instant" (not the container's
+  // smooth default) so it's already settled before the pill rects below
+  // are measured.
+  activeLink.scrollIntoView({ behavior: "instant", inline: "center", block: "nearest" });
+
   const fromKey = sessionStorage.getItem(NAV_PILL_KEY);
   const fromLink = fromKey ? links.find((link) => link.dataset.nav === fromKey) : null;
 

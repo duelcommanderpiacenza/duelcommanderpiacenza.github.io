@@ -1,4 +1,4 @@
-import { Commanders, EventEntries, Matches } from "./db.js";
+import { Commanders, Events, EventEntries, Matches } from "./db.js";
 import { computeGroupedStats } from "./stats.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { renderPieChart } from "./metagame-chart.js";
@@ -25,13 +25,24 @@ async function init() {
   const listEl = document.getElementById("commanders-list");
   const leagueSelect = document.getElementById("commanders-league-filter");
   const eventSelect = document.getElementById("commanders-event-filter");
+  const dateFromInput = document.getElementById("commanders-date-from");
+  const searchInput = document.getElementById("commanders-search");
 
   let allCommanders = [];
   const colorByCommanderId = new Map();
+  let eventDateById = new Map();
+  let lastScopeEventIds = [];
+  let lastRows = [];
+  let lastChartHtml = "";
 
   try {
-    const [commanders, allEntries] = await Promise.all([Commanders.list(), EventEntries.listAll()]);
+    const [commanders, allEntries, events] = await Promise.all([
+      Commanders.list(),
+      EventEntries.listAll(),
+      Events.list(),
+    ]);
     allCommanders = commanders;
+    eventDateById = new Map(events.map((e) => [e.id, e.event_date]));
 
     const globalCounts = new Map();
     for (const e of allEntries) {
@@ -46,6 +57,48 @@ async function init() {
     return;
   }
 
+  // The date filter narrows whichever event ids the league/event scope
+  // filter last reported, rather than replacing it — the two combine.
+  function effectiveEventIds() {
+    const from = dateFromInput.value;
+    if (!from) return lastScopeEventIds;
+    return lastScopeEventIds.filter((id) => {
+      const d = eventDateById.get(id);
+      return d && d >= from;
+    });
+  }
+
+  // The search box only re-filters the already-computed rows (no new
+  // network/stat work), so it can react live on every keystroke.
+  function renderTableSection() {
+    const term = searchInput.value.trim().toLowerCase();
+    const rows = term ? lastRows.filter((r) => r.name.toLowerCase().includes(term)) : lastRows;
+    if (rows.length === 0) {
+      return `<p class="page-empty">${term ? "Nessun comandante corrisponde alla ricerca." : "Nessun comandante inserito ancora."}</p>`;
+    }
+    return `<div class="data-table-wrap"><table class="data-table">
+              <thead><tr><th>Nome</th><th>Identit&agrave; di colore</th><th>Quota</th><th>V-P-S</th><th>Winrate</th></tr></thead>
+              <tbody>
+                ${rows
+                  .map(
+                    (r) => `
+                  <tr>
+                    <td>${commanderLabel(r)}</td>
+                    <td>${colorIdentityPips(r.colorIdentity)}</td>
+                    <td>${r.entries > 0 ? `${r.share.toFixed(1)}%` : "—"}</td>
+                    <td>${r.wins}-${r.draws}-${r.losses}</td>
+                    <td>${r.winRate === null ? "—" : `${r.winRate.toFixed(1)}%`}</td>
+                  </tr>`
+                  )
+                  .join("")}
+              </tbody>
+            </table></div>`;
+  }
+
+  function renderAll() {
+    listEl.innerHTML = `${lastChartHtml}${renderTableSection()}`;
+  }
+
   async function render(eventIds) {
     listEl.innerHTML = '<p class="page-loading">Caricamento...</p>';
     try {
@@ -58,7 +111,7 @@ async function init() {
       const byId = new Map(stats.map((s) => [s.key, s]));
       const totalEntries = stats.reduce((sum, s) => sum + s.entries, 0);
 
-      const rows = allCommanders
+      lastRows = allCommanders
         .map((c) => {
           const s = byId.get(c.id);
           const entries = s?.entries ?? 0;
@@ -78,7 +131,7 @@ async function init() {
 
       const chartRows = [];
       let otherShare = 0;
-      for (const r of rows) {
+      for (const r of lastRows) {
         if (r.entries === 0) continue;
         const color = colorByCommanderId.get(r.id);
         if (color) chartRows.push({ label: r.name, share: r.share, color });
@@ -86,36 +139,25 @@ async function init() {
       }
       chartRows.sort((a, b) => b.share - a.share);
       if (otherShare > 0) chartRows.push({ label: "Altri", share: otherShare, color: OTHER_COLOR });
-      const chartHtml = renderPieChart(chartRows, "Nessun dato per il grafico.");
+      lastChartHtml = renderPieChart(chartRows, "Nessun dato per il grafico.");
 
-      listEl.innerHTML =
-        rows.length === 0
-          ? '<p class="page-empty">Nessun comandante inserito ancora.</p>'
-          : `
-        ${chartHtml}
-        <div class="data-table-wrap"><table class="data-table">
-              <thead><tr><th>Nome</th><th>Identit&agrave; di colore</th><th>Quota</th><th>V-P-S</th><th>Winrate</th></tr></thead>
-              <tbody>
-                ${rows
-                  .map(
-                    (r) => `
-                  <tr>
-                    <td>${commanderLabel(r)}</td>
-                    <td>${colorIdentityPips(r.colorIdentity)}</td>
-                    <td>${r.entries > 0 ? `${r.share.toFixed(1)}%` : "—"}</td>
-                    <td>${r.wins}-${r.draws}-${r.losses}</td>
-                    <td>${r.winRate === null ? "—" : `${r.winRate.toFixed(1)}%`}</td>
-                  </tr>`
-                  )
-                  .join("")}
-              </tbody>
-            </table></div>`;
+      renderAll();
     } catch (err) {
       showError(listEl, err);
     }
   }
 
-  initScopeFilter({ leagueSelect, eventSelect, onChange: render });
+  searchInput.addEventListener("input", renderAll);
+  dateFromInput.addEventListener("change", () => render(effectiveEventIds()));
+
+  initScopeFilter({
+    leagueSelect,
+    eventSelect,
+    onChange: (eventIds) => {
+      lastScopeEventIds = eventIds;
+      render(effectiveEventIds());
+    },
+  });
 }
 
 init();

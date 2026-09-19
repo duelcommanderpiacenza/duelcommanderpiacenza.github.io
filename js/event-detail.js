@@ -1,6 +1,14 @@
 import { Events, EventEntries, Matches } from "./db.js";
-import { computeEventLeaderboard } from "./leaderboard.js";
-import { escapeHtml, formatDate, playerLabel, commanderLabel, archetypeBadge, colorIdentityPips, showError } from "./ui.js";
+import { computeEventLeaderboard, isBye } from "./leaderboard.js";
+import {
+  escapeHtml,
+  formatDate,
+  playerLabel,
+  commanderPairLabel,
+  archetypeBadge,
+  colorIdentityPips,
+  showError,
+} from "./ui.js";
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
@@ -34,8 +42,8 @@ function renderMatchesByRound(matches) {
               (m) => `
             <tr>
               <td>${playerLabel(m.player1)}</td>
-              <td>${playerLabel(m.player2)}</td>
-              <td>${matchResultScore(m)}</td>
+              <td>${isBye(m) ? "Bye" : playerLabel(m.player2)}</td>
+              <td>${isBye(m) ? "Bye" : matchResultScore(m)}</td>
             </tr>`
             )
             .join("")}
@@ -83,7 +91,9 @@ async function init() {
                   (e) => `
                 <tr>
                   <td>${playerLabel(e.player)}</td>
-                  <td>${commanderLabel(e.commander)} ${colorIdentityPips(e.commander?.color_identity)}</td>
+                  <td>${commanderPairLabel(e.commander, e.partner_commander)} ${colorIdentityPips(
+                    (e.commander?.color_identity ?? "") + (e.partner_commander?.color_identity ?? "")
+                  )}</td>
                   <td>${archetypeBadge(e.archetype)}</td>
                 </tr>`
                 )
