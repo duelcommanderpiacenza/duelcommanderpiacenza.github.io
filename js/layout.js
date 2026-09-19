@@ -55,10 +55,23 @@ function setupNavPill() {
   if (!activeLink) return;
 
   // On narrow screens the nav scrolls horizontally instead of wrapping, so
-  // the active tab could start off-screen. "instant" (not the container's
-  // smooth default) so it's already settled before the pill rects below
-  // are measured.
-  activeLink.scrollIntoView({ behavior: "instant", inline: "center", block: "nearest" });
+  // the active tab could start off-screen — center it. Done by setting
+  // scrollLeft directly rather than activeLink.scrollIntoView(): the
+  // container has `scroll-behavior: smooth` in CSS for user-driven
+  // scrolling, and scrollIntoView's "instant" option is non-standard —
+  // where it's not honored, the call silently falls back to that smooth
+  // behavior instead of failing, so it *animates* over several frames
+  // rather than finishing before the next line runs. The placePill() calls
+  // below read scrollLeft synchronously and assume it's already settled;
+  // against an in-progress smooth scroll they'd read a stale mid-animation
+  // value, then get progressively more wrong as the scroll continued
+  // underneath the now-static pill — worse the further the tab was
+  // scrolled to reach, which is exactly the rightmost tabs. Writing the
+  // property directly is always synchronous, regardless of that CSS.
+  const linkRect = activeLink.getBoundingClientRect();
+  const containerRect = container.getBoundingClientRect();
+  const linkCenter = linkRect.left - containerRect.left + container.scrollLeft + linkRect.width / 2;
+  container.scrollLeft = linkCenter - container.clientWidth / 2;
 
   const fromKey = sessionStorage.getItem(NAV_PILL_KEY);
   const fromLink = fromKey ? links.find((link) => link.dataset.nav === fromKey) : null;
