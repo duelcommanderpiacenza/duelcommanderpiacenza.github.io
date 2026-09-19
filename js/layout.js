@@ -18,8 +18,15 @@ function placePill(pill, link, container, instant) {
   const linkRect = link.getBoundingClientRect();
   const containerRect = container.getBoundingClientRect();
   if (instant) pill.style.transition = "none";
-  pill.style.left = `${linkRect.left - containerRect.left}px`;
-  pill.style.top = `${linkRect.top - containerRect.top}px`;
+  // `left`/`top` on this absolutely-positioned pill are measured from the
+  // container's *unscrolled* content origin, but getBoundingClientRect()
+  // reflects the *current* (possibly scrolled) on-screen position — on the
+  // mobile nav, which scrolls horizontally, that mismatch made the browser
+  // subtract the scroll offset a second time when rendering, so the pill
+  // drifted away from its tab by roughly the scroll distance. Adding the
+  // current scroll position back cancels that out.
+  pill.style.left = `${linkRect.left - containerRect.left + container.scrollLeft}px`;
+  pill.style.top = `${linkRect.top - containerRect.top + container.scrollTop}px`;
   pill.style.width = `${linkRect.width}px`;
   pill.style.height = `${linkRect.height}px`;
   pill.style.opacity = "1";

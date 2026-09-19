@@ -45,10 +45,6 @@
   --accent-midrange: #0f8b8d;
 }
 
-html {
-  height: 100%;
-}
-
 body {
   margin: 0;
   min-height: 100vh;
@@ -120,6 +116,14 @@ a:hover {
   filter: brightness(0) invert(1);
 }
 
+/* Deliberately no view-transition-name here, unlike the header/footer: this
+   bar's content genuinely differs between pages (a different active tab and
+   pill position), and it already gets its own hand-rolled slide animation
+   from js/layout.js. Treating it as a "continuous" element on top of that
+   fought with it — the pill doesn't exist in the DOM yet when the browser
+   snapshots the incoming page, so it briefly renders pill-less before our
+   script catches up, causing a visible flicker/jump. Left as part of the
+   ordinary root crossfade instead. */
 .site-nav {
   position: sticky;
   top: 0;
@@ -128,7 +132,6 @@ a:hover {
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--hairline);
   box-shadow: 0 8px 18px rgba(69, 29, 34, 0.05);
-  view-transition-name: site-nav;
 }
 
 .site-nav-inner {
