@@ -75,12 +75,6 @@ export function leagueStatusBadge(isOpen) {
     : '<span class="badge-status badge-status-closed">Conclusa</span>';
 }
 
-// Only shown for Topdeck series — a normal league needs no label, it's the
-// default/expected case.
-export function topdeckBadge(isTopdeck) {
-  return isTopdeck ? '<span class="badge-status badge-topdeck">Topdeck</span>' : "";
-}
-
 export function showError(el, err) {
   console.error(err);
   el.innerHTML = `<p class="page-error">Si &egrave; verificato un errore nel caricamento dei dati. ${

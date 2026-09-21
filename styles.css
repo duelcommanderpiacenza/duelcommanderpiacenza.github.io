@@ -34,10 +34,6 @@
   --accent-green-2: #14914a;
   --accent-green-glow: rgba(34, 153, 84, 0.28);
 
-  --accent-blue-1: #4a8cff;
-  --accent-blue-2: #2f67d8;
-  --accent-blue-glow: rgba(50, 115, 220, 0.28);
-
   --accent-aggro: #e0752b;
   --accent-control: #7c3aed;
   --accent-combo: #dc181c;
@@ -1099,7 +1095,6 @@ table.data-table tbody tr:hover {
 
 .badge-status-open { background: var(--accent-green-2); }
 .badge-status-closed { background: var(--text-muted); }
-.badge-topdeck { background: var(--accent-blue-2); }
 
 .entity-card .badge-status {
   margin-top: 10px;

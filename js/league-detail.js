@@ -1,7 +1,7 @@
 import { Leagues, Events, EventEntries, Matches } from "./db.js";
 import { computeLeaguePoints } from "./leaderboard.js";
 import { computeLeagueSummary } from "./stats.js";
-import { escapeHtml, formatDate, eventTitle, leagueStatusBadge, topdeckBadge, playerLabel, showError } from "./ui.js";
+import { escapeHtml, formatDate, eventTitle, leagueStatusBadge, playerLabel, showError } from "./ui.js";
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
@@ -22,9 +22,7 @@ async function init() {
 
   try {
     const league = await Leagues.get(id);
-    titleEl.innerHTML = `${escapeHtml(league.name)} ${leagueStatusBadge(league.is_open)} ${topdeckBadge(
-      league.is_topdeck
-    )}`;
+    titleEl.innerHTML = `${escapeHtml(league.name)} ${leagueStatusBadge(league.is_open)}`;
 
     // A Topdeck series is just a bucket of events, with no points leaderboard.
     if (league.is_topdeck) leaderboardSectionEl.hidden = true;
