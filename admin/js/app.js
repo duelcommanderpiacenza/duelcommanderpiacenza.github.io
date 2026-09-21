@@ -1,6 +1,8 @@
 import { getSession, signIn, signOut, onAuthChange } from "./auth.js";
 import { setupThemeToggle } from "../../js/theme.js";
 import { eventTitle } from "../../js/ui.js";
+import { enhanceSelects } from "../../js/custom-select.js";
+import { enhanceDateInputs } from "../../js/custom-date.js";
 import { initPlayersAdmin } from "./players-admin.js";
 import { initCommandersAdmin } from "./commanders-admin.js";
 import { initLeaguesAdmin } from "./leagues-admin.js";
@@ -192,3 +194,5 @@ getSession().then((session) => {
 });
 
 setupThemeToggle();
+enhanceSelects();
+enhanceDateInputs();

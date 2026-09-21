@@ -309,15 +309,15 @@
           <h3>Nuova / modifica partita</h3>
           <form id="matches-admin-form">
             <input type="hidden" id="matches-admin-id">
-            <div class="checkbox-field" id="matches-admin-bye-field" hidden>
-              <label class="checkbox-inline">
-                <input type="checkbox" id="matches-admin-bye">
-                Bye (unico giocatore rimasto senza avversario in questo turno)
-              </label>
-            </div>
             <div class="field">
               <label for="matches-admin-player1" id="matches-admin-player1-label">Giocatore 1</label>
               <select id="matches-admin-player1" required></select>
+            </div>
+            <div class="checkbox-field" id="matches-admin-bye-field" hidden>
+              <label class="checkbox-inline">
+                <input type="checkbox" id="matches-admin-bye">
+                Bye
+              </label>
             </div>
             <div class="field" id="matches-admin-player2-field">
               <label for="matches-admin-player2">Giocatore 2</label>

@@ -13,6 +13,8 @@
 // when the transition snapshot was taken.
 
 import { setupThemeToggle } from "./theme.js";
+import { enhanceSelects } from "./custom-select.js";
+import { enhanceDateInputs } from "./custom-date.js";
 
 const NAV_PILL_KEY = "navPillFrom";
 
@@ -111,3 +113,5 @@ function setupNavPill() {
 
 setupNavPill();
 setupThemeToggle();
+enhanceSelects();
+enhanceDateInputs();

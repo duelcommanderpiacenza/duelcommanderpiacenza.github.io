@@ -815,6 +815,18 @@ footer {
     opacity: 1;
     transform: none;
   }
+
+  .cs-wrap.is-open .cs-menu {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
+
+  .cd-wrap.is-open .cd-popup {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .page-heading {
@@ -1155,7 +1167,8 @@ table.data-table tbody tr:hover {
 
 .field input,
 .field select,
-.field textarea {
+.field textarea,
+.cs-trigger {
   font: inherit;
   padding: 10px 12px;
   border-radius: 12px;
@@ -1166,9 +1179,328 @@ table.data-table tbody tr:hover {
 
 .field input:focus,
 .field select:focus,
-.field textarea:focus {
+.field textarea:focus,
+.cs-trigger:focus-visible {
   outline: none;
   border-color: var(--hairline-hover-strong);
+}
+
+/* Custom-styled <select>: the native element stays in the DOM (hidden) as
+   the single source of truth for .value/change/options (see
+   js/custom-select.js) — this is purely the skin around it, a trigger
+   button + popup list matching the site's rounded/card language, since no
+   browser lets you reliably restyle the *native* popup itself. */
+
+.cs-native {
+  display: none;
+}
+
+.cs-wrap {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.cs-trigger {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  appearance: none;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 180ms ease;
+}
+
+.cs-trigger-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cs-trigger-arrow {
+  flex-shrink: 0;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--brand-red);
+  transition: transform 180ms ease;
+}
+
+.cs-wrap.is-open .cs-trigger-arrow {
+  transform: rotate(180deg);
+}
+
+.cs-wrap.is-disabled .cs-trigger {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.cs-menu {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: var(--shadow-card-hover);
+  padding: 6px;
+  display: none;
+}
+
+.cs-wrap.is-open .cs-menu {
+  display: block;
+  animation: cs-menu-in 140ms ease both;
+}
+
+@keyframes cs-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cs-option {
+  padding: 9px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: var(--text-body);
+}
+
+.cs-option:hover,
+.cs-option:focus {
+  outline: none;
+  background: var(--hairline-hover);
+}
+
+.cs-option[aria-selected="true"] {
+  background: var(--brand-red);
+  color: #fff;
+}
+
+/* Custom-styled <input type="date">: unlike <select>, no browser exposes
+   any CSS hook into the native calendar popup at all, so this fully
+   replaces it with a month-grid built in js/custom-date.js — same contract
+   as the select skin above, the native input stays hidden as the source of
+   truth for .value/change. */
+
+.cd-native {
+  display: none;
+}
+
+.cd-wrap {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.cd-trigger {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  font: inherit;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--hairline);
+  background: #fff;
+  color: var(--text-body);
+  appearance: none;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 180ms ease;
+}
+
+.cd-trigger:focus-visible {
+  outline: none;
+  border-color: var(--hairline-hover-strong);
+}
+
+.cd-trigger-label.is-placeholder {
+  color: var(--text-muted);
+}
+
+.cd-trigger-arrow {
+  flex-shrink: 0;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--brand-red);
+  transition: transform 180ms ease;
+}
+
+.cd-wrap.is-open .cd-trigger-arrow {
+  transform: rotate(180deg);
+}
+
+.cd-wrap.is-disabled .cd-trigger {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.cd-popup {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 268px;
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: var(--shadow-card-hover);
+  padding: 12px;
+  display: none;
+}
+
+.cd-wrap.is-open .cd-popup {
+  display: block;
+  animation: cd-popup-in 140ms ease both;
+}
+
+@keyframes cd-popup-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cd-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.cd-month-label {
+  font-weight: 800;
+  font-size: 0.92rem;
+  color: var(--text-title);
+  text-transform: capitalize;
+}
+
+.cd-nav {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--hairline);
+  background: #fff;
+  color: var(--brand-red-darker);
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.cd-nav:hover {
+  background: #fff7f4;
+  border-color: var(--hairline-hover);
+}
+
+.cd-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 4px;
+}
+
+.cd-weekdays span {
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.cd-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.cd-day {
+  aspect-ratio: 1;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-body);
+  font: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.cd-day:hover,
+.cd-day:focus {
+  outline: none;
+  background: var(--hairline-hover);
+}
+
+.cd-day.is-outside {
+  color: var(--text-muted);
+  opacity: 0.55;
+}
+
+.cd-day.is-today {
+  font-weight: 800;
+  color: var(--brand-red);
+}
+
+.cd-day.is-selected {
+  background: var(--brand-red);
+  color: #fff;
+  font-weight: 800;
+}
+
+.cd-day.is-selected.is-today {
+  color: #fff;
+}
+
+.cd-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--hairline);
+}
+
+.cd-footer-btn {
+  flex: 1;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-pill);
+  background: #fff;
+  color: var(--brand-red-deep);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 7px 10px;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.cd-footer-btn:hover {
+  background: #fff7f4;
+  border-color: var(--hairline-hover);
 }
 
 /* Commander color-identity picker: a round WUBRG-colored swatch per option
@@ -1426,13 +1758,18 @@ table.data-table tbody tr:hover {
 }
 
 :root[data-theme="dark"] .rank-cell,
-:root[data-theme="dark"] .stat-tile-value {
+:root[data-theme="dark"] .stat-tile-value,
+:root[data-theme="dark"] .cd-day.is-today {
   color: #ff6a6e;
 }
 
 :root[data-theme="dark"] .field input,
 :root[data-theme="dark"] .field select,
 :root[data-theme="dark"] .field textarea,
+:root[data-theme="dark"] .cs-trigger,
+:root[data-theme="dark"] .cd-trigger,
+:root[data-theme="dark"] .cd-nav,
+:root[data-theme="dark"] .cd-footer-btn,
 :root[data-theme="dark"] .btn-secondary,
 :root[data-theme="dark"] .btn-danger,
 :root[data-theme="dark"] .expand-button,
@@ -1447,7 +1784,24 @@ table.data-table tbody tr:hover {
 :root[data-theme="dark"] .btn-secondary:hover,
 :root[data-theme="dark"] .btn-danger:hover,
 :root[data-theme="dark"] .expand-button:hover,
-:root[data-theme="dark"] .section-link:hover {
+:root[data-theme="dark"] .section-link:hover,
+:root[data-theme="dark"] .cd-nav:hover,
+:root[data-theme="dark"] .cd-footer-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Not a translucent tint like the rules above — these popups can float over
+   arbitrary page content (tables, other cards) behind them, so they need a
+   solid color of their own to stay legible regardless of what's underneath. */
+:root[data-theme="dark"] .cs-menu,
+:root[data-theme="dark"] .cd-popup {
+  background: #241a1d;
+}
+
+:root[data-theme="dark"] .cs-option:hover,
+:root[data-theme="dark"] .cs-option:focus,
+:root[data-theme="dark"] .cd-day:hover,
+:root[data-theme="dark"] .cd-day:focus {
   background: rgba(255, 255, 255, 0.1);
 }
 

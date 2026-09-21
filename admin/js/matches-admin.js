@@ -23,7 +23,6 @@ export function initMatchesAdmin() {
   const byeField = document.getElementById("matches-admin-bye");
   const player1Label = document.getElementById("matches-admin-player1-label");
   const player1Field = document.getElementById("matches-admin-player1");
-  const player2FieldWrap = document.getElementById("matches-admin-player2-field");
   const player2Field = document.getElementById("matches-admin-player2");
   const scoreRowWrap = document.getElementById("matches-admin-score-row");
   const p1WinsField = document.getElementById("matches-admin-p1wins");
@@ -60,7 +59,9 @@ export function initMatchesAdmin() {
   // Player 1/2 can only be chosen from players not already paired (or
   // given a bye) this round. The bye checkbox itself only appears when
   // there's exactly one such player left over — the classic odd-one-out —
-  // or while editing a match that's already a bye.
+  // or while editing a match that's already a bye. When only one player is
+  // left, they can only receive a bye (there's no one left to pair them
+  // against), so Giocatore 2 is left with nothing to offer.
   function updateFormAvailability() {
     const excludeId = editingRow ? editingRow.id : null;
     const available = availableEntrants(excludeId);
@@ -68,7 +69,12 @@ export function initMatchesAdmin() {
       .map((e) => `<option value="${e.player.id}">${e.player.name}${e.player.handle ? ` (${e.player.handle})` : ""}</option>`)
       .join("");
     fillSelect(player1Field, options);
-    fillSelect(player2Field, options);
+    // Only blank Giocatore 2 when there's truly no one left to pair
+    // against — not while editing an existing two-player match that
+    // happens to leave just one *other* entrant uncovered (that match's
+    // own opponent must stay selectable in Giocatore 2).
+    const noOpponentLeft = available.length === 1 && !(editingRow && !isBye(editingRow));
+    fillSelect(player2Field, noOpponentLeft ? "" : options);
 
     const showBye = available.length === 1 || (editingRow && isBye(editingRow));
     byeFieldWrap.hidden = !showBye;
@@ -79,7 +85,7 @@ export function initMatchesAdmin() {
   function updateByeUI() {
     const bye = byeField.checked;
     player1Label.textContent = bye ? "Giocatore" : "Giocatore 1";
-    player2FieldWrap.hidden = bye;
+    player2Field.disabled = bye;
     player2Field.required = !bye;
     scoreRowWrap.hidden = bye;
     [p1WinsField, drawsField, p2WinsField].forEach((f) => (f.required = !bye));
@@ -98,7 +104,11 @@ export function initMatchesAdmin() {
         }
       </span>`;
     }
-    html += '<button type="button" class="round-tab-add" id="add-round-btn">+ Turno</button>';
+    // A closed event is already published — its round/turn structure is
+    // frozen from here on, only individual match scores can still be fixed.
+    if (currentEvent?.is_open) {
+      html += '<button type="button" class="round-tab-add" id="add-round-btn">+ Turno</button>';
+    }
     roundTabsEl.innerHTML = html;
 
     roundTabsEl.querySelectorAll(".round-tab[data-round]").forEach((btn) => {
@@ -115,7 +125,7 @@ export function initMatchesAdmin() {
         deleteRound(parseInt(btn.dataset.round, 10));
       });
     });
-    document.getElementById("add-round-btn").addEventListener("click", addRound);
+    document.getElementById("add-round-btn")?.addEventListener("click", addRound);
   }
 
   async function addRound() {
@@ -197,8 +207,14 @@ export function initMatchesAdmin() {
             <td><strong>${s.points}</strong></td>
             <td>${s.wins}-${s.losses}-${s.draws}</td>
             <td class="row-actions">
-              <button type="button" class="btn-secondary" data-move="up" data-index="${i}" ${tiedWithPrev ? "" : "disabled"}>&uarr;</button>
-              <button type="button" class="btn-secondary" data-move="down" data-index="${i}" ${tiedWithNext ? "" : "disabled"}>&darr;</button>
+              ${
+                currentEvent?.is_open
+                  ? `
+                <button type="button" class="btn-secondary" data-move="up" data-index="${i}" ${tiedWithPrev ? "" : "disabled"}>&uarr;</button>
+                <button type="button" class="btn-secondary" data-move="down" data-index="${i}" ${tiedWithNext ? "" : "disabled"}>&darr;</button>
+              `
+                  : ""
+              }
             </td>
           </tr>`;
           })
@@ -251,6 +267,8 @@ export function initMatchesAdmin() {
       const updated = await Events.update(currentEvent.id, { is_open: !currentEvent.is_open });
       currentEvent.is_open = updated.is_open;
       updateToggleEventOpenBtn();
+      renderRoundTabs();
+      renderEventLeaderboard();
       setMessage(msgEl, currentEvent.is_open ? "Evento riaperto." : "Evento chiuso: la classifica è ora pubblica.", false);
       emit("events:changed");
     } catch (err) {
