@@ -37,6 +37,9 @@ async function init() {
   const dateFromInput = document.getElementById("commanders-date-from");
   const searchInput = document.getElementById("commanders-search");
   const sortSelect = document.getElementById("commanders-sort");
+  const colorCheckboxes = Array.from(document.querySelectorAll('input[name="commanders-color-filter"]'));
+  const colorExactWrap = document.getElementById("commanders-color-exact-wrap");
+  const colorExactCheckbox = document.getElementById("commanders-color-exact");
 
   let allCommanders = [];
   const colorByCommanderId = new Map();
@@ -78,6 +81,29 @@ async function init() {
     });
   }
 
+  function colorIdentitySet(colorIdentity) {
+    return new Set(String(colorIdentity ?? "").toUpperCase().split("").filter((c) => "WUBRG".includes(c)));
+  }
+
+  // Colors picked in the swatch row filter to commanders whose identity
+  // *contains* every one of them (extra colors beyond that are fine) —
+  // "Solo identità esatta" narrows that to an exact match instead
+  // (no extra colors either). The exact toggle only makes sense once at
+  // least one color is picked, so it's hidden until then.
+  function updateColorExactVisibility() {
+    const anySelected = colorCheckboxes.some((cb) => cb.checked);
+    colorExactWrap.hidden = !anySelected;
+    if (!anySelected) colorExactCheckbox.checked = false;
+  }
+
+  function matchesColorFilter(r) {
+    const selected = colorCheckboxes.filter((cb) => cb.checked).map((cb) => cb.value);
+    if (selected.length === 0) return true;
+    const identity = colorIdentitySet(r.colorIdentity);
+    if (colorExactCheckbox.checked && identity.size !== selected.length) return false;
+    return selected.every((c) => identity.has(c));
+  }
+
   // The search box only re-filters the already-computed rows (no new
   // network/stat work), so it can react live on every keystroke. animate
   // is false for that keystroke re-render so .data-table-wrap's entrance
@@ -87,9 +113,10 @@ async function init() {
     // Commanders no one has ever played are always left out — an all-"—"
     // row isn't useful, filtered or not.
     const base = lastRows.filter((r) => r.entries > 0);
-    const filtered = term ? base.filter((r) => r.name.toLowerCase().includes(term)) : base;
+    const anyFilterActive = Boolean(term) || colorCheckboxes.some((cb) => cb.checked);
+    const filtered = base.filter((r) => (!term || r.name.toLowerCase().includes(term)) && matchesColorFilter(r));
     if (filtered.length === 0) {
-      return `<p class="page-empty">${term ? "Nessun comandante corrisponde alla ricerca." : "Nessun comandante ha ancora dati registrati."}</p>`;
+      return `<p class="page-empty">${anyFilterActive ? "Nessun comandante corrisponde ai filtri." : "Nessun comandante ha ancora dati registrati."}</p>`;
     }
     const sorter = SORTERS[sortSelect.value] ?? SORTERS.played;
     const rows = [...filtered].sort((a, b) => sorter(a, b) || a.name.localeCompare(b.name));
@@ -167,7 +194,30 @@ async function init() {
       }
       chartRows.sort((a, b) => b.share - a.share);
       if (otherShare > 0) chartRows.push({ label: "Altri", share: otherShare, color: OTHER_COLOR });
-      lastChartHtml = renderPieChart(chartRows, "Nessun dato per il grafico.");
+
+      // Same donut, same colors per commander as the metashare chart above
+      // (so a commander reads as the same color in both) — just sliced by
+      // each commander's share of total wins instead of total entries, to
+      // show who's actually winning the most rather than who's just played
+      // the most.
+      const totalWins = lastRows.reduce((sum, r) => sum + r.wins, 0);
+      const winsChartRows = [];
+      let otherWinsShare = 0;
+      for (const r of lastRows) {
+        if (r.wins === 0) continue;
+        const share = totalWins > 0 ? (r.wins / totalWins) * 100 : 0;
+        const color = colorByCommanderId.get(r.id);
+        if (color) winsChartRows.push({ label: r.name, share, color });
+        else otherWinsShare += share;
+      }
+      winsChartRows.sort((a, b) => b.share - a.share);
+      if (otherWinsShare > 0) winsChartRows.push({ label: "Altri", share: otherWinsShare, color: OTHER_COLOR });
+
+      lastChartHtml = `
+        <div class="chart-grid">
+          ${renderPieChart(chartRows, "Nessun dato per il grafico.", "Metashare")}
+          ${renderPieChart(winsChartRows, "Nessun dato per il grafico.", "Winrate")}
+        </div>`;
       chartEl.innerHTML = lastChartHtml;
       renderTable();
     } catch (err) {
@@ -177,6 +227,13 @@ async function init() {
 
   searchInput.addEventListener("input", () => renderTable(false));
   sortSelect.addEventListener("change", () => renderTable());
+  colorCheckboxes.forEach((cb) =>
+    cb.addEventListener("change", () => {
+      updateColorExactVisibility();
+      renderTable(false);
+    })
+  );
+  colorExactCheckbox.addEventListener("change", () => renderTable(false));
   dateFromInput.addEventListener("change", () => render(effectiveEventIds()));
 
   initScopeFilter({

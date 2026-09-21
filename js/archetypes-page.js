@@ -28,7 +28,8 @@ async function fetchEventsData(eventIds) {
 }
 
 async function init() {
-  const listEl = document.getElementById("archetypes-list");
+  const chartEl = document.getElementById("archetypes-chart");
+  const tableEl = document.getElementById("archetypes-table");
   const leagueSelect = document.getElementById("archetypes-league-filter");
   const eventSelect = document.getElementById("archetypes-event-filter");
   const dateFromInput = document.getElementById("archetypes-date-from");
@@ -39,7 +40,7 @@ async function init() {
     const events = await Events.list();
     eventDateById = new Map(events.map((e) => [e.id, e.event_date]));
   } catch (err) {
-    showError(listEl, err);
+    showError(chartEl, err);
     return;
   }
 
@@ -55,7 +56,8 @@ async function init() {
   }
 
   async function render(eventIds) {
-    listEl.innerHTML = '<p class="page-loading">Caricamento...</p>';
+    chartEl.innerHTML = '<p class="page-loading">Caricamento...</p>';
+    tableEl.innerHTML = "";
     try {
       const eventsData = await fetchEventsData(eventIds);
       const stats = computeGroupedStats(
@@ -82,11 +84,32 @@ async function init() {
 
       const chartHtml = renderPieChart(
         rows.map((r) => ({ label: r.archetype, share: r.share, color: ARCHETYPE_COLORS[r.archetype] })),
-        "Nessun dato per il grafico."
+        "Nessun dato per il grafico.",
+        "Metashare"
       );
 
-      listEl.innerHTML = `
-        ${chartHtml}
+      // Same donut/colors as the metashare chart, just sliced by each
+      // archetype's share of total wins instead of total entries — shows
+      // which archetype is actually winning the most, not just the most
+      // played.
+      const totalWins = rows.reduce((sum, r) => sum + r.wins, 0);
+      const winsChartHtml = renderPieChart(
+        rows.map((r) => ({
+          label: r.archetype,
+          share: totalWins > 0 ? (r.wins / totalWins) * 100 : 0,
+          color: ARCHETYPE_COLORS[r.archetype],
+        })),
+        "Nessun dato per il grafico.",
+        "Winrate"
+      );
+
+      chartEl.innerHTML = `
+        <div class="chart-grid">
+          ${chartHtml}
+          ${winsChartHtml}
+        </div>`;
+
+      tableEl.innerHTML = `
         <div class="data-table-wrap"><table class="data-table">
           <thead><tr><th>Archetipo</th><th>Quota</th><th>V-S-P</th><th>Winrate</th></tr></thead>
           <tbody>
@@ -104,7 +127,7 @@ async function init() {
           </tbody>
         </table></div>`;
     } catch (err) {
-      showError(listEl, err);
+      showError(chartEl, err);
     }
   }
 

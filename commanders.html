@@ -45,6 +45,10 @@
 <main class="page-main">
   <div class="page-heading"><h1>Comandanti</h1></div>
 
+  <div id="commanders-chart">
+    <p class="page-loading">Caricamento comandanti...</p>
+  </div>
+
   <div class="filter-bar">
     <div class="field">
       <label for="commanders-league-filter">Lega</label>
@@ -59,23 +63,45 @@
       <input type="date" id="commanders-date-from">
     </div>
     <div class="field">
-      <label for="commanders-sort">Ordina per</label>
-      <select id="commanders-sort">
-        <option value="played">Giocato</option>
-        <option value="winrate">Winrate</option>
-        <option value="wins">Vittorie</option>
-      </select>
+      <label>Identit&agrave; di colore</label>
+      <div class="filter-bar-row">
+        <div class="color-swatch-row color-swatch-row-compact">
+          <label class="color-swatch color-swatch-W" title="Bianco">
+            <input type="checkbox" name="commanders-color-filter" value="W" aria-label="Bianco">
+          </label>
+          <label class="color-swatch color-swatch-U" title="Blu">
+            <input type="checkbox" name="commanders-color-filter" value="U" aria-label="Blu">
+          </label>
+          <label class="color-swatch color-swatch-B" title="Nero">
+            <input type="checkbox" name="commanders-color-filter" value="B" aria-label="Nero">
+          </label>
+          <label class="color-swatch color-swatch-R" title="Rosso">
+            <input type="checkbox" name="commanders-color-filter" value="R" aria-label="Rosso">
+          </label>
+          <label class="color-swatch color-swatch-G" title="Verde">
+            <input type="checkbox" name="commanders-color-filter" value="G" aria-label="Verde">
+          </label>
+        </div>
+        <label class="checkbox-inline" id="commanders-color-exact-wrap" hidden>
+          <input type="checkbox" id="commanders-color-exact">
+          Solo identit&agrave; esatta
+        </label>
+      </div>
     </div>
-  </div>
-
-  <div id="commanders-chart">
-    <p class="page-loading">Caricamento comandanti...</p>
   </div>
 
   <div class="filter-bar">
     <div class="field">
       <label for="commanders-search">Cerca</label>
       <input type="search" id="commanders-search" placeholder="Nome comandante...">
+    </div>
+    <div class="field" style="margin-left:auto;">
+      <label for="commanders-sort">Ordina per</label>
+      <select id="commanders-sort">
+        <option value="played">Giocato</option>
+        <option value="winrate">Winrate</option>
+        <option value="wins">Vittorie</option>
+      </select>
     </div>
   </div>
 
