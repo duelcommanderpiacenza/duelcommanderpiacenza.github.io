@@ -40,7 +40,6 @@ function renderLeagueCard({ league, summary, standings }) {
     <a class="dashboard-league-card" href="league.html?id=${league.id}">
       <div class="dashboard-league-card-head">
         <span class="dashboard-league-card-name">${escapeHtml(league.name)}</span>
-        <span class="badge-status badge-status-open">${league.is_topdeck ? "Topdeck" : "In corso"}</span>
       </div>
       <div class="dashboard-league-card-stats">${summary.events} eventi &middot; ${summary.uniquePlayers} giocatori</div>
       ${
