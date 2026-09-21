@@ -1,5 +1,5 @@
 import { Leagues, Events } from "./db.js";
-import { escapeHtml, leagueStatusBadge, topdeckBadge, showError } from "./ui.js";
+import { escapeHtml, leagueStatusBadge, showError } from "./ui.js";
 
 async function init() {
   const listEl = document.getElementById("leagues-list");
@@ -21,7 +21,7 @@ async function init() {
         <a class="entity-card" href="league.html?id=${l.id}">
           <div class="entity-card-title">${escapeHtml(l.name)}</div>
           <div class="entity-card-meta">${count} event${count === 1 ? "o" : "i"}</div>
-          ${leagueStatusBadge(l.is_open)} ${topdeckBadge(l.is_topdeck)}
+          ${leagueStatusBadge(l.is_open)}
         </a>`;
             })
             .join("");

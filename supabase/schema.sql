@@ -12,9 +12,10 @@
 -- (player1_wins/draws/player2_wins) instead of a single win/loss/draw result
 -- and can be a bye (player2_id null, an automatic win for player1), a league
 -- row can be flagged as a "Topdeck" series (is_topdeck) — the same shape,
--- just without a points leaderboard, only one league/topdeck row can be
--- open at a time, and an entry can carry a manual_rank tiebreak override for
--- its event's standings.
+-- just without a points leaderboard; at most one league and, separately, at
+-- most one Topdeck can be open at a time (one of each together is fine),
+-- and an entry can carry a manual_rank tiebreak override for its event's
+-- standings.
 -- Re-running this drops and recreates every table, so it wipes existing
 -- rows — expected while there's only test data.
 
@@ -112,11 +113,15 @@ create table matches ( -- one round pairing between two players, scored as a bes
   )
 );
 
--- At most one league/topdeck row can have is_open = true at a time (a
--- partial unique index on a column that's always true for the rows it
--- covers means at most one such row can exist). The app closes every other
--- row before opening one, but this is the actual guarantee.
-create unique index leagues_only_one_open_idx on leagues (is_open) where is_open;
+-- At most one *league* and, separately, at most one *Topdeck* series can be
+-- open at a time — a normal league and a Topdeck may be open together, but
+-- never two of the same kind. A partial unique index on is_topdeck, scoped
+-- to the open rows, gives exactly that: among rows where is_open is true,
+-- is_topdeck (only two possible values) must be unique, so at most one
+-- open row has is_topdeck = false and at most one has it = true. The app
+-- closes whatever else is open *of that same kind* before opening one, but
+-- this is the actual guarantee.
+create unique index leagues_only_one_open_idx on leagues (is_topdeck) where is_open;
 
 create index events_league_id_idx on events (league_id);
 create index event_entries_event_id_idx on event_entries (event_id);

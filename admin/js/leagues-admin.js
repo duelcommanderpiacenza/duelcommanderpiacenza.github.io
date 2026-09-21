@@ -8,7 +8,7 @@ import { renderTable, setMessage } from "./crud-ui.js";
 // rather than falling through to a generic message when it does fire.
 function describeError(err, fallback) {
   if (err?.code === "23505" && err?.message?.includes("leagues_only_one_open_idx")) {
-    return "Non possono esistere due leghe/topdeck aperti contemporaneamente. Chiudi quella attualmente aperta per crearne o aprirne un'altra.";
+    return "Non possono esistere due leghe (o due Topdeck) dello stesso tipo aperte contemporaneamente. Chiudi quella attualmente aperta di questo tipo per crearne o aprirne un'altra.";
   }
   return fallback;
 }
@@ -85,9 +85,10 @@ export function initLeaguesAdmin({ onOpenLeague }) {
 
   async function onToggleOpen(row) {
     try {
-      // Only one league/topdeck is open at a time — opening this one closes
-      // every other open row first.
-      if (!row.is_open) await Leagues.closeOtherOpen(row.id);
+      // At most one league, and separately at most one Topdeck, is open at
+      // a time — opening this one closes every other open row of the same
+      // kind first (a league and a Topdeck can be open together).
+      if (!row.is_open) await Leagues.closeOtherOpenOfType(row.is_topdeck, row.id);
       await Leagues.update(row.id, { is_open: !row.is_open });
       await refresh();
     } catch (err) {
@@ -113,11 +114,11 @@ export function initLeaguesAdmin({ onOpenLeague }) {
       if (idField.value) {
         await Leagues.update(idField.value, payload);
       } else {
-        // A new league/topdeck defaults to open, and only one row may be —
-        // close whatever else was open *before* inserting, or the insert
-        // itself would violate that uniqueness the instant another league
-        // is still open.
-        await Leagues.closeAllOpen();
+        // A new league/topdeck defaults to open, and only one of each kind
+        // may be — close whatever else of that same kind was open *before*
+        // inserting, or the insert itself would violate that uniqueness
+        // the instant another row of that kind is still open.
+        await Leagues.closeAllOpenOfType(payload.is_topdeck);
         await Leagues.create(payload);
       }
       resetForm();

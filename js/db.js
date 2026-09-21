@@ -53,15 +53,25 @@ export const Leagues = {
   create: (row) => sb.from("leagues").insert(row).select().single().then(assertOk),
   update: (id, patch) => sb.from("leagues").update(patch).eq("id", id).select().single().then(assertOk),
   remove: (id) => sb.from("leagues").delete().eq("id", id).then(assertOk),
-  // Only one league/topdeck can be open at a time — call before opening one
-  // (flipping an existing row's is_open true) so it's the only one left open.
-  closeOtherOpen: (exceptId) =>
-    sb.from("leagues").update({ is_open: false }).eq("is_open", true).neq("id", exceptId).then(assertOk),
+  // At most one league, and separately at most one Topdeck, is open at a
+  // time (one of each together is fine) — call before opening one
+  // (flipping an existing row's is_open true) so it's the only *other row
+  // of that same kind* left open.
+  closeOtherOpenOfType: (isTopdeck, exceptId) =>
+    sb
+      .from("leagues")
+      .update({ is_open: false })
+      .eq("is_open", true)
+      .eq("is_topdeck", isTopdeck)
+      .neq("id", exceptId)
+      .then(assertOk),
   // Same, for creating a brand new row — it doesn't exist yet to "except",
-  // and a new league/topdeck defaults to open, so every other open row must
-  // be closed *before* the insert (a plain insert would otherwise violate
-  // leagues_only_one_open_idx the instant another row is still open).
-  closeAllOpen: () => sb.from("leagues").update({ is_open: false }).eq("is_open", true).then(assertOk),
+  // and a new league/topdeck defaults to open, so every other open row of
+  // that same kind must be closed *before* the insert (a plain insert would
+  // otherwise violate leagues_only_one_open_idx the instant another row of
+  // that kind is still open).
+  closeAllOpenOfType: (isTopdeck) =>
+    sb.from("leagues").update({ is_open: false }).eq("is_open", true).eq("is_topdeck", isTopdeck).then(assertOk),
 };
 
 export const Events = {
