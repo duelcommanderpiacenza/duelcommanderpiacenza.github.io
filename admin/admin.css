@@ -227,6 +227,64 @@ html {
   font-size: 0.8rem;
 }
 
+/* Closed by default (no `open` attribute) — a <details> gives this for
+   free with no JS needed. */
+.badges-legend {
+  margin-top: 20px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card-sm);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow-card);
+  padding: 4px 18px;
+}
+
+.badges-legend summary {
+  cursor: pointer;
+  padding: 14px 0;
+  font-weight: 800;
+  color: var(--text-title);
+  list-style: none;
+}
+
+.badges-legend summary::-webkit-details-marker {
+  display: none;
+}
+
+.badges-legend summary::before {
+  content: "\25B8";
+  display: inline-block;
+  width: 1em;
+  margin-right: 6px;
+  color: var(--brand-red-deep);
+  transition: transform 180ms ease;
+}
+
+.badges-legend[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.badges-legend dl {
+  margin: 0 0 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--hairline);
+}
+
+.badges-legend dt {
+  font-weight: 700;
+  color: var(--text-title);
+  margin-top: 12px;
+}
+
+.badges-legend dt:first-child {
+  margin-top: 0;
+}
+
+.badges-legend dd {
+  margin: 4px 0 0;
+  color: var(--text-body);
+  font-size: 0.92rem;
+}
+
 .form-message {
   min-height: 20px;
   font-weight: 700;
@@ -392,7 +450,8 @@ html {
 :root[data-theme="dark"] .login-card,
 :root[data-theme="dark"] .admin-form-card,
 :root[data-theme="dark"] .admin-tab,
-:root[data-theme="dark"] .round-tab {
+:root[data-theme="dark"] .round-tab,
+:root[data-theme="dark"] .badges-legend {
   background: rgba(255, 255, 255, 0.05);
 }
 

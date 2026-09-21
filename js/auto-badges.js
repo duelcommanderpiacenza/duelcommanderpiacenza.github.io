@@ -15,7 +15,7 @@ const MAX_AUTO_BADGES_PER_PLAYER = 3;
 // A tiny sample shouldn't win either stats-based badge below — a single
 // lucky win is a meaningless 100% winrate, and a handful of matches
 // shouldn't out-rank nobody-else-qualifies for "most played" either.
-const MIN_MATCHES_FOR_STATS_BADGES = 5;
+const MIN_MATCHES_FOR_STATS_BADGES = 10;
 const MIN_COMMANDERS_FOR_DIVERSITY_BADGE = 5;
 const COMPLETIST_EVENT_COUNT = 10;
 
