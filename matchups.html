@@ -13,7 +13,7 @@
       } catch (e) {}
     })();
   </script>
-  <title>Eventi - Duel Commander Piacenza</title>
+  <title>Matchups - Duel Commander Piacenza</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="view-transition" content="same-origin">
   <link rel="icon" type="image/png" href="dc_pc.png">
@@ -21,7 +21,7 @@
   <meta name="theme-color" content="#dc181c">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body data-active-nav="events" class="is-loading">
+<body data-active-nav="matchups" class="is-loading">
 
 <header class="site-header">
   <a class="site-header-brand" href="index.html">
@@ -44,14 +44,30 @@
 </nav>
 
 <main class="page-main">
-  <div class="page-heading"><h1>Eventi</h1></div>
+  <div class="page-heading"><h1>Matchups</h1></div>
+  <p class="page-subtitle">La matchup matrix mostra, per ogni coppia di comandanti, la percentuale di vittorie dell&rsquo;uno contro l&rsquo;altro nelle partite gi&agrave; giocate tra loro.</p>
 
   <div class="page-loading-region">
     <div id="page-loading-overlay" class="page-loading-overlay"><p>Caricamento...</p></div>
 
-    <div id="events-list" class="entity-grid">
-      <p class="page-loading">Caricamento eventi...</p>
+    <div class="matchups-toolbar">
+      <h2 id="matchups-mode-title">Comandanti pi&ugrave; giocati</h2>
+      <button type="button" class="btn-secondary" id="matchups-custom-btn">Crea tabella personalizzata</button>
     </div>
+
+    <div class="card matchups-picker-card" id="matchups-picker-card" hidden>
+      <div class="matchups-picker-head">
+        <div class="field matchups-typeahead" style="margin-bottom:0;">
+          <label for="matchups-search">Cerca comandante</label>
+          <input type="search" id="matchups-search" placeholder="Nome comandante..." autocomplete="off" role="combobox" aria-expanded="false" aria-controls="matchups-dropdown">
+          <div class="matchups-dropdown" id="matchups-dropdown" role="listbox" hidden></div>
+        </div>
+        <span class="matchups-count" id="matchups-count">0 / 10 selezionati</span>
+      </div>
+      <div class="matchups-selected-list" id="matchups-selected-list"></div>
+    </div>
+
+    <div id="matchups-matrix"></div>
   </div>
 </main>
 
@@ -71,7 +87,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script type="module" src="js/layout.js"></script>
-<script type="module" src="js/events-page.js"></script>
+<script type="module" src="js/matchups-page.js"></script>
 
 </body>
 </html>

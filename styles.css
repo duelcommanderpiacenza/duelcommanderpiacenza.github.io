@@ -248,6 +248,7 @@ body[data-active-nav="current"] .nav-link[data-nav="current"],
 body[data-active-nav="leagues"] .nav-link[data-nav="leagues"],
 body[data-active-nav="events"] .nav-link[data-nav="events"],
 body[data-active-nav="commanders"] .nav-link[data-nav="commanders"],
+body[data-active-nav="matchups"] .nav-link[data-nav="matchups"],
 body[data-active-nav="archetypes"] .nav-link[data-nav="archetypes"],
 body[data-active-nav="players"] .nav-link[data-nav="players"],
 body[data-active-nav="social"] .nav-link[data-nav="social"],
@@ -255,6 +256,7 @@ body[data-active-nav="current"] .nav-link[data-nav="current"]:hover,
 body[data-active-nav="leagues"] .nav-link[data-nav="leagues"]:hover,
 body[data-active-nav="events"] .nav-link[data-nav="events"]:hover,
 body[data-active-nav="commanders"] .nav-link[data-nav="commanders"]:hover,
+body[data-active-nav="matchups"] .nav-link[data-nav="matchups"]:hover,
 body[data-active-nav="archetypes"] .nav-link[data-nav="archetypes"]:hover,
 body[data-active-nav="players"] .nav-link[data-nav="players"]:hover,
 body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
@@ -2263,6 +2265,218 @@ img.cs-option-icon {
   gap: 14px;
 }
 
+/* Matchups page: commander picker (search + capped checkbox list) and the
+   win% heatmap matrix built from it. */
+
+.matchups-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.matchups-toolbar h2 {
+  margin: 0;
+}
+
+.matchups-picker-card {
+  margin-bottom: 22px;
+}
+
+.matchups-picker-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.matchups-picker-head .field {
+  min-width: 240px;
+  flex: 1 1 240px;
+}
+
+.matchups-typeahead {
+  position: relative;
+}
+
+/* Promoted to its own stacking context (via JS, matchups-page.js) only
+   while the dropdown is actually open. .matchups-typeahead's own z-index
+   wasn't enough — it's nested *inside* .matchups-picker-card, which is
+   itself a plain, unpositioned element, so the z-index never actually got
+   compared against the matrix table's own stacking context below it; it
+   has to be the card itself that's promoted. */
+.matchups-picker-card.is-dropdown-open {
+  position: relative;
+  z-index: 30;
+}
+
+.matchups-count {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.matchups-count.is-full {
+  color: var(--brand-red-deep);
+}
+
+/* Same popup language as the custom-select dropdown (.cs-menu) elsewhere —
+   border/radius/shadow/open animation — just live-filtered by the search
+   box above it instead of a fixed option list. */
+.matchups-dropdown {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: var(--shadow-card-hover);
+  padding: 6px;
+  animation: cs-menu-in 140ms ease both;
+}
+
+.matchups-dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.95rem;
+  text-align: left;
+  color: var(--text-body);
+  cursor: pointer;
+}
+
+.matchups-dropdown-item:hover,
+.matchups-dropdown-item:focus {
+  outline: none;
+  background: var(--hairline-hover);
+}
+
+.matchups-dropdown-empty {
+  padding: 9px 12px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* Selected commanders as removable chips, same pill language as
+   .dashboard-league-chip elsewhere, with a small "x" appended to remove. */
+.matchups-selected-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.matchups-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px 6px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--hairline);
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--brand-red-deep);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.matchups-chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(220, 24, 28, 0.12);
+  color: var(--brand-red-deep);
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.matchups-chip-remove:hover {
+  background: rgba(220, 24, 28, 0.25);
+}
+
+.matchups-matrix-wrap {
+  overflow-x: auto;
+}
+
+/* Deliberately its own class, not table.data-table — that shared rule's
+   selector specificity (element+class+element) would otherwise win over
+   this one for shared properties like padding/text-align, since a plain
+   class selector alone is less specific. */
+.matchups-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.85rem;
+}
+
+.matchups-table th,
+.matchups-table td {
+  border-bottom: 1px solid var(--hairline);
+  padding: 8px 10px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.matchups-row-header {
+  text-align: left;
+  color: var(--text-title);
+  font-weight: 800;
+  /* Solid, not translucent — this sticky column needs to fully mask the
+     colored heatmap cells scrolling underneath it, not blend with them. */
+  background: #fff;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+/* The empty top-left cell above the row-header column — without its own
+   sticky+solid background, the scrolling column headers in the same row
+   could still be seen passing underneath the sticky row-header column
+   below it while scrolling horizontally. */
+.matchups-corner-header {
+  background: #fff;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+}
+
+.matchups-col-header {
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-title);
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+
+.matchups-cell {
+  font-weight: 700;
+  color: var(--text-title);
+  cursor: default;
+}
+
+.matchups-cell-empty {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
 /* Metagame share chart (ring + side legend), js/metagame-chart.js. A single
    mask cuts the hole directly out of the conic-gradient itself — it's a ring
    from the very first frame, not a pie with a disc laid on top of it — and
@@ -2526,7 +2740,23 @@ img.cs-option-icon {
    arbitrary page content (tables, other cards) behind them, so they need a
    solid color of their own to stay legible regardless of what's underneath. */
 :root[data-theme="dark"] .cs-menu,
-:root[data-theme="dark"] .cd-popup {
+:root[data-theme="dark"] .cd-popup,
+:root[data-theme="dark"] .matchups-dropdown {
+  background: #241a1d;
+}
+
+:root[data-theme="dark"] .matchups-dropdown-item:hover,
+:root[data-theme="dark"] .matchups-dropdown-item:focus {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme="dark"] .matchups-chip {
+  background: rgba(255, 255, 255, 0.045);
+}
+
+/* Solid, not translucent — this sticky column needs to fully mask
+   whatever's scrolled underneath it, same reasoning as .cs-menu above. */
+:root[data-theme="dark"] .matchups-row-header {
   background: #241a1d;
 }
 
