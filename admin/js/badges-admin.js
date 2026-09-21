@@ -1,13 +1,16 @@
 import { Badges } from "../../js/db.js";
-import { renderTable, setMessage } from "./crud-ui.js";
+import { renderTable, setMessage, fillSelect } from "./crud-ui.js";
 import { emit } from "./bus.js";
 
+// Each rule can only ever point at one player at a time, so it only makes
+// sense assigned to one badge — the dropdown built from this list leaves
+// out whichever rules another badge already has (see populateRuleOptions).
 const RULE_LABELS = {
-  league_winner: "Vincitore ultima lega",
-  top8_streak: "3 top8 consecutivi",
-  league_rank_1: "1° in classifica",
-  league_rank_2: "2° in classifica",
-  league_rank_3: "3° in classifica",
+  league_winner: "Vincitore ultima lega conclusa",
+  top8_streak: "3 top8 consecutivi (ultimi 3 mesi)",
+  league_rank_1: "1° in classifica (lega attuale)",
+  league_rank_2: "2° in classifica (lega attuale)",
+  league_rank_3: "3° in classifica (lega attuale)",
 };
 
 function ruleLabel(row) {
@@ -27,6 +30,23 @@ export function initBadgesAdmin() {
   const iconRadios = () => Array.from(document.querySelectorAll('input[name="badges-admin-icon"]'));
 
   let allBadges = [];
+
+  // Rebuilds the rule dropdown from whichever rules aren't already taken by
+  // another badge. excludeId is the badge currently being edited (if any),
+  // so its own already-assigned rule stays offered — otherwise saving it
+  // again with the same rule unchanged would have nowhere to select it.
+  function populateRuleOptions(excludeId) {
+    const usedRules = new Set(
+      allBadges.filter((b) => b.auto_rule && b.id !== excludeId).map((b) => b.auto_rule)
+    );
+    const options =
+      '<option value="">Nessuna (solo manuale)</option>' +
+      Object.entries(RULE_LABELS)
+        .filter(([value]) => !usedRules.has(value))
+        .map(([value, label]) => `<option value="${value}">${label}</option>`)
+        .join("");
+    fillSelect(autoRuleField, options);
+  }
 
   // Live filter over the already-fetched list, so it's easy to check
   // whether a badge already exists before adding a duplicate.
@@ -53,6 +73,7 @@ export function initBadgesAdmin() {
     try {
       allBadges = await Badges.list();
       renderList();
+      populateRuleOptions(null);
     } catch (err) {
       setMessage(msgEl, "Errore nel caricamento.", true);
     }
@@ -66,6 +87,7 @@ export function initBadgesAdmin() {
     iconRadios().forEach((radio) => {
       radio.checked = radio.value === row.icon;
     });
+    populateRuleOptions(row.id);
     autoRuleField.value = row.auto_rule ?? "";
     priorityField.value = row.priority ?? 0;
   }
@@ -73,6 +95,7 @@ export function initBadgesAdmin() {
   function resetForm() {
     idField.value = "";
     form.reset();
+    populateRuleOptions(null);
     priorityField.value = 0;
     setMessage(msgEl, "", false);
   }
