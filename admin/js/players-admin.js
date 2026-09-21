@@ -1,4 +1,5 @@
 import { Players, Badges } from "../../js/db.js";
+import { escapeHtml } from "../../js/ui.js";
 import { renderTable, setMessage, fillSelect } from "./crud-ui.js";
 import { emit, on } from "./bus.js";
 
@@ -25,9 +26,24 @@ export function initPlayersAdmin() {
   async function populateBadges() {
     const badges = await Badges.list();
     const manualBadges = badges.filter((b) => !b.auto_rule);
+    // data-icon (a URL) or data-icon-text (an emoji) let the custom
+    // dropdown (js/custom-select.js) render the icon as its own element
+    // rather than as plain inline text — needed so an uploaded image and a
+    // plain emoji end up sitting on the same vertical anchor instead of
+    // wherever the emoji font's own glyph metrics happen to place it. The
+    // option's own text is just the name either way.
     const options =
       '<option value="">&mdash; nessuno &mdash;</option>' +
-      manualBadges.map((b) => `<option value="${b.id}">${b.icon} ${b.name}</option>`).join("");
+      manualBadges
+        .map((b) => {
+          const iconAttr = b.icon_url
+            ? ` data-icon="${escapeHtml(b.icon_url)}"`
+            : b.icon
+            ? ` data-icon-text="${escapeHtml(b.icon)}"`
+            : "";
+          return `<option value="${b.id}"${iconAttr}>${escapeHtml(b.name)}</option>`;
+        })
+        .join("");
     fillSelect(badge1Field, options);
     fillSelect(badge2Field, options);
   }
@@ -52,7 +68,19 @@ export function initPlayersAdmin() {
         {
           key: "badges",
           label: "Badge",
-          render: (r) => [r.badge1, r.badge2].filter(Boolean).map((b) => b.icon).join(" ") || "—",
+          // .badge-icon-box gives the image and the emoji the same
+          // flex-centered box (see styles.css) so they share a vertical
+          // anchor — an emoji as bare text sits per font glyph metrics,
+          // which doesn't line up with a flex-centered <img>.
+          render: (r) =>
+            [r.badge1, r.badge2]
+              .filter(Boolean)
+              .map((b) =>
+                b.icon_url
+                  ? `<img src="${b.icon_url}" alt="" class="badge-icon-box" style="width:1.2em;height:1.2em;">`
+                  : `<span class="badge-icon-box" style="width:1.2em;height:1.2em;">${b.icon ?? ""}</span>`
+              )
+              .join(" ") || "—",
         },
       ],
       { onEdit, onDelete }

@@ -127,7 +127,7 @@ export async function computeAutoBadgeAssignments() {
     const top = [...playerBadges].sort((a, b) => b.priority - a.priority).slice(0, MAX_AUTO_BADGES_PER_PLAYER);
     result.set(
       playerId,
-      top.map((b) => ({ id: b.id, name: b.name, icon: b.icon }))
+      top.map((b) => ({ id: b.id, name: b.name, icon: b.icon, icon_url: b.icon_url }))
     );
   }
   return result;

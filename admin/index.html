@@ -179,8 +179,16 @@
           </div>
           <div class="field">
             <label>Icona</label>
-            <div class="icon-swatch-row">
-              <label class="icon-swatch" aria-label="Coppa"><input type="radio" name="badges-admin-icon" value="&#127942;" required>&#127942;</label>
+            <div class="checkbox-inline" style="display:inline-flex;margin-right:20px;">
+              <input type="radio" name="badges-admin-icon-mode" id="badges-admin-icon-mode-emoji" value="emoji" checked>
+              <label for="badges-admin-icon-mode-emoji" style="font-weight:600;text-transform:none;letter-spacing:normal;color:inherit;">Emoji</label>
+            </div>
+            <div class="checkbox-inline" style="display:inline-flex;margin-bottom:12px;">
+              <input type="radio" name="badges-admin-icon-mode" id="badges-admin-icon-mode-image" value="image">
+              <label for="badges-admin-icon-mode-image" style="font-weight:600;text-transform:none;letter-spacing:normal;color:inherit;">Immagine personalizzata</label>
+            </div>
+            <div id="badges-admin-icon-emoji-wrap" class="icon-swatch-row">
+              <label class="icon-swatch" aria-label="Coppa"><input type="radio" name="badges-admin-icon" value="&#127942;">&#127942;</label>
               <label class="icon-swatch" aria-label="Medaglia d'oro"><input type="radio" name="badges-admin-icon" value="&#129351;">&#129351;</label>
               <label class="icon-swatch" aria-label="Medaglia d'argento"><input type="radio" name="badges-admin-icon" value="&#129352;">&#129352;</label>
               <label class="icon-swatch" aria-label="Medaglia di bronzo"><input type="radio" name="badges-admin-icon" value="&#129353;">&#129353;</label>
@@ -204,6 +212,11 @@
               <label class="icon-swatch" aria-label="Maschere teatrali"><input type="radio" name="badges-admin-icon" value="&#127917;">&#127917;</label>
               <label class="icon-swatch" aria-label="Unicorno"><input type="radio" name="badges-admin-icon" value="&#129412;">&#129412;</label>
               <label class="icon-swatch" aria-label="Coriandoli"><input type="radio" name="badges-admin-icon" value="&#127881;">&#127881;</label>
+            </div>
+            <div id="badges-admin-icon-image-wrap" hidden>
+              <input type="file" id="badges-admin-icon-file" accept="image/png,image/jpeg,image/webp">
+              <p class="field-hint">PNG, JPG o WEBP, max 300&nbsp;KB.</p>
+              <div id="badges-admin-icon-preview"></div>
             </div>
           </div>
           <div class="field">

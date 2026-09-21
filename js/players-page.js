@@ -33,10 +33,12 @@ function mostUsedCommander(entries) {
 function playerBadgesHtml(p, autoBadgesByPlayer) {
   const badges = [p.badge1, p.badge2, ...(autoBadgesByPlayer.get(p.id) ?? [])].filter(Boolean);
   return badges
-    .map(
-      (b) =>
-        `<span class="icon-badge" data-tooltip="${escapeHtml(b.name)}" aria-label="${escapeHtml(b.name)}" tabindex="0">${b.icon}</span>`
-    )
+    .map((b) => {
+      const glyph = b.icon_url
+        ? `<img src="${b.icon_url}" alt="" class="icon-badge-img badge-icon-box" style="width:1.1em;height:1.1em;">`
+        : `<span class="badge-icon-box" style="width:1.1em;height:1.1em;">${b.icon ?? ""}</span>`;
+      return `<span class="icon-badge" data-tooltip="${escapeHtml(b.name)}" aria-label="${escapeHtml(b.name)}" tabindex="0">${glyph}</span>`;
+    })
     .join("");
 }
 

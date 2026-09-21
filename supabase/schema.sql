@@ -49,7 +49,13 @@ create table commanders (
 create table badges ( -- small icon + name a player can be tagged with (e.g. "Campione", trophy icon)
   id uuid primary key default gen_random_uuid(),
   name text not null unique, -- shown as the tooltip when hovering the icon next to a player's name
-  icon text not null, -- one emoji, picked from a fixed pool offered by the admin UI
+  -- Exactly one of these two is set: icon is a fixed emoji from the admin's
+  -- pool, icon_url is a custom PNG/JPG/WEBP the admin uploaded to the
+  -- "badge-icons" Supabase Storage bucket (see js/db.js's BadgeIcons and
+  -- admin/js/badges-admin.js). The rendering side (js/players-page.js) just
+  -- checks which one is present.
+  icon text,
+  icon_url text,
   -- Auto-assignment: null means this badge is manual-only (assignable via
   -- the two fixed dropdowns on the players form). A non-null rule instead
   -- computes who currently holds this badge live, from match/league data,
@@ -62,6 +68,7 @@ create table badges ( -- small icon + name a player can be tagged with (e.g. "Ca
   -- players) always display before any auto badge, regardless of this.
   priority integer not null default 0,
   created_at timestamptz not null default now(),
+  constraint badges_icon_present check (icon is not null or icon_url is not null),
   constraint badges_auto_rule_valid check (
     auto_rule is null or auto_rule in ('league_winner', 'top8_streak', 'league_rank_1', 'league_rank_2', 'league_rank_3')
   )

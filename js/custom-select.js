@@ -51,6 +51,32 @@ function selectValue(select, value) {
   select.dispatchEvent(new Event("change", { bubbles: true }));
 }
 
+// An <option> can carry an icon two ways — data-icon (a URL, e.g. a
+// custom-uploaded badge image) or data-icon-text (a single emoji/glyph,
+// e.g. a badge's fixed icon). Both render into an identically-sized
+// .cs-option-icon box (see CSS) so an image and an emoji end up on the
+// same vertical anchor — an emoji left as plain inline text next to the
+// label would sit wherever the font's own glyph metrics happen to place
+// it, which rarely lines up with a flex-centered <img>. Built as real DOM
+// elements rather than an HTML string, so there's no need to hand-escape
+// the option's own text.
+function appendOptionIcon(container, opt) {
+  const iconUrl = opt.dataset.icon;
+  const iconText = opt.dataset.iconText;
+  if (iconUrl) {
+    const img = document.createElement("img");
+    img.className = "cs-option-icon";
+    img.src = iconUrl;
+    img.alt = "";
+    container.appendChild(img);
+  } else if (iconText) {
+    const span = document.createElement("span");
+    span.className = "cs-option-icon cs-option-icon-text";
+    span.textContent = iconText;
+    container.appendChild(span);
+  }
+}
+
 function rebuildMenu(wrap, select) {
   const menu = wrap.querySelector(".cs-menu");
   menu.innerHTML = "";
@@ -60,7 +86,10 @@ function rebuildMenu(wrap, select) {
     row.setAttribute("role", "option");
     row.tabIndex = -1;
     row.dataset.value = opt.value;
-    row.textContent = opt.textContent;
+    appendOptionIcon(row, opt);
+    const label = document.createElement("span");
+    label.textContent = opt.textContent;
+    row.appendChild(label);
     row.addEventListener("click", () => {
       selectValue(select, opt.value);
       closeMenu(wrap);
@@ -76,6 +105,12 @@ function syncUI(wrap, select) {
   menu.querySelectorAll(".cs-option").forEach((row) => {
     row.setAttribute("aria-selected", row.dataset.value === select.value ? "true" : "false");
   });
+
+  const triggerIcon = wrap.querySelector(".cs-trigger-icon");
+  triggerIcon.innerHTML = "";
+  const selectedOption = select.options[select.selectedIndex];
+  if (selectedOption) appendOptionIcon(triggerIcon, selectedOption);
+
   wrap.querySelector(".cs-trigger-label").textContent = currentLabel(select);
   const trigger = wrap.querySelector(".cs-trigger");
   trigger.disabled = select.disabled;
@@ -107,7 +142,8 @@ export function enhanceSelect(select) {
   trigger.className = "cs-trigger";
   trigger.setAttribute("aria-haspopup", "listbox");
   trigger.setAttribute("aria-expanded", "false");
-  trigger.innerHTML = '<span class="cs-trigger-label"></span><span class="cs-trigger-arrow" aria-hidden="true"></span>';
+  trigger.innerHTML =
+    '<span class="cs-trigger-icon"></span><span class="cs-trigger-label"></span><span class="cs-trigger-arrow" aria-hidden="true"></span>';
 
   const menu = document.createElement("div");
   menu.className = "cs-menu";

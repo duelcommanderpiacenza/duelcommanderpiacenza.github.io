@@ -27,7 +27,7 @@ export const Commanders = {
 // know which is which. Up to 2 more badges can show per player, computed
 // live from badges.auto_rule (js/auto-badges.js) rather than stored here.
 const BADGE_EMBED =
-  "badge1:badges!players_badge1_id_fkey(id,name,icon), badge2:badges!players_badge2_id_fkey(id,name,icon)";
+  "badge1:badges!players_badge1_id_fkey(id,name,icon,icon_url), badge2:badges!players_badge2_id_fkey(id,name,icon,icon_url)";
 
 export const Badges = {
   list: () => sb.from("badges").select("*").order("name").then(assertOk),
@@ -35,6 +35,36 @@ export const Badges = {
   create: (row) => sb.from("badges").insert(row).select().single().then(assertOk),
   update: (id, patch) => sb.from("badges").update(patch).eq("id", id).select().single().then(assertOk),
   remove: (id) => sb.from("badges").delete().eq("id", id).then(assertOk),
+};
+
+// A badge's icon can be either a fixed emoji (badges.icon) or a custom
+// uploaded image (badges.icon_url, a public URL into this bucket) — see
+// admin/js/badges-admin.js. Kept as its own small object rather than folded
+// into Badges since it talks to Supabase Storage, a different API surface
+// than the table CRUD above.
+const BADGE_ICON_BUCKET = "badge-icons";
+
+export const BadgeIcons = {
+  upload: async (file) => {
+    const ext = (file.name.split(".").pop() || "png").toLowerCase();
+    const path = `${crypto.randomUUID()}.${ext}`;
+    const { error } = await sb.storage.from(BADGE_ICON_BUCKET).upload(path, file, { cacheControl: "3600", upsert: false });
+    if (error) throw error;
+    return sb.storage.from(BADGE_ICON_BUCKET).getPublicUrl(path).data.publicUrl;
+  },
+  // Best-effort cleanup when a badge's image is replaced or removed —
+  // never blocks the caller if it fails (e.g. the URL isn't one of ours).
+  remove: async (publicUrl) => {
+    const marker = `/${BADGE_ICON_BUCKET}/`;
+    const idx = publicUrl?.indexOf(marker) ?? -1;
+    if (idx === -1) return;
+    const path = publicUrl.slice(idx + marker.length);
+    try {
+      await sb.storage.from(BADGE_ICON_BUCKET).remove([path]);
+    } catch {
+      // ignore — an orphaned file in storage is harmless
+    }
+  },
 };
 
 export const Players = {

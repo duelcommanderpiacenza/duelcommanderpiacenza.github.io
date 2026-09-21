@@ -1194,10 +1194,40 @@ table.data-table tbody tr:hover {
    instead, in the same red-pill language as the rest of the site. */
 .icon-badge {
   position: relative;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
   margin-left: 6px;
   font-size: 1rem;
   cursor: default;
+}
+
+.icon-badge-img {
+  width: 1.1em;
+  height: 1.1em;
+  object-fit: contain;
+  border-radius: 3px;
+}
+
+/* Reusable icon box for anywhere a badge's uploaded image and its emoji
+   fallback can appear side by side (admin player/badge lists, player
+   badge tooltips) — same flex-centering fix as .cs-option-icon in the
+   custom dropdown: an emoji left as plain text sits wherever the font's
+   own glyph metrics place it, which won't match an <img> centered by
+   flexbox. Giving both an identically-sized, self-centering box fixes it
+   everywhere at once. Width/height are set per call site via inline style. */
+.badge-icon-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+img.badge-icon-box {
+  object-fit: contain;
+  border-radius: 3px;
 }
 
 .icon-badge::after,
@@ -1451,10 +1481,17 @@ table.data-table tbody tr:hover {
   transition: border-color 180ms ease;
 }
 
+.cs-trigger-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
 .cs-trigger-label {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
 }
 
 .cs-trigger-arrow {
@@ -1509,11 +1546,39 @@ table.data-table tbody tr:hover {
 }
 
 .cs-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   padding: 9px 12px;
   border-radius: 10px;
   cursor: pointer;
   font-size: 0.95rem;
   color: var(--text-body);
+}
+
+/* An option can carry a data-icon (e.g. a custom-uploaded badge image) —
+   shown here and in the closed trigger's own label (.cs-trigger-label). A
+   flex container centers it reliably; vertical-align doesn't line up an
+   <img> the same way it does inline text. */
+.cs-option-icon {
+  width: 1.1em;
+  height: 1.1em;
+  flex-shrink: 0;
+}
+
+img.cs-option-icon {
+  object-fit: contain;
+  border-radius: 3px;
+}
+
+/* An emoji left as plain inline text sits wherever the font's own glyph
+   metrics happen to place it — flex-centering it inside a box the same
+   size as the image icon above gives both the same vertical anchor. */
+.cs-option-icon-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
 .cs-option:hover,
@@ -1811,6 +1876,14 @@ table.data-table tbody tr:hover {
   gap: 10px;
 }
 
+/* Same fix as .field[hidden] elsewhere — this class's own `display: flex`
+   above otherwise wins the tie against the browser's default
+   `[hidden] { display: none; }` rule, silently making a plain `hidden`
+   toggle do nothing (used by badges-admin.js to switch emoji/image mode). */
+.icon-swatch-row[hidden] {
+  display: none;
+}
+
 .icon-swatch {
   position: relative;
   width: 44px;
@@ -1843,6 +1916,52 @@ table.data-table tbody tr:hover {
   border-color: var(--brand-red);
   box-shadow: 0 0 0 3px rgba(220, 24, 28, 0.25);
   transform: scale(1.08);
+}
+
+#badges-admin-icon-preview img {
+  display: block;
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  margin-top: 10px;
+  border-radius: 12px;
+  border: 2px solid var(--hairline);
+  background: #fff;
+}
+
+/* The file input's own "Scegli file" part is a browser-rendered button
+   pseudo-element (::file-selector-button, ::-webkit-file-upload-button for
+   older WebKit) — styled to match .btn-secondary; the input's own box gets
+   the same look as every other .field input. */
+#badges-admin-icon-file {
+  font: inherit;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--hairline);
+  background: #fff;
+  color: var(--text-body);
+  cursor: pointer;
+}
+
+#badges-admin-icon-file::file-selector-button,
+#badges-admin-icon-file::-webkit-file-upload-button {
+  font: inherit;
+  font-weight: 800;
+  padding: 0 14px;
+  height: 36px;
+  margin-right: 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--hairline);
+  background: #fff;
+  color: var(--brand-red-deep);
+  cursor: pointer;
+  transition: background 180ms ease, border-color 180ms ease;
+}
+
+#badges-admin-icon-file:hover::file-selector-button,
+#badges-admin-icon-file:hover::-webkit-file-upload-button {
+  background: #fff7f4;
+  border-color: var(--hairline-hover);
 }
 
 .form-actions {
@@ -2054,6 +2173,7 @@ table.data-table tbody tr:hover {
 :root[data-theme="dark"] .cd-nav,
 :root[data-theme="dark"] .cd-footer-btn,
 :root[data-theme="dark"] .icon-swatch,
+:root[data-theme="dark"] #badges-admin-icon-file,
 :root[data-theme="dark"] .btn-secondary,
 :root[data-theme="dark"] .btn-danger,
 :root[data-theme="dark"] .expand-button,
@@ -2065,12 +2185,19 @@ table.data-table tbody tr:hover {
   background: rgba(255, 255, 255, 0.06);
 }
 
+:root[data-theme="dark"] #badges-admin-icon-file::file-selector-button,
+:root[data-theme="dark"] #badges-admin-icon-file::-webkit-file-upload-button {
+  background: rgba(255, 255, 255, 0.06);
+}
+
 :root[data-theme="dark"] .btn-secondary:hover,
 :root[data-theme="dark"] .btn-danger:hover,
 :root[data-theme="dark"] .expand-button:hover,
 :root[data-theme="dark"] .section-link:hover,
 :root[data-theme="dark"] .cd-nav:hover,
-:root[data-theme="dark"] .cd-footer-btn:hover {
+:root[data-theme="dark"] .cd-footer-btn:hover,
+:root[data-theme="dark"] #badges-admin-icon-file:hover::file-selector-button,
+:root[data-theme="dark"] #badges-admin-icon-file:hover::-webkit-file-upload-button {
   background: rgba(255, 255, 255, 0.1);
 }
 
