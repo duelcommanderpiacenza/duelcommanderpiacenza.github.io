@@ -1,8 +1,10 @@
+import { Events } from "../../js/db.js";
 import { getSession, signIn, signOut, onAuthChange } from "./auth.js";
 import { setupThemeToggle } from "../../js/theme.js";
 import { eventTitle } from "../../js/ui.js";
 import { enhanceSelects } from "../../js/custom-select.js";
 import { enhanceDateInputs } from "../../js/custom-date.js";
+import { emit } from "./bus.js";
 import { initPlayersAdmin } from "./players-admin.js";
 import { initCommandersAdmin } from "./commanders-admin.js";
 import { initBadgesAdmin } from "./badges-admin.js";
@@ -32,6 +34,7 @@ const leagueDetailBack = document.getElementById("league-detail-back");
 const eventDetailBack = document.getElementById("event-detail-back");
 const matchesDetailBack = document.getElementById("matches-detail-back");
 const openMatchesBtn = document.getElementById("open-matches-btn");
+const eventDetailToggleBtn = document.getElementById("event-detail-toggle-open");
 
 let modulesInitialized = false;
 let currentEvent = null;
@@ -116,14 +119,36 @@ function showAdmin(session) {
     initCommandersAdmin();
 
     const entriesCtl = initEntriesAdmin();
-    const matchesCtl = initMatchesAdmin();
+    const matchesCtl = initMatchesAdmin({ onToggleOpen: toggleEventOpen });
 
     function openEvent(event) {
       currentEvent = event;
       eventDetailTitle.textContent = eventTitle(event);
+      eventDetailToggleBtn.textContent = event.is_open ? "Chiudi evento" : "Riapri evento";
       entriesCtl.openEvent(event);
       enterEventFlow();
     }
+
+    // Open/closed state is shown on both the Iscritti and Partite title
+    // bars — currentEvent is the one object both entriesCtl and matchesCtl
+    // were handed, so updating it here and re-running each module's own
+    // refresh keeps every view in sync regardless of which button was
+    // clicked.
+    async function toggleEventOpen() {
+      if (!currentEvent) return;
+      try {
+        const updated = await Events.update(currentEvent.id, { is_open: !currentEvent.is_open });
+        currentEvent.is_open = updated.is_open;
+        eventDetailToggleBtn.textContent = currentEvent.is_open ? "Chiudi evento" : "Riapri evento";
+        entriesCtl.openEvent(currentEvent);
+        matchesCtl.refreshOpenState();
+        emit("events:changed");
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    eventDetailToggleBtn.addEventListener("click", toggleEventOpen);
 
     const eventsCtl = initEventsAdmin({ onOpenEvent: openEvent });
     initStandaloneEventsAdmin({ onOpenEvent: openEvent });

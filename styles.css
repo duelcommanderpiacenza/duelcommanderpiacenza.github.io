@@ -1472,7 +1472,13 @@ img.badge-icon-box {
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  /* Not space-between: with no icon, that empty .cs-trigger-icon span still
+     counts as a flex item, so the leftover space gets split before AND
+     after the label — pushing it away from the left edge instead of
+     leaving it flush. margin-left: auto on the arrow (below) pushes just
+     that to the right instead, so icon+label always sit naturally at the
+     start. */
+  justify-content: flex-start;
   gap: 10px;
   width: 100%;
   appearance: none;
@@ -1496,6 +1502,7 @@ img.badge-icon-box {
 
 .cs-trigger-arrow {
   flex-shrink: 0;
+  margin-left: auto;
   width: 0;
   height: 0;
   border-left: 5px solid transparent;

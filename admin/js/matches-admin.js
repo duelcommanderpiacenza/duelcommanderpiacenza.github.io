@@ -2,7 +2,7 @@ import { EventEntries, Matches, Events } from "../../js/db.js";
 import { isBye, computeEventLeaderboard } from "../../js/leaderboard.js";
 import { escapeHtml } from "../../js/ui.js";
 import { setMessage, fillSelect } from "./crud-ui.js";
-import { on, emit } from "./bus.js";
+import { on } from "./bus.js";
 
 /**
  * Bottom of the pyramid, one level below entries: matches belong to
@@ -14,7 +14,7 @@ import { on, emit } from "./bus.js";
  * null) when the event has an odd number of entrants — an automatic win
  * for player1, recorded with a placeholder 2-0-0 score.
  */
-export function initMatchesAdmin() {
+export function initMatchesAdmin({ onToggleOpen } = {}) {
   const roundTabsEl = document.getElementById("matches-round-tabs");
   const listEl = document.getElementById("matches-admin-list");
   const form = document.getElementById("matches-admin-form");
@@ -257,20 +257,18 @@ export function initMatchesAdmin() {
     toggleEventOpenBtn.textContent = currentEvent?.is_open ? "Chiudi evento" : "Riapri evento";
   }
 
-  toggleEventOpenBtn.addEventListener("click", async () => {
+  toggleEventOpenBtn.addEventListener("click", () => onToggleOpen?.());
+
+  // The open/closed toggle now also lives on the Iscritti title bar, so the
+  // actual API call is centralized in app.js (the only place holding the one
+  // currentEvent object both this module and entries-admin share) — this
+  // just re-renders whatever this module already has on screen afterward.
+  function refreshOpenState() {
     if (!currentEvent) return;
-    try {
-      const updated = await Events.update(currentEvent.id, { is_open: !currentEvent.is_open });
-      currentEvent.is_open = updated.is_open;
-      updateToggleEventOpenBtn();
-      renderRoundTabs();
-      renderEventLeaderboard();
-      setMessage(msgEl, currentEvent.is_open ? "Evento riaperto." : "Evento chiuso: la classifica è ora pubblica.", false);
-      emit("events:changed");
-    } catch (err) {
-      setMessage(msgEl, "Errore nell'aggiornamento dello stato dell'evento.", true);
-    }
-  });
+    updateToggleEventOpenBtn();
+    renderRoundTabs();
+    renderEventLeaderboard();
+  }
 
   function renderMatchList() {
     const matches = allMatches.filter((m) => (m.round ?? 1) === currentRound);
@@ -429,5 +427,5 @@ export function initMatchesAdmin() {
     populateEntrants().then(refresh);
   }
 
-  return { openEvent };
+  return { openEvent, refreshOpenState };
 }

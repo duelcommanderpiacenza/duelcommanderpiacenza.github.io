@@ -128,6 +128,16 @@
   align-items: start;
 }
 
+/* A grid item's default min-width is `auto`, which lets a wide table (with
+   .data-table-wrap's own overflow-x:auto) force the whole grid — and with
+   it the page — wider than the container instead of scrolling inside its
+   own column. That's what pushed the list column past the title bar's
+   buttons above it (same container, so they should otherwise share a right
+   edge). min-width: 0 lets the track's own 1fr sizing win instead. */
+.admin-panel-layout > * {
+  min-width: 0;
+}
+
 @media (max-width: 800px) {
   .admin-panel-layout {
     grid-template-columns: 1fr;

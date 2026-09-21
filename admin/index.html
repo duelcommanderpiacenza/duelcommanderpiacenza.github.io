@@ -343,7 +343,10 @@
       <a href="#" class="breadcrumb-link" id="event-detail-back">&larr; Torna agli eventi</a>
       <div class="page-heading">
         <h3 id="event-detail-title" style="margin-top:0;"></h3>
-        <button type="button" class="btn-secondary" id="open-matches-btn">Gestisci partite &rarr;</button>
+        <div style="display:flex;gap:10px;">
+          <button type="button" class="btn-secondary" id="event-detail-toggle-open">Chiudi evento</button>
+          <button type="button" class="btn-secondary" id="open-matches-btn">Gestisci partite &rarr;</button>
+        </div>
       </div>
 
       <h4>Iscritti</h4>
@@ -392,7 +395,10 @@
     <!-- Partite, divise in tab per turno, di un evento -->
     <div class="admin-subview" id="subview-matches-detail" hidden>
       <a href="#" class="breadcrumb-link" id="matches-detail-back">&larr; Torna agli iscritti</a>
-      <h3 id="matches-detail-title" style="margin-top:0;"></h3>
+      <div class="page-heading">
+        <h3 id="matches-detail-title" style="margin-top:0;"></h3>
+        <button type="button" class="btn-secondary" id="matches-toggle-event-open">Chiudi evento</button>
+      </div>
 
       <div class="round-tabs" id="matches-round-tabs"></div>
 
@@ -440,10 +446,7 @@
       </div>
 
       <div style="margin-top:32px;">
-        <div class="page-heading">
-          <h3 style="margin:0;">Classifica evento</h3>
-          <button type="button" class="btn-secondary" id="matches-toggle-event-open">Chiudi evento</button>
-        </div>
+        <h3 style="margin:0;">Classifica evento</h3>
         <p class="page-subtitle">
           Anteprima calcolata dai turni inseriti finora, con i tiebreak MTG standard (percentuale vittorie
           avversari, percentuale partite vinte). Usa le frecce per correggere manualmente l'ordine tra
