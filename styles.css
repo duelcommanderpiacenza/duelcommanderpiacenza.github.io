@@ -2199,15 +2199,25 @@ img.cs-option-icon {
 
 /* The file input's own "Scegli file" part is a browser-rendered button
    pseudo-element (::file-selector-button, ::-webkit-file-upload-button for
-   older WebKit) — styled to match .btn-secondary; the input's own box gets
-   the same look as every other .field input. */
+   older WebKit) — styled to match .btn-secondary. The input's own box is
+   left bare (no border/background/padding) so only that pill button shows;
+   without a width cap it'd also size itself to fit the button plus the
+   browser's own "Nessun file selezionato" filename text and overflow the
+   form card sideways, so both a width cap and (since that text can't be
+   removed from the DOM — the browser draws it as part of the control)
+   color: transparent are needed too. The button keeps its own color below
+   since ::file-selector-button is a separate box color:transparent here
+   doesn't reach. */
 #badges-admin-icon-file {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   font: inherit;
-  padding: 8px 10px;
-  border-radius: 12px;
-  border: 1px solid var(--hairline);
-  background: #fff;
-  color: var(--text-body);
+  border: none;
+  background: none;
+  padding: 0;
+  color: transparent;
   cursor: pointer;
 }
 

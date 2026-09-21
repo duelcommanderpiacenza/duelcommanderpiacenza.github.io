@@ -17,6 +17,7 @@ const MAX_AUTO_BADGES_PER_PLAYER = 3;
 // shouldn't out-rank nobody-else-qualifies for "most played" either.
 const MIN_MATCHES_FOR_STATS_BADGES = 5;
 const MIN_COMMANDERS_FOR_DIVERSITY_BADGE = 5;
+const COMPLETIST_EVENT_COUNT = 10;
 
 async function fetchLeagueEventsData(leagueId) {
   const events = await Events.listByLeague(leagueId);
@@ -190,6 +191,33 @@ async function mostCommandersPlayedPlayerIds() {
   );
 }
 
+// Every player with an entry in *all* of the latest COMPLETIST_EVENT_COUNT
+// events club-wide — any league, Topdeck, or standalone, whichever mix is
+// most recent by date — not scoped to one league like the rank/winner rules
+// above. Nobody qualifies until that many events exist yet at all. Any
+// number of players can independently qualify (a threshold check, not a
+// ranking), same shape as top8StreakPlayerIds above.
+async function completistPlayerIds() {
+  const events = await Events.list(); // newest-first already
+  if (events.length < COMPLETIST_EVENT_COUNT) return [];
+  const recentEvents = events.slice(0, COMPLETIST_EVENT_COUNT);
+  const entries = await EventEntries.listByEvents(recentEvents.map((e) => e.id));
+
+  const playerIdsByEvent = new Map(); // event id -> Set of player ids
+  for (const e of entries) {
+    if (!playerIdsByEvent.has(e.event_id)) playerIdsByEvent.set(e.event_id, new Set());
+    playerIdsByEvent.get(e.event_id).add(e.player_id);
+  }
+
+  let qualifying = null;
+  for (const ev of recentEvents) {
+    const playerIds = playerIdsByEvent.get(ev.id) ?? new Set();
+    qualifying = qualifying === null ? new Set(playerIds) : new Set([...qualifying].filter((id) => playerIds.has(id)));
+    if (qualifying.size === 0) break;
+  }
+  return qualifying ? Array.from(qualifying) : [];
+}
+
 /**
  * @returns {Promise<Map<string, Array<{id: string, name: string, icon: string}>>>}
  *   player id -> up to MAX_AUTO_BADGES_PER_PLAYER badges, highest priority first.
@@ -221,6 +249,8 @@ export async function computeAutoBadgeAssignments() {
       for (const playerId of await mostMatchesPlayedPlayerIds()) grant(playerId, badge);
     } else if (badge.auto_rule === "most_commanders_played") {
       for (const playerId of await mostCommandersPlayedPlayerIds()) grant(playerId, badge);
+    } else if (badge.auto_rule === "completionist") {
+      for (const playerId of await completistPlayerIds()) grant(playerId, badge);
     }
   }
 

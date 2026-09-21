@@ -8,14 +8,15 @@ const MAX_ICON_FILE_BYTES = 300 * 1024;
 // sense assigned to one badge — the dropdown built from this list leaves
 // out whichever rules another badge already has (see populateRuleOptions).
 const RULE_LABELS = {
-  league_winner: "Vincitore ultima lega conclusa",
-  top8_streak: "3 top8 consecutivi (ultimi 3 mesi)",
-  league_rank_1: "1° in classifica (lega attuale)",
-  league_rank_2: "2° in classifica (lega attuale)",
-  league_rank_3: "3° in classifica (lega attuale)",
-  highest_winrate: "Winrate più alto (min. 5 partite)",
-  most_matches_played: "Più match giocati (min. 5 partite)",
-  most_commanders_played: "Più comandanti giocati (min. 5 comandanti)",
+  league_winner: "Vincitore ultima lega",
+  top8_streak: "3 top8 consecutive",
+  league_rank_1: "1° in classifica",
+  league_rank_2: "2° in classifica",
+  league_rank_3: "3° in classifica",
+  highest_winrate: "Winrate più alto",
+  most_matches_played: "Più match giocati",
+  most_commanders_played: "Più comandanti giocati",
+  completionist: "10 eventi consecutivi",
 };
 
 function ruleLabel(row) {

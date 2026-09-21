@@ -81,7 +81,7 @@ create table badges ( -- small icon + name a player can be tagged with (e.g. "Ca
   constraint badges_auto_rule_valid check (
     auto_rule is null or auto_rule in (
       'league_winner', 'top8_streak', 'league_rank_1', 'league_rank_2', 'league_rank_3',
-      'highest_winrate', 'most_matches_played', 'most_commanders_played'
+      'highest_winrate', 'most_matches_played', 'most_commanders_played', 'completionist'
     )
   )
 );
