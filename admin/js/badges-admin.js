@@ -13,6 +13,9 @@ const RULE_LABELS = {
   league_rank_1: "1° in classifica (lega attuale)",
   league_rank_2: "2° in classifica (lega attuale)",
   league_rank_3: "3° in classifica (lega attuale)",
+  highest_winrate: "Winrate più alto (min. 5 partite)",
+  most_matches_played: "Più match giocati (min. 5 partite)",
+  most_commanders_played: "Più comandanti giocati (min. 5 comandanti)",
 };
 
 function ruleLabel(row) {

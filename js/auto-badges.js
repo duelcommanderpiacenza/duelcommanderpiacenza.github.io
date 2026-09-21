@@ -7,11 +7,16 @@
 // affected by whatever league/event/date filter a visitor has selected.
 
 import { Badges, Leagues, Events, EventEntries, Matches } from "./db.js";
-import { computeEventLeaderboard, computeLeaguePoints } from "./leaderboard.js";
+import { computeEventLeaderboard, computeLeaguePoints, isBye } from "./leaderboard.js";
 
 const TOP8_STREAK_COUNT = 3;
 const TOP8_STREAK_WINDOW_MONTHS = 3;
-const MAX_AUTO_BADGES_PER_PLAYER = 2;
+const MAX_AUTO_BADGES_PER_PLAYER = 3;
+// A tiny sample shouldn't win either stats-based badge below — a single
+// lucky win is a meaningless 100% winrate, and a handful of matches
+// shouldn't out-rank nobody-else-qualifies for "most played" either.
+const MIN_MATCHES_FOR_STATS_BADGES = 5;
+const MIN_COMMANDERS_FOR_DIVERSITY_BADGE = 5;
 
 async function fetchLeagueEventsData(leagueId) {
   const events = await Events.listByLeague(leagueId);
@@ -94,6 +99,97 @@ async function top8StreakPlayerIds() {
   return qualifying;
 }
 
+// Used by both match-based stats badges below (game-basis winrate and
+// total matches played) — each one calls this independently, so both
+// badges being configured at once means two separate fetches of the
+// matches table, same trade-off the existing league-rank rules already
+// make (each doing its own fetch) in exchange for keeping each rule
+// self-contained.
+async function playerMatchStats() {
+  const allMatches = await Matches.listAll();
+  const stats = new Map(); // player id -> { played, gameWins, gameTotal }
+
+  function ensure(playerId) {
+    if (!stats.has(playerId)) stats.set(playerId, { played: 0, gameWins: 0, gameTotal: 0 });
+    return stats.get(playerId);
+  }
+
+  for (const m of allMatches) {
+    const p1 = ensure(m.player1_id);
+    p1.played += 1;
+    if (isBye(m)) {
+      // A bye's placeholder 2-0-0 score is a clean win, same treatment as
+      // the official tiebreaker rules elsewhere (js/leaderboard.js).
+      p1.gameWins += 2;
+      p1.gameTotal += 2;
+      continue;
+    }
+    const p2 = ensure(m.player2_id);
+    p2.played += 1;
+    const gameTotal = m.player1_wins + m.draws + m.player2_wins;
+    p1.gameWins += m.player1_wins;
+    p1.gameTotal += gameTotal;
+    p2.gameWins += m.player2_wins;
+    p2.gameTotal += gameTotal;
+  }
+  return stats;
+}
+
+// The player(s) tied for the highest value of valueFn among everyone who
+// clears minSample — an empty array (not an error) when nobody does yet.
+function playersWithMaxValue(entries, valueFn, minSample, sampleFn) {
+  let max = -Infinity;
+  let winners = [];
+  for (const [playerId, data] of entries) {
+    if (sampleFn(data) < minSample) continue;
+    const value = valueFn(data);
+    if (value > max) {
+      max = value;
+      winners = [playerId];
+    } else if (value === max) {
+      winners.push(playerId);
+    }
+  }
+  return winners;
+}
+
+async function highestWinratePlayerIds() {
+  const stats = await playerMatchStats();
+  return playersWithMaxValue(
+    stats,
+    (s) => (s.gameTotal > 0 ? s.gameWins / s.gameTotal : -1),
+    MIN_MATCHES_FOR_STATS_BADGES,
+    (s) => s.played
+  );
+}
+
+async function mostMatchesPlayedPlayerIds() {
+  const stats = await playerMatchStats();
+  return playersWithMaxValue(stats, (s) => s.played, MIN_MATCHES_FOR_STATS_BADGES, (s) => s.played);
+}
+
+// Distinct commanders piloted — counts a commander whether it was played as
+// the primary or as the partner/background, same convention as the
+// commander detail page's own "played this commander" definition.
+async function mostCommandersPlayedPlayerIds() {
+  const entries = await EventEntries.listAll();
+  const commandersByPlayer = new Map(); // player id -> Set of commander ids
+
+  for (const e of entries) {
+    if (!commandersByPlayer.has(e.player_id)) commandersByPlayer.set(e.player_id, new Set());
+    const set = commandersByPlayer.get(e.player_id);
+    if (e.commander_id) set.add(e.commander_id);
+    if (e.partner_commander_id) set.add(e.partner_commander_id);
+  }
+
+  return playersWithMaxValue(
+    commandersByPlayer,
+    (set) => set.size,
+    MIN_COMMANDERS_FOR_DIVERSITY_BADGE,
+    (set) => set.size
+  );
+}
+
 /**
  * @returns {Promise<Map<string, Array<{id: string, name: string, icon: string}>>>}
  *   player id -> up to MAX_AUTO_BADGES_PER_PLAYER badges, highest priority first.
@@ -119,6 +215,12 @@ export async function computeAutoBadgeAssignments() {
       grant(await leagueRankPlayerId(leagues, badge.auto_rule), badge);
     } else if (badge.auto_rule === "top8_streak") {
       for (const playerId of await top8StreakPlayerIds()) grant(playerId, badge);
+    } else if (badge.auto_rule === "highest_winrate") {
+      for (const playerId of await highestWinratePlayerIds()) grant(playerId, badge);
+    } else if (badge.auto_rule === "most_matches_played") {
+      for (const playerId of await mostMatchesPlayedPlayerIds()) grant(playerId, badge);
+    } else if (badge.auto_rule === "most_commanders_played") {
+      for (const playerId of await mostCommandersPlayedPlayerIds()) grant(playerId, badge);
     }
   }
 
