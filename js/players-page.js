@@ -50,6 +50,7 @@ function renderRow(r) {
       <td>${r.wins}-${r.losses}-${r.draws}</td>
       <td>${r.rate}</td>
       <td>${r.topCommanderHtml}</td>
+      <td>${r.topCommanderColorsHtml}</td>
     </tr>`;
 }
 
@@ -133,7 +134,7 @@ async function init() {
       visible.length === 0
         ? `<p class="page-empty">${term ? "Nessun giocatore corrisponde alla ricerca." : "Nessun giocatore ha ancora dati registrati."}</p>`
         : `<div class="data-table-wrap${animate ? "" : " no-entrance-anim"}"><table class="data-table">
-      <thead><tr><th>Giocatore</th><th>Eventi</th><th>V-S-P</th><th>Winrate</th><th>Commander pi&ugrave; usato</th></tr></thead>
+      <thead><tr><th>Giocatore</th><th>Eventi</th><th>V-S-P</th><th>Winrate</th><th>Commander pi&ugrave; usato</th><th>Identit&agrave; di colore</th></tr></thead>
       <tbody>${visible.map(renderRow).join("")}</tbody>
     </table></div>`;
   }
@@ -204,11 +205,12 @@ async function init() {
           losses: record.losses,
           winRate,
           rate: winRate === null ? "—" : `${winRate.toFixed(1)}%`,
-          topCommanderHtml: topCommander
-            ? `${commanderPairLabel(topCommander.commander, topCommander.partner)} ${colorIdentityPips(
+          topCommanderHtml: topCommander ? commanderPairLabel(topCommander.commander, topCommander.partner) : "—",
+          topCommanderColorsHtml: topCommander
+            ? colorIdentityPips(
                 (topCommander.commander.color_identity ?? "") + (topCommander.partner?.color_identity ?? "")
-              )}`
-            : "—",
+              )
+            : "",
         };
       });
 

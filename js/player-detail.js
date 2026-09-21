@@ -64,11 +64,11 @@ async function init() {
       commanderList.length === 0
         ? '<p class="page-empty">Nessun dato registrato per questo giocatore.</p>'
         : `<div class="data-table-wrap"><table class="data-table">
-            <thead><tr><th>Commander</th><th>Ultima volta giocato</th></tr></thead>
+            <thead><tr><th>Commander</th><th>Identit&agrave; di colore</th><th>Ultima volta giocato</th></tr></thead>
             <tbody>
               ${commanderList
                 .map(
-                  (c) => `<tr><td>${commanderPairLabel(c.commander, c.partner)} ${colorIdentityPips(
+                  (c) => `<tr><td>${commanderPairLabel(c.commander, c.partner)}</td><td>${colorIdentityPips(
                     (c.commander.color_identity ?? "") + (c.partner?.color_identity ?? "")
                   )}</td><td>${formatDate(c.lastPlayed)}</td></tr>`
                 )

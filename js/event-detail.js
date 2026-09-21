@@ -85,14 +85,15 @@ async function init() {
       entries.length === 0
         ? '<p class="page-empty">Nessun iscritto registrato.</p>'
         : `<div class="data-table-wrap"><table class="data-table">
-            <thead><tr><th>Giocatore</th><th>Commander</th><th>Archetipo</th></tr></thead>
+            <thead><tr><th>Giocatore</th><th>Commander</th><th>Identit&agrave; di colore</th><th>Archetipo</th></tr></thead>
             <tbody>
               ${entries
                 .map(
                   (e) => `
                 <tr>
                   <td>${playerLabel(e.player)}</td>
-                  <td>${commanderPairLabel(e.commander, e.partner_commander)} ${colorIdentityPips(
+                  <td>${commanderPairLabel(e.commander, e.partner_commander)}</td>
+                  <td>${colorIdentityPips(
                     (e.commander?.color_identity ?? "") + (e.partner_commander?.color_identity ?? "")
                   )}</td>
                   <td>${archetypeBadge(e.archetype)}</td>
