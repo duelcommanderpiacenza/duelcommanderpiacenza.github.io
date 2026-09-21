@@ -95,7 +95,11 @@ async function init() {
                   .map(
                     (r) => `
                   <tr>
-                    <td>${commanderLabel(r)}</td>
+                    <td>${commanderLabel(r)}${
+                      r.isBanned
+                        ? '<span class="icon-badge" data-tooltip="Bannato" aria-label="Bannato" tabindex="0">&#9888;&#65039;</span>'
+                        : ""
+                    }</td>
                     <td>${colorIdentityPips(r.colorIdentity)}</td>
                     <td>${r.entries}</td>
                     <td>${r.entries > 0 ? `${r.share.toFixed(1)}%` : "—"}</td>
@@ -134,6 +138,7 @@ async function init() {
             id: c.id,
             name: c.name,
             colorIdentity: c.color_identity,
+            isBanned: c.is_banned,
             entries,
             share: totalEntries > 0 ? (entries / totalEntries) * 100 : 0,
             wins: s?.wins ?? 0,

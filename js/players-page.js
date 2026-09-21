@@ -35,7 +35,7 @@ function playerBadgesHtml(p, autoBadgesByPlayer) {
   return badges
     .map(
       (b) =>
-        `<span class="player-badge" data-tooltip="${escapeHtml(b.name)}" aria-label="${escapeHtml(b.name)}" tabindex="0">${b.icon}</span>`
+        `<span class="icon-badge" data-tooltip="${escapeHtml(b.name)}" aria-label="${escapeHtml(b.name)}" tabindex="0">${b.icon}</span>`
     )
     .join("");
 }

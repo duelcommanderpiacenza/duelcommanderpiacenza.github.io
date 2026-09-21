@@ -12,6 +12,7 @@ export function initCommandersAdmin() {
   const msgEl = document.getElementById("commanders-admin-message");
   const cancelBtn = document.getElementById("commanders-admin-cancel");
   const colorlessBox = document.getElementById("commanders-admin-colorless");
+  const bannedBox = document.getElementById("commanders-admin-banned");
   const colorBoxes = () => Array.from(document.querySelectorAll('input[name="commanders-admin-color"]'));
 
   colorBoxes().forEach((box) => {
@@ -40,6 +41,7 @@ export function initCommandersAdmin() {
       [
         { key: "name", label: "Nome" },
         { key: "color_identity", label: "Colori", render: (r) => colorIdentityPips(r.color_identity) },
+        { key: "is_banned", label: "Bannato", render: (r) => (r.is_banned ? "⚠️" : "—") },
       ],
       { onEdit, onDelete }
     );
@@ -64,6 +66,7 @@ export function initCommandersAdmin() {
       box.checked = letters.includes(box.value);
     });
     colorlessBox.checked = letters.length === 0;
+    bannedBox.checked = row.is_banned ?? false;
   }
 
   function resetForm() {
@@ -89,7 +92,7 @@ export function initCommandersAdmin() {
       .filter((b) => b.checked)
       .map((b) => b.value)
       .join("");
-    const payload = { name: nameField.value.trim(), color_identity: colorIdentity };
+    const payload = { name: nameField.value.trim(), color_identity: colorIdentity, is_banned: bannedBox.checked };
     if (!payload.name) return;
     try {
       if (idField.value) await Commanders.update(idField.value, payload);

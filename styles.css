@@ -1021,10 +1021,12 @@ table.data-table tbody tr:hover {
   color: var(--brand-red);
 }
 
-/* Player badges — Giocatori tab only, shown next to the player's name.
-   `title` on the span itself gives the native hover/focus tooltip with the
-   badge's name, so no extra JS is needed for that. */
-.player-badge {
+/* Small inline icon with a hover/focus tooltip — player badges (Giocatori
+   tab) and the banned-commander warning icon (Comandanti tab) both use
+   this. data-tooltip feeds the tooltip text; no native `title` involved,
+   since no browser lets that be restyled — this builds one from scratch
+   instead, in the same red-pill language as the rest of the site. */
+.icon-badge {
   position: relative;
   display: inline-block;
   margin-left: 6px;
@@ -1032,11 +1034,8 @@ table.data-table tbody tr:hover {
   cursor: default;
 }
 
-/* Custom hover/focus tooltip, replacing the native title attribute — no
-   browser lets that be restyled, so this builds one from scratch instead,
-   in the same red-pill language as the rest of the site's badges/buttons. */
-.player-badge::after,
-.player-badge::before {
+.icon-badge::after,
+.icon-badge::before {
   position: absolute;
   left: 50%;
   opacity: 0;
@@ -1045,7 +1044,7 @@ table.data-table tbody tr:hover {
   z-index: 40;
 }
 
-.player-badge::after {
+.icon-badge::after {
   content: attr(data-tooltip);
   bottom: calc(100% + 10px);
   transform: translate(-50%, 4px);
@@ -1059,7 +1058,7 @@ table.data-table tbody tr:hover {
   box-shadow: var(--shadow-card-hover);
 }
 
-.player-badge::before {
+.icon-badge::before {
   content: "";
   bottom: calc(100% + 5px);
   transform: translate(-50%, 4px);
@@ -1068,10 +1067,10 @@ table.data-table tbody tr:hover {
   border-bottom: 5px solid var(--brand-red);
 }
 
-.player-badge:hover::after,
-.player-badge:hover::before,
-.player-badge:focus-visible::after,
-.player-badge:focus-visible::before {
+.icon-badge:hover::after,
+.icon-badge:hover::before,
+.icon-badge:focus-visible::after,
+.icon-badge:focus-visible::before {
   opacity: 1;
   transform: translate(-50%, 0);
 }
@@ -1573,13 +1572,13 @@ table.data-table tbody tr:hover {
 .color-swatch-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 8px;
 }
 
 .color-swatch {
   position: relative;
-  width: 44px;
-  height: 44px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   border: 2px solid rgba(0, 0, 0, 0.15);
   box-shadow: var(--shadow-card);
