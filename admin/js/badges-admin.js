@@ -40,6 +40,7 @@ export function initBadgesAdmin() {
   const nameField = document.getElementById("badges-admin-name");
   const autoRuleField = document.getElementById("badges-admin-auto-rule");
   const priorityField = document.getElementById("badges-admin-priority");
+  const priorityFieldWrap = document.getElementById("badges-admin-priority-field");
   const msgEl = document.getElementById("badges-admin-message");
   const cancelBtn = document.getElementById("badges-admin-cancel");
   const iconRadios = () => Array.from(document.querySelectorAll('input[name="badges-admin-icon"]'));
@@ -62,6 +63,14 @@ export function initBadgesAdmin() {
     emojiWrap.hidden = isImage;
     imageWrap.hidden = !isImage;
   }
+
+  // Priority only means anything as a tiebreak among a player's *automatic*
+  // badges — irrelevant for a manual-only one, so there's nothing to show
+  // until an auto rule is actually picked.
+  function updatePriorityVisibility() {
+    priorityFieldWrap.hidden = !autoRuleField.value;
+  }
+  autoRuleField.addEventListener("change", updatePriorityVisibility);
   modeRadios().forEach((r) => r.addEventListener("change", updateIconModeUI));
 
   function renderPreview(src) {
@@ -137,6 +146,7 @@ export function initBadgesAdmin() {
     populateRuleOptions(row.id);
     autoRuleField.value = row.auto_rule ?? "";
     priorityField.value = row.priority ?? 0;
+    updatePriorityVisibility();
 
     selectedFile = null;
     fileInput.value = "";
@@ -161,6 +171,7 @@ export function initBadgesAdmin() {
     form.reset();
     populateRuleOptions(null);
     priorityField.value = 0;
+    updatePriorityVisibility();
     selectedFile = null;
     editingIconUrl = null;
     renderPreview(null);
@@ -240,5 +251,6 @@ export function initBadgesAdmin() {
   cancelBtn.addEventListener("click", resetForm);
 
   updateIconModeUI();
+  updatePriorityVisibility();
   refresh();
 }
