@@ -25,13 +25,18 @@ function mostUsedCommander(entries) {
 
 // Up to 2 manually assigned badges plus up to 2 auto-assigned ones (see
 // js/auto-badges.js), for up to 4 total. Hover/focus shows the badge's own
-// name as a native tooltip — kept as a sibling of the name link (not nested
-// inside it) so hovering/clicking a badge icon doesn't behave like part of
-// the player-page link.
+// name as a custom tooltip (styles.css) — a native `title` attribute can't
+// be restyled by any browser, so this builds one from scratch instead, fed
+// by data-tooltip and kept accessible via aria-label. Kept as a sibling of
+// the name link (not nested inside it) so hovering/clicking a badge icon
+// doesn't behave like part of the player-page link.
 function playerBadgesHtml(p, autoBadgesByPlayer) {
   const badges = [p.badge1, p.badge2, ...(autoBadgesByPlayer.get(p.id) ?? [])].filter(Boolean);
   return badges
-    .map((b) => `<span class="player-badge" title="${escapeHtml(b.name)}" tabindex="0">${b.icon}</span>`)
+    .map(
+      (b) =>
+        `<span class="player-badge" data-tooltip="${escapeHtml(b.name)}" aria-label="${escapeHtml(b.name)}" tabindex="0">${b.icon}</span>`
+    )
     .join("");
 }
 

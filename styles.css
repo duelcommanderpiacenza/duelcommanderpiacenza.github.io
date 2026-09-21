@@ -1025,10 +1025,55 @@ table.data-table tbody tr:hover {
    `title` on the span itself gives the native hover/focus tooltip with the
    badge's name, so no extra JS is needed for that. */
 .player-badge {
+  position: relative;
   display: inline-block;
   margin-left: 6px;
   font-size: 1rem;
   cursor: default;
+}
+
+/* Custom hover/focus tooltip, replacing the native title attribute — no
+   browser lets that be restyled, so this builds one from scratch instead,
+   in the same red-pill language as the rest of the site's badges/buttons. */
+.player-badge::after,
+.player-badge::before {
+  position: absolute;
+  left: 50%;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease, transform 150ms ease;
+  z-index: 40;
+}
+
+.player-badge::after {
+  content: attr(data-tooltip);
+  bottom: calc(100% + 10px);
+  transform: translate(-50%, 4px);
+  white-space: nowrap;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: var(--brand-red);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  box-shadow: var(--shadow-card-hover);
+}
+
+.player-badge::before {
+  content: "";
+  bottom: calc(100% + 5px);
+  transform: translate(-50%, 4px);
+  border: 5px solid transparent;
+  border-top-width: 0;
+  border-bottom: 5px solid var(--brand-red);
+}
+
+.player-badge:hover::after,
+.player-badge:hover::before,
+.player-badge:focus-visible::after,
+.player-badge:focus-visible::before {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 /* Badges: archetypes, color identity pips, provisional notice */
