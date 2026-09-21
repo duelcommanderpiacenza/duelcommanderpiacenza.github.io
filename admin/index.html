@@ -64,6 +64,7 @@
   <div class="admin-tabs">
     <button type="button" class="admin-tab" data-tab="players">Giocatori</button>
     <button type="button" class="admin-tab" data-tab="commanders">Comandanti</button>
+    <button type="button" class="admin-tab" data-tab="badges">Badge</button>
     <button type="button" class="admin-tab" data-tab="leagues">Leghe</button>
     <button type="button" class="admin-tab" data-tab="standalone-events">Eventi standalone</button>
   </div>
@@ -82,6 +83,14 @@
           <div class="field">
             <label for="players-admin-handle">Handle (per omonimi)</label>
             <input type="text" id="players-admin-handle" placeholder="es. tag Discord, soprannome">
+          </div>
+          <div class="field">
+            <label for="players-admin-badge1">Badge 1</label>
+            <select id="players-admin-badge1"></select>
+          </div>
+          <div class="field">
+            <label for="players-admin-badge2">Badge 2</label>
+            <select id="players-admin-badge2"></select>
           </div>
           <div class="form-actions">
             <button type="submit" class="btn-primary">Salva</button>
@@ -147,6 +156,63 @@
           <input type="search" id="commanders-admin-search" placeholder="Nome comandante...">
         </div>
         <div id="commanders-admin-list"><p class="page-loading">Caricamento...</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Badge: piatto, sempre modificabile -->
+  <section class="admin-panel" id="panel-badges">
+    <div class="admin-panel-layout">
+      <div class="admin-form-card">
+        <h3>Nuovo / modifica badge</h3>
+        <form id="badges-admin-form">
+          <input type="hidden" id="badges-admin-id">
+          <div class="field">
+            <label for="badges-admin-name">Nome</label>
+            <input type="text" id="badges-admin-name" required>
+          </div>
+          <div class="field">
+            <label>Icona</label>
+            <div class="icon-swatch-row">
+              <label class="icon-swatch" aria-label="Coppa"><input type="radio" name="badges-admin-icon" value="&#127942;" required>&#127942;</label>
+              <label class="icon-swatch" aria-label="Medaglia d'oro"><input type="radio" name="badges-admin-icon" value="&#129351;">&#129351;</label>
+              <label class="icon-swatch" aria-label="Medaglia d'argento"><input type="radio" name="badges-admin-icon" value="&#129352;">&#129352;</label>
+              <label class="icon-swatch" aria-label="Medaglia di bronzo"><input type="radio" name="badges-admin-icon" value="&#129353;">&#129353;</label>
+              <label class="icon-swatch" aria-label="Stella"><input type="radio" name="badges-admin-icon" value="&#11088;">&#11088;</label>
+              <label class="icon-swatch" aria-label="Stella brillante"><input type="radio" name="badges-admin-icon" value="&#127775;">&#127775;</label>
+              <label class="icon-swatch" aria-label="Fuoco"><input type="radio" name="badges-admin-icon" value="&#128293;">&#128293;</label>
+              <label class="icon-swatch" aria-label="Teschio"><input type="radio" name="badges-admin-icon" value="&#128128;">&#128128;</label>
+              <label class="icon-swatch" aria-label="Bersaglio"><input type="radio" name="badges-admin-icon" value="&#127919;">&#127919;</label>
+              <label class="icon-swatch" aria-label="Scudo"><input type="radio" name="badges-admin-icon" value="&#128737;&#65039;">&#128737;&#65039;</label>
+              <label class="icon-swatch" aria-label="Spade incrociate"><input type="radio" name="badges-admin-icon" value="&#9876;&#65039;">&#9876;&#65039;</label>
+              <label class="icon-swatch" aria-label="Drago"><input type="radio" name="badges-admin-icon" value="&#128009;">&#128009;</label>
+              <label class="icon-swatch" aria-label="Dadi"><input type="radio" name="badges-admin-icon" value="&#127922;">&#127922;</label>
+              <label class="icon-swatch" aria-label="Jolly"><input type="radio" name="badges-admin-icon" value="&#127183;">&#127183;</label>
+              <label class="icon-swatch" aria-label="Corona"><input type="radio" name="badges-admin-icon" value="&#128081;">&#128081;</label>
+              <label class="icon-swatch" aria-label="Gemma"><input type="radio" name="badges-admin-icon" value="&#128142;">&#128142;</label>
+              <label class="icon-swatch" aria-label="Razzo"><input type="radio" name="badges-admin-icon" value="&#128640;">&#128640;</label>
+              <label class="icon-swatch" aria-label="Cervello"><input type="radio" name="badges-admin-icon" value="&#129504;">&#129504;</label>
+              <label class="icon-swatch" aria-label="Bicipite"><input type="radio" name="badges-admin-icon" value="&#128170;">&#128170;</label>
+              <label class="icon-swatch" aria-label="Quadrifoglio"><input type="radio" name="badges-admin-icon" value="&#127808;">&#127808;</label>
+              <label class="icon-swatch" aria-label="Fulmine"><input type="radio" name="badges-admin-icon" value="&#9889;">&#9889;</label>
+              <label class="icon-swatch" aria-label="Maschere teatrali"><input type="radio" name="badges-admin-icon" value="&#127917;">&#127917;</label>
+              <label class="icon-swatch" aria-label="Unicorno"><input type="radio" name="badges-admin-icon" value="&#129412;">&#129412;</label>
+              <label class="icon-swatch" aria-label="Coriandoli"><input type="radio" name="badges-admin-icon" value="&#127881;">&#127881;</label>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Salva</button>
+            <button type="button" class="btn-secondary" id="badges-admin-cancel">Annulla</button>
+          </div>
+          <p class="form-message" id="badges-admin-message"></p>
+        </form>
+      </div>
+      <div>
+        <div class="field">
+          <label for="badges-admin-search">Cerca</label>
+          <input type="search" id="badges-admin-search" placeholder="Nome badge...">
+        </div>
+        <div id="badges-admin-list"><p class="page-loading">Caricamento...</p></div>
       </div>
     </div>
   </section>

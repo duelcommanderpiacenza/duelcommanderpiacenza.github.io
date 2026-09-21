@@ -1012,6 +1012,16 @@ table.data-table tbody tr:hover {
   color: var(--brand-red);
 }
 
+/* Player badges — Giocatori tab only, shown next to the player's name.
+   `title` on the span itself gives the native hover/focus tooltip with the
+   badge's name, so no extra JS is needed for that. */
+.player-badge {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 1rem;
+  cursor: default;
+}
+
 /* Badges: archetypes, color identity pips, provisional notice */
 
 .badge-archetype {
@@ -1564,6 +1574,50 @@ table.data-table tbody tr:hover {
   background: repeating-linear-gradient(45deg, #ddd 0, #ddd 5px, #eee 5px, #eee 10px);
 }
 
+/* Badge icon picker: same single-choice swatch pattern as the color-identity
+   picker above, just showing the emoji glyph itself instead of a color
+   fill, and radio (not checkbox) inputs since a badge has exactly one icon. */
+
+.icon-swatch-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.icon-swatch {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 2px solid var(--hairline);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  background: #fff;
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+}
+
+.icon-swatch:hover {
+  transform: translateY(-2px);
+}
+
+.icon-swatch input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.icon-swatch:has(input:checked) {
+  border-color: var(--brand-red);
+  box-shadow: 0 0 0 3px rgba(220, 24, 28, 0.25);
+  transform: scale(1.08);
+}
+
 .form-actions {
   display: flex;
   gap: 10px;
@@ -1770,6 +1824,7 @@ table.data-table tbody tr:hover {
 :root[data-theme="dark"] .cd-trigger,
 :root[data-theme="dark"] .cd-nav,
 :root[data-theme="dark"] .cd-footer-btn,
+:root[data-theme="dark"] .icon-swatch,
 :root[data-theme="dark"] .btn-secondary,
 :root[data-theme="dark"] .btn-danger,
 :root[data-theme="dark"] .expand-button,

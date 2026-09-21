@@ -27,6 +27,7 @@ drop table if exists decks cascade;
 drop table if exists events cascade;
 drop table if exists leagues cascade;
 drop table if exists players cascade;
+drop table if exists badges cascade;
 drop table if exists commanders cascade;
 drop type if exists deck_archetype;
 drop type if exists match_result;
@@ -44,11 +45,35 @@ create table commanders (
   created_at timestamptz not null default now()
 );
 
+create table badges ( -- small icon + name a player can be tagged with (e.g. "Campione", trophy icon)
+  id uuid primary key default gen_random_uuid(),
+  name text not null unique, -- shown as the tooltip when hovering the icon next to a player's name
+  icon text not null, -- one emoji, picked from a fixed pool offered by the admin UI
+  created_at timestamptz not null default now()
+);
+
 create table players (
   id uuid primary key default gen_random_uuid(),
   name text not null,      -- duplicates allowed (homonyms)
   handle text,              -- optional disambiguator shown next to the name when it collides
-  created_at timestamptz not null default now()
+  -- Up to 4 badges, each its own nullable slot (not a join table) since the
+  -- admin UI is literally fixed dropdowns, not an open-ended list. Only the
+  -- first 2 are admin-editable (see admin/js/players-admin.js); badge3/4 are
+  -- reserved for a future automatic-assignment rule, not set anywhere yet.
+  badge1_id uuid,
+  badge2_id uuid,
+  badge3_id uuid,
+  badge4_id uuid,
+  created_at timestamptz not null default now(),
+  constraint players_badge1_id_fkey foreign key (badge1_id) references badges(id) on delete set null,
+  constraint players_badge2_id_fkey foreign key (badge2_id) references badges(id) on delete set null,
+  constraint players_badge3_id_fkey foreign key (badge3_id) references badges(id) on delete set null,
+  constraint players_badge4_id_fkey foreign key (badge4_id) references badges(id) on delete set null,
+  constraint players_badges_distinct check (
+    badge1_id <> badge2_id and badge1_id <> badge3_id and badge1_id <> badge4_id
+    and badge2_id <> badge3_id and badge2_id <> badge4_id
+    and badge3_id <> badge4_id
+  )
 );
 
 create table leagues (
@@ -147,7 +172,7 @@ do $$
 declare
   t text;
 begin
-  foreach t in array array['commanders', 'players', 'leagues', 'events', 'event_entries', 'matches']
+  foreach t in array array['commanders', 'players', 'badges', 'leagues', 'events', 'event_entries', 'matches']
   loop
     execute format('alter table %I enable row level security;', t);
     execute format('create policy "%I_admin_insert" on %I for insert with check (auth.role() = ''authenticated'');', t, t);
@@ -158,6 +183,7 @@ end $$;
 
 create policy "commanders_public_read" on commanders for select using (true);
 create policy "players_public_read" on players for select using (true);
+create policy "badges_public_read" on badges for select using (true);
 create policy "leagues_public_read" on leagues for select using (true);
 
 create policy "events_public_read" on events for select

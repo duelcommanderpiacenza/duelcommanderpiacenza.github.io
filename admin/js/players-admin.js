@@ -1,6 +1,6 @@
-import { Players } from "../../js/db.js";
-import { renderTable, setMessage } from "./crud-ui.js";
-import { emit } from "./bus.js";
+import { Players, Badges } from "../../js/db.js";
+import { renderTable, setMessage, fillSelect } from "./crud-ui.js";
+import { emit, on } from "./bus.js";
 
 export function initPlayersAdmin() {
   const listEl = document.getElementById("players-admin-list");
@@ -9,10 +9,24 @@ export function initPlayersAdmin() {
   const idField = document.getElementById("players-admin-id");
   const nameField = document.getElementById("players-admin-name");
   const handleField = document.getElementById("players-admin-handle");
+  const badge1Field = document.getElementById("players-admin-badge1");
+  const badge2Field = document.getElementById("players-admin-badge2");
   const msgEl = document.getElementById("players-admin-message");
   const cancelBtn = document.getElementById("players-admin-cancel");
 
   let allPlayers = [];
+
+  // badge1/badge2 are the only admin-editable slots — badge3/badge4 are
+  // reserved for a future automatic-assignment rule and must never be
+  // touched by this form (see the submit payload below).
+  async function populateBadges() {
+    const badges = await Badges.list();
+    const options =
+      '<option value="">&mdash; nessuno &mdash;</option>' +
+      badges.map((b) => `<option value="${b.id}">${b.icon} ${b.name}</option>`).join("");
+    fillSelect(badge1Field, options);
+    fillSelect(badge2Field, options);
+  }
 
   // Live filter over the already-fetched list, so it's easy to check
   // whether a player has already been entered before adding a duplicate.
@@ -31,6 +45,11 @@ export function initPlayersAdmin() {
       [
         { key: "name", label: "Nome" },
         { key: "handle", label: "Handle" },
+        {
+          key: "badges",
+          label: "Badge",
+          render: (r) => [r.badge1, r.badge2, r.badge3, r.badge4].filter(Boolean).map((b) => b.icon).join(" ") || "—",
+        },
       ],
       { onEdit, onDelete }
     );
@@ -52,6 +71,8 @@ export function initPlayersAdmin() {
     idField.value = row.id;
     nameField.value = row.name;
     handleField.value = row.handle ?? "";
+    badge1Field.value = row.badge1?.id ?? "";
+    badge2Field.value = row.badge2?.id ?? "";
   }
 
   function resetForm() {
@@ -73,7 +94,20 @@ export function initPlayersAdmin() {
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const payload = { name: nameField.value.trim(), handle: handleField.value.trim() || null };
+    const badgeIds = [badge1Field.value, badge2Field.value].filter(Boolean);
+    if (new Set(badgeIds).size !== badgeIds.length) {
+      setMessage(msgEl, "Seleziona badge diversi tra loro.", true);
+      return;
+    }
+    // badge3_id/badge4_id are deliberately left out — they're reserved for a
+    // future automatic-assignment rule, and this payload must never
+    // overwrite whatever that rule may have already set there.
+    const payload = {
+      name: nameField.value.trim(),
+      handle: handleField.value.trim() || null,
+      badge1_id: badge1Field.value || null,
+      badge2_id: badge2Field.value || null,
+    };
     if (!payload.name) return;
     try {
       if (idField.value) await Players.update(idField.value, payload);
@@ -89,5 +123,7 @@ export function initPlayersAdmin() {
 
   cancelBtn.addEventListener("click", resetForm);
 
-  refresh();
+  on("badges:changed", populateBadges);
+
+  Promise.all([populateBadges(), refresh()]);
 }

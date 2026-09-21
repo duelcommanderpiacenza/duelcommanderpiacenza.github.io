@@ -30,6 +30,9 @@ export function matchRoundOutcome(m) {
 // single bad round (or a weak opponent) doesn't disproportionately tank it.
 const MIN_WIN_PCT = 1 / 3;
 
+// How many of an event's final standings count as a "top 8" finish.
+const TOP_FINISH_CUTOFF = 8;
+
 /**
  * Event leaderboard: 3 pts win / 1 pt draw / 0 pt loss, ties broken by the
  * standard Magic tournament tiebreakers — opponents' match-win %, then own
@@ -44,7 +47,8 @@ const MIN_WIN_PCT = 1 / 3;
  * and the V-S-P display column, which are legitimately about match record).
  * @param {Array} matches - rows from `matches` for one event.
  * @param {Array} entries - rows from `event_entries` for the same event (with player/commander joined).
- * @returns {Array} standings sorted by points desc, then tiebreakers, then name.
+ * @returns {Array} standings sorted by points desc, then tiebreakers, then name; each row also carries
+ *   `isTop8` (its final position is within the top TOP_FINISH_CUTOFF).
  */
 export function computeEventLeaderboard(matches, entries) {
   const byPlayer = new Map();
@@ -189,7 +193,7 @@ export function computeEventLeaderboard(matches, entries) {
     row.opponentsGameWinPct = average(opponents, gameWinPct);
   }
 
-  return Array.from(byPlayer.values()).sort((a, b) => {
+  const standings = Array.from(byPlayer.values()).sort((a, b) => {
     if (b.points !== a.points) return b.points - a.points;
 
     // A manual override only settles ties among the entries the admin has
@@ -204,6 +208,16 @@ export function computeEventLeaderboard(matches, entries) {
     if (b.opponentsGameWinPct !== a.opponentsGameWinPct) return b.opponentsGameWinPct - a.opponentsGameWinPct;
     return (a.player?.name ?? "").localeCompare(b.player?.name ?? "");
   });
+
+  // Not used anywhere yet — exposed so a later feature (a stat, a badge...)
+  // can read who placed top 8 without re-deriving it from points/tiebreaks
+  // itself. Always computed fresh from the live standings above, never
+  // stored, so it can never drift out of sync with match results.
+  standings.forEach((row, i) => {
+    row.isTop8 = i < TOP_FINISH_CUTOFF;
+  });
+
+  return standings;
 }
 
 // League scoring rule ("Sistema di Punteggio"):

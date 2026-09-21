@@ -188,3 +188,18 @@ document.addEventListener("click", (e) => {
     if (!wrap.contains(e.target)) closeMenu(wrap);
   });
 });
+
+// form.reset() resets each field via an internal browser algorithm that
+// bypasses the wrapped `value` setter above entirely — re-sync explicitly,
+// a tick after the browser's own reset has actually applied. (Mirrors the
+// same handling in js/custom-date.js, needed here now that at least one
+// form with <select> fields — players-admin-form — calls form.reset().)
+document.addEventListener("reset", (e) => {
+  if (!(e.target instanceof HTMLFormElement)) return;
+  const form = e.target;
+  setTimeout(() => {
+    form.querySelectorAll(".cs-wrap select.cs-native").forEach((select) => {
+      select.dispatchEvent(new Event("change", { bubbles: false }));
+    });
+  }, 0);
+});

@@ -22,10 +22,20 @@ function mostUsedCommander(entries) {
   return best;
 }
 
+// Hover/focus shows the badge's own name as a native tooltip — kept as a
+// sibling of the name link (not nested inside it) so hovering/clicking a
+// badge icon doesn't behave like part of the player-page link.
+function playerBadgesHtml(p) {
+  return [p.badge1, p.badge2, p.badge3, p.badge4]
+    .filter(Boolean)
+    .map((b) => `<span class="player-badge" title="${escapeHtml(b.name)}" tabindex="0">${b.icon}</span>`)
+    .join("");
+}
+
 function renderRow(r) {
   return `
     <tr>
-      <td><a href="player.html?id=${r.id}">${r.nameHtml}</a></td>
+      <td><a href="player.html?id=${r.id}">${r.nameHtml}</a>${r.badgesHtml}</td>
       <td>${r.eventsPlayed}</td>
       <td>${r.wins}-${r.losses}-${r.draws}</td>
       <td>${r.rate}</td>
@@ -170,6 +180,7 @@ async function init() {
           id: p.id,
           searchText: `${p.name} ${p.handle ?? ""}`.toLowerCase(),
           nameHtml: p.handle ? `${escapeHtml(p.name)} (${escapeHtml(p.handle)})` : escapeHtml(p.name),
+          badgesHtml: playerBadgesHtml(p),
           eventsPlayed,
           wins: record.wins,
           draws: record.draws,

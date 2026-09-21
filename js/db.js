@@ -22,9 +22,24 @@ export const Commanders = {
   remove: (id) => sb.from("commanders").delete().eq("id", id).then(assertOk),
 };
 
+// players has four FKs to badges (badge1_id..badge4_id — up to 4 fixed
+// slots, not a join table), so PostgREST needs the constraint name on each
+// embed to know which is which. Only badge1/badge2 are admin-editable;
+// badge3/badge4 are reserved for a future automatic-assignment rule.
+const BADGE_EMBED =
+  "badge1:badges!players_badge1_id_fkey(id,name,icon), badge2:badges!players_badge2_id_fkey(id,name,icon), badge3:badges!players_badge3_id_fkey(id,name,icon), badge4:badges!players_badge4_id_fkey(id,name,icon)";
+
+export const Badges = {
+  list: () => sb.from("badges").select("*").order("name").then(assertOk),
+  get: (id) => sb.from("badges").select("*").eq("id", id).single().then(assertOk),
+  create: (row) => sb.from("badges").insert(row).select().single().then(assertOk),
+  update: (id, patch) => sb.from("badges").update(patch).eq("id", id).select().single().then(assertOk),
+  remove: (id) => sb.from("badges").delete().eq("id", id).then(assertOk),
+};
+
 export const Players = {
-  list: () => sb.from("players").select("*").order("name").then(assertOk),
-  get: (id) => sb.from("players").select("*").eq("id", id).single().then(assertOk),
+  list: () => sb.from("players").select(`*, ${BADGE_EMBED}`).order("name").then(assertOk),
+  get: (id) => sb.from("players").select(`*, ${BADGE_EMBED}`).eq("id", id).single().then(assertOk),
   create: (row) => sb.from("players").insert(row).select().single().then(assertOk),
   update: (id, patch) => sb.from("players").update(patch).eq("id", id).select().single().then(assertOk),
   remove: (id) => sb.from("players").delete().eq("id", id).then(assertOk),

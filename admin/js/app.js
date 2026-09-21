@@ -5,6 +5,7 @@ import { enhanceSelects } from "../../js/custom-select.js";
 import { enhanceDateInputs } from "../../js/custom-date.js";
 import { initPlayersAdmin } from "./players-admin.js";
 import { initCommandersAdmin } from "./commanders-admin.js";
+import { initBadgesAdmin } from "./badges-admin.js";
 import { initLeaguesAdmin } from "./leagues-admin.js";
 import { initEventsAdmin } from "./events-admin.js";
 import { initStandaloneEventsAdmin } from "./standalone-events-admin.js";
@@ -110,6 +111,7 @@ function showAdmin(session) {
 
   if (!modulesInitialized) {
     initTabs();
+    initBadgesAdmin();
     initPlayersAdmin();
     initCommandersAdmin();
 
