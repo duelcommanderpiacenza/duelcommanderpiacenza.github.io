@@ -281,6 +281,77 @@ main {
   background: rgba(255, 255, 255, 0.88);
   box-shadow: 0 18px 42px rgba(69, 29, 34, 0.08);
   backdrop-filter: blur(10px);
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Same idea as the metagame ring chart's own entrance (pie-ring-in below) —
+   applied directly on the class rule rather than toggled by JS, so any
+   freshly-rendered card/table just plays it on insertion, everywhere on the
+   site (public pages and admin alike) without every call site needing to
+   know about it. */
+@keyframes entrance-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Repeating list/grid items (event & league cards, dashboard chips/rows) —
+   stagger the first few so they cascade in instead of popping as one flat
+   block. Capped at 6 steps: a long list re-using the last delay for every
+   item past that reads better than a multi-second queued cascade. */
+.entity-card:nth-child(2),
+.dashboard-league-card:nth-child(2),
+.dashboard-league-chip:nth-child(2),
+.dashboard-event-row:nth-child(2) {
+  animation-delay: 45ms;
+}
+
+.entity-card:nth-child(3),
+.dashboard-league-card:nth-child(3),
+.dashboard-league-chip:nth-child(3),
+.dashboard-event-row:nth-child(3) {
+  animation-delay: 90ms;
+}
+
+.entity-card:nth-child(4),
+.dashboard-league-card:nth-child(4),
+.dashboard-league-chip:nth-child(4),
+.dashboard-event-row:nth-child(4) {
+  animation-delay: 135ms;
+}
+
+.entity-card:nth-child(5),
+.dashboard-league-card:nth-child(5),
+.dashboard-league-chip:nth-child(5),
+.dashboard-event-row:nth-child(5) {
+  animation-delay: 180ms;
+}
+
+.entity-card:nth-child(n + 6),
+.dashboard-league-card:nth-child(n + 6),
+.dashboard-league-chip:nth-child(n + 6),
+.dashboard-event-row:nth-child(n + 6) {
+  animation-delay: 225ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .data-table-wrap,
+  .admin-form-card,
+  .entity-card,
+  .dashboard-league-card,
+  .dashboard-league-chip,
+  .dashboard-event-row,
+  .page-heading h1,
+  .admin-topbar h1,
+  input[type="search"] {
+    animation: none;
+  }
 }
 
 .overview-card {
@@ -361,6 +432,7 @@ main {
   text-decoration: none;
   color: inherit;
   transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 .dashboard-league-card:hover {
@@ -431,6 +503,7 @@ main {
   font-size: 0.85rem;
   text-decoration: none;
   transition: transform 180ms ease, border-color 180ms ease;
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 .dashboard-league-chip:hover {
@@ -454,6 +527,7 @@ main {
   text-decoration: none;
   color: var(--text-body);
   font-weight: 700;
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 .dashboard-event-row:last-child {
@@ -1003,10 +1077,12 @@ footer {
   margin-bottom: 22px;
 }
 
-.page-heading h1 {
+.page-heading h1,
+.admin-topbar h1 {
   margin: 0;
   font-size: 1.9rem;
   color: var(--text-title);
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 .page-subtitle {
@@ -1095,6 +1171,7 @@ footer {
   text-decoration: none;
   color: inherit;
   transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 .entity-card:hover {
@@ -1150,6 +1227,14 @@ footer {
   box-shadow: var(--shadow-card);
   overflow: hidden;
   overflow-x: auto;
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Every live-search box rebuilds its .data-table-wrap on each keystroke
+   (same element, freshly recreated) — opting out here stops the entrance
+   animation from replaying on every character typed. */
+.data-table-wrap.no-entrance-anim {
+  animation: none;
 }
 
 table.data-table {
@@ -1444,6 +1529,13 @@ img.badge-icon-box {
   color: var(--text-body);
 }
 
+/* Search boxes (admin list filters) sit outside .admin-form-card/.card, so
+   they don't get either one's own entrance animation for free — give them
+   their own. */
+input[type="search"] {
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
 .field input:focus,
 .field select:focus,
 .field textarea:focus,
@@ -1462,8 +1554,23 @@ img.badge-icon-box {
   display: none;
 }
 
+/* No entrance animation here (removed — it kept skipping its own "from"
+   frame in a way that wasn't worth chasing further). The explicit z-index
+   instead promotes every dropdown to its own stacking context ranked above
+   any plain z-index:auto sibling later in the page (e.g. a data table),
+   regardless of whether that sibling happens to have an active/self-
+   promoting animation of its own — without this, .cs-menu's own z-index:30
+   only wins comparisons *inside* .cs-wrap, not against a later sibling
+   that ends up promoted to its own stacking context. */
 .cs-wrap {
   position: relative;
+  /* Matches .cs-menu's own z-index (30 — above the sticky nav/admin-tabs
+     bar's 20, below tooltips' 40) rather than some arbitrary low number:
+     once promoted, everything inside .cs-wrap is scoped/capped by this
+     value when compared against anything outside it, so this needs to be
+     at least as high as what .cs-menu previously relied on winning against
+     externally. */
+  z-index: 30;
   display: block;
   width: 100%;
 }
@@ -1548,7 +1655,7 @@ img.badge-icon-box {
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 
@@ -1609,8 +1716,13 @@ img.cs-option-icon {
   display: none;
 }
 
+/* Same stacking fix as .cs-wrap above, for the same reason: without an
+   explicit z-index here, .cd-popup's own z-index:30 only wins comparisons
+   inside .cd-wrap, not against a later sibling on the page that ends up
+   promoted to its own stacking context (e.g. a data table). */
 .cd-wrap {
   position: relative;
+  z-index: 30;
   display: block;
   width: 100%;
 }
@@ -1688,7 +1800,7 @@ img.cs-option-icon {
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 
@@ -2029,7 +2141,13 @@ img.cs-option-icon {
   }
   to {
     opacity: 1;
-    transform: scale(1) rotate(0deg);
+    /* Not "scale(1) rotate(0deg)" — any non-"none" transform value
+       permanently creates a new stacking context once the animation
+       settles there (fill-mode: both), even a visual no-op like this one.
+       That let the chart end up painting above a dropdown menu that
+       should sit on top of it, since the two ended up in different,
+       unrelated stacking contexts instead of comparing z-index directly. */
+    transform: none;
   }
 }
 
@@ -2057,7 +2175,7 @@ img.cs-option-icon {
   }
   to {
     opacity: 1;
-    transform: translateX(0);
+    transform: none;
   }
 }
 
@@ -2310,7 +2428,7 @@ img.cs-option-icon {
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 

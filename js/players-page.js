@@ -123,7 +123,7 @@ async function init() {
   // network/stat work), so it can react live on every keystroke. Players
   // with no events in the current scope are always dropped, filtered or
   // not — an empty "—" row isn't useful either way.
-  function renderList() {
+  function renderList(animate = true) {
     const term = searchInput.value.trim().toLowerCase();
     const base = lastRows.filter((r) => r.eventsPlayed > 0);
     const filtered = term ? base.filter((r) => r.searchText.includes(term)) : base;
@@ -132,7 +132,7 @@ async function init() {
     listEl.innerHTML =
       visible.length === 0
         ? `<p class="page-empty">${term ? "Nessun giocatore corrisponde alla ricerca." : "Nessun giocatore ha ancora dati registrati."}</p>`
-        : `<div class="data-table-wrap"><table class="data-table">
+        : `<div class="data-table-wrap${animate ? "" : " no-entrance-anim"}"><table class="data-table">
       <thead><tr><th>Giocatore</th><th>Eventi</th><th>V-S-P</th><th>Winrate</th><th>Commander pi&ugrave; usato</th></tr></thead>
       <tbody>${visible.map(renderRow).join("")}</tbody>
     </table></div>`;
@@ -218,8 +218,8 @@ async function init() {
     }
   }
 
-  searchInput.addEventListener("input", renderList);
-  sortSelect.addEventListener("change", renderList);
+  searchInput.addEventListener("input", () => renderList(false));
+  sortSelect.addEventListener("change", () => renderList());
   dateFromInput.addEventListener("change", () => render(effectiveEventIds()));
 
   initScopeFilter({

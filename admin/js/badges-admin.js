@@ -96,7 +96,7 @@ export function initBadgesAdmin() {
 
   // Live filter over the already-fetched list, so it's easy to check
   // whether a badge already exists before adding a duplicate.
-  function renderList() {
+  function renderList(animate = true) {
     const term = searchField.value.trim().toLowerCase();
     const visible = term ? allBadges.filter((b) => b.name.toLowerCase().includes(term)) : allBadges;
     if (term && visible.length === 0) {
@@ -111,7 +111,8 @@ export function initBadgesAdmin() {
         { key: "name", label: "Nome" },
         { key: "auto_rule", label: "Regola automatica", render: ruleLabel },
       ],
-      { onEdit, onDelete }
+      { onEdit, onDelete },
+      { animate }
     );
   }
 
@@ -125,7 +126,7 @@ export function initBadgesAdmin() {
     }
   }
 
-  searchField.addEventListener("input", renderList);
+  searchField.addEventListener("input", () => renderList(false));
 
   function onEdit(row) {
     idField.value = row.id;

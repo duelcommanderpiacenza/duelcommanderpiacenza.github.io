@@ -16,6 +16,7 @@ import { initMatchesAdmin } from "./matches-admin.js";
 
 const loginView = document.getElementById("login-view");
 const adminView = document.getElementById("admin-view");
+const adminTabsBar = document.getElementById("admin-tabs-bar");
 const loginForm = document.getElementById("login-form");
 const loginError = document.getElementById("login-error");
 const whoamiEl = document.getElementById("whoami");
@@ -95,21 +96,36 @@ function showMatchesDetailSubview() {
 function initTabs() {
   const tabs = Array.from(document.querySelectorAll(".admin-tab"));
   const panels = Array.from(document.querySelectorAll(".admin-panel"));
+  const pageTitle = document.getElementById("admin-page-title");
+
+  // The heading and browser tab title said "Gestione dati" everywhere,
+  // regardless of which tab was open — swap in the clicked tab's own label
+  // (its button text is already the exact name to show) instead.
+  function setActiveTab(tab) {
+    tabs.forEach((t) => t.classList.remove("is-active"));
+    panels.forEach((p) => p.classList.remove("is-active"));
+    tab.classList.add("is-active");
+    document.getElementById(`panel-${tab.dataset.tab}`).classList.add("is-active");
+    pageTitle.textContent = tab.textContent;
+    document.title = `${tab.textContent} - Duel Commander Piacenza Admin`;
+  }
+
   tabs.forEach((tab) => {
     tab.addEventListener("click", () => {
-      tabs.forEach((t) => t.classList.remove("is-active"));
-      panels.forEach((p) => p.classList.remove("is-active"));
-      tab.classList.add("is-active");
-      document.getElementById(`panel-${tab.dataset.tab}`).classList.add("is-active");
+      // The tab bar is now reachable from anywhere, including while
+      // drilled into a league/event's entries or matches — back out of
+      // that flow first so the clicked panel is actually visible.
+      if (!adminEventFlow.hidden) exitEventFlow();
+      setActiveTab(tab);
     });
   });
-  tabs[0]?.classList.add("is-active");
-  panels[0]?.classList.add("is-active");
+  if (tabs[0]) setActiveTab(tabs[0]);
 }
 
 function showAdmin(session) {
   loginView.style.display = "none";
   adminView.style.display = "block";
+  adminTabsBar.style.display = "block";
   whoamiEl.textContent = session.user.email;
 
   if (!modulesInitialized) {
@@ -195,6 +211,7 @@ function showAdmin(session) {
 
 function showLogin() {
   adminView.style.display = "none";
+  adminTabsBar.style.display = "none";
   loginView.style.display = "flex";
 }
 

@@ -6,14 +6,17 @@ import { escapeHtml } from "../../js/ui.js";
  * @param {Array} rows
  * @param {Array<{key:string,label:string,render?:(row)=>string}>} columns
  * @param {{onEdit?: (row)=>void, onDelete: (row)=>void}} actions
+ * @param {{animate?: boolean}} [options] - animate defaults to true; live
+ *   search callers pass false so re-filtering on every keystroke doesn't
+ *   replay .data-table-wrap's entrance animation each time.
  */
-export function renderTable(container, rows, columns, actions) {
+export function renderTable(container, rows, columns, actions, { animate = true } = {}) {
   if (rows.length === 0) {
     container.innerHTML = '<p class="page-empty">Nessun elemento.</p>';
     return;
   }
 
-  container.innerHTML = `<div class="data-table-wrap"><table class="data-table">
+  container.innerHTML = `<div class="data-table-wrap${animate ? "" : " no-entrance-anim"}"><table class="data-table">
     <thead><tr>${columns.map((c) => `<th>${c.label}</th>`).join("")}<th></th></tr></thead>
     <tbody>
       ${rows

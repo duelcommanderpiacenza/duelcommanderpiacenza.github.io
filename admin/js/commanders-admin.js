@@ -28,7 +28,7 @@ export function initCommandersAdmin() {
 
   // Live filter over the already-fetched list, so it's easy to check
   // whether a commander has already been entered before adding a duplicate.
-  function renderList() {
+  function renderList(animate = true) {
     const term = searchField.value.trim().toLowerCase();
     const visible = term ? allCommanders.filter((c) => c.name.toLowerCase().includes(term)) : allCommanders;
     if (term && visible.length === 0) {
@@ -43,7 +43,8 @@ export function initCommandersAdmin() {
         { key: "color_identity", label: "Colori", render: (r) => colorIdentityPips(r.color_identity) },
         { key: "is_banned", label: "Bannato", render: (r) => (r.is_banned ? "⚠️" : "—") },
       ],
-      { onEdit, onDelete }
+      { onEdit, onDelete },
+      { animate }
     );
   }
 
@@ -56,7 +57,7 @@ export function initCommandersAdmin() {
     }
   }
 
-  searchField.addEventListener("input", renderList);
+  searchField.addEventListener("input", () => renderList(false));
 
   function onEdit(row) {
     idField.value = row.id;

@@ -11,6 +11,7 @@ import { on } from "./bus.js";
  */
 export function initStandaloneEventsAdmin({ onOpenEvent }) {
   const listEl = document.getElementById("standalone-events-admin-list");
+  const searchField = document.getElementById("standalone-events-admin-search");
   const form = document.getElementById("standalone-events-admin-form");
   const idField = document.getElementById("standalone-events-admin-id");
   const nameField = document.getElementById("standalone-events-admin-name");
@@ -20,40 +21,56 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
 
   let events = [];
 
-  async function refresh() {
-    try {
-      events = await Events.listStandalone();
-      renderTable(
-        listEl,
-        events,
-        [
-          { key: "name", label: "Nome" },
-          { key: "event_date", label: "Data", render: (r) => formatDate(r.event_date) },
-          { key: "status", label: "Stato", render: (r) => statusBadge(r.is_open) },
-          {
-            key: "manage",
-            label: "",
-            render: (e) => `
+  // Live filter over the already-fetched list — already ordered newest
+  // first by Events.listStandalone() itself, so filtering never disturbs
+  // that order.
+  function renderList(animate = true) {
+    const term = searchField.value.trim().toLowerCase();
+    const visible = term ? events.filter((e) => e.name.toLowerCase().includes(term)) : events;
+    if (term && visible.length === 0) {
+      listEl.innerHTML = '<p class="page-empty">Nessun evento corrisponde alla ricerca.</p>';
+      return;
+    }
+    renderTable(
+      listEl,
+      visible,
+      [
+        { key: "name", label: "Nome" },
+        { key: "event_date", label: "Data", render: (r) => formatDate(r.event_date) },
+        { key: "status", label: "Stato", render: (r) => statusBadge(r.is_open) },
+        {
+          key: "manage",
+          label: "",
+          render: (e) => `
               <div class="row-actions">
                 <button type="button" class="btn-secondary" data-toggle="${e.id}">${e.is_open ? "Chiudi" : "Riapri"}</button>
                 <button type="button" class="btn-secondary" data-open="${e.id}">Gestisci iscritti/partite &rarr;</button>
               </div>`,
-          },
-        ],
-        { onEdit, onDelete }
-      );
-      listEl.querySelectorAll("[data-open]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const ev = events.find((e) => e.id === btn.dataset.open);
-          if (ev) onOpenEvent(ev);
-        });
+        },
+      ],
+      { onEdit, onDelete },
+      { animate }
+    );
+    listEl.querySelectorAll("[data-open]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const ev = events.find((e) => e.id === btn.dataset.open);
+        if (ev) onOpenEvent(ev);
       });
-      listEl.querySelectorAll("[data-toggle]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const ev = events.find((e) => e.id === btn.dataset.toggle);
-          if (ev) onToggleOpen(ev);
-        });
+    });
+    listEl.querySelectorAll("[data-toggle]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const ev = events.find((e) => e.id === btn.dataset.toggle);
+        if (ev) onToggleOpen(ev);
       });
+    });
+  }
+
+  searchField.addEventListener("input", () => renderList(false));
+
+  async function refresh() {
+    try {
+      events = await Events.listStandalone();
+      renderList();
     } catch (err) {
       setMessage(msgEl, "Errore nel caricamento.", true);
     }

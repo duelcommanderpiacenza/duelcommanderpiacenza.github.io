@@ -79,8 +79,10 @@ async function init() {
   }
 
   // The search box only re-filters the already-computed rows (no new
-  // network/stat work), so it can react live on every keystroke.
-  function renderTableSection() {
+  // network/stat work), so it can react live on every keystroke. animate
+  // is false for that keystroke re-render so .data-table-wrap's entrance
+  // animation doesn't replay on every character typed.
+  function renderTableSection(animate = true) {
     const term = searchInput.value.trim().toLowerCase();
     // Commanders no one has ever played are always left out — an all-"—"
     // row isn't useful, filtered or not.
@@ -91,7 +93,7 @@ async function init() {
     }
     const sorter = SORTERS[sortSelect.value] ?? SORTERS.played;
     const rows = [...filtered].sort((a, b) => sorter(a, b) || a.name.localeCompare(b.name));
-    return `<div class="data-table-wrap"><table class="data-table">
+    return `<div class="data-table-wrap${animate ? "" : " no-entrance-anim"}"><table class="data-table">
               <thead><tr><th>Nome</th><th>Identit&agrave; di colore</th><th>Giocato</th><th>Quota</th><th>V-S-P</th><th>Winrate</th></tr></thead>
               <tbody>
                 ${rows
@@ -115,9 +117,12 @@ async function init() {
             </table></div>`;
   }
 
-  function renderAll() {
-    chartEl.innerHTML = lastChartHtml;
-    tableEl.innerHTML = renderTableSection();
+  // Only touches the table, not the chart — search/sort never change the
+  // chart's own content (that's keyed off the scope/date filters only), so
+  // re-setting chartEl.innerHTML here too would just replay its entrance
+  // animation for no reason on every keystroke.
+  function renderTable(animate = true) {
+    tableEl.innerHTML = renderTableSection(animate);
   }
 
   async function render(eventIds) {
@@ -163,15 +168,15 @@ async function init() {
       chartRows.sort((a, b) => b.share - a.share);
       if (otherShare > 0) chartRows.push({ label: "Altri", share: otherShare, color: OTHER_COLOR });
       lastChartHtml = renderPieChart(chartRows, "Nessun dato per il grafico.");
-
-      renderAll();
+      chartEl.innerHTML = lastChartHtml;
+      renderTable();
     } catch (err) {
       showError(chartEl, err);
     }
   }
 
-  searchInput.addEventListener("input", renderAll);
-  sortSelect.addEventListener("change", renderAll);
+  searchInput.addEventListener("input", () => renderTable(false));
+  sortSelect.addEventListener("change", () => renderTable());
   dateFromInput.addEventListener("change", () => render(effectiveEventIds()));
 
   initScopeFilter({

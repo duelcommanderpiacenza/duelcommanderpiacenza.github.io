@@ -1,4 +1,4 @@
-import { Leagues } from "../../js/db.js";
+import { Leagues, Events } from "../../js/db.js";
 import { statusBadge } from "../../js/ui.js";
 import { renderTable, setMessage } from "./crud-ui.js";
 
@@ -21,8 +21,21 @@ function describeError(err, fallback) {
  * A row can also be a "Topdeck" series — same shape, just no points
  * leaderboard and never featured on the homepage (see is_topdeck in db.js).
  */
+// Same rule as the public Leghe page (js/leagues-page.js): open first, then
+// whichever has the most recently dated associated event, newest first —
+// so the admin list matches what visitors actually see.
+function compareLeagues(a, b) {
+  if (a.is_open !== b.is_open) return a.is_open ? -1 : 1;
+  if (a.is_open && b.is_open && a.is_topdeck !== b.is_topdeck) return a.is_topdeck ? 1 : -1;
+  const aDate = a.latestEventDate ?? "";
+  const bDate = b.latestEventDate ?? "";
+  if (aDate !== bDate) return aDate < bDate ? 1 : -1;
+  return a.name.localeCompare(b.name);
+}
+
 export function initLeaguesAdmin({ onOpenLeague }) {
   const listEl = document.getElementById("leagues-admin-list");
+  const searchField = document.getElementById("leagues-admin-search");
   const form = document.getElementById("leagues-admin-form");
   const idField = document.getElementById("leagues-admin-id");
   const nameField = document.getElementById("leagues-admin-name");
@@ -32,40 +45,67 @@ export function initLeaguesAdmin({ onOpenLeague }) {
 
   let leagues = [];
 
-  async function refresh() {
-    try {
-      leagues = await Leagues.list();
-      renderTable(
-        listEl,
-        leagues,
-        [
-          { key: "name", label: "Nome" },
-          { key: "type", label: "Tipo", render: (l) => (l.is_topdeck ? "Topdeck" : "Lega") },
-          { key: "status", label: "Stato", render: (l) => statusBadge(l.is_open) },
-          {
-            key: "manage",
-            label: "",
-            render: (l) => `
+  // Live filter over the already-fetched (and already-ordered) list, so
+  // typing a search term never disturbs the open/date ordering.
+  function renderList(animate = true) {
+    const term = searchField.value.trim().toLowerCase();
+    const visible = term ? leagues.filter((l) => l.name.toLowerCase().includes(term)) : leagues;
+    if (term && visible.length === 0) {
+      listEl.innerHTML = '<p class="page-empty">Nessuna lega corrisponde alla ricerca.</p>';
+      return;
+    }
+    renderTable(
+      listEl,
+      visible,
+      [
+        { key: "name", label: "Nome" },
+        { key: "type", label: "Tipo", render: (l) => (l.is_topdeck ? "Topdeck" : "Lega") },
+        { key: "status", label: "Stato", render: (l) => statusBadge(l.is_open) },
+        {
+          key: "manage",
+          label: "",
+          render: (l) => `
               <div class="row-actions">
                 <button type="button" class="btn-secondary" data-toggle="${l.id}">${l.is_open ? "Chiudi" : "Riapri"}</button>
                 <button type="button" class="btn-secondary" data-open="${l.id}">Gestisci eventi &rarr;</button>
               </div>`,
-          },
-        ],
-        { onEdit, onDelete }
-      );
-      listEl.querySelectorAll("[data-open]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const league = leagues.find((l) => l.id === btn.dataset.open);
-          if (league) onOpenLeague(league);
-        });
+        },
+      ],
+      { onEdit, onDelete },
+      { animate }
+    );
+    listEl.querySelectorAll("[data-open]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const league = leagues.find((l) => l.id === btn.dataset.open);
+        if (league) onOpenLeague(league);
       });
-      listEl.querySelectorAll("[data-toggle]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const league = leagues.find((l) => l.id === btn.dataset.toggle);
-          if (league) onToggleOpen(league);
-        });
+    });
+    listEl.querySelectorAll("[data-toggle]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const league = leagues.find((l) => l.id === btn.dataset.toggle);
+        if (league) onToggleOpen(league);
       });
+    });
+  }
+
+  searchField.addEventListener("input", () => renderList(false));
+
+  // Same ordering data the public Leghe page needs — the latest associated
+  // event date per league — fetched here too since Leagues.list() itself
+  // just orders by creation date.
+  async function refresh() {
+    try {
+      const [allLeagues, events] = await Promise.all([Leagues.list(), Events.list()]);
+      const latestEventDateByLeague = new Map();
+      for (const ev of events) {
+        if (!ev.league_id || !ev.event_date) continue;
+        const current = latestEventDateByLeague.get(ev.league_id);
+        if (!current || ev.event_date > current) latestEventDateByLeague.set(ev.league_id, ev.event_date);
+      }
+      leagues = allLeagues
+        .map((l) => ({ ...l, latestEventDate: latestEventDateByLeague.get(l.id) ?? null }))
+        .sort(compareLeagues);
+      renderList();
     } catch (err) {
       setMessage(msgEl, "Errore nel caricamento.", true);
     }

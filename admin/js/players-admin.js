@@ -50,7 +50,7 @@ export function initPlayersAdmin() {
 
   // Live filter over the already-fetched list, so it's easy to check
   // whether a player has already been entered before adding a duplicate.
-  function renderList() {
+  function renderList(animate = true) {
     const term = searchField.value.trim().toLowerCase();
     const visible = term
       ? allPlayers.filter((p) => `${p.name} ${p.handle ?? ""}`.toLowerCase().includes(term))
@@ -83,7 +83,8 @@ export function initPlayersAdmin() {
               .join(" ") || "—",
         },
       ],
-      { onEdit, onDelete }
+      { onEdit, onDelete },
+      { animate }
     );
   }
 
@@ -97,7 +98,7 @@ export function initPlayersAdmin() {
     }
   }
 
-  searchField.addEventListener("input", renderList);
+  searchField.addEventListener("input", () => renderList(false));
 
   function onEdit(row) {
     idField.value = row.id;

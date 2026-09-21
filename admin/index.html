@@ -22,12 +22,28 @@
 </head>
 <body>
 
-<header class="site-header">
+<header class="site-header site-header--admin">
   <a class="site-header-brand" href="index.html">
     <img src="../dc_pc.png" alt="" class="site-logo-sm">
     <span>Duel Commander Piacenza &mdash; Admin</span>
   </a>
 </header>
+
+<!-- A direct sibling of <header>, same as .site-nav on the public site —
+     not nested inside .admin-shell, so it's naturally full-width with no
+     breakout trick needed. Always visible once logged in (tabs-view or
+     drilled into a league/event), so clicking a tab always works regardless
+     of where you currently are; toggled in sync with #admin-view by
+     js/app.js. -->
+<div id="admin-tabs-bar" class="admin-tabs" hidden>
+  <div class="admin-tabs-inner">
+    <button type="button" class="admin-tab" data-tab="players">Giocatori</button>
+    <button type="button" class="admin-tab" data-tab="commanders">Comandanti</button>
+    <button type="button" class="admin-tab" data-tab="badges">Badge</button>
+    <button type="button" class="admin-tab" data-tab="leagues">Leghe</button>
+    <button type="button" class="admin-tab" data-tab="standalone-events">Eventi standalone</button>
+  </div>
+</div>
 
 <div id="login-view" class="login-wrap">
   <div class="login-card">
@@ -53,7 +69,7 @@
 
 <div id="admin-view" class="admin-shell" hidden>
   <div class="admin-topbar">
-    <h1 style="margin:0;font-size:1.4rem;">Gestione dati</h1>
+    <h1 style="margin:0;font-size:1.4rem;" id="admin-page-title">Gestione dati</h1>
     <div>
       <span class="whoami" id="whoami"></span>
       <button type="button" class="btn-secondary" id="logout-btn" style="margin-left:10px;">Esci</button>
@@ -61,14 +77,6 @@
   </div>
 
   <div id="admin-tabs-view">
-  <div class="admin-tabs">
-    <button type="button" class="admin-tab" data-tab="players">Giocatori</button>
-    <button type="button" class="admin-tab" data-tab="commanders">Comandanti</button>
-    <button type="button" class="admin-tab" data-tab="badges">Badge</button>
-    <button type="button" class="admin-tab" data-tab="leagues">Leghe</button>
-    <button type="button" class="admin-tab" data-tab="standalone-events">Eventi standalone</button>
-  </div>
-
   <!-- Giocatori: piatto, sempre modificabile -->
   <section class="admin-panel" id="panel-players">
     <div class="admin-panel-layout">
@@ -271,7 +279,13 @@
             <p class="form-message" id="leagues-admin-message"></p>
           </form>
         </div>
-        <div id="leagues-admin-list"><p class="page-loading">Caricamento...</p></div>
+        <div>
+          <div class="field">
+            <label for="leagues-admin-search">Cerca</label>
+            <input type="search" id="leagues-admin-search" placeholder="Nome lega...">
+          </div>
+          <div id="leagues-admin-list"><p class="page-loading">Caricamento...</p></div>
+        </div>
       </div>
     </div>
 
@@ -327,7 +341,13 @@
           <p class="form-message" id="standalone-events-admin-message"></p>
         </form>
       </div>
-      <div id="standalone-events-admin-list"><p class="page-loading">Caricamento...</p></div>
+      <div>
+        <div class="field">
+          <label for="standalone-events-admin-search">Cerca</label>
+          <input type="search" id="standalone-events-admin-search" placeholder="Nome evento...">
+        </div>
+        <div id="standalone-events-admin-list"><p class="page-loading">Caricamento...</p></div>
+      </div>
     </div>
   </section>
 
