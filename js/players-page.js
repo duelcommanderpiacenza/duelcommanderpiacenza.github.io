@@ -117,24 +117,19 @@ async function init() {
     });
   }
 
-  // A league/event/date filter is actively narrowing the scope — unlike the
-  // default (whole-roster) view, players with no events in that scope are
-  // dropped instead of shown as an empty "—" row.
-  function isScopeFiltered() {
-    return Boolean(leagueSelect.value || eventSelect.value || dateFromInput.value);
-  }
-
   // The search box only re-filters the already-computed rows (no new
-  // network/stat work), so it can react live on every keystroke.
+  // network/stat work), so it can react live on every keystroke. Players
+  // with no events in the current scope are always dropped, filtered or
+  // not — an empty "—" row isn't useful either way.
   function renderList() {
     const term = searchInput.value.trim().toLowerCase();
-    const base = isScopeFiltered() ? lastRows.filter((r) => r.eventsPlayed > 0) : lastRows;
+    const base = lastRows.filter((r) => r.eventsPlayed > 0);
     const filtered = term ? base.filter((r) => r.searchText.includes(term)) : base;
     const sorter = SORTERS[sortSelect.value] ?? SORTERS.events;
     const visible = [...filtered].sort((a, b) => sorter(a, b) || a.nameHtml.localeCompare(b.nameHtml));
     listEl.innerHTML =
       visible.length === 0
-        ? '<p class="page-empty">Nessun giocatore corrisponde alla ricerca.</p>'
+        ? `<p class="page-empty">${term ? "Nessun giocatore corrisponde alla ricerca." : "Nessun giocatore ha ancora dati registrati."}</p>`
         : `<div class="data-table-wrap"><table class="data-table">
       <thead><tr><th>Giocatore</th><th>Eventi</th><th>V-S-P</th><th>Winrate</th><th>Commander pi&ugrave; usato</th></tr></thead>
       <tbody>${visible.map(renderRow).join("")}</tbody>

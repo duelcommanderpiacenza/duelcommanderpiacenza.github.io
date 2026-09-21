@@ -82,9 +82,12 @@ async function init() {
   // network/stat work), so it can react live on every keystroke.
   function renderTableSection() {
     const term = searchInput.value.trim().toLowerCase();
-    const filtered = term ? lastRows.filter((r) => r.name.toLowerCase().includes(term)) : lastRows;
+    // Commanders no one has ever played are always left out — an all-"—"
+    // row isn't useful, filtered or not.
+    const base = lastRows.filter((r) => r.entries > 0);
+    const filtered = term ? base.filter((r) => r.name.toLowerCase().includes(term)) : base;
     if (filtered.length === 0) {
-      return `<p class="page-empty">${term ? "Nessun comandante corrisponde alla ricerca." : "Nessun comandante inserito ancora."}</p>`;
+      return `<p class="page-empty">${term ? "Nessun comandante corrisponde alla ricerca." : "Nessun comandante ha ancora dati registrati."}</p>`;
     }
     const sorter = SORTERS[sortSelect.value] ?? SORTERS.played;
     const rows = [...filtered].sort((a, b) => sorter(a, b) || a.name.localeCompare(b.name));
