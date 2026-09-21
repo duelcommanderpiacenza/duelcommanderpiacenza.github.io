@@ -17,9 +17,9 @@
   --text-muted-2: #6f5a5e;
   --text-value: #4f3c40;
 
-  --hairline: rgba(154, 28, 32, 0.12);
-  --hairline-hover: rgba(220, 24, 28, 0.28);
-  --hairline-hover-strong: rgba(220, 24, 28, 0.32);
+  --hairline: rgba(154, 28, 32, 0.18);
+  --hairline-hover: rgba(220, 24, 28, 0.32);
+  --hairline-hover-strong: rgba(220, 24, 28, 0.36);
 
   --shadow-soft: 0 18px 42px rgba(69, 29, 34, 0.08);
   --shadow-card: 0 12px 28px rgba(40, 24, 26, 0.08);
@@ -808,6 +808,13 @@ footer {
   ::view-transition-new(*) {
     animation: none !important;
   }
+
+  .pie-chart,
+  .pie-legend-item {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .page-heading {
@@ -973,11 +980,11 @@ table.data-table td {
 }
 
 table.data-table th {
-  color: var(--text-muted);
+  color: var(--brand-red-darker);
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  background: #fff7f4;
+  background: #ffe9e2;
 }
 
 table.data-table tbody tr:last-child td {
@@ -985,7 +992,7 @@ table.data-table tbody tr:last-child td {
 }
 
 table.data-table tbody tr:hover {
-  background: #fffaf9;
+  background: #fff3f0;
 }
 
 .rank-cell {
@@ -1245,7 +1252,11 @@ table.data-table tbody tr:hover {
   min-width: 200px;
 }
 
-/* Metagame share chart (pie + side legend), js/metagame-chart.js */
+/* Metagame share chart (ring + side legend), js/metagame-chart.js. A single
+   mask cuts the hole directly out of the conic-gradient itself — it's a ring
+   from the very first frame, not a pie with a disc laid on top of it — and
+   the whole ring spins/scales/fades into place on render, legend rows
+   following with a slight stagger. */
 
 .pie-chart-wrap {
   display: flex;
@@ -1264,14 +1275,30 @@ table.data-table tbody tr:hover {
   width: 170px;
   height: 170px;
   border-radius: 50%;
-  flex-shrink: 0;
   box-shadow: var(--shadow-card);
+  flex-shrink: 0;
+  -webkit-mask: radial-gradient(circle, transparent 42%, #000 43%);
+  mask: radial-gradient(circle, transparent 42%, #000 43%);
+  transform-origin: 50% 50%;
+  animation: pie-ring-in 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes pie-ring-in {
+  from {
+    opacity: 0;
+    transform: scale(0.7) rotate(-80deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
 }
 
 .pie-legend {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  min-width: 190px;
 }
 
 .pie-legend-item {
@@ -1280,6 +1307,28 @@ table.data-table tbody tr:hover {
   gap: 8px;
   font-size: 0.9rem;
   color: var(--text-body);
+  opacity: 0;
+  animation: pie-legend-in 420ms ease both;
+}
+
+@keyframes pie-legend-in {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.pie-legend-label {
+  flex: 1;
+  text-transform: capitalize;
+}
+
+.pie-legend-pct {
+  color: var(--text-title);
 }
 
 .pie-legend-swatch {
@@ -1368,11 +1417,12 @@ table.data-table tbody tr:hover {
 }
 
 :root[data-theme="dark"] table.data-table th {
-  background: rgba(255, 255, 255, 0.06);
+  color: #ff9195;
+  background: rgba(255, 110, 110, 0.1);
 }
 
 :root[data-theme="dark"] table.data-table tbody tr:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 110, 110, 0.06);
 }
 
 :root[data-theme="dark"] .rank-cell,

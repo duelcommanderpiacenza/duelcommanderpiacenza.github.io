@@ -1,4 +1,4 @@
-// Metagame share as a pie chart with a side legend, reused by the
+// Metagame share as a donut chart with a side legend, reused by the
 // Commanders and Archetypes pages.
 import { escapeHtml } from "./ui.js";
 
@@ -23,10 +23,11 @@ export function renderPieChart(rows, emptyMessage) {
 
   const legend = visible
     .map(
-      (r) => `
-    <span class="pie-legend-item">
+      (r, i) => `
+    <span class="pie-legend-item" style="animation-delay:${i * 60}ms;">
       <span class="pie-legend-swatch" style="background:${r.color};"></span>
-      ${escapeHtml(r.label)} <strong>${r.share.toFixed(1)}%</strong>
+      <span class="pie-legend-label">${escapeHtml(r.label)}</span>
+      <strong class="pie-legend-pct">${r.share.toFixed(1)}%</strong>
     </span>`
     )
     .join("");

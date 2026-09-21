@@ -30,7 +30,8 @@ const SORTERS = {
 };
 
 async function init() {
-  const listEl = document.getElementById("commanders-list");
+  const chartEl = document.getElementById("commanders-chart");
+  const tableEl = document.getElementById("commanders-table");
   const leagueSelect = document.getElementById("commanders-league-filter");
   const eventSelect = document.getElementById("commanders-event-filter");
   const dateFromInput = document.getElementById("commanders-date-from");
@@ -62,7 +63,7 @@ async function init() {
       .slice(0, CHART_COLORS.length)
       .forEach(([id], i) => colorByCommanderId.set(id, CHART_COLORS[i]));
   } catch (err) {
-    showError(listEl, err);
+    showError(chartEl, err);
     return;
   }
 
@@ -108,11 +109,13 @@ async function init() {
   }
 
   function renderAll() {
-    listEl.innerHTML = `${lastChartHtml}${renderTableSection()}`;
+    chartEl.innerHTML = lastChartHtml;
+    tableEl.innerHTML = renderTableSection();
   }
 
   async function render(eventIds) {
-    listEl.innerHTML = '<p class="page-loading">Caricamento...</p>';
+    chartEl.innerHTML = '<p class="page-loading">Caricamento...</p>';
+    tableEl.innerHTML = "";
     try {
       const eventsData = await fetchEventsData(eventIds);
       const stats = computeGroupedStats(
@@ -155,7 +158,7 @@ async function init() {
 
       renderAll();
     } catch (err) {
-      showError(listEl, err);
+      showError(chartEl, err);
     }
   }
 
