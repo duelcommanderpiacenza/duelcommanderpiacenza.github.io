@@ -4,7 +4,7 @@
 // current in-scope event ids whenever either one changes.
 
 import { Leagues, Events } from "./db.js";
-import { escapeHtml } from "./ui.js";
+import { escapeHtml, eventTitle } from "./ui.js";
 
 export async function initScopeFilter({ leagueSelect, eventSelect, onChange }) {
   const [leagues, events] = await Promise.all([Leagues.list(), Events.list()]);
@@ -24,7 +24,7 @@ export async function initScopeFilter({ leagueSelect, eventSelect, onChange }) {
       scoped
         .map(
           (e) =>
-            `<option value="${e.id}">${escapeHtml(e.name)}${
+            `<option value="${e.id}">${escapeHtml(eventTitle(e))}${
               e.league ? ` — ${escapeHtml(e.league.name)}` : ""
             }</option>`
         )

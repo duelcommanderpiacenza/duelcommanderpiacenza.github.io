@@ -192,8 +192,8 @@
           <form id="events-admin-form">
             <input type="hidden" id="events-admin-id">
             <div class="field">
-              <label for="events-admin-name">Nome</label>
-              <input type="text" id="events-admin-name" required>
+              <label for="events-admin-name">Nome <span id="events-admin-name-hint" class="field-hint"></span></label>
+              <input type="text" id="events-admin-name">
             </div>
             <div class="field">
               <label for="events-admin-date">Data</label>
@@ -329,12 +329,12 @@
                 <input type="number" id="matches-admin-p1wins" min="0" max="3" step="1" value="0" required>
               </div>
               <div class="field">
-                <label for="matches-admin-draws">Pareggi</label>
-                <input type="number" id="matches-admin-draws" min="0" max="3" step="1" value="0" required>
-              </div>
-              <div class="field">
                 <label for="matches-admin-p2wins">Vittorie G2</label>
                 <input type="number" id="matches-admin-p2wins" min="0" max="3" step="1" value="0" required>
+              </div>
+              <div class="field">
+                <label for="matches-admin-draws">Pareggi</label>
+                <input type="number" id="matches-admin-draws" min="0" max="3" step="1" value="0" required>
               </div>
             </div>
             <div class="form-actions">

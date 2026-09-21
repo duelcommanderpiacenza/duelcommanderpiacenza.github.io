@@ -1,5 +1,5 @@
 import { Events } from "./db.js";
-import { escapeHtml, formatDate, leagueStatusBadge, topdeckBadge, showError } from "./ui.js";
+import { escapeHtml, formatDate, eventTitle, leagueStatusBadge, showError } from "./ui.js";
 
 async function init() {
   const listEl = document.getElementById("events-list");
@@ -32,8 +32,8 @@ async function init() {
             .map(
               (ev) => `
             <a class="entity-card" href="event.html?id=${ev.id}">
-              <div class="entity-card-meta">${formatDate(ev.event_date)}</div>
-              <div class="entity-card-title">${escapeHtml(ev.name)}</div>
+              ${ev.name ? `<div class="entity-card-meta">${formatDate(ev.event_date)}</div>` : ""}
+              <div class="entity-card-title">${escapeHtml(eventTitle(ev))}</div>
             </a>`
             )
             .join("")}
@@ -46,7 +46,7 @@ async function init() {
       <section class="league-group">
         <h2 class="league-group-title">
           <a href="league.html?id=${g.league.id}">${escapeHtml(g.league.name)}</a>
-          ${leagueStatusBadge(g.league.is_open)} ${topdeckBadge(g.league.is_topdeck)}
+          ${leagueStatusBadge(g.league.is_open)}
         </h2>
         ${renderEventGrid(g.events)}
       </section>`

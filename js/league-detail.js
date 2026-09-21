@@ -1,7 +1,7 @@
 import { Leagues, Events, EventEntries, Matches } from "./db.js";
 import { computeLeaguePoints } from "./leaderboard.js";
 import { computeLeagueSummary } from "./stats.js";
-import { escapeHtml, formatDate, leagueStatusBadge, topdeckBadge, playerLabel, showError } from "./ui.js";
+import { escapeHtml, formatDate, eventTitle, leagueStatusBadge, topdeckBadge, playerLabel, showError } from "./ui.js";
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
@@ -42,8 +42,8 @@ async function init() {
       .map(
         (ev) => `
       <a class="entity-card" href="event.html?id=${ev.id}">
-        <div class="entity-card-meta">${formatDate(ev.event_date)}</div>
-        <div class="entity-card-title">${escapeHtml(ev.name)}</div>
+        ${ev.name ? `<div class="entity-card-meta">${formatDate(ev.event_date)}</div>` : ""}
+        <div class="entity-card-title">${escapeHtml(eventTitle(ev))}</div>
       </a>`
       )
       .join("")}</div>`;

@@ -1,7 +1,7 @@
 import { Players, EventEntries, Matches } from "./db.js";
 import { matchRoundOutcome, isBye } from "./leaderboard.js";
-import { tallyOutcome, renderWinrateTiles } from "./winrate.js";
-import { escapeHtml, playerLabel, commanderPairLabel, colorIdentityPips, showError } from "./ui.js";
+import { tallyOutcome, tallyGames, renderWinrateTiles } from "./winrate.js";
+import { escapeHtml, playerLabel, commanderPairLabel, colorIdentityPips, eventTitle, showError } from "./ui.js";
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
@@ -17,7 +17,7 @@ function matchOutcome(m, viewerIsP1) {
 // The score is shown from the viewer's own point of view (their wins first),
 // rather than the raw player1/player2 orientation used elsewhere.
 function viewerScoreLabel(m, viewerIsP1) {
-  return viewerIsP1 ? `${m.player1_wins}-${m.draws}-${m.player2_wins}` : `${m.player2_wins}-${m.draws}-${m.player1_wins}`;
+  return viewerIsP1 ? `${m.player1_wins}-${m.player2_wins}-${m.draws}` : `${m.player2_wins}-${m.player1_wins}-${m.draws}`;
 }
 
 async function init() {
@@ -81,12 +81,15 @@ async function init() {
       const opponentId = viewerIsP1 ? m.player2_id : m.player1_id;
       const myEntry = entryByEvent.get(m.event_id);
       const oppEntry = entryByEventPlayer.get(`${m.event_id}_${opponentId}`);
+      const gameTotal = m.player1_wins + m.draws + m.player2_wins;
       return {
         event: m.event,
         opponent,
         isBye: isBye(m),
         outcome: matchOutcome(m, viewerIsP1),
         scoreLabel: isBye(m) ? "Bye" : viewerScoreLabel(m, viewerIsP1),
+        gameWins: viewerIsP1 ? m.player1_wins : m.player2_wins,
+        gameTotal,
         myCommander: myEntry?.commander ?? null,
         myPartner: myEntry?.partner_commander ?? null,
         oppCommander: oppEntry?.commander ?? null,
@@ -121,11 +124,12 @@ async function init() {
     function applyFilters() {
       const commanderId = commanderFilter.value;
       const leagueId = leagueFilter.value;
-      const bucket = { wins: 0, draws: 0, losses: 0 };
+      const bucket = { wins: 0, draws: 0, losses: 0, gameWins: 0, gameTotal: 0 };
       for (const r of rows) {
         if (commanderId && r.myCommander?.id !== commanderId && r.myPartner?.id !== commanderId) continue;
         if (leagueId && r.event?.league?.id !== leagueId) continue;
         tallyOutcome(bucket, r.outcome);
+        tallyGames(bucket, r.gameWins, r.gameTotal);
       }
       renderWinrateTiles(overallEl, bucket);
     }
@@ -143,7 +147,7 @@ async function init() {
                 .map(
                   (r) => `
                 <tr>
-                  <td>${r.event ? `<a href="event.html?id=${r.event.id}">${escapeHtml(r.event.name)}</a>` : "—"}</td>
+                  <td>${r.event ? `<a href="event.html?id=${r.event.id}">${escapeHtml(eventTitle(r.event))}</a>` : "—"}</td>
                   <td>${commanderPairLabel(r.myCommander, r.myPartner)}</td>
                   <td>${r.isBye ? "Bye" : playerLabel(r.opponent)}</td>
                   <td>${r.isBye ? "—" : commanderPairLabel(r.oppCommander, r.oppPartner)}</td>

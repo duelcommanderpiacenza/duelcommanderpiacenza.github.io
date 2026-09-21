@@ -36,6 +36,12 @@ const MIN_WIN_PCT = 1 / 3;
  * game-win %, then opponents' game-win % — with an optional per-entry
  * manual_rank that overrides those computed tiebreakers when the admin has
  * explicitly reordered a tie group (see admin/js/matches-admin.js).
+ *
+ * Each row's `winRate` is on a *game* basis (games won / games played
+ * across every match), not a match basis — winning a match 2-0 counts more
+ * than winning it 2-1, even though both are a single match win. `wins`/
+ * `draws`/`losses` stay match-level counts (used for the undefeated bonus
+ * and the V-S-P display column, which are legitimately about match record).
  * @param {Array} matches - rows from `matches` for one event.
  * @param {Array} entries - rows from `event_entries` for the same event (with player/commander joined).
  * @returns {Array} standings sorted by points desc, then tiebreakers, then name.
@@ -125,7 +131,11 @@ export function computeEventLeaderboard(matches, entries) {
     return Math.max(row.points / (row.played * POINTS.win), MIN_WIN_PCT);
   }
 
-  function gameWinPct(playerId) {
+  // Raw game tally (not the floored percentage below) — games won/played
+  // across every match, which is what "winrate" actually means: winning a
+  // match 2-1 is not the same as winning it 2-0, even though both are a
+  // single match win.
+  function gameTally(playerId) {
     const pMatches = matchesByPlayer.get(playerId) ?? [];
     let won = 0;
     let total = 0;
@@ -139,6 +149,16 @@ export function computeEventLeaderboard(matches, entries) {
       won += isP1 ? m.player1_wins : m.player2_wins;
       total += m.player1_wins + m.draws + m.player2_wins;
     }
+    return { won, total };
+  }
+
+  // The MTG tiebreaker version of the above floors at MIN_WIN_PCT (a single
+  // bad round, or a weak opponent, shouldn't disproportionately tank it) —
+  // that floor is specifically a tiebreak convention, not a real statistic,
+  // so the *displayed* winrate (row.winRate below) uses the raw tally
+  // instead, unfloored.
+  function gameWinPct(playerId) {
+    const { won, total } = gameTally(playerId);
     return total > 0 ? Math.max(won / total, MIN_WIN_PCT) : MIN_WIN_PCT;
   }
 
@@ -160,6 +180,10 @@ export function computeEventLeaderboard(matches, entries) {
   for (const row of byPlayer.values()) {
     const id = row.player?.id;
     const opponents = id ? opponentIdsOf(id) : [];
+    const tally = id ? gameTally(id) : { won: 0, total: 0 };
+    row.gameWins = tally.won;
+    row.gameTotal = tally.total;
+    row.winRate = tally.total > 0 ? (tally.won / tally.total) * 100 : null;
     row.gameWinPct = id ? gameWinPct(id) : MIN_WIN_PCT;
     row.opponentsMatchWinPct = average(opponents, matchWinPct);
     row.opponentsGameWinPct = average(opponents, gameWinPct);
@@ -226,22 +250,26 @@ export function computeLeaguePoints(eventsData) {
       score += entry?.bonus_points ?? 0;
 
       if (!byPlayer.has(id)) {
-        byPlayer.set(id, { player: row.player, eventScores: [], wins: 0, draws: 0, losses: 0 });
+        byPlayer.set(id, { player: row.player, eventScores: [], wins: 0, draws: 0, losses: 0, gameWins: 0, gameTotal: 0 });
       }
       const agg = byPlayer.get(id);
       agg.eventScores.push(score);
       agg.wins += row.wins;
       agg.draws += row.draws;
       agg.losses += row.losses;
+      agg.gameWins += row.gameWins;
+      agg.gameTotal += row.gameTotal;
     });
   }
 
-  const results = Array.from(byPlayer.values()).map(({ player, eventScores, wins, draws, losses }) => {
+  const results = Array.from(byPlayer.values()).map(({ player, eventScores, wins, draws, losses, gameWins, gameTotal }) => {
     const bestScores = [...eventScores].sort((a, b) => b - a).slice(0, BEST_RESULTS_COUNT);
     const fullAttendance = totalEvents > 0 && eventScores.length === totalEvents;
     const points = bestScores.reduce((sum, s) => sum + s, 0) + (fullAttendance ? FULL_ATTENDANCE_BONUS : 0);
-    const played = wins + draws + losses;
-    const winRate = played > 0 ? (wins / played) * 100 : null;
+    // Game-based, summed across every event in the league — not an average
+    // of each event's own winRate%, which would misweight events with
+    // fewer games played.
+    const winRate = gameTotal > 0 ? (gameWins / gameTotal) * 100 : null;
     return { player, points, eventsPlayed: eventScores.length, fullAttendance, wins, draws, losses, winRate };
   });
 

@@ -17,6 +17,12 @@ export function formatDate(value) {
   return d.toLocaleDateString("it-IT", { year: "numeric", month: "short", day: "2-digit" });
 }
 
+// A Topdeck event can be left unnamed by the admin — wherever its name would
+// be shown as a title/label, fall back to its formatted date instead.
+export function eventTitle(ev) {
+  return ev.name || formatDate(ev.event_date);
+}
+
 export function playerLabel(player) {
   if (!player) return "—";
   const name = escapeHtml(player.name);

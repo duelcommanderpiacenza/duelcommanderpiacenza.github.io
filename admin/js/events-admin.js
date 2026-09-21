@@ -16,6 +16,7 @@ export function initEventsAdmin({ onOpenEvent }) {
   const form = document.getElementById("events-admin-form");
   const idField = document.getElementById("events-admin-id");
   const nameField = document.getElementById("events-admin-name");
+  const nameHintEl = document.getElementById("events-admin-name-hint");
   const dateField = document.getElementById("events-admin-date");
   const msgEl = document.getElementById("events-admin-message");
   const cancelBtn = document.getElementById("events-admin-cancel");
@@ -31,7 +32,7 @@ export function initEventsAdmin({ onOpenEvent }) {
         listEl,
         events,
         [
-          { key: "name", label: "Nome" },
+          { key: "name", label: "Nome", render: (r) => r.name ?? "—" },
           { key: "event_date", label: "Data", render: (r) => formatDate(r.event_date) },
           { key: "status", label: "Stato", render: (r) => statusBadge(r.is_open) },
           {
@@ -65,7 +66,7 @@ export function initEventsAdmin({ onOpenEvent }) {
 
   function onEdit(row) {
     idField.value = row.id;
-    nameField.value = row.name;
+    nameField.value = row.name ?? "";
     dateField.value = row.event_date ?? "";
   }
 
@@ -85,7 +86,7 @@ export function initEventsAdmin({ onOpenEvent }) {
   }
 
   async function onDelete(row) {
-    if (!confirm(`Eliminare l'evento "${row.name}"? Verranno rimossi anche i suoi iscritti e partite.`)) return;
+    if (!confirm(`Eliminare l'evento "${row.name ?? formatDate(row.event_date)}"? Verranno rimossi anche i suoi iscritti e partite.`)) return;
     try {
       await Events.remove(row.id);
       await refresh();
@@ -98,11 +99,13 @@ export function initEventsAdmin({ onOpenEvent }) {
     e.preventDefault();
     if (!currentLeague) return;
     const payload = {
-      name: nameField.value.trim(),
+      name: nameField.value.trim() || null,
       event_date: dateField.value || null,
       league_id: currentLeague.id,
     };
-    if (!payload.name) return;
+    // Only a Topdeck event can be left unnamed — the public site then shows
+    // its date as the title instead. Any other league still requires a name.
+    if (!payload.name && !currentLeague.is_topdeck) return;
     try {
       if (idField.value) await Events.update(idField.value, payload);
       else await Events.create(payload);
@@ -129,6 +132,7 @@ export function initEventsAdmin({ onOpenEvent }) {
 
   function openLeague(league) {
     currentLeague = league;
+    nameHintEl.textContent = league.is_topdeck ? "(opzionale per un Topdeck: se vuoto, verrà mostrata la data)" : "";
     resetForm();
     refresh();
   }

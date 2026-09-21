@@ -1,8 +1,8 @@
 import { Commanders, EventEntries, Matches } from "./db.js";
 import { matchRoundOutcome, isBye } from "./leaderboard.js";
 import { initScopeFilter } from "./scope-filter.js";
-import { tallyOutcome, renderWinrateTiles } from "./winrate.js";
-import { escapeHtml, playerLabel, commanderLabel, commanderPairLabel, colorIdentityPips, showError } from "./ui.js";
+import { tallyOutcome, tallyGames, renderWinrateTiles } from "./winrate.js";
+import { escapeHtml, playerLabel, commanderLabel, commanderPairLabel, colorIdentityPips, eventTitle, showError } from "./ui.js";
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
@@ -17,7 +17,7 @@ function outcomeFor(m, selfIsP1) {
 
 // The score is shown from this commander's own point of view (its wins first).
 function selfScoreLabel(m, selfIsP1) {
-  return selfIsP1 ? `${m.player1_wins}-${m.draws}-${m.player2_wins}` : `${m.player2_wins}-${m.draws}-${m.player1_wins}`;
+  return selfIsP1 ? `${m.player1_wins}-${m.player2_wins}-${m.draws}` : `${m.player2_wins}-${m.player1_wins}-${m.draws}`;
 }
 
 async function init() {
@@ -78,6 +78,7 @@ async function init() {
     // mirror match (both sides on this commander) legitimately yields two rows.
     const rows = [];
     for (const m of matches) {
+      const gameTotal = m.player1_wins + m.draws + m.player2_wins;
       const selfEntry1 = playedEntryByKey.get(`${m.event_id}_${m.player1_id}`);
       if (selfEntry1) {
         const oppEntry = entryByKey.get(`${m.event_id}_${m.player2_id}`);
@@ -89,6 +90,8 @@ async function init() {
           isBye: isBye(m),
           outcome: outcomeFor(m, true),
           scoreLabel: isBye(m) ? "Bye" : selfScoreLabel(m, true),
+          gameWins: m.player1_wins,
+          gameTotal,
           oppCommander: oppEntry?.commander ?? null,
           oppPartner: oppEntry?.partner_commander ?? null,
         });
@@ -105,6 +108,8 @@ async function init() {
           opponent: m.player1,
           outcome: outcomeFor(m, false),
           scoreLabel: selfScoreLabel(m, false),
+          gameWins: m.player2_wins,
+          gameTotal,
           oppCommander: oppEntry?.commander ?? null,
           oppPartner: oppEntry?.partner_commander ?? null,
         });
@@ -121,7 +126,7 @@ async function init() {
                 .map(
                   (r) => `
                 <tr>
-                  <td>${r.event ? `<a href="event.html?id=${r.event.id}">${escapeHtml(r.event.name)}</a>` : "—"}</td>
+                  <td>${r.event ? `<a href="event.html?id=${r.event.id}">${escapeHtml(eventTitle(r.event))}</a>` : "—"}</td>
                   <td>${playerLabel(r.self)}</td>
                   <td>${commanderLabel(r.pairedWith)}</td>
                   <td>${r.isBye ? "Bye" : playerLabel(r.opponent)}</td>
@@ -135,13 +140,14 @@ async function init() {
 
     function computeWinrate(scopedEventIds) {
       const scoped = new Set(scopedEventIds);
-      const bucket = { wins: 0, draws: 0, losses: 0 };
+      const bucket = { wins: 0, draws: 0, losses: 0, gameWins: 0, gameTotal: 0 };
       for (const r of rows) {
         if (r.event && !scoped.has(r.event.id)) continue;
         // A bye is a free win for the player, not a "victory" for the
         // commander — it never actually beat anything.
         if (r.isBye) continue;
         tallyOutcome(bucket, r.outcome);
+        tallyGames(bucket, r.gameWins, r.gameTotal);
       }
       renderWinrateTiles(winrateEl, bucket);
     }

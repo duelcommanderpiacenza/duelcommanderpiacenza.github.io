@@ -1,5 +1,6 @@
 import { getSession, signIn, signOut, onAuthChange } from "./auth.js";
 import { setupThemeToggle } from "../../js/theme.js";
+import { eventTitle } from "../../js/ui.js";
 import { initPlayersAdmin } from "./players-admin.js";
 import { initCommandersAdmin } from "./commanders-admin.js";
 import { initLeaguesAdmin } from "./leagues-admin.js";
@@ -115,7 +116,7 @@ function showAdmin(session) {
 
     function openEvent(event) {
       currentEvent = event;
-      eventDetailTitle.textContent = event.name;
+      eventDetailTitle.textContent = eventTitle(event);
       entriesCtl.openEvent(event);
       enterEventFlow();
     }
@@ -143,7 +144,7 @@ function showAdmin(session) {
 
     openMatchesBtn.addEventListener("click", () => {
       if (!currentEvent) return;
-      matchesDetailTitle.textContent = `${currentEvent.name} — Partite`;
+      matchesDetailTitle.textContent = `${eventTitle(currentEvent)} — Partite`;
       matchesCtl.openEvent(currentEvent);
       showMatchesDetailSubview();
     });

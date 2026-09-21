@@ -3,6 +3,7 @@ import { computeEventLeaderboard, isBye } from "./leaderboard.js";
 import {
   escapeHtml,
   formatDate,
+  eventTitle,
   playerLabel,
   commanderPairLabel,
   archetypeBadge,
@@ -15,7 +16,7 @@ function getId() {
 }
 
 function matchResultScore(m) {
-  return `${m.player1_wins}-${m.draws}-${m.player2_wins}`;
+  return `${m.player1_wins}-${m.player2_wins}-${m.draws}`;
 }
 
 function renderMatchesByRound(matches) {
@@ -73,7 +74,7 @@ async function init() {
       Matches.listByEvent(id),
     ]);
 
-    titleEl.textContent = event.name;
+    titleEl.textContent = eventTitle(event);
     metaEl.innerHTML = `${formatDate(event.event_date)}${
       event.league
         ? ` &middot; Lega: <a href="league.html?id=${event.league.id}">${escapeHtml(event.league.name)}</a>`
@@ -108,7 +109,7 @@ async function init() {
       standings.length === 0
         ? '<p class="page-empty">Nessun dato per la classifica.</p>'
         : `<div class="data-table-wrap"><table class="data-table">
-            <thead><tr><th>#</th><th>Giocatore</th><th>Punti</th><th>V</th><th>S</th><th>P</th></tr></thead>
+            <thead><tr><th>#</th><th>Giocatore</th><th>Punti</th><th>V</th><th>S</th><th>P</th><th>Winrate</th></tr></thead>
             <tbody>
               ${standings
                 .map(
@@ -120,6 +121,7 @@ async function init() {
                   <td>${s.wins}</td>
                   <td>${s.losses}</td>
                   <td>${s.draws}</td>
+                  <td>${s.winRate === null ? "—" : `${s.winRate.toFixed(1)}%`}</td>
                 </tr>`
                 )
                 .join("")}

@@ -62,7 +62,7 @@ create table leagues (
 
 create table events (
   id uuid primary key default gen_random_uuid(),
-  name text not null,
+  name text, -- optional for a Topdeck event: left blank, the public site shows the date as its title instead
   event_date date,
   league_id uuid references leagues(id) on delete cascade, -- null = standalone event, not part of any league
   rounds integer not null default 1, -- number of turns/rounds, set manually by the admin

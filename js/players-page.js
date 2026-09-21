@@ -54,16 +54,23 @@ async function init() {
 
     const recordByPlayer = new Map();
     function ensureRecord(id) {
-      if (!recordByPlayer.has(id)) recordByPlayer.set(id, { wins: 0, draws: 0, losses: 0 });
+      if (!recordByPlayer.has(id)) {
+        recordByPlayer.set(id, { wins: 0, draws: 0, losses: 0, gameWins: 0, gameTotal: 0 });
+      }
       return recordByPlayer.get(id);
     }
     for (const m of matches) {
       const r1 = ensureRecord(m.player1_id);
+      const gamesInMatch = m.player1_wins + m.draws + m.player2_wins;
+      r1.gameWins += m.player1_wins;
+      r1.gameTotal += gamesInMatch;
       if (isBye(m)) {
         r1.wins += 1;
         continue;
       }
       const r2 = ensureRecord(m.player2_id);
+      r2.gameWins += m.player2_wins;
+      r2.gameTotal += gamesInMatch;
       const outcome = matchRoundOutcome(m);
       if (outcome === "player1") {
         r1.wins += 1;
@@ -80,8 +87,7 @@ async function init() {
     rows = players.map((p) => {
       const playerEntries = entriesByPlayer.get(p.id) ?? [];
       const eventsPlayed = new Set(playerEntries.map((e) => e.event_id)).size;
-      const record = recordByPlayer.get(p.id) ?? { wins: 0, draws: 0, losses: 0 };
-      const played = record.wins + record.draws + record.losses;
+      const record = recordByPlayer.get(p.id) ?? { wins: 0, draws: 0, losses: 0, gameWins: 0, gameTotal: 0 };
       const topCommander = mostUsedCommander(playerEntries);
       return {
         id: p.id,
@@ -91,7 +97,9 @@ async function init() {
         wins: record.wins,
         draws: record.draws,
         losses: record.losses,
-        rate: played > 0 ? `${((record.wins / played) * 100).toFixed(1)}%` : "—",
+        // Game basis, not match basis — winning a match 2-0 counts more
+        // than winning it 2-1, even though both are one match win.
+        rate: record.gameTotal > 0 ? `${((record.gameWins / record.gameTotal) * 100).toFixed(1)}%` : "—",
         topCommanderHtml: topCommander
           ? `${commanderPairLabel(topCommander.commander, topCommander.partner)} ${colorIdentityPips(
               (topCommander.commander.color_identity ?? "") + (topCommander.partner?.color_identity ?? "")

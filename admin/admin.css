@@ -45,6 +45,12 @@
   margin: 0 0 18px;
 }
 
+.field-hint {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: normal;
+}
+
 .login-card form {
   text-align: left;
 }

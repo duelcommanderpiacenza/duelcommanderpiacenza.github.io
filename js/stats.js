@@ -7,6 +7,11 @@
 import { matchRoundOutcome, isBye } from "./leaderboard.js";
 
 /**
+ * `wins`/`draws`/`losses` are match-level counts (one per match, used for
+ * the V-S-P display column) — `winRate` is deliberately computed on a
+ * *game* basis instead (games won / games played across every match), not
+ * from those match counts: winning a match 2-0 counts more than winning it
+ * 2-1, even though both are a single match win.
  * @param {Array<{entries: Array, matches: Array}>} eventsData
  * @param {(entry) => string} keyFn - grouping key for one entry, e.g. entry.commander_id
  * @param {(entry) => object} buildMeta - extra display fields captured the first time a key is seen
@@ -19,7 +24,7 @@ export function computeGroupedStats(eventsData, keyFn, buildMeta) {
     const key = keyFn(entry);
     if (key == null) return null;
     if (!groups.has(key)) {
-      groups.set(key, { key, entries: 0, wins: 0, draws: 0, losses: 0, ...buildMeta(entry) });
+      groups.set(key, { key, entries: 0, wins: 0, draws: 0, losses: 0, gameWins: 0, gameTotal: 0, ...buildMeta(entry) });
     }
     return groups.get(key);
   }
@@ -43,16 +48,21 @@ export function computeGroupedStats(eventsData, keyFn, buildMeta) {
       const g1 = e1 ? groups.get(keyFn(e1)) : null;
       const g2 = e2 ? groups.get(keyFn(e2)) : null;
       const outcome = matchRoundOutcome(m);
+      const gamesInMatch = m.player1_wins + m.draws + m.player2_wins;
 
       if (g1) {
         if (outcome === "player1") g1.wins += 1;
         else if (outcome === "player2") g1.losses += 1;
         else g1.draws += 1;
+        g1.gameWins += m.player1_wins;
+        g1.gameTotal += gamesInMatch;
       }
       if (g2) {
         if (outcome === "player2") g2.wins += 1;
         else if (outcome === "player1") g2.losses += 1;
         else g2.draws += 1;
+        g2.gameWins += m.player2_wins;
+        g2.gameTotal += gamesInMatch;
       }
     }
   }
@@ -60,7 +70,7 @@ export function computeGroupedStats(eventsData, keyFn, buildMeta) {
   return Array.from(groups.values())
     .map((g) => {
       const played = g.wins + g.draws + g.losses;
-      return { ...g, played, winRate: played > 0 ? (g.wins / played) * 100 : null };
+      return { ...g, played, winRate: g.gameTotal > 0 ? (g.gameWins / g.gameTotal) * 100 : null };
     })
     .sort((a, b) => b.entries - a.entries);
 }
