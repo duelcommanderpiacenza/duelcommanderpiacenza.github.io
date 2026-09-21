@@ -127,9 +127,11 @@ html {
 
 /* Padding/font-size match .nav-link exactly (8px 14px / 0.92rem, not the
    old 9px 15px inherited-size) so the tab buttons come out the same height
-   as the public site's nav links. */
+   as the public site's nav links. Border also matches .nav-link: transparent
+   by default (unselected tabs shouldn't look boxed), colored in on
+   hover/active only. */
 .admin-tab {
-  border: 1px solid var(--hairline);
+  border: 1px solid transparent;
   background: #fff;
   color: var(--brand-red-darker);
   border-radius: var(--radius-pill);
@@ -235,7 +237,7 @@ html {
 }
 
 .round-tab {
-  border: 1px solid var(--hairline);
+  border: 1px solid transparent;
   background: #fff;
   color: var(--brand-red-darker);
   border-radius: var(--radius-pill);
