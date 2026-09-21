@@ -42,6 +42,7 @@
     <button type="button" class="admin-tab" data-tab="badges">Badge</button>
     <button type="button" class="admin-tab" data-tab="leagues">Leghe</button>
     <button type="button" class="admin-tab" data-tab="standalone-events">Eventi standalone</button>
+    <button type="button" class="admin-tab" data-tab="announcements">Annunci</button>
   </div>
 </div>
 
@@ -348,6 +349,38 @@
           <input type="search" id="standalone-events-admin-search" placeholder="Nome evento...">
         </div>
         <div id="standalone-events-admin-list"><p class="page-loading">Caricamento...</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Annunci: piatto, sempre modificabile — mostrati sulla Bacheca pubblica -->
+  <section class="admin-panel" id="panel-announcements">
+    <div class="admin-panel-layout">
+      <div class="admin-form-card">
+        <h3>Nuovo / modifica annuncio</h3>
+        <form id="announcements-admin-form">
+          <input type="hidden" id="announcements-admin-id">
+          <div class="field">
+            <label for="announcements-admin-title">Titolo</label>
+            <input type="text" id="announcements-admin-title" required>
+          </div>
+          <div class="field">
+            <label for="announcements-admin-body">Testo</label>
+            <textarea id="announcements-admin-body" rows="5" required></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Salva</button>
+            <button type="button" class="btn-secondary" id="announcements-admin-cancel">Annulla</button>
+          </div>
+          <p class="form-message" id="announcements-admin-message"></p>
+        </form>
+      </div>
+      <div>
+        <div class="field">
+          <label for="announcements-admin-search">Cerca</label>
+          <input type="search" id="announcements-admin-search" placeholder="Titolo annuncio...">
+        </div>
+        <div id="announcements-admin-list"><p class="page-loading">Caricamento...</p></div>
       </div>
     </div>
   </section>

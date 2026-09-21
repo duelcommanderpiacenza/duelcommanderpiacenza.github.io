@@ -462,6 +462,57 @@ main {
   margin-bottom: 0;
 }
 
+.announcement-item {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.announcement-item:first-child {
+  padding-top: 0;
+}
+
+.announcement-item:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.announcement-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+/* Brand red + bold, clearly heavier than the body text below it, so the
+   two read as distinct "headline vs. content" rather than similar-weight
+   lines running together. */
+.announcement-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--brand-red-deep);
+}
+
+.announcement-date {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.announcement-body {
+  margin: 0;
+  color: var(--text-body);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  /* A plain textarea in admin — preserves the line breaks the admin
+     actually typed instead of collapsing them like normal HTML text. */
+  white-space: pre-line;
+}
+
 .dashboard-card-subtitle {
   margin: -8px 0 14px;
   color: var(--text-muted);

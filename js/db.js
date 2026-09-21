@@ -14,6 +14,15 @@ function assertOk({ data, error }) {
 const COMMANDER_EMBED =
   "commander:commanders!event_entries_commander_id_fkey(id,name,color_identity), partner_commander:commanders!event_entries_partner_commander_id_fkey(id,name,color_identity)";
 
+export const Announcements = {
+  // Newest first — the public Bacheca section just lists whatever's here,
+  // top to bottom, with no separate pinning/ordering concept.
+  list: () => sb.from("announcements").select("*").order("created_at", { ascending: false }).then(assertOk),
+  create: (row) => sb.from("announcements").insert(row).select().single().then(assertOk),
+  update: (id, patch) => sb.from("announcements").update(patch).eq("id", id).select().single().then(assertOk),
+  remove: (id) => sb.from("announcements").delete().eq("id", id).then(assertOk),
+};
+
 export const Commanders = {
   list: () => sb.from("commanders").select("*").order("name").then(assertOk),
   get: (id) => sb.from("commanders").select("*").eq("id", id).single().then(assertOk),

@@ -21,6 +21,7 @@
 
 create extension if not exists pgcrypto;
 
+drop table if exists announcements cascade;
 drop table if exists matches cascade;
 drop table if exists event_entries cascade;
 drop table if exists decks cascade;
@@ -37,6 +38,14 @@ create type deck_archetype as enum ('aggro', 'control', 'combo', 'tempo', 'midra
 -- ---------------------------------------------------------------------------
 -- Tables
 -- ---------------------------------------------------------------------------
+
+create table announcements ( -- short club announcements shown on the Bacheca homepage; the section
+    -- there is hidden entirely whenever this table is empty
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  body text not null,
+  created_at timestamptz not null default now()
+);
 
 create table commanders (
   id uuid primary key default gen_random_uuid(),
@@ -186,7 +195,7 @@ do $$
 declare
   t text;
 begin
-  foreach t in array array['commanders', 'players', 'badges', 'leagues', 'events', 'event_entries', 'matches']
+  foreach t in array array['announcements', 'commanders', 'players', 'badges', 'leagues', 'events', 'event_entries', 'matches']
   loop
     execute format('alter table %I enable row level security;', t);
     execute format('create policy "%I_admin_insert" on %I for insert with check (auth.role() = ''authenticated'');', t, t);
@@ -195,6 +204,7 @@ begin
   end loop;
 end $$;
 
+create policy "announcements_public_read" on announcements for select using (true);
 create policy "commanders_public_read" on commanders for select using (true);
 create policy "players_public_read" on players for select using (true);
 create policy "badges_public_read" on badges for select using (true);

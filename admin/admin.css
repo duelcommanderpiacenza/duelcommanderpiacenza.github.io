@@ -175,6 +175,15 @@ html {
   align-items: start;
 }
 
+/* Annunci's form is a long free-text title + a multi-line textarea, not a
+   handful of short fields — the shared fixed 300px column (fine for every
+   other panel's compact forms) left it too narrow to read comfortably
+   while typing. Scoped to just this panel so the other panels keep their
+   own consistent, unaffected 300px split. */
+#panel-announcements .admin-panel-layout {
+  grid-template-columns: 1fr 1fr;
+}
+
 /* A grid item's default min-width is `auto`, which lets a wide table (with
    .data-table-wrap's own overflow-x:auto) force the whole grid — and with
    it the page — wider than the container instead of scrolling inside its

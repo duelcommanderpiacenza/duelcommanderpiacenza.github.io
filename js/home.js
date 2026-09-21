@@ -2,7 +2,7 @@
 // events, most played commanders) — each fetches and renders on its own,
 // so one failing doesn't block the others.
 
-import { Leagues, Events, EventEntries, Matches } from "./db.js";
+import { Announcements, Leagues, Events, EventEntries, Matches } from "./db.js";
 import { computeLeagueSummary } from "./stats.js";
 import { computeLeaguePoints } from "./leaderboard.js";
 import { renderPieChart } from "./metagame-chart.js";
@@ -60,6 +60,32 @@ function renderLeagueCard({ league, summary, standings }) {
             </ol>`
       }
     </a>`;
+}
+
+// The section itself is hidden entirely (not just empty) whenever there
+// are no announcements — including on a fetch failure, since this widget
+// is a nice-to-have, not critical page content worth an error box.
+async function renderAnnouncementsSection(sectionEl, contentEl) {
+  try {
+    const announcements = await Announcements.list();
+    sectionEl.hidden = announcements.length === 0;
+    if (announcements.length === 0) return;
+    contentEl.innerHTML = announcements
+      .map(
+        (a) => `
+      <article class="announcement-item">
+        <div class="announcement-head">
+          <h3 class="announcement-title">${escapeHtml(a.title)}</h3>
+          <span class="announcement-date">${formatDate(a.created_at)}</span>
+        </div>
+        <p class="announcement-body">${escapeHtml(a.body)}</p>
+      </article>`
+      )
+      .join("");
+  } catch (err) {
+    console.error(err);
+    sectionEl.hidden = true;
+  }
 }
 
 async function renderLeaguesSection(el) {
@@ -159,9 +185,13 @@ async function renderCommandersSection(el) {
   }
 }
 
-// Three independent widgets — the page isn't "ready" until all three have
+// Four independent widgets — the page isn't "ready" until all of them have
 // settled (success or already-shown error), not just the first one.
 Promise.allSettled([
+  renderAnnouncementsSection(
+    document.getElementById("dashboard-announcements"),
+    document.getElementById("dashboard-announcements-content")
+  ),
   renderLeaguesSection(document.getElementById("dashboard-leagues-content")),
   renderEventsSection(document.getElementById("dashboard-events-content")),
   renderCommandersSection(document.getElementById("dashboard-commanders-content")),
