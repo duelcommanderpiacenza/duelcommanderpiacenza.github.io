@@ -53,7 +53,9 @@ export function initMatchesAdmin() {
       covered.add(m.player1_id);
       if (m.player2_id) covered.add(m.player2_id);
     }
-    return currentEntrants.filter((e) => !covered.has(e.player.id));
+    return currentEntrants
+      .filter((e) => !covered.has(e.player.id))
+      .sort((a, b) => a.player.name.localeCompare(b.player.name, "it"));
   }
 
   // Player 1/2 can only be chosen from players not already paired (or
@@ -329,13 +331,18 @@ export function initMatchesAdmin() {
     }
   }
 
+  // For a fresh match, default Giocatore 1/2 to the next two alphabetically
+  // available entrants rather than leaving them blank — since the picker
+  // list is already alphabetical, that's almost always who the admin wants
+  // to pair next; they can still change it before submitting.
   function resetForm() {
     editingRow = null;
     idField.value = "";
     byeField.checked = false;
     updateFormAvailability();
-    player1Field.value = "";
-    player2Field.value = "";
+    const available = availableEntrants(null);
+    player1Field.value = available[0]?.player.id ?? "";
+    player2Field.value = available[1]?.player.id ?? "";
     p1WinsField.value = "0";
     drawsField.value = "0";
     p2WinsField.value = "0";

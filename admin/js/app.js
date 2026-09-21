@@ -155,6 +155,10 @@ function showAdmin(session) {
 
     matchesDetailBack.addEventListener("click", (e) => {
       e.preventDefault();
+      // currentEvent is the same object reference matchesCtl was handed, so
+      // an open/close toggle made there is already reflected on it — just
+      // re-run openEvent to refresh the entries form's locked state and list.
+      if (currentEvent) entriesCtl.openEvent(currentEvent);
       showEventDetailSubview();
     });
 

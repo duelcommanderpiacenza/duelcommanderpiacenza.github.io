@@ -26,6 +26,16 @@ export function initEntriesAdmin() {
   let currentEntries = [];
   let editingEntryId = null;
 
+  // Once an event is closed its results are published — locking the form
+  // stops new/edited entrants from silently changing an already-public
+  // standing. Re-opening the event (from the Partite subview) unlocks it
+  // again.
+  function applyLockState() {
+    const locked = currentEvent ? !currentEvent.is_open : false;
+    form.querySelectorAll("input, select, button").forEach((el) => (el.disabled = locked));
+    setMessage(msgEl, locked ? "Evento chiuso: riaprilo per modificare gli iscritti." : "", false);
+  }
+
   async function populatePlayers() {
     allPlayers = await Players.list();
     updatePlayerOptions();
@@ -37,7 +47,7 @@ export function initEntriesAdmin() {
   // (excluded from its own "already entered" set) so the value can be kept.
   function updatePlayerOptions() {
     const enteredIds = new Set(currentEntries.filter((e) => e.id !== editingEntryId).map((e) => e.player_id));
-    const available = allPlayers.filter((p) => !enteredIds.has(p.id));
+    const available = allPlayers.filter((p) => !enteredIds.has(p.id)).sort((a, b) => a.name.localeCompare(b.name, "it"));
     fillSelect(
       playerField,
       available.map((p) => `<option value="${p.id}">${p.name}${p.handle ? ` (${p.handle})` : ""}</option>`).join("")
@@ -45,7 +55,7 @@ export function initEntriesAdmin() {
   }
 
   async function populateCommanders() {
-    const commanders = await Commanders.list();
+    const commanders = (await Commanders.list()).sort((a, b) => a.name.localeCompare(b.name, "it"));
     const options = commanders.map((c) => `<option value="${c.id}">${c.name}</option>`).join("");
     fillSelect(commanderField, options);
     fillSelect(partnerField, '<option value="">&mdash; nessuno &mdash;</option>' + options);
@@ -157,6 +167,7 @@ export function initEntriesAdmin() {
     currentEvent = event;
     bonusFieldWrap.hidden = !bonusApplies();
     resetForm();
+    applyLockState();
     refresh();
   }
 
