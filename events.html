@@ -21,7 +21,7 @@
   <meta name="theme-color" content="#dc181c">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body data-active-nav="events">
+<body data-active-nav="events" class="is-loading">
 
 <header class="site-header">
   <a class="site-header-brand" href="index.html">
@@ -45,8 +45,12 @@
 <main class="page-main">
   <div class="page-heading"><h1>Eventi</h1></div>
 
-  <div id="events-list" class="entity-grid">
-    <p class="page-loading">Caricamento eventi...</p>
+  <div class="page-loading-region">
+    <div id="page-loading-overlay" class="page-loading-overlay"><p>Caricamento...</p></div>
+
+    <div id="events-list" class="entity-grid">
+      <p class="page-loading">Caricamento eventi...</p>
+    </div>
   </div>
 </main>
 

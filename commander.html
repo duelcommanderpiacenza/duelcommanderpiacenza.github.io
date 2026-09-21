@@ -21,7 +21,7 @@
   <meta name="theme-color" content="#dc181c">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body data-active-nav="commanders">
+<body data-active-nav="commanders" class="is-loading">
 
 <header class="site-header">
   <a class="site-header-brand" href="index.html">
@@ -49,24 +49,28 @@
     <h1 id="commander-title">Caricamento...</h1>
   </div>
 
-  <h2>Winrate</h2>
-  <div class="filter-bar">
-    <div class="field">
-      <label for="commander-league-filter">Lega</label>
-      <select id="commander-league-filter"><option value="">Tutte le leghe</option></select>
+  <div class="page-loading-region">
+    <div id="page-loading-overlay" class="page-loading-overlay"><p>Caricamento...</p></div>
+
+    <h2>Winrate</h2>
+    <div class="filter-bar">
+      <div class="field">
+        <label for="commander-league-filter">Lega</label>
+        <select id="commander-league-filter"><option value="">Tutte le leghe</option></select>
+      </div>
+      <div class="field">
+        <label for="commander-event-filter">Evento</label>
+        <select id="commander-event-filter"><option value="">Tutti gli eventi</option></select>
+      </div>
     </div>
-    <div class="field">
-      <label for="commander-event-filter">Evento</label>
-      <select id="commander-event-filter"><option value="">Tutti gli eventi</option></select>
-    </div>
+    <div id="commander-winrate" class="stat-grid page-loading">Caricamento...</div>
+
+    <h2 style="margin-top:28px;">Giocatori</h2>
+    <div id="commander-players" class="page-loading">Caricamento...</div>
+
+    <h2 style="margin-top:28px;">Storico partite</h2>
+    <div id="commander-matches" class="page-loading">Caricamento...</div>
   </div>
-  <div id="commander-winrate" class="stat-grid page-loading">Caricamento...</div>
-
-  <h2 style="margin-top:28px;">Giocatori</h2>
-  <div id="commander-players" class="page-loading">Caricamento...</div>
-
-  <h2 style="margin-top:28px;">Storico partite</h2>
-  <div id="commander-matches" class="page-loading">Caricamento...</div>
 </main>
 
 <footer>

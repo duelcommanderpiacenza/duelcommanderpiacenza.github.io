@@ -21,7 +21,7 @@
   <meta name="theme-color" content="#dc181c">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body data-active-nav="archetypes">
+<body data-active-nav="archetypes" class="is-loading">
 
 <header class="site-header">
   <a class="site-header-brand" href="index.html">
@@ -45,26 +45,30 @@
 <main class="page-main">
   <div class="page-heading"><h1>Archetipi</h1></div>
 
-  <div id="archetypes-chart">
-    <p class="page-loading">Caricamento archetipi...</p>
-  </div>
+  <div class="page-loading-region">
+    <div id="page-loading-overlay" class="page-loading-overlay"><p>Caricamento...</p></div>
 
-  <div class="filter-bar">
-    <div class="field">
-      <label for="archetypes-league-filter">Lega</label>
-      <select id="archetypes-league-filter"><option value="">Tutte le leghe</option></select>
+    <div id="archetypes-chart">
+      <p class="page-loading">Caricamento archetipi...</p>
     </div>
-    <div class="field">
-      <label for="archetypes-event-filter">Evento</label>
-      <select id="archetypes-event-filter"><option value="">Tutti gli eventi</option></select>
-    </div>
-    <div class="field">
-      <label for="archetypes-date-from">Dal</label>
-      <input type="date" id="archetypes-date-from">
-    </div>
-  </div>
 
-  <div id="archetypes-table"></div>
+    <div class="filter-bar">
+      <div class="field">
+        <label for="archetypes-league-filter">Lega</label>
+        <select id="archetypes-league-filter"><option value="">Tutte le leghe</option></select>
+      </div>
+      <div class="field">
+        <label for="archetypes-event-filter">Evento</label>
+        <select id="archetypes-event-filter"><option value="">Tutti gli eventi</option></select>
+      </div>
+      <div class="field">
+        <label for="archetypes-date-from">Dal</label>
+        <input type="date" id="archetypes-date-from">
+      </div>
+    </div>
+
+    <div id="archetypes-table"></div>
+  </div>
 </main>
 
 <footer>

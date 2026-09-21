@@ -3,6 +3,7 @@ import { computeGroupedStats } from "./stats.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { renderPieChart } from "./metagame-chart.js";
 import { commanderLabel, colorIdentityPips, showError } from "./ui.js";
+import { hidePageLoading } from "./page-loading.js";
 
 // Fixed hue order, assigned once by each commander's overall popularity
 // across the whole site (not the current filter), so a commander keeps the
@@ -67,6 +68,7 @@ async function init() {
       .forEach(([id], i) => colorByCommanderId.set(id, CHART_COLORS[i]));
   } catch (err) {
     showError(chartEl, err);
+    hidePageLoading();
     return;
   }
 
@@ -222,6 +224,8 @@ async function init() {
       renderTable();
     } catch (err) {
       showError(chartEl, err);
+    } finally {
+      hidePageLoading();
     }
   }
 

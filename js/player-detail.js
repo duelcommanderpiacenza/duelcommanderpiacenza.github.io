@@ -2,6 +2,7 @@ import { Players, EventEntries, Matches } from "./db.js";
 import { matchRoundOutcome, isBye, computeEventLeaderboard } from "./leaderboard.js";
 import { tallyOutcome, tallyGames, renderWinrateTiles } from "./winrate.js";
 import { escapeHtml, playerLabel, commanderPairLabel, colorIdentityPips, eventTitle, formatDate, showError } from "./ui.js";
+import { hidePageLoading } from "./page-loading.js";
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
@@ -32,6 +33,7 @@ async function init() {
 
   if (!id) {
     titleEl.textContent = "Giocatore non trovato";
+    hidePageLoading();
     return;
   }
 
@@ -223,6 +225,8 @@ async function init() {
           </table></div>`;
   } catch (err) {
     showError(document.getElementById("player-content"), err);
+  } finally {
+    hidePageLoading();
   }
 }
 

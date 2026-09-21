@@ -32,7 +32,7 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 
-<body data-active-nav="social">
+<body data-active-nav="social" class="is-loading">
 
 <header class="site-header">
   <a class="site-header-brand" href="index.html">
@@ -70,22 +70,26 @@
 
 <main>
 
-  <div class="overview-grid">
-    <section class="card overview-card">
-      <div class="section-heading">
-        <h2>Ultimi Video</h2>
-        <div id="video-filters-slot"></div>
-      </div>
-      <div id="videos">Caricamento video...</div>
-    </section>
+  <div class="page-loading-region">
+    <div id="page-loading-overlay" class="page-loading-overlay"><p>Caricamento...</p></div>
 
-    <section class="card overview-card">
-      <div class="section-heading">
-        <h2>Ultimi Decks</h2>
-        <div id="deck-filters-slot"></div>
-      </div>
-      <div id="decks">Caricamento decks...</div>
-    </section>
+    <div class="overview-grid">
+      <section class="card overview-card">
+        <div class="section-heading">
+          <h2>Ultimi Video</h2>
+          <div id="video-filters-slot"></div>
+        </div>
+        <div id="videos">Caricamento video...</div>
+      </section>
+
+      <section class="card overview-card">
+        <div class="section-heading">
+          <h2>Ultimi Decks</h2>
+          <div id="deck-filters-slot"></div>
+        </div>
+        <div id="decks">Caricamento decks...</div>
+      </section>
+    </div>
   </div>
 
 </main>

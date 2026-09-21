@@ -54,6 +54,76 @@ body {
   color: var(--text-body);
 }
 
+/* Splash shown until a page's own data has finished loading (see
+   js/page-loading.js) — static markup right after .page-heading in every
+   public page's <main>, same reasoning as the header/nav in js/layout.js:
+   present at first paint so there's nothing to pop in. Deliberately scoped
+   to below the title (header, nav and heading stay visible/interactive the
+   whole time) rather than covering the whole page — .page-loading-region
+   is the positioning parent, with a min-height so the splash still reads
+   as a proper "screen" even though its content starts out empty and only
+   grows to its natural height once the splash is gone. */
+.page-loading-region {
+  position: relative;
+  min-height: 50vh;
+}
+
+/* The real content underneath (filters, chart, table, each with its own
+   small "Caricamento..." placeholder) is hidden outright — see the
+   visibility rule below — rather than painted over with a matching color,
+   since no fixed color could ever exactly match body's gradient (which
+   spans the full, variable document height) at this box's particular
+   position. With nothing left to paint over, there's nothing to mismatch:
+   the correct bit of body's own background just shows through on its own. */
+.page-loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 220ms ease;
+}
+
+/* visibility (not display/opacity) so the region still reserves the real
+   content's actual layout space while it's hidden — kept in sync with the
+   same body.is-loading class that pauses entrance animations, so removing
+   it both reveals this content and starts those animations at once. */
+body.is-loading .page-loading-region > *:not(.page-loading-overlay) {
+  visibility: hidden;
+}
+
+.page-loading-overlay p {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.page-loading-overlay.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Content gets built (and its entrance animations technically start
+   playing) behind the splash while data is still loading, well before the
+   splash itself fades out — without this, everything would already be
+   sitting fully settled the moment the splash clears, silently skipping
+   the animation entirely. Pausing every animation on the page while
+   .is-loading is present holds each one at its very first frame; js/
+   page-loading.js removes the class at the same moment it hides the
+   splash, so every element's entrance animation starts playing together,
+   in sync, right as the page becomes visible. */
+body.is-loading * {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-loading-overlay {
+    transition: none;
+  }
+}
+
 /* Pushes the footer to the bottom of the viewport on short pages, while
    letting it sit below the content as usual once content overflows it. */
 main,
@@ -1564,7 +1634,7 @@ input[type="search"] {
 }
 
 /* No entrance animation here (removed — it kept skipping its own "from"
-   frame in a way that wasn't worth chasing further). */
+frame in a way that wasn't worth chasing further). */
 .cs-wrap {
   position: relative;
   display: block;

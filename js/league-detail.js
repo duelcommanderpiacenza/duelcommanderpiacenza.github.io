@@ -2,6 +2,7 @@ import { Leagues, Events, EventEntries, Matches } from "./db.js";
 import { computeLeaguePoints } from "./leaderboard.js";
 import { computeLeagueSummary } from "./stats.js";
 import { escapeHtml, formatDate, eventTitle, leagueStatusBadge, playerLabel, showError } from "./ui.js";
+import { hidePageLoading } from "./page-loading.js";
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
@@ -17,6 +18,7 @@ async function init() {
 
   if (!id) {
     titleEl.textContent = "Lega non trovata";
+    hidePageLoading();
     return;
   }
 
@@ -97,6 +99,8 @@ async function init() {
           </table></div>`;
   } catch (err) {
     showError(document.getElementById("league-content"), err);
+  } finally {
+    hidePageLoading();
   }
 }
 

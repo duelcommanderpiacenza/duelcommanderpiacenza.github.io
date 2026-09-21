@@ -21,7 +21,7 @@
   <meta name="theme-color" content="#dc181c">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body data-active-nav="events">
+<body data-active-nav="events" class="is-loading">
 
 <header class="site-header">
   <a class="site-header-brand" href="index.html">
@@ -50,15 +50,19 @@
   </div>
   <p class="page-subtitle" id="event-meta"></p>
 
-  <h2>Giocatori</h2>
-  <div id="event-entries" class="page-loading">Caricamento...</div>
+  <div class="page-loading-region">
+    <div id="page-loading-overlay" class="page-loading-overlay"><p>Caricamento...</p></div>
 
-  <h2 style="margin-top:28px;">Classifica</h2>
-  <p class="page-subtitle">3 punti per vittoria, 1 per pareggio, 0 per sconfitta.</p>
-  <div id="event-leaderboard" class="page-loading">Caricamento...</div>
+    <h2>Giocatori</h2>
+    <div id="event-entries" class="page-loading">Caricamento...</div>
 
-  <h2 style="margin-top:28px;">Partite</h2>
-  <div id="event-matches" class="page-loading">Caricamento...</div>
+    <h2 style="margin-top:28px;">Classifica</h2>
+    <p class="page-subtitle">3 punti per vittoria, 1 per pareggio, 0 per sconfitta.</p>
+    <div id="event-leaderboard" class="page-loading">Caricamento...</div>
+
+    <h2 style="margin-top:28px;">Partite</h2>
+    <div id="event-matches" class="page-loading">Caricamento...</div>
+  </div>
 </main>
 
 <footer>

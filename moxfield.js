@@ -421,7 +421,12 @@ if (window.location.protocol === "file:") {
       Open this site through a small local web server instead.
     `;
   }
+
+  // js/layout.js (a deferred module) hasn't necessarily run yet at this
+  // point in a plain classic script's synchronous execution — push to the
+  // next tick so window.hidePageLoading is reliably defined by the time
+  // this runs.
+  setTimeout(() => window.hidePageLoading?.(), 0);
 } else {
-  loadDecks();
-  loadVideos();
+  Promise.allSettled([loadDecks(), loadVideos()]).then(() => window.hidePageLoading?.());
 }

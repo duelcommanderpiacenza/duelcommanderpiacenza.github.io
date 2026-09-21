@@ -1,5 +1,6 @@
 import { Leagues, Events } from "./db.js";
 import { escapeHtml, leagueStatusBadge, showError } from "./ui.js";
+import { hidePageLoading } from "./page-loading.js";
 
 // Open leagues first (left), closed ones last (right); within each group,
 // whichever has the most recently dated associated event comes first
@@ -51,6 +52,8 @@ async function init() {
             .join("");
   } catch (err) {
     showError(listEl, err);
+  } finally {
+    hidePageLoading();
   }
 }
 

@@ -21,7 +21,7 @@
   <meta name="theme-color" content="#dc181c">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body data-active-nav="players">
+<body data-active-nav="players" class="is-loading">
 
 <header class="site-header">
   <a class="site-header-brand" href="index.html">
@@ -49,27 +49,31 @@
     <h1 id="player-title">Caricamento...</h1>
   </div>
 
-  <h2>Winrate</h2>
-  <div class="filter-bar">
-    <div class="field">
-      <label for="player-commander-filter">Commander</label>
-      <select id="player-commander-filter"><option value="">Tutti</option></select>
+  <div class="page-loading-region">
+    <div id="page-loading-overlay" class="page-loading-overlay"><p>Caricamento...</p></div>
+
+    <h2>Winrate</h2>
+    <div class="filter-bar">
+      <div class="field">
+        <label for="player-commander-filter">Commander</label>
+        <select id="player-commander-filter"><option value="">Tutti</option></select>
+      </div>
+      <div class="field">
+        <label for="player-league-filter">Lega</label>
+        <select id="player-league-filter"><option value="">Tutte</option></select>
+      </div>
     </div>
-    <div class="field">
-      <label for="player-league-filter">Lega</label>
-      <select id="player-league-filter"><option value="">Tutte</option></select>
-    </div>
+    <div id="player-winrate-overall" class="stat-grid page-loading">Caricamento...</div>
+
+    <h2 style="margin-top:28px;">Commander giocati</h2>
+    <div id="player-commanders" class="page-loading">Caricamento...</div>
+
+    <h2 style="margin-top:28px;">Storico eventi</h2>
+    <div id="player-event-history" class="page-loading">Caricamento...</div>
+
+    <h2 style="margin-top:28px;">Storico partite</h2>
+    <div id="player-matches" class="page-loading">Caricamento...</div>
   </div>
-  <div id="player-winrate-overall" class="stat-grid page-loading">Caricamento...</div>
-
-  <h2 style="margin-top:28px;">Commander giocati</h2>
-  <div id="player-commanders" class="page-loading">Caricamento...</div>
-
-  <h2 style="margin-top:28px;">Storico eventi</h2>
-  <div id="player-event-history" class="page-loading">Caricamento...</div>
-
-  <h2 style="margin-top:28px;">Storico partite</h2>
-  <div id="player-matches" class="page-loading">Caricamento...</div>
 </main>
 
 <footer>

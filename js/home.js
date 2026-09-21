@@ -7,6 +7,7 @@ import { computeLeagueSummary } from "./stats.js";
 import { computeLeaguePoints } from "./leaderboard.js";
 import { renderPieChart } from "./metagame-chart.js";
 import { escapeHtml, eventTitle, formatDate, showError } from "./ui.js";
+import { hidePageLoading } from "./page-loading.js";
 
 const LATEST_EVENTS_COUNT = 5;
 const TOP_STANDINGS_COUNT = 3;
@@ -158,6 +159,10 @@ async function renderCommandersSection(el) {
   }
 }
 
-renderLeaguesSection(document.getElementById("dashboard-leagues-content"));
-renderEventsSection(document.getElementById("dashboard-events-content"));
-renderCommandersSection(document.getElementById("dashboard-commanders-content"));
+// Three independent widgets — the page isn't "ready" until all three have
+// settled (success or already-shown error), not just the first one.
+Promise.allSettled([
+  renderLeaguesSection(document.getElementById("dashboard-leagues-content")),
+  renderEventsSection(document.getElementById("dashboard-events-content")),
+  renderCommandersSection(document.getElementById("dashboard-commanders-content")),
+]).then(hidePageLoading);

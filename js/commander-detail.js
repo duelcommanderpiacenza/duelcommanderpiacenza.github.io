@@ -3,6 +3,7 @@ import { matchRoundOutcome, isBye } from "./leaderboard.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { tallyOutcome, tallyGames, renderWinrateTiles } from "./winrate.js";
 import { escapeHtml, playerLabel, commanderLabel, commanderPairLabel, colorIdentityPips, eventTitle, showError } from "./ui.js";
+import { hidePageLoading } from "./page-loading.js";
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
@@ -31,6 +32,7 @@ async function init() {
 
   if (!id) {
     titleEl.textContent = "Commander non trovato";
+    hidePageLoading();
     return;
   }
 
@@ -152,9 +154,11 @@ async function init() {
       renderWinrateTiles(winrateEl, bucket);
     }
 
-    initScopeFilter({ leagueSelect: leagueFilter, eventSelect: eventFilter, onChange: computeWinrate });
+    await initScopeFilter({ leagueSelect: leagueFilter, eventSelect: eventFilter, onChange: computeWinrate });
   } catch (err) {
     showError(document.getElementById("commander-content"), err);
+  } finally {
+    hidePageLoading();
   }
 }
 

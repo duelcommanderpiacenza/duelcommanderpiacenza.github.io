@@ -3,6 +3,7 @@ import { computeGroupedStats } from "./stats.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { renderPieChart } from "./metagame-chart.js";
 import { archetypeBadge, showError } from "./ui.js";
+import { hidePageLoading } from "./page-loading.js";
 
 const ARCHETYPES = ["aggro", "control", "combo", "tempo", "midrange"];
 
@@ -41,6 +42,7 @@ async function init() {
     eventDateById = new Map(events.map((e) => [e.id, e.event_date]));
   } catch (err) {
     showError(chartEl, err);
+    hidePageLoading();
     return;
   }
 
@@ -128,6 +130,8 @@ async function init() {
         </table></div>`;
     } catch (err) {
       showError(chartEl, err);
+    } finally {
+      hidePageLoading();
     }
   }
 

@@ -32,7 +32,7 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 
-<body data-active-nav="current">
+<body data-active-nav="current" class="is-loading">
 
 <header class="site-header">
   <a class="site-header-brand" href="index.html">
@@ -58,24 +58,28 @@
     <h1>Bacheca</h1>
   </div>
 
-  <div class="dashboard-grid">
-    <div class="dashboard-left-col">
-      <section class="card dashboard-card dashboard-card-leagues">
-        <h2>Leghe in corso</h2>
-        <div id="dashboard-leagues-content"><p class="page-loading">Caricamento...</p></div>
-      </section>
+  <div class="page-loading-region">
+    <div id="page-loading-overlay" class="page-loading-overlay"><p>Caricamento...</p></div>
 
-      <section class="card dashboard-card dashboard-card-events">
-        <h2>Ultimi eventi</h2>
-        <div id="dashboard-events-content"><p class="page-loading">Caricamento...</p></div>
+    <div class="dashboard-grid">
+      <div class="dashboard-left-col">
+        <section class="card dashboard-card dashboard-card-leagues">
+          <h2>Leghe in corso</h2>
+          <div id="dashboard-leagues-content"><p class="page-loading">Caricamento...</p></div>
+        </section>
+
+        <section class="card dashboard-card dashboard-card-events">
+          <h2>Ultimi eventi</h2>
+          <div id="dashboard-events-content"><p class="page-loading">Caricamento...</p></div>
+        </section>
+      </div>
+
+      <section class="card dashboard-card dashboard-card-commanders">
+        <h2>Commander pi&ugrave; giocati</h2>
+        <p class="dashboard-card-subtitle">(ultimi 3 mesi)</p>
+        <div id="dashboard-commanders-content"><p class="page-loading">Caricamento...</p></div>
       </section>
     </div>
-
-    <section class="card dashboard-card dashboard-card-commanders">
-      <h2>Commander pi&ugrave; giocati</h2>
-      <p class="dashboard-card-subtitle">(ultimi 3 mesi)</p>
-      <div id="dashboard-commanders-content"><p class="page-loading">Caricamento...</p></div>
-    </section>
   </div>
 </main>
 

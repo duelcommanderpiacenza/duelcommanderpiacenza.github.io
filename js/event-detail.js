@@ -10,6 +10,7 @@ import {
   colorIdentityPips,
   showError,
 } from "./ui.js";
+import { hidePageLoading } from "./page-loading.js";
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
@@ -64,6 +65,7 @@ async function init() {
 
   if (!id) {
     titleEl.textContent = "Evento non trovato";
+    hidePageLoading();
     return;
   }
 
@@ -130,6 +132,8 @@ async function init() {
           </table></div>`;
   } catch (err) {
     showError(document.getElementById("event-content"), err);
+  } finally {
+    hidePageLoading();
   }
 }
 

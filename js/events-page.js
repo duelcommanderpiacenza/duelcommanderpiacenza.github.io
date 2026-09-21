@@ -1,5 +1,6 @@
 import { Events } from "./db.js";
 import { escapeHtml, formatDate, eventTitle, leagueStatusBadge, showError } from "./ui.js";
+import { hidePageLoading } from "./page-loading.js";
 
 async function init() {
   const listEl = document.getElementById("events-list");
@@ -65,6 +66,8 @@ async function init() {
     listEl.innerHTML = leagueSections + standaloneSection;
   } catch (err) {
     showError(listEl, err);
+  } finally {
+    hidePageLoading();
   }
 }
 

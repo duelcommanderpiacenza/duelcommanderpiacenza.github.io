@@ -21,7 +21,7 @@
   <meta name="theme-color" content="#dc181c">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body data-active-nav="commanders">
+<body data-active-nav="commanders" class="is-loading">
 
 <header class="site-header">
   <a class="site-header-brand" href="index.html">
@@ -45,7 +45,10 @@
 <main class="page-main">
   <div class="page-heading"><h1>Comandanti</h1></div>
 
-  <div id="commanders-chart">
+  <div class="page-loading-region">
+    <div id="page-loading-overlay" class="page-loading-overlay"><p>Caricamento...</p></div>
+
+    <div id="commanders-chart">
     <p class="page-loading">Caricamento comandanti...</p>
   </div>
 
@@ -106,6 +109,7 @@
   </div>
 
   <div id="commanders-table"></div>
+  </div>
 </main>
 
 <footer>

@@ -3,6 +3,7 @@ import { matchRoundOutcome, isBye } from "./leaderboard.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { computeAutoBadgeAssignments } from "./auto-badges.js";
 import { escapeHtml, commanderPairLabel, colorIdentityPips, showError } from "./ui.js";
+import { hidePageLoading } from "./page-loading.js";
 
 // Keyed by the commander+partner pair, not just the primary commander, so
 // "Thrasios / Tymna" and "Thrasios / Vial Smasher" count as different decks.
@@ -92,12 +93,14 @@ async function init() {
     const [players, events] = await Promise.all([Players.list(), Events.list()]);
     if (players.length === 0) {
       listEl.innerHTML = '<p class="page-empty">Nessun giocatore inserito ancora.</p>';
+      hidePageLoading();
       return;
     }
     allPlayers = players;
     eventDateById = new Map(events.map((e) => [e.id, e.event_date]));
   } catch (err) {
     showError(listEl, err);
+    hidePageLoading();
     return;
   }
 
@@ -217,6 +220,8 @@ async function init() {
       renderList();
     } catch (err) {
       showError(listEl, err);
+    } finally {
+      hidePageLoading();
     }
   }
 

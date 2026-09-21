@@ -21,7 +21,7 @@
   <meta name="theme-color" content="#dc181c">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body data-active-nav="leagues">
+<body data-active-nav="leagues" class="is-loading">
 
 <header class="site-header">
   <a class="site-header-brand" href="index.html">
@@ -45,8 +45,12 @@
 <main class="page-main">
   <div class="page-heading"><h1>Leghe</h1></div>
 
-  <div id="leagues-list" class="entity-grid">
-    <p class="page-loading">Caricamento leghe...</p>
+  <div class="page-loading-region">
+    <div id="page-loading-overlay" class="page-loading-overlay"><p>Caricamento...</p></div>
+
+    <div id="leagues-list" class="entity-grid">
+      <p class="page-loading">Caricamento leghe...</p>
+    </div>
   </div>
 </main>
 
