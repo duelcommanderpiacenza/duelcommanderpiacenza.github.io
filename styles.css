@@ -1555,24 +1555,22 @@ input[type="search"] {
 }
 
 /* No entrance animation here (removed — it kept skipping its own "from"
-   frame in a way that wasn't worth chasing further). The explicit z-index
-   instead promotes every dropdown to its own stacking context ranked above
-   any plain z-index:auto sibling later in the page (e.g. a data table),
-   regardless of whether that sibling happens to have an active/self-
-   promoting animation of its own — without this, .cs-menu's own z-index:30
-   only wins comparisons *inside* .cs-wrap, not against a later sibling
-   that ends up promoted to its own stacking context. */
+   frame in a way that wasn't worth chasing further). */
 .cs-wrap {
   position: relative;
-  /* Matches .cs-menu's own z-index (30 — above the sticky nav/admin-tabs
-     bar's 20, below tooltips' 40) rather than some arbitrary low number:
-     once promoted, everything inside .cs-wrap is scoped/capped by this
-     value when compared against anything outside it, so this needs to be
-     at least as high as what .cs-menu previously relied on winning against
-     externally. */
-  z-index: 30;
   display: block;
   width: 100%;
+}
+
+/* Only promoted to its own stacking context while actually open — giving
+   every closed trigger a permanent z-index made it paint in front of the
+   sticky nav/admin-tabs bar (z-index 20) whenever it scrolled near/under
+   it, which looked broken. Scoped to .is-open, it only needs to outrank
+   anything else when the popup itself is showing (e.g. a later sibling
+   like a data table that ends up in its own stacking context) — matches
+   .cs-menu's own z-index so the whole wrapper is capped consistently. */
+.cs-wrap.is-open {
+  z-index: 30;
 }
 
 .cs-trigger {
@@ -1716,15 +1714,17 @@ img.cs-option-icon {
   display: none;
 }
 
-/* Same stacking fix as .cs-wrap above, for the same reason: without an
-   explicit z-index here, .cd-popup's own z-index:30 only wins comparisons
-   inside .cd-wrap, not against a later sibling on the page that ends up
-   promoted to its own stacking context (e.g. a data table). */
 .cd-wrap {
   position: relative;
-  z-index: 30;
   display: block;
   width: 100%;
+}
+
+/* Same stacking fix as .cs-wrap.is-open above, scoped the same way —
+   only promoted while the calendar popup is actually showing, so a closed
+   date field doesn't paint in front of the sticky nav/admin-tabs bar. */
+.cd-wrap.is-open {
+  z-index: 30;
 }
 
 .cd-trigger {
