@@ -1,7 +1,7 @@
 import { Players, EventEntries, Matches } from "./db.js";
-import { matchRoundOutcome, isBye } from "./leaderboard.js";
+import { matchRoundOutcome, isBye, computeEventLeaderboard } from "./leaderboard.js";
 import { tallyOutcome, tallyGames, renderWinrateTiles } from "./winrate.js";
-import { escapeHtml, playerLabel, commanderPairLabel, colorIdentityPips, eventTitle, showError } from "./ui.js";
+import { escapeHtml, playerLabel, commanderPairLabel, colorIdentityPips, eventTitle, formatDate, showError } from "./ui.js";
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
@@ -24,6 +24,7 @@ async function init() {
   const id = getId();
   const titleEl = document.getElementById("player-title");
   const commandersEl = document.getElementById("player-commanders");
+  const eventHistoryEl = document.getElementById("player-event-history");
   const overallEl = document.getElementById("player-winrate-overall");
   const commanderFilter = document.getElementById("player-commander-filter");
   const leagueFilter = document.getElementById("player-league-filter");
@@ -42,11 +43,19 @@ async function init() {
 
     // Commander giocati: a plain, de-duplicated list — not split by event.
     // Keyed by the commander+partner pair, so "X / Y" and "X / Z" both show.
+    // lastPlayed tracks the latest event_date across every entry with that
+    // pair, regardless of the order entries happen to be iterated in.
     const uniqueCommanders = new Map();
     for (const e of entries) {
       if (!e.commander) continue;
       const key = `${e.commander.id}_${e.partner_commander?.id ?? ""}`;
-      uniqueCommanders.set(key, { commander: e.commander, partner: e.partner_commander ?? null });
+      const eventDate = e.event?.event_date ?? null;
+      const existing = uniqueCommanders.get(key);
+      if (!existing) {
+        uniqueCommanders.set(key, { commander: e.commander, partner: e.partner_commander ?? null, lastPlayed: eventDate });
+      } else if (eventDate && (!existing.lastPlayed || eventDate > existing.lastPlayed)) {
+        existing.lastPlayed = eventDate;
+      }
     }
     const commanderList = Array.from(uniqueCommanders.values()).sort((a, b) =>
       a.commander.name.localeCompare(b.commander.name)
@@ -55,13 +64,68 @@ async function init() {
       commanderList.length === 0
         ? '<p class="page-empty">Nessun dato registrato per questo giocatore.</p>'
         : `<div class="data-table-wrap"><table class="data-table">
-            <thead><tr><th>Commander</th></tr></thead>
+            <thead><tr><th>Commander</th><th>Ultima volta giocato</th></tr></thead>
             <tbody>
               ${commanderList
                 .map(
                   (c) => `<tr><td>${commanderPairLabel(c.commander, c.partner)} ${colorIdentityPips(
                     (c.commander.color_identity ?? "") + (c.partner?.color_identity ?? "")
-                  )}</td></tr>`
+                  )}</td><td>${formatDate(c.lastPlayed)}</td></tr>`
+                )
+                .join("")}
+            </tbody>
+          </table></div>`;
+
+    // One row per event this player entered, with the full field's
+    // standings computed to find their own final position in each — not
+    // just this player's own matches, so it needs every entry/match of
+    // that event, not only the ones involving them.
+    const historyEventIds = [...new Set(entries.map((e) => e.event_id))];
+    const [historyEntries, historyMatches] = await Promise.all([
+      historyEventIds.length ? EventEntries.listByEvents(historyEventIds) : [],
+      historyEventIds.length ? Matches.listByEvents(historyEventIds) : [],
+    ]);
+    const historyEntriesByEvent = new Map();
+    for (const e of historyEntries) {
+      if (!historyEntriesByEvent.has(e.event_id)) historyEntriesByEvent.set(e.event_id, []);
+      historyEntriesByEvent.get(e.event_id).push(e);
+    }
+    const historyMatchesByEvent = new Map();
+    for (const m of historyMatches) {
+      if (!historyMatchesByEvent.has(m.event_id)) historyMatchesByEvent.set(m.event_id, []);
+      historyMatchesByEvent.get(m.event_id).push(m);
+    }
+    const eventHistoryRows = entries
+      .filter((e) => e.event)
+      .map((e) => {
+        const standings = computeEventLeaderboard(
+          historyMatchesByEvent.get(e.event_id) ?? [],
+          historyEntriesByEvent.get(e.event_id) ?? []
+        );
+        const position = standings.findIndex((s) => s.player?.id === id);
+        return {
+          event: e.event,
+          commander: e.commander,
+          partner: e.partner_commander,
+          position: position === -1 ? null : position + 1,
+        };
+      })
+      .sort((a, b) => (b.event?.event_date ?? "").localeCompare(a.event?.event_date ?? ""));
+
+    eventHistoryEl.innerHTML =
+      eventHistoryRows.length === 0
+        ? '<p class="page-empty">Nessun evento registrato per questo giocatore.</p>'
+        : `<div class="data-table-wrap"><table class="data-table">
+            <thead><tr><th>Evento</th><th>Commander</th><th>Posizione in classifica</th></tr></thead>
+            <tbody>
+              ${eventHistoryRows
+                .map(
+                  (r) => `
+                <tr>
+                  <td>${r.event ? `<a href="event.html?id=${r.event.id}">${escapeHtml(eventTitle(r.event))}</a>` : "—"}</td>
+                  <td>${commanderPairLabel(r.commander, r.partner)}</td>
+                  <td>${r.position === null ? "—" : `#${r.position}`}</td>
+                </tr>`
                 )
                 .join("")}
             </tbody>
