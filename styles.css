@@ -294,6 +294,189 @@ main {
   letter-spacing: 0.02em;
 }
 
+/* Home dashboard (index.html) — two columns: leagues + events stacked in
+   their own wrapper on the left, commanders on the right. Deliberately NOT
+   a single grid with commanders spanning both rows — a spanning item
+   forces the grid to stretch the shared row tracks to fit it, which left a
+   large dead gap under the (usually much shorter) leagues card before the
+   events card started. Two independently-sized columns avoids that
+   entirely. Collapses to one stacked column below 860px. */
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 22px;
+  align-items: start;
+}
+
+.dashboard-left-col {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* .card's own margin-bottom (for normal document-flow stacking elsewhere)
+   would otherwise stack on top of the flex/grid gaps above. */
+.dashboard-card {
+  margin-bottom: 0;
+}
+
+.dashboard-card-subtitle {
+  margin: -8px 0 14px;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+@media (max-width: 860px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* The pie chart already renders its own card-like frame (border/shadow) —
+   redundant nested inside a dashboard card, so it's stripped down to just
+   its content here. */
+.dashboard-card-commanders .pie-chart-wrap {
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  backdrop-filter: none;
+  padding: 0;
+  margin-bottom: 14px;
+}
+
+.dashboard-league-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.dashboard-league-card {
+  display: block;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card-sm);
+  background: rgba(255, 255, 255, 0.7);
+  padding: 14px 16px;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.dashboard-league-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card);
+  border-color: var(--hairline-hover);
+}
+
+.dashboard-league-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.dashboard-league-card-name {
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: var(--text-title);
+}
+
+.dashboard-league-card-stats {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.dashboard-standings {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dashboard-standings li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.dashboard-standings li > .dashboard-standings-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-body);
+}
+
+.dashboard-league-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dashboard-league-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--hairline);
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--brand-red-deep);
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-decoration: none;
+  transition: transform 180ms ease, border-color 180ms ease;
+}
+
+.dashboard-league-chip:hover {
+  transform: translateY(-1px);
+  border-color: var(--hairline-hover);
+}
+
+.dashboard-event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dashboard-event-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 4px;
+  border-bottom: 1px solid var(--hairline);
+  text-decoration: none;
+  color: var(--text-body);
+  font-weight: 700;
+}
+
+.dashboard-event-row:last-child {
+  border-bottom: none;
+}
+
+.dashboard-event-row:hover .dashboard-event-name {
+  text-decoration: underline;
+}
+
+.dashboard-event-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-event-meta {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
 .section-heading {
   display: flex;
   align-items: center;
@@ -1842,7 +2025,9 @@ table.data-table tbody tr:hover {
 :root[data-theme="dark"] .data-table-wrap,
 :root[data-theme="dark"] .pie-chart-wrap,
 :root[data-theme="dark"] .deck,
-:root[data-theme="dark"] .video-card {
+:root[data-theme="dark"] .video-card,
+:root[data-theme="dark"] .dashboard-league-card,
+:root[data-theme="dark"] .dashboard-league-chip {
   background: rgba(255, 255, 255, 0.045);
 }
 
@@ -1959,4 +2144,90 @@ table.data-table tbody tr:hover {
 
 :root[data-theme="dark"] .theme-toggle {
   background: rgba(255, 255, 255, 0.08);
+}
+
+/* "Install app" banner (js/pwa-install.js) — shown at most once per
+   visitor, floating above whatever page content happens to be behind it,
+   so it gets a solid background rather than the usual translucent card
+   tint (same reasoning as the custom select/date popups). */
+.pwa-install-banner {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: var(--radius-card-sm);
+  background: #fff;
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow-card-hover);
+  animation: pwa-banner-in 260ms ease both;
+}
+
+@keyframes pwa-banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pwa-install-text {
+  color: var(--text-body);
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
+.pwa-install-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pwa-install-dismiss {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.3rem;
+  line-height: 1;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.pwa-install-dismiss:hover {
+  background: var(--hairline);
+}
+
+@media (max-width: 480px) {
+  .pwa-install-banner {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    padding: 12px 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pwa-install-banner {
+    animation: none !important;
+  }
+}
+
+:root[data-theme="dark"] .pwa-install-banner {
+  background: #241a1d;
+}
+
+:root[data-theme="dark"] .pwa-install-dismiss:hover {
+  background: rgba(255, 255, 255, 0.1);
 }

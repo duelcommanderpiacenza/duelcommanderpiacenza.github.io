@@ -14,6 +14,7 @@
 import { setupThemeToggle } from "./theme.js";
 import { enhanceSelects } from "./custom-select.js";
 import { enhanceDateInputs } from "./custom-date.js";
+import "./pwa-install.js";
 
 setupThemeToggle();
 enhanceSelects();

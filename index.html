@@ -22,11 +22,13 @@
       } catch (e) {}
     })();
   </script>
-  <title>Duel Commander Piacenza</title>
+  <title>Bacheca - Duel Commander Piacenza</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="view-transition" content="same-origin">
 
   <link rel="icon" type="image/png" href="dc_pc.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#dc181c">
   <link rel="stylesheet" href="styles.css">
 </head>
 
@@ -41,7 +43,7 @@
 
 <nav class="site-nav" aria-label="Navigazione principale">
   <div class="site-nav-inner">
-    <a class="nav-link" data-nav="current" href="index.html">In corso</a>
+    <a class="nav-link" data-nav="current" href="index.html">Bacheca</a>
     <a class="nav-link" data-nav="leagues" href="leagues.html">Leghe</a>
     <a class="nav-link" data-nav="events" href="events.html">Eventi</a>
     <a class="nav-link" data-nav="commanders" href="commanders.html">Comandanti</a>
@@ -53,11 +55,27 @@
 
 <main class="page-main">
   <div class="page-heading">
-    <h1>Lega in corso</h1>
+    <h1>Bacheca</h1>
   </div>
 
-  <div id="current-league-content">
-    <p class="page-loading">Caricamento...</p>
+  <div class="dashboard-grid">
+    <div class="dashboard-left-col">
+      <section class="card dashboard-card dashboard-card-leagues">
+        <h2>Leghe in corso</h2>
+        <div id="dashboard-leagues-content"><p class="page-loading">Caricamento...</p></div>
+      </section>
+
+      <section class="card dashboard-card dashboard-card-events">
+        <h2>Ultimi eventi</h2>
+        <div id="dashboard-events-content"><p class="page-loading">Caricamento...</p></div>
+      </section>
+    </div>
+
+    <section class="card dashboard-card dashboard-card-commanders">
+      <h2>Commander pi&ugrave; giocati</h2>
+      <p class="dashboard-card-subtitle">(ultimi 3 mesi)</p>
+      <div id="dashboard-commanders-content"><p class="page-loading">Caricamento...</p></div>
+    </section>
   </div>
 </main>
 
@@ -66,7 +84,7 @@
   <div class="footer-center">
     <div>&copy; 2026 Duel Commander Piacenza</div>
     <div class="footer-credit">
-      Creato da Michele Ferri
+      Created by Michele Ferri
       <a href="https://www.instagram.com/michele__f/" target="_blank" rel="noopener noreferrer" aria-label="Instagram di Michele Ferri">
         <img src="instagram.png" alt="Instagram" width="16" height="16">
       </a>
