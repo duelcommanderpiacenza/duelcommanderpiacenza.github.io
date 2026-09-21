@@ -41,7 +41,7 @@ export function initMatchesAdmin() {
   let editingRow = null; // the match object loaded into the form, or null when adding new
 
   function scoreLabel(m) {
-    return isBye(m) ? "Bye" : `${m.player1_wins}-${m.draws}-${m.player2_wins}`;
+    return `${m.player1_wins}-${m.draws}-${m.player2_wins}`;
   }
 
   // Entrants without a match (or bye) yet in the current round, excluding

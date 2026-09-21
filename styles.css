@@ -201,6 +201,16 @@ a:hover {
   color: #fff;
 }
 
+/* The active tab's red comes from the .nav-pill sitting behind it (z-index
+   0, this link at z-index 1) — the plain :hover rule above was painting a
+   near-white background *on top of* that pill, leaving white text on a
+   near-white background. Keep hovering the active tab transparent so the
+   pill stays visible through it. */
+.nav-link.is-active:hover {
+  background: transparent;
+  border-color: transparent;
+}
+
 @media (max-width: 480px) {
   .site-header {
     padding: 14px 16px;
@@ -790,25 +800,9 @@ footer {
   max-width: 1100px;
   margin: 0 auto;
   padding: 28px 20px 48px;
-  animation: page-enter 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-@keyframes page-enter {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .page-main {
-    animation: none;
-  }
-
   ::view-transition-group(*),
   ::view-transition-old(*),
   ::view-transition-new(*) {
