@@ -27,7 +27,7 @@ export function playerLabel(player) {
   if (!player) return "—";
   const name = escapeHtml(player.name);
   const linked = player.id ? `<a href="player.html?id=${player.id}">${name}</a>` : name;
-  return player.handle ? `${linked} <span class="entity-card-meta">(${escapeHtml(player.handle)})</span>` : linked;
+  return player.handle ? `${linked} <span class="player-handle">(${escapeHtml(player.handle)})</span>` : linked;
 }
 
 export function commanderLabel(commander) {

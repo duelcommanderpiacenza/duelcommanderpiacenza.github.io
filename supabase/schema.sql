@@ -49,31 +49,37 @@ create table badges ( -- small icon + name a player can be tagged with (e.g. "Ca
   id uuid primary key default gen_random_uuid(),
   name text not null unique, -- shown as the tooltip when hovering the icon next to a player's name
   icon text not null, -- one emoji, picked from a fixed pool offered by the admin UI
-  created_at timestamptz not null default now()
+  -- Auto-assignment: null means this badge is manual-only (assignable via
+  -- the two fixed dropdowns on the players form). A non-null rule instead
+  -- computes who currently holds this badge live, from match/league data,
+  -- every time it's displayed (js/auto-badges.js) — never stored on a
+  -- player row, so it can never go stale. Add new rule strings to the check
+  -- constraint below as more are defined.
+  auto_rule text,
+  -- Higher wins when a player would qualify for more auto badges than
+  -- there are slots (2). Manually assigned badges (badge1/badge2 on
+  -- players) always display before any auto badge, regardless of this.
+  priority integer not null default 0,
+  created_at timestamptz not null default now(),
+  constraint badges_auto_rule_valid check (
+    auto_rule is null or auto_rule in ('league_winner', 'top8_streak', 'league_rank_1', 'league_rank_2', 'league_rank_3')
+  )
 );
 
 create table players (
   id uuid primary key default gen_random_uuid(),
   name text not null,      -- duplicates allowed (homonyms)
   handle text,              -- optional disambiguator shown next to the name when it collides
-  -- Up to 4 badges, each its own nullable slot (not a join table) since the
-  -- admin UI is literally fixed dropdowns, not an open-ended list. Only the
-  -- first 2 are admin-editable (see admin/js/players-admin.js); badge3/4 are
-  -- reserved for a future automatic-assignment rule, not set anywhere yet.
+  -- Up to 2 *manually* assigned badges, each its own nullable slot (not a
+  -- join table) since the admin UI is literally two fixed dropdowns. A
+  -- player can show up to 2 more on top of these, computed live from
+  -- badges.auto_rule — see js/auto-badges.js — never stored here.
   badge1_id uuid,
   badge2_id uuid,
-  badge3_id uuid,
-  badge4_id uuid,
   created_at timestamptz not null default now(),
   constraint players_badge1_id_fkey foreign key (badge1_id) references badges(id) on delete set null,
   constraint players_badge2_id_fkey foreign key (badge2_id) references badges(id) on delete set null,
-  constraint players_badge3_id_fkey foreign key (badge3_id) references badges(id) on delete set null,
-  constraint players_badge4_id_fkey foreign key (badge4_id) references badges(id) on delete set null,
-  constraint players_badges_distinct check (
-    badge1_id <> badge2_id and badge1_id <> badge3_id and badge1_id <> badge4_id
-    and badge2_id <> badge3_id and badge2_id <> badge4_id
-    and badge3_id <> badge4_id
-  )
+  constraint players_badges_distinct check (badge1_id <> badge2_id)
 );
 
 create table leagues (

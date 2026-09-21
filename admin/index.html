@@ -200,6 +200,21 @@
               <label class="icon-swatch" aria-label="Coriandoli"><input type="radio" name="badges-admin-icon" value="&#127881;">&#127881;</label>
             </div>
           </div>
+          <div class="field">
+            <label for="badges-admin-auto-rule">Regola di assegnazione automatica</label>
+            <select id="badges-admin-auto-rule">
+              <option value="">Nessuna (solo manuale)</option>
+              <option value="league_winner">Vincitore ultima lega conclusa</option>
+              <option value="top8_streak">3 top8 consecutivi (ultimi 3 mesi)</option>
+              <option value="league_rank_1">1&deg; in classifica (lega attuale)</option>
+              <option value="league_rank_2">2&deg; in classifica (lega attuale)</option>
+              <option value="league_rank_3">3&deg; in classifica (lega attuale)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="badges-admin-priority">Priorit&agrave; <span class="field-hint">(tra i badge automatici, vince il valore pi&ugrave; alto se un giocatore ne avrebbe diritto a pi&ugrave; di 2)</span></label>
+            <input type="number" id="badges-admin-priority" step="1" value="0">
+          </div>
           <div class="form-actions">
             <button type="submit" class="btn-primary">Salva</button>
             <button type="button" class="btn-secondary" id="badges-admin-cancel">Annulla</button>

@@ -2,12 +2,26 @@ import { Badges } from "../../js/db.js";
 import { renderTable, setMessage } from "./crud-ui.js";
 import { emit } from "./bus.js";
 
+const RULE_LABELS = {
+  league_winner: "Vincitore ultima lega",
+  top8_streak: "3 top8 consecutivi",
+  league_rank_1: "1° in classifica",
+  league_rank_2: "2° in classifica",
+  league_rank_3: "3° in classifica",
+};
+
+function ruleLabel(row) {
+  return row.auto_rule ? RULE_LABELS[row.auto_rule] ?? row.auto_rule : "—";
+}
+
 export function initBadgesAdmin() {
   const listEl = document.getElementById("badges-admin-list");
   const searchField = document.getElementById("badges-admin-search");
   const form = document.getElementById("badges-admin-form");
   const idField = document.getElementById("badges-admin-id");
   const nameField = document.getElementById("badges-admin-name");
+  const autoRuleField = document.getElementById("badges-admin-auto-rule");
+  const priorityField = document.getElementById("badges-admin-priority");
   const msgEl = document.getElementById("badges-admin-message");
   const cancelBtn = document.getElementById("badges-admin-cancel");
   const iconRadios = () => Array.from(document.querySelectorAll('input[name="badges-admin-icon"]'));
@@ -29,6 +43,7 @@ export function initBadgesAdmin() {
       [
         { key: "icon", label: "Icona", render: (r) => `<span style="font-size:1.3rem;">${r.icon}</span>` },
         { key: "name", label: "Nome" },
+        { key: "auto_rule", label: "Regola automatica", render: ruleLabel },
       ],
       { onEdit, onDelete }
     );
@@ -51,11 +66,14 @@ export function initBadgesAdmin() {
     iconRadios().forEach((radio) => {
       radio.checked = radio.value === row.icon;
     });
+    autoRuleField.value = row.auto_rule ?? "";
+    priorityField.value = row.priority ?? 0;
   }
 
   function resetForm() {
     idField.value = "";
     form.reset();
+    priorityField.value = 0;
     setMessage(msgEl, "", false);
   }
 
@@ -77,7 +95,12 @@ export function initBadgesAdmin() {
       setMessage(msgEl, "Seleziona un'icona.", true);
       return;
     }
-    const payload = { name: nameField.value.trim(), icon };
+    const payload = {
+      name: nameField.value.trim(),
+      icon,
+      auto_rule: autoRuleField.value || null,
+      priority: parseInt(priorityField.value, 10) || 0,
+    };
     if (!payload.name) return;
     try {
       if (idField.value) await Badges.update(idField.value, payload);

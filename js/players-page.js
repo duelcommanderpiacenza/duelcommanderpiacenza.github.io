@@ -1,6 +1,7 @@
 import { Players, Events, EventEntries, Matches } from "./db.js";
 import { matchRoundOutcome, isBye } from "./leaderboard.js";
 import { initScopeFilter } from "./scope-filter.js";
+import { computeAutoBadgeAssignments } from "./auto-badges.js";
 import { escapeHtml, commanderPairLabel, colorIdentityPips, showError } from "./ui.js";
 
 // Keyed by the commander+partner pair, not just the primary commander, so
@@ -22,12 +23,14 @@ function mostUsedCommander(entries) {
   return best;
 }
 
-// Hover/focus shows the badge's own name as a native tooltip — kept as a
-// sibling of the name link (not nested inside it) so hovering/clicking a
-// badge icon doesn't behave like part of the player-page link.
-function playerBadgesHtml(p) {
-  return [p.badge1, p.badge2, p.badge3, p.badge4]
-    .filter(Boolean)
+// Up to 2 manually assigned badges plus up to 2 auto-assigned ones (see
+// js/auto-badges.js), for up to 4 total. Hover/focus shows the badge's own
+// name as a native tooltip — kept as a sibling of the name link (not nested
+// inside it) so hovering/clicking a badge icon doesn't behave like part of
+// the player-page link.
+function playerBadgesHtml(p, autoBadgesByPlayer) {
+  const badges = [p.badge1, p.badge2, ...(autoBadgesByPlayer.get(p.id) ?? [])].filter(Boolean);
+  return badges
     .map((b) => `<span class="player-badge" title="${escapeHtml(b.name)}" tabindex="0">${b.icon}</span>`)
     .join("");
 }
@@ -72,6 +75,10 @@ async function init() {
   let eventDateById = new Map();
   let lastScopeEventIds = [];
   let lastRows = [];
+  // Auto-badge rules are absolute ("the current league", "the last 3
+  // months"), not scoped to whatever this page's own filters are set to —
+  // computed once, globally, rather than re-run on every filter change.
+  let autoBadgesByPlayer = new Map();
 
   try {
     const [players, events] = await Promise.all([Players.list(), Events.list()]);
@@ -84,6 +91,14 @@ async function init() {
   } catch (err) {
     showError(listEl, err);
     return;
+  }
+
+  // Not fatal if this fails — the page still works with just the manually
+  // assigned badges, so it's kept out of the critical try/catch above.
+  try {
+    autoBadgesByPlayer = await computeAutoBadgeAssignments();
+  } catch (err) {
+    console.error(err);
   }
 
   // The date filter narrows whichever event ids the league/event scope
@@ -180,7 +195,7 @@ async function init() {
           id: p.id,
           searchText: `${p.name} ${p.handle ?? ""}`.toLowerCase(),
           nameHtml: p.handle ? `${escapeHtml(p.name)} (${escapeHtml(p.handle)})` : escapeHtml(p.name),
-          badgesHtml: playerBadgesHtml(p),
+          badgesHtml: playerBadgesHtml(p, autoBadgesByPlayer),
           eventsPlayed,
           wins: record.wins,
           draws: record.draws,

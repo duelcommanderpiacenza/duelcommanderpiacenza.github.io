@@ -16,14 +16,18 @@ export function initPlayersAdmin() {
 
   let allPlayers = [];
 
-  // badge1/badge2 are the only admin-editable slots — badge3/badge4 are
-  // reserved for a future automatic-assignment rule and must never be
-  // touched by this form (see the submit payload below).
+  // These are the only 2 manually assignable badges — a player can show up
+  // to 2 more automatically, computed live from badges.auto_rule
+  // (js/auto-badges.js) and merged in on the public Giocatori page, never
+  // stored on the player row at all. A badge with an auto_rule is computed,
+  // not picked, so it's excluded here — it can only ever be earned, never
+  // manually handed out.
   async function populateBadges() {
     const badges = await Badges.list();
+    const manualBadges = badges.filter((b) => !b.auto_rule);
     const options =
       '<option value="">&mdash; nessuno &mdash;</option>' +
-      badges.map((b) => `<option value="${b.id}">${b.icon} ${b.name}</option>`).join("");
+      manualBadges.map((b) => `<option value="${b.id}">${b.icon} ${b.name}</option>`).join("");
     fillSelect(badge1Field, options);
     fillSelect(badge2Field, options);
   }
@@ -48,7 +52,7 @@ export function initPlayersAdmin() {
         {
           key: "badges",
           label: "Badge",
-          render: (r) => [r.badge1, r.badge2, r.badge3, r.badge4].filter(Boolean).map((b) => b.icon).join(" ") || "—",
+          render: (r) => [r.badge1, r.badge2].filter(Boolean).map((b) => b.icon).join(" ") || "—",
         },
       ],
       { onEdit, onDelete }
@@ -99,9 +103,6 @@ export function initPlayersAdmin() {
       setMessage(msgEl, "Seleziona badge diversi tra loro.", true);
       return;
     }
-    // badge3_id/badge4_id are deliberately left out — they're reserved for a
-    // future automatic-assignment rule, and this payload must never
-    // overwrite whatever that rule may have already set there.
     const payload = {
       name: nameField.value.trim(),
       handle: handleField.value.trim() || null,

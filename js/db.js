@@ -22,12 +22,12 @@ export const Commanders = {
   remove: (id) => sb.from("commanders").delete().eq("id", id).then(assertOk),
 };
 
-// players has four FKs to badges (badge1_id..badge4_id — up to 4 fixed
-// slots, not a join table), so PostgREST needs the constraint name on each
-// embed to know which is which. Only badge1/badge2 are admin-editable;
-// badge3/badge4 are reserved for a future automatic-assignment rule.
+// players has two FKs to badges (badge1_id/badge2_id — the manually
+// assigned slots), so PostgREST needs the constraint name on each embed to
+// know which is which. Up to 2 more badges can show per player, computed
+// live from badges.auto_rule (js/auto-badges.js) rather than stored here.
 const BADGE_EMBED =
-  "badge1:badges!players_badge1_id_fkey(id,name,icon), badge2:badges!players_badge2_id_fkey(id,name,icon), badge3:badges!players_badge3_id_fkey(id,name,icon), badge4:badges!players_badge4_id_fkey(id,name,icon)";
+  "badge1:badges!players_badge1_id_fkey(id,name,icon), badge2:badges!players_badge2_id_fkey(id,name,icon)";
 
 export const Badges = {
   list: () => sb.from("badges").select("*").order("name").then(assertOk),
