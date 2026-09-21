@@ -21,12 +21,21 @@ async function fetchEventsData(eventIds) {
   );
 }
 
+// Highest value first; a null winRate (no games played) always sorts last
+// rather than tying with an actual 0%.
+const SORTERS = {
+  played: (a, b) => b.entries - a.entries,
+  winrate: (a, b) => (b.winRate ?? -1) - (a.winRate ?? -1),
+  wins: (a, b) => b.wins - a.wins,
+};
+
 async function init() {
   const listEl = document.getElementById("commanders-list");
   const leagueSelect = document.getElementById("commanders-league-filter");
   const eventSelect = document.getElementById("commanders-event-filter");
   const dateFromInput = document.getElementById("commanders-date-from");
   const searchInput = document.getElementById("commanders-search");
+  const sortSelect = document.getElementById("commanders-sort");
 
   let allCommanders = [];
   const colorByCommanderId = new Map();
@@ -72,12 +81,14 @@ async function init() {
   // network/stat work), so it can react live on every keystroke.
   function renderTableSection() {
     const term = searchInput.value.trim().toLowerCase();
-    const rows = term ? lastRows.filter((r) => r.name.toLowerCase().includes(term)) : lastRows;
-    if (rows.length === 0) {
+    const filtered = term ? lastRows.filter((r) => r.name.toLowerCase().includes(term)) : lastRows;
+    if (filtered.length === 0) {
       return `<p class="page-empty">${term ? "Nessun comandante corrisponde alla ricerca." : "Nessun comandante inserito ancora."}</p>`;
     }
+    const sorter = SORTERS[sortSelect.value] ?? SORTERS.played;
+    const rows = [...filtered].sort((a, b) => sorter(a, b) || a.name.localeCompare(b.name));
     return `<div class="data-table-wrap"><table class="data-table">
-              <thead><tr><th>Nome</th><th>Identit&agrave; di colore</th><th>Quota</th><th>V-S-P</th><th>Winrate</th></tr></thead>
+              <thead><tr><th>Nome</th><th>Identit&agrave; di colore</th><th>Giocato</th><th>Quota</th><th>V-S-P</th><th>Winrate</th></tr></thead>
               <tbody>
                 ${rows
                   .map(
@@ -85,6 +96,7 @@ async function init() {
                   <tr>
                     <td>${commanderLabel(r)}</td>
                     <td>${colorIdentityPips(r.colorIdentity)}</td>
+                    <td>${r.entries}</td>
                     <td>${r.entries > 0 ? `${r.share.toFixed(1)}%` : "—"}</td>
                     <td>${r.wins}-${r.losses}-${r.draws}</td>
                     <td>${r.winRate === null ? "—" : `${r.winRate.toFixed(1)}%`}</td>
@@ -148,6 +160,7 @@ async function init() {
   }
 
   searchInput.addEventListener("input", renderAll);
+  sortSelect.addEventListener("change", renderAll);
   dateFromInput.addEventListener("change", () => render(effectiveEventIds()));
 
   initScopeFilter({

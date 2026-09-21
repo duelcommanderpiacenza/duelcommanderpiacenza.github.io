@@ -45,6 +45,26 @@
 
   <div class="filter-bar">
     <div class="field">
+      <label for="players-league-filter">Lega</label>
+      <select id="players-league-filter"><option value="">Tutte le leghe</option></select>
+    </div>
+    <div class="field">
+      <label for="players-event-filter">Evento</label>
+      <select id="players-event-filter"><option value="">Tutti gli eventi</option></select>
+    </div>
+    <div class="field">
+      <label for="players-date-from">Dal</label>
+      <input type="date" id="players-date-from">
+    </div>
+    <div class="field">
+      <label for="players-sort">Ordina per</label>
+      <select id="players-sort">
+        <option value="events">Eventi</option>
+        <option value="winrate">Winrate</option>
+        <option value="wins">Vittorie</option>
+      </select>
+    </div>
+    <div class="field">
       <label for="players-search">Cerca</label>
       <input type="search" id="players-search" placeholder="Nome giocatore...">
     </div>

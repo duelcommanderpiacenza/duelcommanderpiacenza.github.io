@@ -1,5 +1,6 @@
-import { Players, EventEntries, Matches } from "./db.js";
+import { Players, Events, EventEntries, Matches } from "./db.js";
 import { matchRoundOutcome, isBye } from "./leaderboard.js";
+import { initScopeFilter } from "./scope-filter.js";
 import { escapeHtml, commanderPairLabel, colorIdentityPips, showError } from "./ui.js";
 
 // Keyed by the commander+partner pair, not just the primary commander, so
@@ -32,91 +33,75 @@ function renderRow(r) {
     </tr>`;
 }
 
+async function fetchEventsData(eventIds) {
+  return Promise.all(
+    eventIds.map(async (id) => {
+      const [entries, matches] = await Promise.all([EventEntries.listByEvent(id), Matches.listByEvent(id)]);
+      return { entries, matches };
+    })
+  );
+}
+
+// Highest value first; a null winRate (no games played) always sorts last
+// rather than tying with an actual 0%.
+const SORTERS = {
+  events: (a, b) => b.eventsPlayed - a.eventsPlayed,
+  winrate: (a, b) => (b.winRate ?? -1) - (a.winRate ?? -1),
+  wins: (a, b) => b.wins - a.wins,
+};
+
 async function init() {
   const listEl = document.getElementById("players-list");
   const searchInput = document.getElementById("players-search");
+  const leagueSelect = document.getElementById("players-league-filter");
+  const eventSelect = document.getElementById("players-event-filter");
+  const dateFromInput = document.getElementById("players-date-from");
+  const sortSelect = document.getElementById("players-sort");
 
-  let rows = [];
+  let allPlayers = [];
+  let eventDateById = new Map();
+  let lastScopeEventIds = [];
+  let lastRows = [];
 
   try {
-    const [players, entries, matches] = await Promise.all([Players.list(), EventEntries.listAll(), Matches.listAll()]);
-
+    const [players, events] = await Promise.all([Players.list(), Events.list()]);
     if (players.length === 0) {
       listEl.innerHTML = '<p class="page-empty">Nessun giocatore inserito ancora.</p>';
       return;
     }
-
-    const entriesByPlayer = new Map();
-    for (const e of entries) {
-      if (!entriesByPlayer.has(e.player_id)) entriesByPlayer.set(e.player_id, []);
-      entriesByPlayer.get(e.player_id).push(e);
-    }
-
-    const recordByPlayer = new Map();
-    function ensureRecord(id) {
-      if (!recordByPlayer.has(id)) {
-        recordByPlayer.set(id, { wins: 0, draws: 0, losses: 0, gameWins: 0, gameTotal: 0 });
-      }
-      return recordByPlayer.get(id);
-    }
-    for (const m of matches) {
-      const r1 = ensureRecord(m.player1_id);
-      const gamesInMatch = m.player1_wins + m.draws + m.player2_wins;
-      r1.gameWins += m.player1_wins;
-      r1.gameTotal += gamesInMatch;
-      if (isBye(m)) {
-        r1.wins += 1;
-        continue;
-      }
-      const r2 = ensureRecord(m.player2_id);
-      r2.gameWins += m.player2_wins;
-      r2.gameTotal += gamesInMatch;
-      const outcome = matchRoundOutcome(m);
-      if (outcome === "player1") {
-        r1.wins += 1;
-        r2.losses += 1;
-      } else if (outcome === "player2") {
-        r2.wins += 1;
-        r1.losses += 1;
-      } else {
-        r1.draws += 1;
-        r2.draws += 1;
-      }
-    }
-
-    rows = players.map((p) => {
-      const playerEntries = entriesByPlayer.get(p.id) ?? [];
-      const eventsPlayed = new Set(playerEntries.map((e) => e.event_id)).size;
-      const record = recordByPlayer.get(p.id) ?? { wins: 0, draws: 0, losses: 0, gameWins: 0, gameTotal: 0 };
-      const topCommander = mostUsedCommander(playerEntries);
-      return {
-        id: p.id,
-        searchText: `${p.name} ${p.handle ?? ""}`.toLowerCase(),
-        nameHtml: p.handle ? `${escapeHtml(p.name)} (${escapeHtml(p.handle)})` : escapeHtml(p.name),
-        eventsPlayed,
-        wins: record.wins,
-        draws: record.draws,
-        losses: record.losses,
-        // Game basis, not match basis — winning a match 2-0 counts more
-        // than winning it 2-1, even though both are one match win.
-        rate: record.gameTotal > 0 ? `${((record.gameWins / record.gameTotal) * 100).toFixed(1)}%` : "—",
-        topCommanderHtml: topCommander
-          ? `${commanderPairLabel(topCommander.commander, topCommander.partner)} ${colorIdentityPips(
-              (topCommander.commander.color_identity ?? "") + (topCommander.partner?.color_identity ?? "")
-            )}`
-          : "—",
-      };
-    });
-
-    renderList();
+    allPlayers = players;
+    eventDateById = new Map(events.map((e) => [e.id, e.event_date]));
   } catch (err) {
     showError(listEl, err);
     return;
   }
 
+  // The date filter narrows whichever event ids the league/event scope
+  // filter last reported, rather than replacing it — the two combine.
+  function effectiveEventIds() {
+    const from = dateFromInput.value;
+    if (!from) return lastScopeEventIds;
+    return lastScopeEventIds.filter((id) => {
+      const d = eventDateById.get(id);
+      return d && d >= from;
+    });
+  }
+
+  // A league/event/date filter is actively narrowing the scope — unlike the
+  // default (whole-roster) view, players with no events in that scope are
+  // dropped instead of shown as an empty "—" row.
+  function isScopeFiltered() {
+    return Boolean(leagueSelect.value || eventSelect.value || dateFromInput.value);
+  }
+
+  // The search box only re-filters the already-computed rows (no new
+  // network/stat work), so it can react live on every keystroke.
   function renderList() {
     const term = searchInput.value.trim().toLowerCase();
-    const visible = term ? rows.filter((r) => r.searchText.includes(term)) : rows;
+    const base = isScopeFiltered() ? lastRows.filter((r) => r.eventsPlayed > 0) : lastRows;
+    const filtered = term ? base.filter((r) => r.searchText.includes(term)) : base;
+    const sorter = SORTERS[sortSelect.value] ?? SORTERS.events;
+    const visible = [...filtered].sort((a, b) => sorter(a, b) || a.nameHtml.localeCompare(b.nameHtml));
     listEl.innerHTML =
       visible.length === 0
         ? '<p class="page-empty">Nessun giocatore corrisponde alla ricerca.</p>'
@@ -126,7 +111,97 @@ async function init() {
     </table></div>`;
   }
 
+  async function render(eventIds) {
+    listEl.innerHTML = '<p class="page-loading">Caricamento...</p>';
+    try {
+      const eventsData = await fetchEventsData(eventIds);
+
+      const entriesByPlayer = new Map();
+      for (const { entries } of eventsData) {
+        for (const e of entries) {
+          if (!entriesByPlayer.has(e.player_id)) entriesByPlayer.set(e.player_id, []);
+          entriesByPlayer.get(e.player_id).push(e);
+        }
+      }
+
+      const recordByPlayer = new Map();
+      function ensureRecord(id) {
+        if (!recordByPlayer.has(id)) {
+          recordByPlayer.set(id, { wins: 0, draws: 0, losses: 0, gameWins: 0, gameTotal: 0 });
+        }
+        return recordByPlayer.get(id);
+      }
+      for (const { matches } of eventsData) {
+        for (const m of matches) {
+          const r1 = ensureRecord(m.player1_id);
+          const gamesInMatch = m.player1_wins + m.draws + m.player2_wins;
+          r1.gameWins += m.player1_wins;
+          r1.gameTotal += gamesInMatch;
+          if (isBye(m)) {
+            r1.wins += 1;
+            continue;
+          }
+          const r2 = ensureRecord(m.player2_id);
+          r2.gameWins += m.player2_wins;
+          r2.gameTotal += gamesInMatch;
+          const outcome = matchRoundOutcome(m);
+          if (outcome === "player1") {
+            r1.wins += 1;
+            r2.losses += 1;
+          } else if (outcome === "player2") {
+            r2.wins += 1;
+            r1.losses += 1;
+          } else {
+            r1.draws += 1;
+            r2.draws += 1;
+          }
+        }
+      }
+
+      lastRows = allPlayers.map((p) => {
+        const playerEntries = entriesByPlayer.get(p.id) ?? [];
+        const eventsPlayed = new Set(playerEntries.map((e) => e.event_id)).size;
+        const record = recordByPlayer.get(p.id) ?? { wins: 0, draws: 0, losses: 0, gameWins: 0, gameTotal: 0 };
+        const topCommander = mostUsedCommander(playerEntries);
+        // Game basis, not match basis — winning a match 2-0 counts more
+        // than winning it 2-1, even though both are one match win.
+        const winRate = record.gameTotal > 0 ? (record.gameWins / record.gameTotal) * 100 : null;
+        return {
+          id: p.id,
+          searchText: `${p.name} ${p.handle ?? ""}`.toLowerCase(),
+          nameHtml: p.handle ? `${escapeHtml(p.name)} (${escapeHtml(p.handle)})` : escapeHtml(p.name),
+          eventsPlayed,
+          wins: record.wins,
+          draws: record.draws,
+          losses: record.losses,
+          winRate,
+          rate: winRate === null ? "—" : `${winRate.toFixed(1)}%`,
+          topCommanderHtml: topCommander
+            ? `${commanderPairLabel(topCommander.commander, topCommander.partner)} ${colorIdentityPips(
+                (topCommander.commander.color_identity ?? "") + (topCommander.partner?.color_identity ?? "")
+              )}`
+            : "—",
+        };
+      });
+
+      renderList();
+    } catch (err) {
+      showError(listEl, err);
+    }
+  }
+
   searchInput.addEventListener("input", renderList);
+  sortSelect.addEventListener("change", renderList);
+  dateFromInput.addEventListener("change", () => render(effectiveEventIds()));
+
+  initScopeFilter({
+    leagueSelect,
+    eventSelect,
+    onChange: (eventIds) => {
+      lastScopeEventIds = eventIds;
+      render(effectiveEventIds());
+    },
+  });
 }
 
 init();
