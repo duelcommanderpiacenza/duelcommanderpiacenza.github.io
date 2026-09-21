@@ -954,8 +954,9 @@ footer {
 
 .league-group-title {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
   margin: 0 0 16px;
   font-size: 1.25rem;
   color: var(--text-title);
