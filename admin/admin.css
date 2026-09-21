@@ -162,9 +162,15 @@ html {
   display: block;
 }
 
+/* A fixed first-column width, not a minmax() range — a range resolves to
+   whatever fits each panel's own form content best, so the split between
+   form and list ended up at a different x-position on every single panel,
+   making the whole page feel like it shifted around when switching tabs.
+   A fixed width keeps that split (and everything to its right) at the
+   exact same position on every panel, consistently. */
 .admin-panel-layout {
   display: grid;
-  grid-template-columns: minmax(260px, 340px) 1fr;
+  grid-template-columns: 300px 1fr;
   gap: 22px;
   align-items: start;
 }

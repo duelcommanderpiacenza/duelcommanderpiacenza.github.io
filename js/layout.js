@@ -14,14 +14,8 @@
 import { setupThemeToggle } from "./theme.js";
 import { enhanceSelects } from "./custom-select.js";
 import { enhanceDateInputs } from "./custom-date.js";
-import { hidePageLoading } from "./page-loading.js";
 import "./pwa-install.js";
 
 setupThemeToggle();
 enhanceSelects();
 enhanceDateInputs();
-
-// social.html's moxfield.js is a plain classic script (not a module, so it
-// can't `import` this directly) — exposed globally so it can still hide the
-// splash once its own decks/videos fetches settle.
-window.hidePageLoading = hidePageLoading;

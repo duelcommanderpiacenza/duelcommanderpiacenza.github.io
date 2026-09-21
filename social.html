@@ -108,6 +108,26 @@
   <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="false" aria-label="Cambia tema"></button>
 </footer>
 
+<script>
+  // moxfield.js (below) is a plain classic script, not a module, so it
+  // can't rely on js/layout.js (a deferred module, which has to fetch
+  // several JS files before it can even run) to set window.hidePageLoading
+  // in time — decks.json/videos.json are small, fast, cache-friendly
+  // requests that can easily resolve before that module chain does, and
+  // when that happened window.hidePageLoading was still undefined, so the
+  // splash never got hidden at all. Defined here, inline, synchronously,
+  // it's guaranteed to exist before moxfield.js's own script tag even
+  // starts running — same logic as js/page-loading.js's own export.
+  window.hidePageLoading = function () {
+    document.body.classList.remove("is-loading");
+    var el = document.getElementById("page-loading-overlay");
+    if (!el) return;
+    el.classList.add("is-hidden");
+    el.addEventListener("transitionend", function () {
+      el.remove();
+    }, { once: true });
+  };
+</script>
 <script src="moxfield.js"></script>
 <script type="module" src="js/layout.js"></script>
 
