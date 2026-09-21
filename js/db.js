@@ -113,7 +113,7 @@ export const Events = {
   listByLeague: (leagueId) =>
     sb
       .from("events")
-      .select("*, league:leagues(id,name)")
+      .select("*, league:leagues(id,name,is_topdeck)")
       .eq("league_id", leagueId)
       .order("event_date", { ascending: false, nullsFirst: false })
       .then(assertOk),

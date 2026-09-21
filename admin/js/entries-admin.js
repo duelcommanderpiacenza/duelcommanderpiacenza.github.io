@@ -16,6 +16,7 @@ export function initEntriesAdmin() {
   const commanderField = document.getElementById("entries-admin-commander");
   const partnerField = document.getElementById("entries-admin-partner");
   const archetypeField = document.getElementById("entries-admin-archetype");
+  const bonusFieldWrap = document.getElementById("entries-admin-bonus-field");
   const bonusField = document.getElementById("entries-admin-bonus");
   const msgEl = document.getElementById("entries-admin-message");
   const cancelBtn = document.getElementById("entries-admin-cancel");
@@ -123,7 +124,10 @@ export function initEntriesAdmin() {
       commander_id: commanderField.value,
       partner_commander_id: partnerField.value || null,
       archetype: archetypeField.value,
-      bonus_points: parseInt(bonusField.value, 10) || 0,
+      // Bonus points only ever feed the league points leaderboard, which
+      // doesn't exist for Topdeck series or standalone events — never
+      // trust the (hidden) field's value there, even if it's stale.
+      bonus_points: bonusApplies() ? parseInt(bonusField.value, 10) || 0 : 0,
     };
     try {
       if (idField.value) await EventEntries.update(idField.value, payload);
@@ -142,8 +146,16 @@ export function initEntriesAdmin() {
   on("players:changed", populatePlayers);
   on("commanders:changed", populateCommanders);
 
+  // Bonus points are a league-points adjustment — meaningless for a
+  // Topdeck series (no points leaderboard) or a standalone event (no
+  // league at all).
+  function bonusApplies() {
+    return Boolean(currentEvent?.league && !currentEvent.league.is_topdeck);
+  }
+
   function openEvent(event) {
     currentEvent = event;
+    bonusFieldWrap.hidden = !bonusApplies();
     resetForm();
     refresh();
   }

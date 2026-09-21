@@ -117,13 +117,9 @@ a:hover {
 }
 
 /* Deliberately no view-transition-name here, unlike the header/footer: this
-   bar's content genuinely differs between pages (a different active tab and
-   pill position), and it already gets its own hand-rolled slide animation
-   from js/layout.js. Treating it as a "continuous" element on top of that
-   fought with it — the pill doesn't exist in the DOM yet when the browser
-   snapshots the incoming page, so it briefly renders pill-less before our
-   script catches up, causing a visible flicker/jump. Left as part of the
-   ordinary root crossfade instead. */
+   bar's content genuinely differs between pages (a different active tab),
+   so treating it as a single "continuous" element across a navigation
+   isn't right — left as part of the ordinary root crossfade instead. */
 .site-nav {
   position: sticky;
   top: 0;
@@ -160,26 +156,7 @@ a:hover {
   }
 }
 
-/* Absolutely-positioned pill that js/layout.js slides under the active
-   nav-link. Positioned/sized in JS; only the motion is CSS. */
-.nav-pill {
-  position: absolute;
-  left: 0;
-  top: 10px;
-  width: 0;
-  height: 0;
-  border-radius: var(--radius-pill);
-  background: var(--brand-red);
-  opacity: 0;
-  z-index: 0;
-  pointer-events: none;
-  transition: left 320ms cubic-bezier(0.4, 0, 0.2, 1), width 320ms cubic-bezier(0.4, 0, 0.2, 1),
-    top 320ms cubic-bezier(0.4, 0, 0.2, 1), height 320ms cubic-bezier(0.4, 0, 0.2, 1), opacity 180ms ease;
-}
-
 .nav-link {
-  position: relative;
-  z-index: 1;
   display: inline-flex;
   align-items: center;
   padding: 8px 14px;
@@ -197,17 +174,26 @@ a:hover {
   border-color: var(--hairline);
 }
 
-.nav-link.is-active {
+/* Active-tab highlight driven entirely by matching <body data-active-nav>
+   (set statically per page, already in every page's HTML) against each
+   link's own data-nav — no JS, no separate pill element, no per-navigation
+   positioning/animation at all. */
+body[data-active-nav="current"] .nav-link[data-nav="current"],
+body[data-active-nav="leagues"] .nav-link[data-nav="leagues"],
+body[data-active-nav="events"] .nav-link[data-nav="events"],
+body[data-active-nav="commanders"] .nav-link[data-nav="commanders"],
+body[data-active-nav="archetypes"] .nav-link[data-nav="archetypes"],
+body[data-active-nav="players"] .nav-link[data-nav="players"],
+body[data-active-nav="social"] .nav-link[data-nav="social"],
+body[data-active-nav="current"] .nav-link[data-nav="current"]:hover,
+body[data-active-nav="leagues"] .nav-link[data-nav="leagues"]:hover,
+body[data-active-nav="events"] .nav-link[data-nav="events"]:hover,
+body[data-active-nav="commanders"] .nav-link[data-nav="commanders"]:hover,
+body[data-active-nav="archetypes"] .nav-link[data-nav="archetypes"]:hover,
+body[data-active-nav="players"] .nav-link[data-nav="players"]:hover,
+body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
+  background: var(--brand-red);
   color: #fff;
-}
-
-/* The active tab's red comes from the .nav-pill sitting behind it (z-index
-   0, this link at z-index 1) — the plain :hover rule above was painting a
-   near-white background *on top of* that pill, leaving white text on a
-   near-white background. Keep hovering the active tab transparent so the
-   pill stays visible through it. */
-.nav-link.is-active:hover {
-  background: transparent;
   border-color: transparent;
 }
 
@@ -1197,6 +1183,15 @@ table.data-table tbody tr:hover {
   flex-direction: column;
   gap: 6px;
   margin-bottom: 14px;
+}
+
+/* .field's own `display: flex` above has the same specificity as the
+   browser's default `[hidden] { display: none; }` rule, and — being an
+   author rule — wins the tie regardless of source order, so a plain
+   `hidden` attribute silently does nothing on a .field element without
+   this. Higher-specificity rule needed to actually make it work. */
+.field[hidden] {
+  display: none;
 }
 
 .field label {
