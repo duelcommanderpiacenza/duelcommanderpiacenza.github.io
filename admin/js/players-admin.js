@@ -4,6 +4,7 @@ import { emit } from "./bus.js";
 
 export function initPlayersAdmin() {
   const listEl = document.getElementById("players-admin-list");
+  const searchField = document.getElementById("players-admin-search");
   const form = document.getElementById("players-admin-form");
   const idField = document.getElementById("players-admin-id");
   const nameField = document.getElementById("players-admin-name");
@@ -11,23 +12,41 @@ export function initPlayersAdmin() {
   const msgEl = document.getElementById("players-admin-message");
   const cancelBtn = document.getElementById("players-admin-cancel");
 
+  let allPlayers = [];
+
+  // Live filter over the already-fetched list, so it's easy to check
+  // whether a player has already been entered before adding a duplicate.
+  function renderList() {
+    const term = searchField.value.trim().toLowerCase();
+    const visible = term
+      ? allPlayers.filter((p) => `${p.name} ${p.handle ?? ""}`.toLowerCase().includes(term))
+      : allPlayers;
+    if (term && visible.length === 0) {
+      listEl.innerHTML = '<p class="page-empty">Nessun giocatore corrisponde alla ricerca.</p>';
+      return;
+    }
+    renderTable(
+      listEl,
+      visible,
+      [
+        { key: "name", label: "Nome" },
+        { key: "handle", label: "Handle" },
+      ],
+      { onEdit, onDelete }
+    );
+  }
+
   async function refresh() {
     try {
-      const players = await Players.list();
-      renderTable(
-        listEl,
-        players,
-        [
-          { key: "name", label: "Nome" },
-          { key: "handle", label: "Handle" },
-        ],
-        { onEdit, onDelete }
-      );
+      allPlayers = await Players.list();
+      renderList();
     } catch (err) {
       setMessage(msgEl, "Errore nel caricamento.", true);
       console.error(err);
     }
   }
+
+  searchField.addEventListener("input", renderList);
 
   function onEdit(row) {
     idField.value = row.id;

@@ -184,7 +184,7 @@ export function initMatchesAdmin() {
       return;
     }
     eventLeaderboardEl.innerHTML = `<div class="data-table-wrap"><table class="data-table">
-      <thead><tr><th>#</th><th>Giocatore</th><th>Punti</th><th>V-P-S</th><th></th></tr></thead>
+      <thead><tr><th>#</th><th>Giocatore</th><th>Punti</th><th>V-S-P</th><th></th></tr></thead>
       <tbody>
         ${standings
           .map((s, i) => {
@@ -195,7 +195,7 @@ export function initMatchesAdmin() {
             <td class="rank-cell">${i + 1}</td>
             <td>${escapeHtml(s.player?.name ?? "")}</td>
             <td><strong>${s.points}</strong></td>
-            <td>${s.wins}-${s.draws}-${s.losses}</td>
+            <td>${s.wins}-${s.losses}-${s.draws}</td>
             <td class="row-actions">
               <button type="button" class="btn-secondary" data-move="up" data-index="${i}" ${tiedWithPrev ? "" : "disabled"}>&uarr;</button>
               <button type="button" class="btn-secondary" data-move="down" data-index="${i}" ${tiedWithNext ? "" : "disabled"}>&darr;</button>

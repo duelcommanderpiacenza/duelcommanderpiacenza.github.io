@@ -26,7 +26,7 @@ function renderRow(r) {
     <tr>
       <td><a href="player.html?id=${r.id}">${r.nameHtml}</a></td>
       <td>${r.eventsPlayed}</td>
-      <td>${r.wins}-${r.draws}-${r.losses}</td>
+      <td>${r.wins}-${r.losses}-${r.draws}</td>
       <td>${r.rate}</td>
       <td>${r.topCommanderHtml}</td>
     </tr>`;
@@ -113,7 +113,7 @@ async function init() {
       visible.length === 0
         ? '<p class="page-empty">Nessun giocatore corrisponde alla ricerca.</p>'
         : `<div class="data-table-wrap"><table class="data-table">
-      <thead><tr><th>Giocatore</th><th>Eventi</th><th>V-P-S</th><th>Winrate</th><th>Commander pi&ugrave; usato</th></tr></thead>
+      <thead><tr><th>Giocatore</th><th>Eventi</th><th>V-S-P</th><th>Winrate</th><th>Commander pi&ugrave; usato</th></tr></thead>
       <tbody>${visible.map(renderRow).join("")}</tbody>
     </table></div>`;
   }

@@ -5,6 +5,7 @@ import { emit } from "./bus.js";
 
 export function initCommandersAdmin() {
   const listEl = document.getElementById("commanders-admin-list");
+  const searchField = document.getElementById("commanders-admin-search");
   const form = document.getElementById("commanders-admin-form");
   const idField = document.getElementById("commanders-admin-id");
   const nameField = document.getElementById("commanders-admin-name");
@@ -22,22 +23,38 @@ export function initCommandersAdmin() {
     if (colorlessBox.checked) colorBoxes().forEach((box) => (box.checked = false));
   });
 
+  let allCommanders = [];
+
+  // Live filter over the already-fetched list, so it's easy to check
+  // whether a commander has already been entered before adding a duplicate.
+  function renderList() {
+    const term = searchField.value.trim().toLowerCase();
+    const visible = term ? allCommanders.filter((c) => c.name.toLowerCase().includes(term)) : allCommanders;
+    if (term && visible.length === 0) {
+      listEl.innerHTML = '<p class="page-empty">Nessun comandante corrisponde alla ricerca.</p>';
+      return;
+    }
+    renderTable(
+      listEl,
+      visible,
+      [
+        { key: "name", label: "Nome" },
+        { key: "color_identity", label: "Colori", render: (r) => colorIdentityPips(r.color_identity) },
+      ],
+      { onEdit, onDelete }
+    );
+  }
+
   async function refresh() {
     try {
-      const commanders = await Commanders.list();
-      renderTable(
-        listEl,
-        commanders,
-        [
-          { key: "name", label: "Nome" },
-          { key: "color_identity", label: "Colori", render: (r) => colorIdentityPips(r.color_identity) },
-        ],
-        { onEdit, onDelete }
-      );
+      allCommanders = await Commanders.list();
+      renderList();
     } catch (err) {
       setMessage(msgEl, "Errore nel caricamento.", true);
     }
   }
+
+  searchField.addEventListener("input", renderList);
 
   function onEdit(row) {
     idField.value = row.id;

@@ -77,7 +77,7 @@ async function init() {
       return `<p class="page-empty">${term ? "Nessun comandante corrisponde alla ricerca." : "Nessun comandante inserito ancora."}</p>`;
     }
     return `<div class="data-table-wrap"><table class="data-table">
-              <thead><tr><th>Nome</th><th>Identit&agrave; di colore</th><th>Quota</th><th>V-P-S</th><th>Winrate</th></tr></thead>
+              <thead><tr><th>Nome</th><th>Identit&agrave; di colore</th><th>Quota</th><th>V-S-P</th><th>Winrate</th></tr></thead>
               <tbody>
                 ${rows
                   .map(
@@ -86,7 +86,7 @@ async function init() {
                     <td>${commanderLabel(r)}</td>
                     <td>${colorIdentityPips(r.colorIdentity)}</td>
                     <td>${r.entries > 0 ? `${r.share.toFixed(1)}%` : "—"}</td>
-                    <td>${r.wins}-${r.draws}-${r.losses}</td>
+                    <td>${r.wins}-${r.losses}-${r.draws}</td>
                     <td>${r.winRate === null ? "—" : `${r.winRate.toFixed(1)}%`}</td>
                   </tr>`
                   )

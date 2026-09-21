@@ -79,7 +79,7 @@ async function init() {
       standings.length === 0
         ? '<p class="page-empty">Nessun dato per la classifica.</p>'
         : `<div class="data-table-wrap"><table class="data-table">
-            <thead><tr><th>#</th><th>Giocatore</th><th>Punti</th><th>V-P-S</th><th>Winrate</th><th>Eventi giocati</th><th>Presenza completa</th></tr></thead>
+            <thead><tr><th>#</th><th>Giocatore</th><th>Punti</th><th>V-S-P</th><th>Winrate</th><th>Eventi giocati</th><th>Presenza completa</th></tr></thead>
             <tbody>
               ${standings
                 .map(
@@ -88,7 +88,7 @@ async function init() {
                   <td class="rank-cell">${i + 1}</td>
                   <td>${playerLabel(s.player)}</td>
                   <td><strong>${s.points}</strong></td>
-                  <td>${s.wins}-${s.draws}-${s.losses}</td>
+                  <td>${s.wins}-${s.losses}-${s.draws}</td>
                   <td>${s.winRate === null ? "—" : `${s.winRate.toFixed(1)}%`}</td>
                   <td>${s.eventsPlayed}</td>
                   <td>${s.fullAttendance ? "✓ +5 PUNTI" : "—"}</td>

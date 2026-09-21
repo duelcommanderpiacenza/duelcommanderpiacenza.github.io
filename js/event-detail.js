@@ -108,7 +108,7 @@ async function init() {
       standings.length === 0
         ? '<p class="page-empty">Nessun dato per la classifica.</p>'
         : `<div class="data-table-wrap"><table class="data-table">
-            <thead><tr><th>#</th><th>Giocatore</th><th>Punti</th><th>V</th><th>P</th><th>S</th></tr></thead>
+            <thead><tr><th>#</th><th>Giocatore</th><th>Punti</th><th>V</th><th>S</th><th>P</th></tr></thead>
             <tbody>
               ${standings
                 .map(
@@ -118,8 +118,8 @@ async function init() {
                   <td>${playerLabel(s.player)}</td>
                   <td><strong>${s.points}</strong></td>
                   <td>${s.wins}</td>
-                  <td>${s.draws}</td>
                   <td>${s.losses}</td>
+                  <td>${s.draws}</td>
                 </tr>`
                 )
                 .join("")}
