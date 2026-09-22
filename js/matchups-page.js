@@ -7,7 +7,7 @@
 // entry/match lists are in, so picking decks re-renders the matrix instantly.
 
 import { EventEntries, Matches } from "./db.js";
-import { isBye } from "./leaderboard.js";
+import { isBye, isDrop } from "./leaderboard.js";
 import { escapeHtml, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 
@@ -75,7 +75,7 @@ async function init() {
     allDecks = Array.from(decksById.values());
 
     matchSides = matches
-      .filter((m) => !isBye(m))
+      .filter((m) => !isBye(m) && !isDrop(m))
       .map((m) => {
         const e1 = entryByEventPlayer.get(`${m.event_id}_${m.player1_id}`);
         const e2 = entryByEventPlayer.get(`${m.event_id}_${m.player2_id}`);

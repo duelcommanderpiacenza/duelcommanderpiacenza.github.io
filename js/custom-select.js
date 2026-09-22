@@ -31,12 +31,23 @@ function closeAllExcept(except) {
   });
 }
 
+// Same "flip upward when there isn't room below" behavior as the date
+// popup (js/custom-date.js) — otherwise a select low on the page (e.g. the
+// admin's match form, sitting above a scrolled-to bottom bar) opens a menu
+// that spills past the viewport instead of over it.
 function openMenu(wrap) {
   if (wrap.classList.contains("is-disabled")) return;
   closeAllExcept(wrap);
+  wrap.classList.remove("cs-open-upward");
   wrap.classList.add("is-open");
   wrap.querySelector(".cs-trigger").setAttribute("aria-expanded", "true");
   const menu = wrap.querySelector(".cs-menu");
+  const wrapRect = wrap.getBoundingClientRect();
+  const menuHeight = menu.getBoundingClientRect().height;
+  const spaceBelow = window.innerHeight - wrapRect.bottom;
+  if (menuHeight > spaceBelow && wrapRect.top > menuHeight) {
+    wrap.classList.add("cs-open-upward");
+  }
   const active = menu.querySelector('.cs-option[aria-selected="true"]') || menu.querySelector(".cs-option");
   active?.focus();
 }

@@ -1,5 +1,5 @@
 import { EventEntries, Matches, Events } from "../../js/db.js";
-import { isBye, computeEventLeaderboard } from "../../js/leaderboard.js";
+import { isBye, isDrop, computeEventLeaderboard } from "../../js/leaderboard.js";
 import { escapeHtml } from "../../js/ui.js";
 import { setMessage, fillSelect } from "./crud-ui.js";
 import { on } from "./bus.js";
@@ -10,17 +10,19 @@ import { on } from "./bus.js";
  * tab bumps the event's `rounds` count and switches to the new tab; matches
  * are fetched once per event and filtered client-side by the active tab.
  * A match's score is a best-of-3 game count (player1_wins/draws/player2_wins)
- * rather than a single winner. A match can also be a "bye" (player2_id
- * null) when the event has an odd number of entrants — an automatic win
- * for player1, recorded with a placeholder 2-0-0 score.
+ * rather than a single winner. A match can instead be a single-player row —
+ * either a "bye" (player2_id null, an automatic win, for an odd entrant this
+ * round) or a "drop" (player2_id null, is_drop true — the player left the
+ * event and this round isn't scored at all) — picked via the two mutually
+ * exclusive checkboxes below Giocatore 1.
  */
 export function initMatchesAdmin({ onToggleOpen } = {}) {
   const roundTabsEl = document.getElementById("matches-round-tabs");
   const listEl = document.getElementById("matches-admin-list");
   const form = document.getElementById("matches-admin-form");
   const idField = document.getElementById("matches-admin-id");
-  const byeFieldWrap = document.getElementById("matches-admin-bye-field");
   const byeField = document.getElementById("matches-admin-bye");
+  const dropField = document.getElementById("matches-admin-drop");
   const player1Label = document.getElementById("matches-admin-player1-label");
   const player1Field = document.getElementById("matches-admin-player1");
   const player2Field = document.getElementById("matches-admin-player2");
@@ -46,24 +48,29 @@ export function initMatchesAdmin({ onToggleOpen } = {}) {
   // Entrants without a match (or bye) yet in the current round, excluding
   // whatever effect the match currently being edited has on that coverage —
   // so editing a match keeps its own player(s) selectable in their own slot.
+  // A player who has dropped (in any round of this event, not just the
+  // current one) is excluded everywhere from here on, since they're done
+  // with the event entirely — except from the drop match itself, so editing
+  // it still shows them as an option.
   function availableEntrants(excludeMatchId) {
     const covered = new Set();
+    const dropped = new Set();
     for (const m of allMatches) {
-      if ((m.round ?? 1) !== currentRound || m.id === excludeMatchId) continue;
+      if (m.id === excludeMatchId) continue;
+      if (isDrop(m)) dropped.add(m.player1_id);
+      if ((m.round ?? 1) !== currentRound) continue;
       covered.add(m.player1_id);
       if (m.player2_id) covered.add(m.player2_id);
     }
     return currentEntrants
-      .filter((e) => !covered.has(e.player.id))
+      .filter((e) => !covered.has(e.player.id) && !dropped.has(e.player.id))
       .sort((a, b) => a.player.name.localeCompare(b.player.name, "it"));
   }
 
-  // Player 1/2 can only be chosen from players not already paired (or
-  // given a bye) this round. The bye checkbox itself only appears when
-  // there's exactly one such player left over — the classic odd-one-out —
-  // or while editing a match that's already a bye. When only one player is
-  // left, they can only receive a bye (there's no one left to pair them
-  // against), so Giocatore 2 is left with nothing to offer.
+  // Player 1/2 can only be chosen from players not already paired this
+  // round (or already dropped from the event). Bye/Drop are always offered
+  // as two mutually exclusive checkboxes — checking either clears and
+  // disables Giocatore 2, since there's no opponent to record.
   function updateFormAvailability() {
     const excludeId = editingRow ? editingRow.id : null;
     const available = availableEntrants(excludeId);
@@ -71,26 +78,18 @@ export function initMatchesAdmin({ onToggleOpen } = {}) {
       .map((e) => `<option value="${e.player.id}">${e.player.name}${e.player.handle ? ` (${e.player.handle})` : ""}</option>`)
       .join("");
     fillSelect(player1Field, options);
-    // Only blank Giocatore 2 when there's truly no one left to pair
-    // against — not while editing an existing two-player match that
-    // happens to leave just one *other* entrant uncovered (that match's
-    // own opponent must stay selectable in Giocatore 2).
-    const noOpponentLeft = available.length === 1 && !(editingRow && !isBye(editingRow));
-    fillSelect(player2Field, noOpponentLeft ? "" : options);
-
-    const showBye = available.length === 1 || (editingRow && isBye(editingRow));
-    byeFieldWrap.hidden = !showBye;
-    if (!showBye) byeField.checked = false;
-    updateByeUI();
+    fillSelect(player2Field, options);
+    updateMatchTypeUI();
   }
 
-  function updateByeUI() {
-    const bye = byeField.checked;
-    player1Label.textContent = bye ? "Giocatore" : "Giocatore 1";
-    player2Field.disabled = bye;
-    player2Field.required = !bye;
-    scoreRowWrap.hidden = bye;
-    [p1WinsField, drawsField, p2WinsField].forEach((f) => (f.required = !bye));
+  function updateMatchTypeUI() {
+    const special = byeField.checked || dropField.checked;
+    player1Label.textContent = special ? "Giocatore" : "Giocatore 1";
+    player2Field.disabled = special;
+    player2Field.required = !special;
+    if (special) fillSelect(player2Field, "");
+    scoreRowWrap.hidden = special;
+    [p1WinsField, drawsField, p2WinsField].forEach((f) => (f.required = !special));
   }
 
   function renderRoundTabs() {
@@ -286,8 +285,8 @@ export function initMatchesAdmin({ onToggleOpen } = {}) {
             (m) => `
           <tr data-id="${m.id}">
             <td>${escapeHtml(m.player1?.name ?? "")}</td>
-            <td>${isBye(m) ? "Bye" : escapeHtml(m.player2?.name ?? "")}</td>
-            <td>${scoreLabel(m)}</td>
+            <td>${isBye(m) ? "Bye" : isDrop(m) ? "Drop" : escapeHtml(m.player2?.name ?? "")}</td>
+            <td>${isDrop(m) ? "—" : scoreLabel(m)}</td>
             <td class="row-actions">
               <button type="button" class="btn-secondary" data-action="edit">Modifica</button>
               <button type="button" class="btn-danger" data-action="delete">Elimina</button>
@@ -319,9 +318,10 @@ export function initMatchesAdmin({ onToggleOpen } = {}) {
     editingRow = row;
     idField.value = row.id;
     byeField.checked = isBye(row);
+    dropField.checked = isDrop(row);
     updateFormAvailability();
     player1Field.value = row.player1_id;
-    if (!isBye(row)) {
+    if (!isBye(row) && !isDrop(row)) {
       player2Field.value = row.player2_id;
       p1WinsField.value = row.player1_wins;
       drawsField.value = row.draws;
@@ -337,6 +337,7 @@ export function initMatchesAdmin({ onToggleOpen } = {}) {
     editingRow = null;
     idField.value = "";
     byeField.checked = false;
+    dropField.checked = false;
     updateFormAvailability();
     const available = availableEntrants(null);
     player1Field.value = available[0]?.player.id ?? "";
@@ -357,14 +358,38 @@ export function initMatchesAdmin({ onToggleOpen } = {}) {
     }
   }
 
-  byeField.addEventListener("change", updateByeUI);
+  // Bye and Drop are mutually exclusive — checking one clears the other,
+  // rather than validating the conflict only at submit time.
+  byeField.addEventListener("change", () => {
+    if (byeField.checked) dropField.checked = false;
+    updateFormAvailability();
+  });
+  dropField.addEventListener("change", () => {
+    if (dropField.checked) byeField.checked = false;
+    updateFormAvailability();
+  });
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (!currentEvent) return;
 
     let payload;
-    if (byeField.checked) {
+    if (dropField.checked) {
+      if (!player1Field.value) {
+        setMessage(msgEl, "Seleziona il giocatore che droppa.", true);
+        return;
+      }
+      payload = {
+        event_id: currentEvent.id,
+        round: currentRound,
+        player1_id: player1Field.value,
+        player2_id: null,
+        player1_wins: 0,
+        draws: 0,
+        player2_wins: 0,
+        is_drop: true,
+      };
+    } else if (byeField.checked) {
       if (!player1Field.value) {
         setMessage(msgEl, "Seleziona il giocatore che riceve il bye.", true);
         return;
@@ -377,6 +402,7 @@ export function initMatchesAdmin({ onToggleOpen } = {}) {
         player1_wins: 2,
         draws: 0,
         player2_wins: 0,
+        is_drop: false,
       };
     } else {
       if (!player1Field.value || !player2Field.value || player1Field.value === player2Field.value) {
@@ -399,6 +425,7 @@ export function initMatchesAdmin({ onToggleOpen } = {}) {
         player1_wins: p1Wins,
         draws,
         player2_wins: p2Wins,
+        is_drop: false,
       };
     }
 

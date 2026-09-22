@@ -10,7 +10,9 @@
 -- event's name only needs to be unique within its own league (or among
 -- standalone events), a match now records a best-of-3 game score
 -- (player1_wins/draws/player2_wins) instead of a single win/loss/draw result
--- and can be a bye (player2_id null, an automatic win for player1), a league
+-- and can be a bye (player2_id null, an automatic win for player1) or a drop
+-- (player2_id null, is_drop true — the player left the event, excluded from
+-- every calculation instead of scored as a win), a league
 -- row can be flagged as a "Topdeck" series (is_topdeck) — the same shape,
 -- just without a points leaderboard; at most one league and, separately, at
 -- most one Topdeck can be open at a time (one of each together is fine),
@@ -153,17 +155,23 @@ create table matches ( -- one round pairing between two players, scored as a bes
   event_id uuid not null references events(id) on delete cascade,
   round integer not null default 1,
   player1_id uuid not null,
-  player2_id uuid, -- null = a bye: player1 had no opponent this round and is scored an automatic win
+  player2_id uuid, -- null = a bye (is_drop false) or a drop (is_drop true) — player1 has no opponent this round
   player1_wins integer not null default 0,
   draws integer not null default 0,
   player2_wins integer not null default 0,
+  -- player1 left the event as of this round: not a win, loss, or game played,
+  -- excluded from every leaderboard/winrate calculation — kept only as a
+  -- record so the round history shows it and the admin form stops offering
+  -- that player in later rounds of the same event. Mutually exclusive with a
+  -- bye (player2_id null with is_drop false).
+  is_drop boolean not null default false,
   created_at timestamptz not null default now(),
   constraint matches_player1_id_fkey foreign key (player1_id) references players(id) on delete restrict,
   constraint matches_player2_id_fkey foreign key (player2_id) references players(id) on delete restrict,
   constraint matches_players_distinct check (player1_id <> player2_id),
   constraint matches_score_valid check (
     player1_wins >= 0 and draws >= 0 and player2_wins >= 0
-    and (player1_wins + draws + player2_wins) between 1 and 3
+    and (is_drop or (player1_wins + draws + player2_wins) between 1 and 3)
   )
 );
 

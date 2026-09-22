@@ -1,5 +1,5 @@
 import { Players, EventEntries, Matches } from "./db.js";
-import { matchRoundOutcome, isBye, computeEventLeaderboard } from "./leaderboard.js";
+import { matchRoundOutcome, isBye, isDrop, computeEventLeaderboard } from "./leaderboard.js";
 import { tallyOutcome, tallyGames, renderWinrateTiles } from "./winrate.js";
 import { escapeHtml, playerLabel, commanderPairLabel, colorIdentityPips, eventTitle, formatDate, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
@@ -152,8 +152,9 @@ async function init() {
         event: m.event,
         opponent,
         isBye: isBye(m),
+        isDrop: isDrop(m),
         outcome: matchOutcome(m, viewerIsP1),
-        scoreLabel: isBye(m) ? "Bye" : viewerScoreLabel(m, viewerIsP1),
+        scoreLabel: isBye(m) ? "Bye" : isDrop(m) ? "Drop" : viewerScoreLabel(m, viewerIsP1),
         gameWins: viewerIsP1 ? m.player1_wins : m.player2_wins,
         gameTotal,
         myCommander: myEntry?.commander ?? null,
@@ -194,8 +195,15 @@ async function init() {
       for (const r of rows) {
         if (commanderId && r.myCommander?.id !== commanderId && r.myPartner?.id !== commanderId) continue;
         if (leagueId && r.event?.league?.id !== leagueId) continue;
+        // A drop isn't a win, a loss, or a game played — skipped entirely,
+        // unlike a bye (still a match win, just not a real game — see below).
+        if (r.isDrop) continue;
         tallyOutcome(bucket, r.outcome);
-        tallyGames(bucket, r.gameWins, r.gameTotal);
+        // A bye's placeholder 2-0 score isn't a real game played — it still
+        // counts as a match win (tallyOutcome above), but must not inflate
+        // the game-basis Winrate%, same reasoning js/commander-detail.js
+        // already excludes byes for.
+        if (!r.isBye) tallyGames(bucket, r.gameWins, r.gameTotal);
       }
       renderWinrateTiles(overallEl, bucket);
     }
@@ -215,8 +223,8 @@ async function init() {
                 <tr>
                   <td>${r.event ? `<a href="event.html?id=${r.event.id}">${escapeHtml(eventTitle(r.event))}</a>` : "—"}</td>
                   <td>${commanderPairLabel(r.myCommander, r.myPartner)}</td>
-                  <td>${r.isBye ? "Bye" : playerLabel(r.opponent)}</td>
-                  <td>${r.isBye ? "—" : commanderPairLabel(r.oppCommander, r.oppPartner)}</td>
+                  <td>${r.isBye ? "Bye" : r.isDrop ? "Drop" : playerLabel(r.opponent)}</td>
+                  <td>${r.isBye || r.isDrop ? "—" : commanderPairLabel(r.oppCommander, r.oppPartner)}</td>
                   <td>${r.scoreLabel}</td>
                 </tr>`
                 )

@@ -1,5 +1,5 @@
 import { Players, Events, EventEntries, Matches } from "./db.js";
-import { matchRoundOutcome, isBye } from "./leaderboard.js";
+import { matchRoundOutcome, isBye, isDrop } from "./leaderboard.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { computeAutoBadgeAssignments } from "./auto-badges.js";
 import { escapeHtml, commanderPairLabel, colorIdentityPips, showError } from "./ui.js";
@@ -164,14 +164,21 @@ async function init() {
       }
       for (const { matches } of eventsData) {
         for (const m of matches) {
+          // A drop isn't a win, a loss, or a game played — it never
+          // touches either player's record.
+          if (isDrop(m)) continue;
           const r1 = ensureRecord(m.player1_id);
-          const gamesInMatch = m.player1_wins + m.draws + m.player2_wins;
-          r1.gameWins += m.player1_wins;
-          r1.gameTotal += gamesInMatch;
           if (isBye(m)) {
+            // A bye's placeholder 2-0 score isn't a real game played — it
+            // still counts as a match win (below), but must not inflate the
+            // game-basis Winrate%, same reasoning js/commander-detail.js
+            // already excludes byes for.
             r1.wins += 1;
             continue;
           }
+          const gamesInMatch = m.player1_wins + m.draws + m.player2_wins;
+          r1.gameWins += m.player1_wins;
+          r1.gameTotal += gamesInMatch;
           const r2 = ensureRecord(m.player2_id);
           r2.gameWins += m.player2_wins;
           r2.gameTotal += gamesInMatch;

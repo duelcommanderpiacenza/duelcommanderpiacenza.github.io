@@ -4,7 +4,7 @@
 // Commanders and Archetypes pages, both of which let the viewer narrow the
 // scope to a league and/or a single event first.
 
-import { matchRoundOutcome, isBye } from "./leaderboard.js";
+import { matchRoundOutcome, isBye, isDrop } from "./leaderboard.js";
 
 /**
  * `wins`/`draws`/`losses` are match-level counts (one per match, used for
@@ -40,8 +40,9 @@ export function computeGroupedStats(eventsData, keyFn, buildMeta) {
     for (const m of matches) {
       // A bye is a free win for the player, but it's not a "victory" for
       // whatever commander/archetype they happened to be piloting — it
-      // never involved an opponent to actually beat.
-      if (isBye(m)) continue;
+      // never involved an opponent to actually beat. A drop is excluded for
+      // the same reason (plus it's not a game played at all).
+      if (isBye(m) || isDrop(m)) continue;
 
       const e1 = entryByPlayer.get(m.player1_id);
       const e2 = entryByPlayer.get(m.player2_id);

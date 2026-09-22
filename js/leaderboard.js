@@ -6,10 +6,23 @@ const POINTS = { win: 3, draw: 1, loss: 0 };
 /**
  * A bye: player1 had no opponent this round (an odd number of entrants) and
  * is scored an automatic win, regardless of whatever placeholder score got
- * saved alongside it.
+ * saved alongside it. A dropped player's round (isDrop below) also has no
+ * player2, so it's explicitly excluded here — the two are mutually
+ * exclusive single-player match "shapes".
  */
 export function isBye(m) {
-  return m.player2_id == null;
+  return m.player2_id == null && !m.is_drop;
+}
+
+/**
+ * A drop: player1 left the event as of this round and isn't playing it —
+ * not a win, not a loss, not a real game. Excluded everywhere a match is
+ * tallied into points, standings, or winrate (game- or match-basis alike);
+ * only kept around as a record so the round history shows it and the admin
+ * form can stop offering that player in later rounds of the same event.
+ */
+export function isDrop(m) {
+  return !!m.is_drop;
 }
 
 /**
@@ -45,6 +58,9 @@ const TOP_FINISH_CUTOFF = 8;
  * than winning it 2-1, even though both are a single match win. `wins`/
  * `draws`/`losses` stay match-level counts (used for the undefeated bonus
  * and the V-S-P display column, which are legitimately about match record).
+ * A dropped player's round (isDrop) is skipped entirely — no points, no
+ * played count, nothing — leaving whatever they'd already earned in earlier
+ * rounds untouched.
  * @param {Array} matches - rows from `matches` for one event.
  * @param {Array} entries - rows from `event_entries` for the same event (with player/commander joined).
  * @returns {Array} standings sorted by points desc, then tiebreakers, then name; each row also carries
@@ -97,6 +113,8 @@ export function computeEventLeaderboard(matches, entries) {
   }
 
   for (const m of matches) {
+    if (isDrop(m)) continue;
+
     const p1 = ensure(m.player1_id, m.player1);
     p1.played += 1;
     trackMatch(m.player1_id, m);

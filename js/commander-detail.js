@@ -1,5 +1,5 @@
 import { Commanders, EventEntries, Matches } from "./db.js";
-import { matchRoundOutcome, isBye } from "./leaderboard.js";
+import { matchRoundOutcome, isBye, isDrop } from "./leaderboard.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { tallyOutcome, tallyGames, renderWinrateTiles } from "./winrate.js";
 import {
@@ -86,8 +86,9 @@ async function init() {
           self: m.player1,
           opponent: m.player2,
           isBye: isBye(m),
+          isDrop: isDrop(m),
           outcome: outcomeFor(m, true),
-          scoreLabel: isBye(m) ? "Bye" : selfScoreLabel(m, true),
+          scoreLabel: isBye(m) ? "Bye" : isDrop(m) ? "Drop" : selfScoreLabel(m, true),
           gameWins: m.player1_wins,
           gameTotal,
           oppCommander: oppEntry?.commander ?? null,
@@ -141,8 +142,8 @@ async function init() {
                 <tr>
                   <td>${r.event ? `<a href="event.html?id=${r.event.id}">${escapeHtml(eventTitle(r.event))}</a>` : "—"}</td>
                   <td>${playerLabel(r.self)}</td>
-                  <td>${r.isBye ? "Bye" : playerLabel(r.opponent)}</td>
-                  <td>${r.isBye ? "—" : commanderPairLabel(r.oppCommander, r.oppPartner)}</td>
+                  <td>${r.isBye ? "Bye" : r.isDrop ? "Drop" : playerLabel(r.opponent)}</td>
+                  <td>${r.isBye || r.isDrop ? "—" : commanderPairLabel(r.oppCommander, r.oppPartner)}</td>
                   <td>${r.scoreLabel}</td>
                 </tr>`
                 )
@@ -156,8 +157,9 @@ async function init() {
       for (const r of rows) {
         if (r.event && !scoped.has(r.event.id)) continue;
         // A bye is a free win for the player, not a "victory" for the
-        // commander — it never actually beat anything.
-        if (r.isBye) continue;
+        // commander — it never actually beat anything. A drop isn't a
+        // "victory" either, and isn't a game played at all.
+        if (r.isBye || r.isDrop) continue;
         tallyOutcome(bucket, r.outcome);
         tallyGames(bucket, r.gameWins, r.gameTotal);
       }

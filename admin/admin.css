@@ -411,6 +411,15 @@ html {
   min-width: 0;
 }
 
+/* "Vittorie G1"/"Vittorie G2" otherwise wrap to 2 lines in this narrow
+   3-up row while "Pareggi" fits on 1, pushing that column's input down
+   and leaving the row visibly uneven — kept to a single line here instead
+   of widening the whole box to fit the longest label at full size. */
+.score-input-row .field label {
+  white-space: nowrap;
+  font-size: 0.72rem;
+}
+
 /* Re-triggerable entrance animation for drill-down subviews (leagues ->
    events -> entries -> matches); js/app.js toggles this class each time a
    subview is shown, forcing a reflow first so it replays every time. */

@@ -500,10 +500,14 @@
               <label for="matches-admin-player1" id="matches-admin-player1-label">Giocatore 1</label>
               <select id="matches-admin-player1" required></select>
             </div>
-            <div class="checkbox-field" id="matches-admin-bye-field" hidden>
+            <div class="checkbox-field-row">
               <label class="checkbox-inline">
                 <input type="checkbox" id="matches-admin-bye">
                 Bye
+              </label>
+              <label class="checkbox-inline">
+                <input type="checkbox" id="matches-admin-drop">
+                Drop
               </label>
             </div>
             <div class="field" id="matches-admin-player2-field">
@@ -536,11 +540,6 @@
 
       <div style="margin-top:32px;">
         <h3 style="margin:0;">Classifica evento</h3>
-        <p class="page-subtitle">
-          Anteprima calcolata dai turni inseriti finora, con i tiebreak MTG standard (percentuale vittorie
-          avversari, percentuale partite vinte). Usa le frecce per correggere manualmente l'ordine tra
-          giocatori a pari punti. Chiudendo l'evento la classifica diventa visibile pubblicamente.
-        </p>
         <div id="matches-event-leaderboard"><p class="page-loading">Caricamento...</p></div>
       </div>
     </div>

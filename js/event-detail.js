@@ -1,5 +1,5 @@
 import { Events, EventEntries, Matches } from "./db.js";
-import { computeEventLeaderboard, isBye } from "./leaderboard.js";
+import { computeEventLeaderboard, isBye, isDrop } from "./leaderboard.js";
 import {
   escapeHtml,
   formatDate,
@@ -44,8 +44,8 @@ function renderMatchesByRound(matches) {
               (m) => `
             <tr>
               <td>${playerLabel(m.player1)}</td>
-              <td>${isBye(m) ? "Bye" : playerLabel(m.player2)}</td>
-              <td>${isBye(m) ? "Bye" : matchResultScore(m)}</td>
+              <td>${isBye(m) ? "Bye" : isDrop(m) ? "Drop" : playerLabel(m.player2)}</td>
+              <td>${isBye(m) ? "Bye" : isDrop(m) ? "Drop" : matchResultScore(m)}</td>
             </tr>`
             )
             .join("")}

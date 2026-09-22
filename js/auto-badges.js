@@ -7,7 +7,7 @@
 // affected by whatever league/event/date filter a visitor has selected.
 
 import { Badges, Leagues, Events, EventEntries, Matches } from "./db.js";
-import { computeEventLeaderboard, computeLeaguePoints, isBye } from "./leaderboard.js";
+import { computeEventLeaderboard, computeLeaguePoints, isBye, isDrop } from "./leaderboard.js";
 
 const TOP8_STREAK_COUNT = 3;
 const TOP8_STREAK_WINDOW_MONTHS = 3;
@@ -116,6 +116,9 @@ async function playerMatchStats() {
   }
 
   for (const m of allMatches) {
+    // A drop isn't a game played, win, or loss — excluded entirely, same
+    // as everywhere else a match gets tallied.
+    if (isDrop(m)) continue;
     const p1 = ensure(m.player1_id);
     p1.played += 1;
     if (isBye(m)) {
