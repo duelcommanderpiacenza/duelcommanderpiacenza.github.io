@@ -2,7 +2,7 @@ import { Commanders, Events, EventEntries, Matches } from "./db.js";
 import { computeGroupedStats } from "./stats.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { renderPieChart } from "./metagame-chart.js";
-import { commanderLabel, colorIdentityPips, showError } from "./ui.js";
+import { commanderPairLabel, colorIdentityPips, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 
 // Fixed hue order, assigned once by each commander's overall popularity
@@ -129,7 +129,7 @@ async function init() {
                   .map(
                     (r) => `
                   <tr>
-                    <td>${commanderLabel(r)}${
+                    <td>${commanderPairLabel(r.commander, r.partner)}${
                       r.isBanned
                         ? '<span class="icon-badge" data-tooltip="Bannato" aria-label="Bannato" tabindex="0">&#9888;&#65039;</span>'
                         : ""
@@ -159,29 +159,39 @@ async function init() {
     tableEl.innerHTML = "";
     try {
       const eventsData = await fetchEventsData(eventIds);
+      const commandersById = new Map(allCommanders.map((c) => [c.id, c]));
+
+      // Grouped by the exact commander+partner pairing (partner_commander_id
+      // is part of the key, null for a solo entry) — a commander played with
+      // two different partners, or both solo and partnered, shows as
+      // separate rows here, each with its own stats and its own color
+      // identity (the union of both commanders' colors), rather than being
+      // folded into one overall row for the primary commander alone.
       const stats = computeGroupedStats(
         eventsData,
-        (e) => e.commander_id,
-        (e) => ({ name: e.commander?.name, colorIdentity: e.commander?.color_identity })
+        (e) => `${e.commander_id}_${e.partner_commander_id ?? ""}`,
+        (e) => ({ commanderId: e.commander_id, partnerId: e.partner_commander_id ?? null })
       );
-      const byId = new Map(stats.map((s) => [s.key, s]));
       const totalEntries = stats.reduce((sum, s) => sum + s.entries, 0);
 
-      lastRows = allCommanders
-        .map((c) => {
-          const s = byId.get(c.id);
-          const entries = s?.entries ?? 0;
+      lastRows = stats
+        .map((s) => {
+          const commander = commandersById.get(s.commanderId);
+          const partner = s.partnerId ? commandersById.get(s.partnerId) : null;
+          const name = partner ? `${commander.name} / ${partner.name}` : commander.name;
           return {
-            id: c.id,
-            name: c.name,
-            colorIdentity: c.color_identity,
-            isBanned: c.is_banned,
-            entries,
-            share: totalEntries > 0 ? (entries / totalEntries) * 100 : 0,
-            wins: s?.wins ?? 0,
-            draws: s?.draws ?? 0,
-            losses: s?.losses ?? 0,
-            winRate: s?.winRate ?? null,
+            id: s.key,
+            commander,
+            partner,
+            name,
+            colorIdentity: (commander.color_identity ?? "") + (partner?.color_identity ?? ""),
+            isBanned: commander.is_banned || (partner?.is_banned ?? false),
+            entries: s.entries,
+            share: totalEntries > 0 ? (s.entries / totalEntries) * 100 : 0,
+            wins: s.wins,
+            draws: s.draws,
+            losses: s.losses,
+            winRate: s.winRate,
           };
         })
         .sort((a, b) => b.entries - a.entries || a.name.localeCompare(b.name));
@@ -190,7 +200,10 @@ async function init() {
       let otherShare = 0;
       for (const r of lastRows) {
         if (r.entries === 0) continue;
-        const color = colorByCommanderId.get(r.id);
+        // Keyed by the primary commander's own id — two rows that share one
+        // (e.g. "Thrasios / Tymna" and "Thrasios / Vial Smasher") get the
+        // same slice color, same reasoning as sharing a label prefix.
+        const color = colorByCommanderId.get(r.commander.id);
         if (color) chartRows.push({ label: r.name, share: r.share, color });
         else otherShare += r.share;
       }
@@ -208,7 +221,7 @@ async function init() {
       for (const r of lastRows) {
         if (r.wins === 0) continue;
         const share = totalWins > 0 ? (r.wins / totalWins) * 100 : 0;
-        const color = colorByCommanderId.get(r.id);
+        const color = colorByCommanderId.get(r.commander.id);
         if (color) winsChartRows.push({ label: r.name, share, color });
         else otherWinsShare += share;
       }

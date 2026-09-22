@@ -1,9 +1,12 @@
-// Win% heatmap matrix between up to MAX_SELECTED commanders, picked from
-// the full commander list. Built entirely client-side from already-played
-// matches — no new data to fetch once the initial commander/entry/match
-// lists are in, so picking commanders re-renders the matrix instantly.
+// Win% heatmap matrix between up to MAX_SELECTED "decks" — a commander on
+// its own, or a commander+partner pairing, picked from every combination
+// actually played. A commander used with two different partners (or both
+// solo and partnered) is genuinely a different deck, not the same row, same
+// grouping js/commanders-page.js itself uses. Built entirely client-side
+// from already-played matches — no new data to fetch once the initial
+// entry/match lists are in, so picking decks re-renders the matrix instantly.
 
-import { Commanders, EventEntries, Matches } from "./db.js";
+import { EventEntries, Matches } from "./db.js";
 import { isBye } from "./leaderboard.js";
 import { escapeHtml, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
@@ -42,21 +45,34 @@ async function init() {
   const selectedListEl = document.getElementById("matchups-selected-list");
   const matrixEl = document.getElementById("matchups-matrix");
 
-  let allCommanders = [];
-  let matchSides = []; // { side1, side2: [commanderId,...], side1GameWins, side2GameWins, gameDraws }
+  let allDecks = []; // { id, name, commanderId, partnerId } — one per unique commander(+partner) combo actually played
+  let matchSides = []; // { side1, side2: deckId, side1GameWins, side2GameWins, gameDraws }
   let topPlayedIds = []; // the default "most played" table — reused whenever switching back to it
-  const selected = []; // commander ids, in selection order — also matrix row/column order
+  const selected = []; // deck ids, in selection order — also matrix row/column order
+
+  function deckIdOf(entry) {
+    return `${entry.commander_id}_${entry.partner_commander_id ?? ""}`;
+  }
 
   try {
-    const [commanders, entries, matches] = await Promise.all([
-      Commanders.list(),
-      EventEntries.listAll(),
-      Matches.listAll(),
-    ]);
-    allCommanders = commanders;
+    const [entries, matches] = await Promise.all([EventEntries.listAll(), Matches.listAll()]);
 
     const entryByEventPlayer = new Map(entries.map((e) => [`${e.event_id}_${e.player_id}`, e]));
-    const commanderIdsOf = (entry) => [entry.commander_id, entry.partner_commander_id].filter(Boolean);
+
+    const decksById = new Map();
+    for (const e of entries) {
+      if (!e.commander) continue;
+      const id = deckIdOf(e);
+      if (!decksById.has(id)) {
+        decksById.set(id, {
+          id,
+          commanderId: e.commander_id,
+          partnerId: e.partner_commander_id ?? null,
+          name: e.partner_commander ? `${e.commander.name} / ${e.partner_commander.name}` : e.commander.name,
+        });
+      }
+    }
+    allDecks = Array.from(decksById.values());
 
     matchSides = matches
       .filter((m) => !isBye(m))
@@ -65,8 +81,8 @@ async function init() {
         const e2 = entryByEventPlayer.get(`${m.event_id}_${m.player2_id}`);
         if (!e1 || !e2) return null;
         return {
-          side1: commanderIdsOf(e1),
-          side2: commanderIdsOf(e2),
+          side1: deckIdOf(e1),
+          side2: deckIdOf(e2),
           // Game-basis, not match-basis — a 2-0 match win should count for
           // more than a 2-1 one, same convention as the rest of the site's
           // own winrate stats (js/commanders-page.js, js/players-page.js).
@@ -78,12 +94,12 @@ async function init() {
       .filter(Boolean);
 
     // Same "most played" definition as js/commanders-page.js's own
-    // popularity ranking — counted by primary commander_id only, not the
-    // partner — so this matches what the Comandanti page already considers
-    // the top commanders.
+    // popularity ranking — counted per exact commander(+partner) combo.
     const playCounts = new Map();
     for (const e of entries) {
-      playCounts.set(e.commander_id, (playCounts.get(e.commander_id) ?? 0) + 1);
+      if (!e.commander) continue;
+      const id = deckIdOf(e);
+      playCounts.set(id, (playCounts.get(id) ?? 0) + 1);
     }
     topPlayedIds = Array.from(playCounts.entries())
       .sort((a, b) => b[1] - a[1])
@@ -97,15 +113,15 @@ async function init() {
   }
 
   // Game-basis, not match-basis — a 2-0 match win counts for more than a
-  // 2-1 one, matching the rest of the site's own winrate convention.
-  // Matches where `rowId` faced `colId` on the opposite side — partnered
-  // commanders sharing the *same* side (a single player's own commander +
-  // partner) are correctly never counted as facing each other. Mirror
-  // matches (rowId === colId) are left out of the matrix entirely rather
-  // than resolved ambiguously. Game draws are tracked (shown on hover) but
-  // excluded from the win% itself — wins / (wins + losses) only, so an
-  // all-draws matchup reads as "no decisive data" (—) instead of the
-  // misleading 0% a wins/(wins+losses+draws) formula would give it.
+  // 2-1 one, matching the rest of the site's own winrate convention. Each
+  // side is now the exact deck id (commander+partner combo) that entry
+  // played, so e.g. "Thrasios / Tymna" and "Thrasios / Vial Smasher" are
+  // never conflated into the same row. Mirror matches (rowId === colId)
+  // are left out of the matrix entirely rather than resolved ambiguously.
+  // Game draws are tracked (shown on hover) but excluded from the win%
+  // itself — wins / (wins + losses) only, so an all-draws matchup reads as
+  // "no decisive data" (—) instead of the misleading 0% a
+  // wins/(wins+losses+draws) formula would give it.
   function computeCell(rowId, colId) {
     if (rowId === colId) return null;
     let wins = 0;
@@ -113,8 +129,8 @@ async function init() {
     let draws = 0;
     for (const m of matchSides) {
       let rowSide = null;
-      if (m.side1.includes(rowId) && m.side2.includes(colId)) rowSide = 1;
-      else if (m.side2.includes(rowId) && m.side1.includes(colId)) rowSide = 2;
+      if (m.side1 === rowId && m.side2 === colId) rowSide = 1;
+      else if (m.side2 === rowId && m.side1 === colId) rowSide = 2;
       else continue;
 
       wins += rowSide === 1 ? m.side1GameWins : m.side2GameWins;
@@ -130,7 +146,7 @@ async function init() {
       return;
     }
 
-    const rows = selected.map((id) => allCommanders.find((c) => c.id === id)).filter(Boolean);
+    const rows = selected.map((id) => allDecks.find((d) => d.id === id)).filter(Boolean);
 
     matrixEl.innerHTML = `<div class="data-table-wrap matchups-matrix-wrap"><table class="matchups-table">
       <thead>
@@ -177,7 +193,7 @@ async function init() {
 
   function renderSelectedList() {
     selectedListEl.innerHTML = selected
-      .map((id) => allCommanders.find((c) => c.id === id))
+      .map((id) => allDecks.find((c) => c.id === id))
       .filter(Boolean)
       .map(
         (c) => `
@@ -211,7 +227,7 @@ async function init() {
     if (selected.length >= MAX_SELECTED) {
       dropdownEl.innerHTML = '<p class="matchups-dropdown-empty">Limite di 10 comandanti raggiunto.</p>';
     } else {
-      const results = allCommanders
+      const results = allDecks
         .filter((c) => !selected.includes(c.id) && c.name.toLowerCase().includes(term))
         .slice(0, MAX_DROPDOWN_RESULTS);
       dropdownEl.innerHTML =
