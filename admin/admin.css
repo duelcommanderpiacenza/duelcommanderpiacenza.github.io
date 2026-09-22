@@ -245,7 +245,9 @@ html {
   gap: 8px;
 }
 
-.row-actions button {
+/* Excludes .icon-btn (Modifica/Elimina) — those are fixed-size circles
+   (../../styles.css) and would get squashed into an oval by this padding. */
+.row-actions button:not(.icon-btn) {
   min-height: 32px;
   padding: 0 10px;
   font-size: 0.8rem;

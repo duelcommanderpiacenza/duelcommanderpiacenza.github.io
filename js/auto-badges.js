@@ -198,7 +198,12 @@ async function mostCommandersPlayedPlayerIds() {
 // number of players can independently qualify (a threshold check, not a
 // ranking), same shape as top8StreakPlayerIds above.
 async function completistPlayerIds() {
-  const events = await Events.list(); // newest-first already
+  // A still-open (including future) event has no visible entries at all yet
+  // — left in here, it would always count as zero participants and make
+  // the "latest 10" intersection permanently empty for as long as it stays
+  // open, so it's excluded the same way every other "how many events" count
+  // on the public site now is.
+  const events = (await Events.list()).filter((ev) => !ev.is_open); // newest-first already
   if (events.length < COMPLETIST_EVENT_COUNT) return [];
   const recentEvents = events.slice(0, COMPLETIST_EVENT_COUNT);
   const entries = await EventEntries.listByEvents(recentEvents.map((e) => e.id));

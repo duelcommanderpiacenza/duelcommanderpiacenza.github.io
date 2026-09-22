@@ -5,7 +5,10 @@ import { hidePageLoading } from "./page-loading.js";
 async function init() {
   const listEl = document.getElementById("events-list");
   try {
-    const events = await Events.list();
+    // A still-open (including future) event isn't published yet — it's
+    // previewed elsewhere (the homepage's "Prossimi eventi"), not listed
+    // here as if it had already happened.
+    const events = (await Events.list()).filter((ev) => !ev.is_open);
     if (events.length === 0) {
       listEl.innerHTML = '<p class="page-empty">Nessun evento inserito ancora.</p>';
       return;

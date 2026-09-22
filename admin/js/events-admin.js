@@ -1,6 +1,6 @@
 import { Events } from "../../js/db.js";
-import { formatDate, formatTime, statusBadge } from "../../js/ui.js";
-import { renderTable, setMessage } from "./crud-ui.js";
+import { formatDate, formatTime } from "../../js/ui.js";
+import { renderTable, setMessage, statusToggleButton } from "./crud-ui.js";
 import { on } from "./bus.js";
 
 /**
@@ -25,7 +25,7 @@ export function initEventsAdmin({ onOpenEvent }) {
   let currentLeague = null;
   let events = [];
 
-  async function refresh() {
+  async function refresh(animate = true) {
     if (!currentLeague) return;
     try {
       events = await Events.listByLeague(currentLeague.id);
@@ -36,18 +36,18 @@ export function initEventsAdmin({ onOpenEvent }) {
           { key: "name", label: "Nome", render: (r) => r.name ?? "—" },
           { key: "event_date", label: "Data", render: (r) => formatDate(r.event_date) },
           { key: "start_time", label: "Orario", render: (r) => formatTime(r.start_time) ?? "—" },
-          { key: "status", label: "Stato", render: (r) => statusBadge(r.is_open) },
+          { key: "status", label: "Stato", render: (r) => statusToggleButton(r.is_open, r.id) },
           {
             key: "manage",
             label: "",
             render: (e) => `
               <div class="row-actions">
-                <button type="button" class="btn-secondary" data-toggle="${e.id}">${e.is_open ? "Chiudi" : "Riapri"}</button>
-                <button type="button" class="btn-secondary" data-open="${e.id}">Gestisci iscritti/partite &rarr;</button>
+                <button type="button" class="btn-secondary" data-open="${e.id}">Gestisci &rarr;</button>
               </div>`,
           },
         ],
-        { onEdit, onDelete }
+        { onEdit, onDelete },
+        { animate }
       );
       listEl.querySelectorAll("[data-open]").forEach((btn) => {
         btn.addEventListener("click", () => {
@@ -82,7 +82,9 @@ export function initEventsAdmin({ onOpenEvent }) {
   async function onToggleOpen(row) {
     try {
       await Events.update(row.id, { is_open: !row.is_open });
-      await refresh();
+      // Just a status flip, not a changed row set — skip the list's
+      // entrance animation so it reads as instant feedback, not a reload.
+      await refresh(false);
     } catch (err) {
       setMessage(msgEl, "Errore nell'aggiornamento dello stato.", true);
     }

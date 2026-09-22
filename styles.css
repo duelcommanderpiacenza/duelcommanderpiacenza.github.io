@@ -1626,6 +1626,24 @@ img.badge-icon-box {
 .badge-status-open { background: var(--accent-green-2); }
 .badge-status-closed { background: var(--text-muted); }
 
+/* The admin's clickable variant (see statusToggleButton in
+   admin/js/crud-ui.js) — same pill look as the read-only badge above, just
+   reset as an actual <button> and given hover feedback since it's also the
+   open/close action now, not just a status display. */
+.badge-status-toggle {
+  border: none;
+  font: inherit;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: filter 150ms ease, transform 150ms ease;
+}
+
+.badge-status-toggle:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
 .entity-card .badge-status {
   margin-top: 10px;
 }
@@ -1700,6 +1718,55 @@ img.badge-icon-box {
 .btn-danger:hover {
   background: #fff1ef;
   border-color: rgba(179, 38, 30, 0.42);
+}
+
+/* Compact round Modifica/Elimina buttons for admin list rows — an SVG icon
+   (see EDIT_ICON_SVG/DELETE_ICON_SVG in admin/js/crud-ui.js) instead of a
+   labeled pill, since a row can otherwise get crowded once it also has a
+   status toggle and a "Gestisci" button. Elimina is filled red-on-red from
+   the start (not just on hover) so its destructive weight reads at a
+   glance, same reasoning .btn-primary is solid brand-red while
+   .btn-secondary stays an outline. */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 150ms ease, border-color 150ms ease, background 150ms ease, box-shadow 150ms ease;
+}
+
+.icon-btn:hover {
+  transform: translateY(-1px);
+}
+
+.icon-btn-edit {
+  color: var(--brand-red-deep);
+  background: #fff;
+  border-color: var(--hairline);
+}
+
+.icon-btn-edit:hover {
+  background: #fff7f4;
+  border-color: var(--hairline-hover-strong);
+}
+
+/* No resting box-shadow — a table row's own border-bottom sits right below
+   the row's normal content height, and a shadow reaching past that (like
+   this button briefly had) visually bled across the divider line into the
+   next row, making it look bent/misaligned right where these buttons sit. */
+.icon-btn-delete {
+  color: #fff;
+  background: #c8362b;
+}
+
+.icon-btn-delete:hover {
+  background: #b3261e;
+  box-shadow: 0 3px 8px rgba(179, 38, 30, 0.32);
 }
 
 /* Forms (public filters + admin CRUD) */
@@ -2846,6 +2913,7 @@ img.cs-option-icon {
 :root[data-theme="dark"] #badges-admin-icon-file,
 :root[data-theme="dark"] .btn-secondary,
 :root[data-theme="dark"] .btn-danger,
+:root[data-theme="dark"] .icon-btn-edit,
 :root[data-theme="dark"] .expand-button,
 :root[data-theme="dark"] .section-link,
 :root[data-theme="dark"] .deck-filter,
@@ -2862,6 +2930,7 @@ img.cs-option-icon {
 
 :root[data-theme="dark"] .btn-secondary:hover,
 :root[data-theme="dark"] .btn-danger:hover,
+:root[data-theme="dark"] .icon-btn-edit:hover,
 :root[data-theme="dark"] .expand-button:hover,
 :root[data-theme="dark"] .section-link:hover,
 :root[data-theme="dark"] .cd-nav:hover,

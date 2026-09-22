@@ -29,7 +29,10 @@ async function init() {
     // A Topdeck series is just a bucket of events, with no points leaderboard.
     if (league.is_topdeck) leaderboardSectionEl.hidden = true;
 
-    const events = await Events.listByLeague(id);
+    // A still-open (including future) event isn't published yet — it has no
+    // entries/matches for RLS to even hand back, and would otherwise inflate
+    // this league's own event count/grid before anything's actually happened.
+    const events = (await Events.listByLeague(id)).filter((ev) => !ev.is_open);
 
     if (events.length === 0) {
       statsEl.innerHTML = "";

@@ -1,6 +1,5 @@
 import { Leagues, Events } from "../../js/db.js";
-import { statusBadge } from "../../js/ui.js";
-import { renderTable, setMessage } from "./crud-ui.js";
+import { renderTable, setMessage, statusToggleButton } from "./crud-ui.js";
 
 // The proactive close-before-open/create calls should normally prevent this
 // constraint from ever being hit, but it's still the real, ultimate
@@ -60,14 +59,13 @@ export function initLeaguesAdmin({ onOpenLeague }) {
       [
         { key: "name", label: "Nome" },
         { key: "type", label: "Tipo", render: (l) => (l.is_topdeck ? "Topdeck" : "Lega") },
-        { key: "status", label: "Stato", render: (l) => statusBadge(l.is_open) },
+        { key: "status", label: "Stato", render: (l) => statusToggleButton(l.is_open, l.id) },
         {
           key: "manage",
           label: "",
           render: (l) => `
               <div class="row-actions">
-                <button type="button" class="btn-secondary" data-toggle="${l.id}">${l.is_open ? "Chiudi" : "Riapri"}</button>
-                <button type="button" class="btn-secondary" data-open="${l.id}">Gestisci eventi &rarr;</button>
+                <button type="button" class="btn-secondary" data-open="${l.id}">Gestisci &rarr;</button>
               </div>`,
         },
       ],
@@ -93,7 +91,7 @@ export function initLeaguesAdmin({ onOpenLeague }) {
   // Same ordering data the public Leghe page needs — the latest associated
   // event date per league — fetched here too since Leagues.list() itself
   // just orders by creation date.
-  async function refresh() {
+  async function refresh(animate = true) {
     try {
       const [allLeagues, events] = await Promise.all([Leagues.list(), Events.list()]);
       const latestEventDateByLeague = new Map();
@@ -105,7 +103,7 @@ export function initLeaguesAdmin({ onOpenLeague }) {
       leagues = allLeagues
         .map((l) => ({ ...l, latestEventDate: latestEventDateByLeague.get(l.id) ?? null }))
         .sort(compareLeagues);
-      renderList();
+      renderList(animate);
     } catch (err) {
       setMessage(msgEl, "Errore nel caricamento.", true);
     }
@@ -130,7 +128,10 @@ export function initLeaguesAdmin({ onOpenLeague }) {
       // kind first (a league and a Topdeck can be open together).
       if (!row.is_open) await Leagues.closeOtherOpenOfType(row.is_topdeck, row.id);
       await Leagues.update(row.id, { is_open: !row.is_open });
-      await refresh();
+      // Just a status flip, not a changed row set — replaying the whole
+      // list's entrance animation over it would be a distracting pop for
+      // what should read as instant feedback.
+      await refresh(false);
     } catch (err) {
       setMessage(msgEl, describeError(err, "Errore nell'aggiornamento dello stato."), true);
     }

@@ -20,7 +20,12 @@ const CHART_COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#0
 const OTHER_COLOR = "#9a9a94";
 
 async function fetchLeagueEventsData(leagueId) {
-  const events = await Events.listByLeague(leagueId);
+  // A still-open event (including a future one, now visible ahead of time
+  // for "Prossimi eventi") has no entries/matches yet regardless — but
+  // counting it here would still inflate this league's own "eventi" stat,
+  // so it's excluded up front rather than relying on its (empty) data to
+  // just wash out on its own.
+  const events = (await Events.listByLeague(leagueId)).filter((ev) => !ev.is_open);
   return Promise.all(
     events.map(async (ev) => {
       const [entries, matches] = await Promise.all([EventEntries.listByEvent(ev.id), Matches.listByEvent(ev.id)]);
@@ -171,8 +176,13 @@ async function renderLeaguesSection(el) {
 
 async function renderEventsSection(el) {
   try {
-    // RLS already limits anonymous visitors to closed (published) events.
-    const events = (await Events.list()).slice(0, LATEST_EVENTS_COUNT);
+    // RLS used to limit anonymous visitors to closed (published) events on
+    // its own, but now also lets a future *open* event through (so it can
+    // surface in "Prossimi eventi" before it's been played) — this widget
+    // only wants already-played, closed ones, so that needs filtering for
+    // explicitly here. Events.list() already orders by event_date
+    // descending, so closed events stay in date order once filtered.
+    const events = (await Events.list()).filter((ev) => !ev.is_open).slice(0, LATEST_EVENTS_COUNT);
     el.innerHTML =
       events.length === 0
         ? '<p class="page-empty">Nessun evento pubblicato ancora.</p>'

@@ -19,7 +19,11 @@ function compareLeagues(a, b) {
 async function init() {
   const listEl = document.getElementById("leagues-list");
   try {
-    const [leagues, events] = await Promise.all([Leagues.list(), Events.list()]);
+    const [leagues, allEvents] = await Promise.all([Leagues.list(), Events.list()]);
+    // A still-open (including future) event isn't published yet — excluded
+    // here so neither the per-league count nor "most recently active
+    // league" sort below treats a merely-scheduled event as already played.
+    const events = allEvents.filter((ev) => !ev.is_open);
 
     const eventCountByLeague = new Map();
     const latestEventDateByLeague = new Map();

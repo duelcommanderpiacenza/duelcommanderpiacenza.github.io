@@ -1,6 +1,6 @@
 import { Events } from "../../js/db.js";
-import { formatDate, formatTime, statusBadge } from "../../js/ui.js";
-import { renderTable, setMessage } from "./crud-ui.js";
+import { formatDate, formatTime } from "../../js/ui.js";
+import { renderTable, setMessage, statusToggleButton } from "./crud-ui.js";
 import { on } from "./bus.js";
 
 /**
@@ -39,14 +39,13 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
         { key: "name", label: "Nome" },
         { key: "event_date", label: "Data", render: (r) => formatDate(r.event_date) },
         { key: "start_time", label: "Orario", render: (r) => formatTime(r.start_time) ?? "—" },
-        { key: "status", label: "Stato", render: (r) => statusBadge(r.is_open) },
+        { key: "status", label: "Stato", render: (r) => statusToggleButton(r.is_open, r.id) },
         {
           key: "manage",
           label: "",
           render: (e) => `
               <div class="row-actions">
-                <button type="button" class="btn-secondary" data-toggle="${e.id}">${e.is_open ? "Chiudi" : "Riapri"}</button>
-                <button type="button" class="btn-secondary" data-open="${e.id}">Gestisci iscritti/partite &rarr;</button>
+                <button type="button" class="btn-secondary" data-open="${e.id}">Gestisci &rarr;</button>
               </div>`,
         },
       ],
@@ -69,10 +68,10 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
 
   searchField.addEventListener("input", () => renderList(false));
 
-  async function refresh() {
+  async function refresh(animate = true) {
     try {
       events = await Events.listStandalone();
-      renderList();
+      renderList(animate);
     } catch (err) {
       setMessage(msgEl, "Errore nel caricamento.", true);
     }
@@ -94,7 +93,9 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
   async function onToggleOpen(row) {
     try {
       await Events.update(row.id, { is_open: !row.is_open });
-      await refresh();
+      // Just a status flip, not a changed row set — skip the list's
+      // entrance animation so it reads as instant feedback, not a reload.
+      await refresh(false);
     } catch (err) {
       setMessage(msgEl, "Errore nell'aggiornamento dello stato.", true);
     }

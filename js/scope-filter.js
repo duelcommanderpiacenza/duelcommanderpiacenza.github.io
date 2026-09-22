@@ -7,7 +7,11 @@ import { Leagues, Events } from "./db.js";
 import { escapeHtml, eventTitle } from "./ui.js";
 
 export async function initScopeFilter({ leagueSelect, eventSelect, onChange }) {
-  const [leagues, events] = await Promise.all([Leagues.list(), Events.list()]);
+  const [leagues, allEvents] = await Promise.all([Leagues.list(), Events.list()]);
+  // A still-open (including future) event has no stats to filter by yet —
+  // offering it here would just be a selectable option that always shows
+  // an empty result.
+  const events = allEvents.filter((e) => !e.is_open);
 
   leagueSelect.innerHTML =
     '<option value="">Tutte le leghe</option>' +
