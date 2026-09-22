@@ -1,5 +1,5 @@
 import { Events } from "../../js/db.js";
-import { formatDate, statusBadge } from "../../js/ui.js";
+import { formatDate, formatTime, statusBadge } from "../../js/ui.js";
 import { renderTable, setMessage } from "./crud-ui.js";
 import { on } from "./bus.js";
 
@@ -18,6 +18,7 @@ export function initEventsAdmin({ onOpenEvent }) {
   const nameField = document.getElementById("events-admin-name");
   const nameHintEl = document.getElementById("events-admin-name-hint");
   const dateField = document.getElementById("events-admin-date");
+  const timeField = document.getElementById("events-admin-time");
   const msgEl = document.getElementById("events-admin-message");
   const cancelBtn = document.getElementById("events-admin-cancel");
 
@@ -34,6 +35,7 @@ export function initEventsAdmin({ onOpenEvent }) {
         [
           { key: "name", label: "Nome", render: (r) => r.name ?? "—" },
           { key: "event_date", label: "Data", render: (r) => formatDate(r.event_date) },
+          { key: "start_time", label: "Orario", render: (r) => formatTime(r.start_time) ?? "—" },
           { key: "status", label: "Stato", render: (r) => statusBadge(r.is_open) },
           {
             key: "manage",
@@ -68,6 +70,7 @@ export function initEventsAdmin({ onOpenEvent }) {
     idField.value = row.id;
     nameField.value = row.name ?? "";
     dateField.value = row.event_date ?? "";
+    timeField.value = formatTime(row.start_time) ?? "";
   }
 
   function resetForm() {
@@ -101,6 +104,7 @@ export function initEventsAdmin({ onOpenEvent }) {
     const payload = {
       name: nameField.value.trim() || null,
       event_date: dateField.value || null,
+      start_time: timeField.value || null,
       league_id: currentLeague.id,
     };
     // Only a Topdeck event can be left unnamed — the public site then shows

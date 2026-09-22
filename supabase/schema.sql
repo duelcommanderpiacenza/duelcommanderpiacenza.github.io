@@ -115,6 +115,9 @@ create table events (
   id uuid primary key default gen_random_uuid(),
   name text, -- optional for a Topdeck event: left blank, the public site shows the date as its title instead
   event_date date,
+  start_time time, -- optional; shown alongside the date wherever it's displayed if set — also what lets a
+    -- future event surface on the public Bacheca's "Prossimi eventi" card before it's actually been played
+    -- (see events_public_read below)
   league_id uuid references leagues(id) on delete cascade, -- null = standalone event, not part of any league
   rounds integer not null default 1, -- number of turns/rounds, set manually by the admin
   is_open boolean not null default true, -- while open, the event's data is admin-only; closing it publishes it
@@ -213,8 +216,13 @@ create policy "players_public_read" on players for select using (true);
 create policy "badges_public_read" on badges for select using (true);
 create policy "leagues_public_read" on leagues for select using (true);
 
+-- A closed event is fully published as usual; an open one is also readable
+-- once its own date is today or later, so it can surface as a bare
+-- date/time/name "save the date" preview on the public Bacheca before it's
+-- actually been played — event_entries/matches stay gated to is_open =
+-- false regardless (see below), so no results ever leak early this way.
 create policy "events_public_read" on events for select
-  using (is_open = false or auth.role() = 'authenticated');
+  using (is_open = false or event_date >= current_date or auth.role() = 'authenticated');
 
 create policy "event_entries_public_read" on event_entries for select
   using (

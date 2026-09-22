@@ -17,6 +17,13 @@ export function formatDate(value) {
   return d.toLocaleDateString("it-IT", { year: "numeric", month: "short", day: "2-digit" });
 }
 
+// A Postgres `time` column round-trips through PostgREST as "HH:MM:SS" —
+// trimmed to "HH:MM" for display, since seconds are never set by the
+// <input type="time"> that produced it in the first place.
+export function formatTime(value) {
+  return value ? value.slice(0, 5) : null;
+}
+
 // A Topdeck event can be left unnamed by the admin — wherever its name would
 // be shown as a title/label, fall back to its formatted date instead.
 export function eventTitle(ev) {

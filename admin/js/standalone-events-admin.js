@@ -1,5 +1,5 @@
 import { Events } from "../../js/db.js";
-import { formatDate, statusBadge } from "../../js/ui.js";
+import { formatDate, formatTime, statusBadge } from "../../js/ui.js";
 import { renderTable, setMessage } from "./crud-ui.js";
 import { on } from "./bus.js";
 
@@ -16,6 +16,7 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
   const idField = document.getElementById("standalone-events-admin-id");
   const nameField = document.getElementById("standalone-events-admin-name");
   const dateField = document.getElementById("standalone-events-admin-date");
+  const timeField = document.getElementById("standalone-events-admin-time");
   const msgEl = document.getElementById("standalone-events-admin-message");
   const cancelBtn = document.getElementById("standalone-events-admin-cancel");
 
@@ -37,6 +38,7 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
       [
         { key: "name", label: "Nome" },
         { key: "event_date", label: "Data", render: (r) => formatDate(r.event_date) },
+        { key: "start_time", label: "Orario", render: (r) => formatTime(r.start_time) ?? "—" },
         { key: "status", label: "Stato", render: (r) => statusBadge(r.is_open) },
         {
           key: "manage",
@@ -80,6 +82,7 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
     idField.value = row.id;
     nameField.value = row.name;
     dateField.value = row.event_date ?? "";
+    timeField.value = formatTime(row.start_time) ?? "";
   }
 
   function resetForm() {
@@ -112,6 +115,7 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
     const payload = {
       name: nameField.value.trim(),
       event_date: dateField.value || null,
+      start_time: timeField.value || null,
       league_id: null,
     };
     if (!payload.name) return;

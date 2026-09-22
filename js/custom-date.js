@@ -176,11 +176,23 @@ export function enhanceDateInput(input) {
     next?.focus();
   }
 
+  // The popup always used to open downward, so a date field sitting low on
+  // a page (e.g. the last field before a form's Salva/Annulla bar, itself
+  // near the bottom of a short page) could push it partly past the
+  // viewport — flip it to open upward instead whenever there isn't enough
+  // room below but there is above, same behavior as a native <select>.
   function openPopup() {
     closeAllExcept(wrap);
     view = parseISO(input.value) ?? todayParts();
     renderGrid();
+    wrap.classList.remove("cd-open-upward");
     wrap.classList.add("is-open");
+    const wrapRect = wrap.getBoundingClientRect();
+    const popupHeight = popup.getBoundingClientRect().height;
+    const spaceBelow = window.innerHeight - wrapRect.bottom;
+    if (popupHeight > spaceBelow && wrapRect.top > popupHeight) {
+      wrap.classList.add("cd-open-upward");
+    }
     trigger.setAttribute("aria-expanded", "true");
     (grid.querySelector(".cd-day.is-selected") ?? grid.querySelector(".cd-day:not(.is-outside)"))?.focus();
   }

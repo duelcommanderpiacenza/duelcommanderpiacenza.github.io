@@ -1,15 +1,16 @@
-// Home dashboard: three independent widgets (active leagues, latest
-// events, most played commanders) — each fetches and renders on its own,
-// so one failing doesn't block the others.
+// Home dashboard: independent widgets (announcements, active leagues,
+// upcoming events, latest events, most played commanders) — each fetches
+// and renders on its own, so one failing doesn't block the others.
 
 import { Announcements, Leagues, Events, EventEntries, Matches } from "./db.js";
 import { computeLeagueSummary } from "./stats.js";
 import { computeLeaguePoints } from "./leaderboard.js";
 import { renderPieChart } from "./metagame-chart.js";
-import { escapeHtml, eventTitle, formatDate, showError } from "./ui.js";
+import { escapeHtml, eventTitle, formatDate, formatTime, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 
 const LATEST_EVENTS_COUNT = 5;
+const UPCOMING_EVENTS_COUNT = 3;
 const TOP_STANDINGS_COUNT = 3;
 const TOP_COMMANDERS_COUNT = 6;
 const TOP_COMMANDERS_WINDOW_MONTHS = 3;
@@ -86,6 +87,59 @@ async function renderAnnouncementsSection(sectionEl, contentEl) {
     console.error(err);
     sectionEl.hidden = true;
   }
+}
+
+// Same "hidden entirely when empty" treatment as the Annunci section above
+// — purely a nice-to-have widget, not critical page content. The query
+// itself already only returns events whose date hasn't passed yet (and, for
+// a still-open one, only once RLS lets it through at all — see
+// events_public_read in supabase/schema.sql).
+async function renderUpcomingSection(sectionEl, contentEl) {
+  try {
+    // listUpcoming() already returns soonest-first, across every
+    // league/standalone — only the nearest few are worth featuring here.
+    const events = (await Events.listUpcoming()).slice(0, UPCOMING_EVENTS_COUNT);
+    sectionEl.hidden = events.length === 0;
+    if (events.length === 0) return;
+    contentEl.innerHTML = `<div class="upcoming-list">
+      ${events
+        .map((e) => {
+          const { day, month } = upcomingDateParts(e.event_date);
+          // The date badge on the left already carries the date — the name
+          // falls back to a generic label instead of a formatted date (what
+          // eventTitle() would otherwise give an unnamed Topdeck event) so
+          // it's never repeated a second time here.
+          const title = e.name || (e.league ? e.league.name : "Evento");
+          return `
+        <a class="upcoming-row" href="event.html?id=${e.id}">
+          <div class="upcoming-date-badge">
+            <span class="upcoming-date-day">${day}</span>
+            <span class="upcoming-date-month">${month}</span>
+          </div>
+          <div class="upcoming-row-text">
+            <span class="upcoming-row-title">${escapeHtml(title)}</span>
+            ${e.start_time ? `<span class="upcoming-row-time">ore ${formatTime(e.start_time)}</span>` : ""}
+            ${e.league ? `<span class="upcoming-row-league">${escapeHtml(e.league.name)}</span>` : ""}
+          </div>
+        </a>`;
+        })
+        .join("")}
+    </div>`;
+  } catch (err) {
+    console.error(err);
+    sectionEl.hidden = true;
+  }
+}
+
+// A big day + 3-letter month reads as a calendar-page badge, more eye
+// catching than plain "23 ott 2026" text — the year is left off since it's
+// implied (a "Prossimi eventi" list is never showing a past one).
+function upcomingDateParts(value) {
+  const d = new Date(value);
+  return {
+    day: d.toLocaleDateString("it-IT", { day: "2-digit" }),
+    month: d.toLocaleDateString("it-IT", { month: "short" }).replace(".", "").toUpperCase(),
+  };
 }
 
 async function renderLeaguesSection(el) {
@@ -185,7 +239,7 @@ async function renderCommandersSection(el) {
   }
 }
 
-// Four independent widgets — the page isn't "ready" until all of them have
+// Five independent widgets — the page isn't "ready" until all of them have
 // settled (success or already-shown error), not just the first one.
 Promise.allSettled([
   renderAnnouncementsSection(
@@ -193,6 +247,10 @@ Promise.allSettled([
     document.getElementById("dashboard-announcements-content")
   ),
   renderLeaguesSection(document.getElementById("dashboard-leagues-content")),
+  renderUpcomingSection(
+    document.getElementById("dashboard-upcoming"),
+    document.getElementById("dashboard-upcoming-content")
+  ),
   renderEventsSection(document.getElementById("dashboard-events-content")),
   renderCommandersSection(document.getElementById("dashboard-commanders-content")),
 ]).then(hidePageLoading);

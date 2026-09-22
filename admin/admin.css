@@ -18,6 +18,16 @@ html {
   box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
 }
 
+/* body is already the shared display:flex/flex-direction:column from
+   ../styles.css — without flex-growing whichever of these two is visible,
+   short content (e.g. the Badge tab) leaves .admin-footer sitting right
+   below it instead of anchored to the viewport bottom, same as .page-main
+   already does on every public page. */
+#admin-view,
+#login-view {
+  flex: 1 0 auto;
+}
+
 .admin-shell {
   max-width: 1100px;
   margin: 0 auto;
@@ -208,6 +218,20 @@ html {
   padding: 18px;
   /* entrance-fade-up is defined once in ../styles.css and reused here. */
   animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Same stacking-context trap as elsewhere on the site (.matchups-picker-card,
+   .cd-wrap itself): .cd-wrap.is-open's own z-index:30 (../styles.css) only
+   wins comparisons *within its own stacking context* — nested inside this
+   unpositioned card, it's invisible to a comparison against the list card
+   next to it in the same .admin-panel-layout grid (e.g. #events-admin-list),
+   which otherwise paints on top of it as the later DOM sibling. Promoting the
+   card itself, but only while it actually contains an open popup, fixes that
+   without permanently sitting above the sticky admin tabs bar (z-index 20)
+   the rest of the time. */
+.admin-form-card:has(.cd-wrap.is-open) {
+  position: relative;
+  z-index: 30;
 }
 
 .admin-form-card h3 {

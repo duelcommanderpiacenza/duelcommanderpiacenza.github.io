@@ -149,6 +149,17 @@ export const Events = {
       .select("*, league:leagues(id,name,is_open,is_topdeck)")
       .order("event_date", { ascending: false, nullsFirst: false })
       .then(assertOk),
+  // The public Bacheca's "Prossimi eventi" card: soonest-first, across every
+  // league/standalone, from today onward — RLS itself already keeps a past,
+  // still-open (unpublished) event out of this, so no extra is_open filter
+  // is needed here.
+  listUpcoming: () =>
+    sb
+      .from("events")
+      .select("*, league:leagues(id,name,is_topdeck)")
+      .gte("event_date", new Date().toISOString().slice(0, 10))
+      .order("event_date", { ascending: true })
+      .then(assertOk),
   listByLeague: (leagueId) =>
     sb
       .from("events")
