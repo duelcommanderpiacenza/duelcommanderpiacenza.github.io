@@ -777,6 +777,146 @@ main {
   font-weight: 700;
 }
 
+.dashboard-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.dashboard-card-head h2 {
+  margin-bottom: 0;
+}
+
+/* Events calendar overlay ("Calendario" button on "Prossimi eventi"), js/
+   events-calendar.js. A <dialog> rather than a hand-rolled backdrop div —
+   free Escape-to-close, focus trapping, and top-layer stacking, same
+   reasoning the site already leans on native <input type="date"> before
+   js/custom-date.js reskins it. Reuses .cd-nav/.cd-weekdays/.cd-grid/.cd-day
+   from the date-picker popup for a consistent look rather than redefining
+   the same grid/button chrome twice. */
+.ecal-dialog {
+  width: min(360px, calc(100vw - 32px));
+  border: 1px solid var(--hairline);
+  border-radius: 20px;
+  padding: 18px;
+  background: #fff;
+  box-shadow: var(--shadow-card-hover);
+  color: var(--text-body);
+}
+
+.ecal-dialog::backdrop {
+  background: rgba(32, 18, 20, 0.55);
+}
+
+.ecal-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.ecal-month-label {
+  flex: 1;
+  text-align: center;
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--text-title);
+  text-transform: capitalize;
+}
+
+.ecal-close {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid var(--hairline);
+  background: #fff;
+  color: var(--brand-red-darker);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.ecal-close:hover {
+  background: #fff7f4;
+  border-color: var(--hairline-hover);
+}
+
+/* Tinted fill + bold red number, not just a dot — a marked day needs to
+   read as such while just browsing the grid, not only once clicked. The
+   dot underneath stays as a second, smaller cue once .is-selected's own
+   solid fill below overrides the tint (a selected day is no longer
+   "unvisited", so it no longer needs the same loud treatment). */
+.ecal-day.has-events {
+  position: relative;
+  background: rgba(220, 24, 28, 0.14);
+  color: var(--brand-red-deep);
+  font-weight: 800;
+}
+
+.ecal-day.has-events:hover,
+.ecal-day.has-events:focus {
+  background: rgba(220, 24, 28, 0.24);
+}
+
+.ecal-day.has-events::after {
+  content: "";
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--brand-red);
+}
+
+.ecal-day.is-selected.has-events {
+  background: var(--brand-red);
+  color: #fff;
+}
+
+.ecal-day.is-selected.has-events::after,
+.ecal-day.is-today.has-events::after {
+  background: #fff;
+}
+
+.ecal-day-panel {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--hairline);
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.ecal-day-panel-title {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-title);
+  text-transform: capitalize;
+}
+
+.ecal-day-panel-empty {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+/* A still-open event's row (rendered as a plain div, not an <a> — see
+   js/events-calendar.js) shouldn't carry the same hover affordance as a
+   clickable one. */
+.ecal-event-row-future {
+  cursor: default;
+}
+
+.ecal-event-row-future:hover .dashboard-event-name {
+  text-decoration: none;
+}
+
 .section-heading {
   display: flex;
   align-items: center;
@@ -2600,6 +2740,16 @@ img.cs-option-icon {
 
 .matchups-matrix-wrap {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 480px) {
+  /* Otherwise this sticky column alone can eat most of a phone's viewport
+     width, leaving barely a sliver of the next column peeking out — enough
+     to technically be scrollable but not to look or feel like it. */
+  .matchups-row-header {
+    max-width: 84px;
+  }
 }
 
 /* Deliberately its own class, not table.data-table — that shared rule's
@@ -2622,6 +2772,9 @@ img.cs-option-icon {
 }
 
 .matchups-row-header {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
   text-align: left;
   color: var(--text-title);
   font-weight: 800;
@@ -2909,6 +3062,7 @@ img.cs-option-icon {
 :root[data-theme="dark"] .cd-trigger,
 :root[data-theme="dark"] .cd-nav,
 :root[data-theme="dark"] .cd-footer-btn,
+:root[data-theme="dark"] .ecal-close,
 :root[data-theme="dark"] .icon-swatch,
 :root[data-theme="dark"] #badges-admin-icon-file,
 :root[data-theme="dark"] .btn-secondary,
@@ -2935,6 +3089,7 @@ img.cs-option-icon {
 :root[data-theme="dark"] .section-link:hover,
 :root[data-theme="dark"] .cd-nav:hover,
 :root[data-theme="dark"] .cd-footer-btn:hover,
+:root[data-theme="dark"] .ecal-close:hover,
 :root[data-theme="dark"] #badges-admin-icon-file:hover::file-selector-button,
 :root[data-theme="dark"] #badges-admin-icon-file:hover::-webkit-file-upload-button {
   background: rgba(255, 255, 255, 0.1);
@@ -2945,6 +3100,7 @@ img.cs-option-icon {
    solid color of their own to stay legible regardless of what's underneath. */
 :root[data-theme="dark"] .cs-menu,
 :root[data-theme="dark"] .cd-popup,
+:root[data-theme="dark"] .ecal-dialog,
 :root[data-theme="dark"] .matchups-dropdown {
   background: #241a1d;
 }
