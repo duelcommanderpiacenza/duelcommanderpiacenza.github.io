@@ -116,7 +116,7 @@ async function renderUpcomingSection(sectionEl, contentEl) {
           // it's never repeated a second time here.
           const title = e.name || (e.league ? e.league.name : "Evento");
           return `
-        <a class="upcoming-row" href="event.html?id=${e.id}">
+        <div class="upcoming-row">
           <div class="upcoming-date-badge">
             <span class="upcoming-date-day">${day}</span>
             <span class="upcoming-date-month">${month}</span>
@@ -126,7 +126,7 @@ async function renderUpcomingSection(sectionEl, contentEl) {
             ${e.start_time ? `<span class="upcoming-row-time">ore ${formatTime(e.start_time)}</span>` : ""}
             ${e.league ? `<span class="upcoming-row-league">${escapeHtml(e.league.name)}</span>` : ""}
           </div>
-        </a>`;
+        </div>`;
         })
         .join("")}
     </div>`;
