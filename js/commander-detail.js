@@ -2,7 +2,15 @@ import { Commanders, EventEntries, Matches } from "./db.js";
 import { matchRoundOutcome, isBye } from "./leaderboard.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { tallyOutcome, tallyGames, renderWinrateTiles } from "./winrate.js";
-import { escapeHtml, playerLabel, commanderLabel, commanderPairLabel, colorIdentityPips, eventTitle, showError } from "./ui.js";
+import {
+  escapeHtml,
+  playerLabel,
+  commanderPairLabel,
+  colorIdentityPips,
+  eventTitle,
+  formatDate,
+  showError,
+} from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 
 function getId() {
@@ -53,13 +61,6 @@ async function init() {
     const playedEntryByKey = new Map(playedEntries.map((e) => [`${e.event_id}_${e.player_id}`, e]));
     const eventIds = [...new Set(playedEntries.map((e) => e.event_id))];
 
-    // The other commander in this commander's own entry (its partner, if it
-    // was the primary, or the primary, if it was the partner) — null if solo.
-    function pairedWith(entry) {
-      if (!entry) return null;
-      return entry.commander?.id === id ? entry.partner_commander ?? null : entry.commander ?? null;
-    }
-
     const [allEntries, matches] = await Promise.all([
       EventEntries.listByEvents(eventIds),
       Matches.listByEvents(eventIds),
@@ -71,10 +72,6 @@ async function init() {
       if (e.player) playersMap.set(e.player.id, e.player);
     }
     const playerList = Array.from(playersMap.values()).sort((a, b) => a.name.localeCompare(b.name));
-    playersEl.innerHTML = `<div class="data-table-wrap"><table class="data-table">
-      <thead><tr><th>Giocatore</th></tr></thead>
-      <tbody>${playerList.map((p) => `<tr><td>${playerLabel(p)}</td></tr>`).join("")}</tbody>
-    </table></div>`;
 
     // One row per (match, side) where that side piloted this commander — a
     // mirror match (both sides on this commander) legitimately yields two rows.
@@ -87,7 +84,6 @@ async function init() {
         rows.push({
           event: m.event,
           self: m.player1,
-          pairedWith: pairedWith(selfEntry1),
           opponent: m.player2,
           isBye: isBye(m),
           outcome: outcomeFor(m, true),
@@ -106,7 +102,6 @@ async function init() {
         rows.push({
           event: m.event,
           self: m.player2,
-          pairedWith: pairedWith(selfEntry2),
           opponent: m.player1,
           outcome: outcomeFor(m, false),
           scoreLabel: selfScoreLabel(m, false),
@@ -118,11 +113,27 @@ async function init() {
       }
     }
 
+    // Most recent event date among a player's own rows above — i.e. the
+    // last time they actually played a match on this commander, not just
+    // the last event they were entered into with it.
+    const lastPlayedByPlayer = new Map();
+    for (const r of rows) {
+      if (!r.self || !r.event?.event_date) continue;
+      const current = lastPlayedByPlayer.get(r.self.id);
+      if (!current || r.event.event_date > current) lastPlayedByPlayer.set(r.self.id, r.event.event_date);
+    }
+    playersEl.innerHTML = `<div class="data-table-wrap"><table class="data-table">
+      <thead><tr><th>Giocatore</th><th>Ultima partita</th></tr></thead>
+      <tbody>${playerList
+        .map((p) => `<tr><td>${playerLabel(p)}</td><td>${formatDate(lastPlayedByPlayer.get(p.id))}</td></tr>`)
+        .join("")}</tbody>
+    </table></div>`;
+
     matchesEl.innerHTML =
       rows.length === 0
         ? '<p class="page-empty">Nessuna partita registrata.</p>'
         : `<div class="data-table-wrap"><table class="data-table">
-            <thead><tr><th>Evento</th><th>Giocatore</th><th>Commander</th><th>Avversario</th><th>Commander avversario</th><th>Risultato</th></tr></thead>
+            <thead><tr><th>Evento</th><th>Giocatore</th><th>Avversario</th><th>Commander avversario</th><th>Risultato</th></tr></thead>
             <tbody>
               ${rows
                 .map(
@@ -130,7 +141,6 @@ async function init() {
                 <tr>
                   <td>${r.event ? `<a href="event.html?id=${r.event.id}">${escapeHtml(eventTitle(r.event))}</a>` : "—"}</td>
                   <td>${playerLabel(r.self)}</td>
-                  <td>${commanderLabel(r.pairedWith)}</td>
                   <td>${r.isBye ? "Bye" : playerLabel(r.opponent)}</td>
                   <td>${r.isBye ? "—" : commanderPairLabel(r.oppCommander, r.oppPartner)}</td>
                   <td>${r.scoreLabel}</td>
