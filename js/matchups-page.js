@@ -176,7 +176,7 @@ async function init() {
                 const title = `${cell.wins}-${cell.losses} (${cell.total} totali)${
                   cell.draws > 0 ? `, ${cell.draws} pareggio${cell.draws === 1 ? "" : "i"} escluso${cell.draws === 1 ? "" : "i"}` : ""
                 }`;
-                return `<td class="matchups-cell" style="background:${heatColor(pct)};" title="${escapeHtml(title)}">${pct.toFixed(0)}%</td>`;
+                return `<td class="matchups-cell" style="background:${heatColor(pct)};" title="${escapeHtml(title)}">${pct.toFixed(0)}% <span class="matchups-cell-count">(${cell.total})</span></td>`;
               })
               .join("")}
           </tr>`

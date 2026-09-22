@@ -2664,6 +2664,12 @@ img.cs-option-icon {
   font-weight: 400;
 }
 
+.matchups-cell-count {
+  font-weight: 400;
+  font-size: 0.75em;
+  opacity: 0.75;
+}
+
 /* Metagame share chart (ring + side legend), js/metagame-chart.js. A single
    mask cuts the hole directly out of the conic-gradient itself — it's a ring
    from the very first frame, not a pie with a disc laid on top of it — and
