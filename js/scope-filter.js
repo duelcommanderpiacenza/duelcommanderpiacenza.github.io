@@ -26,12 +26,18 @@ export async function initScopeFilter({ leagueSelect, eventSelect, onChange }) {
     eventSelect.innerHTML =
       '<option value="">Tutti gli eventi</option>' +
       scoped
-        .map(
-          (e) =>
-            `<option value="${e.id}">${escapeHtml(eventTitle(e))}${
-              e.league ? ` — ${escapeHtml(e.league.name)}` : ""
-            }</option>`
-        )
+        .map((e) => {
+          const name = eventTitle(e);
+          // data-label/data-sublabel are what js/custom-select.js's popup
+          // actually renders (event name bold, league name on its own
+          // smaller/muted line below — same convention as e.g. the
+          // homepage's own event rows) — the option's own text content
+          // stays the plain combined string either way, for the native
+          // <select> (no-JS fallback, screen readers).
+          return `<option value="${e.id}" data-label="${escapeHtml(name)}"${
+            e.league ? ` data-sublabel="${escapeHtml(e.league.name)}"` : ""
+          }>${escapeHtml(name)}${e.league ? ` — ${escapeHtml(e.league.name)}` : ""}</option>`;
+        })
         .join("");
   }
 

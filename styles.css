@@ -2447,7 +2447,12 @@ frame in a way that wasn't worth chasing further). */
   z-index: 30;
   top: calc(100% + 6px);
   left: 0;
-  right: 0;
+  /* At least as wide as the trigger, but free to grow beyond it (capped)
+     for options with a long two-line label (see .cs-option-label) that
+     wouldn't otherwise fit inside a narrow field's own width. */
+  min-width: 100%;
+  width: max-content;
+  max-width: min(360px, 90vw);
   max-height: 260px;
   overflow-y: auto;
   border: 1px solid var(--hairline);
@@ -2501,6 +2506,35 @@ frame in a way that wasn't worth chasing further). */
   width: 1.1em;
   height: 1.1em;
   flex-shrink: 0;
+}
+
+/* An option can instead carry a data-label/data-sublabel pair (e.g. the
+   event filter's own "event name" + "league name") for a two-line row —
+   same "bold name, muted smaller line below" convention as event rows
+   elsewhere on the site (js/home.js's .dashboard-event-name/-meta). */
+.cs-option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cs-option-label,
+.cs-option-sublabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cs-option-label {
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.cs-option-sublabel {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
 img.cs-option-icon {
@@ -2953,10 +2987,14 @@ img.cs-option-icon {
 .filter-bar {
   display: flex;
   flex-wrap: wrap;
-  /* Fields with a short control (e.g. the color-swatch row, shorter than a
-     select/input box) line up along the bottom instead of drifting toward
-     the top of the row. */
-  align-items: flex-end;
+  /* Stretches every .field to the row's tallest sibling (the select/date
+     fields' own height) instead of each sizing to its own content — a
+     field with a shorter control (the color-swatch row, see
+     .filter-bar-row below) still gets that same overall height, so its
+     label lines up with every other field's label, and its own control
+     can center itself within the leftover space below the label rather
+     than being pinned to the top or bottom of a mismatched box. */
+  align-items: stretch;
   gap: 14px;
   margin-bottom: 20px;
 }
@@ -2966,6 +3004,24 @@ img.cs-option-icon {
   min-width: 200px;
 }
 
+/* A fixed (not min-) width, but only for fields wrapping a plain
+   select/date/search control — on pages with two stacked .filter-bar rows
+   (Comandanti, Giocatori) this keeps e.g. "Lega" (row 1) and "Cerca"
+   (row 2) the same width as each other so the two rows line up instead of
+   each field just sizing to its own content. A <select>/date <input> is
+   itself moved inside a .cs-wrap/.cd-wrap by custom-select.js/
+   custom-date.js, so those wrappers (not the now-nested control) are what
+   .field actually has as a direct child once enhanced — matched here
+   alongside a plain <input> (e.g. the search box, never wrapped) so this
+   leaves the color-identity field (whose direct child is a .filter-bar-row
+   holding the swatches, not any of these) at its own natural width instead
+   of squeezing it. */
+.filter-bar .field:has(> .cs-wrap),
+.filter-bar .field:has(> .cd-wrap),
+.filter-bar .field:has(> input) {
+  width: 220px;
+}
+
 /* Color-identity filter: the swatches and the "solo identità esatta"
    toggle sit on the same line, checkbox on the right, both bottom-aligned
    with each other. */
@@ -2973,6 +3029,11 @@ img.cs-option-icon {
   display: flex;
   align-items: center;
   gap: 14px;
+  /* Fills the leftover height .filter-bar's stretch (above) gives this
+     field beyond the swatch row's own natural height, so align-items:
+     center here centers the swatches against the taller select/date boxes
+     next to it instead of leaving them pinned to the top. */
+  flex: 1;
 }
 
 /* Matchups page: commander picker (search + capped checkbox list) and the

@@ -98,9 +98,34 @@ function rebuildMenu(wrap, select) {
     row.tabIndex = -1;
     row.dataset.value = opt.value;
     appendOptionIcon(row, opt);
-    const label = document.createElement("span");
-    label.textContent = opt.textContent;
-    row.appendChild(label);
+    // An option can carry a data-label/data-sublabel pair (e.g. the event
+    // filter's "event name" + "league name") for a two-line row instead of
+    // the plain single-line text — opt.textContent itself is untouched
+    // either way, so the native <select> (no-JS fallback, screen readers)
+    // still reads the full combined string exactly as before.
+    if (opt.dataset.label) {
+      // .cs-option is itself a flex row (for icon + text side by side on
+      // selects that use one) — label/sublabel need their own column-flex
+      // wrapper to actually stack, rather than sitting as two more items
+      // in that same row.
+      const textWrap = document.createElement("span");
+      textWrap.className = "cs-option-text";
+      const label = document.createElement("span");
+      label.className = "cs-option-label";
+      label.textContent = opt.dataset.label;
+      textWrap.appendChild(label);
+      if (opt.dataset.sublabel) {
+        const sublabel = document.createElement("span");
+        sublabel.className = "cs-option-sublabel";
+        sublabel.textContent = opt.dataset.sublabel;
+        textWrap.appendChild(sublabel);
+      }
+      row.appendChild(textWrap);
+    } else {
+      const label = document.createElement("span");
+      label.textContent = opt.textContent;
+      row.appendChild(label);
+    }
     row.addEventListener("click", () => {
       selectValue(select, opt.value);
       closeMenu(wrap);
