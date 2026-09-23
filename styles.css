@@ -1841,20 +1841,39 @@ footer {
    can't overflow it. min-height: 0 overrides the grid item's default
    min-height: auto, which otherwise floors the row at the child's own
    min-content height (a single line of "Nessun evento..." text) even at
-   grid-template-rows: 0fr. margin: 0 clears the empty-state <p>'s own
-   default browser margin, and padding: 0 clears .page-empty's own built-in
-   padding (styles.css, "padding: 6px 0") — both sit/live on this exact
-   element, so neither is optional here: unlike content (which min-height:
-   0 lets actually shrink), an element's own margin or padding is never
-   reduced by its own overflow: hidden, regardless of how small the grid
-   row containing it is squeezed to. Missing either one alone was already
-   enough to keep a collapsed empty league's card sitting visibly taller
-   than the rest, with a sliver of that text still peeking through. */
-.league-group-body > * {
+   grid-template-rows: 0fr. This lives on its own wrapper (js/events-page.js
+   wraps the actual content in .league-group-body-clip) so any margin or
+   padding the actual content ends up needing can still be fully clipped
+   away by this wrapper's own overflow: hidden when collapsed — an
+   element's margin/padding is never reduced by its *own* overflow, only
+   by an ancestor's. */
+.league-group-body-clip {
   overflow: hidden;
   min-height: 0;
+}
+
+/* margin: 0 clears the empty-state <p>'s own default browser margin, and
+   padding: 0 clears .page-empty's own built-in padding (styles.css,
+   "padding: 6px 0") — both sit/live on this exact element, so neither is
+   optional here: unlike content (which min-height: 0, above, lets
+   actually shrink), an element's own margin or padding is never reduced
+   by its own overflow: hidden, regardless of how small the grid row
+   containing it is squeezed to. */
+.league-group-body-clip > * {
   margin: 0;
   padding: 0;
+}
+
+/* .entity-card's own box-shadow, nested here inside a card that already
+   has its own border/shadow, has nowhere good to go: giving it room to
+   render in full (a bottom padding buffer) just made it read as a heavy
+   pink halo around the inner card instead of a subtle lift, and leaving
+   it as-is clips it unevenly at the corners. Simplest fix is also the
+   more correct one — a card-within-a-card doesn't need its own drop
+   shadow when it's already visually contained by the outer one. */
+.league-group-body-clip .entity-card,
+.league-group-body-clip .entity-card:hover {
+  box-shadow: none;
 }
 
 /* The league's own name is a real link to its detail page — clicks on it

@@ -61,7 +61,9 @@ function renderGroup({ id, name, link, badge, events }) {
         <span class="league-group-toggle-icon" aria-hidden="true"></span>
       </div>
       <div class="league-group-body">
-        ${count === 0 ? '<p class="page-empty">Nessun evento pubblicato ancora.</p>' : renderEventGrid(events)}
+        <div class="league-group-body-clip">
+          ${count === 0 ? '<p class="page-empty">Nessun evento pubblicato ancora.</p>' : renderEventGrid(events)}
+        </div>
       </div>
     </section>`;
 }
