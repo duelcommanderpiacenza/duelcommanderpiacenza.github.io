@@ -20,9 +20,9 @@ function describeError(err, fallback) {
  * A row can also be a "Topdeck" series — same shape, just no points
  * leaderboard and never featured on the homepage (see is_topdeck in db.js).
  */
-// Same rule as the public Leghe page (js/leagues-page.js): open first, then
-// whichever has the most recently dated associated event, newest first —
-// so the admin list matches what visitors actually see.
+// Same rule as the public Leghe & Eventi page (js/events-page.js): open
+// first, then whichever has the most recently dated associated event,
+// newest first — so the admin list matches what visitors actually see.
 function compareLeagues(a, b) {
   if (a.is_open !== b.is_open) return a.is_open ? -1 : 1;
   if (a.is_open && b.is_open && a.is_topdeck !== b.is_topdeck) return a.is_topdeck ? 1 : -1;

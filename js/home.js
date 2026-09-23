@@ -163,7 +163,7 @@ async function renderLeaguesSection(el) {
         <div class="dashboard-league-chip-list">
           ${recent.map((l) => `<a class="dashboard-league-chip" href="league.html?id=${l.id}">${escapeHtml(l.name)}</a>`).join("")}
         </div>
-        <a class="section-link" style="margin-top:16px;" href="leagues.html">Tutte le leghe &rarr;</a>`;
+        <a class="section-link" style="margin-top:16px;" href="events.html">Tutte le leghe &rarr;</a>`;
       return;
     }
 
