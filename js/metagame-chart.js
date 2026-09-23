@@ -44,3 +44,39 @@ export function renderPieChart(rows, emptyMessage, title) {
     </div>
   `;
 }
+
+/**
+ * One horizontal bar per row, each independently 0-100 (a real winrate, not
+ * a share that has to sum to 100 like the pie chart above) — a null value
+ * (no games played yet in the current scope) shows as "—" with an empty
+ * track instead of a misleading 0% bar.
+ * @param {Array<{label: string, value: number|null, color: string}>} rows
+ * @param {string} emptyMessage
+ * @param {string} [title] - shown inside the box itself, above the bars.
+ */
+export function renderBarChart(rows, emptyMessage, title) {
+  const titleHtml = title ? `<h2 class="pie-chart-title">${escapeHtml(title)}</h2>` : "";
+  if (rows.length === 0) {
+    return `<div class="pie-chart-wrap">${titleHtml}<p class="page-empty">${emptyMessage}</p></div>`;
+  }
+
+  const bars = rows
+    .map(
+      (r, i) => `
+    <div class="bar-chart-row" style="animation-delay:${i * 60}ms;">
+      <span class="bar-chart-label">${escapeHtml(r.label)}</span>
+      <div class="bar-chart-track">
+        ${r.value === null ? "" : `<div class="bar-chart-fill" style="width:${Math.max(r.value, 0)}%; background:${r.color};"></div>`}
+      </div>
+      <strong class="bar-chart-pct">${r.value === null ? "—" : `${r.value.toFixed(1)}%`}</strong>
+    </div>`
+    )
+    .join("");
+
+  return `
+    <div class="pie-chart-wrap">
+      ${titleHtml}
+      <div class="bar-chart-body">${bars}</div>
+    </div>
+  `;
+}

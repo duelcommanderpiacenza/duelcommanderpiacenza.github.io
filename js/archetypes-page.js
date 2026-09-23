@@ -1,7 +1,7 @@
 import { Events, EventEntries, Matches } from "./db.js";
 import { computeGroupedStats } from "./stats.js";
 import { initScopeFilter } from "./scope-filter.js";
-import { renderPieChart } from "./metagame-chart.js";
+import { renderPieChart, renderBarChart } from "./metagame-chart.js";
 import { archetypeBadge, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 
@@ -90,17 +90,18 @@ async function init() {
         "Metashare"
       );
 
-      // Same donut/colors as the metashare chart, just sliced by each
-      // archetype's share of total wins instead of total entries — shows
-      // which archetype is actually winning the most, not just the most
-      // played.
-      const totalWins = rows.reduce((sum, r) => sum + r.wins, 0);
-      const winsChartHtml = renderPieChart(
-        rows.map((r) => ({
-          label: r.archetype,
-          share: totalWins > 0 ? (r.wins / totalWins) * 100 : 0,
-          color: ARCHETYPE_COLORS[r.archetype],
-        })),
+      // Same colors as the metashare chart, one bar per archetype showing
+      // its own actual winrate — not a share of total wins, so a bar's
+      // length is independent of every other bar's. Sorted by that winrate
+      // itself, not reusing the metashare chart's by-entries order.
+      const winsChartHtml = renderBarChart(
+        rows
+          .map((r) => ({
+            label: r.archetype,
+            value: r.winRate,
+            color: ARCHETYPE_COLORS[r.archetype],
+          }))
+          .sort((a, b) => (b.value ?? -1) - (a.value ?? -1)),
         "Nessun dato per il grafico.",
         "Winrate"
       );

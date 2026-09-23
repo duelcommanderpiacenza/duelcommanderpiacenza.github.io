@@ -2864,6 +2864,52 @@ img.cs-option-icon {
   flex-wrap: wrap;
 }
 
+/* Winrate bar chart (js/metagame-chart.js's renderBarChart) — shares the
+   pie chart's own card wrapper/title, just a different body: one row per
+   entry, each independently 0-100% rather than a slice of a 100% whole. */
+.bar-chart-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bar-chart-row {
+  display: grid;
+  grid-template-columns: 108px 1fr 48px;
+  align-items: center;
+  gap: 10px;
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.bar-chart-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-title);
+}
+
+.bar-chart-track {
+  position: relative;
+  height: 14px;
+  border-radius: var(--radius-pill);
+  background: var(--hairline-hover);
+  overflow: hidden;
+}
+
+.bar-chart-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+}
+
+.bar-chart-pct {
+  text-align: right;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--text-title);
+}
+
 /* Side-by-side charts (metagame share + wins share) on Comandanti and
    Archetipi. Single column once there isn't room for both ring+legend
    pairs to sit comfortably next to each other. */

@@ -8,6 +8,17 @@ function assertOk({ data, error }) {
   return data;
 }
 
+// Local calendar date, not `new Date().toISOString()` (UTC-based) — for a
+// visitor east of UTC (e.g. Italy), toISOString() still reports yesterday's
+// date for the first couple hours after local midnight, which let a
+// same-day-or-earlier event keep passing an `event_date >= today` filter
+// well past its own date. Same reasoning js/custom-date.js already avoids
+// UTC-based date math for.
+function todayLocalIso() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 // event_entries has two FKs to commanders (commander_id, partner_commander_id
 // — an optional partner/background pairing), so PostgREST needs the
 // constraint name on both embeds to know which is which.
@@ -150,14 +161,15 @@ export const Events = {
       .order("event_date", { ascending: false, nullsFirst: false })
       .then(assertOk),
   // The public Bacheca's "Prossimi eventi" card: soonest-first, across every
-  // league/standalone, from today onward — RLS itself already keeps a past,
-  // still-open (unpublished) event out of this, so no extra is_open filter
-  // is needed here.
+  // league/standalone, from today onward — only still-open events (a closed
+  // one has already been played, however recent its date, so it belongs in
+  // "Ultimi eventi" instead, not here).
   listUpcoming: () =>
     sb
       .from("events")
       .select("*, league:leagues(id,name,is_topdeck)")
-      .gte("event_date", new Date().toISOString().slice(0, 10))
+      .eq("is_open", true)
+      .gte("event_date", todayLocalIso())
       .order("event_date", { ascending: true })
       .then(assertOk),
   listByLeague: (leagueId) =>

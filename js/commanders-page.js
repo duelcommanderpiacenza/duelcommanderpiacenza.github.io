@@ -1,7 +1,7 @@
 import { Commanders, Events, EventEntries, Matches } from "./db.js";
 import { computeGroupedStats } from "./stats.js";
 import { initScopeFilter } from "./scope-filter.js";
-import { renderPieChart } from "./metagame-chart.js";
+import { renderPieChart, renderBarChart } from "./metagame-chart.js";
 import { commanderPairLabel, colorIdentityPips, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 
@@ -191,6 +191,8 @@ async function init() {
             wins: s.wins,
             draws: s.draws,
             losses: s.losses,
+            gameWins: s.gameWins,
+            gameTotal: s.gameTotal,
             winRate: s.winRate,
           };
         })
@@ -210,28 +212,32 @@ async function init() {
       chartRows.sort((a, b) => b.share - a.share);
       if (otherShare > 0) chartRows.push({ label: "Altri", share: otherShare, color: OTHER_COLOR });
 
-      // Same donut, same colors per commander as the metashare chart above
-      // (so a commander reads as the same color in both) — just sliced by
-      // each commander's share of total wins instead of total entries, to
-      // show who's actually winning the most rather than who's just played
-      // the most.
-      const totalWins = lastRows.reduce((sum, r) => sum + r.wins, 0);
+      // Same top-6 commanders/colors as the metashare chart above, one bar
+      // per entry — but each bar is that commander's own winrate (0-100,
+      // independent of every other bar), not a share of the group's total
+      // wins, so it actually answers "how good is this commander", not
+      // "who's racked up the most wins by playing the most". An aggregate
+      // "Altri" bar doesn't mean anything for a winrate (unlike a metashare
+      // %, which is meaningfully additive), so the 7th slot instead goes to
+      // whichever single non-top-6 commander actually has the best winrate.
       const winsChartRows = [];
-      let otherWinsShare = 0;
+      const others = [];
       for (const r of lastRows) {
-        if (r.wins === 0) continue;
-        const share = totalWins > 0 ? (r.wins / totalWins) * 100 : 0;
         const color = colorByCommanderId.get(r.commander.id);
-        if (color) winsChartRows.push({ label: r.name, share, color });
-        else otherWinsShare += share;
+        if (color) winsChartRows.push({ label: r.name, value: r.winRate, color });
+        else others.push(r);
       }
-      winsChartRows.sort((a, b) => b.share - a.share);
-      if (otherWinsShare > 0) winsChartRows.push({ label: "Altri", share: otherWinsShare, color: OTHER_COLOR });
+      const bestOther = others.filter((r) => r.winRate !== null).sort((a, b) => b.winRate - a.winRate)[0];
+      if (bestOther) winsChartRows.push({ label: bestOther.name, value: bestOther.winRate, color: OTHER_COLOR });
+      // Sorted last, after every entry (including bestOther above) is in
+      // place — sorting any earlier would leave that final entry stuck at
+      // the end regardless of where its own value actually ranks.
+      winsChartRows.sort((a, b) => (b.value ?? -1) - (a.value ?? -1));
 
       lastChartHtml = `
         <div class="chart-grid">
           ${renderPieChart(chartRows, "Nessun dato per il grafico.", "Metashare")}
-          ${renderPieChart(winsChartRows, "Nessun dato per il grafico.", "Winrate")}
+          ${renderBarChart(winsChartRows, "Nessun dato per il grafico.", "Winrate")}
         </div>`;
       chartEl.innerHTML = lastChartHtml;
       renderTable();
