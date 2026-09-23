@@ -235,16 +235,6 @@ a:hover {
   transition: background 180ms ease, border-color 180ms ease, color 180ms ease;
 }
 
-/* js/nav-dropdown.js always inserts this button regardless of viewport
-   width — hidden here by default (desktop/tablet keep the plain row) and
-   only switched to display: flex inside the @media (max-width: 640px)
-   block below, where it replaces that row. Without this base rule it would
-   render with unstyled browser-default button chrome above the nav on
-   every screen size, not just phones. */
-.nav-dropdown-trigger {
-  display: none;
-}
-
 .nav-link:hover {
   background: #fff7f4;
   border-color: var(--hairline);
@@ -273,158 +263,6 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
   background: var(--brand-red);
   color: #fff;
   border-color: transparent;
-}
-
-/* Phones only: js/nav-dropdown.js collapses the 8-tab row behind a single
-   "current section ▾" trigger — the plain .nav-link list underneath is
-   untouched (still real, crawlable, working-without-JS links). Hidden by
-   `html.nav-mobile` (see the inline head script, same pattern as the
-   dark/light theme flash-prevention script right above it in every page)
-   rather than waiting on a class the deferred module script adds later —
-   that gap was long enough for the plain, full-width nav to visibly flash
-   on screen before collapsing on every navigation. `html.nav-mobile` is
-   only ever set by inline JS actually running, so true no-JS still gets
-   the plain, always-visible, working list instead of a hidden/broken nav. */
-@media (max-width: 640px) {
-  /* Detached from the header entirely now — floats centered near the
-     bottom of the viewport instead, so the dropdown panel opens *upward*
-     from it (there's rarely room below a bottom-docked element) and never
-     needs the runtime "flip if there's no room" measurement js/custom-
-     date.js's popup uses, since there's never room below here. */
-  html.nav-mobile .site-nav {
-    position: fixed;
-    top: auto;
-    bottom: 16px;
-    left: 0;
-    right: 0;
-    background: none;
-    backdrop-filter: none;
-    border-bottom: none;
-    box-shadow: none;
-    padding: 0;
-  }
-
-  html.nav-mobile .site-nav-inner {
-    display: none;
-    position: absolute;
-    z-index: 30;
-    bottom: calc(100% + 8px);
-    top: auto;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 200px;
-    max-width: calc(100vw - 32px);
-    flex-direction: column;
-    flex-wrap: nowrap;
-    /* Overrides the @media (max-width: 900px) block's own overflow-x: auto
-       above — still in effect at this width too, and would otherwise turn
-       the .nav-link width overflow below into a visible horizontal
-       scrollbar instead of just not happening. */
-    overflow-x: hidden;
-    border: 1px solid var(--hairline);
-    border-radius: 14px;
-    /* A soft red tint rather than the plain white .cs-menu/.cd-popup use
-       elsewhere — the trigger below is solid brand red, so the panel it
-       opens from reads as the same "family" at a lower intensity, not an
-       unrelated plain-white popup. */
-    background: #fdecec;
-    box-shadow: var(--shadow-card-hover);
-    padding: 6px;
-  }
-
-  html.nav-mobile .site-nav.is-open .site-nav-inner {
-    display: flex;
-    /* Not the shared cs-menu-in keyframe — its `transform: none` end state
-       would wipe out the translateX(-50%) centering above once the
-       animation finishes, leaving the panel's left edge (not its center)
-       sitting at the pill's horizontal center. */
-    animation: nav-dropdown-menu-in 140ms ease both;
-  }
-
-  @keyframes nav-dropdown-menu-in {
-    from {
-      opacity: 0;
-      transform: translateX(-50%) translateY(4px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(-50%);
-    }
-  }
-
-  html.nav-mobile .nav-link {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    /* Same ~44-46px touch target as the trigger pill below, not the
-       tighter desktop pill padding .nav-link normally gets. */
-    min-height: 46px;
-    padding: 12px 16px;
-    box-sizing: border-box;
-  }
-
-  .nav-dropdown-trigger {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    width: 200px;
-    margin: 0 auto;
-    /* Comfortably clears the ~44px min touch-target size guidelines
-       recommend, rather than whatever height the padding+line-height
-       happens to add up to. */
-    min-height: 46px;
-    font: inherit;
-    font-size: 1rem;
-    padding: 12px 16px;
-    border-radius: var(--radius-pill);
-    border: none;
-    background: var(--brand-red);
-    color: #fff;
-    font-weight: 700;
-    cursor: pointer;
-    box-shadow: var(--shadow-card-hover);
-  }
-
-  .nav-dropdown-trigger:hover {
-    background: var(--brand-red-deep-2);
-  }
-
-  /* Points up at rest — the panel it opens always appears above the pill,
-     never below — and rotates to point down once open, same "flip to
-     signal toggle state" idea as the downward-opening dropdowns elsewhere,
-     just starting from the opposite resting direction. */
-  .nav-dropdown-caret {
-    flex-shrink: 0;
-    width: 0;
-    height: 0;
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-    border-bottom: 6px solid #fff;
-    transition: transform 180ms ease;
-  }
-
-  /* .pwa-install-banner is also position: fixed, bottom: 16px, nearly
-     full-width — without this it would sit exactly on top of the pill
-     above instead of stacking above it. */
-  .pwa-install-banner {
-    bottom: 78px;
-  }
-
-  /* Reserves space so the footer (copyright, theme toggle) never ends up
-     sitting directly behind the now-fixed pill once scrolled to the very
-     bottom of a page — added to the footer's own bottom padding rather
-     than body's, so that reserved strip is filled with the footer's own
-     grey background instead of the page's plain (much lighter) one,
-     which otherwise reads as an odd white seam right above the pill. */
-  html.nav-mobile footer {
-    padding-bottom: calc(18px + 78px);
-  }
-
-  .site-nav.is-open .nav-dropdown-caret {
-    transform: rotate(180deg);
-  }
 }
 
 @media (max-width: 480px) {
@@ -3320,13 +3158,6 @@ img.cs-option-icon {
 /* Not a translucent tint like the rules above — these popups can float over
    arbitrary page content (tables, other cards) behind them, so they need a
    solid color of their own to stay legible regardless of what's underneath. */
-/* Its own slightly red-tinted dark shade, not the plain neutral one below
-   — same "less intense red, same family as the trigger" reasoning as its
-   light-mode #fdecec background. */
-html[data-theme="dark"].nav-mobile .site-nav-inner {
-  background: #2c1719;
-}
-
 :root[data-theme="dark"] .cs-menu,
 :root[data-theme="dark"] .cd-popup,
 :root[data-theme="dark"] .ecal-dialog,
@@ -3482,12 +3313,6 @@ html[data-theme="dark"].nav-mobile .site-nav-inner {
     right: 10px;
     bottom: 10px;
     padding: 12px 14px;
-  }
-
-  /* Otherwise this re-applies the plain bottom: 10px above, right back
-     underneath the nav pill it was already lifted clear of at 640px. */
-  html.nav-mobile .pwa-install-banner {
-    bottom: 78px;
   }
 }
 
