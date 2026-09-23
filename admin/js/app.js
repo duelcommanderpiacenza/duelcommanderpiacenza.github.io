@@ -14,6 +14,7 @@ import { initStandaloneEventsAdmin } from "./standalone-events-admin.js";
 import { initAnnouncementsAdmin } from "./announcements-admin.js";
 import { initEntriesAdmin } from "./entries-admin.js";
 import { initMatchesAdmin } from "./matches-admin.js";
+import { initAdminNavDropdown } from "./admin-nav-dropdown.js";
 
 const loginView = document.getElementById("login-view");
 const adminView = document.getElementById("admin-view");
@@ -246,3 +247,4 @@ getSession().then((session) => {
 setupThemeToggle();
 enhanceSelects();
 enhanceDateInputs();
+initAdminNavDropdown();

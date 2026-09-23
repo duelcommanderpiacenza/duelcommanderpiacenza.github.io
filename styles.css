@@ -41,6 +41,17 @@
   --accent-midrange: #0f8b8d;
 }
 
+/* Suppresses the browser's default blue-ish tap-highlight flash on mobile
+   (WebKit/Chrome on touch devices briefly overlay a translucent color on
+   whatever you tapped) — a non-standard, touch-only property with no
+   effect at all on desktop, since there's no tap highlight to suppress
+   there in the first place. Every element already gets its own deliberate
+   :hover/:active feedback, so this flash was only ever redundant noise on
+   top of that, not a replacement for it. */
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
 body {
   margin: 0;
   min-height: 100vh;

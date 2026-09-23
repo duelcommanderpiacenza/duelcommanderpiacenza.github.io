@@ -164,6 +164,144 @@ html {
   border-color: var(--brand-red);
 }
 
+/* Public-site nav's own pill (js/nav-dropdown.js, styles.css) recolored
+   black instead of brand red — a plain visual cue that this is the admin
+   area, not the public site, at a glance even before reading anything.
+   Structurally identical: same real-touch-device gating, same synchronous
+   html.nav-mobile class (see the inline head script above), same
+   self-healing fallback (admin-nav-dropdown.js), same upward-opening
+   dropdown panel. */
+.admin-nav-trigger {
+  display: none;
+}
+
+@media (max-width: 640px) and (pointer: coarse) and (hover: none) {
+  html.nav-mobile .admin-tabs {
+    position: fixed;
+    top: auto;
+    bottom: 16px;
+    left: 0;
+    right: 0;
+    background: none;
+    backdrop-filter: none;
+    border-bottom: none;
+    box-shadow: none;
+    padding: 0;
+  }
+
+  html.nav-mobile .admin-tabs-inner {
+    display: none;
+    position: absolute;
+    z-index: 30;
+    bottom: calc(100% + 8px);
+    top: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 260px;
+    max-width: calc(100vw - 32px);
+    flex-direction: column;
+    flex-wrap: nowrap;
+    overflow-x: hidden;
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
+    /* Neutral gray, not the public site's red tint — same "less intense
+       version of the trigger's own color" idea, just black's version. */
+    background: #f0f0f0;
+    box-shadow: var(--shadow-card-hover);
+    padding: 6px;
+  }
+
+  html.nav-mobile .admin-tabs.is-open .admin-tabs-inner {
+    display: flex;
+    /* Not a shared/reused keyframe — see js/nav-dropdown.js's own note on
+       why this needs its own animation: a generic one ending in
+       `transform: none` would wipe out the translateX(-50%) centering
+       above once it finishes. */
+    animation: admin-nav-panel-in 140ms ease both;
+  }
+
+  @keyframes admin-nav-panel-in {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%);
+    }
+  }
+
+  /* .admin-tab's own base color/active-highlight (further up this file)
+     are the site's red, same as the public nav-link pills — overridden
+     here to a black/gray scheme so the rows read as the same "family" as
+     the black trigger pill above, not an unrelated red list underneath it. */
+  html.nav-mobile .admin-tab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 54px;
+    padding: 14px 18px;
+    font-size: 1.05rem;
+    box-sizing: border-box;
+    /* Not a hardcoded dark color — var(--text-title) already flips to a
+       light color in dark mode (same as the rest of the site), so this
+       stays legible against the dark theme's own dark panel background
+       instead of going near-invisible dark-on-dark. */
+    color: var(--text-title);
+  }
+
+  html.nav-mobile .admin-tab.is-active {
+    background: #1a1a1a;
+    color: #fff;
+    border-color: #1a1a1a;
+  }
+
+  html.nav-mobile .admin-nav-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    width: 260px;
+    margin: 0 auto;
+    min-height: 56px;
+    font: inherit;
+    font-size: 1.15rem;
+    padding: 16px 22px;
+    border-radius: var(--radius-pill);
+    border: none;
+    background: #1a1a1a;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  html.nav-mobile .admin-nav-trigger:hover {
+    background: #000;
+  }
+
+  html.nav-mobile .admin-nav-caret {
+    flex-shrink: 0;
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 7px solid #fff;
+    transition: transform 180ms ease;
+  }
+
+  html.nav-mobile .admin-tabs.is-open .admin-nav-caret {
+    transform: rotate(180deg);
+  }
+
+  /* Reserves space so the footer's theme toggle never ends up sitting
+     directly behind the now-fixed pill once scrolled to the very bottom. */
+  html.nav-mobile .admin-footer {
+    padding-bottom: 88px;
+  }
+}
+
 .admin-panel {
   display: none;
 }
@@ -492,4 +630,20 @@ html {
 
 :root[data-theme="dark"] .admin-tabs {
   background: rgba(20, 14, 16, 0.92);
+}
+
+/* The mobile dropdown panel's own solid color — same reasoning as the
+   public site's .cs-menu/.cd-popup dark overrides: it floats over
+   arbitrary content, so it needs a real color of its own, not a
+   translucent tint, to stay legible regardless of what's underneath. */
+html[data-theme="dark"].nav-mobile .admin-tabs-inner {
+  background: #241a1d;
+}
+
+/* A lighter gray than the light-mode #1a1a1a — against this panel's own
+   already-dark #241a1d background, solid near-black wouldn't read as a
+   distinct "this one's selected" highlight at all. */
+html[data-theme="dark"].nav-mobile .admin-tab.is-active {
+  background: #4a4a4a;
+  border-color: #4a4a4a;
 }

@@ -10,6 +10,7 @@
           t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
         }
         document.documentElement.dataset.theme = t;
+        if (window.matchMedia("(max-width: 640px) and (pointer: coarse) and (hover: none)").matches) document.documentElement.classList.add("nav-mobile");
       } catch (e) {}
     })();
   </script>
@@ -36,6 +37,7 @@
      of where you currently are; toggled in sync with #admin-view by
      js/app.js. -->
 <div id="admin-tabs-bar" class="admin-tabs" hidden>
+  <button type="button" class="admin-nav-trigger" aria-haspopup="true" aria-expanded="false"><span class="admin-nav-label">Giocatori</span><span class="admin-nav-caret" aria-hidden="true"></span></button>
   <div class="admin-tabs-inner">
     <button type="button" class="admin-tab" data-tab="players">Giocatori</button>
     <button type="button" class="admin-tab" data-tab="commanders">Comandanti</button>
