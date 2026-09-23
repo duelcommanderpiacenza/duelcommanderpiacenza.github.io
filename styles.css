@@ -294,11 +294,6 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
    actually running, so true no-JS still gets the plain, always-visible,
    working list instead of a hidden/broken nav. */
 @media (max-width: 640px) and (pointer: coarse) and (hover: none) {
-  /* No branded top bar on mobile — the bottom pill is the only nav. */
-  html.nav-mobile .site-header {
-    display: none;
-  }
-
   html.nav-mobile .site-nav {
     position: fixed;
     top: auto;
@@ -323,7 +318,7 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
        lines up under the pill regardless of the trigger's rendered width. */
     left: 50%;
     transform: translateX(-50%);
-    width: 200px;
+    width: 260px;
     max-width: calc(100vw - 32px);
     flex-direction: column;
     flex-wrap: nowrap;
@@ -368,33 +363,35 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
     align-items: center;
     justify-content: center;
     width: 100%;
-    /* A comfortable ~44-46px touch target, not the tighter desktop pill
-       padding .nav-link normally gets. */
-    min-height: 46px;
-    padding: 12px 16px;
+    /* A comfortable, generous touch target, not the tighter desktop pill
+       padding .nav-link normally gets — and a larger font size than the
+       desktop tab row's own 0.92rem, to match. */
+    min-height: 54px;
+    padding: 14px 18px;
+    font-size: 1.05rem;
     box-sizing: border-box;
   }
 
   /* Every rule from here down is also gated on html.nav-mobile, not just
-     this media query, on purpose — consistently with .site-header/.site-nav
-     above. Without it, a mismatch between the two (e.g. the media query
-     matching before the inline head script's class has actually landed,
-     such as switching DevTools into device mode without reloading) leaves
-     the pill rendered and styled — nothing here stops it — while
-     .site-header/.site-nav-inner above stay visible since *their* rules
-     are still waiting on the missing class: a broken hybrid state with
-     the pill floating uselessly at the top, full nav still showing too. */
+     this media query, on purpose — consistently with .site-nav above.
+     Without it, a mismatch between the two (e.g. the media query matching
+     before the inline head script's class has actually landed, such as
+     switching DevTools into device mode without reloading) leaves the
+     pill rendered and styled — nothing here stops it — while .site-nav
+     above stays sticky-at-top since *its* rule is still waiting on the
+     missing class: a broken hybrid state with the pill floating uselessly
+     at the top, full nav still showing too. */
   html.nav-mobile .nav-dropdown-trigger {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    width: 200px;
+    gap: 14px;
+    width: 260px;
     margin: 0 auto;
-    min-height: 46px;
+    min-height: 56px;
     font: inherit;
-    font-size: 1rem;
-    padding: 12px 16px;
+    font-size: 1.15rem;
+    padding: 16px 22px;
     border-radius: var(--radius-pill);
     border: none;
     background: var(--brand-red);
@@ -416,9 +413,9 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
     flex-shrink: 0;
     width: 0;
     height: 0;
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-    border-bottom: 6px solid #fff;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 7px solid #fff;
     transition: transform 180ms ease;
   }
 
