@@ -29,7 +29,7 @@ function showBanner(deferredPrompt) {
   const banner = document.createElement("div");
   banner.className = "pwa-install-banner";
   banner.innerHTML = `
-    <span class="pwa-install-text">Installa il sito come app per un accesso pi&ugrave; rapido.</span>
+    <span class="pwa-install-text">Installa l&rsquo;app</span>
     <div class="pwa-install-actions">
       <button type="button" class="btn-primary pwa-install-btn">Installa</button>
       <button type="button" class="pwa-install-dismiss" aria-label="Chiudi">&times;</button>

@@ -3727,6 +3727,21 @@ html[data-theme="dark"].nav-mobile .site-nav-inner {
   animation: pwa-banner-in 260ms ease both;
 }
 
+/* On anything wider than a phone, stretching the banner edge-to-edge (the
+   left/right: 16px above) reads as an oversized bar across the whole
+   window — capped and centered instead, the same "left: 0; right: 0;
+   margin: auto" trick used for other centered fixed elements on the site,
+   picked over a translateX(-50%) specifically so it doesn't fight the
+   animation's own `transform` above. */
+@media (min-width: 641px) {
+  .pwa-install-banner {
+    left: 0;
+    right: 0;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+}
+
 @keyframes pwa-banner-in {
   from {
     opacity: 0;
