@@ -5,7 +5,11 @@
 // decides to stop offering it. Capturing beforeinstallprompt and driving our
 // own banner instead lets us remember "already asked" ourselves.
 
-const DISMISS_KEY = "pwaInstallAsked";
+// localStorage is shared across the whole origin, but /admin/ is now its
+// own separately-installable app (own manifest/icons) — without a distinct
+// key here, dismissing/installing one app's banner would also permanently
+// suppress the other's, since they'd read the same flag.
+const DISMISS_KEY = location.pathname.startsWith("/admin/") ? "pwaInstallAskedAdmin" : "pwaInstallAsked";
 
 function hasBeenAsked() {
   try {
@@ -49,8 +53,11 @@ function showBanner(deferredPrompt) {
   });
 }
 
+// Root-relative rather than "sw.js" — this file is now also loaded from
+// admin/index.html, where a plain relative path would resolve to the
+// (non-existent) admin/sw.js instead of the real one at the site root.
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js").catch(() => {});
+  navigator.serviceWorker.register("/sw.js").catch(() => {});
 }
 
 window.addEventListener("beforeinstallprompt", (e) => {
