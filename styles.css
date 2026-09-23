@@ -305,10 +305,23 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
    actually running, so true no-JS still gets the plain, always-visible,
    working list instead of a hidden/broken nav. */
 @media (max-width: 640px) and (pointer: coarse) and (hover: none) {
+  /* Fills all the way up behind a translucent iOS status bar (see
+     apple-mobile-web-app-status-bar-style in every page's <head>) and
+     Android's own edge-to-edge status bar, instead of the red background
+     stopping short and leaving a plain white strip above it — env()
+     resolves to 0 on anything without a notch/inset, so this is a no-op
+     everywhere else. */
+  .site-header {
+    padding-top: calc(18px + env(safe-area-inset-top));
+  }
+
+  /* Same reasoning at the opposite edge — keeps the pill clear of the
+     home-indicator gesture bar on notched phones instead of sitting
+     underneath/behind it. */
   html.nav-mobile .site-nav {
     position: fixed;
     top: auto;
-    bottom: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom));
     left: 0;
     right: 0;
     background: none;
@@ -316,6 +329,15 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
     border-bottom: none;
     box-shadow: none;
     padding: 0;
+  }
+
+  /* Rubber-band/pull-to-refresh bounce reads as "a webpage in a browser
+     tab" — a real installed app doesn't do this, so it's turned off here
+     (touch-scrolling devices only; a mouse wheel on desktop never
+     triggered it in the first place, so nothing changes there). */
+  html,
+  body {
+    overscroll-behavior-y: contain;
   }
 
   html.nav-mobile .site-nav-inner {
@@ -438,7 +460,7 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
      full-width — without this it would sit exactly on top of the pill
      above instead of stacking above it. */
   html.nav-mobile .pwa-install-banner {
-    bottom: 78px;
+    bottom: calc(78px + env(safe-area-inset-bottom));
   }
 
   /* Reserves space so the footer (copyright, theme toggle) never ends up
@@ -447,7 +469,7 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
      than body's, so that reserved strip is filled with the footer's own
      grey background instead of the page's plain (much lighter) one. */
   html.nav-mobile footer {
-    padding-bottom: calc(18px + 78px);
+    padding-bottom: calc(18px + 78px + env(safe-area-inset-bottom));
   }
 }
 
@@ -3690,7 +3712,7 @@ html[data-theme="dark"].nav-mobile .site-nav-inner {
   position: fixed;
   left: 16px;
   right: 16px;
-  bottom: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
   z-index: 50;
   display: flex;
   align-items: center;
@@ -3749,14 +3771,14 @@ html[data-theme="dark"].nav-mobile .site-nav-inner {
   .pwa-install-banner {
     left: 10px;
     right: 10px;
-    bottom: 10px;
+    bottom: calc(10px + env(safe-area-inset-bottom));
     padding: 12px 14px;
   }
 
   /* Otherwise this re-applies the plain bottom: 10px above, right back
      underneath the nav pill it was already lifted clear of at 640px. */
   html.nav-mobile .pwa-install-banner {
-    bottom: 78px;
+    bottom: calc(78px + env(safe-area-inset-bottom));
   }
 }
 
