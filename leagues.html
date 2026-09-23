@@ -10,6 +10,7 @@
           t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
         }
         document.documentElement.dataset.theme = t;
+        if (window.matchMedia("(max-width: 640px)").matches) document.documentElement.classList.add("nav-mobile");
       } catch (e) {}
     })();
   </script>
@@ -31,6 +32,7 @@
 </header>
 
 <nav class="site-nav" aria-label="Navigazione principale">
+  <button type="button" class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false"><span class="nav-dropdown-label">Leghe</span><span class="nav-dropdown-caret" aria-hidden="true"></span></button>
   <div class="site-nav-inner">
     <a class="nav-link" data-nav="current" href="index.html">Bacheca</a>
     <a class="nav-link" data-nav="leagues" href="leagues.html">Leghe</a>
