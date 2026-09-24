@@ -3795,6 +3795,16 @@ img.cs-option-icon {
   background: rgba(255, 255, 255, 0.045);
 }
 
+/* Without this, the generic dark-mode rule above (3 classes) wins on
+   specificity over .dashboard-card-commanders .pie-chart-wrap's own
+   background: none (2 classes) regardless of source order, giving the
+   chart its own faint tinted box distinct from the dashboard card behind
+   it — same trap as the nav pill's dark-mode background bug fixed
+   earlier this session. */
+:root[data-theme="dark"] .dashboard-card-commanders .pie-chart-wrap {
+  background: none;
+}
+
 /* .dashboard-card-upcoming's own red-tinted gradient (hardcoded rgba, not a
    theme var) would otherwise be overridden back to the plain dark-card
    background by the shared rule above — same specificity, later in dark
@@ -3903,7 +3913,8 @@ html[data-theme="dark"].nav-mobile .site-nav-inner {
   background: rgba(255, 255, 255, 0.045);
 }
 
-:root[data-theme="dark"] .matchups-row-header {
+:root[data-theme="dark"] .matchups-row-header,
+:root[data-theme="dark"] .matchups-corner-header {
   background: #241a1d;
 }
 
