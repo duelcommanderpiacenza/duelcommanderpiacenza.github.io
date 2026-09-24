@@ -10,6 +10,15 @@
 
 const MOBILE_QUERY = "(max-width: 640px) and (pointer: coarse) and (hover: none)";
 
+function isMobileNav() {
+  // Some Android OEM browsers (Samsung Internet has a history of this)
+  // misreport pointer/hover, matching neither branch of MOBILE_QUERY on an
+  // actual touch phone — navigator.maxTouchPoints checks real touch
+  // hardware directly instead, sidestepping the media-query engine
+  // entirely. Same combined check as every page's own inline head script.
+  return window.matchMedia(MOBILE_QUERY).matches || (window.innerWidth <= 640 && navigator.maxTouchPoints > 0);
+}
+
 function closeDropdown(nav) {
   nav.classList.remove("is-open");
   nav.querySelector(".nav-dropdown-trigger")?.setAttribute("aria-expanded", "false");
@@ -22,7 +31,7 @@ function init() {
   // override can land a beat after that very first script executes,
   // making its one-time check read the pre-emulation (desktop) state. This
   // one runs later, giving the override more time to actually be in place.
-  if (!document.documentElement.classList.contains("nav-mobile") && window.matchMedia(MOBILE_QUERY).matches) {
+  if (!document.documentElement.classList.contains("nav-mobile") && isMobileNav()) {
     document.documentElement.classList.add("nav-mobile");
   }
 

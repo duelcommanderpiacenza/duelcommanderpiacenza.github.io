@@ -8,6 +8,15 @@
 
 const MOBILE_QUERY = "(max-width: 640px) and (pointer: coarse) and (hover: none)";
 
+function isMobileNav() {
+  // Some Android OEM browsers (Samsung Internet has a history of this)
+  // misreport pointer/hover, matching neither branch of MOBILE_QUERY on an
+  // actual touch phone — navigator.maxTouchPoints checks real touch
+  // hardware directly instead. Same combined check as the public site's
+  // js/nav-dropdown.js and every page's own inline head script.
+  return window.matchMedia(MOBILE_QUERY).matches || (window.innerWidth <= 640 && navigator.maxTouchPoints > 0);
+}
+
 function closeDropdown(bar) {
   bar.classList.remove("is-open");
   bar.querySelector(".admin-nav-trigger")?.setAttribute("aria-expanded", "false");
@@ -17,7 +26,7 @@ export function initAdminNavDropdown() {
   // Self-healing fallback for the inline head script's own check — see
   // js/nav-dropdown.js for why (a DevTools device-emulation reload can
   // have the touch/hover override land a beat after that first script).
-  if (!document.documentElement.classList.contains("nav-mobile") && window.matchMedia(MOBILE_QUERY).matches) {
+  if (!document.documentElement.classList.contains("nav-mobile") && isMobileNav()) {
     document.documentElement.classList.add("nav-mobile");
   }
 

@@ -3861,6 +3861,14 @@ img.cs-option-icon {
   background: rgba(255, 255, 255, 0.1);
 }
 
+/* Without this, :root[data-theme="dark"] .site-nav below (meant for the
+   normal sticky top nav bar) wins on specificity over the mobile pill's own
+   background: none and reasserts a solid dark bar behind/around the
+   floating pill — this re-clears it back to transparent for that state. */
+html[data-theme="dark"].nav-mobile .site-nav {
+  background: none;
+}
+
 /* Its own slightly red-tinted dark shade, not the plain neutral one below
    — same "less intense red, same family as the solid-red trigger pill"
    reasoning as its light-mode #fdecec background. */
