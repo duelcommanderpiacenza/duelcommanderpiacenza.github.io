@@ -268,14 +268,14 @@ export const Matches = {
       sb
         .from("matches")
         .select(
-          "*, event:events(id,name,league_id,league:leagues(id,name)), player2:players!matches_player2_id_fkey(id,name,handle)"
+          "*, event:events(id,name,event_date,league_id,league:leagues(id,name)), player2:players!matches_player2_id_fkey(id,name,handle)"
         )
         .eq("player1_id", playerId)
         .then(assertOk),
       sb
         .from("matches")
         .select(
-          "*, event:events(id,name,league_id,league:leagues(id,name)), player1:players!matches_player1_id_fkey(id,name,handle)"
+          "*, event:events(id,name,event_date,league_id,league:leagues(id,name)), player1:players!matches_player1_id_fkey(id,name,handle)"
         )
         .eq("player2_id", playerId)
         .then(assertOk),

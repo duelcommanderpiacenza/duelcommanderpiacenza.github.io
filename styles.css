@@ -2405,6 +2405,13 @@ img.badge-icon-box {
   border-color: rgba(179, 38, 30, 0.42);
 }
 
+/* "Mostra altri risultati" — sits below a paginated .data-table-wrap
+   (js/ui.js's renderPaginated), not inside its own bordered card. */
+.table-load-more {
+  margin-top: 14px;
+  text-align: center;
+}
+
 /* Compact round Modifica/Elimina buttons for admin list rows — an SVG icon
    (see EDIT_ICON_SVG/DELETE_ICON_SVG in admin/js/crud-ui.js) instead of a
    labeled pill, since a row can otherwise get crowded once it also has a

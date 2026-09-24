@@ -10,6 +10,7 @@ import {
   eventTitle,
   formatDate,
   showError,
+  renderPaginated,
 } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 
@@ -67,6 +68,14 @@ async function init() {
     ]);
     const entryByKey = new Map(allEntries.map((e) => [`${e.event_id}_${e.player_id}`, e]));
 
+    // Storico partite: newest first — the rows built from `matches` below
+    // inherit this order (each match contributes 1-2 consecutive rows), so
+    // sorting here is enough without needing to sort `rows` again after.
+    matches.sort((a, b) => {
+      const dateCompare = (b.event?.event_date ?? "").localeCompare(a.event?.event_date ?? "");
+      return dateCompare !== 0 ? dateCompare : (b.round ?? 0) - (a.round ?? 0);
+    });
+
     const playersMap = new Map();
     for (const e of playedEntries) {
       if (e.player) playersMap.set(e.player.id, e.player);
@@ -123,20 +132,30 @@ async function init() {
       const current = lastPlayedByPlayer.get(r.self.id);
       if (!current || r.event.event_date > current) lastPlayedByPlayer.set(r.self.id, r.event.event_date);
     }
-    playersEl.innerHTML = `<div class="data-table-wrap"><table class="data-table">
+    renderPaginated(
+      playersEl,
+      playerList,
+      (visible) =>
+        visible.length === 0
+          ? '<p class="page-empty">Nessun giocatore ha ancora usato questo commander.</p>'
+          : `<div class="data-table-wrap"><table class="data-table">
       <thead><tr><th>Giocatore</th><th>Ultima partita</th></tr></thead>
-      <tbody>${playerList
+      <tbody>${visible
         .map((p) => `<tr><td>${playerLabel(p)}</td><td>${formatDate(lastPlayedByPlayer.get(p.id))}</td></tr>`)
         .join("")}</tbody>
-    </table></div>`;
+    </table></div>`
+    );
 
-    matchesEl.innerHTML =
-      rows.length === 0
-        ? '<p class="page-empty">Nessuna partita registrata.</p>'
-        : `<div class="data-table-wrap"><table class="data-table">
+    renderPaginated(
+      matchesEl,
+      rows,
+      (visible) =>
+        visible.length === 0
+          ? '<p class="page-empty">Nessuna partita registrata.</p>'
+          : `<div class="data-table-wrap"><table class="data-table">
             <thead><tr><th>Evento</th><th>Giocatore</th><th>Avversario</th><th>Commander avversario</th><th>Risultato</th></tr></thead>
             <tbody>
-              ${rows
+              ${visible
                 .map(
                   (r) => `
                 <tr>
@@ -149,7 +168,8 @@ async function init() {
                 )
                 .join("")}
             </tbody>
-          </table></div>`;
+          </table></div>`
+    );
 
     function computeWinrate(scopedEventIds) {
       const scoped = new Set(scopedEventIds);

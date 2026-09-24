@@ -88,3 +88,29 @@ export function showError(el, err) {
     !window.supabase ? "Controlla la connessione." : ""
   }</p>`;
 }
+
+// Renders `rows` into `el` one page at a time (`pageSize` per page), via
+// `renderRows(visibleRows)` — a function returning the markup for however
+// many rows are currently visible (its own empty-state message included,
+// for when `rows` is empty). A "Mostra altri risultati" button is appended
+// below, revealing one more page per click and disappearing once every row
+// is shown — for any table (match/event history, etc.) long enough that
+// rendering it all at once isn't worth the scroll.
+export function renderPaginated(el, rows, renderRows, pageSize = 10) {
+  let visible = Math.min(pageSize, rows.length);
+
+  function draw() {
+    const remaining = rows.length - visible;
+    const button =
+      remaining > 0
+        ? `<div class="table-load-more"><button type="button" class="btn-secondary btn-load-more">Mostra altri risultati (${remaining})</button></div>`
+        : "";
+    el.innerHTML = renderRows(rows.slice(0, visible)) + button;
+    el.querySelector(".btn-load-more")?.addEventListener("click", () => {
+      visible = Math.min(visible + pageSize, rows.length);
+      draw();
+    });
+  }
+
+  draw();
+}

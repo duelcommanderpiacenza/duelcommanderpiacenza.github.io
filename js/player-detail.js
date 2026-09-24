@@ -1,7 +1,16 @@
 import { Players, EventEntries, Matches } from "./db.js";
 import { matchRoundOutcome, isBye, isDrop, computeEventLeaderboard } from "./leaderboard.js";
 import { tallyOutcome, tallyGames, renderWinrateTiles } from "./winrate.js";
-import { escapeHtml, playerLabel, commanderPairLabel, colorIdentityPips, eventTitle, formatDate, showError } from "./ui.js";
+import {
+  escapeHtml,
+  playerLabel,
+  commanderPairLabel,
+  colorIdentityPips,
+  eventTitle,
+  formatDate,
+  showError,
+  renderPaginated,
+} from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 
 function getId() {
@@ -114,13 +123,16 @@ async function init() {
       })
       .sort((a, b) => (b.event?.event_date ?? "").localeCompare(a.event?.event_date ?? ""));
 
-    eventHistoryEl.innerHTML =
-      eventHistoryRows.length === 0
-        ? '<p class="page-empty">Nessun evento registrato per questo giocatore.</p>'
-        : `<div class="data-table-wrap"><table class="data-table">
+    renderPaginated(
+      eventHistoryEl,
+      eventHistoryRows,
+      (visible) =>
+        visible.length === 0
+          ? '<p class="page-empty">Nessun evento registrato per questo giocatore.</p>'
+          : `<div class="data-table-wrap"><table class="data-table">
             <thead><tr><th>Evento</th><th>Commander</th><th>Posizione in classifica</th></tr></thead>
             <tbody>
-              ${eventHistoryRows
+              ${visible
                 .map(
                   (r) => `
                 <tr>
@@ -131,12 +143,18 @@ async function init() {
                 )
                 .join("")}
             </tbody>
-          </table></div>`;
+          </table></div>`
+    );
 
     const entryByEvent = new Map(entries.map((e) => [e.event_id, e]));
 
     const { asP1, asP2 } = await Matches.listByPlayer(id);
     const rawMatches = [...asP1.map((m) => ({ m, viewerIsP1: true })), ...asP2.map((m) => ({ m, viewerIsP1: false }))];
+    // Storico partite: newest first.
+    rawMatches.sort((a, b) => {
+      const dateCompare = (b.m.event?.event_date ?? "").localeCompare(a.m.event?.event_date ?? "");
+      return dateCompare !== 0 ? dateCompare : (b.m.round ?? 0) - (a.m.round ?? 0);
+    });
 
     const eventIds = [...new Set(rawMatches.map(({ m }) => m.event_id))];
     const eventEntries = eventIds.length ? await EventEntries.listByEvents(eventIds) : [];
@@ -211,13 +229,16 @@ async function init() {
     leagueFilter.addEventListener("change", applyFilters);
     applyFilters();
 
-    matchesEl.innerHTML =
-      rows.length === 0
-        ? '<p class="page-empty">Nessuna partita registrata.</p>'
-        : `<div class="data-table-wrap"><table class="data-table">
+    renderPaginated(
+      matchesEl,
+      rows,
+      (visible) =>
+        visible.length === 0
+          ? '<p class="page-empty">Nessuna partita registrata.</p>'
+          : `<div class="data-table-wrap"><table class="data-table">
             <thead><tr><th>Evento</th><th>Commander</th><th>Avversario</th><th>Commander avversario</th><th>Risultato</th></tr></thead>
             <tbody>
-              ${rows
+              ${visible
                 .map(
                   (r) => `
                 <tr>
@@ -230,7 +251,8 @@ async function init() {
                 )
                 .join("")}
             </tbody>
-          </table></div>`;
+          </table></div>`
+    );
   } catch (err) {
     showError(document.getElementById("player-content"), err);
   } finally {
