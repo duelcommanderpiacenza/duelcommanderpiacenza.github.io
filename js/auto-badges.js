@@ -14,6 +14,10 @@ import { computeEventLeaderboard, computeLeaguePoints, isBye, isDrop, matchRound
 
 const TOP8_STREAK_COUNT = 3;
 const TOP8_STREAK_WINDOW_MONTHS = 3;
+// A top-8 in a tiny event isn't the same achievement as a top-8 in a full
+// one — only events with at least this many entrants count toward the
+// streak at all.
+const TOP8_STREAK_MIN_ENTRANTS = 20;
 // How many auto badges show per player — applied by js/players-page.js at
 // display time (sliced off the front of the priority-sorted array this
 // module returns), not baked into what gets stored. player.html shows a
@@ -60,7 +64,8 @@ async function leagueRankPlayerId(leagues, rule) {
 }
 
 // Every player who top-8'd in each of their last 3 attended events (any
-// league/standalone), provided all 3 fall within the last 3 months.
+// league/standalone), provided all 3 fall within the last 3 months and each
+// of those 3 events had at least TOP8_STREAK_MIN_ENTRANTS entrants.
 async function top8StreakPlayerIds() {
   const [events, allEntries, allMatches] = await Promise.all([Events.list(), EventEntries.listAll(), Matches.listAll()]);
   const eventById = new Map(events.map((e) => [e.id, e]));
@@ -101,7 +106,10 @@ async function top8StreakPlayerIds() {
     const latest = [...playerEvents].sort((a, b) => (a.event_date < b.event_date ? 1 : -1)).slice(0, TOP8_STREAK_COUNT);
     if (latest.length < TOP8_STREAK_COUNT) continue;
     if (latest.some((ev) => ev.event_date < cutoffIso)) continue;
-    const allTop8 = latest.every((ev) => standingsFor(ev.id).find((row) => row.player?.id === playerId)?.isTop8);
+    const allTop8 = latest.every((ev) => {
+      if ((entriesByEvent.get(ev.id)?.length ?? 0) < TOP8_STREAK_MIN_ENTRANTS) return false;
+      return standingsFor(ev.id).find((row) => row.player?.id === playerId)?.isTop8;
+    });
     if (allTop8) qualifying.push(playerId);
   }
   return qualifying;
