@@ -3375,10 +3375,9 @@ img.cs-option-icon {
 }
 
 @media (max-width: 480px) {
-  /* Otherwise a long commander name alone can eat most of a phone's
-     viewport width, leaving barely a sliver of the next column peeking
-     out — enough to technically be scrollable but not to look or feel
-     like it. */
+  /* Otherwise this sticky column alone can eat most of a phone's viewport
+     width, leaving barely a sliver of the next column peeking out — enough
+     to technically be scrollable but not to look or feel like it. */
   .matchups-row-header {
     max-width: 84px;
   }
@@ -3404,7 +3403,9 @@ img.cs-option-icon {
 }
 
 .matchups-row-header {
-  position: relative;
+  position: sticky;
+  left: 0;
+  z-index: 1;
   text-align: left;
   color: var(--text-title);
   font-weight: 800;
@@ -3413,6 +3414,9 @@ img.cs-option-icon {
 }
 
 .matchups-corner-header {
+  position: sticky;
+  left: 0;
+  z-index: 2;
   background: #fff;
 }
 
@@ -3913,6 +3917,8 @@ html[data-theme="dark"].nav-mobile .site-nav-inner {
   background: rgba(255, 255, 255, 0.045);
 }
 
+/* Solid, not translucent — this sticky column needs to fully mask
+   whatever's scrolled underneath it, same reasoning as .cs-menu above. */
 :root[data-theme="dark"] .matchups-row-header,
 :root[data-theme="dark"] .matchups-corner-header {
   background: #241a1d;
