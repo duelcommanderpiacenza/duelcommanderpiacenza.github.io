@@ -4036,6 +4036,79 @@ img.cs-option-icon {
   flex-shrink: 0;
 }
 
+/* Commander detail's "decks played over time" line (js/line-chart.js) —
+   shares the pie/bar charts' own .pie-chart-wrap card, just full-width
+   instead of paired side-by-side. aspect-ratio (matching the SVG's own
+   viewBox) rather than a fixed height: keeps x/y scaled together as the
+   card's actual width changes, so the line's stroke width and the dots
+   stay circular instead of stretching unevenly on narrow screens. */
+.line-chart-wrap {
+  margin-bottom: 20px;
+}
+
+.line-chart {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1000 / 280;
+}
+
+.line-chart-grid {
+  stroke: var(--hairline);
+  stroke-width: 1;
+}
+
+.line-chart-axis-label {
+  fill: var(--text-muted);
+  font-size: 13px;
+}
+
+.line-chart-area {
+  fill: rgba(220, 24, 28, 0.12);
+  stroke: none;
+}
+
+.line-chart-line {
+  fill: none;
+  stroke: var(--brand-red);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.line-chart-dot {
+  fill: var(--brand-red);
+}
+
+/* Archetipi page's multi-series chart (js/line-chart.js's
+   renderMultiLineChart) — each <path>/<circle> sets its own stroke/fill
+   inline (per-archetype color), so unlike the single-series chart there's
+   no shared color rule to override here, just the legend identifying which
+   line is which. */
+.line-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin-top: 14px;
+  justify-content: center;
+}
+
+.line-chart-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--text-body);
+  text-transform: capitalize;
+}
+
+.line-chart-legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
 @media (max-width: 640px) {
   .page-main {
     padding: 20px 16px 36px;

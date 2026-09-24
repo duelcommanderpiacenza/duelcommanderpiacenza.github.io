@@ -218,7 +218,7 @@ export const EventEntries = {
   listByCommander: (commanderId) =>
     sb
       .from("event_entries")
-      .select(`*, player:players(id,name,handle), ${COMMANDER_EMBED}`)
+      .select(`*, player:players(id,name,handle), event:events(id,name,event_date), ${COMMANDER_EMBED}`)
       .or(`commander_id.eq.${commanderId},partner_commander_id.eq.${commanderId}`)
       .then(assertOk),
   // Batch lookup across several events at once (e.g. every event a given

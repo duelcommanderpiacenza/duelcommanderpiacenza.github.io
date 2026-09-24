@@ -2,6 +2,7 @@ import { Commanders, EventEntries, Matches } from "./db.js";
 import { matchRoundOutcome, isBye, isDrop } from "./leaderboard.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { tallyOutcome, tallyGames, renderWinrateTiles } from "./winrate.js";
+import { renderLineChart } from "./line-chart.js";
 import {
   escapeHtml,
   playerLabel,
@@ -158,6 +159,7 @@ async function init() {
   const eventFilter = document.getElementById("commander-event-filter");
   const playersEl = document.getElementById("commander-players");
   const matchesEl = document.getElementById("commander-matches");
+  const decksChartEl = document.getElementById("commander-decks-chart");
 
   if (!id) {
     titleEl.textContent = "Commander non trovato";
@@ -238,6 +240,7 @@ async function init() {
       winrateEl.innerHTML = '<p class="page-empty">Non ci sono ancora dati sufficienti.</p>';
       playersEl.innerHTML = '<p class="page-empty">Nessun giocatore ha ancora usato questo commander.</p>';
       matchesEl.innerHTML = '<p class="page-empty">Nessuna partita registrata.</p>';
+      decksChartEl.innerHTML = renderLineChart([], "Non ci sono ancora dati sufficienti.", "Utilizzo");
       // This path skips computeWinrate entirely, which is the only other
       // place statsReady gets set — without this, a commander with no
       // recorded data at all would leave the card permanently hidden even
@@ -265,10 +268,31 @@ async function init() {
     });
 
     const playersMap = new Map();
+    // One count per player of how many entries (events) they piloted this
+    // commander in — playedEntries itself, not `rows` below, since rows is
+    // per-match-side and would overcount a player across a multi-round event.
+    const timesPlayedByPlayer = new Map();
     for (const e of playedEntries) {
-      if (e.player) playersMap.set(e.player.id, e.player);
+      if (!e.player) continue;
+      playersMap.set(e.player.id, e.player);
+      timesPlayedByPlayer.set(e.player.id, (timesPlayedByPlayer.get(e.player.id) ?? 0) + 1);
     }
     const playerList = Array.from(playersMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+
+    // One data point per event date this commander appeared in at least one
+    // entry — decks played, not matches, so this counts playedEntries
+    // (one per pilot per event) rather than `rows` (per match-side, which
+    // would inflate the count by however many rounds that event had).
+    const deckCountByDate = new Map();
+    for (const e of playedEntries) {
+      const date = e.event?.event_date;
+      if (!date) continue;
+      deckCountByDate.set(date, (deckCountByDate.get(date) ?? 0) + 1);
+    }
+    const deckChartPoints = [...deckCountByDate.entries()]
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([date, value]) => ({ date, value }));
+    decksChartEl.innerHTML = renderLineChart(deckChartPoints, "Non ci sono ancora dati sufficienti.", "Utilizzo");
 
     // One row per (match, side) where that side piloted this commander — a
     // mirror match (both sides on this commander) legitimately yields two rows.
@@ -280,6 +304,7 @@ async function init() {
         const oppEntry = entryByKey.get(`${m.event_id}_${m.player2_id}`);
         rows.push({
           event: m.event,
+          round: m.round,
           self: m.player1,
           opponent: m.player2,
           isBye: isBye(m),
@@ -299,6 +324,7 @@ async function init() {
         const oppEntry = entryByKey.get(`${m.event_id}_${m.player1_id}`);
         rows.push({
           event: m.event,
+          round: m.round,
           self: m.player2,
           opponent: m.player1,
           outcome: outcomeFor(m, false),
@@ -327,16 +353,35 @@ async function init() {
         visible.length === 0
           ? '<p class="page-empty">Nessun giocatore ha ancora usato questo commander.</p>'
           : `<div class="data-table-wrap"><table class="data-table">
-      <thead><tr><th>Giocatore</th><th>Ultima partita</th></tr></thead>
+      <thead><tr><th>Giocatore</th><th>Volte giocato</th><th>Ultima partita</th></tr></thead>
       <tbody>${visible
-        .map((p) => `<tr><td>${playerLabel(p)}</td><td>${formatDate(lastPlayedByPlayer.get(p.id))}</td></tr>`)
+        .map(
+          (p) =>
+            `<tr><td>${playerLabel(p)}</td><td>${timesPlayedByPlayer.get(p.id) ?? 0}</td><td>${formatDate(lastPlayedByPlayer.get(p.id))}</td></tr>`
+        )
         .join("")}</tbody>
     </table></div>`
     );
 
+    // A bye has no real opponent/commander matchup to show — computeWinrate
+    // below still counts it (via the full, unfiltered `rows`), only the
+    // table listing itself drops it.
+    // Event date (newest first) as the primary sort, then alphabetically by
+    // the player who piloted this commander (groups a date's rows by player
+    // instead of interleaving them round-by-round), then by round ascending
+    // within that player's own rows on that date (turno 1 before turno 2).
+    const matchRows = rows
+      .filter((r) => !r.isBye)
+      .sort((a, b) => {
+        const dateCompare = (b.event?.event_date ?? "").localeCompare(a.event?.event_date ?? "");
+        if (dateCompare !== 0) return dateCompare;
+        const nameCompare = (a.self?.name ?? "").localeCompare(b.self?.name ?? "");
+        if (nameCompare !== 0) return nameCompare;
+        return (a.round ?? 0) - (b.round ?? 0);
+      });
     renderPaginated(
       matchesEl,
-      rows,
+      matchRows,
       (visible) =>
         visible.length === 0
           ? '<p class="page-empty">Nessuna partita registrata.</p>'
@@ -349,8 +394,8 @@ async function init() {
                 <tr>
                   <td>${r.event ? `<a href="event.html?id=${r.event.id}">${escapeHtml(eventTitle(r.event))}</a>` : "—"}</td>
                   <td>${playerLabel(r.self)}</td>
-                  <td>${r.isBye ? "Bye" : r.isDrop ? "Drop" : playerLabel(r.opponent)}</td>
-                  <td>${r.isBye || r.isDrop ? "—" : commanderPairLabel(r.oppCommander, r.oppPartner)}</td>
+                  <td>${r.isDrop ? "Drop" : playerLabel(r.opponent)}</td>
+                  <td>${r.isDrop ? "—" : commanderPairLabel(r.oppCommander, r.oppPartner)}</td>
                   <td>${r.scoreLabel}</td>
                 </tr>`
                 )

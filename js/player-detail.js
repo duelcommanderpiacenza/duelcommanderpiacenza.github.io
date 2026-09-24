@@ -149,11 +149,15 @@ async function init() {
           historyEntriesByEvent.get(e.event_id) ?? []
         );
         const position = standings.findIndex((s) => s.player?.id === id);
+        const standingRow = position === -1 ? null : standings[position];
         return {
           event: e.event,
           commander: e.commander,
           partner: e.partner_commander,
           position: position === -1 ? null : position + 1,
+          wins: standingRow?.wins ?? 0,
+          losses: standingRow?.losses ?? 0,
+          draws: standingRow?.draws ?? 0,
         };
       })
       .sort((a, b) => (b.event?.event_date ?? "").localeCompare(a.event?.event_date ?? ""));
@@ -165,7 +169,7 @@ async function init() {
         visible.length === 0
           ? '<p class="page-empty">Nessun evento registrato per questo giocatore.</p>'
           : `<div class="data-table-wrap"><table class="data-table">
-            <thead><tr><th>Evento</th><th>Commander</th><th>Posizione in classifica</th></tr></thead>
+            <thead><tr><th>Evento</th><th>Commander</th><th>V-S-P</th><th>Posizione</th></tr></thead>
             <tbody>
               ${visible
                 .map(
@@ -173,6 +177,7 @@ async function init() {
                 <tr>
                   <td>${r.event ? `<a href="event.html?id=${r.event.id}">${escapeHtml(eventTitle(r.event))}</a>` : "—"}</td>
                   <td>${commanderPairLabel(r.commander, r.partner)}</td>
+                  <td>${r.wins}-${r.losses}-${r.draws}</td>
                   <td>${r.position === null ? "—" : `#${r.position}`}</td>
                 </tr>`
                 )
