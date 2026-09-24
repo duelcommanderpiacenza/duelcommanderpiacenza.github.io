@@ -2032,6 +2032,20 @@ footer {
     height: auto;
     max-width: none;
   }
+
+  /* Bigger touch target on mobile than the desktop 36px — comfortably
+     tappable without needing to aim, now that the card itself is bigger
+     here too. right: -14px (desktop) is kept as-is; it's already a
+     reasonable overhang at this size. */
+  .commander-card-flip-btn {
+    width: 48px;
+    height: 48px;
+  }
+
+  .commander-card-flip-btn svg {
+    width: 24px;
+    height: 24px;
+  }
 }
 
 .page-subtitle {
