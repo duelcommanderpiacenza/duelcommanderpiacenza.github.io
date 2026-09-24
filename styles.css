@@ -413,6 +413,15 @@ html.nav-mobile .site-search-field {
   border-color: var(--hairline);
 }
 
+/* The close button is position: fixed now (see .site-search-close) — no
+   longer a flex sibling .site-search-bar itself reserves room for
+   automatically, so the field would otherwise stretch to flex: 1's full
+   width and run underneath it. Reserved explicitly instead, sized to the
+   button's own real width (from its rect) plus a bit of breathing room. */
+html.nav-mobile .site-search-bar {
+  padding-right: calc(var(--search-close-size, 38px) + 12px);
+}
+
 html.nav-mobile .site-search-field-icon {
   color: var(--text-muted);
 }
@@ -425,13 +434,26 @@ html.nav-mobile .site-search-input::placeholder {
   color: var(--text-muted);
 }
 
+/* Pinned to the exact spot/size the trigger button itself occupies
+   (js/site-search.js sets these custom properties from the trigger's own
+   getBoundingClientRect(), same call already made for the circle-reveal's
+   own origin) rather than wherever .site-search-bar's flex layout would
+   otherwise put it — reads as "the same button, still there" through the
+   whole open animation, not a second, differently-placed close affordance
+   that only shows up once the overlay has finished expanding. Taken out of
+   .site-search-bar's normal flex flow entirely (position: fixed) — see
+   .site-search-bar's own padding-right below for how the field avoids
+   running underneath it. */
 html.nav-mobile .site-search-close {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  flex-shrink: 0;
+  position: fixed;
+  top: var(--search-close-top, 12px);
+  right: var(--search-close-right, 16px);
+  width: var(--search-close-size, 38px);
+  height: var(--search-close-size, 38px);
+  z-index: 201;
   border: none;
   border-radius: 50%;
   background: var(--brand-red);
@@ -466,7 +488,8 @@ html.nav-mobile .site-search-box {
   display: none;
 }
 
-html.nav-mobile .site-search-box.is-open {
+html.nav-mobile .site-search-box.is-open,
+html.nav-mobile .site-search-box.is-closing {
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -474,34 +497,97 @@ html.nav-mobile .site-search-box.is-open {
   z-index: 200;
   background: var(--bg-cream-1);
   padding: 18px 16px;
-  padding-top: calc(18px + env(safe-area-inset-top));
-  animation: search-overlay-in 200ms ease both;
+  /* --search-close-top (js/site-search.js, same rect the close button
+     itself is pinned to) rather than a fixed guess — the bar's top edge
+     then lands at exactly the button's own top edge regardless of header
+     padding/safe-area-inset on this particular page/device, instead of
+     the two only coincidentally lining up. The fallback keeps the old
+     fixed value for the brief moment before JS has set it at all. */
+  padding-top: var(--search-close-top, calc(18px + env(safe-area-inset-top)));
 }
 
-@keyframes search-overlay-in {
+/* Expands from the round trigger button's own position (js/site-search.js
+   sets --search-origin-x/-y/-max-radius on open, from the trigger's real
+   getBoundingClientRect()) out to cover the whole screen, like a ripple —
+   a plain fade read as generic and disconnected from the button that
+   triggered it; this reads as that same white circle growing into the
+   page. --search-max-radius is the exact distance to the farthest
+   viewport corner from that point, not a rough percentage, so the circle
+   is guaranteed to fully cover the screen at the end of the animation
+   regardless of where the trigger sits. Fallback values (top-right-ish)
+   only matter if this somehow plays before the custom properties are set. */
+html.nav-mobile .site-search-box.is-open {
+  animation: search-circle-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes search-circle-in {
+  from {
+    clip-path: circle(0px at var(--search-origin-x, calc(100% - 45px)) var(--search-origin-y, 45px));
+  }
+  to {
+    clip-path: circle(var(--search-max-radius, 150%) at var(--search-origin-x, calc(100% - 45px)) var(--search-origin-y, 45px));
+  }
+}
+
+/* Same ripple, reversed — collapses back down into the trigger instead of
+   just vanishing, so opening and closing read as one coherent motion
+   rather than two unrelated transitions. js/site-search.js keeps this
+   rendered (via .is-closing, since display: none can't itself be
+   animated) for exactly as long as this takes, then lets it go. */
+html.nav-mobile .site-search-box.is-closing {
+  animation: search-circle-out 320ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+@keyframes search-circle-out {
+  from {
+    clip-path: circle(var(--search-max-radius, 150%) at var(--search-origin-x, calc(100% - 45px)) var(--search-origin-y, 45px));
+  }
+  to {
+    clip-path: circle(0px at var(--search-origin-x, calc(100% - 45px)) var(--search-origin-y, 45px));
+  }
+}
+
+/* The circle expands on its own; the field cascades in a beat after it,
+   once the ripple has substantially grown. A scale-in (coalescing into
+   place), not entrance-fade-up's slide-up-from-below — that's a different
+   motion vocabulary with no relation to a circular reveal expanding from a
+   point, which read as two unrelated animations glued together rather
+   than one coherent gesture. Same easing curve as search-circle-in
+   itself, not entrance-fade-up's own, so it reads as a continuation of
+   that same motion, not a second, differently-paced one.
+   .site-search-field specifically, not the whole .site-search-bar — the
+   close button lives in that same bar in markup, but is position: fixed
+   now (pinned to the trigger's own real spot, see .site-search-close), and
+   an animated `transform` on an ancestor becomes the containing block for
+   a position: fixed descendant, which would drag the button along with
+   this scale instead of leaving it stationary. Only on the way in —
+   .is-closing has nothing analogous, the field just leaves with the rest
+   of the circle. */
+html.nav-mobile .site-search-box.is-open .site-search-field {
+  animation: search-content-in 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 140ms;
+}
+
+@keyframes search-content-in {
   from {
     opacity: 0;
+    transform: scale(0.85);
   }
   to {
     opacity: 1;
+    transform: scale(1);
   }
 }
 
-/* The backdrop above fades in on its own; the actual search bar cascades
-   in a beat after it — same entrance-fade-up + stagger language used
-   everywhere else on the site, not a bespoke animation just for this. */
-html.nav-mobile .site-search-box.is-open .site-search-bar {
-  animation: entrance-fade-up 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-  animation-delay: 60ms;
-}
-
-html.nav-mobile .site-search-box.is-open .site-search-results {
+html.nav-mobile .site-search-box.is-open .site-search-results,
+html.nav-mobile .site-search-box.is-closing .site-search-results {
   display: block;
 }
 
 @media (prefers-reduced-motion: reduce) {
   html.nav-mobile .site-search-box.is-open,
-  html.nav-mobile .site-search-box.is-open .site-search-bar {
+  html.nav-mobile .site-search-box.is-closing,
+  html.nav-mobile .site-search-box.is-open .site-search-field {
     animation: none;
   }
 }

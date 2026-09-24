@@ -79,7 +79,46 @@ function init() {
     resultsEl.innerHTML = rowsHtml || '<p class="site-search-hint">Nessun risultato trovato.</p>';
   }
 
+  // Mobile only: the overlay expands from/collapses back into the round
+  // trigger button itself, like a ripple filling the screen, rather than a
+  // plain fade — see search-circle-in/-out in styles.css. Both need the
+  // trigger's actual on-screen position (and the distance from there to
+  // the farthest viewport corner, so the circle is guaranteed to fully
+  // cover the screen at its largest) as CSS custom properties, recomputed
+  // on each open/close rather than cached once, so an orientation change
+  // or resize while the overlay is open doesn't leave the animation
+  // expanding from a stale, no-longer-correct point. The close button is
+  // also pinned to that exact spot/size (not just wherever .site-search-bar's
+  // own flex layout happens to put it) — same rect, so it visually reads as
+  // "the trigger button, still right there" rather than a second, unrelated
+  // close affordance appearing somewhere else on open.
+  function updateSearchOrigin() {
+    const rect = trigger.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const maxRadius = Math.hypot(
+      Math.max(cx, window.innerWidth - cx),
+      Math.max(cy, window.innerHeight - cy)
+    );
+    box.style.setProperty("--search-origin-x", `${cx}px`);
+    box.style.setProperty("--search-origin-y", `${cy}px`);
+    box.style.setProperty("--search-max-radius", `${maxRadius}px`);
+    box.style.setProperty("--search-close-top", `${rect.top}px`);
+    box.style.setProperty("--search-close-right", `${window.innerWidth - rect.right}px`);
+    box.style.setProperty("--search-close-size", `${rect.width}px`);
+  }
+
+  function isMobile() {
+    return document.documentElement.classList.contains("nav-mobile");
+  }
+
+  function prefersReducedMotion() {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
   function open() {
+    if (isMobile()) updateSearchOrigin();
+    box.classList.remove("is-closing");
     box.classList.add("is-open");
     trigger.setAttribute("aria-expanded", "true");
     render();
@@ -93,8 +132,19 @@ function init() {
   }
 
   function close() {
+    if (!box.classList.contains("is-open")) return;
     box.classList.remove("is-open");
     trigger.setAttribute("aria-expanded", "false");
+    // Desktop's own "close" is just hiding the dropdown below the pill —
+    // instant, no ripple to reverse. display: none (the base, closed
+    // state) can't be transitioned on its own either way, so .is-closing
+    // keeps the overlay actually rendered for exactly as long as
+    // search-circle-out takes to play, then lets it go — same pattern
+    // js/nav-dropdown.js uses for its own popup panel.
+    if (!isMobile() || prefersReducedMotion()) return;
+    updateSearchOrigin();
+    box.classList.add("is-closing");
+    box.addEventListener("animationend", () => box.classList.remove("is-closing"), { once: true });
   }
 
   trigger.addEventListener("click", open);
