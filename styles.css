@@ -228,7 +228,8 @@ a:hover {
     -webkit-overflow-scrolling: touch;
   }
 
-  .nav-link {
+  .nav-link,
+  .nav-item-has-sub {
     flex-shrink: 0;
   }
 }
@@ -289,6 +290,107 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
   background: var(--brand-red);
   color: #fff;
   border-color: transparent;
+}
+
+/* Reusable "tab with a submenu" scaffolding — not currently wired to any
+   live nav item (Matchups was tried as a Comandanti submenu and then
+   reverted back to its own top-level tab, see memory), kept here ready for
+   the next tab that actually needs one. To reuse: wrap the parent
+   <a class="nav-link"> + a sibling <div class="nav-submenu"> in a
+   <div class="nav-item-has-sub">, put the child link(s) in the submenu as
+   <a class="nav-sublink">, and add a body[data-active-nav="X"]
+   .nav-sublink[data-nav="X"] rule for the active-state highlight (plus,
+   optionally, a lighter "parent section" tint on the parent .nav-link,
+   the way the reverted Matchups version did). Desktop: hover/focus-opened
+   popup. Mobile: see the html.nav-mobile override further down, which
+   swaps it to an always-visible nested row instead (no hover on touch). */
+.nav-item-has-sub {
+  position: relative;
+  display: inline-flex;
+}
+
+/* Invisible bridge filling the gap between the Comandanti link and the
+   popup below it (.nav-submenu's own margin-top) — without this, moving
+   the pointer straight down from one to the other crosses a strip that
+   belongs to neither element, :hover is lost for that instant, and the
+   popup closes before the pointer ever reaches it. Sized to at least the
+   popup's own min-width so it covers the full width the popup can open
+   to, not just the (usually narrower) trigger link's width. */
+.nav-item-has-sub::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 160px;
+  width: 100%;
+  height: 6px;
+}
+
+/* Small downward caret next to "Comandanti" — the "there's more here" hint
+   the tab wouldn't otherwise give any sign of. Always at least partly
+   visible (not hover-only) so it reads as a hint rather than something
+   only discoverable by accident. */
+.nav-sub-hint {
+  display: inline-block;
+  margin-left: 6px;
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid currentColor;
+  opacity: 0.5;
+  transition: transform 200ms ease, opacity 200ms ease;
+}
+
+.nav-item-has-sub:hover .nav-sub-hint,
+.nav-item-has-sub:focus-within .nav-sub-hint {
+  opacity: 0.9;
+  transform: rotate(180deg);
+}
+
+.nav-submenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 6px;
+  min-width: 160px;
+  padding: 6px;
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: var(--shadow-card-hover);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-6px);
+  transition: opacity 180ms ease, transform 180ms ease, visibility 180ms;
+  z-index: 25;
+}
+
+.nav-item-has-sub:hover .nav-submenu,
+.nav-item-has-sub:focus-within .nav-submenu {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: none;
+}
+
+.nav-sublink {
+  display: block;
+  padding: 9px 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--text-body);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.nav-sublink:hover,
+.nav-sublink:focus-visible {
+  background: var(--hairline-hover);
+  outline: none;
 }
 
 /* Real touch devices only — (pointer: coarse) and (hover: none) describes
@@ -403,6 +505,64 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
     padding: 14px 18px;
     font-size: 1.05rem;
     box-sizing: border-box;
+  }
+
+  /* There's no hover on a touchscreen, so the desktop hover-popup treatment
+     (.nav-submenu positioned/hidden, .nav-sub-hint as the only clue it
+     exists) doesn't work here — Matchups is shown directly underneath
+     Comandanti instead, always visible, indented, so the nesting itself is
+     the hint rather than something to discover. */
+  html.nav-mobile .nav-item-has-sub {
+    /* Overrides the base rule's row-direction inline-flex — without this,
+       the Comandanti link and the submenu below (both width: 100%) sat
+       side by side instead of stacked, pushing Matchups off the right
+       edge where .site-nav-inner's own overflow-x: hidden clips it. */
+    flex-direction: column;
+    width: 100%;
+  }
+
+  html.nav-mobile .nav-sub-hint {
+    display: none;
+  }
+
+  html.nav-mobile .nav-submenu {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    box-shadow: none;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+  }
+
+  html.nav-mobile .nav-sublink {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    width: 100%;
+    min-height: 44px;
+    padding: 8px 44px 8px 18px;
+    font-size: 1rem;
+    color: var(--text-body);
+    box-sizing: border-box;
+  }
+
+  html.nav-mobile .nav-sublink::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.6;
+    flex-shrink: 0;
   }
 
   /* Every rule from here down is also gated on html.nav-mobile, not just
@@ -3210,9 +3370,10 @@ img.cs-option-icon {
 }
 
 @media (max-width: 480px) {
-  /* Otherwise this sticky column alone can eat most of a phone's viewport
-     width, leaving barely a sliver of the next column peeking out — enough
-     to technically be scrollable but not to look or feel like it. */
+  /* Otherwise a long commander name alone can eat most of a phone's
+     viewport width, leaving barely a sliver of the next column peeking
+     out — enough to technically be scrollable but not to look or feel
+     like it. */
   .matchups-row-header {
     max-width: 84px;
   }
@@ -3238,38 +3399,93 @@ img.cs-option-icon {
 }
 
 .matchups-row-header {
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  position: relative;
   text-align: left;
   color: var(--text-title);
   font-weight: 800;
-  /* Solid, not translucent — this sticky column needs to fully mask the
-     colored heatmap cells scrolling underneath it, not blend with them. */
   background: #fff;
-  position: sticky;
-  left: 0;
-  z-index: 1;
+  cursor: default;
 }
 
-/* The empty top-left cell above the row-header column — without its own
-   sticky+solid background, the scrolling column headers in the same row
-   could still be seen passing underneath the sticky row-header column
-   below it while scrolling horizontally. */
 .matchups-corner-header {
   background: #fff;
-  position: sticky;
-  left: 0;
-  z-index: 2;
 }
 
 .matchups-col-header {
-  max-width: 90px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  position: relative;
   color: var(--text-title);
   font-weight: 800;
   font-size: 0.85rem;
+  cursor: default;
+}
+
+/* The ellipsis truncation lives on this inner span rather than the <th>
+   itself — overflow: hidden here would otherwise also clip the <th>'s own
+   ::before/::after tooltip below, since they're positioned children of
+   whichever element declares them (same fix as .league-group-body-clip
+   elsewhere: keep the clipping boundary off the element that also needs
+   to render content outside its own box). */
+.matchups-row-header-text,
+.matchups-col-header-text {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.matchups-row-header-text {
+  max-width: 120px;
+}
+
+.matchups-col-header-text {
+  max-width: 90px;
+}
+
+/* Full commander name on hover, since the cell itself truncates long ones
+   with an ellipsis. Same red-pill visual language as .icon-badge's own
+   tooltip, but a real element positioned by js/matchups-page.js and
+   appended to <body> rather than a CSS ::after anchored to the cell —
+   .matchups-matrix-wrap needs overflow-x: auto for the wide table, which
+   (per the CSS overflow spec) forces overflow-y to clip too, so anything
+   anchored *inside* that wrapper gets cut off at its edge instead of
+   escaping over the rest of the page. */
+.matchups-tooltip {
+  position: fixed;
+  z-index: 60;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: var(--brand-red);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: var(--shadow-card-hover);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.matchups-tooltip.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Positioned via inline `left` in js/matchups-page.js — the tooltip box
+   itself can get shifted off-center (clamped to stay on-screen), so the
+   arrow needs to track the actual cell instead of staying fixed at the
+   tooltip's own midpoint. */
+.matchups-tooltip-arrow {
+  position: absolute;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+}
+
+.matchups-tooltip-arrow-down {
+  bottom: -5px;
+  border-top: 5px solid var(--brand-red);
 }
 
 .matchups-cell {
@@ -3621,8 +3837,18 @@ html[data-theme="dark"].nav-mobile .site-nav-inner {
 :root[data-theme="dark"] .cs-menu,
 :root[data-theme="dark"] .cd-popup,
 :root[data-theme="dark"] .ecal-dialog,
-:root[data-theme="dark"] .matchups-dropdown {
+:root[data-theme="dark"] .matchups-dropdown,
+:root[data-theme="dark"] .nav-submenu {
   background: #241a1d;
+}
+
+:root[data-theme="dark"] .nav-sublink {
+  color: var(--text-body);
+}
+
+:root[data-theme="dark"] .nav-sublink:hover,
+:root[data-theme="dark"] .nav-sublink:focus-visible {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 :root[data-theme="dark"] .matchups-dropdown-item:hover,
@@ -3634,8 +3860,6 @@ html[data-theme="dark"].nav-mobile .site-nav-inner {
   background: rgba(255, 255, 255, 0.045);
 }
 
-/* Solid, not translucent — this sticky column needs to fully mask
-   whatever's scrolled underneath it, same reasoning as .cs-menu above. */
 :root[data-theme="dark"] .matchups-row-header {
   background: #241a1d;
 }
