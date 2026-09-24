@@ -52,23 +52,43 @@
 
   <div class="page-heading">
     <h1 id="commander-title">Caricamento...</h1>
+    <figure class="commander-card-figure" id="commander-card-figure" hidden>
+      <div class="commander-card-perspective">
+        <div class="commander-card-flipper" id="commander-card-flipper">
+          <img id="commander-card-image-front" class="commander-card-face commander-card-face-front" alt="">
+          <img id="commander-card-image-back" class="commander-card-face commander-card-face-back" alt="">
+        </div>
+      </div>
+      <button type="button" class="commander-card-flip-btn" id="commander-card-flip-btn" hidden aria-label="Mostra l'altro lato della carta">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M17 2.1l4 4-4 4"></path>
+          <path d="M3 12.5a9 9 0 0 1 15-6.7l3 2.9"></path>
+          <path d="M7 21.9l-4-4 4-4"></path>
+          <path d="M21 11.5a9 9 0 0 1-15 6.7l-3-2.9"></path>
+        </svg>
+      </button>
+    </figure>
   </div>
 
   <div class="page-loading-region">
     <div id="page-loading-overlay" class="page-loading-overlay"><p>Caricamento...</p></div>
 
-    <h2>Winrate</h2>
-    <div class="filter-bar">
-      <div class="field">
-        <label for="commander-league-filter">Lega</label>
-        <select id="commander-league-filter"><option value="">Tutte le leghe</option></select>
-      </div>
-      <div class="field">
-        <label for="commander-event-filter">Evento</label>
-        <select id="commander-event-filter"><option value="">Tutti gli eventi</option></select>
+    <div class="commander-top-row">
+      <div class="commander-top-row-main">
+        <h2>Winrate</h2>
+        <div class="filter-bar">
+          <div class="field">
+            <label for="commander-league-filter">Lega</label>
+            <select id="commander-league-filter"><option value="">Tutte le leghe</option></select>
+          </div>
+          <div class="field">
+            <label for="commander-event-filter">Evento</label>
+            <select id="commander-event-filter"><option value="">Tutti gli eventi</option></select>
+          </div>
+        </div>
+        <div id="commander-winrate" class="stat-grid page-loading">Caricamento...</div>
       </div>
     </div>
-    <div id="commander-winrate" class="stat-grid page-loading">Caricamento...</div>
 
     <h2 style="margin-top:28px;">Giocatori</h2>
     <div id="commander-players" class="page-loading">Caricamento...</div>

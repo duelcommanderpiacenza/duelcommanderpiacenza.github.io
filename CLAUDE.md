@@ -6,6 +6,7 @@ Static site (vanilla HTML/CSS/JS, **no build step**, no framework, no bundler) f
 - No React/Vue/etc. Pages are plain `.html` files; each loads a page-specific `js/*-page.js` (or `*-detail.js`) ES module plus shared modules.
 - **Nav markup is duplicated verbatim across every public page's `<head>`/`<body>` start** — there's no shared header partial, no server-side includes (GitHub Pages serves static files only). Changing the nav means editing all ~11 public HTML files individually. Same for the PWA-related `<head>` tags (manifest link, apple-mobile-web-app-*, viewport-fit=cover).
 - Two separate installable PWA identities: the public site (`manifest.json` at root) and the admin app (`admin/manifest.json`), each with their own icon set — admin's icons are the same club logo recolored black instead of red, both use `id`/`scope` to stay distinct as separate installs from the same origin.
+- **New accent-colored UI elements (buttons, badges, small floating controls, etc.) should default to the brand-red family** (`--brand-red` and friends, `rgba(220, 24, 28, ...)` for translucent variants) rather than a neutral dark/gray tint — an explicit standing preference, not just this one element's choice. `.badge-status-open` and the commander-detail flip button are the existing examples to match.
 
 ## Data model (Supabase, see `supabase/schema.sql`)
 

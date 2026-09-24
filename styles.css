@@ -1781,7 +1781,8 @@ footer {
   }
 
   .pie-chart,
-  .pie-legend-item {
+  .pie-legend-item,
+  .commander-card-perspective {
     animation: none !important;
     opacity: 1;
     transform: none;
@@ -1801,6 +1802,7 @@ footer {
 }
 
 .page-heading {
+  position: relative;
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -1815,6 +1817,214 @@ footer {
   font-size: 1.9rem;
   color: var(--text-title);
   animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.commander-top-row-main {
+  /* Reserves horizontal space on desktop so the Winrate content never
+     runs under the card art floating beside it (see .commander-card-figure
+     below) — the figure is positioned relative to .page-heading, not this
+     element, so flexbox/grid can't reserve the space automatically here.
+     Sized generously since the image's actual width isn't fixed (see
+     .commander-card-image's own comment) — a bit more than it should ever
+     need, rather than cutting it close. */
+  padding-right: 300px;
+}
+
+/* Commander detail page's Scryfall card art. Positioned relative to
+   .page-heading (made position: relative above) rather than sitting in
+   the Winrate row as a normal flex sibling — that way its top is pinned
+   to the title's own top for free via top: 0, no JS needed for that part.
+   Its height is set explicitly in JS instead (js/commander-detail.js's
+   syncCardImageLayout) to reach exactly down to the stat tiles' bottom —
+   two separate elements with no clean CSS-only way to span between them.
+   That same function also reads the image's own resulting width back and
+   sets it as .commander-top-row-main's padding-right, below, so the stat
+   tiles can grow to fill the space right up to the card's real edge. It's
+   allowed to visually extend past .page-heading's own bottom edge into
+   the Winrate row below since nothing here clips overflow. */
+.commander-card-figure {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 0;
+}
+
+@keyframes commander-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* perspective (not directly on .commander-card-flipper) is what gives the
+   flip below its 3D depth rather than looking like a flat horizontal
+   squash — kept on its own wrapper, one level below .commander-card-figure,
+   rather than on the figure itself: perspective establishes a new
+   stacking context on whatever it's set on, and .commander-card-flip-btn
+   is a sibling of this wrapper, not a child of it — keeping the two out
+   of the same stacking context is what actually fixed the button not
+   being reliably clickable over the card (pointer-events: none on the
+   svg, below, wasn't enough on its own).
+
+   The entrance animation lives here too, for the exact same reason —
+   putting it on .commander-card-figure itself (tried first) reintroduced
+   the same button-not-clickable bug, since a CSS Animation that animates
+   transform makes the browser treat its target as needing its own
+   stacking context for as long as animation-fill-mode holds it there,
+   regardless of the transform settling back to none. Removing the hidden
+   attribute (js/commander-detail.js, once both the image and the Winrate
+   stats are ready) inserts this into the render tree fresh, which is what
+   makes the animation actually play — it wouldn't if this had been
+   visible the whole time. */
+.commander-card-perspective {
+  perspective: 1200px;
+  animation: commander-card-in 450ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Double-faced commanders only (js/commander-detail.js only reveals the
+   flip button when a second face actually exists) — front and back are
+   both real <img> elements stacked in the same spot the whole time, not
+   swapped on click, so the 3D rotation below has something physically "on
+   the other side" to reveal rather than needing to cross-fade/swap
+   mid-animation. */
+.commander-card-flipper {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 600ms cubic-bezier(0.4, 0.2, 0.2, 1);
+}
+
+.commander-card-flipper.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.commander-card-face {
+  display: block;
+  width: auto;
+  height: auto;
+  /* A cap this low would fight the JS-set height above: with width: auto
+     and an explicit height, the browser computes width from the image's
+     own aspect ratio — if that computed width would exceed max-width, the
+     browser shrinks the rendered height back down to match the capped
+     width instead, undershooting the actual target height. 320px is
+     comfortably above what the real height (title-to-stat-tiles) implies,
+     so it only acts as a safety ceiling, not a normal constraint. */
+  max-width: 320px;
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+  /* The face rotated away from the viewer (whichever one isn't currently
+     showing) renders as literally invisible instead of a mirror-flipped
+     image of itself. */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.commander-card-face-front {
+  /* In normal flow — its own natural size (height set by JS, width
+     derived from that) is what .commander-card-flipper itself sizes to,
+     since the flipper is otherwise just a plain, unsized div. */
+  position: relative;
+}
+
+.commander-card-face-back {
+  /* width/height: 100% (not auto) against the flipper's own definite
+     size — inset: 0 alone with width/height: auto (tried first) relies on
+     browsers correctly "stretching" an absolutely positioned <img> to fill
+     its containing block, which — like the height: 100% flex-stretch
+     attempt earlier on this same page — turned out unreliable in practice
+     (rendered oversized, close to the image's own intrinsic size instead
+     of matching the front face). Percentage sizing against a definite
+     ancestor size is the more reliably-supported path. max-width: none
+     since .commander-card-face's own 320px cap is meant for the
+     JS-height-driven front face, not relevant to this one sizing off it.
+     Pre-rotated 180deg from the start: with the flipper itself also
+     rotating, this face goes 180->360deg (i.e. back to facing the viewer)
+     in lockstep with the front's 0->180deg (i.e. away from the viewer). */
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  transform: rotateY(180deg);
+}
+
+.commander-card-flip-btn {
+  position: absolute;
+  top: 50%;
+  right: -14px;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  /* Brand red, not a neutral dark tint — the site's own accent color
+     family, same reasoning as .badge-status-open elsewhere: any small
+     floating accent like this should read as "part of the site" rather
+     than a generic dark UI chrome color. */
+  background: rgba(220, 24, 28, 0.78);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: var(--shadow-card-hover);
+  transition: background 150ms ease, transform 150ms ease;
+}
+
+/* Same fix as .field[hidden]/.icon-swatch-row[hidden] elsewhere — this
+   rule's own display: flex above has the same specificity as the browser
+   default [hidden] { display: none; }, but author styles always beat
+   user-agent ones regardless of specificity, so without this override the
+   hidden attribute was silently doing nothing and the button showed for
+   every commander, not just double-faced ones. */
+.commander-card-flip-btn[hidden] {
+  display: none;
+}
+
+.commander-card-flip-btn:hover {
+  background: rgba(220, 24, 28, 0.95);
+  transform: translateY(-50%) scale(1.06);
+}
+
+.commander-card-flip-btn svg {
+  width: 18px;
+  height: 18px;
+  /* Guarantees every click within the button's box — icon included — is
+     handled by the <button> itself, not intercepted by the svg/its paths
+     (a common source of "button not clickable right on the icon" bugs). */
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .commander-top-row-main {
+    padding-right: 0;
+  }
+
+  /* No longer floating beside anything at this width — back to a normal,
+     centered in-flow block (still sits right after the name and before
+     the rest of the page either way, since that's already where it is in
+     the markup: inside .page-heading, ahead of .page-loading-region
+     entirely). Kept position: relative (not static) rather than removing
+     positioning altogether — .commander-card-flip-btn is position:
+     absolute and needs *this* element as its anchor, not whatever
+     positioned ancestor is next up the tree (.page-heading, spanning the
+     full page width) once this one stops being one. */
+  .commander-card-figure {
+    position: relative;
+    top: auto;
+    right: auto;
+    margin: 14px auto 0;
+  }
+
+  .commander-card-face {
+    width: 260px;
+    height: auto;
+    max-width: none;
+  }
 }
 
 .page-subtitle {

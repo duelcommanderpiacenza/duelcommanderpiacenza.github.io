@@ -18,6 +18,68 @@ function getId() {
   return new URLSearchParams(window.location.search).get("id");
 }
 
+// A real JSON lookup rather than Scryfall's simpler image-redirect
+// shortcut (.../cards/named?...&format=image) — that one only ever gives
+// a single image, but a double-faced commander needs both faces' own
+// image URLs to flip between. Returns null (figure stays hidden) rather
+// than throwing, for a name Scryfall can't match exactly or if the
+// request itself fails — a missing card image is never worth blocking on.
+async function fetchScryfallCard(name) {
+  try {
+    const res = await fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}`);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+// Split/adventure/flip cards also have a card_faces array in Scryfall's
+// data, but only ONE physical image showing both halves already — their
+// faces don't carry their own image_uris, only true double-faced cards
+// (transform, modal DFC, meld) do, one full image per side. That's the
+// actual signal for "this needs a flip button", not just the presence of
+// card_faces.
+function scryfallCardImages(card) {
+  if (card.card_faces?.length >= 2 && card.card_faces.every((f) => f.image_uris)) {
+    return card.card_faces.map((f) => f.image_uris.normal);
+  }
+  return card.image_uris ? [card.image_uris.normal] : [];
+}
+
+// The card's top is already pinned to the title's own top for free, via
+// position: absolute + top: 0 on .commander-card-figure (see the CSS) —
+// this sets its height, in px, so the bottom lands exactly at the stat
+// tiles' own bottom edge (#commander-winrate, not its .commander-top-row-main
+// wrapper — measuring the wrapper instead of the tiles themselves left a
+// few px of slack whenever they didn't happen to be the same). Spanning
+// two separate elements (.page-heading and the stat tiles) like that isn't
+// something CSS alone can do. Then, now that the image has a real
+// rendered width (derived from that height via its own aspect ratio, see
+// the CSS), reads it back and sets it as .commander-top-row-main's own
+// padding-right — so the stat tiles grow to fill the space right up to
+// the card's actual edge, rather than stopping short at a fixed guess
+// that doesn't match the image's real (height-dependent) width. Below
+// 640px the card drops below the title instead of floating beside it (see
+// the CSS), so there's no column layout to match there at all — both
+// inline overrides are cleared and the CSS fallbacks take over.
+function syncCardImageLayout(cardImageEl) {
+  const mainColEl = document.querySelector(".commander-top-row-main");
+  if (window.innerWidth <= 640) {
+    cardImageEl.style.height = "";
+    if (mainColEl) mainColEl.style.paddingRight = "";
+    return;
+  }
+  const headingEl = document.querySelector(".page-heading");
+  const winrateBoxesEl = document.getElementById("commander-winrate");
+  if (!headingEl || !mainColEl || !winrateBoxesEl) return;
+  const top = headingEl.getBoundingClientRect().top;
+  const bottom = winrateBoxesEl.getBoundingClientRect().bottom;
+  cardImageEl.style.height = `${Math.round(bottom - top)}px`;
+  const imageWidth = cardImageEl.getBoundingClientRect().width;
+  mainColEl.style.paddingRight = `${Math.round(imageWidth) + 24}px`;
+}
+
 function outcomeFor(m, selfIsP1) {
   const outcome = matchRoundOutcome(m);
   if (outcome === "draw") return "draw";
@@ -33,6 +95,11 @@ function selfScoreLabel(m, selfIsP1) {
 async function init() {
   const id = getId();
   const titleEl = document.getElementById("commander-title");
+  const cardFigureEl = document.getElementById("commander-card-figure");
+  const cardFlipperEl = document.getElementById("commander-card-flipper");
+  const cardImageFrontEl = document.getElementById("commander-card-image-front");
+  const cardImageBackEl = document.getElementById("commander-card-image-back");
+  const cardFlipBtnEl = document.getElementById("commander-card-flip-btn");
   const winrateEl = document.getElementById("commander-winrate");
   const leagueFilter = document.getElementById("commander-league-filter");
   const eventFilter = document.getElementById("commander-event-filter");
@@ -45,9 +112,65 @@ async function init() {
     return;
   }
 
+  // Scryfall's image and the Winrate stats below (Supabase) load
+  // independently, in whichever order actually finishes first — revealing
+  // the card as soon as *it* is ready, on its own, meant syncCardImageLayout
+  // sometimes measured against the stat tiles' still-showing "Caricamento..."
+  // placeholder rather than the real tiles, since those hadn't rendered yet:
+  // a visibly smaller card that then jumped to full size once the real
+  // stats did land a moment later. Both readiness flags below have to be
+  // true before the card is revealed at all, so it only ever appears
+  // already at its final, correct size.
+  let cardImageReady = false;
+  let statsReady = false;
+  function revealCardIfReady() {
+    if (!cardImageReady || !statsReady || !cardFigureEl.hidden) return;
+    cardFigureEl.hidden = false;
+    syncCardImageLayout(cardImageFrontEl);
+  }
+
   try {
     const commander = await Commanders.get(id);
     titleEl.innerHTML = `${escapeHtml(commander.name)} ${colorIdentityPips(commander.color_identity)}`;
+
+    // Loaded independently of everything else below (not awaited here) — a
+    // slow/unreachable Scryfall never blocks the actual page data, and a
+    // failed/mismatched lookup just leaves the figure hidden rather than
+    // showing a broken image icon.
+    cardImageFrontEl.alt = commander.name;
+    cardImageFrontEl.addEventListener(
+      "load",
+      () => {
+        cardImageReady = true;
+        revealCardIfReady();
+      },
+      { once: true }
+    );
+    cardImageFrontEl.addEventListener("error", () => cardFigureEl.hidden = true, { once: true });
+    window.addEventListener("resize", () => syncCardImageLayout(cardImageFrontEl));
+
+    fetchScryfallCard(commander.name).then((card) => {
+      if (!card) return;
+      const images = scryfallCardImages(card);
+      if (images.length === 0) return;
+      cardImageFrontEl.src = images[0];
+      if (images.length < 2) return;
+
+      // Double-faced (transform/modal DFC) — wire up the flip button and
+      // load the back face too, same reasoning as the front: it fails
+      // silently (button just never appears) rather than anything visible
+      // breaking if this particular URL doesn't resolve.
+      cardImageBackEl.alt = `${commander.name} (retro)`;
+      cardImageBackEl.src = images[1];
+      cardFlipBtnEl.hidden = false;
+      cardFlipBtnEl.addEventListener("click", () => {
+        const isFlipped = cardFlipperEl.classList.toggle("is-flipped");
+        cardFlipBtnEl.setAttribute(
+          "aria-label",
+          isFlipped ? "Mostra il lato frontale della carta" : "Mostra l'altro lato della carta"
+        );
+      });
+    });
 
     // Every (event, player) pair that piloted this commander.
     const playedEntries = await EventEntries.listByCommander(id);
@@ -56,6 +179,12 @@ async function init() {
       winrateEl.innerHTML = '<p class="page-empty">Non ci sono ancora dati sufficienti.</p>';
       playersEl.innerHTML = '<p class="page-empty">Nessun giocatore ha ancora usato questo commander.</p>';
       matchesEl.innerHTML = '<p class="page-empty">Nessuna partita registrata.</p>';
+      // This path skips computeWinrate entirely, which is the only other
+      // place statsReady gets set — without this, a commander with no
+      // recorded data at all would leave the card permanently hidden even
+      // once its image finishes loading.
+      statsReady = true;
+      revealCardIfReady();
       return;
     }
 
@@ -184,6 +313,13 @@ async function init() {
         tallyGames(bucket, r.gameWins, r.gameTotal);
       }
       renderWinrateTiles(winrateEl, bucket);
+      statsReady = true;
+      revealCardIfReady();
+      // The stat tiles just replaced their own "Caricamento..." placeholder
+      // (or a filter change re-rendered them) — either can change their own
+      // height, so the card needs re-measuring. A no-op if the card isn't
+      // visible yet (revealCardIfReady above handles that first reveal).
+      syncCardImageLayout(cardImageFrontEl);
     }
 
     await initScopeFilter({ leagueSelect: leagueFilter, eventSelect: eventFilter, onChange: computeWinrate });
