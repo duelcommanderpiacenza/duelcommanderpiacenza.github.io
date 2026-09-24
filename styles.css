@@ -39,6 +39,19 @@
   --accent-combo: #2a2226;
   --accent-tempo: #0aa8bd;
   --accent-midrange: #e0752b;
+
+  /* Same blue family as --accent-control, but its own named variable —
+     the nav's Social tab intentionally breaks from the red brand family
+     (see .nav-link[data-nav="social"] below) to read as visually distinct
+     from the rest of the site's own content, not because it's secretly
+     "the control archetype's" color. Split into two, same reasoning as
+     --brand-red vs --brand-red-darker: --social-blue is a solid fill (the
+     active pill's own background), left untouched in dark mode like
+     --brand-red itself is; --social-blue-text is the inactive tab's own
+     (much thinner) text color, which does need brightening for contrast
+     once the page behind it goes dark — see the dark-theme override below. */
+  --social-blue: #2f5fdc;
+  --social-blue-text: #2f5fdc;
 }
 
 /* Suppresses the browser's default blue-ish tap-highlight flash on mobile
@@ -179,7 +192,10 @@ a:hover {
     linear-gradient(135deg, var(--brand-red-dark), rgba(220, 24, 28, 0.96)),
     var(--brand-red);
   color: white;
-  padding: 18px 20px;
+  /* Vertical padding trimmed from 18px to 15px, exactly offsetting the
+     logo/text size bump below (.site-logo-sm/.site-header-brand) — the
+     header's own total height stays the same, only what's inside it grows. */
+  padding: 15px 20px;
   box-shadow: 0 20px 45px rgba(103, 16, 20, 0.22);
   view-transition-name: site-header;
 }
@@ -205,13 +221,13 @@ a:hover {
   color: #fff;
   text-decoration: none;
   font-weight: 800;
-  font-size: 1.15rem;
+  font-size: 1.3rem;
   letter-spacing: 0.01em;
 }
 
 .site-logo-sm {
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   flex-shrink: 0;
   object-fit: contain;
   filter: brightness(0) invert(1);
@@ -459,10 +475,35 @@ html.nav-mobile .site-search-box.is-open {
   background: var(--bg-cream-1);
   padding: 18px 16px;
   padding-top: calc(18px + env(safe-area-inset-top));
+  animation: search-overlay-in 200ms ease both;
+}
+
+@keyframes search-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* The backdrop above fades in on its own; the actual search bar cascades
+   in a beat after it — same entrance-fade-up + stagger language used
+   everywhere else on the site, not a bespoke animation just for this. */
+html.nav-mobile .site-search-box.is-open .site-search-bar {
+  animation: entrance-fade-up 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: 60ms;
 }
 
 html.nav-mobile .site-search-box.is-open .site-search-results {
   display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.nav-mobile .site-search-box.is-open,
+  html.nav-mobile .site-search-box.is-open .site-search-bar {
+    animation: none;
+  }
 }
 
 @media (max-width: 480px) {
@@ -550,22 +591,47 @@ html.nav-mobile .site-search-box.is-open .site-search-results {
 /* Active-tab highlight driven entirely by matching <body data-active-nav>
    (set statically per page, already in every page's HTML) against each
    link's own data-nav — no JS, no separate pill element, no per-navigation
-   positioning/animation at all. */
+   positioning/animation at all. Social is deliberately excluded from this
+   shared red group — see .nav-link[data-nav="social"] below for its own
+   blue treatment instead. */
 body[data-active-nav="current"] .nav-link[data-nav="current"],
 body[data-active-nav="events"] .nav-link[data-nav="events"],
 body[data-active-nav="commanders"] .nav-link[data-nav="commanders"],
 body[data-active-nav="matchups"] .nav-link[data-nav="matchups"],
 body[data-active-nav="archetypes"] .nav-link[data-nav="archetypes"],
 body[data-active-nav="players"] .nav-link[data-nav="players"],
-body[data-active-nav="social"] .nav-link[data-nav="social"],
 body[data-active-nav="current"] .nav-link[data-nav="current"]:hover,
 body[data-active-nav="events"] .nav-link[data-nav="events"]:hover,
 body[data-active-nav="commanders"] .nav-link[data-nav="commanders"]:hover,
 body[data-active-nav="matchups"] .nav-link[data-nav="matchups"]:hover,
 body[data-active-nav="archetypes"] .nav-link[data-nav="archetypes"]:hover,
-body[data-active-nav="players"] .nav-link[data-nav="players"]:hover,
-body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
+body[data-active-nav="players"] .nav-link[data-nav="players"]:hover {
   background: var(--brand-red);
+  color: #fff;
+  border-color: transparent;
+}
+
+/* Social's own tab: pushed to the far right of the row (margin-left: auto,
+   the row's only "auto" margin, so everything else keeps its normal
+   left-packed flow) and given a blue identity instead of the shared red
+   one above — reads as a deliberately distinct, "external link" kind of
+   tab rather than one more page among the others. No effect once the row
+   becomes the mobile dropdown's vertical list (html.nav-mobile
+   .site-nav-inner is flex-direction: column there — margin-left has no
+   axis to push along), it just sits last, same as before. */
+.nav-link[data-nav="social"] {
+  margin-left: auto;
+  color: var(--social-blue-text);
+}
+
+.nav-link[data-nav="social"]:hover {
+  background: rgba(47, 95, 214, 0.08);
+  border-color: rgba(47, 95, 214, 0.3);
+}
+
+body[data-active-nav="social"] .nav-link[data-nav="social"],
+body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
+  background: var(--social-blue);
   color: #fff;
   border-color: transparent;
 }
@@ -700,7 +766,7 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
      resolves to 0 on anything without a notch/inset, so this is a no-op
      everywhere else. */
   html.nav-mobile .site-header {
-    padding-top: calc(18px + env(safe-area-inset-top));
+    padding-top: calc(9px + env(safe-area-inset-top));
   }
 
   /* Same reasoning at the opposite edge — keeps the pill clear of the
@@ -717,6 +783,27 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
     border-bottom: none;
     box-shadow: none;
     padding: 0;
+  }
+
+  /* A soft red-to-transparent backdrop behind the floating pill, covering
+     the very bottom of the viewport — keeps the pill readable against
+     whatever page content happens to be scrolled underneath it, and reads
+     as a deliberate floating dock rather than the pill just sitting bare
+     over the page. z-index: -1 only ranks it within .site-nav's own
+     stacking context (that element's explicit z-index further up still
+     puts the whole thing above ordinary page content) — behind the pill
+     itself, in front of the page. pointer-events: none so taps in the
+     gradient area (but off the pill) still reach the page underneath. */
+  html.nav-mobile .site-nav::before {
+    content: "";
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 90px;
+    background: linear-gradient(to top, rgba(220, 24, 28, 0.35), transparent);
+    pointer-events: none;
+    z-index: -1;
   }
 
   /* Rubber-band/pull-to-refresh bounce reads as "a webpage in a browser
@@ -875,6 +962,18 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
     background: var(--brand-red-deep-2);
   }
 
+  /* The pill shows whatever page is currently active (its own label text,
+     set per-page in the static HTML) — when that's Social, it should
+     carry Social's own blue identity too, same reasoning as the desktop
+     tab row's .nav-link[data-nav="social"] override. */
+  html.nav-mobile body[data-active-nav="social"] .nav-dropdown-trigger {
+    background: var(--social-blue);
+  }
+
+  html.nav-mobile body[data-active-nav="social"] .nav-dropdown-trigger:hover {
+    background: #1f47b8;
+  }
+
   /* Points up at rest — the panel it opens always appears above the pill,
      never below — and rotates to point down once open, same "flip to
      signal toggle state" idea as a downward-opening dropdown, just
@@ -911,17 +1010,19 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
 
 @media (max-width: 480px) {
   .site-header {
-    padding: 14px 16px;
+    /* Same trade-off as the desktop rule above — padding trimmed by
+       exactly as much as the logo grows, so total header height holds. */
+    padding: 9px 16px;
   }
 
   .site-header-brand {
-    font-size: 1rem;
+    font-size: 1.25rem;
     gap: 10px;
   }
 
   .site-logo-sm {
-    width: 28px;
-    height: 28px;
+    width: 38px;
+    height: 38px;
   }
 
   .nav-link {
@@ -1023,35 +1124,40 @@ main {
 .entity-card:nth-child(2),
 .dashboard-league-card:nth-child(2),
 .dashboard-league-chip:nth-child(2),
-.dashboard-event-row:nth-child(2) {
+.dashboard-event-row:nth-child(2),
+.stat-tile:nth-child(2) {
   animation-delay: 45ms;
 }
 
 .entity-card:nth-child(3),
 .dashboard-league-card:nth-child(3),
 .dashboard-league-chip:nth-child(3),
-.dashboard-event-row:nth-child(3) {
+.dashboard-event-row:nth-child(3),
+.stat-tile:nth-child(3) {
   animation-delay: 90ms;
 }
 
 .entity-card:nth-child(4),
 .dashboard-league-card:nth-child(4),
 .dashboard-league-chip:nth-child(4),
-.dashboard-event-row:nth-child(4) {
+.dashboard-event-row:nth-child(4),
+.stat-tile:nth-child(4) {
   animation-delay: 135ms;
 }
 
 .entity-card:nth-child(5),
 .dashboard-league-card:nth-child(5),
 .dashboard-league-chip:nth-child(5),
-.dashboard-event-row:nth-child(5) {
+.dashboard-event-row:nth-child(5),
+.stat-tile:nth-child(5) {
   animation-delay: 180ms;
 }
 
 .entity-card:nth-child(n + 6),
 .dashboard-league-card:nth-child(n + 6),
 .dashboard-league-chip:nth-child(n + 6),
-.dashboard-event-row:nth-child(n + 6) {
+.dashboard-event-row:nth-child(n + 6),
+.stat-tile:nth-child(n + 6) {
   animation-delay: 225ms;
 }
 
@@ -1063,9 +1169,10 @@ main {
   .dashboard-league-card,
   .dashboard-league-chip,
   .dashboard-event-row,
-  .page-heading h1,
   .admin-topbar h1,
-  input[type="search"] {
+  input[type="search"],
+  .stat-tile,
+  .pie-chart-wrap {
     animation: none;
   }
 }
@@ -2095,7 +2202,21 @@ footer {
   margin-bottom: 22px;
 }
 
-.page-heading h1,
+/* Deliberately no entrance animation and no loading-state hiding here — a
+   detail page's <h1> starts as a plain "Caricamento..." placeholder
+   (static HTML, present at first paint) and is simply overwritten in place
+   once js/*-detail.js's first fetch resolves, the same way any other
+   already-there text would update. Treating that swap as something to
+   animate or hide until "ready" made it feel like part of the page's
+   loading choreography; the title isn't meant to be — it's meant to just
+   already be there, briefly wrong for a moment on a detail page, same as
+   a list page's own static title (which never changes at all). */
+.page-heading h1 {
+  margin: 0;
+  font-size: 1.9rem;
+  color: var(--text-title);
+}
+
 .admin-topbar h1 {
   margin: 0;
   font-size: 1.9rem;
@@ -2468,6 +2589,10 @@ footer {
   box-shadow: var(--shadow-card);
   padding: 18px;
   backdrop-filter: blur(10px);
+  /* Was missing entirely — every other reveal-on-load card/row on the site
+     (.card, .entity-card, .data-table-wrap, .dashboard-*) fades up, but
+     the Winrate/Vittorie/Pareggi/Sconfitte tiles just popped in flat. */
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 .stat-tile-label {
@@ -4128,6 +4253,12 @@ img.cs-option-icon {
   box-shadow: var(--shadow-card);
   padding: 18px;
   margin-bottom: 20px;
+  /* The card boundary itself was never animating — only the ring/legend
+     content inside it (see the pie-ring-in/pie-legend-in animations right
+     below). Fading the whole card up too covers every chart shape sharing
+     this wrapper uniformly, including the line chart (js/line-chart.js),
+     which had no entrance animation of its own at all. */
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 .pie-chart-title {
@@ -4444,6 +4575,7 @@ img.cs-option-icon {
      --brand-red itself — safe and necessary to brighten for contrast. */
   --brand-red-deep: #ff7a7e;
   --brand-red-darker: #ff8489;
+  --social-blue-text: #7fa0ff;
 }
 
 :root[data-theme="dark"] .site-nav {
