@@ -836,7 +836,7 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
        scrollbar instead of just not happening. */
     overflow-x: hidden;
     border: 1px solid var(--hairline);
-    border-radius: 14px;
+    border-radius: 32px;
     /* A soft red tint rather than the plain white .cs-menu/.cd-popup use
        elsewhere — the trigger below is solid brand red, so the panel it
        opens from reads as the same "family" at a lower intensity, not an
@@ -863,6 +863,28 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
     to {
       opacity: 1;
       transform: translateX(-50%);
+    }
+  }
+
+  /* Closing used to be an instant display: none the moment .is-open came
+     off — display can't be transitioned/animated on its own. js/nav-
+     dropdown.js instead adds .is-closing (keeping this rendered, reversing
+     the entrance animation) for exactly as long as nav-dropdown-panel-out
+     takes, then removes it once that animation ends, letting the earlier
+     display: none rule (no matching .is-open/.is-closing) take back over. */
+  html.nav-mobile .site-nav.is-closing .site-nav-inner {
+    display: flex;
+    animation: nav-dropdown-panel-out 140ms ease both;
+  }
+
+  @keyframes nav-dropdown-panel-out {
+    from {
+      opacity: 1;
+      transform: translateX(-50%);
+    }
+    to {
+      opacity: 0;
+      transform: translateX(-50%) translateY(4px);
     }
   }
 
@@ -1526,6 +1548,22 @@ main {
   color: var(--text-muted);
   font-size: 0.82rem;
   font-weight: 700;
+}
+
+/* .dashboard-event-meta's own flex-shrink: 0 (above) means it never gives
+   up width to its row-mate — on a narrow phone, that squeezed the event
+   name (the more important of the two) down to just a handful of visible
+   characters before ellipsis kicked in. Stacking the two instead — name on
+   its own full-width line, meta below on a second, smaller one — gives the
+   name priority without needing to truncate anything at all in the common
+   case, rather than trying to tune how much of the row each one "deserves"
+   while still sharing one line. */
+@media (max-width: 640px) {
+  .dashboard-event-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
 }
 
 .dashboard-card-head {

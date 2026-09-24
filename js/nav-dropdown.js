@@ -14,9 +14,32 @@ function isMobileNav() {
   return navigator.maxTouchPoints > 0;
 }
 
-function closeDropdown(nav) {
+// display: none (the base, closed state) can't be transitioned/animated on
+// its own — opening plays nav-dropdown-panel-in via .is-open (styles.css)
+// same as before, but closing used to just be an instant cut to display:
+// none the moment .is-open came off. .is-closing keeps the panel actually
+// rendered for exactly as long as the reverse animation
+// (nav-dropdown-panel-out) takes, playing it, before finally letting it
+// disappear — mirroring js/page-loading.js's own transitionend-then-remove
+// pattern for the same "animate something on its way OUT" problem.
+function openDropdown(nav, trigger) {
+  nav.classList.remove("is-closing");
+  nav.classList.add("is-open");
+  trigger.setAttribute("aria-expanded", "true");
+}
+
+function closeDropdown(nav, trigger) {
+  if (!nav.classList.contains("is-open")) return;
   nav.classList.remove("is-open");
-  nav.querySelector(".nav-dropdown-trigger")?.setAttribute("aria-expanded", "false");
+  trigger.setAttribute("aria-expanded", "false");
+  // Reduced motion: nothing to reverse out of, and animationend would
+  // never fire to clear .is-closing again — skip straight to the (already
+  // instant) closed state instead of hanging the panel open.
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const inner = nav.querySelector(".site-nav-inner");
+  if (!inner) return;
+  nav.classList.add("is-closing");
+  inner.addEventListener("animationend", () => nav.classList.remove("is-closing"), { once: true });
 }
 
 function init() {
@@ -35,17 +58,17 @@ function init() {
   if (!nav || !trigger) return;
 
   trigger.addEventListener("click", () => {
-    const open = nav.classList.toggle("is-open");
-    trigger.setAttribute("aria-expanded", String(open));
+    if (nav.classList.contains("is-open")) closeDropdown(nav, trigger);
+    else openDropdown(nav, trigger);
   });
 
   document.addEventListener("click", (e) => {
-    if (!nav.contains(e.target)) closeDropdown(nav);
+    if (!nav.contains(e.target)) closeDropdown(nav, trigger);
   });
 
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && nav.classList.contains("is-open")) {
-      closeDropdown(nav);
+      closeDropdown(nav, trigger);
       trigger.focus();
     }
   });
