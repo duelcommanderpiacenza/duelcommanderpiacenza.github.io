@@ -44,8 +44,9 @@ export const Commanders = {
 
 // players has two FKs to badges (badge1_id/badge2_id — the manually
 // assigned slots), so PostgREST needs the constraint name on each embed to
-// know which is which. Up to 2 more badges can show per player, computed
-// live from badges.auto_rule (js/auto-badges.js) rather than stored here.
+// know which is which. Up to 2 more badges can show per player, from
+// badges.auto_rule via the precomputed PlayerAutoBadges below rather than
+// stored on this row.
 const BADGE_EMBED =
   "badge1:badges!players_badge1_id_fkey(id,name,icon,icon_url), badge2:badges!players_badge2_id_fkey(id,name,icon,icon_url)";
 
@@ -285,4 +286,37 @@ export const Matches = {
   create: (row) => sb.from("matches").insert(row).select().single().then(assertOk),
   update: (id, patch) => sb.from("matches").update(patch).eq("id", id).select().single().then(assertOk),
   remove: (id) => sb.from("matches").delete().eq("id", id).then(assertOk),
+};
+
+// Precomputed auto-badge assignments (badges.auto_rule) — recomputed and
+// fully replaced by admin/js/badges-sync.js whenever an event or league is
+// closed (the only moments the underlying match/standings data actually
+// changes), rather than live-computed on every page view. See that file
+// and js/auto-badges.js for the "why" — this is just the storage.
+export const PlayerAutoBadges = {
+  // badge.priority is included so callers that need only a top-N subset
+  // (js/players-page.js) can sort for it themselves — Postgres/PostgREST
+  // don't guarantee row order without an explicit order() on the query,
+  // and there's no direct column on this join table itself to order by.
+  list: () =>
+    sb.from("player_badges_auto").select("player_id, badge:badges(id,name,icon,icon_url,priority)").then(assertOk),
+  listByPlayer: (playerId) =>
+    sb
+      .from("player_badges_auto")
+      .select("badge:badges(id,name,icon,icon_url,priority)")
+      .eq("player_id", playerId)
+      .then(assertOk),
+  // Full replace, not a diff — simplest correct way to keep this in sync
+  // with computeAutoBadgeAssignments's own from-scratch recomputation, and
+  // it only ever runs on the relatively rare "an event/league just closed"
+  // event, not on every page load, so the extra round-trip doesn't matter.
+  replaceAll: async (rows) => {
+    // neq against an all-zero UUID (guaranteed to never be a real row's
+    // id) rather than not(...,"is",null) — the more common/battle-tested
+    // Supabase idiom for "delete every row", used here since PlayerAutoBadges
+    // is a plain join table with no other single column to filter on.
+    assertOk(await sb.from("player_badges_auto").delete().neq("player_id", "00000000-0000-0000-0000-000000000000"));
+    if (rows.length === 0) return;
+    assertOk(await sb.from("player_badges_auto").insert(rows));
+  },
 };

@@ -2,6 +2,7 @@ import { Events } from "../../js/db.js";
 import { formatDate, formatTime } from "../../js/ui.js";
 import { renderTable, setMessage, statusToggleButton } from "./crud-ui.js";
 import { on } from "./bus.js";
+import { syncAutoBadges } from "./badges-sync.js";
 
 /**
  * Middle of the pyramid: events always belong to whichever league was just
@@ -80,8 +81,14 @@ export function initEventsAdmin({ onOpenEvent }) {
   }
 
   async function onToggleOpen(row) {
+    const wasOpen = row.is_open;
     try {
-      await Events.update(row.id, { is_open: !row.is_open });
+      await Events.update(row.id, { is_open: !wasOpen });
+      // Just closed, not reopened — the underlying match/standings data
+      // several auto-badge rules depend on just changed. Fire-and-forget:
+      // badges are a nice-to-have, not worth blocking/erroring the actual
+      // status flip over if this secondary step happens to fail.
+      if (wasOpen) syncAutoBadges().catch(console.error);
       // Just a status flip, not a changed row set — skip the list's
       // entrance animation so it reads as instant feedback, not a reload.
       await refresh(false);

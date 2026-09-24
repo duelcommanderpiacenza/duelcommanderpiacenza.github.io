@@ -69,9 +69,11 @@ create table badges ( -- small icon + name a player can be tagged with (e.g. "Ca
   icon_url text,
   -- Auto-assignment: null means this badge is manual-only (assignable via
   -- the two fixed dropdowns on the players form). A non-null rule instead
-  -- computes who currently holds this badge live, from match/league data,
-  -- every time it's displayed (js/auto-badges.js) — never stored on a
-  -- player row, so it can never go stale. Add new rule strings to the check
+  -- computes who currently holds this badge from match/league data
+  -- (js/auto-badges.js) — not live on every view, though: recomputed and
+  -- cached into player_badges_auto (below) only when an event/league
+  -- closes (admin/js/badges-sync.js), which is the only time the
+  -- underlying data actually changes. Add new rule strings to the check
   -- constraint below as more are defined.
   auto_rule text,
   -- Higher wins when a player would qualify for more auto badges than
@@ -94,8 +96,8 @@ create table players (
   handle text,              -- optional disambiguator shown next to the name when it collides
   -- Up to 2 *manually* assigned badges, each its own nullable slot (not a
   -- join table) since the admin UI is literally two fixed dropdowns. A
-  -- player can show up to 2 more on top of these, computed live from
-  -- badges.auto_rule — see js/auto-badges.js — never stored here.
+  -- player can show up to 2 more on top of these, from badges.auto_rule —
+  -- see player_badges_auto below, not stored on this row.
   badge1_id uuid,
   badge2_id uuid,
   created_at timestamptz not null default now(),
@@ -148,6 +150,17 @@ create table event_entries ( -- a player's commander(s) + archetype for one even
   constraint event_entries_partner_commander_id_fkey foreign key (partner_commander_id) references commanders(id) on delete restrict,
   constraint event_entries_partner_distinct check (partner_commander_id is null or partner_commander_id <> commander_id),
   constraint event_entries_one_per_player unique (event_id, player_id)
+);
+
+create table player_badges_auto ( -- precomputed badges.auto_rule assignments — see admin/js/badges-sync.js.
+    -- Recomputed and fully replaced (delete-all then reinsert) whenever an
+    -- event or league is closed in the admin, rather than live-computed on
+    -- every page view (js/auto-badges.js's own computation is expensive:
+    -- several rules independently re-fetch overlapping match/event data).
+    -- No id/created_at — this is pure derived cache, not a record of anything.
+  player_id uuid not null references players(id) on delete cascade,
+  badge_id uuid not null references badges(id) on delete cascade,
+  primary key (player_id, badge_id)
 );
 
 create table matches ( -- one round pairing between two players, scored as a best-of-3 game count
@@ -209,7 +222,7 @@ do $$
 declare
   t text;
 begin
-  foreach t in array array['announcements', 'commanders', 'players', 'badges', 'leagues', 'events', 'event_entries', 'matches']
+  foreach t in array array['announcements', 'commanders', 'players', 'badges', 'leagues', 'events', 'event_entries', 'matches', 'player_badges_auto']
   loop
     execute format('alter table %I enable row level security;', t);
     execute format('create policy "%I_admin_insert" on %I for insert with check (auth.role() = ''authenticated'');', t, t);
@@ -243,3 +256,5 @@ create policy "matches_public_read" on matches for select
     auth.role() = 'authenticated'
     or exists (select 1 from events e where e.id = matches.event_id and e.is_open = false)
   );
+
+create policy "player_badges_auto_public_read" on player_badges_auto for select using (true);

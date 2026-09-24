@@ -1,7 +1,7 @@
-import { Players, Events, EventEntries, Matches } from "./db.js";
+import { Players, Events, EventEntries, Matches, PlayerAutoBadges } from "./db.js";
 import { matchRoundOutcome, isBye, isDrop } from "./leaderboard.js";
 import { initScopeFilter } from "./scope-filter.js";
-import { computeAutoBadgeAssignments } from "./auto-badges.js";
+import { MAX_AUTO_BADGES_PER_PLAYER } from "./auto-badges.js";
 import { escapeHtml, commanderPairLabel, colorIdentityPips, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 
@@ -24,11 +24,12 @@ function mostUsedCommander(entries) {
   return best;
 }
 
-// Up to 2 manually assigned badges plus up to 2 auto-assigned ones (see
-// js/auto-badges.js), for up to 4 total. Hover/focus shows the badge's own
-// name as a custom tooltip (styles.css) — a native `title` attribute can't
-// be restyled by any browser, so this builds one from scratch instead, fed
-// by data-tooltip and kept accessible via aria-label. Kept as a sibling of
+// Up to 2 manually assigned badges plus up to MAX_AUTO_BADGES_PER_PLAYER
+// auto-assigned ones (already capped in autoBadgesByPlayer above — see
+// js/auto-badges.js). Hover/focus shows the badge's own name as a custom
+// tooltip (styles.css) — a native `title` attribute can't be restyled by
+// any browser, so this builds one from scratch instead, fed by
+// data-tooltip and kept accessible via aria-label. Kept as a sibling of
 // the name link (not nested inside it) so hovering/clicking a badge icon
 // doesn't behave like part of the player-page link.
 function playerBadgesHtml(p, autoBadgesByPlayer) {
@@ -86,7 +87,7 @@ async function init() {
   let lastRows = [];
   // Auto-badge rules are absolute ("the current league", "the last 3
   // months"), not scoped to whatever this page's own filters are set to —
-  // computed once, globally, rather than re-run on every filter change.
+  // read once, globally, rather than re-fetched on every filter change.
   let autoBadgesByPlayer = new Map();
 
   try {
@@ -106,8 +107,24 @@ async function init() {
 
   // Not fatal if this fails — the page still works with just the manually
   // assigned badges, so it's kept out of the critical try/catch above.
+  // Precomputed by admin/js/badges-sync.js whenever an event/league closes
+  // (see js/db.js's PlayerAutoBadges) — a plain read here, not the actual
+  // (expensive) computation.
   try {
-    autoBadgesByPlayer = await computeAutoBadgeAssignments();
+    for (const row of await PlayerAutoBadges.list()) {
+      if (!row.badge) continue;
+      if (!autoBadgesByPlayer.has(row.player_id)) autoBadgesByPlayer.set(row.player_id, []);
+      autoBadgesByPlayer.get(row.player_id).push(row.badge);
+    }
+    // The stored set is the player's *entire* auto-badge set (player.html
+    // shows all of it) — this page still only shows the top few, highest
+    // priority first (rows come back in no guaranteed order otherwise).
+    for (const [playerId, badges] of autoBadgesByPlayer) {
+      autoBadgesByPlayer.set(
+        playerId,
+        badges.sort((a, b) => b.priority - a.priority).slice(0, MAX_AUTO_BADGES_PER_PLAYER)
+      );
+    }
   } catch (err) {
     console.error(err);
   }

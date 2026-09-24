@@ -2,6 +2,7 @@ import { Events } from "../../js/db.js";
 import { formatDate, formatTime } from "../../js/ui.js";
 import { renderTable, setMessage, statusToggleButton } from "./crud-ui.js";
 import { on } from "./bus.js";
+import { syncAutoBadges } from "./badges-sync.js";
 
 /**
  * A flat list of events that don't belong to any league (league_id null) —
@@ -91,8 +92,12 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
   }
 
   async function onToggleOpen(row) {
+    const wasOpen = row.is_open;
     try {
-      await Events.update(row.id, { is_open: !row.is_open });
+      await Events.update(row.id, { is_open: !wasOpen });
+      // Just closed, not reopened — see events-admin.js's own onToggleOpen
+      // for why this is fire-and-forget.
+      if (wasOpen) syncAutoBadges().catch(console.error);
       // Just a status flip, not a changed row set — skip the list's
       // entrance animation so it reads as instant feedback, not a reload.
       await refresh(false);

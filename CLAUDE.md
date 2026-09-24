@@ -20,7 +20,8 @@ No ORM — `js/db.js` is a thin wrapper: `Entity.method()` functions that `await
 | `matches` | `event_id`, `round`, `player1_id`, `player2_id` (nullable = bye), `player1_wins`/`draws`/`player2_wins` (game score, best-of-3), `is_drop` | Winrate everywhere on the site is **game-basis, not match-basis** — a 2-0 counts for more than a 2-1 |
 | `commanders` | `name`, `color_identity`, `is_banned` | A "deck" elsewhere in the code = commander + optional partner combo, not just the commander alone |
 | `players` | `name`, `handle`, `badge1_id`, `badge2_id` | Two manually-assignable badge slots |
-| `badges` | `name`, `icon` (emoji) or `icon_url` (Storage), `auto_rule` (enum or null=manual), `priority` | Auto-computed badges (league winner, top8 streak, etc.) are computed live client-side by `js/auto-badges.js`, not stored |
+| `badges` | `name`, `icon` (emoji) or `icon_url` (Storage), `auto_rule` (enum or null=manual), `priority` | Auto-computed badges (league winner, top8 streak, etc.) are computed by `js/auto-badges.js` and cached into `player_badges_auto`, recomputed only when an event/league closes (`admin/js/badges-sync.js`) — not live on every page view |
+| `player_badges_auto` | `player_id`, `badge_id` | Pure derived cache (no id/created_at) — fully replaced (delete-all + reinsert) by `admin/js/badges-sync.js`, read by public pages via `js/db.js`'s `PlayerAutoBadges` |
 | `announcements` | `title`, `body` | Flat list, homepage only |
 
 RLS: public read is scoped so an open (unpublished) event is only visible from its own date onward; entries/matches are gated to closed events only. All writes require `auth.role() = 'authenticated'` — public sign-up must stay disabled in the Supabase dashboard.

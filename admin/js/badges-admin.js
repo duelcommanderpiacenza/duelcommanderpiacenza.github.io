@@ -1,6 +1,7 @@
 import { Badges, BadgeIcons } from "../../js/db.js";
 import { renderTable, setMessage, fillSelect } from "./crud-ui.js";
 import { emit } from "./bus.js";
+import { syncAutoBadges } from "./badges-sync.js";
 
 const MAX_ICON_FILE_BYTES = 300 * 1024;
 
@@ -239,6 +240,12 @@ export function initBadgesAdmin() {
       // when the old image was actually replaced or dropped, never the one
       // we just kept or just uploaded.
       if (editingIconUrl && editingIconUrl !== iconUrl) BadgeIcons.remove(editingIconUrl);
+      // Unconditional, not just when payload.auto_rule is set — editing an
+      // existing badge to *remove* its rule matters too (it should stop
+      // being granted), and this is a rare enough admin action that it's
+      // not worth tracking the old value just to skip an unnecessary sync.
+      // Fire-and-forget: see events-admin.js's own onToggleOpen for why.
+      syncAutoBadges().catch(console.error);
       resetForm();
       await refresh();
       setMessage(msgEl, "Salvato.", false);

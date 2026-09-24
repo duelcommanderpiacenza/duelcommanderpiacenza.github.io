@@ -1,5 +1,6 @@
 import { Leagues, Events } from "../../js/db.js";
 import { renderTable, setMessage, statusToggleButton } from "./crud-ui.js";
+import { syncAutoBadges } from "./badges-sync.js";
 
 // The proactive close-before-open/create calls should normally prevent this
 // constraint from ever being hit, but it's still the real, ultimate
@@ -128,6 +129,13 @@ export function initLeaguesAdmin({ onOpenLeague }) {
       // kind first (a league and a Topdeck can be open together).
       if (!row.is_open) await Leagues.closeOtherOpenOfType(row.is_topdeck, row.id);
       await Leagues.update(row.id, { is_open: !row.is_open });
+      // Unconditional, not just on the "closing this row" branch — opening
+      // one can itself close a *different* league as a side effect just
+      // above (closeOtherOpenOfType), which is just as much a "a league
+      // just closed" event for league_winner/league_rank badges as closing
+      // this row directly. Fire-and-forget: see events-admin.js's own
+      // onToggleOpen for why.
+      syncAutoBadges().catch(console.error);
       // Just a status flip, not a changed row set — replaying the whole
       // list's entrance animation over it would be a distracting pop for
       // what should read as instant feedback.

@@ -2078,15 +2078,31 @@ footer {
 
 /* Sits to the left of the page's <h1> (or h3, in admin's subviews) — see
    .page-heading-row below, which wraps the two together. Vertically
-   centered against the title, or the title+subtitle pair together where a
-   page has one (e.g. event.html's date/meta line) — .page-heading-row's
-   own align-items: center handles that regardless of which case it is,
-   nothing extra needed here. */
+   centered (desktop) against the title, or the title+subtitle pair
+   together where a page has one (e.g. event.html's date/meta line) — see
+   .page-heading-row's own mobile override, though, for the one case
+   (commander.html) where centering isn't actually what's wanted. */
 .page-heading-row {
   display: flex;
   align-items: center;
   gap: 14px;
   margin-bottom: 22px;
+}
+
+@media (max-width: 640px) {
+  /* On the commander detail page specifically, the card image stacks
+     below the title on mobile (.commander-card-figure's own mobile rule),
+     making .page-heading's box a lot taller than just the title line —
+     align-items: center (above) was centering the button against that
+     *whole* stacked block, landing it next to the card image instead of
+     the name. flex-start aligns it to the top of whatever's in there
+     instead — the title, in every case — which reads correctly here and
+     doesn't visibly change anything on the pages that don't have this
+     tall-stacked-content situation (their own .page-heading is barely
+     taller than the title's own line height either way). */
+  .page-heading-row {
+    align-items: flex-start;
+  }
 }
 
 .page-heading-row .page-heading,

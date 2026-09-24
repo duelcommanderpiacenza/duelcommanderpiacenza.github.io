@@ -1,17 +1,24 @@
 // Computes which players currently hold which auto-assigned badges
 // (badges.auto_rule), fresh from live match/league data every time this is
-// called — nothing about this is ever stored on a player row, so it can
-// never drift out of sync with results. Only the Giocatori page uses this
-// (badges show "ONLY in Giocatori tab" per spec), scoped globally — these
-// rules are absolute ("the current league", "the last 3 months"), not
-// affected by whatever league/event/date filter a visitor has selected.
+// called. Not run on every page view any more — admin/js/badges-sync.js
+// calls this once whenever an event/league closes and caches the *full*
+// result (no MAX_AUTO_BADGES_PER_PLAYER cap applied here any more — see
+// its own comment below) into player_badges_auto (js/db.js's
+// PlayerAutoBadges), which is what public pages actually read. Scoped
+// globally — these rules are absolute ("the current league", "the last 3
+// months"), not affected by whatever league/event/date filter a visitor
+// has selected.
 
 import { Badges, Leagues, Events, EventEntries, Matches } from "./db.js";
 import { computeEventLeaderboard, computeLeaguePoints, isBye, isDrop } from "./leaderboard.js";
 
 const TOP8_STREAK_COUNT = 3;
 const TOP8_STREAK_WINDOW_MONTHS = 3;
-const MAX_AUTO_BADGES_PER_PLAYER = 3;
+// How many auto badges show per player — applied by js/players-page.js at
+// display time (sliced off the front of the priority-sorted array this
+// module returns), not baked into what gets stored. player.html shows a
+// player's *entire* auto-badge set instead, uncapped.
+export const MAX_AUTO_BADGES_PER_PLAYER = 3;
 // A tiny sample shouldn't win either stats-based badge below — a single
 // lucky win is a meaningless 100% winrate, and a handful of matches
 // shouldn't out-rank nobody-else-qualifies for "most played" either.
@@ -264,10 +271,13 @@ export async function computeAutoBadgeAssignments() {
 
   const result = new Map();
   for (const [playerId, playerBadges] of grants) {
-    const top = [...playerBadges].sort((a, b) => b.priority - a.priority).slice(0, MAX_AUTO_BADGES_PER_PLAYER);
+    // Sorted (highest priority first), not sliced — the cap is a
+    // players-page.js display concern now, not something baked into what
+    // gets computed/stored.
+    const sorted = [...playerBadges].sort((a, b) => b.priority - a.priority);
     result.set(
       playerId,
-      top.map((b) => ({ id: b.id, name: b.name, icon: b.icon, icon_url: b.icon_url }))
+      sorted.map((b) => ({ id: b.id, name: b.name, icon: b.icon, icon_url: b.icon_url, priority: b.priority }))
     );
   }
   return result;

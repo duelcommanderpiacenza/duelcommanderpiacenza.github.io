@@ -15,6 +15,7 @@ import { initAnnouncementsAdmin } from "./announcements-admin.js";
 import { initEntriesAdmin } from "./entries-admin.js";
 import { initMatchesAdmin } from "./matches-admin.js";
 import { initAdminNavDropdown } from "./admin-nav-dropdown.js";
+import { syncAutoBadges } from "./badges-sync.js";
 
 const loginView = document.getElementById("login-view");
 const adminView = document.getElementById("admin-view");
@@ -155,13 +156,17 @@ function showAdmin(session) {
     // clicked.
     async function toggleEventOpen() {
       if (!currentEvent) return;
+      const wasOpen = currentEvent.is_open;
       try {
-        const updated = await Events.update(currentEvent.id, { is_open: !currentEvent.is_open });
+        const updated = await Events.update(currentEvent.id, { is_open: !wasOpen });
         currentEvent.is_open = updated.is_open;
         eventDetailToggleBtn.textContent = currentEvent.is_open ? "Chiudi evento" : "Riapri evento";
         entriesCtl.openEvent(currentEvent);
         matchesCtl.refreshOpenState();
         emit("events:changed");
+        // Just closed, not reopened — see events-admin.js's own
+        // onToggleOpen for why this is fire-and-forget.
+        if (wasOpen) syncAutoBadges().catch(console.error);
       } catch (err) {
         console.error(err);
       }

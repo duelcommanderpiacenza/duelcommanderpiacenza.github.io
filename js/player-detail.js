@@ -1,4 +1,4 @@
-import { Players, EventEntries, Matches } from "./db.js";
+import { Players, EventEntries, Matches, PlayerAutoBadges } from "./db.js";
 import { matchRoundOutcome, isBye, isDrop, computeEventLeaderboard } from "./leaderboard.js";
 import { tallyOutcome, tallyGames, renderWinrateTiles } from "./winrate.js";
 import {
@@ -30,6 +30,22 @@ function viewerScoreLabel(m, viewerIsP1) {
   return viewerIsP1 ? `${m.player1_wins}-${m.player2_wins}-${m.draws}` : `${m.player2_wins}-${m.player1_wins}-${m.draws}`;
 }
 
+// Manual (badge1/badge2) and auto badges together — the auto ones are a
+// plain read of PlayerAutoBadges, precomputed by admin/js/badges-sync.js
+// whenever an event/league closes, not a live js/auto-badges.js
+// computation (that would recompute every player's standings/stats just
+// to extract this one player's result).
+function playerBadgesHtml(badges) {
+  return badges
+    .map((b) => {
+      const glyph = b.icon_url
+        ? `<img src="${b.icon_url}" alt="" class="icon-badge-img badge-icon-box" style="width:1.1em;height:1.1em;">`
+        : `<span class="badge-icon-box" style="width:1.1em;height:1.1em;">${b.icon ?? ""}</span>`;
+      return `<span class="icon-badge" data-tooltip="${escapeHtml(b.name)}" aria-label="${escapeHtml(b.name)}" tabindex="0">${glyph}</span>`;
+    })
+    .join("");
+}
+
 async function init() {
   const id = getId();
   const titleEl = document.getElementById("player-title");
@@ -48,7 +64,22 @@ async function init() {
 
   try {
     const player = await Players.get(id);
-    titleEl.textContent = player.handle ? `${player.name} (${player.handle})` : player.name;
+    const nameLabel = player.handle ? `${player.name} (${player.handle})` : player.name;
+    // Not fatal if this fails — the page still works with just the
+    // manually assigned badges, so it's kept out of this try/catch.
+    let autoBadges = [];
+    try {
+      // The player list caps this to a few (highest priority first); this
+      // page shows every auto badge a player has, uncapped — still sorted
+      // the same way, just not sliced.
+      autoBadges = (await PlayerAutoBadges.listByPlayer(id))
+        .map((r) => r.badge)
+        .filter(Boolean)
+        .sort((a, b) => b.priority - a.priority);
+    } catch (err) {
+      console.error(err);
+    }
+    titleEl.innerHTML = `${escapeHtml(nameLabel)} ${playerBadgesHtml([player.badge1, player.badge2, ...autoBadges].filter(Boolean))}`;
 
     const entries = await EventEntries.listByPlayer(id);
 
