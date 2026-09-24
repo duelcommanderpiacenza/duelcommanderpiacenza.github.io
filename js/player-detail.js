@@ -71,13 +71,16 @@ async function init() {
     const commanderList = Array.from(uniqueCommanders.values()).sort((a, b) =>
       a.commander.name.localeCompare(b.commander.name)
     );
-    commandersEl.innerHTML =
-      commanderList.length === 0
-        ? '<p class="page-empty">Nessun dato registrato per questo giocatore.</p>'
-        : `<div class="data-table-wrap"><table class="data-table">
+    renderPaginated(
+      commandersEl,
+      commanderList,
+      (visible) =>
+        visible.length === 0
+          ? '<p class="page-empty">Nessun dato registrato per questo giocatore.</p>'
+          : `<div class="data-table-wrap"><table class="data-table">
             <thead><tr><th>Commander</th><th>Identit&agrave; di colore</th><th>Ultima volta giocato</th></tr></thead>
             <tbody>
-              ${commanderList
+              ${visible
                 .map(
                   (c) => `<tr><td>${commanderPairLabel(c.commander, c.partner)}</td><td>${colorIdentityPips(
                     (c.commander.color_identity ?? "") + (c.partner?.color_identity ?? "")
@@ -85,7 +88,8 @@ async function init() {
                 )
                 .join("")}
             </tbody>
-          </table></div>`;
+          </table></div>`
+    );
 
     // One row per event this player entered, with the full field's
     // standings computed to find their own final position in each — not

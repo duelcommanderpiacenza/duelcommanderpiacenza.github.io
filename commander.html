@@ -48,11 +48,14 @@
 </nav>
 
 <main class="page-main" id="commander-content">
-  <a class="breadcrumb-link" href="commanders.html">&larr; Tutti i comandanti</a>
+  <div class="page-heading-row">
+    <a class="breadcrumb-link" href="commanders.html" aria-label="Tutti i comandanti" title="Tutti i comandanti">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+    </a>
 
-  <div class="page-heading">
-    <h1 id="commander-title">Caricamento...</h1>
-    <figure class="commander-card-figure" id="commander-card-figure" hidden>
+    <div class="page-heading">
+      <h1 id="commander-title">Caricamento...</h1>
+      <figure class="commander-card-figure" id="commander-card-figure" hidden>
       <div class="commander-card-perspective">
         <div class="commander-card-flipper" id="commander-card-flipper">
           <img id="commander-card-image-front" class="commander-card-face commander-card-face-front" alt="">
@@ -61,13 +64,14 @@
       </div>
       <button type="button" class="commander-card-flip-btn" id="commander-card-flip-btn" hidden aria-label="Mostra l'altro lato della carta">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M17 2.1l4 4-4 4"></path>
-          <path d="M3 12.5a9 9 0 0 1 15-6.7l3 2.9"></path>
-          <path d="M7 21.9l-4-4 4-4"></path>
-          <path d="M21 11.5a9 9 0 0 1-15 6.7l-3-2.9"></path>
+          <polyline points="17 1 21 5 17 9"></polyline>
+          <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+          <polyline points="7 23 3 19 7 15"></polyline>
+          <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
         </svg>
       </button>
     </figure>
+    </div>
   </div>
 
   <div class="page-loading-region">
