@@ -34,11 +34,11 @@
   --accent-green-2: #14914a;
   --accent-green-glow: rgba(34, 153, 84, 0.28);
 
-  --accent-aggro: #e0752b;
-  --accent-control: #7c3aed;
-  --accent-combo: #dc181c;
-  --accent-tempo: #b8860b;
-  --accent-midrange: #0f8b8d;
+  --accent-aggro: #dc181c;
+  --accent-control: #2f5fdc;
+  --accent-combo: #2a2226;
+  --accent-tempo: #0aa8bd;
+  --accent-midrange: #e0752b;
 }
 
 /* Suppresses the browser's default blue-ish tap-highlight flash on mobile
@@ -2308,7 +2308,7 @@ img.badge-icon-box {
   flex-shrink: 0;
 }
 
-.badge-status-open { background: var(--accent-green-2); }
+.badge-status-open { background: var(--brand-red); }
 .badge-status-closed { background: var(--text-muted); }
 
 /* The admin's clickable variant (see statusToggleButton in
@@ -3583,6 +3583,36 @@ img.cs-option-icon {
   font-size: 0.85rem;
   font-weight: 800;
   color: var(--text-title);
+}
+
+/* .bar-chart-body-spacious (see renderBarChart's `spacious` option) — a
+   short, fixed-length list (Archetipi's 5 rows) stretched to actually fill
+   the card's height (matched to the taller pie chart beside it) instead of
+   clustering at the top, with larger rows/text to match. Scoped to the
+   wrap that actually contains one, via :has(), rather than making every
+   .pie-chart-wrap flex — the Comandanti page's own (much longer, already
+   naturally fills the card) bar chart stays exactly as it was. */
+.pie-chart-wrap:has(.bar-chart-body-spacious) {
+  display: flex;
+  flex-direction: column;
+}
+
+.pie-chart-wrap:has(.bar-chart-body-spacious) .pie-chart-title {
+  flex-shrink: 0;
+}
+
+.bar-chart-body-spacious {
+  flex: 1;
+  justify-content: space-evenly;
+}
+
+.bar-chart-body-spacious .bar-chart-label,
+.bar-chart-body-spacious .bar-chart-pct {
+  font-size: 0.95rem;
+}
+
+.bar-chart-body-spacious .bar-chart-track {
+  height: 18px;
 }
 
 /* Side-by-side charts (metagame share + wins share) on Comandanti and

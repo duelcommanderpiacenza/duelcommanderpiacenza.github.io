@@ -12,11 +12,11 @@ const ARCHETYPES = ["aggro", "control", "combo", "tempo", "midrange"];
 // in the chart and the badges. Hardcoded here rather than var(--accent-...)
 // because the chart needs the real hex to pick readable label text per slice.
 const ARCHETYPE_COLORS = {
-  aggro: "#e0752b",
-  control: "#7c3aed",
-  combo: "#dc181c",
-  tempo: "#b8860b",
-  midrange: "#0f8b8d",
+  aggro: "#dc181c",
+  control: "#2f5fdc",
+  combo: "#2a2226",
+  tempo: "#0aa8bd",
+  midrange: "#e0752b",
 };
 
 async function fetchEventsData(eventIds) {
@@ -103,7 +103,8 @@ async function init() {
           }))
           .sort((a, b) => (b.value ?? -1) - (a.value ?? -1)),
         "Nessun dato per il grafico.",
-        "Winrate"
+        "Winrate",
+        { spacious: true }
       );
 
       chartEl.innerHTML = `

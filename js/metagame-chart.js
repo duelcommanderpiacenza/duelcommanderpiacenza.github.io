@@ -54,7 +54,7 @@ export function renderPieChart(rows, emptyMessage, title) {
  * @param {string} emptyMessage
  * @param {string} [title] - shown inside the box itself, above the bars.
  */
-export function renderBarChart(rows, emptyMessage, title) {
+export function renderBarChart(rows, emptyMessage, title, { spacious = false } = {}) {
   const titleHtml = title ? `<h2 class="pie-chart-title">${escapeHtml(title)}</h2>` : "";
   if (rows.length === 0) {
     return `<div class="pie-chart-wrap">${titleHtml}<p class="page-empty">${emptyMessage}</p></div>`;
@@ -73,10 +73,15 @@ export function renderBarChart(rows, emptyMessage, title) {
     )
     .join("");
 
+  // `spacious`: for a short, fixed-length list (Archetipi's 5 rows) rather
+  // than the Comandanti page's own much longer one — spreads the rows out
+  // to actually fill the card's full height (matched to the pie chart
+  // beside it via .chart-grid) instead of clustering at the top with a
+  // block of empty space below, and bumps up the row/font size to match.
   return `
     <div class="pie-chart-wrap">
       ${titleHtml}
-      <div class="bar-chart-body">${bars}</div>
+      <div class="bar-chart-body${spacious ? " bar-chart-body-spacious" : ""}">${bars}</div>
     </div>
   `;
 }
