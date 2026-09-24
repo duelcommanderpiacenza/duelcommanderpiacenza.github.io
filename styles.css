@@ -4073,6 +4073,148 @@ img.cs-option-icon {
   flex: 1;
 }
 
+/* Search/sort (where a page has them) stay on their own top line, with a
+   small round "funnel" button pinned to its right (js/filter-toggle.js)
+   that expands/collapses a separate panel below holding the rest of that
+   page's filters (league/event/date/color-identity) — keeps the page's
+   own results visible without permanently reserving a whole extra row (or
+   two) of vertical space for filters most visits never touch. Same
+   collapse mechanics (grid-template-rows: 1fr/0fr) as .matchups-embed/
+   .league-group elsewhere, reused here under its own class names since
+   the trigger is a small icon button, not a whole clickable header row. */
+.filter-toggle-line {
+  display: flex;
+  /* Not center — .field is a label-above-input column, so centering
+     against its *full* height (label included) left the button sitting
+     noticeably higher than the actual search/sort input boxes, not level
+     with them. flex-end aligns every item's bottom edge instead, which
+     lines the button up with the boxes themselves (label or not), since
+     the input/select controls and the button are all close enough in
+     height already for their bottoms lining up to read as centered
+     against each other. */
+  align-items: flex-end;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.filter-toggle-line .field {
+  margin-bottom: 0;
+}
+
+/* Grows to fill whatever space the sort field + funnel button don't need,
+   rather than the fixed width .filter-bar's own fields get (that fixed
+   width exists to line up multiple fields against each other within a
+   single .filter-bar row, not relevant to this lone search field). */
+.filter-toggle-search {
+  flex: 1;
+  min-width: 0;
+}
+
+.filter-toggle-sort {
+  flex-shrink: 0;
+  /* Wider than the fields inside the collapsible panel (160px) — the sort
+     box now shows its own real current selection (e.g. "Winrate") rather
+     than a fixed placeholder, so it needs room for the widest of those
+     words plus the enhanced select's own icon/arrow padding, comfortably,
+     not just barely. Taken from the search field's own space (flex: 1
+     there absorbs the difference automatically), not the row's overall
+     width, since the search field is the one with room to spare. */
+  width: 220px;
+}
+
+/* Pinned to the row's right edge via the row's only auto margin — same
+   trick as the nav's own Social tab (.nav-link[data-nav="social"]) —
+   everything else stays left-packed regardless of how many (or how few —
+   Archetipi has neither a search nor a sort field) fields sit before it. */
+.filter-toggle-btn {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: var(--brand-red);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+  transition: background 150ms ease;
+}
+
+.filter-toggle-btn:hover,
+.filter-toggle-btn.is-open {
+  background: var(--brand-red-deep-2);
+}
+
+.filter-toggle-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.filter-panel {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 280ms ease;
+}
+
+.filter-panel.is-collapsed {
+  grid-template-rows: 0fr;
+}
+
+/* Same reasoning as .league-group-body-clip elsewhere: the clipping
+   boundary has to sit on a wrapper *inside* the collapsing grid row, not
+   the row itself — an element's own margin/padding is never clipped away
+   by its own overflow, only by an ancestor's. */
+.filter-panel-clip {
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Lifted once the expand animation genuinely finishes (js/filter-toggle.js)
+   — a select/date field inside opens its own popup positioned relative to
+   itself, a descendant of this clipping box, so as long as overflow stays
+   hidden here that popup gets cut off right at this box's own edge instead
+   of floating freely over whatever page content sits above/below it. */
+.filter-panel-clip.is-open {
+  overflow: visible;
+}
+
+.filter-panel-body {
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card-sm);
+  background: rgba(255, 255, 255, 0.7);
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.filter-panel-body .filter-bar {
+  margin-bottom: 0;
+}
+
+/* .filter-toggle-line is nowrap (no flex-wrap set) so it can never break
+   onto a second line — the search field's own min-width: 0 already lets
+   it shrink as needed, but the sort field's fixed 220px doesn't, and on a
+   narrow phone the two together plus the button can get tight enough to
+   force the row to overflow sideways instead. Narrowing the sort field
+   specifically (not the search field, which should stay the more usable
+   one of the two) keeps everything fitting comfortably down to a small
+   phone's actual width — still wide enough for its own longest option
+   ("Winrate"/"Vittorie") without truncating, just less generously than
+   on desktop. */
+@media (max-width: 480px) {
+  .filter-toggle-sort {
+    width: 130px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .filter-panel {
+    transition: none;
+  }
+}
+
 /* Matchups page: commander picker (search + capped checkbox list) and the
    win% heatmap matrix built from it. */
 
@@ -4725,7 +4867,8 @@ img.cs-option-icon {
 :root[data-theme="dark"] .deck,
 :root[data-theme="dark"] .video-card,
 :root[data-theme="dark"] .dashboard-league-card,
-:root[data-theme="dark"] .dashboard-league-chip {
+:root[data-theme="dark"] .dashboard-league-chip,
+:root[data-theme="dark"] .filter-panel-body {
   background: rgba(255, 255, 255, 0.045);
 }
 

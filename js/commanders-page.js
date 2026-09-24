@@ -4,6 +4,7 @@ import { initScopeFilter } from "./scope-filter.js";
 import { renderPieChart, renderBarChart } from "./metagame-chart.js";
 import { commanderPairLabel, colorIdentityPips, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
+import { initFilterToggle } from "./filter-toggle.js";
 
 // Fixed hue order, assigned once by each commander's overall popularity
 // across the whole site (not the current filter), so a commander keeps the
@@ -245,6 +246,8 @@ async function init() {
       hidePageLoading();
     }
   }
+
+  initFilterToggle("commanders-filter-toggle", "commanders-filter-panel");
 
   searchInput.addEventListener("input", () => renderTable(false));
   sortSelect.addEventListener("change", () => renderTable());

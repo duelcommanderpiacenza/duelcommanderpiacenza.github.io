@@ -92,6 +92,13 @@ function rebuildMenu(wrap, select) {
   const menu = wrap.querySelector(".cs-menu");
   menu.innerHTML = "";
   Array.from(select.options).forEach((opt) => {
+    // A native <option hidden> (e.g. a "Ordina per..." placeholder that's
+    // the default .value but shouldn't be a real, re-choosable entry) is
+    // already skipped by the browser's own native dropdown for free —
+    // this popup is hand-built from scratch instead, so it needs the same
+    // check explicitly, or a hidden option would still render as a normal
+    // clickable row here.
+    if (opt.hidden) return;
     const row = document.createElement("div");
     row.className = "cs-option";
     row.setAttribute("role", "option");

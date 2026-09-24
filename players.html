@@ -74,33 +74,42 @@
   <div class="page-loading-region">
     <div id="page-loading-overlay" class="page-loading-overlay"><p>Caricamento...</p></div>
 
-    <div class="filter-bar">
-      <div class="field">
-        <label for="players-league-filter">Lega</label>
-        <select id="players-league-filter"><option value="">Tutte le leghe</option></select>
-      </div>
-      <div class="field">
-        <label for="players-event-filter">Evento</label>
-        <select id="players-event-filter"><option value="">Tutti gli eventi</option></select>
-      </div>
-      <div class="field">
-        <label for="players-date-from">Dal</label>
-        <input type="date" id="players-date-from">
-      </div>
-    </div>
-
-    <div class="filter-bar">
-      <div class="field">
+    <div class="filter-toggle-line">
+      <div class="field filter-toggle-search">
         <label for="players-search">Cerca</label>
-        <input type="search" id="players-search" placeholder="Nome giocatore...">
+        <input type="search" id="players-search" placeholder="Cerca giocatore...">
       </div>
-      <div class="field">
+      <div class="field filter-toggle-sort">
         <label for="players-sort">Ordina per</label>
         <select id="players-sort">
           <option value="events">Eventi</option>
           <option value="winrate">Winrate</option>
           <option value="wins">Vittorie</option>
         </select>
+      </div>
+      <button type="button" class="filter-toggle-btn" id="players-filter-toggle" aria-expanded="false" aria-controls="players-filter-panel" aria-label="Filtri">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+      </button>
+    </div>
+
+    <div class="filter-panel is-collapsed" id="players-filter-panel">
+      <div class="filter-panel-clip">
+        <div class="filter-panel-body">
+          <div class="filter-bar">
+            <div class="field">
+              <label for="players-league-filter">Lega</label>
+              <select id="players-league-filter"><option value="">Tutte le leghe</option></select>
+            </div>
+            <div class="field">
+              <label for="players-event-filter">Evento</label>
+              <select id="players-event-filter"><option value="">Tutti gli eventi</option></select>
+            </div>
+            <div class="field">
+              <label for="players-date-from">Dal</label>
+              <input type="date" id="players-date-from" placeholder="Dal">
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 

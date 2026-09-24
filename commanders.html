@@ -78,59 +78,68 @@
     <p class="page-loading">Caricamento comandanti...</p>
   </div>
 
-  <div class="filter-bar">
-    <div class="field">
-      <label for="commanders-league-filter">Lega</label>
-      <select id="commanders-league-filter"><option value="">Tutte le leghe</option></select>
-    </div>
-    <div class="field">
-      <label for="commanders-event-filter">Evento</label>
-      <select id="commanders-event-filter"><option value="">Tutti gli eventi</option></select>
-    </div>
-    <div class="field">
-      <label for="commanders-date-from">Dal</label>
-      <input type="date" id="commanders-date-from">
-    </div>
-    <div class="field">
-      <label>Identit&agrave; di colore</label>
-      <div class="filter-bar-row">
-        <div class="color-swatch-row color-swatch-row-compact">
-          <label class="color-swatch color-swatch-W" title="Bianco">
-            <input type="checkbox" name="commanders-color-filter" value="W" aria-label="Bianco">
-          </label>
-          <label class="color-swatch color-swatch-U" title="Blu">
-            <input type="checkbox" name="commanders-color-filter" value="U" aria-label="Blu">
-          </label>
-          <label class="color-swatch color-swatch-B" title="Nero">
-            <input type="checkbox" name="commanders-color-filter" value="B" aria-label="Nero">
-          </label>
-          <label class="color-swatch color-swatch-R" title="Rosso">
-            <input type="checkbox" name="commanders-color-filter" value="R" aria-label="Rosso">
-          </label>
-          <label class="color-swatch color-swatch-G" title="Verde">
-            <input type="checkbox" name="commanders-color-filter" value="G" aria-label="Verde">
-          </label>
-        </div>
-        <label class="checkbox-inline" id="commanders-color-exact-wrap" hidden>
-          <input type="checkbox" id="commanders-color-exact">
-          Identit&agrave; esatta
-        </label>
-      </div>
-    </div>
-  </div>
-
-  <div class="filter-bar">
-    <div class="field">
+  <div class="filter-toggle-line">
+    <div class="field filter-toggle-search">
       <label for="commanders-search">Cerca</label>
-      <input type="search" id="commanders-search" placeholder="Nome comandante...">
+      <input type="search" id="commanders-search" placeholder="Cerca comandante...">
     </div>
-    <div class="field">
+    <div class="field filter-toggle-sort">
       <label for="commanders-sort">Ordina per</label>
       <select id="commanders-sort">
         <option value="played">Giocato</option>
         <option value="winrate">Winrate</option>
         <option value="wins">Vittorie</option>
       </select>
+    </div>
+    <button type="button" class="filter-toggle-btn" id="commanders-filter-toggle" aria-expanded="false" aria-controls="commanders-filter-panel" aria-label="Filtri">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+    </button>
+  </div>
+
+  <div class="filter-panel is-collapsed" id="commanders-filter-panel">
+    <div class="filter-panel-clip">
+      <div class="filter-panel-body">
+        <div class="filter-bar">
+          <div class="field">
+            <label for="commanders-league-filter">Lega</label>
+            <select id="commanders-league-filter"><option value="">Tutte le leghe</option></select>
+          </div>
+          <div class="field">
+            <label for="commanders-event-filter">Evento</label>
+            <select id="commanders-event-filter"><option value="">Tutti gli eventi</option></select>
+          </div>
+          <div class="field">
+            <label for="commanders-date-from">Dal</label>
+            <input type="date" id="commanders-date-from" placeholder="Dal">
+          </div>
+          <div class="field">
+            <label>Identit&agrave; di colore</label>
+            <div class="filter-bar-row">
+              <div class="color-swatch-row color-swatch-row-compact">
+                <label class="color-swatch color-swatch-W" title="Bianco">
+                  <input type="checkbox" name="commanders-color-filter" value="W" aria-label="Bianco">
+                </label>
+                <label class="color-swatch color-swatch-U" title="Blu">
+                  <input type="checkbox" name="commanders-color-filter" value="U" aria-label="Blu">
+                </label>
+                <label class="color-swatch color-swatch-B" title="Nero">
+                  <input type="checkbox" name="commanders-color-filter" value="B" aria-label="Nero">
+                </label>
+                <label class="color-swatch color-swatch-R" title="Rosso">
+                  <input type="checkbox" name="commanders-color-filter" value="R" aria-label="Rosso">
+                </label>
+                <label class="color-swatch color-swatch-G" title="Verde">
+                  <input type="checkbox" name="commanders-color-filter" value="G" aria-label="Verde">
+                </label>
+              </div>
+              <label class="checkbox-inline" id="commanders-color-exact-wrap" hidden>
+                <input type="checkbox" id="commanders-color-exact">
+                Identit&agrave; esatta
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 

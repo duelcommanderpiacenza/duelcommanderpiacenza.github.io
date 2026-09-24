@@ -260,7 +260,10 @@ export function enhanceDateInput(input) {
 
   function syncTrigger() {
     const parsed = parseISO(input.value);
-    label.textContent = parsed ? formatLabel(parsed) : "gg/mm/aaaa";
+    // The native input's own placeholder attribute, if the markup set one
+    // (e.g. "Dal") — opt-in, so every other date field on the site that
+    // never set one keeps the generic format hint exactly as before.
+    label.textContent = parsed ? formatLabel(parsed) : input.placeholder || "gg/mm/aaaa";
     label.classList.toggle("is-placeholder", !parsed);
     trigger.disabled = input.disabled;
     wrap.classList.toggle("is-disabled", input.disabled);

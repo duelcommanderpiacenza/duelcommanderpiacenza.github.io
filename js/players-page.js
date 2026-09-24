@@ -4,6 +4,7 @@ import { initScopeFilter } from "./scope-filter.js";
 import { MAX_AUTO_BADGES_PER_PLAYER } from "./auto-badges.js";
 import { escapeHtml, commanderPairLabel, colorIdentityPips, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
+import { initFilterToggle } from "./filter-toggle.js";
 
 // Keyed by the commander+partner pair, not just the primary commander, so
 // "Thrasios / Tymna" and "Thrasios / Vial Smasher" count as different decks.
@@ -240,6 +241,8 @@ async function init() {
       hidePageLoading();
     }
   }
+
+  initFilterToggle("players-filter-toggle", "players-filter-panel");
 
   searchInput.addEventListener("input", () => renderList(false));
   sortSelect.addEventListener("change", () => renderList());

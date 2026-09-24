@@ -4,6 +4,7 @@ import { initScopeFilter } from "./scope-filter.js";
 import { renderPieChart, renderBarChart } from "./metagame-chart.js";
 import { archetypeBadge, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
+import { initFilterToggle } from "./filter-toggle.js";
 
 const ARCHETYPES = ["aggro", "control", "combo", "tempo", "midrange"];
 
@@ -136,6 +137,8 @@ async function init() {
       hidePageLoading();
     }
   }
+
+  initFilterToggle("archetypes-filter-toggle", "archetypes-filter-panel");
 
   dateFromInput.addEventListener("change", () => render(effectiveEventIds()));
 
