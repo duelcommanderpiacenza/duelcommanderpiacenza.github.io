@@ -4,19 +4,14 @@
 // paint, not waiting on this deferred module), and the plain <a
 // class="nav-link"> list is likewise real, untouched markup, only hidden
 // by the synchronous html.nav-mobile class (set by the inline head
-// script, based on matchMedia("... and (pointer: coarse) and (hover:
-// none)") — a real touch device, not just a narrow window). This file
-// only adds the open/close interaction on top of both.
-
-const MOBILE_QUERY = "(max-width: 640px) and (pointer: coarse) and (hover: none)";
+// script from navigator.maxTouchPoints — any touch device, not gated on
+// width or on matchMedia's pointer/hover reporting, which some Android
+// OEM browsers, Samsung Internet included, have a history of getting
+// wrong on real touch phones). This file only adds the open/close
+// interaction on top of both.
 
 function isMobileNav() {
-  // Some Android OEM browsers (Samsung Internet has a history of this)
-  // misreport pointer/hover, matching neither branch of MOBILE_QUERY on an
-  // actual touch phone — navigator.maxTouchPoints checks real touch
-  // hardware directly instead, sidestepping the media-query engine
-  // entirely. Same combined check as every page's own inline head script.
-  return window.matchMedia(MOBILE_QUERY).matches || (window.innerWidth <= 640 && navigator.maxTouchPoints > 0);
+  return navigator.maxTouchPoints > 0;
 }
 
 function closeDropdown(nav) {

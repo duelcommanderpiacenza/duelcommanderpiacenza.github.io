@@ -175,7 +175,10 @@ html {
   display: none;
 }
 
-@media (max-width: 640px) and (pointer: coarse) and (hover: none) {
+/* No @media wrapper here on purpose — see the equivalent note in
+   styles.css's .site-nav mobile-pill block. html.nav-mobile (set in JS
+   purely from navigator.maxTouchPoints) is the single source of truth;
+   every rule below is already scoped by that class on its own. */
   html.nav-mobile .admin-tabs {
     position: fixed;
     top: auto;
@@ -300,7 +303,6 @@ html {
   html.nav-mobile .admin-footer {
     padding-bottom: 88px;
   }
-}
 
 .admin-panel {
   display: none;
@@ -630,6 +632,14 @@ html {
 
 :root[data-theme="dark"] .admin-tabs {
   background: rgba(20, 14, 16, 0.92);
+}
+
+/* Without this, :root[data-theme="dark"] .admin-tabs above (meant for the
+   normal sticky top bar) wins on specificity over the mobile pill's own
+   background: none and reasserts a solid dark bar behind/around the
+   floating pill — same bug and same fix as the public site's .site-nav. */
+html[data-theme="dark"].nav-mobile .admin-tabs {
+  background: none;
 }
 
 /* The mobile dropdown panel's own solid color — same reasoning as the

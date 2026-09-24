@@ -393,27 +393,35 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
   outline: none;
 }
 
-/* Real touch devices only — (pointer: coarse) and (hover: none) describes
-   a device whose primary input is touch with no hover capability, true
-   for phones/tablets and false for a resized desktop browser window (a
-   mouse is always pointer: fine, hover: hover) even at the same viewport
-   width. A touch laptop with a trackpad still reports pointer: fine too
-   (the trackpad is its primary pointer), so this stays out of their way.
-   Gated by html.nav-mobile (see the inline head script, same synchronous-
-   detection pattern as the dark/light theme flash-prevention script right
-   above it in every page's <head>) rather than the media query alone, so
-   there's no gap where the plain full-width nav flashes on screen before
-   collapsing — html.nav-mobile is only ever set by that inline script
-   actually running, so true no-JS still gets the plain, always-visible,
-   working list instead of a hidden/broken nav. */
-@media (max-width: 640px) and (pointer: coarse) and (hover: none) {
+/* Real touch devices only, via html.nav-mobile — set in JS purely from
+   navigator.maxTouchPoints > 0 (see every page's inline head script), not
+   a CSS media query. That's deliberate: an earlier version gated this
+   whole block on `@media (max-width: 640px) and (pointer: coarse) and
+   (hover: none)` in addition to the class, on the theory that (pointer:
+   coarse) and (hover: none) reliably meant "touch, no mouse" (true for
+   phones, false for a resized desktop window or a touch laptop with a
+   trackpad, which are naturally pointer: fine/hover: hover instead). In
+   practice, some Android OEM browsers — Samsung Internet included —
+   misreport those media features on a real touch phone, so the CSS media
+   query silently failed to match even once html.nav-mobile was already
+   correctly set, and the pill's styling just never applied. Every rule
+   below is scoped by html.nav-mobile alone now — simpler, and the
+   only thing actually gating it. Same inline-head-script pattern as the
+   dark/light theme flash-prevention script right above it in every page's
+   <head>, so there's no gap where the plain full-width nav flashes on
+   screen before collapsing — true no-JS still gets that plain,
+   always-visible, working list instead of a hidden/broken nav. Accepted
+   trade-off: this now also covers touch laptops and tablets (iPad
+   included, if narrow enough — though iPad's own viewport is normally
+   well above 640px anyway) rather than excluding them on purpose. */
+
   /* Fills all the way up behind a translucent iOS status bar (see
      apple-mobile-web-app-status-bar-style in every page's <head>) and
      Android's own edge-to-edge status bar, instead of the red background
      stopping short and leaving a plain white strip above it — env()
      resolves to 0 on anything without a notch/inset, so this is a no-op
      everywhere else. */
-  .site-header {
+  html.nav-mobile .site-header {
     padding-top: calc(18px + env(safe-area-inset-top));
   }
 
@@ -437,8 +445,8 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
      tab" — a real installed app doesn't do this, so it's turned off here
      (touch-scrolling devices only; a mouse wheel on desktop never
      triggered it in the first place, so nothing changes there). */
-  html,
-  body {
+  html.nav-mobile,
+  html.nav-mobile body {
     overscroll-behavior-y: contain;
   }
 
@@ -565,15 +573,6 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
     flex-shrink: 0;
   }
 
-  /* Every rule from here down is also gated on html.nav-mobile, not just
-     this media query, on purpose — consistently with .site-nav above.
-     Without it, a mismatch between the two (e.g. the media query matching
-     before the inline head script's class has actually landed, such as
-     switching DevTools into device mode without reloading) leaves the
-     pill rendered and styled — nothing here stops it — while .site-nav
-     above stays sticky-at-top since *its* rule is still waiting on the
-     missing class: a broken hybrid state with the pill floating uselessly
-     at the top, full nav still showing too. */
   html.nav-mobile .nav-dropdown-trigger {
     display: flex;
     align-items: center;
@@ -631,7 +630,6 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
   html.nav-mobile footer {
     padding-bottom: calc(18px + 78px + env(safe-area-inset-bottom));
   }
-}
 
 @media (max-width: 480px) {
   .site-header {

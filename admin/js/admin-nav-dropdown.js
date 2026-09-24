@@ -6,15 +6,8 @@
 // the dropdown on tab click — neither of which the public version needs,
 // since there a click just navigates away on its own.
 
-const MOBILE_QUERY = "(max-width: 640px) and (pointer: coarse) and (hover: none)";
-
 function isMobileNav() {
-  // Some Android OEM browsers (Samsung Internet has a history of this)
-  // misreport pointer/hover, matching neither branch of MOBILE_QUERY on an
-  // actual touch phone — navigator.maxTouchPoints checks real touch
-  // hardware directly instead. Same combined check as the public site's
-  // js/nav-dropdown.js and every page's own inline head script.
-  return window.matchMedia(MOBILE_QUERY).matches || (window.innerWidth <= 640 && navigator.maxTouchPoints > 0);
+  return navigator.maxTouchPoints > 0;
 }
 
 function closeDropdown(bar) {
