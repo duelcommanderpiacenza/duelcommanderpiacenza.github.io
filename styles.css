@@ -2020,8 +2020,15 @@ footer {
     margin: 14px auto 0;
   }
 
+  /* min(260px, 80vw) rather than a flat 260px — that was wide enough to
+     overflow a narrow phone's actual viewport once page padding is
+     accounted for, forcing the whole page to become horizontally
+     scrollable (and, as a side effect, making the browser's own address
+     bar chrome show/hide oddly, reacting to that unexpected horizontal
+     scroll capability). 80vw leaves a comfortable margin on either side
+     so it still reads as "centered", not edge-to-edge. */
   .commander-card-face {
-    width: 260px;
+    width: min(260px, 80vw);
     height: auto;
     max-width: none;
   }
