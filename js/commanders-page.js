@@ -191,8 +191,6 @@ async function init() {
             wins: s.wins,
             draws: s.draws,
             losses: s.losses,
-            gameWins: s.gameWins,
-            gameTotal: s.gameTotal,
             winRate: s.winRate,
           };
         })

@@ -1,7 +1,7 @@
 import { Commanders, EventEntries, Matches } from "./db.js";
 import { matchRoundOutcome, isBye, isDrop } from "./leaderboard.js";
 import { initScopeFilter } from "./scope-filter.js";
-import { tallyOutcome, tallyGames, renderWinrateTiles } from "./winrate.js";
+import { tallyOutcome, renderWinrateTiles } from "./winrate.js";
 import { renderLineChart } from "./line-chart.js";
 import {
   escapeHtml,
@@ -298,7 +298,6 @@ async function init() {
     // mirror match (both sides on this commander) legitimately yields two rows.
     const rows = [];
     for (const m of matches) {
-      const gameTotal = m.player1_wins + m.draws + m.player2_wins;
       const selfEntry1 = playedEntryByKey.get(`${m.event_id}_${m.player1_id}`);
       if (selfEntry1) {
         const oppEntry = entryByKey.get(`${m.event_id}_${m.player2_id}`);
@@ -311,8 +310,6 @@ async function init() {
           isDrop: isDrop(m),
           outcome: outcomeFor(m, true),
           scoreLabel: isBye(m) ? "Bye" : isDrop(m) ? "Drop" : selfScoreLabel(m, true),
-          gameWins: m.player1_wins,
-          gameTotal,
           oppCommander: oppEntry?.commander ?? null,
           oppPartner: oppEntry?.partner_commander ?? null,
         });
@@ -329,8 +326,6 @@ async function init() {
           opponent: m.player1,
           outcome: outcomeFor(m, false),
           scoreLabel: selfScoreLabel(m, false),
-          gameWins: m.player2_wins,
-          gameTotal,
           oppCommander: oppEntry?.commander ?? null,
           oppPartner: oppEntry?.partner_commander ?? null,
         });
@@ -406,15 +401,14 @@ async function init() {
 
     function computeWinrate(scopedEventIds) {
       const scoped = new Set(scopedEventIds);
-      const bucket = { wins: 0, draws: 0, losses: 0, gameWins: 0, gameTotal: 0 };
+      const bucket = { wins: 0, draws: 0, losses: 0 };
       for (const r of rows) {
         if (r.event && !scoped.has(r.event.id)) continue;
         // A bye is a free win for the player, not a "victory" for the
         // commander — it never actually beat anything. A drop isn't a
-        // "victory" either, and isn't a game played at all.
+        // "victory" either, and isn't a match played at all.
         if (r.isBye || r.isDrop) continue;
         tallyOutcome(bucket, r.outcome);
-        tallyGames(bucket, r.gameWins, r.gameTotal);
       }
       renderWinrateTiles(winrateEl, bucket);
       statsReady = true;

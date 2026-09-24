@@ -7,7 +7,7 @@
 // entry/match lists are in, so picking decks re-renders the matrix instantly.
 
 import { EventEntries, Matches } from "./db.js";
-import { isBye, isDrop } from "./leaderboard.js";
+import { isBye, isDrop, matchRoundOutcome } from "./leaderboard.js";
 import { escapeHtml, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 
@@ -182,12 +182,10 @@ async function init() {
         return {
           side1: deckIdOf(e1),
           side2: deckIdOf(e2),
-          // Game-basis, not match-basis — a 2-0 match win should count for
-          // more than a 2-1 one, same convention as the rest of the site's
-          // own winrate stats (js/commanders-page.js, js/players-page.js).
-          side1GameWins: m.player1_wins,
-          side2GameWins: m.player2_wins,
-          gameDraws: m.draws,
+          // Match-basis, matching the rest of the site's own winrate
+          // convention — one whole match win/loss/draw, not the individual
+          // best-of-3 game score inside it.
+          outcome: matchRoundOutcome(m),
         };
       })
       .filter(Boolean);
@@ -211,16 +209,16 @@ async function init() {
     return;
   }
 
-  // Game-basis, not match-basis — a 2-0 match win counts for more than a
-  // 2-1 one, matching the rest of the site's own winrate convention. Each
-  // side is now the exact deck id (commander+partner combo) that entry
+  // Match-basis, matching the rest of the site's own winrate convention —
+  // a whole match's outcome counts once, not its individual game score.
+  // Each side is the exact deck id (commander+partner combo) that entry
   // played, so e.g. "Thrasios / Tymna" and "Thrasios / Vial Smasher" are
-  // never conflated into the same row. Mirror matches (rowId === colId)
-  // are left out of the matrix entirely rather than resolved ambiguously.
-  // Game draws are tracked (shown on hover) but excluded from the win%
-  // itself — wins / (wins + losses) only, so an all-draws matchup reads as
-  // "no decisive data" (—) instead of the misleading 0% a
-  // wins/(wins+losses+draws) formula would give it.
+  // never conflated into the same row. Mirror matches (rowId === colId) are
+  // left out of the matrix entirely rather than resolved ambiguously. A
+  // draw counts toward `total` (played) but not `wins`, same as everywhere
+  // else on the site — an all-draws matchup now reads as a real 0% rather
+  // than "no decisive data" (—), which only still shows for a matchup with
+  // zero recorded matches at all.
   function computeCell(rowId, colId) {
     if (rowId === colId) return null;
     let wins = 0;
@@ -232,11 +230,11 @@ async function init() {
       else if (m.side2 === rowId && m.side1 === colId) rowSide = 2;
       else continue;
 
-      wins += rowSide === 1 ? m.side1GameWins : m.side2GameWins;
-      losses += rowSide === 1 ? m.side2GameWins : m.side1GameWins;
-      draws += m.gameDraws;
+      if (m.outcome === "draw") draws += 1;
+      else if ((m.outcome === "player1" && rowSide === 1) || (m.outcome === "player2" && rowSide === 2)) wins += 1;
+      else losses += 1;
     }
-    return { wins, losses, draws, total: wins + losses };
+    return { wins, losses, draws, total: wins + losses + draws };
   }
 
   function renderMatrix() {
@@ -270,11 +268,9 @@ async function init() {
                   return '<td class="matchups-cell matchups-cell-empty">&mdash;</td>';
                 }
                 const pct = (cell.wins / cell.total) * 100;
-                // Game-basis: wins/losses here are individual games (a
-                // match is best-of-3), not whole matches.
-                const title = `${cell.wins}-${cell.losses} (${cell.total} totali)${
-                  cell.draws > 0 ? `, ${cell.draws} pareggio${cell.draws === 1 ? "" : "i"} escluso${cell.draws === 1 ? "" : "i"}` : ""
-                }`;
+                // Match-basis V-S-P, same order/format as the rest of the
+                // site's own V-S-P columns.
+                const title = `${cell.wins}-${cell.losses}-${cell.draws} (${cell.total} match totali)`;
                 return `<td class="matchups-cell" style="background:${heatColor(pct)};" title="${escapeHtml(title)}">${pct.toFixed(0)}% <span class="matchups-cell-count">(${cell.total})</span></td>`;
               })
               .join("")}

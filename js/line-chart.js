@@ -136,7 +136,12 @@ export function renderLineChart(rawPoints, emptyMessage, title) {
   const linePath = smoothPath(coords);
   const areaPath = `${linePath} L${coords[coords.length - 1][0].toFixed(2)},${PAD_TOP + innerHeight} L${coords[0][0].toFixed(2)},${PAD_TOP + innerHeight} Z`;
 
-  const GRID_STEPS = 4;
+  // Capped to yMax itself (not a flat 4) — yMax is a small whole number
+  // (a deck-count axis rarely exceeds single digits), so 4 evenly-spaced
+  // steps rounded to whole numbers could land on the same integer twice
+  // (e.g. yMax=2 rounds to 0, 1, 1, 2, 2). Capping the step count keeps
+  // the raw step size at 1 or more, so every rounded label is distinct.
+  const GRID_STEPS = Math.min(4, yMax);
   const gridLines = Array.from({ length: GRID_STEPS + 1 }, (_, i) => {
     const y = PAD_TOP + innerHeight - (i / GRID_STEPS) * innerHeight;
     const value = Math.round((i / GRID_STEPS) * yMax);
@@ -219,7 +224,12 @@ export function renderMultiLineChart(dates, series, emptyMessage, title) {
     coords: s.values.map((v, i) => [xAt(i), yAt(v)]),
   }));
 
-  const GRID_STEPS = 4;
+  // Capped to yMax itself (not a flat 4) — yMax is a small whole number
+  // (a deck-count axis rarely exceeds single digits), so 4 evenly-spaced
+  // steps rounded to whole numbers could land on the same integer twice
+  // (e.g. yMax=2 rounds to 0, 1, 1, 2, 2). Capping the step count keeps
+  // the raw step size at 1 or more, so every rounded label is distinct.
+  const GRID_STEPS = Math.min(4, yMax);
   const gridLines = Array.from({ length: GRID_STEPS + 1 }, (_, i) => {
     const y = PAD_TOP + innerHeight - (i / GRID_STEPS) * innerHeight;
     const value = Math.round((i / GRID_STEPS) * yMax);

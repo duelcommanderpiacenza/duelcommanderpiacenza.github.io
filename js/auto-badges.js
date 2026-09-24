@@ -10,7 +10,7 @@
 // has selected.
 
 import { Badges, Leagues, Events, EventEntries, Matches } from "./db.js";
-import { computeEventLeaderboard, computeLeaguePoints, isBye, isDrop } from "./leaderboard.js";
+import { computeEventLeaderboard, computeLeaguePoints, isBye, isDrop, matchRoundOutcome } from "./leaderboard.js";
 
 const TOP8_STREAK_COUNT = 3;
 const TOP8_STREAK_WINDOW_MONTHS = 3;
@@ -107,7 +107,7 @@ async function top8StreakPlayerIds() {
   return qualifying;
 }
 
-// Used by both match-based stats badges below (game-basis winrate and
+// Used by both match-based stats badges below (match-basis winrate and
 // total matches played) — each one calls this independently, so both
 // badges being configured at once means two separate fetches of the
 // matches table, same trade-off the existing league-rank rules already
@@ -115,33 +115,30 @@ async function top8StreakPlayerIds() {
 // self-contained.
 async function playerMatchStats() {
   const allMatches = await Matches.listAll();
-  const stats = new Map(); // player id -> { played, gameWins, gameTotal }
+  const stats = new Map(); // player id -> { played, wins }
 
   function ensure(playerId) {
-    if (!stats.has(playerId)) stats.set(playerId, { played: 0, gameWins: 0, gameTotal: 0 });
+    if (!stats.has(playerId)) stats.set(playerId, { played: 0, wins: 0 });
     return stats.get(playerId);
   }
 
   for (const m of allMatches) {
-    // A drop isn't a game played, win, or loss — excluded entirely, same
+    // A drop isn't a match played, win, or loss — excluded entirely, same
     // as everywhere else a match gets tallied.
     if (isDrop(m)) continue;
     const p1 = ensure(m.player1_id);
     p1.played += 1;
     if (isBye(m)) {
-      // A bye's placeholder 2-0-0 score is a clean win, same treatment as
-      // the official tiebreaker rules elsewhere (js/leaderboard.js).
-      p1.gameWins += 2;
-      p1.gameTotal += 2;
+      // A bye is a plain win, same treatment as the official tiebreaker
+      // rules elsewhere (js/leaderboard.js).
+      p1.wins += 1;
       continue;
     }
     const p2 = ensure(m.player2_id);
     p2.played += 1;
-    const gameTotal = m.player1_wins + m.draws + m.player2_wins;
-    p1.gameWins += m.player1_wins;
-    p1.gameTotal += gameTotal;
-    p2.gameWins += m.player2_wins;
-    p2.gameTotal += gameTotal;
+    const outcome = matchRoundOutcome(m);
+    if (outcome === "player1") p1.wins += 1;
+    else if (outcome === "player2") p2.wins += 1;
   }
   return stats;
 }
@@ -168,7 +165,7 @@ async function highestWinratePlayerIds() {
   const stats = await playerMatchStats();
   return playersWithMaxValue(
     stats,
-    (s) => (s.gameTotal > 0 ? s.gameWins / s.gameTotal : -1),
+    (s) => (s.played > 0 ? s.wins / s.played : -1),
     MIN_MATCHES_FOR_STATS_BADGES,
     (s) => s.played
   );

@@ -53,11 +53,14 @@ const TOP_FINISH_CUTOFF = 8;
  * manual_rank that overrides those computed tiebreakers when the admin has
  * explicitly reordered a tie group (see admin/js/matches-admin.js).
  *
- * Each row's `winRate` is on a *game* basis (games won / games played
- * across every match), not a match basis — winning a match 2-0 counts more
- * than winning it 2-1, even though both are a single match win. `wins`/
- * `draws`/`losses` stay match-level counts (used for the undefeated bonus
- * and the V-S-P display column, which are legitimately about match record).
+ * Each row's `winRate` is on a *match* basis (matches won / matches played),
+ * same level as the `wins`/`draws`/`losses` V-S-P counts it's derived from —
+ * a 2-0 and a 2-1 match win both just count as one win. The MTG tournament
+ * tiebreakers below (`gameWinPct`/`opponentsGameWinPct`) are a deliberately
+ * different, game-basis calculation — that's the official DCI/WPN tiebreak
+ * formula itself (Opponents' Match Win %, then Game Win %, then Opponents'
+ * Game Win %), not this site's own choice of how to display "winrate", so
+ * it stays game-basis regardless of what `winRate` does.
  * A dropped player's round (isDrop) is skipped entirely — no points, no
  * played count, nothing — leaving whatever they'd already earned in earlier
  * rounds untouched.
@@ -153,10 +156,10 @@ export function computeEventLeaderboard(matches, entries) {
     return Math.max(row.points / (row.played * POINTS.win), MIN_WIN_PCT);
   }
 
-  // Raw game tally (not the floored percentage below) — games won/played
-  // across every match, which is what "winrate" actually means: winning a
-  // match 2-1 is not the same as winning it 2-0, even though both are a
-  // single match win.
+  // Raw game tally (not the floored percentage below) — feeds gameWinPct,
+  // the official MTG tiebreaker stat (Game Win %), not the displayed
+  // `winRate` (that's match-basis now, computed straight from wins/played
+  // above — no game-level tally involved in it at all).
   function gameTally(playerId) {
     const pMatches = matchesByPlayer.get(playerId) ?? [];
     let won = 0;
@@ -174,11 +177,9 @@ export function computeEventLeaderboard(matches, entries) {
     return { won, total };
   }
 
-  // The MTG tiebreaker version of the above floors at MIN_WIN_PCT (a single
-  // bad round, or a weak opponent, shouldn't disproportionately tank it) —
-  // that floor is specifically a tiebreak convention, not a real statistic,
-  // so the *displayed* winrate (row.winRate below) uses the raw tally
-  // instead, unfloored.
+  // Floors at MIN_WIN_PCT (a single bad round, or a weak opponent,
+  // shouldn't disproportionately tank it) — the official tiebreak
+  // convention, tiebreaker-only, never displayed as a real statistic.
   function gameWinPct(playerId) {
     const { won, total } = gameTally(playerId);
     return total > 0 ? Math.max(won / total, MIN_WIN_PCT) : MIN_WIN_PCT;
@@ -202,10 +203,7 @@ export function computeEventLeaderboard(matches, entries) {
   for (const row of byPlayer.values()) {
     const id = row.player?.id;
     const opponents = id ? opponentIdsOf(id) : [];
-    const tally = id ? gameTally(id) : { won: 0, total: 0 };
-    row.gameWins = tally.won;
-    row.gameTotal = tally.total;
-    row.winRate = tally.total > 0 ? (tally.won / tally.total) * 100 : null;
+    row.winRate = row.played > 0 ? (row.wins / row.played) * 100 : null;
     row.gameWinPct = id ? gameWinPct(id) : MIN_WIN_PCT;
     row.opponentsMatchWinPct = average(opponents, matchWinPct);
     row.opponentsGameWinPct = average(opponents, gameWinPct);
@@ -282,26 +280,25 @@ export function computeLeaguePoints(eventsData) {
       score += entry?.bonus_points ?? 0;
 
       if (!byPlayer.has(id)) {
-        byPlayer.set(id, { player: row.player, eventScores: [], wins: 0, draws: 0, losses: 0, gameWins: 0, gameTotal: 0 });
+        byPlayer.set(id, { player: row.player, eventScores: [], wins: 0, draws: 0, losses: 0 });
       }
       const agg = byPlayer.get(id);
       agg.eventScores.push(score);
       agg.wins += row.wins;
       agg.draws += row.draws;
       agg.losses += row.losses;
-      agg.gameWins += row.gameWins;
-      agg.gameTotal += row.gameTotal;
     });
   }
 
-  const results = Array.from(byPlayer.values()).map(({ player, eventScores, wins, draws, losses, gameWins, gameTotal }) => {
+  const results = Array.from(byPlayer.values()).map(({ player, eventScores, wins, draws, losses }) => {
     const bestScores = [...eventScores].sort((a, b) => b - a).slice(0, BEST_RESULTS_COUNT);
     const fullAttendance = totalEvents > 0 && eventScores.length === totalEvents;
     const points = bestScores.reduce((sum, s) => sum + s, 0) + (fullAttendance ? FULL_ATTENDANCE_BONUS : 0);
-    // Game-based, summed across every event in the league — not an average
+    // Match-based, summed across every event in the league — not an average
     // of each event's own winRate%, which would misweight events with
-    // fewer games played.
-    const winRate = gameTotal > 0 ? (gameWins / gameTotal) * 100 : null;
+    // fewer matches played.
+    const played = wins + draws + losses;
+    const winRate = played > 0 ? (wins / played) * 100 : null;
     return { player, points, eventsPlayed: eventScores.length, fullAttendance, wins, draws, losses, winRate };
   });
 

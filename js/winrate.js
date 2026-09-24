@@ -2,14 +2,14 @@
 // and commander detail pages (each shows the same overall winrate cards,
 // updated live as the viewer narrows the scope with a filter).
 //
-// The "Winrate" figure is deliberately on a *game* basis (games won / games
-// played across every match), not a match basis: winning a match 2-0 counts
-// more than winning it 2-1, even though both are a single match win. The
-// Vittorie/Pareggi/Sconfitte tiles stay match-level counts, which is a
-// legitimate, different statistic (the actual match record).
+// The "Winrate" figure is on a *match* basis (matches won / matches played),
+// not a game basis: a 2-0 and a 2-1 match win both just count as one win,
+// same as the Vittorie/Pareggi/Sconfitte tiles below it — those and the
+// Winrate figure are now two views of the exact same match-level tally,
+// not two different statistics.
 
-export function winRatePct(gameWins, gameTotal) {
-  return gameTotal > 0 ? ((gameWins / gameTotal) * 100).toFixed(1) : null;
+export function winRatePct(wins, played) {
+  return played > 0 ? ((wins / played) * 100).toFixed(1) : null;
 }
 
 export function tallyOutcome(bucket, outcome) {
@@ -18,13 +18,9 @@ export function tallyOutcome(bucket, outcome) {
   else bucket.losses += 1;
 }
 
-export function tallyGames(bucket, gameWins, gameTotal) {
-  bucket.gameWins += gameWins;
-  bucket.gameTotal += gameTotal;
-}
-
 export function renderWinrateTiles(el, bucket) {
-  const rate = winRatePct(bucket.gameWins ?? 0, bucket.gameTotal ?? 0);
+  const played = (bucket.wins ?? 0) + (bucket.draws ?? 0) + (bucket.losses ?? 0);
+  const rate = winRatePct(bucket.wins ?? 0, played);
   el.innerHTML =
     rate === null
       ? '<p class="page-empty">Non ci sono ancora dati sufficienti.</p>'

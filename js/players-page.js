@@ -175,30 +175,23 @@ async function init() {
       const recordByPlayer = new Map();
       function ensureRecord(id) {
         if (!recordByPlayer.has(id)) {
-          recordByPlayer.set(id, { wins: 0, draws: 0, losses: 0, gameWins: 0, gameTotal: 0 });
+          recordByPlayer.set(id, { wins: 0, draws: 0, losses: 0 });
         }
         return recordByPlayer.get(id);
       }
       for (const { matches } of eventsData) {
         for (const m of matches) {
-          // A drop isn't a win, a loss, or a game played — it never
+          // A drop isn't a win, a loss, or a match played — it never
           // touches either player's record.
           if (isDrop(m)) continue;
           const r1 = ensureRecord(m.player1_id);
           if (isBye(m)) {
-            // A bye's placeholder 2-0 score isn't a real game played — it
-            // still counts as a match win (below), but must not inflate the
-            // game-basis Winrate%, same reasoning js/commander-detail.js
-            // already excludes byes for.
+            // A bye has no player2 to also credit/debit — a plain win for
+            // player1, nothing further to process for this match.
             r1.wins += 1;
             continue;
           }
-          const gamesInMatch = m.player1_wins + m.draws + m.player2_wins;
-          r1.gameWins += m.player1_wins;
-          r1.gameTotal += gamesInMatch;
           const r2 = ensureRecord(m.player2_id);
-          r2.gameWins += m.player2_wins;
-          r2.gameTotal += gamesInMatch;
           const outcome = matchRoundOutcome(m);
           if (outcome === "player1") {
             r1.wins += 1;
@@ -216,11 +209,10 @@ async function init() {
       lastRows = allPlayers.map((p) => {
         const playerEntries = entriesByPlayer.get(p.id) ?? [];
         const eventsPlayed = new Set(playerEntries.map((e) => e.event_id)).size;
-        const record = recordByPlayer.get(p.id) ?? { wins: 0, draws: 0, losses: 0, gameWins: 0, gameTotal: 0 };
+        const record = recordByPlayer.get(p.id) ?? { wins: 0, draws: 0, losses: 0 };
         const topCommander = mostUsedCommander(playerEntries);
-        // Game basis, not match basis — winning a match 2-0 counts more
-        // than winning it 2-1, even though both are one match win.
-        const winRate = record.gameTotal > 0 ? (record.gameWins / record.gameTotal) * 100 : null;
+        const played = record.wins + record.draws + record.losses;
+        const winRate = played > 0 ? (record.wins / played) * 100 : null;
         return {
           id: p.id,
           searchText: `${p.name} ${p.handle ?? ""}`.toLowerCase(),

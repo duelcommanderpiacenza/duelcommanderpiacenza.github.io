@@ -1,6 +1,6 @@
 import { Players, EventEntries, Matches, PlayerAutoBadges } from "./db.js";
 import { matchRoundOutcome, isBye, isDrop, computeEventLeaderboard } from "./leaderboard.js";
-import { tallyOutcome, tallyGames, renderWinrateTiles } from "./winrate.js";
+import { tallyOutcome, renderWinrateTiles } from "./winrate.js";
 import {
   escapeHtml,
   playerLabel,
@@ -205,7 +205,6 @@ async function init() {
       const opponentId = viewerIsP1 ? m.player2_id : m.player1_id;
       const myEntry = entryByEvent.get(m.event_id);
       const oppEntry = entryByEventPlayer.get(`${m.event_id}_${opponentId}`);
-      const gameTotal = m.player1_wins + m.draws + m.player2_wins;
       return {
         event: m.event,
         opponent,
@@ -213,8 +212,6 @@ async function init() {
         isDrop: isDrop(m),
         outcome: matchOutcome(m, viewerIsP1),
         scoreLabel: isBye(m) ? "Bye" : isDrop(m) ? "Drop" : viewerScoreLabel(m, viewerIsP1),
-        gameWins: viewerIsP1 ? m.player1_wins : m.player2_wins,
-        gameTotal,
         myCommander: myEntry?.commander ?? null,
         myPartner: myEntry?.partner_commander ?? null,
         oppCommander: oppEntry?.commander ?? null,
@@ -249,19 +246,14 @@ async function init() {
     function applyFilters() {
       const commanderId = commanderFilter.value;
       const leagueId = leagueFilter.value;
-      const bucket = { wins: 0, draws: 0, losses: 0, gameWins: 0, gameTotal: 0 };
+      const bucket = { wins: 0, draws: 0, losses: 0 };
       for (const r of rows) {
         if (commanderId && r.myCommander?.id !== commanderId && r.myPartner?.id !== commanderId) continue;
         if (leagueId && r.event?.league?.id !== leagueId) continue;
-        // A drop isn't a win, a loss, or a game played — skipped entirely,
-        // unlike a bye (still a match win, just not a real game — see below).
+        // A drop isn't a win, a loss, or a match played — skipped entirely.
+        // A bye counts as a played match won, same as any other match win.
         if (r.isDrop) continue;
         tallyOutcome(bucket, r.outcome);
-        // A bye's placeholder 2-0 score isn't a real game played — it still
-        // counts as a match win (tallyOutcome above), but must not inflate
-        // the game-basis Winrate%, same reasoning js/commander-detail.js
-        // already excludes byes for.
-        if (!r.isBye) tallyGames(bucket, r.gameWins, r.gameTotal);
       }
       renderWinrateTiles(overallEl, bucket);
     }

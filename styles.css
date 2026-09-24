@@ -163,6 +163,18 @@ a:hover {
    instead of cross-fading it — it's pixel-identical between pages, so this
    makes it stay fully static across a navigation instead of "reloading". */
 .site-header {
+  /* position + z-index, not just the search dropdown's own z-index: 60 —
+     view-transition-name (below) forces this element into its own stacking
+     context regardless of position, but without an explicit z-index that
+     context still only ranks as z-index: 0 among its siblings. .site-nav
+     right below declares an explicit z-index: 20 of its own, which beat
+     it (and, with it, the z-index: 60 search dropdown painted inside this
+     stacking context — a descendant's z-index only ever competes with its
+     OWN stacking context's siblings, never escapes past it) regardless of
+     that 60, making the dropdown render as if tucked behind the nav bar.
+     25 only needs to clear .site-nav's 20. */
+  position: relative;
+  z-index: 25;
   background:
     linear-gradient(135deg, var(--brand-red-dark), rgba(220, 24, 28, 0.96)),
     var(--brand-red);
@@ -172,12 +184,24 @@ a:hover {
   view-transition-name: site-header;
 }
 
+/* Centering used to live on .site-header-brand itself (the header's only
+   child) — now that the search box sits beside it, this wrapper does the
+   centering/max-width instead, with the brand and the search as two flex
+   children spaced apart. */
+.site-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
 .site-header-brand {
   display: flex;
   align-items: center;
   gap: 12px;
-  max-width: 1100px;
-  margin: 0 auto;
+  min-width: 0;
   color: #fff;
   text-decoration: none;
   font-weight: 800;
@@ -191,6 +215,260 @@ a:hover {
   flex-shrink: 0;
   object-fit: contain;
   filter: brightness(0) invert(1);
+}
+
+/* Site-wide search (js/site-search.js) — one shared markup block for both
+   desktop and mobile, styled entirely differently by CSS rather than two
+   separate widgets: desktop shows an always-visible translucent pill with
+   a live field right in the header; html.nav-mobile (the same touch-only
+   gate as the rest of the site's mobile chrome, see the .site-nav comment
+   below) collapses that to a round trigger button that opens the same
+   field + results as a full-screen overlay instead. Results are a live
+   dropdown either way — see js/site-search.js — never a separate results
+   page. */
+.site-search-trigger {
+  display: none;
+}
+
+html.nav-mobile .site-search-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--brand-red);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+}
+
+.site-search-trigger svg {
+  width: 19px;
+  height: 19px;
+}
+
+.site-search-box {
+  position: relative;
+}
+
+.site-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.site-search-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: var(--radius-pill);
+  padding: 9px 14px;
+  width: 240px;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.site-search-field:focus-within {
+  background: rgba(255, 255, 255, 0.26);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.site-search-field-icon {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.site-search-input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  color: #fff;
+  font: inherit;
+  font-size: 0.88rem;
+}
+
+.site-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* The browser's own built-in "clear" cross inside type="search" inputs —
+   redundant with (and, on mobile, visually crowding) .site-search-close,
+   which already serves the same purpose there; on desktop nothing else
+   closes the field at all (blur/Escape do that instead), so it's not
+   needed there either. */
+.site-search-input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.site-search-close {
+  display: none;
+}
+
+.site-search-results {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 360px;
+  max-width: calc(100vw - 40px);
+  max-height: 70vh;
+  overflow-y: auto;
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card-sm);
+  box-shadow: var(--shadow-card-hover);
+  padding: 10px;
+  z-index: 60;
+}
+
+.site-search-box.is-open .site-search-results {
+  display: block;
+  animation: cs-menu-in 140ms ease both;
+}
+
+/* One flat list, no per-type section headings — each row names its own
+   type via .site-search-result-type instead (a small pill, not the same
+   solid/bold .badge-status pill used for event/league open-closed state
+   elsewhere, so it reads as a lighter-weight label rather than a status). */
+.site-search-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 8px;
+  border-radius: 10px;
+  color: var(--text-body);
+  font-size: 0.92rem;
+}
+
+.site-search-result-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.site-search-result-type {
+  flex-shrink: 0;
+  padding: 2px 9px;
+  border-radius: var(--radius-pill);
+  background: rgba(220, 24, 28, 0.1);
+  color: var(--brand-red-deep);
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.site-search-result:hover {
+  background: var(--hairline-hover);
+  text-decoration: none;
+}
+
+.site-search-hint {
+  margin: 0;
+  padding: 14px 8px;
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 0.88rem;
+}
+
+/* Mobile: the round trigger opens this same block as a full-screen overlay
+   instead of a dropdown under a small inline pill — position/size/color
+   overridden wholesale rather than incrementally, since almost nothing
+   about the desktop layout (an absolutely-positioned white card floating
+   under a translucent-on-red pill) still applies once this is covering the
+   whole viewport. The field switches to a normal light/dark-aware input
+   (like .field input elsewhere) instead of translucent-on-red, since its
+   background is no longer the red header. */
+html.nav-mobile .site-search-field {
+  width: auto;
+  flex: 1;
+  background: #fff;
+  border-color: var(--hairline);
+}
+
+html.nav-mobile .site-search-field-icon {
+  color: var(--text-muted);
+}
+
+html.nav-mobile .site-search-input {
+  color: var(--text-body);
+}
+
+html.nav-mobile .site-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+html.nav-mobile .site-search-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--brand-red);
+  color: #fff;
+  cursor: pointer;
+}
+
+html.nav-mobile .site-search-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+html.nav-mobile .site-search-results {
+  display: none;
+  position: static;
+  width: auto;
+  max-width: none;
+  max-height: none;
+  flex: 1;
+  margin-top: 16px;
+  background: none;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 0;
+}
+
+/* Hidden outright until opened — without this, the box (with no display
+   override otherwise) would still render as a normal block sitting next to
+   the trigger in the header row instead of staying off-screen. */
+html.nav-mobile .site-search-box {
+  display: none;
+}
+
+html.nav-mobile .site-search-box.is-open {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: var(--bg-cream-1);
+  padding: 18px 16px;
+  padding-top: calc(18px + env(safe-area-inset-top));
+}
+
+html.nav-mobile .site-search-box.is-open .site-search-results {
+  display: block;
+}
+
+@media (max-width: 480px) {
+  .site-search-field {
+    width: 170px;
+  }
 }
 
 /* Deliberately no view-transition-name here, unlike the header/footer: this
@@ -1795,6 +2073,12 @@ footer {
   }
 
   .cd-wrap.is-open .cd-popup {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
+
+  .site-search-box.is-open .site-search-results {
     animation: none !important;
     opacity: 1;
     transform: none;
@@ -4278,14 +4562,26 @@ html[data-theme="dark"].nav-mobile .site-nav-inner {
   background: #2c1719;
 }
 
+/* The mobile search field switches to a normal light/dark-aware input
+   (see the light-mode rule) rather than staying translucent-on-red — same
+   dark background as .field input/.cs-trigger elsewhere. */
+html[data-theme="dark"].nav-mobile .site-search-field {
+  background: rgba(255, 255, 255, 0.06);
+}
+
 /* Not a translucent tint like the rules above — these popups can float over
    arbitrary page content (tables, other cards) behind them, so they need a
-   solid color of their own to stay legible regardless of what's underneath. */
+   solid color of their own to stay legible regardless of what's underneath.
+   .site-search-results is desktop-only here (:not(.nav-mobile)) — on mobile
+   it's part of the full-screen overlay's own background (.site-search-box,
+   already var(--bg-cream-1)-based and so already dark-mode-aware) rather
+   than a floating popup needing its own solid color. */
 :root[data-theme="dark"] .cs-menu,
 :root[data-theme="dark"] .cd-popup,
 :root[data-theme="dark"] .ecal-dialog,
 :root[data-theme="dark"] .matchups-dropdown,
-:root[data-theme="dark"] .nav-submenu {
+:root[data-theme="dark"] .nav-submenu,
+html[data-theme="dark"]:not(.nav-mobile) .site-search-results {
   background: #241a1d;
 }
 
