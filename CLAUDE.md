@@ -59,6 +59,58 @@ Admin (`admin/index.html`, single-page app, login-gated): top tab bar has `playe
 - **Any touch device** (`html.nav-mobile`, see above) — nav becomes a floating pill fixed to the bottom of the screen; tapping it opens an upward panel listing all tabs. This is the *only* place safe-area-inset / overscroll-behavior fixes were added — desktop-without-touch is the only thing that still gets the normal nav. This intentionally also covers touch laptops/tablets/iPad now (not just phones) — an earlier, narrower version tried gating on `max-width: 640px` plus `pointer: coarse`/`hover: none`, which excluded those on purpose, but that media-query condition itself turned out to be unreliable on real phones (Samsung Internet) and was dropped entirely rather than patched further.
 - **Reusable nav-submenu scaffolding, currently unwired**: `.nav-item-has-sub` / `.nav-sub-hint` / `.nav-submenu` / `.nav-sublink` in `styles.css` implement a full "tab with a hover popup on desktop, always-visible nested row on mobile" pattern. It was built and tried for nesting "Matchups" under "Comandanti", then reverted back to Matchups being its own top-level tab per product decision — but the CSS was deliberately left in place for the next tab that needs to nest under another one. To reuse: wrap a `<a class="nav-link">` + sibling `<div class="nav-submenu">` in `<div class="nav-item-has-sub">`, submenu children are `<a class="nav-sublink" data-nav="X">`; add a `body[data-active-nav="X"] .nav-sublink[data-nav="X"]` active-highlight rule (there's no generic one, it was removed with the Matchups wiring). Needs duplicating across all public pages' nav markup, same as any other nav change.
 
+## Commander detail page: Scryfall card art
+
+`commander.html`/`js/commander-detail.js` shows the commander's own Scryfall
+card image next to its name, spanning from the title down to the bottom of
+the stat tiles (desktop), or stacked below the title (mobile, ≤640px).
+
+- **Fetch**: `fetchScryfallCard(name)` does a real JSON `fetch()` to
+  `/cards/named?exact=...` (not the simpler `format=image` redirect trick)
+  because a double-faced commander needs both faces' own `image_uris` to
+  flip between, not just one. `scryfallCardImages(card)` distinguishes true
+  double-faced cards (`card_faces[].image_uris` present on every face) from
+  split/adventure/flip cards (a single combined image, `card.image_uris`
+  only) — that's the actual signal for whether the flip button appears, not
+  just the presence of `card_faces`. Loaded independently of the page's own
+  Supabase data (not awaited) — a slow/unreachable Scryfall never blocks the
+  real page, a failed/no-match lookup just leaves the figure hidden.
+- **Sizing**: `syncCardImageLayout()` sets the image's height in JS (px,
+  measured from `.page-heading`'s top to the stat tiles' bottom — two
+  separate elements with no CSS-only way to span between them), then reads
+  the image's own resulting width back and sets it as
+  `.commander-top-row-main`'s `padding-right`, so the stat tiles grow right
+  up to the card's real (height-dependent) edge instead of stopping short
+  at a fixed guess.
+- **Reveal timing**: the Scryfall image and the Supabase winrate stats load
+  independently in unpredictable order — revealing the card as soon as
+  either one alone is ready risks measuring/sizing against the other's
+  still-showing placeholder. A `cardImageReady`/`statsReady` two-flag latch
+  (`revealCardIfReady()`) holds the card hidden until both are true.
+- **Flip (double-faced cards only)**: a real CSS 3D flip (`.commander-card-flipper`
+  toggling `.is-flipped { transform: rotateY(180deg) }`, both faces stacked
+  as separate `<img>`s with `backface-visibility: hidden`), not a
+  swap-on-click. `perspective` and the entrance animation both live on a
+  dedicated `.commander-card-perspective` wrapper *one level below*
+  `.commander-card-figure`, never on the figure itself — either one directly
+  on the figure creates a stacking context that broke click-through to the
+  sibling flip button, even with `pointer-events: none` on its icon (see
+  gotcha #10).
+- **Mobile title fit**: `fitCommanderTitle()` shrinks `#commander-title`'s
+  font-size (down to a 17px floor) when the name + color-identity pips
+  don't fit the width actually left next to the back button on a phone,
+  measured against the text's own natural unwrapped width — not a fixed
+  smaller mobile font-size, so short names stay full-size and only long
+  ones shrink, only as much as they need to. Paired with
+  `alignBackButtonToTitle()`: `.page-heading-row`'s mobile
+  `align-items: flex-start` only top-aligns the back button with the
+  title (needed so it anchors to the name, not the card image stacked
+  below it on mobile) — once the title's own font-size shrinks well below
+  the button's 44px, top-aligning no longer puts their *centers* level.
+  This nudges the button's `margin-top` by the exact difference so it
+  stays vertically centered against whatever the title's actual rendered
+  height ends up being.
+
 ## Non-obvious gotchas (hit and fixed this session — avoid repeating)
 
 1. **`overflow: hidden` on an element clips its own `::before`/`::after` too**, even ones meant to render outside its box (tooltips, dropdown shadows). If an element needs both truncation (`text-overflow: ellipsis`) *and* to host an absolutely-positioned popup/tooltip, put the truncation on an inner wrapper instead and keep the outer element unclipped.
@@ -70,3 +122,4 @@ Admin (`admin/index.html`, single-page app, login-gated): top tab bar has `playe
 7. Service worker (`sw.js`) is a deliberate no-op (pure network pass-through, no caching) — it exists only to satisfy Chrome's PWA installability check, since the site's data is always-live from Supabase and caching would show stale results.
 8. **A generic dark-mode override can win on specificity over a more specific context rule that resets a background to transparent**, even when that rule is more semantically "specific." The generic dark-mode "give this a faint card background" rules (`styles.css`, the big `:root[data-theme="dark"] .card, .stat-tile, .pie-chart-wrap, ...` list) are 3 classes; a narrower "this one shouldn't have its own background, it's nested inside another card" rule like `.dashboard-card-commanders .pie-chart-wrap { background: none; }` is usually only 2 — the generic rule wins regardless of source order, silently reintroducing a visible background the narrower rule was trying to remove. Hit **three separate times** this session with this exact shape (`html.nav-mobile .site-nav`, `admin/admin.css`'s `.admin-tabs`, and `.dashboard-card-commanders .pie-chart-wrap`) — worth checking for this pattern by default whenever a "make this transparent/none in context X" rule doesn't seem to be working in dark mode specifically. Fix is always the same: a compound selector combining `:root[data-theme="dark"]` (or `html[data-theme="dark"]`) with the narrower context class(es) in one selector, placed near the other dark-mode overrides, not just relying on cascade order.
 9. **Wrapping already-class-gated CSS in a redundant `@media` condition means BOTH have to independently match, and they can disagree.** The mobile-pill CSS was originally inside `@media (max-width: 640px) and (pointer: coarse) and (hover: none) { html.nav-mobile .site-nav { ... } }` — belt-and-suspenders with the JS-set class, in theory. In practice, some browsers (Samsung Internet) misreport `pointer`/`hover`, so the `@media` condition silently failed to match even when `html.nav-mobile` was correctly set by JS — the styling just never applied, with no error, nothing to debug from the DOM (the class was right there). Fixed by dropping the `@media` wrapper entirely and trusting the JS-set class as the single source of truth, rather than trying to patch the media query further.
+10. **`perspective` and any CSS `animation`/`transition` that animates `transform` both create a stacking context on whatever element they're set on**, for as long as `animation-fill-mode` holds it there (not just while actively animating). A sibling element positioned to overlap that one (e.g. the commander card's flip button sitting over the card image) can become unclickable even with `pointer-events: none` on its own icon, because the *ancestor* now stacks the whole overlapping region above the sibling. Fix: keep `perspective`/animated-`transform` rules on a dedicated inner wrapper, never on the same element an interactive sibling is positioned against — see the commander card's `.commander-card-perspective` split from `.commander-card-figure` above.

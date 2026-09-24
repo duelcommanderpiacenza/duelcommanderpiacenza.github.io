@@ -101,6 +101,10 @@ export function initEventsAdmin({ onOpenEvent }) {
     if (!confirm(`Eliminare l'evento "${row.name ?? formatDate(row.event_date)}"? Verranno rimossi anche i suoi iscritti e partite.`)) return;
     try {
       await Events.remove(row.id);
+      // Cascades away all of this event's entries/matches, which can
+      // change standings/stats just as much as closing one does — same
+      // fire-and-forget reasoning as onToggleOpen above.
+      syncAutoBadges().catch(console.error);
       await refresh();
     } catch (err) {
       setMessage(msgEl, "Errore nell'eliminazione.", true);

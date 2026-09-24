@@ -149,6 +149,9 @@ export function initLeaguesAdmin({ onOpenLeague }) {
     if (!confirm(`Eliminare la lega "${row.name}"? Verranno rimossi anche i suoi eventi, iscritti e partite.`)) return;
     try {
       await Leagues.remove(row.id);
+      // Cascades away all of this league's events/entries/matches — same
+      // fire-and-forget reasoning as onToggleOpen above.
+      syncAutoBadges().catch(console.error);
       await refresh();
     } catch (err) {
       setMessage(msgEl, "Errore nell'eliminazione.", true);

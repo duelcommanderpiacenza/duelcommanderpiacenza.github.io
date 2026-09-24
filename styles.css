@@ -2014,9 +2014,9 @@ footer {
   }
 
   /* No longer floating beside anything at this width — back to a normal,
-     centered in-flow block (still sits right after the name and before
-     the rest of the page either way, since that's already where it is in
-     the markup: inside .page-heading, ahead of .page-loading-region
+     left-aligned in-flow block (still sits right after the name and
+     before the rest of the page either way, since that's already where it
+     is in the markup: inside .page-heading, ahead of .page-loading-region
      entirely). Kept position: relative (not static) rather than removing
      positioning altogether — .commander-card-flip-btn is position:
      absolute and needs *this* element as its anchor, not whatever
@@ -2026,7 +2026,7 @@ footer {
     position: relative;
     top: auto;
     right: auto;
-    margin: 14px auto 0;
+    margin: 14px 0 0;
   }
 
   /* min(260px, 80vw) rather than a flat 260px — that was wide enough to
