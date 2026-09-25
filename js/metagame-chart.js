@@ -21,12 +21,17 @@ export const ARCHETYPE_COLORS = {
  * @param {Array<{label: string, share: number, color: string}>} rows - share is 0-100, sums to ~100.
  * @param {string} emptyMessage
  * @param {string} [title] - shown inside the box itself, above the ring/legend.
+ * @param {{subtitle?: string, footer?: string}} [options] - subtitle: small
+ *   muted line under the title; footer: trusted HTML at the bottom of the box
+ *   (the Bacheca's per-slide "Vedi tutti" link).
  */
-export function renderPieChart(rows, emptyMessage, title) {
-  const titleHtml = title ? `<h2 class="pie-chart-title">${escapeHtml(title)}</h2>` : "";
+export function renderPieChart(rows, emptyMessage, title, { subtitle = "", footer = "" } = {}) {
+  const titleHtml =
+    (title ? `<h2 class="pie-chart-title">${escapeHtml(title)}</h2>` : "") +
+    (subtitle ? `<p class="pie-chart-subtitle">${escapeHtml(subtitle)}</p>` : "");
   const visible = rows.filter((r) => r.share > 0);
   if (visible.length === 0) {
-    return `<div class="pie-chart-wrap">${titleHtml}<p class="page-empty">${emptyMessage}</p></div>`;
+    return `<div class="pie-chart-wrap">${titleHtml}<p class="page-empty">${emptyMessage}</p>${footer}</div>`;
   }
 
   let cursor = 0;
@@ -56,6 +61,7 @@ export function renderPieChart(rows, emptyMessage, title) {
         <div class="pie-chart" style="background: conic-gradient(${stops});" role="img" aria-label="Grafico a torta del metagame"></div>
         <div class="pie-legend">${legend}</div>
       </div>
+      ${footer}
     </div>
   `;
 }

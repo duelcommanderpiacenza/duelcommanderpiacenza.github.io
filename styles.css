@@ -1604,10 +1604,18 @@ a.upcoming-row:hover .upcoming-row-title {
   white-space: nowrap;
 }
 
-/* "Vedi tutti" at the bottom of the "Più giocati" card — one link, its
-   target following the chart in view (js/home.js). */
-.dashboard-charts-link {
-  margin-top: 4px;
+/* Each "Più giocati" slide's own "Vedi tutti" (js/home.js) — the slide is a
+   flex column (.chart-grid > .pie-chart-wrap), which would otherwise
+   stretch the link into a full-width bar; kept its natural size, pinned to
+   the slide's bottom so both slides' links line up. */
+.dashboard-card-commanders .pie-chart-wrap > .section-link {
+  align-self: flex-start;
+  margin-top: auto;
+}
+
+/* Room between a slide's legend and its "Vedi tutti" below. */
+.dashboard-card-commanders .pie-chart-body {
+  margin-bottom: 18px;
 }
 
 .dashboard-league-list {

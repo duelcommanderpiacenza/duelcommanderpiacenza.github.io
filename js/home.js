@@ -263,28 +263,24 @@ async function renderCommandersSection(el) {
     // The same whole-block carousel as the Comandanti/Archetipi charts
     // (js/chart-carousel.js) — this card is narrow, so it shows one chart
     // at a time (two only once the card itself is wide enough, see
-    // .chart-carousel-host in styles.css). No per-chart titles: the card's
-    // own heading and its bottom "Vedi tutti" link follow whichever chart
-    // is in view, and the ‹ • › controls sit below the card, outside it.
-    const slides = [
-      { title: "Commander più giocati", href: "commanders.html" },
-      { title: "Archetipi più giocati", href: "archetypes.html" },
-    ];
+    // .chart-carousel-host in styles.css). Each slide carries its own title,
+    // "(ultimi 3 mesi)" and "Vedi tutti" link (the card has no fixed heading
+    // or link of its own), so all of it slides along with its chart; the
+    // ‹ • › controls sit below the card, outside it.
+    const periodLabel = `(ultimi ${TOP_COMMANDERS_WINDOW_MONTHS} mesi)`;
+    const seeAll = (href) => `<a class="section-link" href="${href}">Vedi tutti</a>`;
     el.innerHTML = `
       <div class="chart-grid">
-        ${renderPieChart(chartRows, "Nessun dato per il grafico.")}
-        ${renderPieChart(archetypeRows, "Nessun dato per il grafico.")}
+        ${renderPieChart(chartRows, "Nessun dato per il grafico.", "Commander più giocati", {
+          subtitle: periodLabel,
+          footer: seeAll("commanders.html"),
+        })}
+        ${renderPieChart(archetypeRows, "Nessun dato per il grafico.", "Archetipi più giocati", {
+          subtitle: periodLabel,
+          footer: seeAll("archetypes.html"),
+        })}
       </div>`;
-    const titleEl = document.getElementById("dashboard-charts-title");
-    const linkEl = document.getElementById("dashboard-charts-link");
-    initChartCarousel(el, {
-      navAfter: document.getElementById("dashboard-charts-card"),
-      onIndexChange: (i) => {
-        const slide = slides[i] ?? slides[0];
-        titleEl.textContent = slide.title;
-        linkEl.href = slide.href;
-      },
-    });
+    initChartCarousel(el, { navAfter: document.getElementById("dashboard-charts-card") });
   } catch (err) {
     showError(el, err);
   }

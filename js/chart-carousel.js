@@ -31,11 +31,8 @@ function positionCount(grid) {
  * @param {HTMLElement} [options.navAfter] - put the ‹ • › controls right after
  *   this element instead of directly under the row (the Bacheca: below its
  *   whole card, outside the white box).
- * @param {(index: number) => void} [options.onIndexChange] - called with the
- *   index of the first chart in view, initially and whenever it changes
- *   (the Bacheca swaps its card title/link with it).
  */
-export function initChartCarousel(containerEl, { navAfter = null, onIndexChange = null } = {}) {
+export function initChartCarousel(containerEl, { navAfter = null } = {}) {
   const grid = containerEl.querySelector(".chart-grid");
   if (!grid) return;
   // Controls placed outside containerEl survive a re-render of its content,
@@ -64,7 +61,6 @@ export function initChartCarousel(containerEl, { navAfter = null, onIndexChange 
   const prevBtn = nav.querySelector('[data-dir="-1"]');
   const nextBtn = nav.querySelector('[data-dir="1"]');
 
-  let lastIndex = null;
   function update() {
     const count = positionCount(grid);
     // Everything already fits (e.g. only 2 charts, 2 visible) — no controls.
@@ -76,10 +72,6 @@ export function initChartCarousel(containerEl, { navAfter = null, onIndexChange 
     Array.from(dotsEl.children).forEach((dot, i) => dot.classList.toggle("is-active", i === index));
     prevBtn.disabled = index <= 0;
     nextBtn.disabled = index >= count - 1;
-    if (onIndexChange && index !== lastIndex) {
-      lastIndex = index;
-      onIndexChange(index);
-    }
   }
 
   nav.querySelectorAll(".chart-carousel-arrow").forEach((btn) => {
