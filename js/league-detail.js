@@ -1,17 +1,107 @@
 import { Leagues, Events, EventEntries, Matches } from "./db.js";
 import { computeLeaguePoints } from "./leaderboard.js";
-import { computeLeagueSummary } from "./stats.js";
-import { escapeHtml, formatDate, eventTitle, leagueStatusBadge, playerLabel, showError } from "./ui.js";
+import { computeLeagueSummary, computeLeagueWrapped } from "./stats.js";
+import {
+  escapeHtml,
+  formatDate,
+  eventTitle,
+  leagueStatusBadge,
+  playerLabel,
+  commanderPairLabel,
+  archetypeBadge,
+  showError,
+} from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
 }
 
+function wrappedTile(label, valueHtml, detail = "") {
+  return `<div class="stat-tile wrapped-tile">
+    <div class="stat-tile-label">${label}</div>
+    <div class="wrapped-tile-value">${valueHtml}</div>
+    ${detail ? `<div class="wrapped-tile-detail">${detail}</div>` : ""}
+  </div>`;
+}
+
+const EMPTY_VALUE = '<span class="wrapped-tile-empty">—</span>';
+
+// Highlights from a single event just repeat that event's own results —
+// only worth showing across several.
+const WRAPPED_MIN_EVENTS = 2;
+
+function renderWrapped(league, standings, wrapped, eventCount) {
+  if (eventCount < WRAPPED_MIN_EVENTS) return "";
+
+  const tiles = [];
+
+  // A Topdeck series has no points leaderboard, so no winner either.
+  if (!league.is_topdeck) {
+    if (league.is_open) {
+      tiles.push(wrappedTile("Vincitore", '<span class="wrapped-tile-empty">Lega in corso</span>'));
+    } else if (standings.length === 0) {
+      tiles.push(wrappedTile("Vincitore", EMPTY_VALUE));
+    } else {
+      // League points have no tiebreaker, so a tie on top points is shown
+      // as a shared win rather than settled alphabetically.
+      const topPoints = standings[0].points;
+      const winners = standings.filter((s) => s.points === topPoints);
+      tiles.push(
+        wrappedTile("Vincitore", winners.map((s) => playerLabel(s.player)).join("<br>"), `${topPoints} punti`)
+      );
+    }
+  }
+
+  const bw = wrapped.bestWinrate;
+  tiles.push(
+    bw
+      ? wrappedTile(
+          "Miglior winrate",
+          bw.players.map(playerLabel).join("<br>"),
+          bw.players.length === 1
+            ? `${bw.winRate.toFixed(1)}% · ${bw.wins}-${bw.losses}-${bw.draws}`
+            : `${bw.winRate.toFixed(1)}%`
+        )
+      : wrappedTile("Miglior winrate", EMPTY_VALUE)
+  );
+
+  const ta = wrapped.topArchetype;
+  tiles.push(
+    ta
+      ? wrappedTile(
+          "Archetipo più usato",
+          archetypeBadge(ta.archetype),
+          `${ta.entries} ${ta.entries === 1 ? "presenza" : "presenze"} · ${ta.wins} ${ta.wins === 1 ? "vittoria" : "vittorie"}`
+        )
+      : wrappedTile("Archetipo più usato", EMPTY_VALUE)
+  );
+
+  tiles.push(
+    wrapped.topCommanders.length > 0
+      ? wrappedTile(
+          "Comandanti più usati",
+          `<ol class="wrapped-rank-list">${wrapped.topCommanders
+            .map(
+              (c) => `<li>
+                <span class="wrapped-rank-name">${commanderPairLabel(c.commander, c.partner)}</span>
+                <span class="wrapped-rank-count">${c.entries}</span>
+              </li>`
+            )
+            .join("")}</ol>`
+        )
+      : wrappedTile("Comandanti più usati", EMPTY_VALUE)
+  );
+
+  return tiles.join("");
+}
+
 async function init() {
   const id = getId();
   const titleEl = document.getElementById("league-title");
   const statsEl = document.getElementById("league-stats");
+  const wrappedSectionEl = document.getElementById("league-wrapped-section");
+  const wrappedEl = document.getElementById("league-wrapped");
   const eventsEl = document.getElementById("league-events");
   const leaderboardSectionEl = document.getElementById("league-leaderboard-section");
   const leaderboardEl = document.getElementById("league-leaderboard");
@@ -36,6 +126,7 @@ async function init() {
 
     if (events.length === 0) {
       statsEl.innerHTML = "";
+      wrappedSectionEl.hidden = true;
       eventsEl.innerHTML = '<p class="page-empty">Nessun evento associato a questa lega.</p>';
       leaderboardEl.innerHTML = '<p class="page-empty">Nessun dato per la classifica.</p>';
       return;
@@ -74,9 +165,15 @@ async function init() {
       )
       .join("");
 
-    if (league.is_topdeck) return;
-
+    // Computed for Topdeck series too (no leaderboard shown for those) —
+    // Wrapped's best-winrate tile reads its per-player records.
     const standings = computeLeaguePoints(eventsData);
+    wrappedEl.innerHTML = renderWrapped(league, standings, computeLeagueWrapped(eventsData, standings), events.length);
+    // Too few events means no highlight tiles at all — hide the empty grid
+    // rather than leave a gap below the summary tiles.
+    wrappedEl.hidden = wrappedEl.innerHTML === "";
+
+    if (league.is_topdeck) return;
 
     leaderboardEl.innerHTML =
       standings.length === 0

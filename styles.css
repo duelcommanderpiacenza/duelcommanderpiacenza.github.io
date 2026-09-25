@@ -1778,14 +1778,6 @@ main {
   overflow-y: auto;
 }
 
-.ecal-day-panel-title {
-  margin: 0 0 8px;
-  font-size: 0.95rem;
-  font-weight: 800;
-  color: var(--text-title);
-  text-transform: capitalize;
-}
-
 .ecal-day-panel-empty {
   margin: 0;
   color: var(--text-muted);
@@ -1801,6 +1793,28 @@ main {
 
 .ecal-event-row-future:hover .dashboard-event-name {
   text-decoration: none;
+}
+
+/* The calendar's day panel is too narrow for the Bacheca's side-by-side
+   row, so it always uses the stacked layout (same as the Bacheca's own
+   ≤640px one): event name on its own line — allowed to wrap rather than
+   ellipsize, it's the part that matters — with league · time below it. */
+.ecal-day-panel .dashboard-event-row {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.ecal-day-panel .dashboard-event-name {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.ecal-day-panel .dashboard-event-meta {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .section-heading {
@@ -2352,6 +2366,19 @@ footer {
   color: var(--text-title);
 }
 
+/* A status pill inline in the title (league.html's "In corso"/"Conclusa")
+   would otherwise sit on the text baseline, visibly low next to a 1.9rem
+   name — flex centers it on the name's line box instead. The name itself
+   still wraps normally as its own (anonymous) flex item; on a wrapped
+   multi-line name the pill centers against the whole block. */
+.page-heading h1:has(> .badge-status) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 6px;
+}
+
 .admin-topbar h1 {
   margin: 0;
   font-size: 1.9rem;
@@ -2744,6 +2771,84 @@ footer {
   font-weight: 800;
   line-height: 1.2;
   margin-top: 4px;
+}
+
+/* League "Wrapped" highlights (league.html) — built on .stat-tile, so the
+   entrance animation, stagger, dark-mode surface and reduced-motion rules
+   all apply as-is; only the value area differs, since it holds names/badges
+   rather than a single big number. */
+
+.wrapped-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+/* .stat-grid's display: grid would otherwise override the hidden attribute. */
+.wrapped-grid[hidden] {
+  display: none;
+}
+
+/* The numeric summary tiles sit right above the highlights in the same
+   section — same spacing between the two grids as between tiles. */
+.stat-grid:has(+ .wrapped-grid:not([hidden])) {
+  margin-bottom: 16px;
+}
+
+.wrapped-tile-value {
+  color: var(--text-title);
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1.35;
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+}
+
+.wrapped-tile-value .badge-archetype {
+  font-size: 0.95rem;
+}
+
+.wrapped-tile-detail {
+  color: var(--brand-red);
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-top: 6px;
+}
+
+.wrapped-tile-empty {
+  color: var(--text-muted);
+}
+
+.wrapped-rank-list {
+  list-style: none;
+  counter-reset: wrapped-rank;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  font-size: 0.98rem;
+}
+
+.wrapped-rank-list li {
+  counter-increment: wrapped-rank;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.wrapped-rank-list li::before {
+  content: counter(wrapped-rank);
+  color: var(--brand-red);
+  min-width: 1ch;
+}
+
+.wrapped-rank-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.wrapped-rank-count {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
 }
 
 /* Generic entity list/detail cards */
@@ -4997,6 +5102,8 @@ img.cs-option-icon {
 
 :root[data-theme="dark"] .rank-cell,
 :root[data-theme="dark"] .stat-tile-value,
+:root[data-theme="dark"] .wrapped-tile-detail,
+:root[data-theme="dark"] .wrapped-rank-list li::before,
 :root[data-theme="dark"] .cd-day.is-today {
   color: #ff6a6e;
 }

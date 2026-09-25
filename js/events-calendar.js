@@ -99,16 +99,11 @@ function init() {
 
   function renderDayPanel() {
     const iso = isoOf(selected.y, selected.m, selected.d);
-    const label = new Date(selected.y, selected.m, selected.d).toLocaleDateString("it-IT", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
+    // No date heading here — the selected day is already highlighted in the
+    // grid right above, so repeating it only costs vertical space.
     const dayEvents = (eventsByDate?.get(iso) ?? []).slice().sort((a, b) => (a.start_time ?? "").localeCompare(b.start_time ?? ""));
 
     dayPanel.innerHTML = `
-      <h3 class="ecal-day-panel-title">${escapeHtml(label)}</h3>
       ${
         dayEvents.length === 0
           ? '<p class="ecal-day-panel-empty">Nessun evento in questo giorno.</p>'
@@ -116,12 +111,16 @@ function init() {
               ${dayEvents
                 .map((ev) => {
                   const leaguePrefix = ev.league ? `${escapeHtml(ev.league.name)} &middot; ` : "";
-                  const time = ev.start_time ? `ore ${formatTime(ev.start_time)}` : "&mdash;";
+                  // A future event with no start time set yet still reads as
+                  // scheduled ("In programma") rather than a bare dash.
+                  const time = ev.start_time
+                    ? `ore ${formatTime(ev.start_time)}`
+                    : ev.is_open
+                      ? "In programma"
+                      : "&mdash;";
                   const inner = `
                     <span class="dashboard-event-name">${escapeHtml(eventTitle(ev))}</span>
-                    <span class="dashboard-event-meta">${
-                      ev.is_open ? `${leaguePrefix}In programma` : `${leaguePrefix}${time}`
-                    }</span>`;
+                    <span class="dashboard-event-meta">${leaguePrefix}${time}</span>`;
                   // A still-open event has no published entries/matches yet,
                   // same reason the homepage's "Ultimi eventi" widget
                   // excludes it entirely (js/home.js) — here it stays

@@ -70,6 +70,79 @@ export function computeGroupedStats(eventsData, keyFn, buildMeta) {
     .sort((a, b) => b.entries - a.entries);
 }
 
+// Best-winrate needs a real sample: a player who showed up for a single
+// round and won it would otherwise top the league at 100%. Only players who
+// played at least this fraction of the most active player's match count
+// qualify (relative, not a fixed number, so it scales from a 2-event league
+// to a full season).
+const WRAPPED_MIN_PLAYED_RATIO = 0.5;
+const WRAPPED_TOP_COMMANDERS = 3;
+
+/**
+ * League "Wrapped" highlights (league detail page): best winrate, most used
+ * archetype, most used commanders. Winrate is match-basis, same figures as
+ * the league leaderboard table (byes included, as they are there).
+ * @param {Array<{entries: Array, matches: Array}>} eventsData
+ * @param {Array} playerStandings - computeLeaguePoints(eventsData)'s output
+ * @returns {{
+ *   bestWinrate: null | { players: Array, winRate: number, wins: number, draws: number, losses: number },
+ *   topArchetype: null | { archetype: string, entries: number, wins: number },
+ *   topCommanders: Array<{ commander: object, partner: object|null, entries: number, wins: number }>,
+ * }}
+ */
+export function computeLeagueWrapped(eventsData, playerStandings) {
+  const withPlayed = playerStandings
+    .map((s) => ({ ...s, played: s.wins + s.draws + s.losses }))
+    .filter((s) => s.played > 0);
+  const maxPlayed = Math.max(0, ...withPlayed.map((s) => s.played));
+  const eligible = withPlayed.filter((s) => s.played >= maxPlayed * WRAPPED_MIN_PLAYED_RATIO);
+
+  // Compared as exact fractions (a.wins/a.played vs b.wins/b.played, cross-
+  // multiplied) rather than as floats, so two genuinely equal winrates
+  // (e.g. 6/8 and 3/4) always tie instead of one edging out on rounding.
+  let best = [];
+  for (const s of eligible) {
+    const cmp = best.length === 0 ? 1 : s.wins * best[0].played - best[0].wins * s.played;
+    if (cmp > 0) best = [s];
+    else if (cmp === 0) best.push(s);
+  }
+  best.sort((a, b) => (a.player?.name ?? "").localeCompare(b.player?.name ?? ""));
+  const bestWinrate =
+    best.length === 0
+      ? null
+      : {
+          players: best.map((s) => s.player),
+          winRate: best[0].winRate,
+          // V-S-P only meaningful for a single winner — tied players can
+          // share a winrate with different records (3-1 vs 6-2).
+          wins: best[0].wins,
+          draws: best[0].draws,
+          losses: best[0].losses,
+        };
+
+  // Most entries first; a tie goes to whichever has more match wins.
+  const byUsage = (a, b) => b.entries - a.entries || b.wins - a.wins;
+
+  const archetypeStats = computeGroupedStats(eventsData, (e) => e.archetype, () => ({})).sort(byUsage);
+  const topArchetype = archetypeStats[0]
+    ? { archetype: archetypeStats[0].key, entries: archetypeStats[0].entries, wins: archetypeStats[0].wins }
+    : null;
+
+  // Grouped by the exact commander+partner pairing, same "deck" definition
+  // as the Comandanti page.
+  const commanderStats = computeGroupedStats(
+    eventsData,
+    (e) => `${e.commander_id}_${e.partner_commander_id ?? ""}`,
+    (e) => ({ commander: e.commander, partner: e.partner_commander ?? null })
+  );
+  const topCommanders = commanderStats
+    .sort((a, b) => byUsage(a, b) || (a.commander?.name ?? "").localeCompare(b.commander?.name ?? ""))
+    .slice(0, WRAPPED_TOP_COMMANDERS)
+    .map((s) => ({ commander: s.commander, partner: s.partner, entries: s.entries, wins: s.wins }));
+
+  return { bestWinrate, topArchetype, topCommanders };
+}
+
 /**
  * League/homepage summary stats: number of events, unique players across
  * all of them, average attendance per event, total matches played.
