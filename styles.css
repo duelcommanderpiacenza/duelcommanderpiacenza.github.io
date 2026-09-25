@@ -3098,6 +3098,15 @@ footer {
   border-color: var(--hairline-hover);
 }
 
+/* A concluded league (js/events-page.js adds .is-closed) — a muted grey
+   surface, same family as its grey "Conclusa" badge, so finished leagues
+   read apart from the ongoing ones at a glance. The event cards inside keep
+   their own white surface, so they still stand out when expanded. */
+.league-group.is-closed {
+  background: linear-gradient(180deg, #f2eced, #e9e2e3);
+  border-color: rgba(139, 102, 108, 0.24);
+}
+
 .league-group-header {
   display: flex;
   align-items: center;
@@ -3137,6 +3146,10 @@ footer {
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
+  /* .badge-status's own min-height — the standalone-events card has no
+     status badge, just the event count, and was otherwise shorter than
+     every league card next to it. */
+  min-height: 26px;
 }
 
 /* Animated expand/collapse via the grid-rows trick (0fr <-> 1fr) rather
@@ -5304,6 +5317,13 @@ img.cs-option-icon {
    earlier this session. */
 :root[data-theme="dark"] .dashboard-card-commanders .pie-chart-wrap {
   background: none;
+}
+
+/* Concluded league card (Leghe & Eventi): darker than the regular faint
+   light-on-dark surface above, the dark-mode take on "muted". */
+:root[data-theme="dark"] .league-group.is-closed {
+  background: rgba(0, 0, 0, 0.28);
+  border-color: rgba(255, 255, 255, 0.06);
 }
 
 /* Same trap: "Leghe in corso"'s league rows are meant to have no box of

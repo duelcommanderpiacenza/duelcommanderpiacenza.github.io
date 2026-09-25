@@ -1,5 +1,6 @@
 // The merged "Leghe & Eventi" tab: one collapsible section per league (plus
-// a trailing one for standalone events), each listing that league's own
+// one for standalone events, between the ongoing and the concluded
+// leagues), each listing that league's own
 // published events as cards — replaces the old separate Leghe tab
 // (js/leagues-page.js, now deleted) and the old flat events-by-league view
 // this file used to render.
@@ -37,7 +38,7 @@ function renderEventGrid(evs) {
 
 // `link` is the href for the clickable name (a league) or null (the
 // standalone section, which has no page of its own to link to).
-function renderGroup({ id, name, link, badge, events }) {
+function renderGroup({ id, name, link, badge, events, closed = false }) {
   const count = events.length;
   const countLabel = `${count} event${count === 1 ? "o" : "i"}`;
   // The badge and event count sit outside the link on purpose — neither is
@@ -49,7 +50,7 @@ function renderGroup({ id, name, link, badge, events }) {
     : `<span class="league-group-link league-group-link-static"><span class="league-group-name">${escapeHtml(name)}</span></span>`;
 
   return `
-    <section class="league-group is-collapsed" data-group-id="${id}" role="button" tabindex="0" aria-expanded="false">
+    <section class="league-group is-collapsed${closed ? " is-closed" : ""}" data-group-id="${id}" role="button" tabindex="0" aria-expanded="false">
       <div class="league-group-header">
         <div class="league-group-title-row">
           ${nameHtml}
@@ -135,24 +136,31 @@ async function init() {
       })
       .sort(compareLeagues);
 
-    const leagueSections = orderedLeagues
-      .map((l) =>
-        renderGroup({
-          id: l.id,
-          name: l.name,
-          link: `league.html?id=${l.id}`,
-          badge: leagueStatusBadge(l.is_open),
-          events: l.events,
-        })
-      )
-      .join("");
+    const renderLeagues = (list) =>
+      list
+        .map((l) =>
+          renderGroup({
+            id: l.id,
+            name: l.name,
+            link: `league.html?id=${l.id}`,
+            badge: leagueStatusBadge(l.is_open),
+            events: l.events,
+            closed: !l.is_open,
+          })
+        )
+        .join("");
 
     const standaloneSection =
       standaloneEvents.length === 0
         ? ""
         : renderGroup({ id: "standalone", name: "Eventi standalone", link: null, badge: "", events: standaloneEvents });
 
-    listEl.innerHTML = leagueSections + standaloneSection;
+    // Ongoing leagues first, then the standalone events, then concluded
+    // leagues last — each group keeping compareLeagues' own order within it.
+    listEl.innerHTML =
+      renderLeagues(orderedLeagues.filter((l) => l.is_open)) +
+      standaloneSection +
+      renderLeagues(orderedLeagues.filter((l) => !l.is_open));
 
     // The whole card toggles collapse/expand — except a click that
     // actually landed on .league-group-link, which navigates to the
