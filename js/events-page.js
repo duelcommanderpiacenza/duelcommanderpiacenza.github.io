@@ -68,6 +68,41 @@ function renderGroup({ id, name, link, badge, events }) {
     </section>`;
 }
 
+// Mirrors the old grid's own breakpoint (minmax(280px, 1fr), 18px gap) —
+// same column count a CSS auto-fill grid would have produced, just
+// computed here so the cards can be pre-split into independent columns
+// (see .league-grid's own comment in styles.css for why).
+const GROUP_MIN_WIDTH = 280;
+const GROUP_GAP = 18;
+
+function computeColumnCount(containerWidth) {
+  return Math.max(1, Math.floor((containerWidth + GROUP_GAP) / (GROUP_MIN_WIDTH + GROUP_GAP)));
+}
+
+// Redistributes the .league-group cards already in the DOM into N fresh
+// .league-grid-col wrappers, round-robin. Moves the existing elements
+// (appendChild on an already-attached node relocates it, doesn't clone)
+// rather than re-rendering their HTML, so each card's current
+// expanded/collapsed state and event listeners survive a re-layout —
+// important since this also runs on resize, not just on first render.
+let lastColumnCount = null;
+function layoutColumns(listEl) {
+  const groups = Array.from(listEl.querySelectorAll(".league-group"));
+  if (groups.length === 0) return;
+  const count = computeColumnCount(listEl.clientWidth);
+  if (count === lastColumnCount) return;
+  lastColumnCount = count;
+
+  const cols = Array.from({ length: count }, () => {
+    const col = document.createElement("div");
+    col.className = "league-grid-col";
+    return col;
+  });
+  groups.forEach((group, i) => cols[i % count].appendChild(group));
+  listEl.innerHTML = "";
+  cols.forEach((col) => listEl.appendChild(col));
+}
+
 async function init() {
   const listEl = document.getElementById("events-list");
   try {
@@ -139,6 +174,18 @@ async function init() {
           toggleGroup(group);
         }
       });
+    });
+
+    layoutColumns(listEl);
+    // Debounced: column *count* only actually changes at a few width
+    // thresholds, but resize fires continuously while dragging — layoutColumns
+    // itself already no-ops when the count hasn't changed, this just avoids
+    // running that check dozens of times a second while the window is
+    // actively being dragged.
+    let resizeTimer;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => layoutColumns(listEl), 150);
     });
   } catch (err) {
     showError(listEl, err);

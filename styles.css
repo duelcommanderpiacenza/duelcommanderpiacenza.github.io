@@ -2788,16 +2788,26 @@ footer {
 }
 
 /* One card per league (plus a trailing one for standalone events), newest
-   first, so with the compareLeagues sort already ordering open/most-recent
-   leagues first, grid auto-flow (left-to-right, top-to-bottom) naturally
-   puts them top-left. align-items: start (not the grid default stretch)
-   is what lets one card grow taller than its row-mates when expanded,
-   instead of forcing every card in that row to stretch to match it. */
+   first (compareLeagues). This used to be a plain CSS grid
+   (auto-fill, minmax(280px, 1fr)) with align-items: start — but a grid's
+   row track is always sized to its tallest cell regardless of column, so
+   expanding one card still pushed every *later row* down, column or not.
+   js/events-page.js instead pre-splits the cards into N independent
+   .league-grid-col columns (masonry-style) — each one just a normal
+   vertical stack, so a card expanding only pushes down cards later in its
+   *own* column. This row is simply those columns sitting side by side. */
 .league-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  display: flex;
+  align-items: flex-start;
   gap: 18px;
-  align-items: start;
+}
+
+.league-grid-col {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  flex: 1;
+  min-width: 0;
 }
 
 /* The whole card toggles collapse/expand on click (see js/events-page.js —
