@@ -65,8 +65,8 @@ export function renderTable(container, rows, columns, actions, { animate = true 
   });
 }
 
-// A single clickable pill combining the read-only open/closed badge (see
-// statusBadge in ../../js/ui.js, still used on public pages) with the action
+// A single clickable pill combining an open/closed status badge (same
+// .badge-status look as the public site's) with the action
 // to flip it — one row-actions button and one table column fewer than
 // having both a status badge and a separate "Chiudi"/"Riapri" button side
 // by side. Callers wire up the click the same way they already do for any

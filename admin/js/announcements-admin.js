@@ -1,5 +1,5 @@
 import { Announcements } from "../../js/db.js";
-import { formatDate, escapeHtml } from "../../js/ui.js";
+import { formatDate } from "../../js/ui.js";
 import { renderTable, setMessage } from "./crud-ui.js";
 
 /**

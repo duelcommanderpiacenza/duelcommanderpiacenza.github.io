@@ -24,15 +24,12 @@
   --shadow-soft: 0 18px 42px rgba(69, 29, 34, 0.08);
   --shadow-card: 0 12px 28px rgba(40, 24, 26, 0.08);
   --shadow-card-hover: 0 18px 36px rgba(40, 24, 26, 0.14);
-  --shadow-pill: 0 18px 34px rgba(62, 29, 33, 0.1);
 
   --radius-card: 22px;
   --radius-card-sm: 20px;
   --radius-pill: 999px;
 
-  --accent-green-1: #27ae60;
   --accent-green-2: #14914a;
-  --accent-green-glow: rgba(34, 153, 84, 0.28);
 
   --accent-aggro: #dc181c;
   --accent-control: #2f5fdc;
@@ -1493,7 +1490,7 @@ main {
 
 /* "Ultimi eventi" reuses the upcoming-row markup, but each row is a link
    to the event page — no underline across the whole row, only the title
-   on hover, same as the old .dashboard-event-row did. */
+   on hover, same as .dashboard-event-row (the calendar's rows). */
 a.upcoming-row {
   color: inherit;
   text-decoration: none;
@@ -1890,8 +1887,7 @@ a.upcoming-row:hover .upcoming-row-title {
 }
 
 #deck-filters-slot,
-#video-filters-slot,
-.section-heading-spacer {
+#video-filters-slot {
   min-height: 42px;
   display: flex;
   align-items: center;
@@ -2021,7 +2017,6 @@ a.upcoming-row:hover .upcoming-row-title {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
-.deck-placeholder-rank,
 .deck-placeholder-format {
   font-size: 0.8rem;
   text-transform: uppercase;
@@ -2285,8 +2280,7 @@ a.upcoming-row:hover .upcoming-row-title {
   }
 
   #deck-filters-slot,
-  #video-filters-slot,
-  .section-heading-spacer {
+  #video-filters-slot {
     min-height: 0;
     min-width: 0;
   }
@@ -4457,8 +4451,8 @@ img.cs-option-icon {
    page's filters (league/event/date/color-identity) — keeps the page's
    own results visible without permanently reserving a whole extra row (or
    two) of vertical space for filters most visits never touch. Same
-   collapse mechanics (grid-template-rows: 1fr/0fr) as .matchups-embed/
-   .league-group elsewhere, reused here under its own class names since
+   collapse mechanics (grid-template-rows: 1fr/0fr) as .league-group
+   elsewhere, reused here under its own class names since
    the trigger is a small icon button, not a whole clickable header row. */
 .filter-toggle-line {
   display: flex;
@@ -4571,46 +4565,6 @@ img.cs-option-icon {
   margin-bottom: 0;
 }
 
-/* Commander/Player detail pages' "Statistiche" filters — same funnel
-   button + collapsible panel as the list pages, on their own line below
-   the section heading (a plain sibling <h2>, not part of this row) rather
-   than a dedicated search/sort row. The panel sits *beside* the button
-   rather than always dropping below it: flex-wrap does the "same line if
-   there's room, otherwise its own line below" behavior for free, as long
-   as the panel takes zero width while collapsed (it'd otherwise reserve
-   empty horizontal space next to the button even while invisible, since
-   collapsing its *height* via grid-template-rows above doesn't collapse
-   its width as a flex item). */
-.stats-filter-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px 14px;
-  margin-bottom: 14px;
-}
-
-.stats-filter-row .filter-toggle-btn {
-  margin-left: 0;
-  flex-shrink: 0;
-}
-
-/* min-width wide enough that its own two fields (220px each + gap + panel
-   padding, .filter-bar/.field above) never wrap onto separate lines — below
-   that width flex-wrap moves the *whole panel* down onto its own full-width
-   line first (still plenty of room there for both fields side by side),
-   rather than letting the fields wrap internally while still squeezed next
-   to the heading. Only relaxed on phones (below), where even a full-width
-   line isn't wide enough and internal wrapping becomes unavoidable. */
-.stats-filter-row .filter-panel {
-  flex: 0 1 500px;
-  min-width: 480px;
-}
-
-.stats-filter-row .filter-panel.is-collapsed {
-  flex: 0 0 0;
-  min-width: 0;
-}
-
 /* .filter-toggle-line is nowrap (no flex-wrap set) so it can never break
    onto a second line — the search field's own min-width: 0 already lets
    it shrink as needed, but the sort field's fixed 220px doesn't, and on a
@@ -4624,17 +4578,6 @@ img.cs-option-icon {
 @media (max-width: 480px) {
   .filter-toggle-sort {
     width: 130px;
-  }
-}
-
-/* Even a full-width line (see .stats-filter-row .filter-panel above) isn't
-   480px wide on a phone — relaxed here so the panel fits the viewport
-   instead of forcing horizontal overflow; its two fields fall back to
-   wrapping onto their own lines inside it, same as every other filter
-   panel already does at this width. */
-@media (max-width: 640px) {
-  .stats-filter-row .filter-panel {
-    min-width: 0;
   }
 }
 
@@ -5272,7 +5215,6 @@ img.cs-option-icon {
   --shadow-soft: 0 18px 42px rgba(0, 0, 0, 0.5);
   --shadow-card: 0 12px 28px rgba(0, 0, 0, 0.4);
   --shadow-card-hover: 0 18px 36px rgba(0, 0, 0, 0.5);
-  --shadow-pill: 0 18px 34px rgba(0, 0, 0, 0.45);
 
   /* Pure text-role colors (never a solid background fill), so — unlike
      --brand-red itself — safe and necessary to brighten for contrast. */

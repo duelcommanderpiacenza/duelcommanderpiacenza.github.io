@@ -29,6 +29,3 @@ const isAdmin = window.location.pathname.includes("/admin/");
 export const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: { persistSession: isAdmin, autoRefreshToken: isAdmin },
 });
-
-export const isConfigured =
-  !SUPABASE_URL.includes("YOUR-PROJECT-REF") && !SUPABASE_ANON_KEY.includes("YOUR-ANON-PUBLIC-KEY");

@@ -1,16 +1,13 @@
-// The merged "Leghe & Eventi" tab: one collapsible section per league (plus
-// one for standalone events, between the ongoing and the concluded
-// leagues), each listing that league's own
-// published events as cards — replaces the old separate Leghe tab
-// (js/leagues-page.js, now deleted) and the old flat events-by-league view
-// this file used to render.
+// The "Leghe & Eventi" tab: one collapsible section per league (plus one
+// for standalone events, between the ongoing and the concluded leagues),
+// each listing that league's own published events as cards.
 
 import { Leagues, Events } from "./db.js";
 import { escapeHtml, formatDate, eventTitle, leagueStatusBadge, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 
-// Same ordering the old Leghe tab used: open leagues first (real leagues
-// before Topdeck within that), then most-recently-active first, name as a
+// Open leagues first (real leagues before Topdeck within that), then
+// most-recently-active first, name as a
 // final tiebreak — so a league with no events yet still sorts sensibly
 // instead of always trailing at the very end.
 function compareLeagues(a, b) {
@@ -69,8 +66,8 @@ function renderGroup({ id, name, link, badge, events, closed = false }) {
     </section>`;
 }
 
-// Mirrors the old grid's own breakpoint (minmax(280px, 1fr), 18px gap) —
-// same column count a CSS auto-fill grid would have produced, just
+// A 280px minimum card width and 18px gap — the same column count a CSS
+// auto-fill grid (minmax(280px, 1fr)) would produce, just
 // computed here so the cards can be pre-split into independent columns
 // (see .league-grid's own comment in styles.css for why).
 const GROUP_MIN_WIDTH = 280;

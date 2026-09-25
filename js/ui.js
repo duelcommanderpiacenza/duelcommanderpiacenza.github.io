@@ -76,12 +76,6 @@ export function colorIdentityPips(colorIdentity) {
   );
 }
 
-export function statusBadge(isOpen) {
-  return isOpen
-    ? '<span class="badge-status badge-status-open">Aperta</span>'
-    : '<span class="badge-status badge-status-closed">Chiusa</span>';
-}
-
 export function leagueStatusBadge(isOpen) {
   return isOpen
     ? '<span class="badge-status badge-status-open">In corso</span>'

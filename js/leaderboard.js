@@ -225,8 +225,8 @@ export function computeEventLeaderboard(matches, entries) {
     return (a.player?.name ?? "").localeCompare(b.player?.name ?? "");
   });
 
-  // Not used anywhere yet — exposed so a later feature (a stat, a badge...)
-  // can read who placed top 8 without re-deriving it from points/tiebreaks
+  // Read by js/auto-badges.js's top-8 streak badge — exposed here so it
+  // doesn't have to re-derive who placed top 8 from points/tiebreaks
   // itself. Always computed fresh from the live standings above, never
   // stored, so it can never drift out of sync with match results.
   standings.forEach((row, i) => {
