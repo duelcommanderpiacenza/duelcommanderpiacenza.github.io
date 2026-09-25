@@ -11,6 +11,8 @@ import {
   showError,
 } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
+import { resultsLink } from "./results-link.js";
+import { initTitleFit } from "./page-title-fit.js";
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
@@ -59,6 +61,7 @@ async function init() {
   const id = getId();
   const titleEl = document.getElementById("event-title");
   const metaEl = document.getElementById("event-meta");
+  const resultsEl = document.getElementById("event-results");
   const entriesEl = document.getElementById("event-entries");
   const matchesEl = document.getElementById("event-matches");
   const leaderboardEl = document.getElementById("event-leaderboard");
@@ -77,6 +80,10 @@ async function init() {
     ]);
 
     titleEl.textContent = eventTitle(event);
+    const resultsHtml = resultsLink(event.results_url);
+    resultsEl.innerHTML = resultsHtml;
+    resultsEl.hidden = !resultsHtml;
+    initTitleFit(titleEl);
     metaEl.innerHTML = `${formatDate(event.event_date)}${
       event.league
         ? ` &middot; Lega: <a href="league.html?id=${event.league.id}">${escapeHtml(event.league.name)}</a>`

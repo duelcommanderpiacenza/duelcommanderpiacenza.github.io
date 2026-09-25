@@ -125,8 +125,15 @@ create table events (
   league_id uuid references leagues(id) on delete cascade, -- null = standalone event, not part of any league
   rounds integer not null default 1, -- number of turns/rounds, set manually by the admin
   is_open boolean not null default true, -- while open, the event's data is admin-only; closing it publishes it
+  results_url text, -- optional link to the event's top decks on mtgtop8, shown as a small red "Top 8" pill next to
+    -- the event name on the public site; editable any time, closed events included. http(s) only — it's
+    -- rendered as a public link, so a javascript: URL must never get in.
+    -- Added after the initial schema; on an existing DB (don't re-run this file, it wipes everything):
+    --   alter table events add column results_url text
+    --     constraint events_results_url_http check (results_url ~* '^https?://');
   created_at timestamptz not null default now(),
-  constraint events_unique_name_per_league unique (league_id, name) -- same name OK across leagues, not within one
+  constraint events_unique_name_per_league unique (league_id, name), -- same name OK across leagues, not within one
+  constraint events_results_url_http check (results_url ~* '^https?://')
 );
 
 -- Postgres treats every NULL as distinct for a plain unique constraint, so

@@ -30,6 +30,12 @@ export function eventTitle(ev) {
   return ev.name || formatDate(ev.event_date);
 }
 
+// Only http(s) links are ever stored/rendered as a public href — a
+// javascript: (or other scheme) URL must never reach the page.
+export function isHttpUrl(url) {
+  return typeof url === "string" && /^https?:\/\//i.test(url);
+}
+
 export function playerLabel(player) {
   if (!player) return "—";
   const name = escapeHtml(player.name);

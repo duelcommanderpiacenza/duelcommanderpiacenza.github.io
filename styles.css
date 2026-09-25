@@ -1390,13 +1390,21 @@ main {
    style date badge per row (day + month, not a plain text date) — since
    this is meant to catch the eye as important, actionable information
    rather than blend in with routine stats. */
-.dashboard-card-upcoming {
+/* .dashboard-card-accent is that same look (red border, red uppercase
+   title, red row separators) shared by "Leghe in corso" and
+   "Ultimi eventi" too — those two on a plain white card, only "Prossimi
+   eventi" keeps the red-tinted background. */
+.dashboard-card-accent {
   border-color: rgba(220, 24, 28, 0.28);
+  background: #fff;
+}
+
+.dashboard-card-upcoming {
   background:
     linear-gradient(135deg, rgba(220, 24, 28, 0.08), rgba(220, 24, 28, 0.02));
 }
 
-.dashboard-card-upcoming h2 {
+.dashboard-card-accent h2 {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1404,11 +1412,6 @@ main {
   text-transform: uppercase;
   letter-spacing: 0.04em;
   font-size: 1.05rem;
-}
-
-.dashboard-card-upcoming h2::before {
-  content: "\1F4C5";
-  font-size: 1.1rem;
 }
 
 .upcoming-list {
@@ -1486,6 +1489,62 @@ main {
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.03em;
+}
+
+/* "Ultimi eventi" reuses the upcoming-row markup, but each row is a link
+   to the event page — no underline across the whole row, only the title
+   on hover, same as the old .dashboard-event-row did. */
+a.upcoming-row {
+  color: inherit;
+  text-decoration: none;
+}
+
+a.upcoming-row:hover {
+  text-decoration: none;
+}
+
+a.upcoming-row:hover .upcoming-row-title {
+  text-decoration: underline;
+}
+
+/* mtgtop8 "Top 8" pill (js/results-link.js) as the row's last flex item:
+   pushed to the right end, vertically centered on the date badge by the
+   row's own align-items: center. Same size as the one beside event.html's
+   title (.page-heading-pill). The name column still truncates first; the
+   pill never shrinks. */
+.upcoming-row > .results-link {
+  flex-shrink: 0;
+  min-height: 32px;
+  margin-left: auto;
+  padding: 0 14px;
+  font-size: 0.85rem;
+}
+
+/* "Leghe in corso" inside the accent card: the per-league blocks drop their
+   own bordered box and read as rows, split by the same red separators as
+   the upcoming/latest event rows. */
+.dashboard-card-leagues .dashboard-league-list {
+  gap: 0;
+}
+
+.dashboard-card-leagues .dashboard-league-card {
+  border: none;
+  border-radius: 0;
+  background: none;
+  padding: 12px 0;
+}
+
+.dashboard-card-leagues .dashboard-league-card + .dashboard-league-card {
+  border-top: 1px solid rgba(220, 24, 28, 0.14);
+}
+
+.dashboard-card-leagues .dashboard-league-card:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.dashboard-card-leagues .dashboard-league-card:hover .dashboard-league-card-name {
+  text-decoration: underline;
 }
 
 .dashboard-card-subtitle {
@@ -2366,19 +2425,6 @@ footer {
   color: var(--text-title);
 }
 
-/* A status pill inline in the title (league.html's "In corso"/"Conclusa")
-   would otherwise sit on the text baseline, visibly low next to a 1.9rem
-   name — flex centers it on the name's line box instead. The name itself
-   still wraps normally as its own (anonymous) flex item; on a wrapped
-   multi-line name the pill centers against the whole block. */
-.page-heading h1:has(> .badge-status) {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  column-gap: 12px;
-  row-gap: 6px;
-}
-
 .admin-topbar h1 {
   margin: 0;
   font-size: 1.9rem;
@@ -2683,6 +2729,58 @@ footer {
   margin: 4px 0 0;
 }
 
+/* Status / results pill beside a detail page's title — league.html's
+   "In corso"/"Conclusa", event.html's mtgtop8 "Top 8" — a sibling of the
+   title, not inside the <h1>. Phones: it just stacks on its own line
+   between name and date. Desktop: .page-heading-text becomes a 2-column
+   grid with the pill in the title's row, vertically centered on the name
+   (the date line below stays under the name only). */
+.page-heading-pill {
+  display: flex;
+  margin-top: 8px;
+}
+
+/* display: flex above would otherwise override the hidden attribute. */
+.page-heading-pill[hidden] {
+  display: none;
+}
+
+@media (min-width: 641px) {
+  .page-heading-text:has(> .page-heading-pill:not([hidden])) {
+    display: grid;
+    grid-template-columns: minmax(0, max-content) auto;
+    justify-content: start;
+    align-items: center;
+    column-gap: 16px;
+  }
+
+  .page-heading-text > .page-heading {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .page-heading-text > .page-subtitle {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .page-heading-text > .page-heading-pill {
+    grid-column: 2;
+    grid-row: 1;
+    margin-top: 0;
+  }
+}
+
+/* A bit bigger than a plain .badge-status (26px) — both pills here, same
+   size, the results one included (its base style is em-based). */
+.page-heading-pill > .badge-status,
+.page-heading-pill > .results-link {
+  min-height: 32px;
+  margin-left: 0;
+  padding: 0 14px;
+  font-size: 0.85rem;
+}
+
 /* Round icon-only back button — the destination ("Tutti i comandanti" etc.)
    is preserved as aria-label/title on the link itself rather than visible
    text, since there's no text left in the DOM to announce it otherwise.
@@ -2885,6 +2983,60 @@ footer {
   margin-bottom: 6px;
 }
 
+/* mtgtop8 "🏆 Top 8" pill (js/results-link.js) — Bacheca "Ultimi eventi"
+   rows and beside event.html's title. The base is em-based (scales with
+   whatever text it follows); both current placements override it to a
+   fixed size instead (.page-heading-pill > .results-link,
+   .upcoming-row > .results-link). Same solid brand-red pill as
+   .badge-status-open. */
+.results-link {
+  position: relative; /* anchors its hover tooltip, shared with .icon-badge */
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  margin-left: 0.5em;
+  padding: 0.2em 0.6em;
+  vertical-align: middle;
+  border-radius: var(--radius-pill);
+  background: var(--brand-red);
+  color: #fff;
+  font-size: 0.72em;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 150ms ease;
+}
+
+.results-link:hover {
+  text-decoration: none;
+}
+
+/* The tooltip text is sized in rem (shared rule) — reset the inherited
+   metrics so it reads identically on a Bacheca row and next to the much
+   bigger event.html <h1>. */
+.results-link::after {
+  font-family: var(--font-main);
+  letter-spacing: normal;
+  line-height: normal;
+}
+
+.results-link svg {
+  width: 1.1em;
+  height: 1.1em;
+  flex-shrink: 0;
+}
+
+/* Color only, no lift — a transform here would make the pill its own
+   stacking context and trap its tooltip below the sticky nav (gotchas
+   #10/#11 in CLAUDE.md). */
+.results-link:hover,
+.results-link:focus-visible {
+  background: var(--brand-red-deep-2);
+}
+
 .entity-card-meta {
   color: var(--text-muted);
   font-size: 0.85rem;
@@ -2925,16 +3077,6 @@ footer {
   min-width: 0;
 }
 
-/* On a phone there's only ever one column (computeColumnCount,
-   js/events-page.js), so this is the only gap doing any work at all —
-   18px reads fine spacing out cards *between* multiple side-by-side
-   columns, but felt tight stacked full-width one after another. */
-@media (max-width: 640px) {
-  .league-grid-col {
-    gap: 28px;
-  }
-}
-
 /* The whole card toggles collapse/expand on click (see js/events-page.js —
    the click handler explicitly excludes .league-group-link so navigating
    to the league's own page still works), same reasoning .entity-card
@@ -2968,6 +3110,14 @@ footer {
      min-height. A margin here sidesteps that entirely: it's genuinely
      external spacing, never something the collapse needs to clip. */
   margin-bottom: 16px;
+  transition: margin-bottom 280ms ease;
+}
+
+/* That spacing only separates the header from the (expanded) events below
+   — collapsed, it just left the card bottom-heavy. Animated with the same
+   timing as .league-group-body's own collapse, so the two move together. */
+.league-group.is-collapsed .league-group-header {
+  margin-bottom: 0;
 }
 
 /* Name on its own line, the (non-navigable) status badge + event count
@@ -3042,6 +3192,13 @@ footer {
   box-shadow: none;
 }
 
+/* Name first, date below (js/events-page.js) — an unnamed Topdeck event has
+   no date line (its title already is the date), so the name's own bottom
+   margin would just leave the card bottom-heavy. */
+.league-group-body-clip .entity-card-title:last-child {
+  margin-bottom: 0;
+}
+
 /* The league's own name is a real link to its detail page — clicks on it
    are excluded from the card's own toggle handler (js/events-page.js), so
    browsing to the league and collapsing/expanding its events never compete
@@ -3091,8 +3248,8 @@ footer {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: var(--brand-red);
   transition: background 180ms ease;
@@ -3106,17 +3263,61 @@ footer {
   content: "";
   width: 0;
   height: 0;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
   /* Points up at rest (expanded — "click collapses it"), flips to point
      down once collapsed ("click expands it downward"), the conventional
      accordion-chevron direction. */
-  border-bottom: 6px solid #fff;
+  border-bottom: 8px solid #fff;
   transition: transform 180ms ease;
 }
 
 .league-group.is-collapsed .league-group-toggle-icon::before {
   transform: rotate(180deg);
+}
+
+/* Phones: one column only (computeColumnCount, js/events-page.js), cards
+   stacked full-width — tighter spacing than desktop (league cards, and the
+   event cards inside an expanded one), and bigger text, since the cards
+   have the whole screen width to themselves. Kept after the base
+   .league-group* rules above so it wins at equal specificity. */
+@media (max-width: 640px) {
+  .league-grid-col {
+    gap: 14px;
+  }
+
+  .league-group {
+    padding: 16px;
+  }
+
+  .league-group-header {
+    margin-bottom: 12px;
+  }
+
+  .league-group-name {
+    font-size: 1.2rem;
+  }
+
+  .league-group-meta {
+    font-size: 0.85rem;
+  }
+
+  .league-group-body-clip .entity-grid {
+    gap: 10px;
+  }
+
+  .league-group-body-clip .entity-card {
+    padding: 12px 14px;
+  }
+
+  .league-group-body-clip .entity-card-meta {
+    font-size: 0.9rem;
+  }
+
+  .league-group-body-clip .entity-card-title {
+    font-size: 1.15rem;
+    margin-bottom: 2px;
+  }
 }
 
 /* Data tables (leaderboards, match lists, admin lists) */
@@ -3217,7 +3418,9 @@ img.badge-icon-box {
 }
 
 .icon-badge::after,
-.icon-badge::before {
+.icon-badge::before,
+.results-link::after,
+.results-link::before {
   position: absolute;
   left: 50%;
   opacity: 0;
@@ -3226,7 +3429,8 @@ img.badge-icon-box {
   z-index: 40;
 }
 
-.icon-badge::after {
+.icon-badge::after,
+.results-link::after {
   content: attr(data-tooltip);
   bottom: calc(100% + 10px);
   transform: translate(-50%, 4px);
@@ -3240,7 +3444,8 @@ img.badge-icon-box {
   box-shadow: var(--shadow-card-hover);
 }
 
-.icon-badge::before {
+.icon-badge::before,
+.results-link::before {
   content: "";
   bottom: calc(100% + 5px);
   transform: translate(-50%, 4px);
@@ -3252,11 +3457,24 @@ img.badge-icon-box {
 .icon-badge:hover::after,
 .icon-badge:hover::before,
 .icon-badge:focus-visible::after,
-.icon-badge:focus-visible::before {
+.icon-badge:focus-visible::before,
+.results-link:hover::after,
+.results-link:hover::before,
+.results-link:focus-visible::after,
+.results-link:focus-visible::before {
   opacity: 1;
   transform: translate(-50%, 0);
 }
 
+/* The Bacheca's cards are each their own stacking context (entrance
+   animation, backdrop-filter) — a later sibling card would paint over a
+   "Top 8" pill's tooltip spilling past its own card. Raising the card while
+   its pill is hovered keeps the tooltip on top. */
+.card:has(.results-link:hover),
+.card:has(.results-link:focus-visible) {
+  position: relative;
+  z-index: 5;
+}
 /* Badges: archetypes, color identity pips, provisional notice */
 
 .badge-archetype {
@@ -3376,6 +3594,12 @@ img.badge-icon-box {
   transform: translateY(-1px);
   border-color: var(--hairline-hover-strong);
   background: #fff7f4;
+}
+
+/* A link styled as a button (Bacheca's "Tutti gli eventi") — the global
+   a:hover underline would otherwise win on specificity. */
+a.btn-secondary:hover {
+  text-decoration: none;
 }
 
 .btn-danger {
@@ -5079,6 +5303,12 @@ img.cs-option-icon {
    it — same trap as the nav pill's dark-mode background bug fixed
    earlier this session. */
 :root[data-theme="dark"] .dashboard-card-commanders .pie-chart-wrap {
+  background: none;
+}
+
+/* Same trap: "Leghe in corso"'s league rows are meant to have no box of
+   their own inside the accent card. */
+:root[data-theme="dark"] .dashboard-card-leagues .dashboard-league-card {
   background: none;
 }
 

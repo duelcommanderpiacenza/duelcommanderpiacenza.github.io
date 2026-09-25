@@ -27,8 +27,8 @@ function renderEventGrid(evs) {
         .map(
           (ev) => `
         <a class="entity-card" href="event.html?id=${ev.id}">
-          ${ev.name ? `<div class="entity-card-meta">${formatDate(ev.event_date)}</div>` : ""}
           <div class="entity-card-title">${escapeHtml(eventTitle(ev))}</div>
+          ${ev.name ? `<div class="entity-card-meta">${formatDate(ev.event_date)}</div>` : ""}
         </a>`
         )
         .join("")}

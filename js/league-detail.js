@@ -12,9 +12,31 @@ import {
   showError,
 } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
+import { initTitleFit } from "./page-title-fit.js";
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
+}
+
+// Local-time YYYY-MM-DD, directly comparable with an event_date string.
+function todayIso() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+// "12 set 2026 – 30 nov 2026": first event's date to the last one's once the
+// league is closed; "– oggi" while it's still running (the title's own
+// "In corso" badge already says it's open, so this doesn't repeat it);
+// "Inizia il 12 set 2026" when even the first event hasn't happened yet. ""
+// when no event has a date yet — the subtitle is then hidden entirely.
+function leagueDateRange(league, events) {
+  const dates = events.map((ev) => ev.event_date).filter(Boolean).sort();
+  if (dates.length === 0) return "";
+  const start = formatDate(dates[0]);
+  if (dates[0] > todayIso()) return `Inizia il ${start}`;
+  if (league.is_open) return `${start} – oggi`;
+  const end = formatDate(dates[dates.length - 1]);
+  return start === end ? start : `${start} – ${end}`;
 }
 
 function wrappedTile(label, valueHtml, detail = "") {
@@ -99,6 +121,8 @@ function renderWrapped(league, standings, wrapped, eventCount) {
 async function init() {
   const id = getId();
   const titleEl = document.getElementById("league-title");
+  const statusEl = document.getElementById("league-status");
+  const datesEl = document.getElementById("league-dates");
   const statsEl = document.getElementById("league-stats");
   const wrappedSectionEl = document.getElementById("league-wrapped-section");
   const wrappedEl = document.getElementById("league-wrapped");
@@ -114,7 +138,10 @@ async function init() {
 
   try {
     const league = await Leagues.get(id);
-    titleEl.innerHTML = `${escapeHtml(league.name)} ${leagueStatusBadge(league.is_open)}`;
+    titleEl.textContent = league.name;
+    statusEl.innerHTML = leagueStatusBadge(league.is_open);
+    statusEl.hidden = false;
+    initTitleFit(titleEl);
 
     // A Topdeck series is just a bucket of events, with no points leaderboard.
     if (league.is_topdeck) leaderboardSectionEl.hidden = true;
@@ -122,7 +149,14 @@ async function init() {
     // A still-open (including future) event isn't published yet — it has no
     // entries/matches for RLS to even hand back, and would otherwise inflate
     // this league's own event count/grid before anything's actually happened.
-    const events = (await Events.listByLeague(id)).filter((ev) => !ev.is_open);
+    const allEvents = await Events.listByLeague(id);
+    const events = allEvents.filter((ev) => !ev.is_open);
+
+    // Date range under the title — from every event the league has, open
+    // ones included (unlike everything else on this page).
+    const dateRange = leagueDateRange(league, allEvents);
+    datesEl.textContent = dateRange;
+    datesEl.hidden = !dateRange;
 
     if (events.length === 0) {
       statsEl.innerHTML = "";

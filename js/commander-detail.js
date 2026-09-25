@@ -14,6 +14,7 @@ import {
   renderPaginated,
 } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
+import { fitTitleToOneLine, alignBackButtonToTitle } from "./page-title-fit.js";
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
@@ -81,59 +82,6 @@ function syncCardImageLayout(cardImageEl) {
   mainColEl.style.paddingRight = `${Math.round(imageWidth) + 24}px`;
 }
 
-// The name + color-identity pips can be longer than the width actually
-// left for the title on a phone (viewport minus the back button and its
-// gap) — flex-wrap on .page-heading already lets it wrap rather than
-// overflow, but for most commanders it reads better shrunk to fit one
-// line than broken across two. Measures the text's own natural (unwrapped)
-// width against the space actually available and scales the font down to
-// match, rather than picking one fixed smaller mobile size — a short name
-// stays at full size, only a genuinely long one shrinks, and only exactly
-// as much as it needs to. Desktop is untouched (plenty of width there) and
-// a name still too long even at the floor size is left to wrap, same as
-// before.
-function fitCommanderTitle(titleEl) {
-  if (window.innerWidth > 640) {
-    titleEl.style.fontSize = "";
-    return;
-  }
-  titleEl.style.fontSize = "";
-  const baseFontSize = parseFloat(getComputedStyle(titleEl).fontSize);
-  const availableWidth = titleEl.clientWidth;
-  // Forcing nowrap for a moment reveals the text's true single-line width
-  // (scrollWidth) — reset right after, so this doesn't leave the title
-  // permanently overflowing its flex box before the shrink is applied.
-  titleEl.style.whiteSpace = "nowrap";
-  const naturalWidth = titleEl.scrollWidth;
-  titleEl.style.whiteSpace = "";
-  if (naturalWidth <= availableWidth) return;
-  const minFontSize = 17;
-  titleEl.style.fontSize = `${Math.max(minFontSize, Math.floor((baseFontSize * availableWidth) / naturalWidth))}px`;
-}
-
-// .page-heading-row's mobile align-items: flex-start (styles.css) lines the
-// back button's TOP up with the title's top — needed so the button anchors
-// to the name rather than the (taller, stacked-below-it-on-mobile) card
-// image further down .page-heading. That's fine as long as the title's own
-// line box happens to be close to the button's 44px height, but
-// fitCommanderTitle above can shrink it well below that, leaving the
-// button's vertical *center* well below the now-smaller text's center
-// instead of level with it. Nudges the button down/up by exactly the
-// difference so its center lines up with the title's actual rendered
-// height, whatever that ends up being, instead of relying on a fixed CSS
-// alignment that only happened to look right at the original font size.
-function alignBackButtonToTitle(titleEl) {
-  const linkEl = document.querySelector(".page-heading-row .breadcrumb-link");
-  if (!linkEl) return;
-  if (window.innerWidth > 640) {
-    linkEl.style.marginTop = "";
-    return;
-  }
-  const titleHeight = titleEl.getBoundingClientRect().height;
-  const linkHeight = linkEl.getBoundingClientRect().height;
-  linkEl.style.marginTop = `${Math.round((titleHeight - linkHeight) / 2)}px`;
-}
-
 function outcomeFor(m, selfIsP1) {
   const outcome = matchRoundOutcome(m);
   if (outcome === "draw") return "draw";
@@ -187,7 +135,7 @@ async function init() {
   try {
     const commander = await Commanders.get(id);
     titleEl.innerHTML = `${escapeHtml(commander.name)} ${colorIdentityPips(commander.color_identity)}`;
-    fitCommanderTitle(titleEl);
+    fitTitleToOneLine(titleEl);
     alignBackButtonToTitle(titleEl);
 
     // Loaded independently of everything else below (not awaited here) — a
@@ -206,7 +154,7 @@ async function init() {
     cardImageFrontEl.addEventListener("error", () => cardFigureEl.hidden = true, { once: true });
     window.addEventListener("resize", () => {
       syncCardImageLayout(cardImageFrontEl);
-      fitCommanderTitle(titleEl);
+      fitTitleToOneLine(titleEl);
       alignBackButtonToTitle(titleEl);
     });
 

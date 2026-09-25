@@ -98,7 +98,12 @@ the stat tiles (desktop), or stacked below the title (mobile, ≤640px).
   on the figure creates a stacking context that broke click-through to the
   sibling flip button, even with `pointer-events: none` on its icon (see
   gotcha #10).
-- **Mobile title fit**: `fitCommanderTitle()` shrinks `#commander-title`'s
+- **Mobile title fit** (shared `js/page-title-fit.js`, also used by
+  `league.html`/`event.html` — on phones their title pills, "In corso" /
+  "Top 8", are stacked onto their own line below the name by styles.css,
+  so only the name itself is fitted; were a fixed-size pill ever on the
+  same line, its width is subtracted from the calculation instead of scaled):
+  `fitTitleToOneLine()` shrinks `#commander-title`'s
   font-size (down to a 17px floor) when the name + color-identity pips
   don't fit the width actually left next to the back button on a phone,
   measured against the text's own natural unwrapped width — not a fixed

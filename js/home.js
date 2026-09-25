@@ -6,8 +6,9 @@ import { Announcements, Leagues, Events, EventEntries, Matches } from "./db.js";
 import { computeLeagueSummary } from "./stats.js";
 import { computeLeaguePoints } from "./leaderboard.js";
 import { renderPieChart } from "./metagame-chart.js";
-import { escapeHtml, eventTitle, formatDate, formatTime, showError } from "./ui.js";
+import { escapeHtml, formatDate, formatTime, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
+import { nestedResultsLink } from "./results-link.js";
 
 const LATEST_EVENTS_COUNT = 5;
 const UPCOMING_EVENTS_COUNT = 3;
@@ -186,20 +187,28 @@ async function renderEventsSection(el) {
     el.innerHTML =
       events.length === 0
         ? '<p class="page-empty">Nessun evento pubblicato ancora.</p>'
-        : `<div class="dashboard-event-list">
+        : `<div class="upcoming-list">
             ${events
-              .map(
-                (ev) => `
-              <a class="dashboard-event-row" href="event.html?id=${ev.id}">
-                <span class="dashboard-event-name">${escapeHtml(eventTitle(ev))}</span>
-                <span class="dashboard-event-meta">${
-                  ev.league ? `${escapeHtml(ev.league.name)} &middot; ` : ""
-                }${formatDate(ev.event_date)}</span>
-              </a>`
-              )
+              .map((ev) => {
+                // Same row shape as "Prossimi eventi" above (date badge +
+                // name + league), and the same title fallback: the badge
+                // already shows the date, so an unnamed Topdeck event isn't
+                // titled with it a second time.
+                const title = ev.name || (ev.league ? ev.league.name : "Evento");
+                const { day, month } = ev.event_date ? upcomingDateParts(ev.event_date) : { day: "&mdash;", month: "" };
+                const badge = `<span class="upcoming-date-day">${day}</span><span class="upcoming-date-month">${month}</span>`;
+                return `
+              <a class="upcoming-row" href="event.html?id=${ev.id}">
+                <div class="upcoming-date-badge">${badge}</div>
+                <div class="upcoming-row-text">
+                  <span class="upcoming-row-title">${escapeHtml(title)}</span>
+                  ${ev.league ? `<span class="upcoming-row-league">${escapeHtml(ev.league.name)}</span>` : ""}
+                </div>
+                ${nestedResultsLink(ev.results_url)}
+              </a>`;
+              })
               .join("")}
-          </div>
-          <a class="section-link" style="margin-top:16px;" href="events.html">Tutti gli eventi &rarr;</a>`;
+          </div>`;
   } catch (err) {
     showError(el, err);
   }

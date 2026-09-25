@@ -1,5 +1,5 @@
 import { Events } from "../../js/db.js";
-import { formatDate, formatTime } from "../../js/ui.js";
+import { formatDate, formatTime, isHttpUrl } from "../../js/ui.js";
 import { renderTable, setMessage, statusToggleButton } from "./crud-ui.js";
 import { on } from "./bus.js";
 import { syncAutoBadges } from "./badges-sync.js";
@@ -18,6 +18,7 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
   const nameField = document.getElementById("standalone-events-admin-name");
   const dateField = document.getElementById("standalone-events-admin-date");
   const timeField = document.getElementById("standalone-events-admin-time");
+  const resultsUrlField = document.getElementById("standalone-events-admin-results-url");
   const msgEl = document.getElementById("standalone-events-admin-message");
   const cancelBtn = document.getElementById("standalone-events-admin-cancel");
 
@@ -83,6 +84,7 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
     nameField.value = row.name;
     dateField.value = row.event_date ?? "";
     timeField.value = formatTime(row.start_time) ?? "";
+    resultsUrlField.value = row.results_url ?? "";
   }
 
   function resetForm() {
@@ -121,10 +123,17 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+    const resultsUrl = resultsUrlField.value.trim();
+    // See events-admin.js's own submit handler for why this is checked here too.
+    if (resultsUrl && !isHttpUrl(resultsUrl)) {
+      setMessage(msgEl, "Il link deve iniziare con http:// o https://.", true);
+      return;
+    }
     const payload = {
       name: nameField.value.trim(),
       event_date: dateField.value || null,
       start_time: timeField.value || null,
+      results_url: resultsUrl || null,
       league_id: null,
     };
     if (!payload.name) return;

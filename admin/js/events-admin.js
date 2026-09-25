@@ -1,5 +1,5 @@
 import { Events } from "../../js/db.js";
-import { formatDate, formatTime } from "../../js/ui.js";
+import { formatDate, formatTime, isHttpUrl } from "../../js/ui.js";
 import { renderTable, setMessage, statusToggleButton } from "./crud-ui.js";
 import { on } from "./bus.js";
 import { syncAutoBadges } from "./badges-sync.js";
@@ -20,6 +20,7 @@ export function initEventsAdmin({ onOpenEvent }) {
   const nameHintEl = document.getElementById("events-admin-name-hint");
   const dateField = document.getElementById("events-admin-date");
   const timeField = document.getElementById("events-admin-time");
+  const resultsUrlField = document.getElementById("events-admin-results-url");
   const msgEl = document.getElementById("events-admin-message");
   const cancelBtn = document.getElementById("events-admin-cancel");
 
@@ -72,6 +73,7 @@ export function initEventsAdmin({ onOpenEvent }) {
     nameField.value = row.name ?? "";
     dateField.value = row.event_date ?? "";
     timeField.value = formatTime(row.start_time) ?? "";
+    resultsUrlField.value = row.results_url ?? "";
   }
 
   function resetForm() {
@@ -114,10 +116,18 @@ export function initEventsAdmin({ onOpenEvent }) {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (!currentLeague) return;
+    const resultsUrl = resultsUrlField.value.trim();
+    // Same http(s)-only rule as the DB's own check constraint — caught here
+    // first so the admin gets a clear message instead of a generic save error.
+    if (resultsUrl && !isHttpUrl(resultsUrl)) {
+      setMessage(msgEl, "Il link deve iniziare con http:// o https://.", true);
+      return;
+    }
     const payload = {
       name: nameField.value.trim() || null,
       event_date: dateField.value || null,
       start_time: timeField.value || null,
+      results_url: resultsUrl || null,
       league_id: currentLeague.id,
     };
     // Only a Topdeck event can be left unnamed — the public site then shows
