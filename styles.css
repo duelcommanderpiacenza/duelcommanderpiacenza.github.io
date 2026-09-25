@@ -654,7 +654,6 @@ html.nav-mobile .site-search-box.is-closing .site-search-results {
    and at the surrounding text's own bold weight (not italic, not
    lightened), just a plain sans-serif swap rather than a stylistic one. */
 .amp {
-  font-family: Arial, Helvetica, sans-serif;
   margin: 0 2px;
 }
 
