@@ -65,6 +65,12 @@ export function commanderPairWithColors(commander, partner) {
   return `${commanderPairLabel(commander, partner)}<span class="color-identity-inline">${colorIdentityPips(colors)}</span>`;
 }
 
+// ⚠️ "Bannato" icon (tooltip via the site-wide js/floating-tooltip.js) —
+// Comandanti's table and commander.html's title.
+export function bannedBadge() {
+  return '<span class="icon-badge icon-badge-banned" data-tooltip="Bannato" aria-label="Bannato" tabindex="0">&#9888;&#65039;</span>';
+}
+
 export function archetypeBadge(archetype) {
   if (!archetype) return "";
   return `<span class="badge-archetype badge-archetype-${escapeHtml(archetype)}">${escapeHtml(archetype)}</span>`;

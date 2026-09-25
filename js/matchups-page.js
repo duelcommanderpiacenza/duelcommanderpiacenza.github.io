@@ -10,6 +10,7 @@ import { EventEntries, Matches } from "./db.js";
 import { isBye, isDrop, matchRoundOutcome } from "./leaderboard.js";
 import { escapeHtml, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
+import { attachHoverTooltips, fullTextIfTruncated } from "./floating-tooltip.js";
 
 const MAX_SELECTED = 10;
 const TOP_PLAYED_COUNT = 10;
@@ -35,68 +36,6 @@ function heatColor(winPct) {
 
 const MAX_DROPDOWN_RESULTS = 8;
 
-// Header-name tooltips (see styles.css .matchups-tooltip) are positioned in
-// JS and appended to <body>, rather than being a CSS ::after/::before on
-// the cell itself. The matrix sits inside a horizontally-scrolling wrapper
-// (.matchups-matrix-wrap needs overflow-x: auto for the wide table), and
-// per the CSS overflow spec that forces overflow-y to clip too — so
-// anything positioned relative to a cell inside it, even position:
-// absolute with a high z-index, gets cut off at the wrapper's own edge
-// instead of escaping over the rest of the page. Living outside that
-// wrapper entirely sidesteps the clipping altogether.
-let matchupsTooltipEl = null;
-let matchupsTooltipCell = null;
-
-function showMatchupsTooltip(cell) {
-  if (cell === matchupsTooltipCell) return;
-  hideMatchupsTooltip();
-  matchupsTooltipCell = cell;
-  const text = cell.dataset.tooltip;
-  if (!text) return;
-
-  const tip = document.createElement("div");
-  tip.className = "matchups-tooltip";
-  tip.textContent = text;
-  document.body.appendChild(tip);
-  matchupsTooltipEl = tip;
-
-  const cellRect = cell.getBoundingClientRect();
-  const tipRect = tip.getBoundingClientRect();
-  const margin = 8;
-  const centeredLeft = cellRect.left + cellRect.width / 2 - tipRect.width / 2;
-  const left = Math.max(margin, Math.min(centeredLeft, window.innerWidth - tipRect.width - margin));
-  // Always opens upward, same as the badge tooltip it mirrors — column
-  // headers used to open downward specifically to avoid getting clipped
-  // by .matchups-matrix-wrap's own bounds, but that no longer applies now
-  // that the tooltip is a real element appended to <body> rather than
-  // anchored inside that wrapper.
-  const top = cellRect.top - tipRect.height - 10;
-
-  // The arrow needs its own position, separate from the tooltip box's —
-  // clamping the tooltip to stay on-screen can shift it away from
-  // dead-center over the cell, and the arrow should still point at the
-  // cell rather than staying fixed in the tooltip's own middle.
-  const arrowMargin = 12;
-  const arrowLeft = Math.max(arrowMargin, Math.min(cellRect.left + cellRect.width / 2 - left, tipRect.width - arrowMargin));
-  const arrow = document.createElement("span");
-  arrow.className = "matchups-tooltip-arrow matchups-tooltip-arrow-down";
-  arrow.style.left = `${arrowLeft}px`;
-  tip.appendChild(arrow);
-
-  tip.style.left = `${left}px`;
-  tip.style.top = `${top}px`;
-  // Two-step show (append, then add the class that triggers the CSS
-  // transition on the next frame) — added and made visible in the same
-  // frame wouldn't animate, the browser has nothing to transition from.
-  requestAnimationFrame(() => tip.classList.add("is-visible"));
-}
-
-function hideMatchupsTooltip() {
-  matchupsTooltipEl?.remove();
-  matchupsTooltipEl = null;
-  matchupsTooltipCell = null;
-}
-
 async function init() {
   const modeTitleEl = document.getElementById("matchups-mode-title");
   const customBtn = document.getElementById("matchups-custom-btn");
@@ -107,42 +46,14 @@ async function init() {
   const selectedListEl = document.getElementById("matchups-selected-list");
   const matrixEl = document.getElementById("matchups-matrix");
 
-  // mouseenter/mouseleave don't bubble, so listening in the capture phase
-  // on the (stable, never replaced) matrix container is what makes this
-  // work as delegation despite renderMatrix() replacing the actual header
-  // cells underneath on every re-render. Each header <th> wraps its own
-  // inner *-text span (for the ellipsis truncation), which is itself a
-  // distinct element — capture-phase mouseenter/mouseleave fire separately
-  // for it too as the cursor crosses from the <th>'s padding onto the
-  // span, so without the guards below, moving the mouse within a single
-  // name re-triggers hide-then-show once every time it crosses that inner
-  // boundary. showMatchupsTooltip's own matchupsTooltipCell check skips a
-  // redundant re-show for the cell already open; relatedTarget here tells
-  // a real "left the cell" apart from "moved to a descendant still inside
-  // it."
-  matrixEl.addEventListener(
-    "mouseenter",
-    (e) => {
-      const cell = e.target.closest(".matchups-row-header, .matchups-col-header");
-      if (cell) showMatchupsTooltip(cell);
-    },
-    true
-  );
-  matrixEl.addEventListener(
-    "mouseleave",
-    (e) => {
-      const cell = e.target.closest(".matchups-row-header, .matchups-col-header");
-      if (!cell || cell !== matchupsTooltipCell) return;
-      if (e.relatedTarget && cell.contains(e.relatedTarget)) return;
-      hideMatchupsTooltip();
-    },
-    true
-  );
-  // Scrolling the matrix (or the page) invalidates the tooltip's one-time
-  // position measurement — drop it rather than let it drift away from the
-  // cell it's supposedly pointing at.
-  matrixEl.addEventListener("scroll", hideMatchupsTooltip, true);
-  window.addEventListener("scroll", hideMatchupsTooltip, true);
+  // Header-name tooltips: a real element appended to <body> (js/floating-tooltip.js),
+  // since the matrix sits inside a horizontally-scrolling wrapper that would clip
+  // a CSS ::after tooltip anchored inside it. Only for names actually cut off by
+  // their inner *-text span's ellipsis — one that fits needs no tooltip.
+  attachHoverTooltips(matrixEl, ".matchups-row-header, .matchups-col-header", (cell) => {
+    const text = cell.querySelector(".matchups-row-header-text, .matchups-col-header-text");
+    return text && fullTextIfTruncated(text) ? cell.dataset.tooltip : null;
+  });
 
   let allDecks = []; // { id, name, commanderId, partnerId } — one per unique commander(+partner) combo actually played
   let matchSides = []; // { side1, side2: deckId, side1GameWins, side2GameWins, gameDraws }

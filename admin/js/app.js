@@ -164,9 +164,9 @@ function showAdmin(session) {
         entriesCtl.openEvent(currentEvent);
         matchesCtl.refreshOpenState();
         emit("events:changed");
-        // Just closed, not reopened — see events-admin.js's own
-        // onToggleOpen for why this is fire-and-forget.
-        if (wasOpen) syncAutoBadges().catch(console.error);
+        // Closed or reopened — see events-admin.js's own onToggleOpen for
+        // why both count, and why this is fire-and-forget.
+        syncAutoBadges().catch(console.error);
       } catch (err) {
         console.error(err);
       }

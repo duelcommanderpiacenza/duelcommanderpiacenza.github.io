@@ -211,6 +211,30 @@ create index event_entries_commander_id_idx on event_entries (commander_id);
 create index event_entries_partner_commander_id_idx on event_entries (partner_commander_id);
 create index matches_event_id_idx on matches (event_id);
 
+-- Deletion rules for published data. Players and commanders are already
+-- undeletable while any entry/match references them (the ON DELETE RESTRICT
+-- foreign keys above), closed events included. A league, though, would
+-- cascade its events away with it (events.league_id ON DELETE CASCADE) —
+-- silently wiping published results — so deleting one is refused while it
+-- has any closed event; its open (unpublished) events still cascade as
+-- before. The admin also checks this up front for a clearer message
+-- (admin/js/leagues-admin.js). Added after the initial schema; on an
+-- existing DB, run just this function + trigger (don't re-run this file,
+-- it wipes everything).
+create or replace function leagues_block_delete_with_closed_events() returns trigger
+language plpgsql as $$
+begin
+  if exists (select 1 from events where league_id = old.id and not is_open) then
+    raise exception 'La lega ha eventi chiusi e non può essere eliminata.';
+  end if;
+  return old;
+end;
+$$;
+
+create trigger leagues_block_delete_with_closed_events
+  before delete on leagues
+  for each row execute function leagues_block_delete_with_closed_events();
+
 -- ---------------------------------------------------------------------------
 -- Row Level Security: public read (with the open/closed publishing rule
 -- below), admin-only write. "authenticated" = signed in via Supabase Auth.

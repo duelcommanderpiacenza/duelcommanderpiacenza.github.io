@@ -97,9 +97,9 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
     const wasOpen = row.is_open;
     try {
       await Events.update(row.id, { is_open: !wasOpen });
-      // Just closed, not reopened — see events-admin.js's own onToggleOpen
-      // for why this is fire-and-forget.
-      if (wasOpen) syncAutoBadges().catch(console.error);
+      // Closed or reopened — see events-admin.js's own onToggleOpen for why
+      // both count, and why this is fire-and-forget.
+      syncAutoBadges().catch(console.error);
       // Just a status flip, not a changed row set — skip the list's
       // entrance animation so it reads as instant feedback, not a reload.
       await refresh(false);

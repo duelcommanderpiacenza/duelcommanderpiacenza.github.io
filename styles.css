@@ -3033,7 +3033,6 @@ footer {
    .upcoming-row > .results-link). Same solid brand-red pill as
    .badge-status-open. */
 .results-link {
-  position: relative; /* anchors its hover tooltip, shared with .icon-badge */
   display: inline-flex;
   align-items: center;
   gap: 0.3em;
@@ -3057,24 +3056,13 @@ footer {
   text-decoration: none;
 }
 
-/* The tooltip text is sized in rem (shared rule) — reset the inherited
-   metrics so it reads identically on a Bacheca row and next to the much
-   bigger event.html <h1>. */
-.results-link::after {
-  font-family: var(--font-main);
-  letter-spacing: normal;
-  line-height: normal;
-}
-
 .results-link svg {
   width: 1.1em;
   height: 1.1em;
   flex-shrink: 0;
 }
 
-/* Color only, no lift — a transform here would make the pill its own
-   stacking context and trap its tooltip below the sticky nav (gotchas
-   #10/#11 in CLAUDE.md). */
+/* Hover: color only, no lift (same as the badges). */
 .results-link:hover,
 .results-link:focus-visible {
   background: var(--brand-red-deep-2);
@@ -3432,17 +3420,37 @@ table.data-table tbody tr:hover {
 
 /* Small inline icon with a hover/focus tooltip — player badges (Giocatori
    tab) and the banned-commander warning icon (Comandanti tab) both use
-   this. data-tooltip feeds the tooltip text; no native `title` involved,
-   since no browser lets that be restyled — this builds one from scratch
-   instead, in the same red-pill language as the rest of the site. */
+   this. data-tooltip feeds the tooltip text, shown by the site-wide
+   js/floating-tooltip.js (wired in js/layout.js; .floating-tooltip below) —
+   no native `title` involved, since no browser lets that be restyled. */
 .icon-badge {
-  position: relative;
   display: inline-flex;
   align-items: center;
   vertical-align: middle;
   margin-left: 6px;
   font-size: 1rem;
   cursor: default;
+}
+
+/* The ⚠️ "Bannato" icon (js/ui.js's bannedBadge): a tight line box raised
+   slightly off the baseline instead of .icon-badge's vertical-align:
+   middle — the ⚠️ glyph hangs below the text line, so middle left it
+   visibly low next to the name and the color pips. Only this one: the
+   player badges (mostly uploaded images, sized to the line) already sit
+   right with middle. */
+.icon-badge-banned {
+  line-height: 1;
+  vertical-align: 0.1em;
+}
+
+/* The ⚠️ "Bannato" icon after the color pips in commander.html's title —
+   the table-sized 1rem reads as a speck next to the 1.9rem name, so it's
+   scaled with the title instead (em, so it also follows the mobile title
+   shrink, js/page-title-fit.js). */
+#commander-title .icon-badge {
+  font-size: 0.7em;
+  margin-left: 10px;
+  vertical-align: 0.2em;
 }
 
 .icon-badge-img {
@@ -3473,64 +3481,6 @@ img.badge-icon-box {
   border-radius: 3px;
 }
 
-.icon-badge::after,
-.icon-badge::before,
-.results-link::after,
-.results-link::before {
-  position: absolute;
-  left: 50%;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 150ms ease, transform 150ms ease;
-  z-index: 40;
-}
-
-.icon-badge::after,
-.results-link::after {
-  content: attr(data-tooltip);
-  bottom: calc(100% + 10px);
-  transform: translate(-50%, 4px);
-  white-space: nowrap;
-  padding: 6px 10px;
-  border-radius: 10px;
-  background: var(--brand-red);
-  color: #fff;
-  font-size: 0.78rem;
-  font-weight: 700;
-  box-shadow: var(--shadow-card-hover);
-}
-
-.icon-badge::before,
-.results-link::before {
-  content: "";
-  bottom: calc(100% + 5px);
-  transform: translate(-50%, 4px);
-  border: 5px solid transparent;
-  border-top-width: 0;
-  border-bottom: 5px solid var(--brand-red);
-}
-
-.icon-badge:hover::after,
-.icon-badge:hover::before,
-.icon-badge:focus-visible::after,
-.icon-badge:focus-visible::before,
-.results-link:hover::after,
-.results-link:hover::before,
-.results-link:focus-visible::after,
-.results-link:focus-visible::before {
-  opacity: 1;
-  transform: translate(-50%, 0);
-}
-
-/* The Bacheca's cards are each their own stacking context (entrance
-   animation, backdrop-filter) — a later sibling card would paint over a
-   "Top 8" pill's tooltip spilling past its own card. Raising the card while
-   its pill is hovered keeps the tooltip on top. */
-.card:has(.results-link:hover),
-.card:has(.results-link:focus-visible) {
-  position: relative;
-  z-index: 5;
-}
 /* Badges: archetypes, color identity pips, provisional notice */
 
 .badge-archetype {
@@ -4272,6 +4222,23 @@ img.cs-option-icon {
   gap: 8px;
 }
 
+/* Admin's commander form (the non-compact row): all six swatches (WUBRG +
+   colorless) always on one line — each shrinks evenly from its 38px when
+   the form is too narrow for the full size, staying round (aspect-ratio),
+   rather than one or two wrapping onto a second line. */
+.color-swatch-row:not(.color-swatch-row-compact) {
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+.color-swatch-row:not(.color-swatch-row-compact) > .color-swatch {
+  flex: 0 1 38px;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  aspect-ratio: 1;
+}
+
 .color-swatch {
   position: relative;
   width: 38px;
@@ -4877,15 +4844,16 @@ img.cs-option-icon {
   max-width: 90px;
 }
 
-/* Full commander name on hover, since the cell itself truncates long ones
-   with an ellipsis. Same red-pill visual language as .icon-badge's own
-   tooltip, but a real element positioned by js/matchups-page.js and
-   appended to <body> rather than a CSS ::after anchored to the cell —
-   .matchups-matrix-wrap needs overflow-x: auto for the wide table, which
-   (per the CSS overflow spec) forces overflow-y to clip too, so anything
-   anchored *inside* that wrapper gets cut off at its edge instead of
+/* Full name on hover where a label truncates long ones with an ellipsis —
+   Matchups' row/column headers, the Comandanti/Archetipi bar charts' labels.
+   Same red-pill visual language as .icon-badge's own tooltip, but a real
+   element positioned by js/floating-tooltip.js and appended to <body>
+   rather than a CSS ::after anchored to the label — both live inside a
+   horizontally-scrolling wrapper (.matchups-matrix-wrap, .chart-grid),
+   which per the CSS overflow spec forces overflow-y to clip too, so
+   anything anchored *inside* it gets cut off at its edge instead of
    escaping over the rest of the page. */
-.matchups-tooltip {
+.floating-tooltip {
   position: fixed;
   z-index: 60;
   padding: 6px 10px;
@@ -4902,26 +4870,23 @@ img.cs-option-icon {
   transition: opacity 150ms ease, transform 150ms ease;
 }
 
-.matchups-tooltip.is-visible {
+.floating-tooltip.is-visible {
   opacity: 1;
   transform: none;
 }
 
-/* Positioned via inline `left` in js/matchups-page.js — the tooltip box
+/* Positioned via inline `left` in js/floating-tooltip.js — the tooltip box
    itself can get shifted off-center (clamped to stay on-screen), so the
-   arrow needs to track the actual cell instead of staying fixed at the
-   tooltip's own midpoint. */
-.matchups-tooltip-arrow {
+   arrow needs to track the actual anchor instead of staying fixed at the
+   tooltip's own midpoint. Points down (the tooltip always opens above). */
+.floating-tooltip-arrow {
   position: absolute;
+  bottom: -5px;
   transform: translateX(-50%);
   width: 0;
   height: 0;
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
-}
-
-.matchups-tooltip-arrow-down {
-  bottom: -5px;
   border-top: 5px solid var(--brand-red);
 }
 

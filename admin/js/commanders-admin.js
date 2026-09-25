@@ -1,4 +1,4 @@
-import { Commanders } from "../../js/db.js";
+import { Commanders, EventEntries } from "../../js/db.js";
 import { colorIdentityPips } from "../../js/ui.js";
 import { renderTable, setMessage } from "./crud-ui.js";
 import { emit } from "./bus.js";
@@ -77,6 +77,25 @@ export function initCommandersAdmin() {
   }
 
   async function onDelete(row) {
+    // Same rule as players (admin/js/players-admin.js): never deletable once
+    // used in a closed (published) event; any entry at all (either seat,
+    // primary or partner) also blocks it at the DB level (ON DELETE
+    // RESTRICT), so open-event-only use needs those entries changed first.
+    try {
+      const entries = await EventEntries.listByCommander(row.id);
+      const closed = new Set(entries.filter((e) => e.event && !e.event.is_open).map((e) => e.event.id)).size;
+      if (closed > 0) {
+        setMessage(msgEl, `Impossibile eliminare: il commander è usato in ${closed} ${closed === 1 ? "evento chiuso" : "eventi chiusi"}.`, true);
+        return;
+      }
+      if (entries.length > 0) {
+        setMessage(msgEl, "Impossibile eliminare: il commander è usato in eventi ancora aperti. Modifica prima quelle iscrizioni.", true);
+        return;
+      }
+    } catch (err) {
+      setMessage(msgEl, "Errore nel controllo degli utilizzi del commander.", true);
+      return;
+    }
     if (!confirm(`Eliminare il commander "${row.name}"?`)) return;
     try {
       await Commanders.remove(row.id);

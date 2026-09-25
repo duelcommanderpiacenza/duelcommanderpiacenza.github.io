@@ -30,8 +30,16 @@ const MIN_MATCHES_FOR_STATS_BADGES = 10;
 const MIN_COMMANDERS_FOR_DIVERSITY_BADGE = 5;
 const COMPLETIST_EVENT_COUNT = 10;
 
+// Every rule below only ever counts *published* (closed) events — same as
+// the public site. This runs in the admin (admin/js/badges-sync.js), where
+// the logged-in session can see open events too (an in-progress one, one
+// reopened for a fix), so without this their unpublished entries/matches
+// would leak into public badges, and reopening an event to fix it wouldn't
+// actually take its results back out. computeAutoBadgeAssignments fetches
+// the closed-event ids once and hands them to each rule.
+
 async function fetchLeagueEventsData(leagueId) {
-  const events = await Events.listByLeague(leagueId);
+  const events = (await Events.listByLeague(leagueId)).filter((ev) => !ev.is_open);
   return Promise.all(
     events.map(async (ev) => {
       const [entries, matches] = await Promise.all([EventEntries.listByEvent(ev.id), Matches.listByEvent(ev.id)]);
@@ -66,9 +74,13 @@ async function leagueRankPlayerId(leagues, rule) {
 // Every player who top-8'd in each of their last 3 attended events (any
 // league/standalone), provided all 3 fall within the last 3 months and each
 // of those 3 events had at least TOP8_STREAK_MIN_ENTRANTS entrants.
-async function top8StreakPlayerIds() {
-  const [events, allEntries, allMatches] = await Promise.all([Events.list(), EventEntries.listAll(), Matches.listAll()]);
-  const eventById = new Map(events.map((e) => [e.id, e]));
+async function top8StreakPlayerIds(closedIds) {
+  const [events, allEntries, allMatches] = await Promise.all([
+    Events.list(),
+    EventEntries.listAll().then((rows) => rows.filter((e) => closedIds.has(e.event_id))),
+    Matches.listAll().then((rows) => rows.filter((m) => closedIds.has(m.event_id))),
+  ]);
+  const eventById = new Map(events.filter((e) => closedIds.has(e.id)).map((e) => [e.id, e]));
 
   const entriesByEvent = new Map();
   for (const e of allEntries) {
@@ -121,8 +133,8 @@ async function top8StreakPlayerIds() {
 // matches table, same trade-off the existing league-rank rules already
 // make (each doing its own fetch) in exchange for keeping each rule
 // self-contained.
-async function playerMatchStats() {
-  const allMatches = await Matches.listAll();
+async function playerMatchStats(closedIds) {
+  const allMatches = (await Matches.listAll()).filter((m) => closedIds.has(m.event_id));
   const stats = new Map(); // player id -> { played, wins }
 
   function ensure(playerId) {
@@ -169,8 +181,8 @@ function playersWithMaxValue(entries, valueFn, minSample, sampleFn) {
   return winners;
 }
 
-async function highestWinratePlayerIds() {
-  const stats = await playerMatchStats();
+async function highestWinratePlayerIds(closedIds) {
+  const stats = await playerMatchStats(closedIds);
   return playersWithMaxValue(
     stats,
     (s) => (s.played > 0 ? s.wins / s.played : -1),
@@ -179,16 +191,16 @@ async function highestWinratePlayerIds() {
   );
 }
 
-async function mostMatchesPlayedPlayerIds() {
-  const stats = await playerMatchStats();
+async function mostMatchesPlayedPlayerIds(closedIds) {
+  const stats = await playerMatchStats(closedIds);
   return playersWithMaxValue(stats, (s) => s.played, MIN_MATCHES_FOR_STATS_BADGES, (s) => s.played);
 }
 
 // Distinct commanders piloted — counts a commander whether it was played as
 // the primary or as the partner/background, same convention as the
 // commander detail page's own "played this commander" definition.
-async function mostCommandersPlayedPlayerIds() {
-  const entries = await EventEntries.listAll();
+async function mostCommandersPlayedPlayerIds(closedIds) {
+  const entries = (await EventEntries.listAll()).filter((e) => closedIds.has(e.event_id));
   const commandersByPlayer = new Map(); // player id -> Set of commander ids
 
   for (const e of entries) {
@@ -247,7 +259,8 @@ export async function computeAutoBadgeAssignments() {
   const ruleBadges = badges.filter((b) => b.auto_rule);
   if (ruleBadges.length === 0) return new Map();
 
-  const leagues = await Leagues.list();
+  const [leagues, events] = await Promise.all([Leagues.list(), Events.list()]);
+  const closedIds = new Set(events.filter((ev) => !ev.is_open).map((ev) => ev.id));
   const grants = new Map(); // player id -> badge rows
 
   function grant(playerId, badge) {
@@ -262,13 +275,13 @@ export async function computeAutoBadgeAssignments() {
     } else if (badge.auto_rule in LEAGUE_RANK_POSITION) {
       grant(await leagueRankPlayerId(leagues, badge.auto_rule), badge);
     } else if (badge.auto_rule === "top8_streak") {
-      for (const playerId of await top8StreakPlayerIds()) grant(playerId, badge);
+      for (const playerId of await top8StreakPlayerIds(closedIds)) grant(playerId, badge);
     } else if (badge.auto_rule === "highest_winrate") {
-      for (const playerId of await highestWinratePlayerIds()) grant(playerId, badge);
+      for (const playerId of await highestWinratePlayerIds(closedIds)) grant(playerId, badge);
     } else if (badge.auto_rule === "most_matches_played") {
-      for (const playerId of await mostMatchesPlayedPlayerIds()) grant(playerId, badge);
+      for (const playerId of await mostMatchesPlayedPlayerIds(closedIds)) grant(playerId, badge);
     } else if (badge.auto_rule === "most_commanders_played") {
-      for (const playerId of await mostCommandersPlayedPlayerIds()) grant(playerId, badge);
+      for (const playerId of await mostCommandersPlayedPlayerIds(closedIds)) grant(playerId, badge);
     } else if (badge.auto_rule === "completionist") {
       for (const playerId of await completistPlayerIds()) grant(playerId, badge);
     }

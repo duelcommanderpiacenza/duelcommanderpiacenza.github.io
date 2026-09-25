@@ -146,7 +146,22 @@ export function initLeaguesAdmin({ onOpenLeague }) {
   }
 
   async function onDelete(row) {
-    if (!confirm(`Eliminare la lega "${row.name}"? Verranno rimossi anche i suoi eventi, iscritti e partite.`)) return;
+    // A league with any closed (published) event can't be deleted — the
+    // cascade would silently wipe public results with it. Also enforced in
+    // the DB (leagues_block_delete_with_closed_events trigger, see
+    // supabase/schema.sql); checked here too for a clear message. Only open
+    // (unpublished) events get cascaded away with it.
+    try {
+      const closed = (await Events.listByLeague(row.id)).filter((ev) => !ev.is_open).length;
+      if (closed > 0) {
+        setMessage(msgEl, `Impossibile eliminare: la lega ha ${closed} ${closed === 1 ? "evento chiuso" : "eventi chiusi"}.`, true);
+        return;
+      }
+    } catch (err) {
+      setMessage(msgEl, "Errore nel controllo degli eventi della lega.", true);
+      return;
+    }
+    if (!confirm(`Eliminare la lega "${row.name}"? Verranno rimossi anche i suoi eventi aperti, con iscritti e partite.`)) return;
     try {
       await Leagues.remove(row.id);
       // Cascades away all of this league's events/entries/matches — same

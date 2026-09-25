@@ -86,11 +86,13 @@ export function initEventsAdmin({ onOpenEvent }) {
     const wasOpen = row.is_open;
     try {
       await Events.update(row.id, { is_open: !wasOpen });
-      // Just closed, not reopened — the underlying match/standings data
-      // several auto-badge rules depend on just changed. Fire-and-forget:
-      // badges are a nice-to-have, not worth blocking/erroring the actual
-      // status flip over if this secondary step happens to fail.
-      if (wasOpen) syncAutoBadges().catch(console.error);
+      // Closed or reopened, either way the published match/standings data
+      // several auto-badge rules depend on just changed (closing adds this
+      // event's results, reopening takes them back out until it's closed
+      // again). Fire-and-forget: badges are a nice-to-have, not worth
+      // blocking/erroring the actual status flip over if this secondary
+      // step happens to fail.
+      syncAutoBadges().catch(console.error);
       // Just a status flip, not a changed row set — skip the list's
       // entrance animation so it reads as instant feedback, not a reload.
       await refresh(false);

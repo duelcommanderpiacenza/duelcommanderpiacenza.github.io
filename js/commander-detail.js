@@ -8,6 +8,7 @@ import {
   playerLabel,
   commanderPairLabel,
   colorIdentityPips,
+  bannedBadge,
   eventTitle,
   formatDate,
   showError,
@@ -134,7 +135,9 @@ async function init() {
 
   try {
     const commander = await Commanders.get(id);
-    titleEl.innerHTML = `${escapeHtml(commander.name)} ${colorIdentityPips(commander.color_identity)}`;
+    titleEl.innerHTML = `${escapeHtml(commander.name)} ${colorIdentityPips(commander.color_identity)}${
+      commander.is_banned ? bannedBadge() : ""
+    }`;
     fitTitleToOneLine(titleEl);
     alignBackButtonToTitle(titleEl);
 

@@ -1,4 +1,4 @@
-import { Players, Badges } from "../../js/db.js";
+import { Players, Badges, EventEntries } from "../../js/db.js";
 import { escapeHtml } from "../../js/ui.js";
 import { renderTable, setMessage, fillSelect } from "./crud-ui.js";
 import { emit, on } from "./bus.js";
@@ -115,6 +115,26 @@ export function initPlayersAdmin() {
   }
 
   async function onDelete(row) {
+    // A player tied to a closed (published) event can never be deleted —
+    // that would rewrite public results. Any entry at all also blocks it at
+    // the DB level (event_entries.player_id ON DELETE RESTRICT), so an
+    // open-event-only player needs those entries removed first; checked
+    // here up front for a clear message instead of a generic failure.
+    try {
+      const entries = await EventEntries.listByPlayer(row.id);
+      const closed = entries.filter((e) => e.event && !e.event.is_open).length;
+      if (closed > 0) {
+        setMessage(msgEl, `Impossibile eliminare: il giocatore è associato a ${closed} ${closed === 1 ? "evento chiuso" : "eventi chiusi"}.`, true);
+        return;
+      }
+      if (entries.length > 0) {
+        setMessage(msgEl, "Impossibile eliminare: il giocatore è iscritto a eventi ancora aperti. Rimuovi prima le sue iscrizioni.", true);
+        return;
+      }
+    } catch (err) {
+      setMessage(msgEl, "Errore nel controllo delle iscrizioni del giocatore.", true);
+      return;
+    }
     if (!confirm(`Eliminare il giocatore "${row.name}"?`)) return;
     try {
       await Players.remove(row.id);

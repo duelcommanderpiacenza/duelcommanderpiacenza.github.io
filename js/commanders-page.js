@@ -3,7 +3,8 @@ import { computeGroupedStats, computeColorShares } from "./stats.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { renderPieChart, renderBarChart } from "./metagame-chart.js";
 import { initChartCarousel } from "./chart-carousel.js";
-import { commanderPairWithColors, showError } from "./ui.js";
+import { attachHoverTooltips, fullTextIfTruncated } from "./floating-tooltip.js";
+import { commanderPairWithColors, bannedBadge, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
 
@@ -56,6 +57,10 @@ async function init() {
   const colorCheckboxes = Array.from(document.querySelectorAll('input[name="commanders-color-filter"]'));
   const colorExactWrap = document.getElementById("commanders-color-exact-wrap");
   const colorExactCheckbox = document.getElementById("commanders-color-exact");
+
+  // Full commander name on hover for any bar-chart label (Winrate) cut off
+  // with an ellipsis — delegated on chartEl, which survives re-renders.
+  attachHoverTooltips(chartEl, ".bar-chart-label", fullTextIfTruncated);
 
   let allCommanders = [];
   const colorByCommanderId = new Map();
@@ -144,11 +149,7 @@ async function init() {
                   .map(
                     (r) => `
                   <tr>
-                    <td>${commanderPairWithColors(r.commander, r.partner)}${
-                      r.isBanned
-                        ? '<span class="icon-badge" data-tooltip="Bannato" aria-label="Bannato" tabindex="0">&#9888;&#65039;</span>'
-                        : ""
-                    }</td>
+                    <td>${commanderPairWithColors(r.commander, r.partner)}${r.isBanned ? bannedBadge() : ""}</td>
                     <td>${r.entries}</td>
                     <td>${r.entries > 0 ? `${r.share.toFixed(1)}%` : "—"}</td>
                     <td>${r.wins}-${r.losses}-${r.draws}</td>

@@ -17,7 +17,14 @@ import { enhanceDateInputs } from "./custom-date.js";
 import "./pwa-install.js";
 import "./nav-dropdown.js";
 import "./site-search.js";
+import { attachHoverTooltips } from "./floating-tooltip.js";
 
 setupThemeToggle();
 enhanceSelects();
 enhanceDateInputs();
+
+// Every data-tooltip badge-like element on every page — player badges,
+// the banned-commander icon, the mtgtop8 "Top 8" pill — through the one
+// shared tooltip (js/floating-tooltip.js), delegated on the whole body so
+// it covers markup rendered later too.
+attachHoverTooltips(document.body, ".icon-badge[data-tooltip], .results-link[data-tooltip]", (el) => el.dataset.tooltip);
