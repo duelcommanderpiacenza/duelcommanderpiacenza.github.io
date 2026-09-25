@@ -2810,6 +2810,16 @@ footer {
   min-width: 0;
 }
 
+/* On a phone there's only ever one column (computeColumnCount,
+   js/events-page.js), so this is the only gap doing any work at all —
+   18px reads fine spacing out cards *between* multiple side-by-side
+   columns, but felt tight stacked full-width one after another. */
+@media (max-width: 640px) {
+  .league-grid-col {
+    gap: 28px;
+  }
+}
+
 /* The whole card toggles collapse/expand on click (see js/events-page.js —
    the click handler explicitly excludes .league-group-link so navigating
    to the league's own page still works), same reasoning .entity-card
