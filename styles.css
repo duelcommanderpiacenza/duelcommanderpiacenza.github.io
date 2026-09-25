@@ -1192,6 +1192,7 @@ main {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 22px;
   align-items: start;
+  margin-bottom: 24px;
 }
 
 .overview-grid > .card {
@@ -3385,8 +3386,13 @@ img.badge-icon-box {
 
 /* Search boxes (admin list filters) sit outside .admin-form-card/.card, so
    they don't get either one's own entrance animation for free — give them
-   their own. */
-input[type="search"] {
+   their own. Excludes #site-search-input: that's the header's site-wide
+   search box on every public page (desktop pill and mobile overlay alike),
+   which shouldn't play a generic fade-up on load — desktop has no entrance
+   chrome around it at all, and mobile already has its own dedicated
+   search-content-in animation on .site-search-field (below), which this
+   would otherwise double up on. */
+input[type="search"]:not(#site-search-input) {
   animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
@@ -4193,6 +4199,46 @@ img.cs-option-icon {
   margin-bottom: 0;
 }
 
+/* Commander/Player detail pages' "Statistiche" filters — same funnel
+   button + collapsible panel as the list pages, on their own line below
+   the section heading (a plain sibling <h2>, not part of this row) rather
+   than a dedicated search/sort row. The panel sits *beside* the button
+   rather than always dropping below it: flex-wrap does the "same line if
+   there's room, otherwise its own line below" behavior for free, as long
+   as the panel takes zero width while collapsed (it'd otherwise reserve
+   empty horizontal space next to the button even while invisible, since
+   collapsing its *height* via grid-template-rows above doesn't collapse
+   its width as a flex item). */
+.stats-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin-bottom: 14px;
+}
+
+.stats-filter-row .filter-toggle-btn {
+  margin-left: 0;
+  flex-shrink: 0;
+}
+
+/* min-width wide enough that its own two fields (220px each + gap + panel
+   padding, .filter-bar/.field above) never wrap onto separate lines — below
+   that width flex-wrap moves the *whole panel* down onto its own full-width
+   line first (still plenty of room there for both fields side by side),
+   rather than letting the fields wrap internally while still squeezed next
+   to the heading. Only relaxed on phones (below), where even a full-width
+   line isn't wide enough and internal wrapping becomes unavoidable. */
+.stats-filter-row .filter-panel {
+  flex: 0 1 500px;
+  min-width: 480px;
+}
+
+.stats-filter-row .filter-panel.is-collapsed {
+  flex: 0 0 0;
+  min-width: 0;
+}
+
 /* .filter-toggle-line is nowrap (no flex-wrap set) so it can never break
    onto a second line — the search field's own min-width: 0 already lets
    it shrink as needed, but the sort field's fixed 220px doesn't, and on a
@@ -4206,6 +4252,17 @@ img.cs-option-icon {
 @media (max-width: 480px) {
   .filter-toggle-sort {
     width: 130px;
+  }
+}
+
+/* Even a full-width line (see .stats-filter-row .filter-panel above) isn't
+   480px wide on a phone — relaxed here so the panel fits the viewport
+   instead of forcing horizontal overflow; its two fields fall back to
+   wrapping onto their own lines inside it, same as every other filter
+   panel already does at this width. */
+@media (max-width: 640px) {
+  .stats-filter-row .filter-panel {
+    min-width: 0;
   }
 }
 
@@ -4627,10 +4684,18 @@ img.cs-option-icon {
 
 /* Reserves roughly the final two-donut-chart-grid height for the loading
    placeholder, so the filters (and everything below) don't visibly jump
-   down once the async chart data actually arrives and replaces it. */
-#commanders-chart,
-#archetypes-chart {
+   down once the async chart data actually arrives and replaces it. Split
+   from a single shared 300px because Archetipi's actual rendered chart
+   content (fewer distinct archetypes than commanders, generally) settles
+   noticeably shorter than that reservation, leaving visible dead space
+   below the charts before the filter line — Comandanti's own chart content
+   reaches closer to 300px so it's left as-is. */
+#commanders-chart {
   min-height: 300px;
+}
+
+#archetypes-chart {
+  min-height: 220px;
 }
 
 .chart-grid .pie-chart-wrap {
