@@ -417,9 +417,19 @@ html.nav-mobile .site-search-field {
    longer a flex sibling .site-search-bar itself reserves room for
    automatically, so the field would otherwise stretch to flex: 1's full
    width and run underneath it. Reserved explicitly instead, sized to the
-   button's own real width (from its rect) plus a bit of breathing room. */
+   button's own real width (from its rect) plus a bit of breathing room.
+   min-height pins the bar to that same real size too — .site-search-bar's
+   own padding-top (../..) only matches its TOP edge to the button's, not
+   its center; without a matching height, .site-search-field's own
+   padding/line-height can make the bar taller than the 38px button, so
+   align-items: center here was centering the field against a row bigger
+   than the button, not against the button itself. Only actually visible on
+   a touch device wide enough that this is still onscreen at all (iPad) —
+   a phone-width viewport has the same mismatch, just usually too subtle to
+   notice at that size. */
 html.nav-mobile .site-search-bar {
-  padding-right: calc(var(--search-close-size, 38px) + 12px);
+  padding-right: calc(var(--search-close-size, 38px) + 16px);
+  min-height: var(--search-close-size, 38px);
 }
 
 html.nav-mobile .site-search-field-icon {
