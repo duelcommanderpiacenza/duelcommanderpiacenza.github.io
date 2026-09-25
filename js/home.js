@@ -5,7 +5,8 @@
 import { Announcements, Leagues, Events, EventEntries, Matches } from "./db.js";
 import { computeLeagueSummary } from "./stats.js";
 import { computeLeaguePoints } from "./leaderboard.js";
-import { renderPieChart } from "./metagame-chart.js";
+import { renderPieChart, ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
+import { initChartCarousel } from "./chart-carousel.js";
 import { escapeHtml, formatDate, formatTime, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { nestedResultsLink } from "./results-link.js";
@@ -225,8 +226,10 @@ async function renderCommandersSection(el) {
 
     // Primary commander only, same as the Commanders page's own chart —
     // counting the partner too would let one appearance count twice and
-    // push the shares past 100%.
+    // push the shares past 100%. Archetypes counted over the same entries
+    // (one per entry), same as the Archetipi page's own Metashare chart.
     const counts = new Map(); // commander id -> { name, count }
+    const archetypeCounts = new Map(ARCHETYPES.map((a) => [a, 0]));
     let total = 0;
     for (const e of entries) {
       if (!e.commander) continue;
@@ -236,6 +239,7 @@ async function renderCommandersSection(el) {
       const key = e.commander.id;
       if (!counts.has(key)) counts.set(key, { name: e.commander.name, count: 0 });
       counts.get(key).count += 1;
+      if (archetypeCounts.has(e.archetype)) archetypeCounts.set(e.archetype, archetypeCounts.get(e.archetype) + 1);
     }
 
     if (total === 0) {
@@ -250,9 +254,37 @@ async function renderCommandersSection(el) {
     const chartRows = top.map((r, i) => ({ label: r.name, share: (r.count / total) * 100, color: CHART_COLORS[i] }));
     if (otherCount > 0) chartRows.push({ label: "Altri", share: (otherCount / total) * 100, color: OTHER_COLOR });
 
-    el.innerHTML =
-      renderPieChart(chartRows, "Nessun dato per il grafico.") +
-      '<a class="section-link" style="margin-top:4px;" href="commanders.html">Vedi tutti &rarr;</a>';
+    const archetypeRows = ARCHETYPES.map((a) => ({
+      label: a,
+      share: (archetypeCounts.get(a) / total) * 100,
+      color: ARCHETYPE_COLORS[a],
+    })).sort((a, b) => b.share - a.share);
+
+    // The same whole-block carousel as the Comandanti/Archetipi charts
+    // (js/chart-carousel.js) — this card is narrow, so it shows one chart
+    // at a time (two only once the card itself is wide enough, see
+    // .chart-carousel-host in styles.css). No per-chart titles: the card's
+    // own heading and its bottom "Vedi tutti" link follow whichever chart
+    // is in view, and the ‹ • › controls sit below the card, outside it.
+    const slides = [
+      { title: "Commander più giocati", href: "commanders.html" },
+      { title: "Archetipi più giocati", href: "archetypes.html" },
+    ];
+    el.innerHTML = `
+      <div class="chart-grid">
+        ${renderPieChart(chartRows, "Nessun dato per il grafico.")}
+        ${renderPieChart(archetypeRows, "Nessun dato per il grafico.")}
+      </div>`;
+    const titleEl = document.getElementById("dashboard-charts-title");
+    const linkEl = document.getElementById("dashboard-charts-link");
+    initChartCarousel(el, {
+      navAfter: document.getElementById("dashboard-charts-card"),
+      onIndexChange: (i) => {
+        const slide = slides[i] ?? slides[0];
+        titleEl.textContent = slide.title;
+        linkEl.href = slide.href;
+      },
+    });
   } catch (err) {
     showError(el, err);
   }

@@ -56,6 +56,15 @@ export function commanderPairLabel(commander, partner) {
   return partner ? `${commanderLabel(commander)} / ${commanderLabel(partner)}` : commanderLabel(commander);
 }
 
+// commanderPairLabel followed by the deck's color identity pips (commander's
+// + partner's merged) — for table cells, in place of a separate "Identità
+// di colore" column.
+export function commanderPairWithColors(commander, partner) {
+  if (!commander) return "—";
+  const colors = `${commander.color_identity ?? ""}${partner?.color_identity ?? ""}`;
+  return `${commanderPairLabel(commander, partner)}<span class="color-identity-inline">${colorIdentityPips(colors)}</span>`;
+}
+
 export function archetypeBadge(archetype) {
   if (!archetype) return "";
   return `<span class="badge-archetype badge-archetype-${escapeHtml(archetype)}">${escapeHtml(archetype)}</span>`;

@@ -1,8 +1,9 @@
 import { Commanders, Events, EventEntries, Matches } from "./db.js";
-import { computeGroupedStats } from "./stats.js";
+import { computeGroupedStats, computeColorShares } from "./stats.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { renderPieChart, renderBarChart } from "./metagame-chart.js";
-import { commanderPairLabel, colorIdentityPips, showError } from "./ui.js";
+import { initChartCarousel } from "./chart-carousel.js";
+import { commanderPairWithColors, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
 
@@ -13,6 +14,19 @@ import { initFilterToggle } from "./filter-toggle.js";
 // rather than the chart repainting survivors when the filter changes.
 const CHART_COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300"];
 const OTHER_COLOR = "#9a9a94";
+
+// "Colori più giocati" bars — the same hues as the color-identity pips
+// (styles.css .color-pip-*), except white and colorless: the pip's own
+// near-white (#f8f6d8) would all but vanish against the bar chart's light
+// track, so white gets a deeper cream, and colorless a mid grey.
+const MTG_COLOR_BARS = {
+  W: { label: "Bianco", color: "#e3d58a" },
+  U: { label: "Blu", color: "#0e68ab" },
+  B: { label: "Nero", color: "#3a3a3a" },
+  R: { label: "Rosso", color: "#d3202a" },
+  G: { label: "Verde", color: "#00733e" },
+  C: { label: "Incolore", color: "#a8a39d" },
+};
 
 async function fetchEventsData(eventIds) {
   return Promise.all(
@@ -124,18 +138,17 @@ async function init() {
     const sorter = SORTERS[sortSelect.value] ?? SORTERS.played;
     const rows = [...filtered].sort((a, b) => sorter(a, b) || a.name.localeCompare(b.name));
     return `<div class="data-table-wrap${animate ? "" : " no-entrance-anim"}"><table class="data-table">
-              <thead><tr><th>Nome</th><th>Identit&agrave; di colore</th><th>Giocato</th><th>Quota</th><th>V-S-P</th><th>Winrate</th></tr></thead>
+              <thead><tr><th>Nome</th><th>Giocato</th><th>Metashare</th><th>V-S-P</th><th>Winrate</th></tr></thead>
               <tbody>
                 ${rows
                   .map(
                     (r) => `
                   <tr>
-                    <td>${commanderPairLabel(r.commander, r.partner)}${
+                    <td>${commanderPairWithColors(r.commander, r.partner)}${
                       r.isBanned
                         ? '<span class="icon-badge" data-tooltip="Bannato" aria-label="Bannato" tabindex="0">&#9888;&#65039;</span>'
                         : ""
                     }</td>
-                    <td>${colorIdentityPips(r.colorIdentity)}</td>
                     <td>${r.entries}</td>
                     <td>${r.entries > 0 ? `${r.share.toFixed(1)}%` : "—"}</td>
                     <td>${r.wins}-${r.losses}-${r.draws}</td>
@@ -233,12 +246,28 @@ async function init() {
       // the end regardless of where its own value actually ranks.
       winsChartRows.sort((a, b) => (b.value ?? -1) - (a.value ?? -1));
 
+      // Colori più giocati: share of entries whose deck plays each single
+      // color (see computeColorShares — a multicolor deck counts toward
+      // each of its colors). Colorless only shows up once someone actually
+      // played a colorless deck in this scope.
+      const colorRows =
+        totalEntries === 0
+          ? []
+          : computeColorShares(eventsData)
+              .filter((c) => c.color !== "C" || c.entries > 0)
+              .map((c) => ({ label: MTG_COLOR_BARS[c.color].label, value: c.share, color: MTG_COLOR_BARS[c.color].color }))
+              .sort((a, b) => b.value - a.value);
+
       lastChartHtml = `
         <div class="chart-grid">
           ${renderPieChart(chartRows, "Nessun dato per il grafico.", "Metashare")}
           ${renderBarChart(winsChartRows, "Nessun dato per il grafico.", "Winrate")}
+          ${renderBarChart(colorRows, "Nessun dato per il grafico.", "Colori più giocati", {
+            subtitle: "Quota di mazzi che giocano ogni colore",
+          })}
         </div>`;
       chartEl.innerHTML = lastChartHtml;
+      initChartCarousel(chartEl);
       renderTable();
     } catch (err) {
       showError(chartEl, err);

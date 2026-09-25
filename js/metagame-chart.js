@@ -1,6 +1,21 @@
 // Metagame share as a donut chart with a side legend, reused by the
-// Commanders and Archetypes pages.
+// Commanders and Archetypes pages and the Bacheca.
 import { escapeHtml } from "./ui.js";
+
+export const ARCHETYPES = ["aggro", "control", "combo", "tempo", "midrange"];
+
+// Same fixed identity colors as the .badge-archetype-* pills elsewhere on the
+// site (see styles.css --accent-*), so an archetype reads as the same color
+// in every chart and badge. Hardcoded here rather than var(--accent-...)
+// because the charts need real color values (conic-gradient stops, inline
+// bar fills). Shared by the Archetipi page and the Bacheca's own chart.
+export const ARCHETYPE_COLORS = {
+  aggro: "#dc181c",
+  control: "#2f5fdc",
+  combo: "#2a2226",
+  tempo: "#0aa8bd",
+  midrange: "#e0752b",
+};
 
 /**
  * @param {Array<{label: string, share: number, color: string}>} rows - share is 0-100, sums to ~100.
@@ -46,16 +61,22 @@ export function renderPieChart(rows, emptyMessage, title) {
 }
 
 /**
- * One horizontal bar per row, each independently 0-100 (a real winrate, not
- * a share that has to sum to 100 like the pie chart above) — a null value
- * (no games played yet in the current scope) shows as "—" with an empty
- * track instead of a misleading 0% bar.
+ * One horizontal bar per row, each independently 0-100% (a real winrate,
+ * or a share of decks that play a color — not a share that has to sum to
+ * 100 like the pie chart above) — a null value (no games played yet in the
+ * current scope) shows as "—" with an empty track instead of a misleading
+ * 0% bar.
  * @param {Array<{label: string, value: number|null, color: string}>} rows
  * @param {string} emptyMessage
  * @param {string} [title] - shown inside the box itself, above the bars.
+ * @param {object} [options]
+ * @param {boolean} [options.spacious] - see below.
+ * @param {string} [options.subtitle] - small muted line under the title.
  */
-export function renderBarChart(rows, emptyMessage, title, { spacious = false } = {}) {
-  const titleHtml = title ? `<h2 class="pie-chart-title">${escapeHtml(title)}</h2>` : "";
+export function renderBarChart(rows, emptyMessage, title, { spacious = false, subtitle = "" } = {}) {
+  const titleHtml =
+    (title ? `<h2 class="pie-chart-title">${escapeHtml(title)}</h2>` : "") +
+    (subtitle ? `<p class="pie-chart-subtitle">${escapeHtml(subtitle)}</p>` : "");
   if (rows.length === 0) {
     return `<div class="pie-chart-wrap">${titleHtml}<p class="page-empty">${emptyMessage}</p></div>`;
   }
@@ -66,7 +87,7 @@ export function renderBarChart(rows, emptyMessage, title, { spacious = false } =
     <div class="bar-chart-row" style="animation-delay:${i * 60}ms;">
       <span class="bar-chart-label">${escapeHtml(r.label)}</span>
       <div class="bar-chart-track">
-        ${r.value === null ? "" : `<div class="bar-chart-fill" style="width:${Math.max(r.value, 0)}%; background:${r.color};"></div>`}
+        ${r.value === null ? "" : `<div class="bar-chart-fill" style="width:${Math.min(Math.max(r.value, 0), 100)}%; background:${r.color};"></div>`}
       </div>
       <strong class="bar-chart-pct">${r.value === null ? "—" : `${r.value.toFixed(1)}%`}</strong>
     </div>`

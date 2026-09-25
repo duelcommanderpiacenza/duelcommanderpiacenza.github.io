@@ -1,24 +1,11 @@
 import { Events, EventEntries, Matches } from "./db.js";
 import { computeGroupedStats } from "./stats.js";
 import { initScopeFilter } from "./scope-filter.js";
-import { renderPieChart, renderBarChart } from "./metagame-chart.js";
+import { renderPieChart, renderBarChart, ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
+import { initChartCarousel } from "./chart-carousel.js";
 import { archetypeBadge, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
-
-const ARCHETYPES = ["aggro", "control", "combo", "tempo", "midrange"];
-
-// Same fixed identity colors as the .badge-archetype-* pills elsewhere on the
-// site (see styles.css --accent-*), so an archetype reads as the same color
-// in the chart and the badges. Hardcoded here rather than var(--accent-...)
-// because the chart needs the real hex to pick readable label text per slice.
-const ARCHETYPE_COLORS = {
-  aggro: "#dc181c",
-  control: "#2f5fdc",
-  combo: "#2a2226",
-  tempo: "#0aa8bd",
-  midrange: "#e0752b",
-};
 
 async function fetchEventsData(eventIds) {
   return Promise.all(
@@ -113,10 +100,11 @@ async function init() {
           ${chartHtml}
           ${winsChartHtml}
         </div>`;
+      initChartCarousel(chartEl);
 
       tableEl.innerHTML = `
         <div class="data-table-wrap"><table class="data-table">
-          <thead><tr><th>Archetipo</th><th>Quota</th><th>V-S-P</th><th>Winrate</th></tr></thead>
+          <thead><tr><th>Archetipo</th><th>Metashare</th><th>V-S-P</th><th>Winrate</th></tr></thead>
           <tbody>
             ${rows
               .map(

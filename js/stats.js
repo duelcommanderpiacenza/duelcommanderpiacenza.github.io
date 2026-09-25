@@ -6,6 +6,37 @@
 
 import { matchRoundOutcome, isBye, isDrop } from "./leaderboard.js";
 
+const MTG_COLORS = ["W", "U", "B", "R", "G"];
+
+/**
+ * Most played colors (Comandanti's "Colori più giocati" chart): for each
+ * single color, the share of entries whose deck plays it — the deck's
+ * colors being its commander's color identity plus its partner's, merged.
+ * A multicolor deck counts once toward *each* of its colors (a B+R deck is
+ * one black entry and one red entry), so the shares don't sum to 100%. A
+ * deck with no colors at all counts as colorless ("C") instead.
+ * @param {Array<{entries: Array}>} eventsData
+ * @returns {Array<{color: string, entries: number, share: number}>} W, U, B, R, G, C — share 0-100
+ */
+export function computeColorShares(eventsData) {
+  const counts = Object.fromEntries([...MTG_COLORS, "C"].map((c) => [c, 0]));
+  let totalEntries = 0;
+  for (const { entries } of eventsData) {
+    for (const e of entries) {
+      totalEntries += 1;
+      const letters = `${e.commander?.color_identity ?? ""}${e.partner_commander?.color_identity ?? ""}`.toUpperCase();
+      const colors = MTG_COLORS.filter((c) => letters.includes(c));
+      if (colors.length === 0) counts.C += 1;
+      else colors.forEach((c) => (counts[c] += 1));
+    }
+  }
+  return Object.entries(counts).map(([color, entries]) => ({
+    color,
+    entries,
+    share: totalEntries > 0 ? (entries / totalEntries) * 100 : 0,
+  }));
+}
+
 /**
  * `wins`/`draws`/`losses` are match-level counts (one per match, used for
  * the V-S-P display column), and `winRate` is computed from those same
