@@ -361,15 +361,18 @@ html {
 }
 
 /* Same stacking-context trap as elsewhere on the site (.matchups-picker-card,
-   .cd-wrap itself): .cd-wrap.is-open's own z-index:30 (../styles.css) only
-   wins comparisons *within its own stacking context* — nested inside this
-   unpositioned card, it's invisible to a comparison against the list card
-   next to it in the same .admin-panel-layout grid (e.g. #events-admin-list),
-   which otherwise paints on top of it as the later DOM sibling. Promoting the
-   card itself, but only while it actually contains an open popup, fixes that
-   without permanently sitting above the sticky admin tabs bar (z-index 20)
-   the rest of the time. */
-.admin-form-card:has(.cd-wrap.is-open) {
+   .cd-wrap itself): an open date popup's / select menu's own z-index:30
+   (.cd-wrap.is-open / .cs-wrap.is-open, ../styles.css) only wins
+   comparisons *within its own stacking context* — this card's entrance
+   animation makes it one, so it's invisible to a comparison against the
+   list next to (or, on phones, below) it in the same .admin-panel-layout
+   grid (e.g. #events-admin-list, the Partite round's results table
+   #matches-admin-list), which otherwise paints on top of it as the later
+   DOM sibling. Promoting the card itself, but only while it actually
+   contains an open popup, fixes that without permanently sitting above
+   the sticky admin tabs bar (z-index 20) the rest of the time. */
+.admin-form-card:has(.cd-wrap.is-open),
+.admin-form-card:has(.cs-wrap.is-open) {
   position: relative;
   z-index: 30;
 }
