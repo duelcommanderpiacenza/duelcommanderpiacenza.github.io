@@ -4,7 +4,6 @@
 
 import { Announcements, Leagues, Events, EventEntries, Matches } from "./db.js";
 import { computeLeagueSummary } from "./stats.js";
-import { computeLeaguePoints } from "./leaderboard.js";
 import { renderPieChart, ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
 import { initChartCarousel } from "./chart-carousel.js";
 import { escapeHtml, formatDate, formatTime, showError } from "./ui.js";
@@ -13,7 +12,6 @@ import { nestedResultsLink } from "./results-link.js";
 
 const LATEST_EVENTS_COUNT = 5;
 const UPCOMING_EVENTS_COUNT = 3;
-const TOP_STANDINGS_COUNT = 3;
 const TOP_COMMANDERS_COUNT = 6;
 const TOP_COMMANDERS_WINDOW_MONTHS = 3;
 // Same fixed hue order used by the Commanders page's own chart, so a
@@ -39,34 +37,18 @@ async function fetchLeagueEventsData(leagueId) {
 async function loadLeagueCard(league) {
   const eventsData = await fetchLeagueEventsData(league.id);
   const summary = computeLeagueSummary(eventsData);
-  // A Topdeck series has no points leaderboard, so no standings teaser for it.
-  const standings = league.is_topdeck ? [] : computeLeaguePoints(eventsData).slice(0, TOP_STANDINGS_COUNT);
-  return { league, summary, standings };
+  return { league, summary };
 }
 
-function renderLeagueCard({ league, summary, standings }) {
+// Name + event/player counts only — the standings themselves live on the
+// league's own page (the whole card links there).
+function renderLeagueCard({ league, summary }) {
   return `
     <a class="dashboard-league-card" href="league.html?id=${league.id}">
       <div class="dashboard-league-card-head">
         <span class="dashboard-league-card-name">${escapeHtml(league.name)}</span>
       </div>
       <div class="dashboard-league-card-stats">${summary.events} eventi &middot; ${summary.uniquePlayers} giocatori</div>
-      ${
-        standings.length === 0
-          ? ""
-          : `<ol class="dashboard-standings">
-              ${standings
-                .map(
-                  (s, i) => `
-                <li>
-                  <span class="rank-cell">${i + 1}</span>
-                  <span class="dashboard-standings-name">${escapeHtml(s.player?.name ?? "")}</span>
-                  <strong>${s.points}</strong>
-                </li>`
-                )
-                .join("")}
-            </ol>`
-      }
     </a>`;
 }
 

@@ -1662,30 +1662,6 @@ a.upcoming-row:hover .upcoming-row-title {
   font-weight: 700;
 }
 
-.dashboard-standings {
-  list-style: none;
-  margin: 12px 0 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.dashboard-standings li {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
-}
-
-.dashboard-standings li > .dashboard-standings-name {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--text-body);
-}
-
 .dashboard-league-chip-list {
   display: flex;
   flex-wrap: wrap;

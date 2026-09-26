@@ -95,7 +95,10 @@ async function init() {
         : `<div class="data-table-wrap"><table class="data-table">
             <thead><tr><th>Giocatore</th><th>Commander</th><th>Archetipo</th></tr></thead>
             <tbody>
-              ${entries
+              ${[...entries]
+                // Alphabetical by player name (a sorted copy — `entries`
+                // itself also feeds the standings below).
+                .sort((a, b) => (a.player?.name ?? "").localeCompare(b.player?.name ?? "", "it"))
                 .map(
                   (e) => `
                 <tr>

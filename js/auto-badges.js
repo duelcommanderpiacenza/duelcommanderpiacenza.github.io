@@ -61,7 +61,8 @@ async function latestClosedRealLeague(leagues) {
 async function leagueWinnerPlayerId(leagues) {
   const league = await latestClosedRealLeague(leagues);
   if (!league) return null;
-  const results = computeLeaguePoints(await fetchLeagueEventsData(league.id));
+  // A closed league: final standings, full-attendance bonus included.
+  const results = computeLeaguePoints(await fetchLeagueEventsData(league.id), { leagueClosed: true });
   return results[0]?.player?.id ?? null;
 }
 

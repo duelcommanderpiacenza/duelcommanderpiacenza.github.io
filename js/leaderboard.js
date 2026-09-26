@@ -262,9 +262,17 @@ function pointsForPosition(position) {
  * event, which is added into their score for that event before the
  * best-N cutoff below.
  *
+ * The full-attendance bonus is only awarded once the league is closed: while
+ * it's still running, "played every event so far" isn't final (a later
+ * event can still be missed), so it's never added early — and since this is
+ * always computed live from the league's current state, reopening a closed
+ * league takes it back out again. `fullAttendance` itself is still reported
+ * either way (e.g. to show who's on track).
+ *
  * @param {Array<{matches: Array, entries: Array}>} eventsData - one entry per event in the league.
+ * @param {{leagueClosed?: boolean}} [options] - leagueClosed: award the full-attendance bonus.
  */
-export function computeLeaguePoints(eventsData) {
+export function computeLeaguePoints(eventsData, { leagueClosed = false } = {}) {
   const totalEvents = eventsData.length;
   const byPlayer = new Map();
 
@@ -293,13 +301,24 @@ export function computeLeaguePoints(eventsData) {
   const results = Array.from(byPlayer.values()).map(({ player, eventScores, wins, draws, losses }) => {
     const bestScores = [...eventScores].sort((a, b) => b - a).slice(0, BEST_RESULTS_COUNT);
     const fullAttendance = totalEvents > 0 && eventScores.length === totalEvents;
-    const points = bestScores.reduce((sum, s) => sum + s, 0) + (fullAttendance ? FULL_ATTENDANCE_BONUS : 0);
+    const attendanceBonus = leagueClosed && fullAttendance ? FULL_ATTENDANCE_BONUS : 0;
+    const points = bestScores.reduce((sum, s) => sum + s, 0) + attendanceBonus;
     // Match-based, summed across every event in the league — not an average
     // of each event's own winRate%, which would misweight events with
     // fewer matches played.
     const played = wins + draws + losses;
     const winRate = played > 0 ? (wins / played) * 100 : null;
-    return { player, points, eventsPlayed: eventScores.length, fullAttendance, wins, draws, losses, winRate };
+    return {
+      player,
+      points,
+      eventsPlayed: eventScores.length,
+      fullAttendance,
+      attendanceBonus,
+      wins,
+      draws,
+      losses,
+      winRate,
+    };
   });
 
   return results.sort((a, b) => {

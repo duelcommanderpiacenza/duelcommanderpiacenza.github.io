@@ -201,7 +201,8 @@ async function init() {
 
     // Computed for Topdeck series too (no leaderboard shown for those) —
     // Wrapped's best-winrate tile reads its per-player records.
-    const standings = computeLeaguePoints(eventsData);
+    // Full-attendance bonus only once the league is closed (computeLeaguePoints).
+    const standings = computeLeaguePoints(eventsData, { leagueClosed: !league.is_open });
     wrappedEl.innerHTML = renderWrapped(league, standings, computeLeagueWrapped(eventsData, standings), events.length);
     // Too few events means no highlight tiles at all — hide the empty grid
     // rather than leave a gap below the summary tiles.
@@ -225,7 +226,7 @@ async function init() {
                   <td>${s.wins}-${s.losses}-${s.draws}</td>
                   <td>${s.winRate === null ? "—" : `${s.winRate.toFixed(1)}%`}</td>
                   <td>${s.eventsPlayed}</td>
-                  <td>${s.fullAttendance ? "✓ +5 PUNTI" : "—"}</td>
+                  <td>${s.attendanceBonus ? `✓ +${s.attendanceBonus} PUNTI` : s.fullAttendance ? "✓" : "—"}</td>
                 </tr>`
                 )
                 .join("")}
