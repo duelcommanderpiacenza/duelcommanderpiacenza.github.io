@@ -413,8 +413,11 @@ export function initMatchesAdmin({ onToggleOpen } = {}) {
       const draws = parseInt(drawsField.value, 10) || 0;
       const p2Wins = parseInt(p2WinsField.value, 10) || 0;
       const total = p1Wins + draws + p2Wins;
-      if (total < 1 || total > 3) {
-        setMessage(msgEl, "Il totale delle partite giocate deve essere tra 1 e 3.", true);
+      // 0-0-0 is a valid result (no games played, e.g. an intentional draw)
+      // and scores as a draw — matchRoundOutcome treats equal game counts as
+      // one. Only more than a best-of-3's worth of games is rejected.
+      if (p1Wins < 0 || draws < 0 || p2Wins < 0 || total > 3) {
+        setMessage(msgEl, "Il totale delle partite giocate deve essere tra 0 e 3.", true);
         return;
       }
       payload = {

@@ -189,9 +189,16 @@ create table matches ( -- one round pairing between two players, scored as a bes
   constraint matches_player1_id_fkey foreign key (player1_id) references players(id) on delete restrict,
   constraint matches_player2_id_fkey foreign key (player2_id) references players(id) on delete restrict,
   constraint matches_players_distinct check (player1_id <> player2_id),
+  -- 0-0-0 is valid (no games played, e.g. an intentional draw) and scores
+  -- as a draw. Loosened from "between 1 and 3" after the initial schema; on
+  -- an existing DB (don't re-run this file, it wipes everything):
+  --   alter table matches drop constraint matches_score_valid;
+  --   alter table matches add constraint matches_score_valid check (
+  --     player1_wins >= 0 and draws >= 0 and player2_wins >= 0
+  --     and (player1_wins + draws + player2_wins) <= 3);
   constraint matches_score_valid check (
     player1_wins >= 0 and draws >= 0 and player2_wins >= 0
-    and (is_drop or (player1_wins + draws + player2_wins) between 1 and 3)
+    and (player1_wins + draws + player2_wins) <= 3
   )
 );
 
