@@ -211,14 +211,28 @@ async function init() {
         })
         .sort((a, b) => b.entries - a.entries || a.name.localeCompare(b.name));
 
+      // The charts, unlike the table, don't split a commander by its
+      // partner/background: "Thrasios / Tymna" and "Thrasios / Vial Smasher"
+      // are one Thrasios slice/bar — grouped by the primary commander alone
+      // (same as the global top-6 color assignment above), each with its own
+      // combined entries/winrate across every partner it was played with.
+      const commanderRows = computeGroupedStats(
+        eventsData,
+        (e) => e.commander_id,
+        (e) => ({ commanderId: e.commander_id })
+      ).map((s) => ({
+        commanderId: s.commanderId,
+        name: commandersById.get(s.commanderId)?.name ?? "—",
+        entries: s.entries,
+        share: totalEntries > 0 ? (s.entries / totalEntries) * 100 : 0,
+        winRate: s.winRate,
+      }));
+
       const chartRows = [];
       let otherShare = 0;
-      for (const r of lastRows) {
+      for (const r of commanderRows) {
         if (r.entries === 0) continue;
-        // Keyed by the primary commander's own id — two rows that share one
-        // (e.g. "Thrasios / Tymna" and "Thrasios / Vial Smasher") get the
-        // same slice color, same reasoning as sharing a label prefix.
-        const color = colorByCommanderId.get(r.commander.id);
+        const color = colorByCommanderId.get(r.commanderId);
         if (color) chartRows.push({ label: r.name, share: r.share, color });
         else otherShare += r.share;
       }
@@ -235,8 +249,8 @@ async function init() {
       // whichever single non-top-6 commander actually has the best winrate.
       const winsChartRows = [];
       const others = [];
-      for (const r of lastRows) {
-        const color = colorByCommanderId.get(r.commander.id);
+      for (const r of commanderRows) {
+        const color = colorByCommanderId.get(r.commanderId);
         if (color) winsChartRows.push({ label: r.name, value: r.winRate, color });
         else others.push(r);
       }
