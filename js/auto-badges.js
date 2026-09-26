@@ -27,6 +27,9 @@ export const MAX_AUTO_BADGES_PER_PLAYER = 3;
 // lucky win is a meaningless 100% winrate, and a handful of matches
 // shouldn't out-rank nobody-else-qualifies for "most played" either.
 const MIN_MATCHES_FOR_STATS_BADGES = 10;
+// "Più match giocati" goes by events attended instead of a match count —
+// only players who've played at least this many (closed) events qualify.
+const MIN_EVENTS_FOR_MOST_MATCHES_BADGE = 5;
 const MIN_COMMANDERS_FOR_DIVERSITY_BADGE = 5;
 const COMPLETIST_EVENT_COUNT = 10;
 
@@ -135,14 +138,18 @@ async function top8StreakPlayerIds(closedIds) {
 // self-contained.
 async function playerMatchStats(closedIds) {
   const allMatches = (await Matches.listAll()).filter((m) => closedIds.has(m.event_id));
-  const stats = new Map(); // player id -> { played, wins }
+  const stats = new Map(); // player id -> { played, wins, events: Set of event ids }
 
   function ensure(playerId) {
-    if (!stats.has(playerId)) stats.set(playerId, { played: 0, wins: 0 });
+    if (!stats.has(playerId)) stats.set(playerId, { played: 0, wins: 0, events: new Set() });
     return stats.get(playerId);
   }
 
   for (const m of allMatches) {
+    // Events attended: any match row counts, a drop included (the player
+    // did take part in that event, just not every round of it).
+    ensure(m.player1_id).events.add(m.event_id);
+    if (m.player2_id) ensure(m.player2_id).events.add(m.event_id);
     // A drop isn't a match played, win, or loss — excluded entirely, same
     // as everywhere else a match gets tallied.
     if (isDrop(m)) continue;
@@ -193,7 +200,7 @@ async function highestWinratePlayerIds(closedIds) {
 
 async function mostMatchesPlayedPlayerIds(closedIds) {
   const stats = await playerMatchStats(closedIds);
-  return playersWithMaxValue(stats, (s) => s.played, MIN_MATCHES_FOR_STATS_BADGES, (s) => s.played);
+  return playersWithMaxValue(stats, (s) => s.played, MIN_EVENTS_FOR_MOST_MATCHES_BADGE, (s) => s.events.size);
 }
 
 // Distinct commanders piloted — counts a commander whether it was played as
