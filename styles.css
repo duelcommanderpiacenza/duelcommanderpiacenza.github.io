@@ -4556,6 +4556,19 @@ img.cs-option-icon {
   height: 18px;
 }
 
+/* Comandanti/Archetipi: the funnel button on the title's own line, right
+   side, centered on the title (not baseline-aligned like .page-heading's
+   other content) — its filter panel then opens right below the title,
+   above the charts. */
+.page-heading-with-action {
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.page-heading-with-action .filter-toggle-btn {
+  margin-left: 0;
+}
+
 .filter-panel {
   display: grid;
   grid-template-rows: 1fr;

@@ -69,33 +69,12 @@
 </nav>
 
 <main class="page-main">
-  <div class="page-heading"><h1>Comandanti</h1></div>
-
-  <div class="page-loading-region">
-    <div id="page-loading-overlay" class="page-loading-overlay"><p>Caricamento...</p></div>
-
-    <div id="commanders-chart">
-    <p class="page-loading">Caricamento comandanti...</p>
-  </div>
-
-  <div class="filter-toggle-line">
-    <div class="field filter-toggle-search">
-      <label for="commanders-search">Cerca</label>
-      <input type="search" id="commanders-search" placeholder="Cerca comandante...">
-    </div>
-    <div class="field filter-toggle-sort">
-      <label for="commanders-sort">Ordina per</label>
-      <select id="commanders-sort">
-        <option value="played">Giocato</option>
-        <option value="winrate">Winrate</option>
-        <option value="wins">Vittorie</option>
-      </select>
-    </div>
+  <div class="page-heading page-heading-with-action">
+    <h1>Comandanti</h1>
     <button type="button" class="filter-toggle-btn" id="commanders-filter-toggle" aria-expanded="false" aria-controls="commanders-filter-panel" aria-label="Filtri">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
     </button>
   </div>
-
   <div class="filter-panel is-collapsed" id="commanders-filter-panel">
     <div class="filter-panel-clip">
       <div class="filter-panel-body">
@@ -140,6 +119,28 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <div class="page-loading-region">
+    <div id="page-loading-overlay" class="page-loading-overlay"><p>Caricamento...</p></div>
+
+    <div id="commanders-chart">
+    <p class="page-loading">Caricamento comandanti...</p>
+  </div>
+
+  <div class="filter-toggle-line">
+    <div class="field filter-toggle-search">
+      <label for="commanders-search">Cerca</label>
+      <input type="search" id="commanders-search" placeholder="Cerca comandante...">
+    </div>
+    <div class="field filter-toggle-sort">
+      <label for="commanders-sort">Ordina per</label>
+      <select id="commanders-sort">
+        <option value="played">Giocato</option>
+        <option value="winrate">Winrate</option>
+        <option value="wins">Vittorie</option>
+      </select>
     </div>
   </div>
 
