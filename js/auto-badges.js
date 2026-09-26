@@ -26,10 +26,10 @@ export const MAX_AUTO_BADGES_PER_PLAYER = 3;
 // A tiny sample shouldn't win either stats-based badge below — a single
 // lucky win is a meaningless 100% winrate, and a handful of matches
 // shouldn't out-rank nobody-else-qualifies for "most played" either.
-const MIN_MATCHES_FOR_STATS_BADGES = 10;
-// "Più match giocati" goes by events attended instead of a match count —
-// only players who've played at least this many (closed) events qualify.
-const MIN_EVENTS_FOR_MOST_MATCHES_BADGE = 5;
+// "Più match giocati": only players with at least this many matches played.
+const MIN_MATCHES_FOR_MOST_MATCHES_BADGE = 20;
+// "Winrate più alto": only players who've played at least this many events.
+const MIN_EVENTS_FOR_WINRATE_BADGE = 5;
 const MIN_COMMANDERS_FOR_DIVERSITY_BADGE = 5;
 const COMPLETIST_EVENT_COUNT = 10;
 
@@ -193,14 +193,14 @@ async function highestWinratePlayerIds(closedIds) {
   return playersWithMaxValue(
     stats,
     (s) => (s.played > 0 ? s.wins / s.played : -1),
-    MIN_MATCHES_FOR_STATS_BADGES,
-    (s) => s.played
+    MIN_EVENTS_FOR_WINRATE_BADGE,
+    (s) => s.events.size
   );
 }
 
 async function mostMatchesPlayedPlayerIds(closedIds) {
   const stats = await playerMatchStats(closedIds);
-  return playersWithMaxValue(stats, (s) => s.played, MIN_EVENTS_FOR_MOST_MATCHES_BADGE, (s) => s.events.size);
+  return playersWithMaxValue(stats, (s) => s.played, MIN_MATCHES_FOR_MOST_MATCHES_BADGE, (s) => s.played);
 }
 
 // Distinct commanders piloted — counts a commander whether it was played as
