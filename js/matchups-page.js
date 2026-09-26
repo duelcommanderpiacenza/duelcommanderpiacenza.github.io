@@ -182,7 +182,11 @@ async function init() {
                 // Match-basis V-S-P, same order/format as the rest of the
                 // site's own V-S-P columns.
                 const title = `${cell.wins}-${cell.losses}-${cell.draws} (${cell.total} match totali)`;
-                return `<td class="matchups-cell" style="background:${heatColor(pct)};" title="${escapeHtml(title)}">${pct.toFixed(0)}% <span class="matchups-cell-count">(${cell.total})</span></td>`;
+                // The record in V-S-P order (same as every other table), not
+                // just the match count — a draw is a match played but a win
+                // for neither side, so without it two mirror cells (e.g. 50%
+                // vs 0%) looked contradictory.
+                return `<td class="matchups-cell" style="background:${heatColor(pct)};" title="${escapeHtml(title)}">${pct.toFixed(0)}% <span class="matchups-cell-count">(${cell.wins}-${cell.losses}-${cell.draws})</span></td>`;
               })
               .join("")}
           </tr>`
