@@ -8,12 +8,18 @@ import { commanderPairWithColors, bannedBadge, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
 
-// Fixed hue order, assigned once by each commander's overall popularity
-// across the whole site (not the current filter), so a commander keeps the
-// same color no matter which league/event is selected — only its share %
-// changes. Anyone outside the top 6 overall folds into a neutral "Altri"
-// rather than the chart repainting survivors when the filter changes.
-const CHART_COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300"];
+// Both charts are built from the *current filter's* data only (league /
+// event / date): Metashare = its 6 most played commanders + "Altri",
+// Winrate = its 7 highest winrates. Colors are assigned per render in that
+// same order — the pie's commanders first, then any extra ones only the
+// winrate chart shows — so a commander has the same color in both charts.
+// Up to 6 + 7 distinct commanders, hence 13 hues; grey is only "Altri".
+const PIE_TOP_COUNT = 6;
+const WINRATE_TOP_COUNT = 7;
+const CHART_COLORS = [
+  "#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300",
+  "#8e5bd6", "#d6455d", "#00a3a3", "#b07b24", "#5c6bc0", "#c2185b", "#6d8f00",
+];
 const OTHER_COLOR = "#9a9a94";
 
 // "Colori più giocati" bars — the same hues as the color-identity pips
@@ -63,29 +69,15 @@ async function init() {
   attachHoverTooltips(chartEl, ".bar-chart-label", fullTextIfTruncated);
 
   let allCommanders = [];
-  const colorByCommanderId = new Map();
   let eventDateById = new Map();
   let lastScopeEventIds = [];
   let lastRows = [];
   let lastChartHtml = "";
 
   try {
-    const [commanders, allEntries, events] = await Promise.all([
-      Commanders.list(),
-      EventEntries.listAll(),
-      Events.list(),
-    ]);
+    const [commanders, events] = await Promise.all([Commanders.list(), Events.list()]);
     allCommanders = commanders;
     eventDateById = new Map(events.map((e) => [e.id, e.event_date]));
-
-    const globalCounts = new Map();
-    for (const e of allEntries) {
-      globalCounts.set(e.commander_id, (globalCounts.get(e.commander_id) ?? 0) + 1);
-    }
-    Array.from(globalCounts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, CHART_COLORS.length)
-      .forEach(([id], i) => colorByCommanderId.set(id, CHART_COLORS[i]));
   } catch (err) {
     showError(chartEl, err);
     hidePageLoading();
@@ -213,53 +205,51 @@ async function init() {
 
       // The charts, unlike the table, don't split a commander by its
       // partner/background: "Thrasios / Tymna" and "Thrasios / Vial Smasher"
-      // are one Thrasios slice/bar — grouped by the primary commander alone
-      // (same as the global top-6 color assignment above), each with its own
-      // combined entries/winrate across every partner it was played with.
+      // are one Thrasios slice/bar — grouped by the primary commander alone,
+      // each with its own combined entries/winrate across every partner it
+      // was played with. Only commanders actually played in this scope.
       const commanderRows = computeGroupedStats(
         eventsData,
         (e) => e.commander_id,
         (e) => ({ commanderId: e.commander_id })
-      ).map((s) => ({
-        commanderId: s.commanderId,
-        name: commandersById.get(s.commanderId)?.name ?? "—",
-        entries: s.entries,
-        share: totalEntries > 0 ? (s.entries / totalEntries) * 100 : 0,
-        winRate: s.winRate,
-      }));
+      )
+        .filter((s) => s.entries > 0)
+        .map((s) => ({
+          commanderId: s.commanderId,
+          name: commandersById.get(s.commanderId)?.name ?? "—",
+          entries: s.entries,
+          played: s.played,
+          share: totalEntries > 0 ? (s.entries / totalEntries) * 100 : 0,
+          winRate: s.winRate,
+        }));
 
-      const chartRows = [];
-      let otherShare = 0;
-      for (const r of commanderRows) {
-        if (r.entries === 0) continue;
-        const color = colorByCommanderId.get(r.commanderId);
-        if (color) chartRows.push({ label: r.name, share: r.share, color });
-        else otherShare += r.share;
-      }
-      chartRows.sort((a, b) => b.share - a.share);
+      // Colors handed out in chart order (see CHART_COLORS above).
+      const colorByCommanderId = new Map();
+      const colorFor = (id) => {
+        if (!colorByCommanderId.has(id)) {
+          colorByCommanderId.set(id, CHART_COLORS[colorByCommanderId.size] ?? OTHER_COLOR);
+        }
+        return colorByCommanderId.get(id);
+      };
+
+      // Metashare: this scope's most played, then "Altri" for everyone else.
+      const byUsage = [...commanderRows].sort((a, b) => b.entries - a.entries || a.name.localeCompare(b.name));
+      const chartRows = byUsage
+        .slice(0, PIE_TOP_COUNT)
+        .map((r) => ({ label: r.name, share: r.share, color: colorFor(r.commanderId) }));
+      const otherShare = byUsage.slice(PIE_TOP_COUNT).reduce((sum, r) => sum + r.share, 0);
       if (otherShare > 0) chartRows.push({ label: "Altri", share: otherShare, color: OTHER_COLOR });
 
-      // Same top-6 commanders/colors as the metashare chart above, one bar
-      // per entry — but each bar is that commander's own winrate (0-100,
-      // independent of every other bar), not a share of the group's total
-      // wins, so it actually answers "how good is this commander", not
-      // "who's racked up the most wins by playing the most". An aggregate
-      // "Altri" bar doesn't mean anything for a winrate (unlike a metashare
-      // %, which is meaningfully additive), so the 7th slot instead goes to
-      // whichever single non-top-6 commander actually has the best winrate.
-      const winsChartRows = [];
-      const others = [];
-      for (const r of commanderRows) {
-        const color = colorByCommanderId.get(r.commanderId);
-        if (color) winsChartRows.push({ label: r.name, value: r.winRate, color });
-        else others.push(r);
-      }
-      const bestOther = others.filter((r) => r.winRate !== null).sort((a, b) => b.winRate - a.winRate)[0];
-      if (bestOther) winsChartRows.push({ label: bestOther.name, value: bestOther.winRate, color: OTHER_COLOR });
-      // Sorted last, after every entry (including bestOther above) is in
-      // place — sorting any earlier would leave that final entry stuck at
-      // the end regardless of where its own value actually ranks.
-      winsChartRows.sort((a, b) => (b.value ?? -1) - (a.value ?? -1));
+      // Winrate: this scope's highest winrates — each bar that commander's
+      // own winrate (0-100, independent of every other bar), not a share of
+      // total wins. Ties go to whoever played more matches (a bigger sample
+      // at the same rate), then alphabetically. A commander with no match
+      // played in scope (only a bye/drop) has no winrate and is left out.
+      const winsChartRows = commanderRows
+        .filter((r) => r.winRate !== null)
+        .sort((a, b) => b.winRate - a.winRate || b.played - a.played || a.name.localeCompare(b.name))
+        .slice(0, WINRATE_TOP_COUNT)
+        .map((r) => ({ label: r.name, value: r.winRate, color: colorFor(r.commanderId) }));
 
       // Colori più giocati: share of entries whose deck plays each single
       // color (see computeColorShares — a multicolor deck counts toward

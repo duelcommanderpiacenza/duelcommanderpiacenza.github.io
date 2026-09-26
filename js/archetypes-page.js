@@ -82,8 +82,12 @@ async function init() {
       // its own actual winrate — not a share of total wins, so a bar's
       // length is independent of every other bar's. Sorted by that winrate
       // itself, not reusing the metashare chart's by-entries order.
+      // Only archetypes with a match played in the current filter's scope —
+      // one nobody played there has no winrate and isn't shown as a "—"
+      // bar (the metashare pie already leaves out a 0% slice the same way).
       const winsChartHtml = renderBarChart(
         rows
+          .filter((r) => r.winRate !== null)
           .map((r) => ({
             label: r.archetype,
             value: r.winRate,
