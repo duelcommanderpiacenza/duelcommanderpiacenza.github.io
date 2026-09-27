@@ -4,9 +4,10 @@ import { renderTable, setMessage } from "./crud-ui.js";
 
 /**
  * Flat, always-editable list — shown on the public Bacheca homepage
- * whenever at least one exists (the section there is hidden entirely
- * otherwise). No auto-expiry/pinning: the admin just deletes one when it's
- * no longer relevant.
+ * whenever at least one is active (the section there is hidden entirely
+ * otherwise). Optional expiry date (expires_on): the Bacheca shows an
+ * announcement up to and including that day, then hides it (the row itself
+ * stays here, marked "scaduto", until deleted). No pinning.
  */
 export function initAnnouncementsAdmin() {
   const listEl = document.getElementById("announcements-admin-list");
@@ -15,6 +16,7 @@ export function initAnnouncementsAdmin() {
   const idField = document.getElementById("announcements-admin-id");
   const titleField = document.getElementById("announcements-admin-title");
   const bodyField = document.getElementById("announcements-admin-body");
+  const expiresField = document.getElementById("announcements-admin-expires");
   const msgEl = document.getElementById("announcements-admin-message");
   const cancelBtn = document.getElementById("announcements-admin-cancel");
 
@@ -35,11 +37,24 @@ export function initAnnouncementsAdmin() {
       visible,
       [
         { key: "title", label: "Titolo" },
-        { key: "created_at", label: "Data", render: (r) => formatDate(r.created_at) },
+        {
+          key: "expires_on",
+          label: "Scadenza",
+          render: (r) => (r.expires_on ? `${formatDate(r.expires_on)}${isExpired(r) ? " (scaduto)" : ""}` : "—"),
+        },
       ],
       { onEdit, onDelete },
       { animate }
     );
+  }
+
+  // Same rule as the Bacheca (js/db.js's Announcements.listActive): still
+  // shown on its expiry day itself, hidden from the day after.
+  function isExpired(row) {
+    if (!row.expires_on) return false;
+    const d = new Date();
+    const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    return row.expires_on < today;
   }
 
   searchField.addEventListener("input", () => renderList(false));
@@ -57,6 +72,7 @@ export function initAnnouncementsAdmin() {
     idField.value = row.id;
     titleField.value = row.title;
     bodyField.value = row.body;
+    expiresField.value = row.expires_on ?? "";
   }
 
   function resetForm() {
@@ -80,6 +96,7 @@ export function initAnnouncementsAdmin() {
     const payload = {
       title: titleField.value.trim(),
       body: bodyField.value.trim(),
+      expires_on: expiresField.value || null,
     };
     if (!payload.title || !payload.body) return;
     try {

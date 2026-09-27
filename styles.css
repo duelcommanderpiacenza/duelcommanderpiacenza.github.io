@@ -1349,31 +1349,14 @@ main {
   border-bottom: none;
 }
 
-.announcement-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-
 /* Brand red + bold, clearly heavier than the body text below it, so the
    two read as distinct "headline vs. content" rather than similar-weight
    lines running together. */
 .announcement-title {
-  margin: 0;
+  margin: 0 0 8px;
   font-size: 1.15rem;
   font-weight: 800;
   color: var(--brand-red-deep);
-}
-
-.announcement-date {
-  flex-shrink: 0;
-  color: var(--text-muted);
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .announcement-body {

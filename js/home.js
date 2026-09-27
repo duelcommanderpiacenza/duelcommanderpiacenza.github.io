@@ -7,7 +7,7 @@ import { computeLeagueSummary } from "./stats.js";
 import { computeLeaguePoints } from "./leaderboard.js";
 import { renderPieChart, ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
 import { initChartCarousel } from "./chart-carousel.js";
-import { escapeHtml, formatDate, formatTime, playerLabel, showError } from "./ui.js";
+import { escapeHtml, formatTime, playerLabel, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { nestedResultsLink } from "./results-link.js";
 import { fetchPlayerBadgesRenderer } from "./player-badges.js";
@@ -95,17 +95,15 @@ function renderLeagueCard({ league, summary, standings }, badgesFor) {
 // is a nice-to-have, not critical page content worth an error box.
 async function renderAnnouncementsSection(sectionEl, contentEl) {
   try {
-    const announcements = await Announcements.list();
+    // Expired ones (past their optional expires_on) are left out.
+    const announcements = await Announcements.listActive();
     sectionEl.hidden = announcements.length === 0;
     if (announcements.length === 0) return;
     contentEl.innerHTML = announcements
       .map(
         (a) => `
       <article class="announcement-item">
-        <div class="announcement-head">
-          <h3 class="announcement-title">${escapeHtml(a.title)}</h3>
-          <span class="announcement-date">${formatDate(a.created_at)}</span>
-        </div>
+        <h3 class="announcement-title">${escapeHtml(a.title)}</h3>
         <p class="announcement-body">${escapeHtml(a.body)}</p>
       </article>`
       )

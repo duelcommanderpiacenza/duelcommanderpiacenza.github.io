@@ -46,7 +46,10 @@ create table announcements ( -- short club announcements shown on the Bacheca ho
   id uuid primary key default gen_random_uuid(),
   title text not null,
   body text not null,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  expires_on date -- optional: shown on the Bacheca up to and including this day, hidden afterwards
+    -- (null = never expires). Added after the initial schema; on an existing DB run just:
+    -- alter table announcements add column expires_on date;
 );
 
 create table commanders (

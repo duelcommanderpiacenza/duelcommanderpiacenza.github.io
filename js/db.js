@@ -44,6 +44,15 @@ export const Announcements = {
   // Newest first — the public Bacheca section just lists whatever's here,
   // top to bottom, with no separate pinning/ordering concept.
   list: () => sb.from("announcements").select("*").order("created_at", { ascending: false }).then(assertOk),
+  // The public Bacheca's subset: no expiry, or an expiry date (expires_on)
+  // that's today or later, local calendar date. Filtered here rather than
+  // in the query so it keeps working even on a DB without that column yet
+  // (a row lacking expires_on just counts as never expiring).
+  listActive: async () => {
+    const today = todayLocalIso();
+    const rows = await Announcements.list();
+    return rows.filter((a) => !a.expires_on || a.expires_on >= today);
+  },
   create: (row) => sb.from("announcements").insert(row).select().single().then(assertOk),
   update: (id, patch) => sb.from("announcements").update(patch).eq("id", id).select().single().then(assertOk),
   remove: (id) => sb.from("announcements").delete().eq("id", id).then(assertOk),
