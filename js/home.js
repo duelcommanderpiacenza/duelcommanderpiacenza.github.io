@@ -92,7 +92,7 @@ function renderLeagueCard({ league, summary, standings }, badgesFor) {
         <a class="dashboard-league-card-name" href="${href}">${escapeHtml(league.name)}</a>
         ${standings ? `<a class="btn-secondary" href="${href}">Lista completa</a>` : ""}
       </div>
-      <div class="dashboard-league-card-stats">${summary.events} eventi &middot; ${summary.uniquePlayers} giocatori</div>
+      <div class="dashboard-league-card-stats">${summary.events} ${summary.events === 1 ? "evento" : "eventi"} &middot; ${summary.uniquePlayers} giocatori</div>
       ${ranking}
     </div>`;
 }
