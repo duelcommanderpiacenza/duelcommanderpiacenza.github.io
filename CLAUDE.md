@@ -32,7 +32,7 @@ Public (`js/db.js`-backed unless noted):
 
 | Page | Script |
 |---|---|
-| `index.html` (Bacheca) | `js/home.js` — announcements, upcoming events, "Leghe in corso" (open league's top-8 standings preview + "Lista completa" link; a Topdeck series is just a link row), latest events, most-played-commanders donut chart; plus `js/events-calendar.js` ("Calendario" month-grid overlay) |
+| `index.html` (Bacheca) | `js/home.js` — announcements, upcoming events, "Leghe in corso" (open league's top-8 standings preview, points only + "Lista completa" link; a Topdeck series is just a link row), latest events, most-played-commanders donut chart; plus `js/events-calendar.js` ("Calendario" month-grid overlay) |
 | `events.html` (Leghe & Eventi) | `js/events-page.js` — collapsible per-league event cards |
 | `event.html` | `js/event-detail.js` |
 | `league.html` | `js/league-detail.js` |

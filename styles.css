@@ -1573,7 +1573,7 @@ a.upcoming-row:hover .upcoming-row-title {
 .dashboard-standings-head,
 .dashboard-standings-row {
   display: grid;
-  grid-template-columns: 28px minmax(0, 1fr) 56px 64px;
+  grid-template-columns: 28px minmax(0, 1fr) 56px;
   align-items: center;
   gap: 12px;
 }
@@ -1592,9 +1592,8 @@ a.upcoming-row:hover .upcoming-row-title {
   text-align: center;
 }
 
-.dashboard-standings-head > span:nth-child(n + 3),
-.dashboard-standings-points,
-.dashboard-standings-rate {
+.dashboard-standings-head > span:nth-child(3),
+.dashboard-standings-points {
   text-align: right;
 }
 
@@ -1662,12 +1661,6 @@ a.upcoming-row:hover .upcoming-row-title {
   color: var(--text-title);
   font-size: 1.05rem;
   font-weight: 800;
-}
-
-.dashboard-standings-rate {
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  font-weight: 700;
 }
 
 .dashboard-card-subtitle {

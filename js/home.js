@@ -48,7 +48,7 @@ async function loadLeagueCard(league) {
 
 // Name (a link to league.html) + event/player counts. A real league also
 // gets "Lista completa" and a glimpse of its current standings (top
-// LEAGUE_PREVIEW_COUNT, points + winrate); a Topdeck series has neither.
+// LEAGUE_PREVIEW_COUNT, points only); a Topdeck series has neither.
 function renderLeagueCard({ league, summary, standings }, badgesFor) {
   const href = `league.html?id=${league.id}`;
   // A compact ranked list in the dashboard's own row style (red separators,
@@ -59,7 +59,7 @@ function renderLeagueCard({ league, summary, standings }, badgesFor) {
       ? '<p class="page-empty">Nessun dato per la classifica.</p>'
       : `<div class="dashboard-standings">
           <div class="dashboard-standings-head" aria-hidden="true">
-            <span>#</span><span>Giocatore</span><span>Punti</span><span>Winrate</span>
+            <span>#</span><span>Giocatore</span><span>Punti</span>
           </div>
           <ol class="dashboard-standings-list">
             ${standings
@@ -71,7 +71,6 @@ function renderLeagueCard({ league, summary, standings }, badgesFor) {
                 <span class="dashboard-standings-name-text">${playerLabel(s.player)}</span>${badgesFor(s.player)}
               </span>
               <span class="dashboard-standings-points">${s.points}</span>
-              <span class="dashboard-standings-rate">${s.winRate === null ? "—" : `${s.winRate.toFixed(1)}%`}</span>
             </li>`
               )
               .join("")}
