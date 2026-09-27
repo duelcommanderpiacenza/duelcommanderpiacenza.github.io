@@ -267,9 +267,7 @@ async function init() {
         <div class="chart-grid">
           ${renderPieChart(chartRows, "Nessun dato per il grafico.", "Metashare")}
           ${renderBarChart(winsChartRows, "Nessun dato per il grafico.", "Winrate")}
-          ${renderBarChart(colorRows, "Nessun dato per il grafico.", "Colori più giocati", {
-            subtitle: "Quota di mazzi che giocano ogni colore",
-          })}
+          ${renderBarChart(colorRows, "Nessun dato per il grafico.", "Colori più giocati")}
         </div>`;
       chartEl.innerHTML = lastChartHtml;
       initChartCarousel(chartEl);
