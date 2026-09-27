@@ -2,7 +2,7 @@
 // active leagues, latest events, most played commanders) — each fetches
 // and renders on its own, so one failing doesn't block the others.
 
-import { Announcements, Leagues, Events, EventEntries, Matches } from "./db.js";
+import { Announcements, Leagues, Events, EventEntries, fetchEventsResults } from "./db.js";
 import { computeLeagueSummary } from "./stats.js";
 import { computeLeaguePoints } from "./leaderboard.js";
 import { renderPieChart, ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
@@ -33,14 +33,7 @@ async function fetchLeagueEventsData(leagueId) {
   // from visitors) is returned too, for computeLeaguePoints's best-results cap.
   const allEvents = await Events.listByLeague(leagueId);
   const [eventsData, scheduledEvents] = await Promise.all([
-    Promise.all(
-      allEvents
-        .filter((ev) => !ev.is_open)
-        .map(async (ev) => {
-          const [entries, matches] = await Promise.all([EventEntries.listByEvent(ev.id), Matches.listByEvent(ev.id)]);
-          return { entries, matches };
-        })
-    ),
+    fetchEventsResults(allEvents.filter((ev) => !ev.is_open).map((ev) => ev.id)),
     Leagues.eventCount(leagueId, allEvents.length),
   ]);
   return { eventsData, scheduledEvents };
@@ -248,12 +241,11 @@ async function renderEventsSection(el) {
 
 async function renderCommandersSection(el) {
   try {
-    const [entries, events] = await Promise.all([EventEntries.listAll(), Events.list()]);
-    const eventDateById = new Map(events.map((ev) => [ev.id, ev.event_date]));
-
     const cutoff = new Date();
     cutoff.setMonth(cutoff.getMonth() - TOP_COMMANDERS_WINDOW_MONTHS);
     const cutoffIso = `${cutoff.getFullYear()}-${String(cutoff.getMonth() + 1).padStart(2, "0")}-${String(cutoff.getDate()).padStart(2, "0")}`;
+    // Only the window's entries, already date-filtered by the database.
+    const entries = await EventEntries.listForChartsSince(cutoffIso);
 
     // Primary commander only, same as the Commanders page's own chart —
     // counting the partner too would let one appearance count twice and
@@ -264,8 +256,6 @@ async function renderCommandersSection(el) {
     let total = 0;
     for (const e of entries) {
       if (!e.commander) continue;
-      const eventDate = eventDateById.get(e.event_id);
-      if (!eventDate || eventDate < cutoffIso) continue;
       total += 1;
       const key = e.commander.id;
       if (!counts.has(key)) counts.set(key, { name: e.commander.name, count: 0 });

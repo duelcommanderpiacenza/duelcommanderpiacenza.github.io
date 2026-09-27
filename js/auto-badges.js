@@ -9,7 +9,7 @@
 // months"), not affected by whatever league/event/date filter a visitor
 // has selected.
 
-import { Badges, Leagues, Events, EventEntries, Matches } from "./db.js";
+import { Badges, Leagues, Events, EventEntries, Matches, fetchEventsResults } from "./db.js";
 import { computeEventLeaderboard, computeLeaguePoints, isBye, isDrop, matchRoundOutcome } from "./leaderboard.js";
 
 const TOP8_STREAK_COUNT = 3;
@@ -48,14 +48,7 @@ const COMPLETIST_EVENT_COUNT = 10;
 async function fetchLeagueEventsData(leagueId) {
   const allEvents = await Events.listByLeague(leagueId);
   const [eventsData, scheduledEvents] = await Promise.all([
-    Promise.all(
-      allEvents
-        .filter((ev) => !ev.is_open)
-        .map(async (ev) => {
-          const [entries, matches] = await Promise.all([EventEntries.listByEvent(ev.id), Matches.listByEvent(ev.id)]);
-          return { entries, matches };
-        })
-    ),
+    fetchEventsResults(allEvents.filter((ev) => !ev.is_open).map((ev) => ev.id)),
     Leagues.eventCount(leagueId, allEvents.length),
   ]);
   return { eventsData, scheduledEvents };

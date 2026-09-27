@@ -8,6 +8,21 @@ function assertOk({ data, error }) {
   return data;
 }
 
+// PostgREST (Supabase's API) returns at most 1000 rows per response by
+// default, silently truncating the rest — fine for a single event's rows,
+// not for a batch across many events. Pages through with .range() until a
+// short page comes back. `buildQuery` must return a fresh, deterministically
+// ordered query (a unique column last) so pages never overlap or skip rows.
+const PAGE_SIZE = 1000;
+async function selectAllRows(buildQuery) {
+  const rows = [];
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const page = assertOk(await buildQuery().range(from, from + PAGE_SIZE - 1));
+    rows.push(...page);
+    if (page.length < PAGE_SIZE) return rows;
+  }
+}
+
 // Local calendar date, not `new Date().toISOString()` (UTC-based) — for a
 // visitor east of UTC (e.g. Italy), toISOString() still reports yesterday's
 // date for the first couple hours after local midnight, which let a
@@ -214,6 +229,19 @@ export const EventEntries = {
       .from("event_entries")
       .select(`*, player:players(id,name,handle), ${COMMANDER_EMBED}`)
       .then(assertOk),
+  // Bacheca's "Più giocati" charts: just the primary commander and archetype
+  // of every entry whose event falls on/after `sinceIso` (YYYY-MM-DD) —
+  // filtered by the database (inner join on the event) rather than
+  // downloading every entry ever and filtering in the browser, so the
+  // payload stays the same size however long the club's history grows.
+  listForChartsSince: (sinceIso) =>
+    selectAllRows(() =>
+      sb
+        .from("event_entries")
+        .select("id, archetype, commander:commanders!event_entries_commander_id_fkey(id,name), event:events!inner(event_date)")
+        .gte("event.event_date", sinceIso)
+        .order("id")
+    ),
   listByEvent: (eventId) =>
     sb
       .from("event_entries")
@@ -243,6 +271,16 @@ export const EventEntries = {
       .select(`*, player:players(id,name,handle), ${COMMANDER_EMBED}`)
       .in("event_id", eventIds)
       .then(assertOk),
+  // Same as listByEvents, but paged past the row cap and deterministically
+  // ordered — for fetchEventsResults below, which may span a whole league.
+  listByEventsForStandings: (eventIds) =>
+    selectAllRows(() =>
+      sb
+        .from("event_entries")
+        .select(`*, player:players(id,name,handle), ${COMMANDER_EMBED}`)
+        .in("event_id", eventIds)
+        .order("id")
+    ),
   create: (row) => sb.from("event_entries").insert(row).select().single().then(assertOk),
   update: (id, patch) => sb.from("event_entries").update(patch).eq("id", id).select().single().then(assertOk),
   remove: (id) => sb.from("event_entries").delete().eq("id", id).then(assertOk),
@@ -266,6 +304,21 @@ export const Matches = {
       .order("round")
       .order("created_at")
       .then(assertOk),
+  // Same rows and shape as listByEvent, for several events in one request
+  // (paged past the row cap) — for fetchEventsResults below. Unlike
+  // listByEvents, no event/league embed: callers already know the event.
+  listByEventsForStandings: (eventIds) =>
+    selectAllRows(() =>
+      sb
+        .from("matches")
+        .select(
+          "*, player1:players!matches_player1_id_fkey(id,name,handle), player2:players!matches_player2_id_fkey(id,name,handle)"
+        )
+        .in("event_id", eventIds)
+        .order("round")
+        .order("created_at")
+        .order("id")
+    ),
   // Batch lookup across several events at once (e.g. every event a given
   // commander was played in), with the event/league embedded so callers can
   // group or scope-filter without a per-event round trip.
@@ -300,6 +353,33 @@ export const Matches = {
   update: (id, patch) => sb.from("matches").update(patch).eq("id", id).select().single().then(assertOk),
   remove: (id) => sb.from("matches").delete().eq("id", id).then(assertOk),
 };
+
+/**
+ * Entries + matches for several events in two requests (rather than two per
+ * event), grouped back per event in `eventIds`' own order — the
+ * `[{ entries, matches }, ...]` shape computeLeaguePoints/computeLeagueSummary
+ * take. An event with no rows still gets its (empty) slot, so the array's
+ * length always equals the number of events.
+ * @param {string[]} eventIds
+ */
+export async function fetchEventsResults(eventIds) {
+  if (eventIds.length === 0) return [];
+  const [entries, matches] = await Promise.all([
+    EventEntries.listByEventsForStandings(eventIds),
+    Matches.listByEventsForStandings(eventIds),
+  ]);
+  const groupByEvent = (rows) => {
+    const byEvent = new Map();
+    for (const row of rows) {
+      if (!byEvent.has(row.event_id)) byEvent.set(row.event_id, []);
+      byEvent.get(row.event_id).push(row);
+    }
+    return byEvent;
+  };
+  const entriesByEvent = groupByEvent(entries);
+  const matchesByEvent = groupByEvent(matches);
+  return eventIds.map((id) => ({ entries: entriesByEvent.get(id) ?? [], matches: matchesByEvent.get(id) ?? [] }));
+}
 
 // Precomputed auto-badge assignments (badges.auto_rule) — recomputed and
 // fully replaced by admin/js/badges-sync.js whenever an event or league is

@@ -1,4 +1,4 @@
-import { Leagues, Events, EventEntries, Matches } from "./db.js";
+import { Leagues, Events, fetchEventsResults } from "./db.js";
 import { compareLeagueStandings, computeLeaguePoints } from "./leaderboard.js";
 import { fetchPlayerBadgesRenderer } from "./player-badges.js";
 import { computeLeagueSummary, computeLeagueWrapped } from "./stats.js";
@@ -184,15 +184,7 @@ async function init() {
       .join("")}</div>`;
 
     const [eventsData, scheduledEvents] = await Promise.all([
-      Promise.all(
-        events.map(async (ev) => {
-          const [entries, matches] = await Promise.all([
-            EventEntries.listByEvent(ev.id),
-            Matches.listByEvent(ev.id),
-          ]);
-          return { entries, matches };
-        })
-      ),
+      fetchEventsResults(events.map((ev) => ev.id)),
       Leagues.eventCount(id, allEvents.length),
     ]);
 
