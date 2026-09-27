@@ -210,7 +210,7 @@ export const EventEntries = {
   listByPlayer: (playerId) =>
     sb
       .from("event_entries")
-      .select(`*, event:events(id,name,event_date,is_open), ${COMMANDER_EMBED}`)
+      .select(`*, event:events(id,name,event_date,is_open,league:leagues(id,name)), ${COMMANDER_EMBED}`)
       .eq("player_id", playerId)
       .then(assertOk),
   // Entries where this commander appears in EITHER seat (primary or

@@ -30,6 +30,16 @@ export function eventTitle(ev) {
   return ev.name || formatDate(ev.event_date);
 }
 
+// An "Evento" table cell: the event's (linked) title, with its league's name
+// as a small tag on a second line (styles.css .event-league-tag) rather than
+// a column of its own — none for a standalone event. Needs the event row's
+// `league` embed (a league:leagues(...) inside the event:events(...) select).
+export function eventCellLabel(event) {
+  if (!event) return "—";
+  const title = `<a href="event.html?id=${event.id}">${escapeHtml(eventTitle(event))}</a>`;
+  return event.league ? `${title}<span class="event-league-tag">${escapeHtml(event.league.name)}</span>` : title;
+}
+
 // Only http(s) links are ever stored/rendered as a public href — a
 // javascript: (or other scheme) URL must never reach the page.
 export function isHttpUrl(url) {

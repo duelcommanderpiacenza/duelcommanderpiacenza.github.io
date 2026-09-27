@@ -6,7 +6,7 @@ import {
   playerLabel,
   commanderPairLabel,
   commanderPairWithColors,
-  eventTitle,
+  eventCellLabel,
   formatDate,
   showError,
   renderPaginated,
@@ -174,7 +174,7 @@ async function init() {
                 .map(
                   (r) => `
                 <tr>
-                  <td>${r.event ? `<a href="event.html?id=${r.event.id}">${escapeHtml(eventTitle(r.event))}</a>` : "—"}</td>
+                  <td>${eventCellLabel(r.event)}</td>
                   <td>${commanderPairLabel(r.commander, r.partner)}</td>
                   <td>${r.wins}-${r.losses}-${r.draws}</td>
                   <td>${r.position === null ? "—" : `#${r.position}`}</td>
@@ -273,7 +273,7 @@ async function init() {
                 .map(
                   (r) => `
                 <tr>
-                  <td>${r.event ? `<a href="event.html?id=${r.event.id}">${escapeHtml(eventTitle(r.event))}</a>` : "—"}</td>
+                  <td>${eventCellLabel(r.event)}</td>
                   <td>${commanderPairLabel(r.myCommander, r.myPartner)}</td>
                   <td>${r.isBye ? "Bye" : r.isDrop ? "Drop" : playerLabel(r.opponent)}</td>
                   <td>${r.isBye || r.isDrop ? "—" : commanderPairLabel(r.oppCommander, r.oppPartner)}</td>

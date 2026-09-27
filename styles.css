@@ -3180,6 +3180,19 @@ footer {
   font-weight: 700;
 }
 
+/* The league under an event's name in an "Evento" table cell (js/ui.js's
+   eventCellLabel) — a second, small line instead of its own column, in the
+   same muted uppercase as the Bacheca's league tag (.upcoming-row-league). */
+.event-league-tag {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
 /* One card per league (plus a trailing one for standalone events), newest
    first (compareLeagues). This used to be a plain CSS grid
    (auto-fill, minmax(280px, 1fr)) with align-items: start — but a grid's

@@ -9,7 +9,7 @@ import {
   commanderPairLabel,
   colorIdentityPips,
   bannedBadge,
-  eventTitle,
+  eventCellLabel,
   formatDate,
   showError,
   renderPaginated,
@@ -338,7 +338,7 @@ async function init() {
                 .map(
                   (r) => `
                 <tr>
-                  <td>${r.event ? `<a href="event.html?id=${r.event.id}">${escapeHtml(eventTitle(r.event))}</a>` : "—"}</td>
+                  <td>${eventCellLabel(r.event)}</td>
                   <td>${playerLabel(r.self)}</td>
                   <td>${r.isDrop ? "Drop" : playerLabel(r.opponent)}</td>
                   <td>${r.isDrop ? "—" : commanderPairLabel(r.oppCommander, r.oppPartner)}</td>
