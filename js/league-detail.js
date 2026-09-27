@@ -183,15 +183,18 @@ async function init() {
       )
       .join("")}</div>`;
 
-    const eventsData = await Promise.all(
-      events.map(async (ev) => {
-        const [entries, matches] = await Promise.all([
-          EventEntries.listByEvent(ev.id),
-          Matches.listByEvent(ev.id),
-        ]);
-        return { entries, matches };
-      })
-    );
+    const [eventsData, scheduledEvents] = await Promise.all([
+      Promise.all(
+        events.map(async (ev) => {
+          const [entries, matches] = await Promise.all([
+            EventEntries.listByEvent(ev.id),
+            Matches.listByEvent(ev.id),
+          ]);
+          return { entries, matches };
+        })
+      ),
+      Leagues.eventCount(id, allEvents.length),
+    ]);
 
     const summary = computeLeagueSummary(eventsData);
     statsEl.innerHTML = [
@@ -208,8 +211,13 @@ async function init() {
 
     // Computed for Topdeck series too (no leaderboard shown for those) —
     // Wrapped's best-winrate tile reads its per-player records.
-    // Full-attendance bonus only once the league is closed (computeLeaguePoints).
-    const standings = computeLeaguePoints(eventsData, { leagueClosed: !league.is_open });
+    // Full-attendance bonus only once the league is closed; the best-results
+    // cap counts every event the league has, open ones included, even those
+    // hidden from visitors (computeLeaguePoints, Leagues.eventCount).
+    const standings = computeLeaguePoints(eventsData, {
+      leagueClosed: !league.is_open,
+      scheduledEvents,
+    });
     wrappedEl.innerHTML = renderWrapped(league, standings, computeLeagueWrapped(eventsData, standings), events.length);
     // Too few events means no highlight tiles at all — hide the empty grid
     // rather than leave a gap below the summary tiles.

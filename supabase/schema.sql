@@ -242,6 +242,21 @@ create trigger leagues_block_delete_with_closed_events
   before delete on leagues
   for each row execute function leagues_block_delete_with_closed_events();
 
+-- A league's total event count, open and closed alike — the X in the league
+-- score's best-(X−1)-results rule (js/leaderboard.js's computeLeaguePoints).
+-- events_public_read below hides an open event from anonymous visitors once
+-- its date has passed (played, not yet closed), so counting visible rows on
+-- the public site would come up short; security definer lets this count
+-- every row while exposing nothing but the number itself. Added after the
+-- initial schema; on an existing DB, run just this function + grant (don't
+-- re-run this file, it wipes everything).
+create or replace function league_event_count(p_league_id uuid) returns integer
+language sql stable security definer set search_path = public as $$
+  select count(*)::integer from events where league_id = p_league_id;
+$$;
+
+grant execute on function league_event_count(uuid) to anon, authenticated;
+
 -- ---------------------------------------------------------------------------
 -- Row Level Security: public read (with the open/closed publishing rule
 -- below), admin-only write. "authenticated" = signed in via Supabase Auth.

@@ -152,6 +152,19 @@ export const Leagues = {
   // that kind is still open).
   closeAllOpenOfType: (isTopdeck) =>
     sb.from("leagues").update({ is_open: false }).eq("is_open", true).eq("is_topdeck", isTopdeck).then(assertOk),
+  // Total events in a league, open and closed — including an open one RLS
+  // hides from anonymous visitors (see league_event_count in
+  // supabase/schema.sql). Falls back to `visibleCount` (the caller's own
+  // Events.listByLeague length) if the function isn't available, e.g. not
+  // yet created on this DB, rather than failing the whole page.
+  eventCount: (id, visibleCount) =>
+    sb.rpc("league_event_count", { p_league_id: id }).then(({ data, error }) => {
+      if (error) {
+        console.error(error);
+        return visibleCount;
+      }
+      return data;
+    }),
 };
 
 export const Events = {

@@ -262,15 +262,15 @@ export function computeEventLeaderboard(matches, entries) {
 // League scoring rule ("Sistema di Punteggio"):
 // each event ("tappa") awards points by final position within that event,
 // plus a small bonus for finishing undefeated. A player's league total is
-// the sum of their best BEST_RESULTS_COUNT event scores, plus a flat bonus
-// for having an entry in every event of the league. RANK_POINTS[i] is the
-// award for position i+1; any position beyond the array falls back to
-// FALLBACK_POSITION_POINTS.
+// the sum of their best (league's total event count − DISCARDED_RESULTS)
+// event scores, plus a flat bonus for having an entry in every event of the
+// league. RANK_POINTS[i] is the award for position i+1; any position beyond
+// the array falls back to FALLBACK_POSITION_POINTS.
 const RANK_POINTS = [20, 17, 14, 14, 11, 11, 11, 11];
 const FALLBACK_POSITION_POINTS = 5;
 const UNDEFEATED_BONUS = 2;
 const FULL_ATTENDANCE_BONUS = 5;
-const BEST_RESULTS_COUNT = 6;
+const DISCARDED_RESULTS = 1;
 
 function pointsForPosition(position) {
   return RANK_POINTS[position - 1] ?? FALLBACK_POSITION_POINTS;
@@ -283,7 +283,7 @@ function pointsForPosition(position) {
  * one specific tournament) aren't hardcoded here — they're applied manually
  * per player via the `bonus_points` field on that player's entry for that
  * event, which is added into their score for that event before the
- * best-N cutoff below.
+ * best-results cap below.
  *
  * The full-attendance bonus is only awarded once the league is closed: while
  * it's still running, "played every event so far" isn't final (a later
@@ -292,13 +292,24 @@ function pointsForPosition(position) {
  * league takes it back out again. `fullAttendance` itself is still reported
  * either way (e.g. to show who's on track).
  *
+ * Best-results cap: every player counts at most their best (X −
+ * DISCARDED_RESULTS) event scores, X being the league's *total* event count
+ * — scheduled-but-not-yet-played ones included, so the same rule holds
+ * while the league is open as once it's closed. In practice nothing is
+ * dropped until a player has more results than the cap: only someone who
+ * plays every one of the X events loses their worst; anyone who missed one
+ * keeps all of theirs. Never below 1 (a one-event league counts its result).
+ *
  * Ties on points are broken by compareLeagueStandings, then by name.
  *
- * @param {Array<{matches: Array, entries: Array}>} eventsData - one entry per event in the league.
- * @param {{leagueClosed?: boolean}} [options] - leagueClosed: award the full-attendance bonus.
+ * @param {Array<{matches: Array, entries: Array}>} eventsData - one entry per closed event in the league.
+ * @param {{leagueClosed?: boolean, scheduledEvents?: number}} [options] - leagueClosed: award the
+ *   full-attendance bonus. scheduledEvents: the league's total event count, open/future events
+ *   included (X above) — defaults to eventsData.length.
  */
-export function computeLeaguePoints(eventsData, { leagueClosed = false } = {}) {
+export function computeLeaguePoints(eventsData, { leagueClosed = false, scheduledEvents = 0 } = {}) {
   const totalEvents = eventsData.length;
+  const countedResults = Math.max(Math.max(scheduledEvents, totalEvents) - DISCARDED_RESULTS, 1);
   const byPlayer = new Map();
 
   for (const { matches, entries } of eventsData) {
@@ -313,10 +324,11 @@ export function computeLeaguePoints(eventsData, { leagueClosed = false } = {}) {
       score += entry?.bonus_points ?? 0;
 
       if (!byPlayer.has(id)) {
-        byPlayer.set(id, { player: row.player, eventScores: [], wins: 0, draws: 0, losses: 0 });
+        byPlayer.set(id, { player: row.player, eventScores: [], placements: [], wins: 0, draws: 0, losses: 0 });
       }
       const agg = byPlayer.get(id);
       agg.eventScores.push(score);
+      agg.placements[index] = (agg.placements[index] ?? 0) + 1;
       agg.wins += row.wins;
       agg.draws += row.draws;
       agg.losses += row.losses;
@@ -326,8 +338,8 @@ export function computeLeaguePoints(eventsData, { leagueClosed = false } = {}) {
   // Tiebreakers over every match of this league's events only.
   const tiebreakers = buildTiebreakers(eventsData.flatMap(({ matches }) => matches));
 
-  const results = Array.from(byPlayer.values()).map(({ player, eventScores, wins, draws, losses }) => {
-    const bestScores = [...eventScores].sort((a, b) => b - a).slice(0, BEST_RESULTS_COUNT);
+  const results = Array.from(byPlayer.values()).map(({ player, eventScores, placements, wins, draws, losses }) => {
+    const bestScores = [...eventScores].sort((a, b) => b - a).slice(0, countedResults);
     const fullAttendance = totalEvents > 0 && eventScores.length === totalEvents;
     const attendanceBonus = leagueClosed && fullAttendance ? FULL_ATTENDANCE_BONUS : 0;
     const points = bestScores.reduce((sum, s) => sum + s, 0) + attendanceBonus;
@@ -346,6 +358,9 @@ export function computeLeaguePoints(eventsData, { leagueClosed = false } = {}) {
       draws,
       losses,
       winRate,
+      // placements[i] = how many of the league's events this player
+      // finished in position i+1 (sparse: a missing index means 0).
+      placements,
       matchWinPct: tiebreakers.matchWinPct(player.id),
       gameWinPct: tiebreakers.gameWinPct(player.id),
       opponentsGameWinPct: tiebreakers.opponentsGameWinPct(player.id),
@@ -358,14 +373,21 @@ export function computeLeaguePoints(eventsData, { leagueClosed = false } = {}) {
 }
 
 /**
- * League standings order: points desc, then the tiebreakers — own Match
- * Win %, own Game Win %, Opponents' Game Win % (league matches only).
+ * League standings order: points desc, then the tiebreakers — most 1st
+ * places across the league's events (every event, including one left out
+ * by the best-results cap), then most 2nd places, and so on; then own
+ * Match Win %, own Game Win %, Opponents' Game Win % (league matches only).
  * Unlike an event, own Match Win % is meaningful here, since league points
  * come from finishing positions rather than directly from match results.
  * 0 means genuinely tied (only the alphabetical fallback would separate them).
  */
 export function compareLeagueStandings(a, b) {
   if (b.points !== a.points) return b.points - a.points;
+  const positions = Math.max(a.placements.length, b.placements.length);
+  for (let i = 0; i < positions; i++) {
+    const diff = (b.placements[i] ?? 0) - (a.placements[i] ?? 0);
+    if (diff !== 0) return diff;
+  }
   if (b.matchWinPct !== a.matchWinPct) return b.matchWinPct - a.matchWinPct;
   if (b.gameWinPct !== a.gameWinPct) return b.gameWinPct - a.gameWinPct;
   return b.opponentsGameWinPct - a.opponentsGameWinPct;

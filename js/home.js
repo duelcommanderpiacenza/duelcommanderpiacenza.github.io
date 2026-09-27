@@ -29,20 +29,30 @@ async function fetchLeagueEventsData(leagueId) {
   // counting it here would still inflate this league's own "eventi" stat,
   // so it's excluded up front rather than relying on its (empty) data to
   // just wash out on its own.
-  const events = (await Events.listByLeague(leagueId)).filter((ev) => !ev.is_open);
-  return Promise.all(
-    events.map(async (ev) => {
-      const [entries, matches] = await Promise.all([EventEntries.listByEvent(ev.id), Matches.listByEvent(ev.id)]);
-      return { entries, matches };
-    })
-  );
+  // The league's total event count (open ones included, even those hidden
+  // from visitors) is returned too, for computeLeaguePoints's best-results cap.
+  const allEvents = await Events.listByLeague(leagueId);
+  const [eventsData, scheduledEvents] = await Promise.all([
+    Promise.all(
+      allEvents
+        .filter((ev) => !ev.is_open)
+        .map(async (ev) => {
+          const [entries, matches] = await Promise.all([EventEntries.listByEvent(ev.id), Matches.listByEvent(ev.id)]);
+          return { entries, matches };
+        })
+    ),
+    Leagues.eventCount(leagueId, allEvents.length),
+  ]);
+  return { eventsData, scheduledEvents };
 }
 
 async function loadLeagueCard(league) {
-  const eventsData = await fetchLeagueEventsData(league.id);
+  const { eventsData, scheduledEvents } = await fetchLeagueEventsData(league.id);
   const summary = computeLeagueSummary(eventsData);
   // A Topdeck series has no points leaderboard (same as league.html).
-  const standings = league.is_topdeck ? null : computeLeaguePoints(eventsData).slice(0, LEAGUE_PREVIEW_COUNT);
+  const standings = league.is_topdeck
+    ? null
+    : computeLeaguePoints(eventsData, { scheduledEvents }).slice(0, LEAGUE_PREVIEW_COUNT);
   return { league, summary, standings };
 }
 

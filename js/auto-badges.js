@@ -41,14 +41,24 @@ const COMPLETIST_EVENT_COUNT = 10;
 // actually take its results back out. computeAutoBadgeAssignments fetches
 // the closed-event ids once and hands them to each rule.
 
+// The league's total event count (open ones included) is returned too, for
+// computeLeaguePoints's best-results cap. Run from the admin (authenticated,
+// sees every event anyway), but through the same Leagues.eventCount the
+// public pages use, so both always agree on it.
 async function fetchLeagueEventsData(leagueId) {
-  const events = (await Events.listByLeague(leagueId)).filter((ev) => !ev.is_open);
-  return Promise.all(
-    events.map(async (ev) => {
-      const [entries, matches] = await Promise.all([EventEntries.listByEvent(ev.id), Matches.listByEvent(ev.id)]);
-      return { entries, matches };
-    })
-  );
+  const allEvents = await Events.listByLeague(leagueId);
+  const [eventsData, scheduledEvents] = await Promise.all([
+    Promise.all(
+      allEvents
+        .filter((ev) => !ev.is_open)
+        .map(async (ev) => {
+          const [entries, matches] = await Promise.all([EventEntries.listByEvent(ev.id), Matches.listByEvent(ev.id)]);
+          return { entries, matches };
+        })
+    ),
+    Leagues.eventCount(leagueId, allEvents.length),
+  ]);
+  return { eventsData, scheduledEvents };
 }
 
 // Leagues are run one at a time (only one real league can be open), so the
@@ -62,7 +72,8 @@ async function leagueWinnerPlayerId(leagues) {
   const league = await latestClosedRealLeague(leagues);
   if (!league) return null;
   // A closed league: final standings, full-attendance bonus included.
-  const results = computeLeaguePoints(await fetchLeagueEventsData(league.id), { leagueClosed: true });
+  const { eventsData, scheduledEvents } = await fetchLeagueEventsData(league.id);
+  const results = computeLeaguePoints(eventsData, { leagueClosed: true, scheduledEvents });
   return results[0]?.player?.id ?? null;
 }
 
@@ -71,7 +82,8 @@ const LEAGUE_RANK_POSITION = { league_rank_1: 1, league_rank_2: 2, league_rank_3
 async function leagueRankPlayerId(leagues, rule) {
   const league = leagues.find((l) => !l.is_topdeck && l.is_open) ?? null;
   if (!league) return null;
-  const results = computeLeaguePoints(await fetchLeagueEventsData(league.id));
+  const { eventsData, scheduledEvents } = await fetchLeagueEventsData(league.id);
+  const results = computeLeaguePoints(eventsData, { scheduledEvents });
   return results[LEAGUE_RANK_POSITION[rule] - 1]?.player?.id ?? null;
 }
 
