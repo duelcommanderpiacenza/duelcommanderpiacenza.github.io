@@ -77,25 +77,46 @@ function formatMonthTick(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 }
 
-// Catmull-Rom-through-Bezier conversion (tension 1/6, the standard value)
-// — turns a plain polyline through the points into a smooth curve that
-// still passes exactly through every one of them, unlike e.g. a fitted
-// polynomial. Falls back to the segment's own endpoint when there's no
-// further neighbor (the curve's two ends), same as the usual "clamped"
-// variant of this technique.
+// Monotone cubic interpolation (Fritsch–Carlson, same as d3's
+// curveMonotoneX) — a smooth curve through every point that never
+// overshoots between two of them: a segment joining two equal values stays
+// flat, and peaks/dips only ever sit on an actual data point. (A
+// Catmull-Rom spline was used before; it sets each point's tangent from its
+// two neighbors, so after a drop the curve kept heading down past the next
+// point's value — e.g. 2 → 1 → 1 dipped below 1 between the last two.)
 function smoothPath(points) {
-  if (points.length === 1) return `M${points[0][0]},${points[0][1]}`;
-  let d = `M${points[0][0]},${points[0][1]}`;
-  for (let i = 0; i < points.length - 1; i++) {
-    const p0 = points[i === 0 ? i : i - 1];
-    const p1 = points[i];
-    const p2 = points[i + 1];
-    const p3 = points[i + 2 < points.length ? i + 2 : i + 1];
-    const c1x = p1[0] + (p2[0] - p0[0]) / 6;
-    const c1y = p1[1] + (p2[1] - p0[1]) / 6;
-    const c2x = p2[0] - (p3[0] - p1[0]) / 6;
-    const c2y = p2[1] - (p3[1] - p1[1]) / 6;
-    d += ` C${c1x.toFixed(2)},${c1y.toFixed(2)} ${c2x.toFixed(2)},${c2y.toFixed(2)} ${p2[0].toFixed(2)},${p2[1].toFixed(2)}`;
+  const n = points.length;
+  let d = `M${points[0][0].toFixed(2)},${points[0][1].toFixed(2)}`;
+  if (n === 1) return d;
+
+  // Per-segment width and slope.
+  const h = [];
+  const s = [];
+  for (let i = 0; i < n - 1; i++) {
+    h[i] = points[i + 1][0] - points[i][0];
+    s[i] = h[i] ? (points[i + 1][1] - points[i][1]) / h[i] : 0;
+  }
+
+  // Tangent at each point: 0 at a local extremum or next to a flat
+  // segment (neighboring slopes of opposite sign, or either one 0);
+  // otherwise a weighted average of the two slopes, capped so the curve
+  // can't overshoot. The two ends just follow their only segment's slope.
+  const m = [s[0]];
+  for (let i = 1; i < n - 1; i++) {
+    if (s[i - 1] * s[i] <= 0) {
+      m[i] = 0;
+    } else {
+      const p = (s[i - 1] * h[i] + s[i] * h[i - 1]) / (h[i - 1] + h[i]);
+      m[i] = Math.sign(s[i]) * Math.min(Math.abs(s[i - 1]), Math.abs(s[i]), Math.abs(p) / 2) * 2;
+    }
+  }
+  m[n - 1] = s[n - 2];
+
+  for (let i = 0; i < n - 1; i++) {
+    const [x1, y1] = points[i];
+    const [x2, y2] = points[i + 1];
+    const dx = h[i] / 3;
+    d += ` C${(x1 + dx).toFixed(2)},${(y1 + m[i] * dx).toFixed(2)} ${(x2 - dx).toFixed(2)},${(y2 - m[i + 1] * dx).toFixed(2)} ${x2.toFixed(2)},${y2.toFixed(2)}`;
   }
   return d;
 }
