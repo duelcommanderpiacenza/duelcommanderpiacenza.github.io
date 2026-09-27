@@ -1312,9 +1312,13 @@ main {
    events card started. Two independently-sized columns avoids that
    entirely. Collapses to one stacked column below 860px. */
 
+/* minmax(0, …), not a bare fr: a bare fr track can't shrink below its
+   content's min-content width (the charts carousel, a card header's
+   nowrap button), which pushed every dashboard card slightly wider than
+   the full-width announcements card above the grid on phones. */
 .dashboard-grid {
   display: grid;
-  grid-template-columns: 1.3fr 1fr;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
   gap: 22px;
   align-items: start;
 }
@@ -1531,8 +1535,18 @@ a.upcoming-row:hover .upcoming-row-title {
   padding: 12px 0;
 }
 
+/* Between leagues: a stronger, spaced-out rule than the standings rows'
+   own hairline separators, so a second league reads as a new block rather
+   than more rows of the first one's ranking. */
 .dashboard-card-leagues .dashboard-league-card + .dashboard-league-card {
-  border-top: 1px solid rgba(220, 24, 28, 0.14);
+  margin-top: 10px;
+  padding-top: 22px;
+  border-top: 2px solid rgba(220, 24, 28, 0.3);
+}
+
+.dashboard-card-leagues .dashboard-league-card-name {
+  font-size: 1.25rem;
+  line-height: 1.25;
 }
 
 .dashboard-card-leagues .dashboard-league-card:hover {
@@ -1540,8 +1554,120 @@ a.upcoming-row:hover .upcoming-row-title {
   box-shadow: none;
 }
 
-.dashboard-card-leagues .dashboard-league-card:hover .dashboard-league-card-name {
+/* "Lista completa" (js/home.js): the negative block margins keep the 40px
+   button from making the name's line taller, so the stats line below stays
+   as close to the name as on a row without it. */
+.dashboard-league-card-head > .btn-secondary {
+  flex-shrink: 0;
+  white-space: nowrap;
+  margin-block: -8px;
+}
+
+/* The open league's standings preview (js/home.js): a ranked list in the
+   dashboard's own row style. Header and rows share one fixed column
+   template so the numbers line up; the name column truncates first. */
+.dashboard-standings {
+  margin-top: 12px;
+}
+
+.dashboard-standings-head,
+.dashboard-standings-row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 56px 64px;
+  align-items: center;
+  gap: 12px;
+}
+
+.dashboard-standings-head {
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(220, 24, 28, 0.14);
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.dashboard-standings-head > span:first-child {
+  text-align: center;
+}
+
+.dashboard-standings-head > span:nth-child(n + 3),
+.dashboard-standings-points,
+.dashboard-standings-rate {
+  text-align: right;
+}
+
+.dashboard-standings-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.dashboard-standings-row {
+  padding: 8px 0;
+}
+
+.dashboard-standings-row + .dashboard-standings-row {
+  border-top: 1px solid rgba(220, 24, 28, 0.14);
+}
+
+/* Round position badge: podium (1st-3rd) a stronger tint, the rest a faint
+   one. */
+.dashboard-standings-rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(220, 24, 28, 0.08);
+  color: var(--brand-red-deep);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.dashboard-standings-row:nth-child(-n + 3) .dashboard-standings-rank {
+  background: rgba(220, 24, 28, 0.18);
+}
+
+/* Name (+ handle) truncates; the player badges after it never shrink. */
+.dashboard-standings-name {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  font-weight: 700;
+}
+
+.dashboard-standings-name-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-standings-name > .icon-badge {
+  flex-shrink: 0;
+}
+
+.dashboard-standings-name a {
+  color: var(--text-title);
+  text-decoration: none;
+}
+
+.dashboard-standings-name a:hover {
   text-decoration: underline;
+}
+
+.dashboard-standings-points {
+  color: var(--text-title);
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.dashboard-standings-rate {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 700;
 }
 
 .dashboard-card-subtitle {
@@ -1553,7 +1679,7 @@ a.upcoming-row:hover .upcoming-row-title {
 
 @media (max-width: 860px) {
   .dashboard-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -3392,6 +3518,17 @@ table.data-table tbody tr:hover {
 .rank-cell {
   font-weight: 800;
   color: var(--brand-red);
+}
+
+/* league.html leaderboard: the top 8 positions get a faint brand-red tint.
+   Explicit :hover rule since tr.is-top8 ties the generic tr:hover on
+   specificity and, coming later, would otherwise mask it. */
+table.data-table tbody tr.is-top8 {
+  background: rgba(220, 24, 28, 0.05);
+}
+
+table.data-table tbody tr.is-top8:hover {
+  background: rgba(220, 24, 28, 0.09);
 }
 
 /* Small inline icon with a hover/focus tooltip — player badges (Giocatori
@@ -5411,6 +5548,14 @@ html.nav-mobile .chart-carousel-arrow {
   background: none;
 }
 
+:root[data-theme="dark"] .dashboard-standings-rank {
+  background: rgba(255, 110, 110, 0.1);
+}
+
+:root[data-theme="dark"] .dashboard-standings-row:nth-child(-n + 3) .dashboard-standings-rank {
+  background: rgba(255, 110, 110, 0.2);
+}
+
 /* .dashboard-card-upcoming's own red-tinted gradient (hardcoded rgba, not a
    theme var) would otherwise be overridden back to the plain dark-card
    background by the shared rule above — same specificity, later in dark
@@ -5427,6 +5572,14 @@ html.nav-mobile .chart-carousel-arrow {
 
 :root[data-theme="dark"] table.data-table tbody tr:hover {
   background: rgba(255, 110, 110, 0.06);
+}
+
+:root[data-theme="dark"] table.data-table tbody tr.is-top8 {
+  background: rgba(255, 110, 110, 0.08);
+}
+
+:root[data-theme="dark"] table.data-table tbody tr.is-top8:hover {
+  background: rgba(255, 110, 110, 0.13);
 }
 
 :root[data-theme="dark"] .rank-cell,

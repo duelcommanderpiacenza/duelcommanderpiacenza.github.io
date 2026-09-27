@@ -1,5 +1,6 @@
 import { Leagues, Events, EventEntries, Matches } from "./db.js";
-import { computeLeaguePoints } from "./leaderboard.js";
+import { compareLeagueStandings, computeLeaguePoints } from "./leaderboard.js";
+import { fetchPlayerBadgesRenderer } from "./player-badges.js";
 import { computeLeagueSummary, computeLeagueWrapped } from "./stats.js";
 import {
   escapeHtml,
@@ -13,6 +14,9 @@ import {
 } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initTitleFit } from "./page-title-fit.js";
+
+// How many leaderboard rows get the "top 8" highlight (styles.css .is-top8).
+const LEAGUE_TOP_HIGHLIGHT = 8;
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
@@ -65,10 +69,10 @@ function renderWrapped(league, standings, wrapped, eventCount) {
     } else if (standings.length === 0) {
       tiles.push(wrappedTile("Vincitore", EMPTY_VALUE));
     } else {
-      // League points have no tiebreaker, so a tie on top points is shown
-      // as a shared win rather than settled alphabetically.
+      // A tie that survives every tiebreaker is shown as a shared win
+      // rather than settled alphabetically.
       const topPoints = standings[0].points;
-      const winners = standings.filter((s) => s.points === topPoints);
+      const winners = standings.filter((s) => compareLeagueStandings(s, standings[0]) === 0);
       tiles.push(
         wrappedTile("Vincitore", winners.map((s) => playerLabel(s.player)).join("<br>"), `${topPoints} punti`)
       );
@@ -145,6 +149,9 @@ async function init() {
 
     // A Topdeck series is just a bucket of events, with no points leaderboard.
     if (league.is_topdeck) leaderboardSectionEl.hidden = true;
+    // Started now, awaited only right before the leaderboard renders, so it
+    // loads alongside the league's events rather than after them.
+    const badgesPromise = league.is_topdeck ? null : fetchPlayerBadgesRenderer();
 
     // A still-open (including future) event isn't published yet — it has no
     // entries/matches for RLS to even hand back, and would otherwise inflate
@@ -210,6 +217,7 @@ async function init() {
 
     if (league.is_topdeck) return;
 
+    const badgesFor = await badgesPromise;
     leaderboardEl.innerHTML =
       standings.length === 0
         ? '<p class="page-empty">Nessun dato per la classifica.</p>'
@@ -219,9 +227,9 @@ async function init() {
               ${standings
                 .map(
                   (s, i) => `
-                <tr>
+                <tr${i < LEAGUE_TOP_HIGHLIGHT ? ' class="is-top8"' : ""}>
                   <td class="rank-cell">${i + 1}</td>
-                  <td>${playerLabel(s.player)}</td>
+                  <td>${playerLabel(s.player)}${badgesFor(s.player)}</td>
                   <td><strong>${s.points}</strong></td>
                   <td>${s.wins}-${s.losses}-${s.draws}</td>
                   <td>${s.winRate === null ? "—" : `${s.winRate.toFixed(1)}%`}</td>

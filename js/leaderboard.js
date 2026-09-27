@@ -47,6 +47,91 @@ const MIN_WIN_PCT = 1 / 3;
 const TOP_FINISH_CUTOFF = 8;
 
 /**
+ * The standard Magic tournament tiebreaker stats (DCI/WPN formulas: Match
+ * Win %, Game Win %, Opponents' Match/Game Win %), computed over whatever set
+ * of matches is passed in — one event's for the event leaderboard, every
+ * event of a league for the league one. Game-basis where the official
+ * formula is, so never displayed as this site's own "winrate" (see
+ * computeEventLeaderboard's doc).
+ * @param {Array} matches - `matches` rows.
+ * @returns {{matchWinPct: Function, gameWinPct: Function, opponentsMatchWinPct: Function, opponentsGameWinPct: Function}}
+ *   each taking a player id.
+ */
+function buildTiebreakers(matches) {
+  // Per-player match points / rounds played, for Match Win %.
+  const records = new Map();
+  // Matches involving each player (a bye has no real opponent, so it's
+  // excluded from opponent-facing averages, but still counts for the
+  // player's own game-win% — a bye is treated as a clean 2-0 per the
+  // official rules).
+  const matchesByPlayer = new Map();
+  function track(playerId, m, points) {
+    if (!records.has(playerId)) records.set(playerId, { points: 0, played: 0 });
+    const rec = records.get(playerId);
+    rec.points += points;
+    rec.played += 1;
+    if (!matchesByPlayer.has(playerId)) matchesByPlayer.set(playerId, []);
+    matchesByPlayer.get(playerId).push(m);
+  }
+
+  for (const m of matches) {
+    if (isDrop(m)) continue;
+    if (isBye(m)) {
+      track(m.player1_id, m, POINTS.win);
+      continue;
+    }
+    const outcome = matchRoundOutcome(m);
+    track(m.player1_id, m, outcome === "player1" ? POINTS.win : outcome === "draw" ? POINTS.draw : POINTS.loss);
+    track(m.player2_id, m, outcome === "player2" ? POINTS.win : outcome === "draw" ? POINTS.draw : POINTS.loss);
+  }
+
+  function matchWinPct(playerId) {
+    const rec = records.get(playerId);
+    if (!rec || rec.played === 0) return MIN_WIN_PCT;
+    return Math.max(rec.points / (rec.played * POINTS.win), MIN_WIN_PCT);
+  }
+
+  // Floors at MIN_WIN_PCT (a single bad round, or a weak opponent,
+  // shouldn't disproportionately tank it) — the official tiebreak
+  // convention, tiebreaker-only, never displayed as a real statistic.
+  function gameWinPct(playerId) {
+    let won = 0;
+    let total = 0;
+    for (const m of matchesByPlayer.get(playerId) ?? []) {
+      if (isBye(m)) {
+        won += 2;
+        total += 2;
+        continue;
+      }
+      won += m.player1_id === playerId ? m.player1_wins : m.player2_wins;
+      total += m.player1_wins + m.draws + m.player2_wins;
+    }
+    return total > 0 ? Math.max(won / total, MIN_WIN_PCT) : MIN_WIN_PCT;
+  }
+
+  function opponentIdsOf(playerId) {
+    const opponents = [];
+    for (const m of matchesByPlayer.get(playerId) ?? []) {
+      if (isBye(m)) continue;
+      const oppId = m.player1_id === playerId ? m.player2_id : m.player1_id;
+      if (oppId) opponents.push(oppId);
+    }
+    return opponents;
+  }
+
+  function average(ids, fn) {
+    return ids.length > 0 ? ids.reduce((sum, id) => sum + fn(id), 0) / ids.length : 0;
+  }
+
+  return {
+    matchWinPct,
+    gameWinPct,
+    opponentsMatchWinPct: (playerId) => average(opponentIdsOf(playerId), matchWinPct),
+    opponentsGameWinPct: (playerId) => average(opponentIdsOf(playerId), gameWinPct),
+  };
+}
+
+/**
  * Event leaderboard: 3 pts win / 1 pt draw / 0 pt loss, ties broken by the
  * standard Magic tournament tiebreakers — opponents' match-win %, then own
  * game-win %, then opponents' game-win % — with an optional per-entry
@@ -105,22 +190,11 @@ export function computeEventLeaderboard(matches, entries) {
     return byPlayer.get(playerId);
   };
 
-  // Matches involving each player, kept for the game-win% / opponents'
-  // win% tiebreakers below (a bye has no real opponent, so it's excluded
-  // from opponent-facing averages, but still counts for the player's own
-  // game-win% — a bye is treated as a clean 2-0 per the official rules).
-  const matchesByPlayer = new Map();
-  function trackMatch(playerId, m) {
-    if (!matchesByPlayer.has(playerId)) matchesByPlayer.set(playerId, []);
-    matchesByPlayer.get(playerId).push(m);
-  }
-
   for (const m of matches) {
     if (isDrop(m)) continue;
 
     const p1 = ensure(m.player1_id, m.player1);
     p1.played += 1;
-    trackMatch(m.player1_id, m);
 
     if (isBye(m)) {
       // A bye has no opponent to credit/debit — it's a plain win for player1.
@@ -131,7 +205,6 @@ export function computeEventLeaderboard(matches, entries) {
 
     const p2 = ensure(m.player2_id, m.player2);
     p2.played += 1;
-    trackMatch(m.player2_id, m);
 
     const outcome = matchRoundOutcome(m);
     if (outcome === "player1") {
@@ -150,63 +223,13 @@ export function computeEventLeaderboard(matches, entries) {
     }
   }
 
-  function matchWinPct(playerId) {
-    const row = byPlayer.get(playerId);
-    if (!row || row.played === 0) return MIN_WIN_PCT;
-    return Math.max(row.points / (row.played * POINTS.win), MIN_WIN_PCT);
-  }
-
-  // Raw game tally (not the floored percentage below) — feeds gameWinPct,
-  // the official MTG tiebreaker stat (Game Win %), not the displayed
-  // `winRate` (that's match-basis now, computed straight from wins/played
-  // above — no game-level tally involved in it at all).
-  function gameTally(playerId) {
-    const pMatches = matchesByPlayer.get(playerId) ?? [];
-    let won = 0;
-    let total = 0;
-    for (const m of pMatches) {
-      if (isBye(m)) {
-        won += 2;
-        total += 2;
-        continue;
-      }
-      const isP1 = m.player1_id === playerId;
-      won += isP1 ? m.player1_wins : m.player2_wins;
-      total += m.player1_wins + m.draws + m.player2_wins;
-    }
-    return { won, total };
-  }
-
-  // Floors at MIN_WIN_PCT (a single bad round, or a weak opponent,
-  // shouldn't disproportionately tank it) — the official tiebreak
-  // convention, tiebreaker-only, never displayed as a real statistic.
-  function gameWinPct(playerId) {
-    const { won, total } = gameTally(playerId);
-    return total > 0 ? Math.max(won / total, MIN_WIN_PCT) : MIN_WIN_PCT;
-  }
-
-  function opponentIdsOf(playerId) {
-    const pMatches = matchesByPlayer.get(playerId) ?? [];
-    const opponents = [];
-    for (const m of pMatches) {
-      if (isBye(m)) continue;
-      const oppId = m.player1_id === playerId ? m.player2_id : m.player1_id;
-      if (oppId) opponents.push(oppId);
-    }
-    return opponents;
-  }
-
-  function average(ids, fn) {
-    return ids.length > 0 ? ids.reduce((sum, id) => sum + fn(id), 0) / ids.length : 0;
-  }
-
+  const tiebreakers = buildTiebreakers(matches);
   for (const row of byPlayer.values()) {
     const id = row.player?.id;
-    const opponents = id ? opponentIdsOf(id) : [];
     row.winRate = row.played > 0 ? (row.wins / row.played) * 100 : null;
-    row.gameWinPct = id ? gameWinPct(id) : MIN_WIN_PCT;
-    row.opponentsMatchWinPct = average(opponents, matchWinPct);
-    row.opponentsGameWinPct = average(opponents, gameWinPct);
+    row.gameWinPct = id ? tiebreakers.gameWinPct(id) : MIN_WIN_PCT;
+    row.opponentsMatchWinPct = id ? tiebreakers.opponentsMatchWinPct(id) : 0;
+    row.opponentsGameWinPct = id ? tiebreakers.opponentsGameWinPct(id) : 0;
   }
 
   const standings = Array.from(byPlayer.values()).sort((a, b) => {
@@ -269,6 +292,8 @@ function pointsForPosition(position) {
  * league takes it back out again. `fullAttendance` itself is still reported
  * either way (e.g. to show who's on track).
  *
+ * Ties on points are broken by compareLeagueStandings, then by name.
+ *
  * @param {Array<{matches: Array, entries: Array}>} eventsData - one entry per event in the league.
  * @param {{leagueClosed?: boolean}} [options] - leagueClosed: award the full-attendance bonus.
  */
@@ -298,6 +323,9 @@ export function computeLeaguePoints(eventsData, { leagueClosed = false } = {}) {
     });
   }
 
+  // Tiebreakers over every match of this league's events only.
+  const tiebreakers = buildTiebreakers(eventsData.flatMap(({ matches }) => matches));
+
   const results = Array.from(byPlayer.values()).map(({ player, eventScores, wins, draws, losses }) => {
     const bestScores = [...eventScores].sort((a, b) => b - a).slice(0, BEST_RESULTS_COUNT);
     const fullAttendance = totalEvents > 0 && eventScores.length === totalEvents;
@@ -318,11 +346,27 @@ export function computeLeaguePoints(eventsData, { leagueClosed = false } = {}) {
       draws,
       losses,
       winRate,
+      matchWinPct: tiebreakers.matchWinPct(player.id),
+      gameWinPct: tiebreakers.gameWinPct(player.id),
+      opponentsGameWinPct: tiebreakers.opponentsGameWinPct(player.id),
     };
   });
 
-  return results.sort((a, b) => {
-    if (b.points !== a.points) return b.points - a.points;
-    return (a.player?.name ?? "").localeCompare(b.player?.name ?? "");
-  });
+  return results.sort(
+    (a, b) => compareLeagueStandings(a, b) || (a.player?.name ?? "").localeCompare(b.player?.name ?? "")
+  );
+}
+
+/**
+ * League standings order: points desc, then the tiebreakers — own Match
+ * Win %, own Game Win %, Opponents' Game Win % (league matches only).
+ * Unlike an event, own Match Win % is meaningful here, since league points
+ * come from finishing positions rather than directly from match results.
+ * 0 means genuinely tied (only the alphabetical fallback would separate them).
+ */
+export function compareLeagueStandings(a, b) {
+  if (b.points !== a.points) return b.points - a.points;
+  if (b.matchWinPct !== a.matchWinPct) return b.matchWinPct - a.matchWinPct;
+  if (b.gameWinPct !== a.gameWinPct) return b.gameWinPct - a.gameWinPct;
+  return b.opponentsGameWinPct - a.opponentsGameWinPct;
 }

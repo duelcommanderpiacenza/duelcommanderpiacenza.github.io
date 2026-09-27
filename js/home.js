@@ -1,17 +1,21 @@
-// Home dashboard: independent widgets (announcements, active leagues,
-// upcoming events, latest events, most played commanders) — each fetches
+// Home dashboard: independent widgets (announcements, upcoming events,
+// active leagues, latest events, most played commanders) — each fetches
 // and renders on its own, so one failing doesn't block the others.
 
 import { Announcements, Leagues, Events, EventEntries, Matches } from "./db.js";
 import { computeLeagueSummary } from "./stats.js";
+import { computeLeaguePoints } from "./leaderboard.js";
 import { renderPieChart, ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
 import { initChartCarousel } from "./chart-carousel.js";
-import { escapeHtml, formatDate, formatTime, showError } from "./ui.js";
+import { escapeHtml, formatDate, formatTime, playerLabel, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { nestedResultsLink } from "./results-link.js";
+import { fetchPlayerBadgesRenderer } from "./player-badges.js";
 
 const LATEST_EVENTS_COUNT = 5;
 const UPCOMING_EVENTS_COUNT = 3;
+// How many of the open league's standings "Leghe in corso" previews.
+const LEAGUE_PREVIEW_COUNT = 8;
 const TOP_COMMANDERS_COUNT = 6;
 const TOP_COMMANDERS_WINDOW_MONTHS = 3;
 // Same fixed hue order used by the Commanders page's own chart, so a
@@ -37,19 +41,51 @@ async function fetchLeagueEventsData(leagueId) {
 async function loadLeagueCard(league) {
   const eventsData = await fetchLeagueEventsData(league.id);
   const summary = computeLeagueSummary(eventsData);
-  return { league, summary };
+  // A Topdeck series has no points leaderboard (same as league.html).
+  const standings = league.is_topdeck ? null : computeLeaguePoints(eventsData).slice(0, LEAGUE_PREVIEW_COUNT);
+  return { league, summary, standings };
 }
 
-// Name + event/player counts only — the standings themselves live on the
-// league's own page (the whole card links there).
-function renderLeagueCard({ league, summary }) {
+// Name (a link to league.html) + event/player counts. A real league also
+// gets "Lista completa" and a glimpse of its current standings (top
+// LEAGUE_PREVIEW_COUNT, points + winrate); a Topdeck series has neither.
+function renderLeagueCard({ league, summary, standings }, badgesFor) {
+  const href = `league.html?id=${league.id}`;
+  // A compact ranked list in the dashboard's own row style (red separators,
+  // like the event rows) rather than a cut-down copy of league.html's table.
+  const ranking = !standings
+    ? ""
+    : standings.length === 0
+      ? '<p class="page-empty">Nessun dato per la classifica.</p>'
+      : `<div class="dashboard-standings">
+          <div class="dashboard-standings-head" aria-hidden="true">
+            <span>#</span><span>Giocatore</span><span>Punti</span><span>Winrate</span>
+          </div>
+          <ol class="dashboard-standings-list">
+            ${standings
+              .map(
+                (s, i) => `
+            <li class="dashboard-standings-row">
+              <span class="dashboard-standings-rank">${i + 1}</span>
+              <span class="dashboard-standings-name">
+                <span class="dashboard-standings-name-text">${playerLabel(s.player)}</span>${badgesFor(s.player)}
+              </span>
+              <span class="dashboard-standings-points">${s.points}</span>
+              <span class="dashboard-standings-rate">${s.winRate === null ? "—" : `${s.winRate.toFixed(1)}%`}</span>
+            </li>`
+              )
+              .join("")}
+          </ol>
+        </div>`;
   return `
-    <a class="dashboard-league-card" href="league.html?id=${league.id}">
+    <div class="dashboard-league-card">
       <div class="dashboard-league-card-head">
-        <span class="dashboard-league-card-name">${escapeHtml(league.name)}</span>
+        <a class="dashboard-league-card-name" href="${href}">${escapeHtml(league.name)}</a>
+        ${standings ? `<a class="btn-secondary" href="${href}">Lista completa</a>` : ""}
       </div>
       <div class="dashboard-league-card-stats">${summary.events} eventi &middot; ${summary.uniquePlayers} giocatori</div>
-    </a>`;
+      ${ranking}
+    </div>`;
 }
 
 // The section itself is hidden entirely (not just empty) whenever there
@@ -151,8 +187,12 @@ async function renderLeaguesSection(el) {
       return;
     }
 
-    const cards = await Promise.all(active.map(loadLeagueCard));
-    el.innerHTML = `<div class="dashboard-league-list">${cards.map(renderLeagueCard).join("")}</div>`;
+    // Player badges only matter for a real league's standings preview.
+    const [cards, badgesFor] = await Promise.all([
+      Promise.all(active.map(loadLeagueCard)),
+      openLeague ? fetchPlayerBadgesRenderer() : () => "",
+    ]);
+    el.innerHTML = `<div class="dashboard-league-list">${cards.map((c) => renderLeagueCard(c, badgesFor)).join("")}</div>`;
   } catch (err) {
     showError(el, err);
   }
