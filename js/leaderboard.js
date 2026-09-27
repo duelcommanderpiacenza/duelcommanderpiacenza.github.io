@@ -164,6 +164,10 @@ export function computeEventLeaderboard(matches, entries) {
       commander: entry.commander,
       archetype: entry.archetype,
       manualRank: entry.manual_rank ?? null,
+      // League-point adjustment for this event (set from the admin's event
+      // leaderboard) — not part of the event's own match points/ordering,
+      // only added by computeLeaguePoints.
+      bonusPoints: entry.bonus_points ?? 0,
       points: 0,
       wins: 0,
       draws: 0,
@@ -180,6 +184,7 @@ export function computeEventLeaderboard(matches, entries) {
         commander: null,
         archetype: null,
         manualRank: null,
+        bonusPoints: 0,
         points: 0,
         wins: 0,
         draws: 0,
@@ -280,10 +285,10 @@ function pointsForPosition(position) {
  * League leaderboard, per the club's official scoring rules.
  *
  * One-off adjustments that don't fit a generic rule (e.g. a bonus limited to
- * one specific tournament) aren't hardcoded here — they're applied manually
- * per player via the `bonus_points` field on that player's entry for that
- * event, which is added into their score for that event before the
- * best-results cap below.
+ * one specific tournament) aren't hardcoded here — the admin sets them per
+ * player from that event's leaderboard (admin/js/matches-admin.js, stored as
+ * the entry's `bonus_points`), and they're added into the player's score for
+ * that event before the best-results cap below.
  *
  * The full-attendance bonus is only awarded once the league is closed: while
  * it's still running, "played every event so far" isn't final (a later
@@ -320,8 +325,7 @@ export function computeLeaguePoints(eventsData, { leagueClosed = false, schedule
 
       let score = pointsForPosition(index + 1);
       if (row.wins > 0 && row.losses === 0 && row.draws === 0) score += UNDEFEATED_BONUS;
-      const entry = entries.find((e) => e.player_id === id);
-      score += entry?.bonus_points ?? 0;
+      score += row.bonusPoints;
 
       if (!byPlayer.has(id)) {
         byPlayer.set(id, { player: row.player, eventScores: [], placements: [], wins: 0, draws: 0, losses: 0 });

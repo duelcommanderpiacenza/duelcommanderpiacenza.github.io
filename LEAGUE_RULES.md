@@ -17,7 +17,7 @@ created, opened, closed or deleted in admin.
 flowchart TD
     A[Each closed event of the league] --> B[Event standings<br/>3 / 1 / 0 pts per match + tiebreakers]
     B --> C[Position points<br/>20 · 17 · 14 · 14 · 11 · 11 · 11 · 11 · 5]
-    C --> D[+2 undefeated<br/>+ manual bonus_points]
+    C --> D[+2 undefeated<br/>+ league bonus points]
     D --> E[Event score]
     E --> F[Keep each player's best X − 1 event scores<br/>X = league's total events, open + closed]
     F --> G{League closed?}
@@ -55,8 +55,9 @@ third of a win, every percentage floored at 33%, a bye counts as a 2-0).
 Plus:
 
 - **+2 undefeated**: at least one win and no losses or draws in that event.
-- **Manual `bonus_points`** on the player's entry for that event (for one-off
-  adjustments), if set.
+- **League bonus points** (for one-off adjustments), if set: entered per
+  player in the "Bonus lega" column of that event's leaderboard in admin
+  (matches view), while the event is open.
 
 ## 3. League points
 

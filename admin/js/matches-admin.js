@@ -184,29 +184,47 @@ export function initMatchesAdmin({ onToggleOpen } = {}) {
     renderEventLeaderboard();
   }
 
+  // League bonus points are a league-points adjustment — meaningless for a
+  // Topdeck series (no points leaderboard) or a standalone event (no league
+  // at all), so the leaderboard's Bonus column only exists for these.
+  function bonusApplies() {
+    return Boolean(currentEvent?.league && !currentEvent.league.is_topdeck);
+  }
+
   // Preview of the full event standings (all rounds, not just the active
   // tab), using the same tiebreak logic as the public leaderboard. A manual
   // reorder here persists as a manual_rank on the affected entries, so it's
   // reflected everywhere that entry's standing is shown, not just here.
+  // For a league event it's also where per-player league bonus points are
+  // set (stored as the entry's bonus_points, added by computeLeaguePoints);
+  // like the reorder arrows, only while the event is open.
   function renderEventLeaderboard() {
     const standings = computeEventLeaderboard(allMatches, currentEntrants);
     if (standings.length === 0) {
       eventLeaderboardEl.innerHTML = '<p class="page-empty">Nessun dato per la classifica.</p>';
       return;
     }
+    const showBonus = bonusApplies();
+    const locked = !currentEvent?.is_open;
     eventLeaderboardEl.innerHTML = `<div class="data-table-wrap"><table class="data-table">
-      <thead><tr><th>#</th><th>Giocatore</th><th>Punti</th><th>V-S-P</th><th></th></tr></thead>
+      <thead><tr><th>#</th><th>Giocatore</th><th>Punti</th><th>V-S-P</th>${showBonus ? "<th>Bonus lega</th>" : ""}<th></th></tr></thead>
       <tbody>
         ${standings
           .map((s, i) => {
             const tiedWithPrev = i > 0 && standings[i - 1].points === s.points;
             const tiedWithNext = i < standings.length - 1 && standings[i + 1].points === s.points;
+            const bonusCell = !showBonus
+              ? ""
+              : s.entryId
+                ? `<td><input type="number" class="standings-bonus-input" step="1" value="${s.bonusPoints}" data-entry-id="${s.entryId}" aria-label="Punti bonus di lega per ${escapeHtml(s.player?.name ?? "")}" ${locked ? "disabled" : ""}></td>`
+                : "<td>—</td>";
             return `
           <tr>
             <td class="rank-cell">${i + 1}</td>
             <td>${escapeHtml(s.player?.name ?? "")}</td>
             <td><strong>${s.points}</strong></td>
             <td>${s.wins}-${s.losses}-${s.draws}</td>
+            ${bonusCell}
             <td class="row-actions">
               <button type="button" class="btn-secondary" data-move="up" data-index="${i}" ${tiedWithPrev && currentEvent?.is_open ? "" : "disabled"}>&uarr;</button>
               <button type="button" class="btn-secondary" data-move="down" data-index="${i}" ${tiedWithNext && currentEvent?.is_open ? "" : "disabled"}>&darr;</button>
@@ -222,6 +240,27 @@ export function initMatchesAdmin({ onToggleOpen } = {}) {
         moveStanding(standings, parseInt(btn.dataset.index, 10), btn.dataset.move === "up" ? -1 : 1)
       );
     });
+    eventLeaderboardEl.querySelectorAll(".standings-bonus-input").forEach((input) => {
+      input.addEventListener("change", () => saveBonus(input));
+    });
+  }
+
+  // Saved on "change" (blur, Enter, or a spinner step) — no separate save
+  // button. The event is open (the input is disabled otherwise), so its data
+  // isn't in any published league standing yet: no badge sync needed here,
+  // closing the event does that.
+  async function saveBonus(input) {
+    const value = parseInt(input.value, 10) || 0;
+    input.value = value;
+    try {
+      await EventEntries.update(input.dataset.entryId, { bonus_points: value });
+      const entry = currentEntrants.find((e) => e.id === input.dataset.entryId);
+      if (entry) entry.bonus_points = value;
+      setMessage(msgEl, "Bonus salvato.", false);
+    } catch (err) {
+      console.error(err);
+      setMessage(msgEl, "Errore nel salvataggio del bonus.", true);
+    }
   }
 
   async function moveStanding(standings, index, direction) {

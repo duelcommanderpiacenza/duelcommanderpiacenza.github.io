@@ -388,6 +388,32 @@ html {
   gap: 8px;
 }
 
+/* League bonus points, edited inline in an event's leaderboard
+   (matches-admin.js) — same look as a form field (.field input), sized down
+   to sit in a table row. */
+.standings-bonus-input {
+  width: 72px;
+  font: inherit;
+  padding: 6px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--hairline);
+  background: #fff;
+  color: var(--text-body);
+}
+
+.standings-bonus-input:focus {
+  outline: none;
+  border-color: var(--hairline-hover-strong);
+}
+
+.standings-bonus-input:disabled {
+  opacity: 0.6;
+}
+
+:root[data-theme="dark"] .standings-bonus-input {
+  background: rgba(255, 255, 255, 0.06);
+}
+
 /* Excludes .icon-btn (Modifica/Elimina) — those are fixed-size circles
    (../../styles.css) and would get squashed into an oval by this padding. */
 .row-actions button:not(.icon-btn) {
