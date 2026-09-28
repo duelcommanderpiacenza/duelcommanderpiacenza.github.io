@@ -4912,7 +4912,11 @@ img.cs-option-icon {
   white-space: nowrap;
 }
 
-.matchups-row-header {
+/* Scoped under .matchups-table so it outranks `.matchups-table th`'s
+   text-align: center above (class + element beats a class alone) — without
+   it every row name was centered, which only showed on names short enough
+   not to fill the cell via the ellipsis truncation. */
+.matchups-table .matchups-row-header {
   position: sticky;
   left: 0;
   z-index: 1;

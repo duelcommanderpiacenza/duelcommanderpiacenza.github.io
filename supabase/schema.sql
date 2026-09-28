@@ -260,6 +260,20 @@ $$;
 
 grant execute on function league_event_count(uuid) to anon, authenticated;
 
+-- Nightly cleanup of expired announcements (pg_cron): deletes every row
+-- whose expires_on is before today, at 03:15 UTC — the night after its last
+-- day, by which time the Bacheca has already stopped showing it (js/db.js's
+-- Announcements.listActive hides it from local midnight). Added after the
+-- initial schema, already scheduled on the live DB; to stop it:
+-- select cron.unschedule('delete-expired-announcements');
+create extension if not exists pg_cron;
+
+select cron.schedule(
+  'delete-expired-announcements',
+  '15 3 * * *',
+  $$delete from announcements where expires_on < current_date$$
+);
+
 -- ---------------------------------------------------------------------------
 -- Row Level Security: public read (with the open/closed publishing rule
 -- below), admin-only write. "authenticated" = signed in via Supabase Auth.
