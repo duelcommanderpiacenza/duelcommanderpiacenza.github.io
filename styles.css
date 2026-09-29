@@ -1340,8 +1340,12 @@ main {
   .badge-card,
   .upcoming-row,
   .league-group,
-  .bar-chart-row {
-    animation: none;
+  .bar-chart-row,
+  .filter-toggle-btn {
+    /* !important: most of these declare their own animation later in this
+       file, which would otherwise win on source order (equal specificity)
+       and keep animating despite the visitor's reduced-motion setting. */
+    animation: none !important;
   }
 }
 
@@ -2618,6 +2622,97 @@ footer {
      .commander-card-image's own comment) — a bit more than it should ever
      need, rather than cutting it close. */
   padding-right: 300px;
+}
+
+/* Commander page's "Statistiche" title with its filter button right after
+   it. The h2 keeps its own default margins inside the row, so the row is
+   exactly as tall as the lone title used to be. */
+.stats-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stats-heading .filter-toggle-btn {
+  margin-left: 0;
+}
+
+/* The commander page's filters collapse differently from the list pages':
+   the row keeps its space and only fades out (visibility too, so hidden
+   fields can't be tabbed to), while the stat tiles right after it slide up
+   into that space — --commander-filters-shift, set by js/commander-detail.js
+   to the filter row's exact height. The layout never changes, so the card
+   beside it keeps its size and nothing further down the page moves.
+   Expanded, the fields sit in the same box as the list pages' filter
+   panels (.filter-panel-body), and it's never clipped (no height collapse
+   to clip for), so the select/date popups open freely. */
+/* .filter-panel.commander-filter-panel (not just the one class): the
+   shared .filter-panel / .filter-panel.is-collapsed rules come later in
+   this file with the same specificity, and would otherwise win — really
+   collapsing the row and replacing this fade transition. */
+.filter-panel.commander-filter-panel,
+.filter-panel.commander-filter-panel.is-collapsed {
+  grid-template-rows: 1fr;
+}
+
+.filter-panel.commander-filter-panel {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 220ms ease, visibility 0s linear 0s;
+}
+
+.filter-panel.commander-filter-panel.is-collapsed {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 220ms ease, visibility 0s linear 220ms;
+}
+
+.commander-filter-panel .filter-panel-clip {
+  overflow: visible;
+}
+
+#commander-winrate {
+  transition: transform 280ms ease;
+}
+
+.commander-filter-panel.is-collapsed + #commander-winrate {
+  transform: translateY(calc(-1 * var(--commander-filters-shift, 0px)));
+}
+
+/* Phones: the card is stacked above the stats, not beside them, so there's
+   nothing to keep still — the filter row really collapses like the list
+   pages' panels (grid rows 1fr -> 0fr, clipped while animating, the clip
+   lifted by js/filter-toggle.js once open) and the rest of the page moves
+   up with it; no slide-up of the tiles. */
+@media (max-width: 640px) {
+  .filter-panel.commander-filter-panel {
+    transition: grid-template-rows 280ms ease, opacity 220ms ease, visibility 0s linear 0s;
+  }
+
+  .filter-panel.commander-filter-panel.is-collapsed {
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 280ms ease, opacity 220ms ease, visibility 0s linear 280ms;
+  }
+
+  .commander-filter-panel .filter-panel-clip {
+    overflow: hidden;
+  }
+
+  .commander-filter-panel .filter-panel-clip.is-open {
+    overflow: visible;
+  }
+
+  .commander-filter-panel.is-collapsed + #commander-winrate {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .filter-panel.commander-filter-panel,
+  .filter-panel.commander-filter-panel.is-collapsed,
+  #commander-winrate {
+    transition: none;
+  }
 }
 
 /* Commander detail page's Scryfall card art. Positioned relative to
@@ -4753,6 +4848,18 @@ img.cs-option-icon {
   cursor: pointer;
   box-shadow: var(--shadow-card);
   transition: background 150ms ease;
+  /* Appears together with the rest of the page's loaded content, not at
+     first paint: on Comandanti/Archetipi/Matchups it sits in the heading,
+     outside .page-loading-region (whose content is hidden while loading) —
+     same entrance as the cards/tables, held on its invisible first frame
+     by body.is-loading until hidePageLoading(). */
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Hidden outright while loading too — covers reduced-motion visitors,
+   whose animation is off and so wouldn't hold it invisible. */
+body.is-loading .filter-toggle-btn {
+  visibility: hidden;
 }
 
 .filter-toggle-btn:hover,

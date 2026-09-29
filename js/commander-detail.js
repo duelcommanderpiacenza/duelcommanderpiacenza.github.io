@@ -13,9 +13,12 @@ import {
   formatDate,
   showError,
   renderPaginated,
+  isoDateYearsAgo,
+  DEFAULT_DATE_FROM_YEARS,
 } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { fitTitleToOneLine, alignBackButtonToTitle } from "./page-title-fit.js";
+import { initFilterToggle } from "./filter-toggle.js";
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
@@ -73,7 +76,29 @@ function scryfallCardImages(card) {
 // so the stats are already laid out for the card's final size, and swapping
 // the placeholder for the real image moves nothing. Once neither is showing
 // (no image for this commander), the padding shrinks to just the gap.
+// Document-relative top of an element's *layout* box — offsetTop ignores
+// CSS transforms, unlike getBoundingClientRect, which matters here: with
+// the filters collapsed, the stat tiles are only visually slid up (see
+// .commander-filter-panel in styles.css), their layout spot is unchanged.
+function layoutTop(el) {
+  let y = 0;
+  for (let n = el; n; n = n.offsetParent) y += n.offsetTop;
+  return y;
+}
+
+// Filters collapsed: the stat tiles slide up by exactly the filter row's
+// height into its (now invisible) space, via --commander-filters-shift,
+// while the layout itself — card size, everything below — stays put.
+function syncFiltersShift() {
+  const mainColEl = document.querySelector(".commander-top-row-main");
+  const panelEl = document.getElementById("commander-filter-panel");
+  const winrateBoxesEl = document.getElementById("commander-winrate");
+  if (!mainColEl || !panelEl || !winrateBoxesEl) return;
+  mainColEl.style.setProperty("--commander-filters-shift", `${layoutTop(winrateBoxesEl) - layoutTop(panelEl)}px`);
+}
+
 function syncCardImageLayout(cardImageEl) {
+  syncFiltersShift();
   const mainColEl = document.querySelector(".commander-top-row-main");
   const skeletonEl = document.getElementById("commander-card-skeleton");
   if (window.innerWidth <= 640) {
@@ -85,8 +110,11 @@ function syncCardImageLayout(cardImageEl) {
   const headingEl = document.querySelector(".page-heading");
   const winrateBoxesEl = document.getElementById("commander-winrate");
   if (!headingEl || !mainColEl || !winrateBoxesEl) return;
-  const top = headingEl.getBoundingClientRect().top;
-  const bottom = winrateBoxesEl.getBoundingClientRect().bottom;
+  // Layout positions (not on-screen ones): the card spans title to the
+  // tiles' *expanded-filters* spot whether the filters are open or not, so
+  // collapsing them never resizes it.
+  const top = layoutTop(headingEl);
+  const bottom = layoutTop(winrateBoxesEl) + winrateBoxesEl.offsetHeight;
   const height = `${Math.round(bottom - top)}px`;
   cardImageEl.style.height = height;
   if (skeletonEl) skeletonEl.style.height = height;
@@ -119,6 +147,13 @@ async function init() {
   const leagueFilter = document.getElementById("commander-league-filter");
   const eventFilter = document.getElementById("commander-event-filter");
   const dateFromFilter = document.getElementById("commander-date-from");
+  // Same round button + active-filter dot as the list pages; this page's
+  // panel fades instead of collapsing (styles.css .commander-filter-panel).
+  // Same default "Dal" as the list pages too: the last
+  // DEFAULT_DATE_FROM_YEARS years (js/ui.js) — set before the stats first
+  // render, which read it.
+  dateFromFilter.value = isoDateYearsAgo(DEFAULT_DATE_FROM_YEARS);
+  initFilterToggle("commander-filter-toggle", "commander-filter-panel");
   const playersEl = document.getElementById("commander-players");
   const matchesEl = document.getElementById("commander-matches");
   const decksChartEl = document.getElementById("commander-decks-chart");

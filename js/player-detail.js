@@ -11,9 +11,12 @@ import {
   formatDate,
   showError,
   renderPaginated,
+  isoDateYearsAgo,
+  DEFAULT_DATE_FROM_YEARS,
 } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initTitleFit } from "./page-title-fit.js";
+import { initFilterToggle } from "./filter-toggle.js";
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
@@ -62,6 +65,12 @@ async function init() {
   const commanderFilter = document.getElementById("player-commander-filter");
   const leagueFilter = document.getElementById("player-league-filter");
   const dateFromFilter = document.getElementById("player-date-from");
+  // Same round button, box and active-filter dot as the list pages: a plain
+  // collapsing panel, the rest of the page moving with it. Same default
+  // "Dal" too: the last DEFAULT_DATE_FROM_YEARS years (js/ui.js) — set
+  // before the stats first render, which read it.
+  dateFromFilter.value = isoDateYearsAgo(DEFAULT_DATE_FROM_YEARS);
+  initFilterToggle("player-filter-toggle", "player-filter-panel");
   const matchesEl = document.getElementById("player-matches");
 
   if (!id) {

@@ -101,19 +101,30 @@
 
     <div class="commander-top-row">
       <div class="commander-top-row-main">
-        <h2>Statistiche</h2>
-        <div class="filter-bar">
-          <div class="field">
-            <label for="commander-league-filter">Lega</label>
-            <select id="commander-league-filter"><option value="">Tutte le leghe</option></select>
-          </div>
-          <div class="field">
-            <label for="commander-event-filter">Evento</label>
-            <select id="commander-event-filter"><option value="">Tutti gli eventi</option></select>
-          </div>
-          <div class="field">
-            <label for="commander-date-from">Dal</label>
-            <input type="date" id="commander-date-from" placeholder="Dal" data-open-on-today>
+        <div class="stats-heading">
+          <h2>Statistiche</h2>
+          <button type="button" class="filter-toggle-btn" id="commander-filter-toggle" aria-expanded="false" aria-controls="commander-filter-panel" aria-label="Filtri">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+          </button>
+        </div>
+        <div class="filter-panel is-collapsed commander-filter-panel" id="commander-filter-panel">
+          <div class="filter-panel-clip">
+            <div class="filter-panel-body">
+              <div class="filter-bar">
+                <div class="field">
+                  <label for="commander-league-filter">Lega</label>
+                  <select id="commander-league-filter"><option value="">Tutte le leghe</option></select>
+                </div>
+                <div class="field">
+                  <label for="commander-event-filter">Evento</label>
+                  <select id="commander-event-filter"><option value="">Tutti gli eventi</option></select>
+                </div>
+                <div class="field">
+                  <label for="commander-date-from">Dal</label>
+                  <input type="date" id="commander-date-from" placeholder="Dal" data-open-on-today>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <div id="commander-winrate" class="stat-grid page-loading">Caricamento...</div>
