@@ -109,8 +109,11 @@ async function init() {
       const id = deckIdOf(e);
       playCounts.set(id, (playCounts.get(id) ?? 0) + 1);
     }
+    // Ties broken by deck name — with many decks played only once or twice,
+    // which ones make the top 10 would otherwise depend on whatever order
+    // the database happened to return the rows in.
     topPlayedIds = Array.from(playCounts.entries())
-      .sort((a, b) => b[1] - a[1])
+      .sort((a, b) => b[1] - a[1] || decksById.get(a[0]).name.localeCompare(decksById.get(b[0]).name, "it"))
       .slice(0, TOP_PLAYED_COUNT)
       .map(([id]) => id);
     selected.push(...topPlayedIds);

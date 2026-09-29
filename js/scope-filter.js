@@ -1,7 +1,8 @@
-// Shared "filter by league / event" widget used by the Commanders and
-// Archetypes pages. Wires two <select> elements together (choosing a league
-// narrows the event list to that league's events) and reports back the
-// current in-scope event ids whenever either one changes.
+// Shared "filter by league / event" widget used by the Commanders,
+// Archetypes and Players pages (and commander.html). Wires two <select>
+// elements together (choosing a league narrows the event list to that
+// league's events) and reports back the current in-scope event ids whenever
+// either one changes.
 
 import { Leagues, Events } from "./db.js";
 import { escapeHtml, eventTitle } from "./ui.js";

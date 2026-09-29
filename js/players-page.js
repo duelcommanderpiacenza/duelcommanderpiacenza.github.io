@@ -1,4 +1,4 @@
-import { Players, Events, EventEntries, Matches } from "./db.js";
+import { Players, Events, fetchEventsResults } from "./db.js";
 import { matchRoundOutcome, isBye, isDrop } from "./leaderboard.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { fetchTopAutoBadgesByPlayer, playerBadgesHtml } from "./player-badges.js";
@@ -36,13 +36,10 @@ function renderRow(r) {
     </tr>`;
 }
 
-async function fetchEventsData(eventIds) {
-  return Promise.all(
-    eventIds.map(async (id) => {
-      const [entries, matches] = await Promise.all([EventEntries.listByEvent(id), Matches.listByEvent(id)]);
-      return { entries, matches };
-    })
-  );
+// Entries + matches of every event in scope, batched (js/db.js) rather than
+// two requests per event — "Tutte le leghe" spans the whole history.
+function fetchEventsData(eventIds) {
+  return fetchEventsResults(eventIds);
 }
 
 // Highest value first; a null winRate (no games played) always sorts last

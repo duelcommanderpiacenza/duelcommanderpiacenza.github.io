@@ -1,4 +1,4 @@
-import { Commanders, Events, EventEntries, Matches } from "./db.js";
+import { Commanders, Events, fetchEventsResults } from "./db.js";
 import { computeGroupedStats, computeColorShares } from "./stats.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { renderPieChart, renderBarChart } from "./metagame-chart.js";
@@ -35,13 +35,10 @@ const MTG_COLOR_BARS = {
   C: { label: "Incolore", color: "#a8a39d" },
 };
 
-async function fetchEventsData(eventIds) {
-  return Promise.all(
-    eventIds.map(async (id) => {
-      const [entries, matches] = await Promise.all([EventEntries.listByEvent(id), Matches.listByEvent(id)]);
-      return { entries, matches };
-    })
-  );
+// Entries + matches of every event in scope, batched (js/db.js) rather than
+// two requests per event — "Tutte le leghe" spans the whole history.
+function fetchEventsData(eventIds) {
+  return fetchEventsResults(eventIds);
 }
 
 // Highest value first; a null winRate (no games played) always sorts last

@@ -233,11 +233,15 @@ export const Events = {
 };
 
 export const EventEntries = {
+  // Every entry of the whole history (matchups page, auto-badge rules) —
+  // paged past the 1000-row cap, which a year of weekly events outgrows.
   listAll: () =>
-    sb
-      .from("event_entries")
-      .select(`*, player:players(id,name,handle), ${COMMANDER_EMBED}`)
-      .then(assertOk),
+    selectAllRows(() =>
+      sb
+        .from("event_entries")
+        .select(`*, player:players(id,name,handle), ${COMMANDER_EMBED}`)
+        .order("id")
+    ),
   // Bacheca's "Più giocati" charts: just the primary commander and archetype
   // of every entry whose event falls on/after `sinceIso` (YYYY-MM-DD) —
   // filtered by the database (inner join on the event) rather than
@@ -296,13 +300,17 @@ export const EventEntries = {
 };
 
 export const Matches = {
+  // Every match of the whole history (matchups page, auto-badge rules) —
+  // paged past the 1000-row cap, which ~5 months of weekly events outgrow.
   listAll: () =>
-    sb
-      .from("matches")
-      .select(
-        "*, player1:players!matches_player1_id_fkey(id,name,handle), player2:players!matches_player2_id_fkey(id,name,handle)"
-      )
-      .then(assertOk),
+    selectAllRows(() =>
+      sb
+        .from("matches")
+        .select(
+          "*, player1:players!matches_player1_id_fkey(id,name,handle), player2:players!matches_player2_id_fkey(id,name,handle)"
+        )
+        .order("id")
+    ),
   listByEvent: (eventId) =>
     sb
       .from("matches")
@@ -363,9 +371,12 @@ export const Matches = {
   remove: (id) => sb.from("matches").delete().eq("id", id).then(assertOk),
 };
 
+const EVENT_IDS_PER_REQUEST = 100;
+
 /**
  * Entries + matches for several events in two requests (rather than two per
- * event), grouped back per event in `eventIds`' own order — the
+ * event; two per 100 events for a very long list), grouped back per event in
+ * `eventIds`' own order — the
  * `[{ entries, matches }, ...]` shape computeLeaguePoints/computeLeagueSummary
  * take. An event with no rows still gets its (empty) slot, so the array's
  * length always equals the number of events.
@@ -373,10 +384,18 @@ export const Matches = {
  */
 export async function fetchEventsResults(eventIds) {
   if (eventIds.length === 0) return [];
-  const [entries, matches] = await Promise.all([
-    EventEntries.listByEventsForStandings(eventIds),
-    Matches.listByEventsForStandings(eventIds),
+  // The ids travel in the request URL (`event_id=in.(…)`, ~37 chars each):
+  // a whole-history scope (Giocatori/Comandanti/Archetipi's "Tutte le
+  // leghe") grows every week, so it's split into chunks well under common
+  // URL length limits rather than one ever-longer request.
+  const chunks = [];
+  for (let i = 0; i < eventIds.length; i += EVENT_IDS_PER_REQUEST) chunks.push(eventIds.slice(i, i + EVENT_IDS_PER_REQUEST));
+  const [entryChunks, matchChunks] = await Promise.all([
+    Promise.all(chunks.map((ids) => EventEntries.listByEventsForStandings(ids))),
+    Promise.all(chunks.map((ids) => Matches.listByEventsForStandings(ids))),
   ]);
+  const entries = entryChunks.flat();
+  const matches = matchChunks.flat();
   const groupByEvent = (rows) => {
     const byEvent = new Map();
     for (const row of rows) {
