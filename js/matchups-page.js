@@ -2,15 +2,18 @@
 // its own, or a commander+partner pairing, picked from every combination
 // actually played. A commander used with two different partners (or both
 // solo and partnered) is genuinely a different deck, not the same row, same
-// grouping js/commanders-page.js itself uses. Built entirely client-side
-// from already-played matches — no new data to fetch once the initial
-// entry/match lists are in, so picking decks re-renders the matrix instantly.
+// grouping js/commanders-page.js itself uses. Built client-side from the
+// entries/matches of the events the league/event/"Dal" filters leave in
+// scope — refetched only when a filter changes; picking decks just
+// re-renders the matrix from what's already loaded, instantly.
 
-import { EventEntries, Matches } from "./db.js";
+import { Events, fetchEventsResults } from "./db.js";
 import { isBye, isDrop, matchRoundOutcome } from "./leaderboard.js";
-import { escapeHtml, showError } from "./ui.js";
+import { escapeHtml, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { attachHoverTooltips, fullTextIfTruncated } from "./floating-tooltip.js";
+import { initScopeFilter } from "./scope-filter.js";
+import { initFilterToggle } from "./filter-toggle.js";
 
 const MAX_SELECTED = 10;
 const TOP_PLAYED_COUNT = 10;
@@ -36,7 +39,25 @@ function heatColor(winPct) {
 
 const MAX_DROPDOWN_RESULTS = 8;
 
+// The round "?" beside the title shows/hides how to read the matrix (closed
+// by default) — wired first, so it works even while the data still loads.
+// The box slides open/closed via CSS (.help-box-wrap.is-open); while closed
+// it's `inert`, so its collapsed text can't be focused or read out.
+function initHelpToggle() {
+  const btn = document.getElementById("matchups-help-toggle");
+  const box = document.getElementById("matchups-help");
+  if (!btn || !box) return;
+  btn.addEventListener("click", () => {
+    const opening = !box.classList.contains("is-open");
+    box.classList.toggle("is-open", opening);
+    box.inert = !opening;
+    btn.setAttribute("aria-expanded", String(opening));
+    btn.classList.toggle("is-open", opening);
+  });
+}
+
 async function init() {
+  initHelpToggle();
   const modeTitleEl = document.getElementById("matchups-mode-title");
   const customBtn = document.getElementById("matchups-custom-btn");
   const pickerCardEl = document.getElementById("matchups-picker-card");
@@ -64,9 +85,15 @@ async function init() {
     return `${entry.commander_id}_${entry.partner_commander_id ?? ""}`;
   }
 
-  try {
-    const [entries, matches] = await Promise.all([EventEntries.listAll(), Matches.listAll()]);
-
+  // Everything below is built from the events the league/event/"Dal"
+  // filters leave in scope (default "Dal": 2 years ago, js/ui.js), fetched
+  // batched (js/db.js's fetchEventsResults) and rebuilt on every filter
+  // change — decks offered, matrix values and the default "most played" top
+  // 10 alike.
+  function buildFromData(entries, matches) {
+    allDecks = [];
+    matchSides = [];
+    topPlayedIds = [];
     const entryByEventPlayer = new Map(entries.map((e) => [`${e.event_id}_${e.player_id}`, e]));
 
     const decksById = new Map();
@@ -116,11 +143,6 @@ async function init() {
       .sort((a, b) => b[1] - a[1] || decksById.get(a[0]).name.localeCompare(decksById.get(b[0]).name, "it"))
       .slice(0, TOP_PLAYED_COUNT)
       .map(([id]) => id);
-    selected.push(...topPlayedIds);
-  } catch (err) {
-    showError(selectedListEl, err);
-    hidePageLoading();
-    return;
   }
 
   // Match-basis, matching the rest of the site's own winrate convention —
@@ -152,6 +174,10 @@ async function init() {
   }
 
   function renderMatrix() {
+    if (allDecks.length === 0) {
+      matrixEl.innerHTML = '<p class="page-empty">Nessuna partita nei filtri selezionati.</p>';
+      return;
+    }
     if (selected.length < 2) {
       matrixEl.innerHTML = '<p class="page-empty">Seleziona almeno 2 comandanti per generare la matrice.</p>';
       return;
@@ -328,8 +354,84 @@ async function init() {
     else showCustomBuilder();
   });
 
-  renderMatrix();
-  hidePageLoading();
+  // Filters, same trio and behaviour as Comandanti/Archetipi/Giocatori: the
+  // "Dal" date narrows whichever event ids the league/event scope filter
+  // last reported.
+  const leagueSelect = document.getElementById("matchups-league-filter");
+  const eventSelect = document.getElementById("matchups-event-filter");
+  const dateFromInput = document.getElementById("matchups-date-from");
+  let eventDateById = new Map();
+  let lastScopeEventIds = [];
+
+  function effectiveEventIds() {
+    const from = dateFromInput.value;
+    if (!from) return lastScopeEventIds;
+    return lastScopeEventIds.filter((id) => {
+      const d = eventDateById.get(id);
+      return d && d >= from;
+    });
+  }
+
+  // Refetches the scope's data and rebuilds everything from it. A custom
+  // table keeps the decks picked so far that are still in scope. loadToken:
+  // if the filters change again before a slower earlier fetch lands, that
+  // stale result is dropped rather than overwriting the newer one.
+  let loadToken = 0;
+  async function load() {
+    const token = ++loadToken;
+    matrixEl.innerHTML = '<p class="page-loading">Caricamento...</p>';
+    try {
+      const eventsData = await fetchEventsResults(effectiveEventIds());
+      if (token !== loadToken) return;
+      buildFromData(
+        eventsData.flatMap((d) => d.entries),
+        eventsData.flatMap((d) => d.matches)
+      );
+      if (customMode) {
+        const inScope = new Set(allDecks.map((d) => d.id));
+        const kept = selected.filter((id) => inScope.has(id));
+        selected.length = 0;
+        selected.push(...kept);
+        updateCount();
+        renderSelectedList();
+      } else {
+        selected.length = 0;
+        selected.push(...topPlayedIds);
+      }
+      renderMatrix();
+    } catch (err) {
+      if (token === loadToken) showError(matrixEl, err);
+    }
+  }
+
+  try {
+    const events = await Events.list();
+    eventDateById = new Map(events.map((e) => [e.id, e.event_date]));
+  } catch (err) {
+    showError(matrixEl, err);
+    hidePageLoading();
+    return;
+  }
+
+  // Default "Dal": the last DEFAULT_DATE_FROM_YEARS years (js/ui.js) — set
+  // before the first load, so that load already fetches only that window.
+  dateFromInput.value = isoDateYearsAgo(DEFAULT_DATE_FROM_YEARS);
+  initFilterToggle("matchups-filter-toggle", "matchups-filter-panel");
+  dateFromInput.addEventListener("change", load);
+
+  let firstLoad = true;
+  await initScopeFilter({
+    leagueSelect,
+    eventSelect,
+    onChange: (eventIds) => {
+      lastScopeEventIds = eventIds;
+      const done = load();
+      if (firstLoad) {
+        firstLoad = false;
+        done.finally(hidePageLoading);
+      }
+    },
+  });
 }
 
 init();

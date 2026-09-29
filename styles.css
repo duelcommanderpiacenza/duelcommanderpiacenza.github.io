@@ -4743,6 +4743,108 @@ img.cs-option-icon {
   margin-left: 0;
 }
 
+/* Title + a small control right after it (Matchups' "?"), kept together on
+   the left while the heading's own action button stays on the right. */
+.page-heading-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* Round black "?" that shows/hides a page's explanation (.help-box below) —
+   black by request rather than brand red; a thin light ring in dark mode
+   keeps it from vanishing into the dark background. */
+.help-toggle-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: #111;
+  color: #fff;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+  transition: background 150ms ease;
+}
+
+.help-toggle-btn:hover,
+.help-toggle-btn.is-open {
+  background: #333;
+}
+
+/* Phones keep a bigger, easier-to-tap target. */
+html.nav-mobile .help-toggle-btn {
+  width: 28px;
+  height: 28px;
+  font-size: 0.95rem;
+}
+
+:root[data-theme="dark"] .help-toggle-btn {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+/* Slides open/closed (js/matchups-page.js toggles .is-open): the same
+   grid-template-rows 0fr/1fr collapse as .filter-panel, plus a fade. A
+   transition, not an entrance animation — so it also plays while the page
+   is still loading, when body.is-loading freezes animations (not
+   transitions) on their first, invisible frame. The clip's overflow:
+   hidden is what lets the row actually collapse to nothing; the box's own
+   margin sits inside it, so no gap is left behind when closed. */
+.help-box-wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 240ms ease, opacity 240ms ease;
+}
+
+.help-box-wrap.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.help-box-clip {
+  min-height: 0;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .help-box-wrap {
+    transition: none;
+  }
+}
+
+.help-box {
+  margin: 0 0 22px;
+  padding: 14px 18px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card-sm);
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.help-box p {
+  margin: 0;
+}
+
+.help-box p + p {
+  margin-top: 8px;
+}
+
+:root[data-theme="dark"] .help-box {
+  background: rgba(255, 255, 255, 0.045);
+}
+
 /* A small link-button beside a page title (Giocatori's "🏅 Badge") —
    compact and never wrapping, so it stays on the title's line on phones. */
 .page-heading-link {

@@ -183,7 +183,11 @@ export function enhanceDateInput(input) {
   // room below but there is above, same behavior as a native <select>.
   function openPopup() {
     closeAllExcept(wrap);
-    view = parseISO(input.value) ?? todayParts();
+    // A filter field (data-open-on-today, the "Dal" filters) always opens on
+    // the current month, wherever its value sits — its default value is 2
+    // years back, rarely where the visitor wants to start browsing. Any
+    // other date field (admin forms) opens on its own value's month.
+    view = input.hasAttribute("data-open-on-today") ? todayParts() : parseISO(input.value) ?? todayParts();
     renderGrid();
     wrap.classList.remove("cd-open-upward");
     wrap.classList.add("is-open");
@@ -194,7 +198,11 @@ export function enhanceDateInput(input) {
       wrap.classList.add("cd-open-upward");
     }
     trigger.setAttribute("aria-expanded", "true");
-    (grid.querySelector(".cd-day.is-selected") ?? grid.querySelector(".cd-day:not(.is-outside)"))?.focus();
+    (
+      grid.querySelector(".cd-day.is-selected") ??
+      grid.querySelector(".cd-day.is-today") ??
+      grid.querySelector(".cd-day:not(.is-outside)")
+    )?.focus();
   }
 
   trigger.addEventListener("click", () => {
