@@ -1,6 +1,7 @@
 // Recomputes every player's auto-badge assignments (js/auto-badges.js) and
 // fully replaces the precomputed player_badges_auto table with the result —
-// called after closing or reopening an event, opening/closing a league,
+// called after closing or reopening an event, creating a league (which
+// closes the previous one) or opening/closing a league,
 // deleting an event or league (see app.js, events-admin.js,
 // standalone-events-admin.js, leagues-admin.js), and saving a badge
 // (badges-admin.js) — the only moments the published match/standings data

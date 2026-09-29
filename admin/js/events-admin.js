@@ -139,12 +139,10 @@ export function initEventsAdmin({ onOpenEvent }) {
       if (idField.value) {
         await Events.update(idField.value, payload);
       } else {
+        // No syncAutoBadges() here: a new event starts open and empty, so it
+        // doesn't change any published result — the next trigger (e.g.
+        // closing it) recalculates badges anyway.
         await Events.create(payload);
-        // A new event raises its league's total event count, the X in the
-        // league score's best-(X−1)-results cap (js/leaderboard.js) — so the
-        // league_rank badges can shift even though no results changed.
-        // Fire-and-forget, same as onToggleOpen.
-        syncAutoBadges().catch(console.error);
       }
       resetForm();
       await refresh();

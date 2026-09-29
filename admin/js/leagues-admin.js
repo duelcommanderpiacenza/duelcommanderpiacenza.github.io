@@ -187,6 +187,10 @@ export function initLeaguesAdmin({ onOpenLeague }) {
         // the instant another row of that kind is still open.
         await Leagues.closeAllOpenOfType(payload.is_topdeck);
         await Leagues.create(payload);
+        // Creating one just closed the previously open league of its kind
+        // (above) — a "league just closed" moment for league_winner /
+        // league_champion / league_rank badges, same as onToggleOpen.
+        syncAutoBadges().catch(console.error);
       }
       resetForm();
       await refresh();

@@ -1294,7 +1294,10 @@ main {
   input[type="search"],
   .stat-tile,
   .pie-chart-wrap,
-  .badge-card {
+  .badge-card,
+  .upcoming-row,
+  .league-group,
+  .bar-chart-row {
     animation: none;
   }
 }
