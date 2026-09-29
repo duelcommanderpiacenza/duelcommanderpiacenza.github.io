@@ -3,7 +3,7 @@
 // standings preview.
 import { Players, PlayerAutoBadges } from "./db.js";
 import { MAX_AUTO_BADGES_PER_PLAYER } from "./auto-badges.js";
-import { badgeTooltipAttrs } from "./ui.js";
+import { badgeTooltipAttrs, uniqueBadges } from "./ui.js";
 
 /**
  * Player id -> their top MAX_AUTO_BADGES_PER_PLAYER auto badges, highest
@@ -56,7 +56,7 @@ export async function fetchPlayerBadgesRenderer() {
 // inside it) so hovering/clicking a badge icon doesn't behave like part of
 // the player-page link.
 export function playerBadgesHtml(p, autoBadgesByPlayer) {
-  const badges = [p.badge1, p.badge2, ...(autoBadgesByPlayer.get(p.id) ?? [])].filter(Boolean);
+  const badges = uniqueBadges([p.badge1, p.badge2, ...(autoBadgesByPlayer.get(p.id) ?? [])]);
   return badges
     .map((b) => {
       const glyph = b.icon_url

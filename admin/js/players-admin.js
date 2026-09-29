@@ -17,15 +17,16 @@ export function initPlayersAdmin() {
 
   let allPlayers = [];
 
-  // These are the only 2 manually assignable badges — a player can show up
-  // to 2 more automatically, computed live from badges.auto_rule
-  // (js/auto-badges.js) and merged in on the public Giocatori page, never
-  // stored on the player row at all. A badge with an auto_rule is computed,
-  // not picked, so it's excluded here — it can only ever be earned, never
-  // manually handed out.
+  // The 2 manually assigned badge slots — a player also shows the ones
+  // they earn automatically (badges.auto_rule, js/auto-badges.js, cached in
+  // player_badges_auto), never stored on the player row. Automatic badges
+  // are offered here too (marked "Badge automatico"), to hand one out by
+  // hand when it was earned before this site's history starts — e.g.
+  // "Leggendario" for a league won before the site existed. The recalc
+  // never touches these slots, and the site shows a badge only once per
+  // player if it's both assigned here and earned (js/ui.js's uniqueBadges).
   async function populateBadges() {
-    const badges = await Badges.list();
-    const manualBadges = badges.filter((b) => !b.auto_rule);
+    const manualBadges = await Badges.list();
     // data-icon (a URL) or data-icon-text (an emoji) let the custom
     // dropdown (js/custom-select.js) render the icon as its own element
     // rather than as plain inline text — needed so an uploaded image and a
@@ -41,7 +42,9 @@ export function initPlayersAdmin() {
             : b.icon
             ? ` data-icon-text="${escapeHtml(b.icon)}"`
             : "";
-          return `<option value="${b.id}"${iconAttr}>${escapeHtml(b.name)}</option>`;
+          // Two-line option in the custom dropdown for an automatic one.
+          const autoAttr = b.auto_rule ? ` data-label="${escapeHtml(b.name)}" data-sublabel="Badge automatico"` : "";
+          return `<option value="${b.id}"${iconAttr}${autoAttr}>${escapeHtml(b.name)}</option>`;
         })
         .join("");
     fillSelect(badge1Field, options);

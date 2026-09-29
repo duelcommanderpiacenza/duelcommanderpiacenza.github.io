@@ -72,7 +72,7 @@ export const Commanders = {
 // badges.auto_rule via the precomputed PlayerAutoBadges below rather than
 // stored on this row.
 const BADGE_EMBED =
-  "badge1:badges!players_badge1_id_fkey(id,name,description,icon,icon_url), badge2:badges!players_badge2_id_fkey(id,name,description,icon,icon_url)";
+  "badge1:badges!players_badge1_id_fkey(id,name,description,icon,icon_url,auto_rule), badge2:badges!players_badge2_id_fkey(id,name,description,icon,icon_url,auto_rule)";
 
 export const Badges = {
   list: () => sb.from("badges").select("*").order("name").then(assertOk),

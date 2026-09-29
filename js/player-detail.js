@@ -4,6 +4,7 @@ import { tallyOutcome, renderWinrateTiles } from "./winrate.js";
 import {
   escapeHtml,
   badgeTooltipAttrs,
+  uniqueBadges,
   playerLabel,
   commanderPairLabel,
   commanderPairWithColors,
@@ -96,9 +97,13 @@ async function init() {
     } catch (err) {
       console.error(err);
     }
+    // An automatic badge links to its Badge-page card whether it was earned
+    // or assigned by hand in a manual slot (auto_rule set); a manual-only
+    // badge has no card there.
+    const playerBadges = uniqueBadges([player.badge1, player.badge2, ...autoBadges]);
     titleEl.innerHTML = `${escapeHtml(nameLabel)} ${playerBadgesHtml(
-      [player.badge1, player.badge2, ...autoBadges].filter(Boolean),
-      new Set(autoBadges.map((b) => b.id))
+      playerBadges,
+      new Set([...autoBadges.map((b) => b.id), ...playerBadges.filter((b) => b.auto_rule).map((b) => b.id)])
     )}`;
     // Same as the other detail pages: on phones, fits the name to one line
     // and keeps the back button vertically centered on it.

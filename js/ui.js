@@ -89,6 +89,15 @@ export function commanderPairWithColors(commander, partner) {
   return `${commanderPairLabel(commander, partner)}<span class="color-identity-inline">${colorIdentityPips(colors)}</span>`;
 }
 
+// A player's badges without repeats (and without empty slots): an automatic
+// badge can also be assigned by hand in a manual slot (admin, e.g. a
+// "Leggendario" earned before the site's history), so the same badge could
+// otherwise show twice once it's also earned. First occurrence kept.
+export function uniqueBadges(badges) {
+  const seen = new Set();
+  return badges.filter((b) => b && !seen.has(b.id) && seen.add(b.id));
+}
+
 // A player badge icon's hover/focus text (site-wide js/floating-tooltip.js,
 // fed by data-tooltip): the badge's own description when the admin set one,
 // else just its name. The screen-reader label always leads with the name.
