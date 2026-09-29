@@ -351,32 +351,75 @@ html.nav-mobile .site-search-trigger {
 /* One flat list, no per-type section headings — each row names its own
    type via .site-search-result-type instead (a small pill, not the same
    solid/bold .badge-status pill used for event/league open-closed state
-   elsewhere, so it reads as a lighter-weight label rather than a status). */
+   elsewhere, so it reads as a lighter-weight label rather than a status).
+   Same roomy sizing on desktop's dropdown and mobile's full-screen overlay. */
 .site-search-result {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  padding: 9px 8px;
+  gap: 12px;
+  padding: 14px 10px;
   border-radius: 10px;
   color: var(--text-body);
-  font-size: 0.92rem;
+  font-size: 1.05rem;
 }
 
+/* Mobile's full-screen overlay only (desktop's dropdown has none): a
+   hairline between rows — a separate 1px line rather than a border-top,
+   which would bend along the row's rounded corners (kept for the hover
+   highlight) instead of running straight edge to edge. */
+html.nav-mobile .site-search-result + .site-search-result::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--hairline);
+}
+
+/* Name (+ an event's league tag) on one line. Both parts truncate, but the
+   league's huge flex-shrink makes it give up its width long before the
+   name does — the name only ever gets cut once the tag is already gone. */
 .site-search-result-label {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.site-search-result-name,
+.site-search-result-league {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.site-search-result-name {
+  flex: 0 1 auto;
+}
+
+/* Same muted uppercase tag as the league under an event elsewhere
+   (.upcoming-row-league, .event-league-tag), inline here. */
+.site-search-result-league {
+  flex: 0 1000 auto;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
 .site-search-result-type {
   flex-shrink: 0;
-  padding: 2px 9px;
+  padding: 3px 10px;
   border-radius: var(--radius-pill);
   background: rgba(220, 24, 28, 0.1);
   color: var(--brand-red-deep);
-  font-size: 0.66rem;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -389,10 +432,10 @@ html.nav-mobile .site-search-trigger {
 
 .site-search-hint {
   margin: 0;
-  padding: 14px 8px;
+  padding: 16px 10px;
   color: var(--text-muted);
   font-style: italic;
-  font-size: 0.88rem;
+  font-size: 1rem;
 }
 
 /* Mobile: the round trigger opens this same block as a full-screen overlay

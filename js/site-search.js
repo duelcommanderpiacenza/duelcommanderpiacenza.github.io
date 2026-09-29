@@ -21,8 +21,13 @@ const RESULT_TYPES = [
   { key: "commanders", label: "Comandante", href: (c) => `commander.html?id=${c.id}`, getText: (c) => c.name },
 ];
 
-function resultLabel(item, type) {
-  return type.key === "events" ? eventTitle(item) : item.name;
+// An event row also names its league, as a smaller muted tag after the
+// title (.site-search-result-league) — the one that gets cut short first
+// when the row runs out of room, the event's own name keeps priority.
+function resultLabelHtml(item, type) {
+  if (type.key !== "events") return `<span class="site-search-result-name">${escapeHtml(item.name)}</span>`;
+  const league = item.league ? `<span class="site-search-result-league">${escapeHtml(item.league.name)}</span>` : "";
+  return `<span class="site-search-result-name">${escapeHtml(eventTitle(item))}</span>${league}`;
 }
 
 function init() {
@@ -42,7 +47,10 @@ function init() {
     if (!dataPromise) {
       dataPromise = Promise.all([Players.list(), Events.list(), Leagues.list(), Commanders.list()])
         .then(([players, events, leagues, commanders]) => {
-          dataByType = { players, events, leagues, commanders };
+          // Published (closed) events only — an open one is at most a future
+          // "save the date" preview (Bacheca's Prossimi eventi), not
+          // something to search for and land on an empty event page.
+          dataByType = { players, events: events.filter((e) => !e.is_open), leagues, commanders };
         })
         .catch((err) => {
           console.error(err);
@@ -69,7 +77,7 @@ function init() {
         .slice(0, MAX_RESULTS_PER_TYPE)
         .map(
           (item) => `<a class="site-search-result" href="${type.href(item)}">
-            <span class="site-search-result-label">${escapeHtml(resultLabel(item, type))}</span>
+            <span class="site-search-result-label">${resultLabelHtml(item, type)}</span>
             <span class="site-search-result-type">${type.label}</span>
           </a>`
         )
