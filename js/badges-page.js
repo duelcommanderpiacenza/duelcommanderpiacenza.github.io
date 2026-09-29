@@ -20,6 +20,7 @@ import {
 } from "./auto-badges.js";
 import { escapeHtml, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
+import { initTitleFit } from "./page-title-fit.js";
 
 const RULE_TEXT = {
   league_winner: "Vinci una lega: il badge resta tuo fino alla conclusione della lega successiva.",
@@ -73,6 +74,9 @@ function gridHtml(badges, holdersByBadge) {
 
 async function init() {
   const contentEl = document.getElementById("badges-content");
+  // Same as the other pages with a back button: on phones, keeps it
+  // vertically centered on the title (js/page-title-fit.js).
+  initTitleFit(document.getElementById("badges-title"));
   try {
     const [badges, players, autoRows] = await Promise.all([Badges.list(), Players.list(), PlayerAutoBadges.list()]);
 

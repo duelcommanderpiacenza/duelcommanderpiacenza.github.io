@@ -13,6 +13,7 @@ import {
   renderPaginated,
 } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
+import { initTitleFit } from "./page-title-fit.js";
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
@@ -89,6 +90,9 @@ async function init() {
       [player.badge1, player.badge2, ...autoBadges].filter(Boolean),
       new Set(autoBadges.map((b) => b.id))
     )}`;
+    // Same as the other detail pages: on phones, fits the name to one line
+    // and keeps the back button vertically centered on it.
+    initTitleFit(titleEl);
 
     const entries = await EventEntries.listByPlayer(id);
 
