@@ -85,8 +85,9 @@ async function init() {
 
     // Commander giocati: a plain, de-duplicated list — not split by event.
     // Keyed by the commander+partner pair, so "X / Y" and "X / Z" both show.
-    // lastPlayed tracks the latest event_date across every entry with that
-    // pair, regardless of the order entries happen to be iterated in.
+    // timesPlayed counts the entries (events) with that pair; lastPlayed
+    // tracks the latest event_date across them, regardless of the order
+    // entries happen to be iterated in.
     const uniqueCommanders = new Map();
     for (const e of entries) {
       if (!e.commander) continue;
@@ -94,9 +95,15 @@ async function init() {
       const eventDate = e.event?.event_date ?? null;
       const existing = uniqueCommanders.get(key);
       if (!existing) {
-        uniqueCommanders.set(key, { commander: e.commander, partner: e.partner_commander ?? null, lastPlayed: eventDate });
-      } else if (eventDate && (!existing.lastPlayed || eventDate > existing.lastPlayed)) {
-        existing.lastPlayed = eventDate;
+        uniqueCommanders.set(key, {
+          commander: e.commander,
+          partner: e.partner_commander ?? null,
+          timesPlayed: 1,
+          lastPlayed: eventDate,
+        });
+      } else {
+        existing.timesPlayed += 1;
+        if (eventDate && (!existing.lastPlayed || eventDate > existing.lastPlayed)) existing.lastPlayed = eventDate;
       }
     }
     const commanderList = Array.from(uniqueCommanders.values()).sort((a, b) =>
@@ -109,12 +116,12 @@ async function init() {
         visible.length === 0
           ? '<p class="page-empty">Nessun dato registrato per questo giocatore.</p>'
           : `<div class="data-table-wrap"><table class="data-table">
-            <thead><tr><th>Commander</th><th>Ultima volta giocato</th></tr></thead>
+            <thead><tr><th>Commander</th><th>Volte giocato</th><th>Ultima volta giocato</th></tr></thead>
             <tbody>
               ${visible
                 .map(
                   (c) =>
-                    `<tr><td>${commanderPairWithColors(c.commander, c.partner)}</td><td>${formatDate(c.lastPlayed)}</td></tr>`
+                    `<tr><td>${commanderPairWithColors(c.commander, c.partner)}</td><td>${c.timesPlayed}</td><td>${formatDate(c.lastPlayed)}</td></tr>`
                 )
                 .join("")}
             </tbody>
@@ -254,7 +261,14 @@ async function init() {
         if (r.isDrop) continue;
         tallyOutcome(bucket, r.outcome);
       }
-      renderWinrateTiles(overallEl, bucket);
+      // Events entered within the same filters (an entry, not a match, so an
+      // event is counted even if the player dropped before playing a round).
+      const events = entries.filter((e) => {
+        if (commanderId && e.commander?.id !== commanderId && e.partner_commander?.id !== commanderId) return false;
+        if (leagueId && e.event?.league?.id !== leagueId) return false;
+        return true;
+      }).length;
+      renderWinrateTiles(overallEl, bucket, { events });
     }
     commanderFilter.addEventListener("change", applyFilters);
     leagueFilter.addEventListener("change", applyFilters);

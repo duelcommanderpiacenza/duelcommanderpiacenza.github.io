@@ -18,7 +18,9 @@ export function tallyOutcome(bucket, outcome) {
   else bucket.losses += 1;
 }
 
-export function renderWinrateTiles(el, bucket) {
+// `events` (optional): an extra "Eventi" tile right after Winrate — the
+// player page passes its events-played count; the commander page doesn't.
+export function renderWinrateTiles(el, bucket, { events = null } = {}) {
   const played = (bucket.wins ?? 0) + (bucket.draws ?? 0) + (bucket.losses ?? 0);
   const rate = winRatePct(bucket.wins ?? 0, played);
   el.innerHTML =
@@ -26,6 +28,7 @@ export function renderWinrateTiles(el, bucket) {
       ? '<p class="page-empty">Non ci sono ancora dati sufficienti.</p>'
       : `
     <div class="stat-tile"><div class="stat-tile-label">Winrate</div><div class="stat-tile-value">${rate}%</div></div>
+    ${events === null ? "" : `<div class="stat-tile"><div class="stat-tile-label">Eventi</div><div class="stat-tile-value">${events}</div></div>`}
     <div class="stat-tile"><div class="stat-tile-label">Vittorie</div><div class="stat-tile-value">${bucket.wins}</div></div>
     <div class="stat-tile"><div class="stat-tile-label">Pareggi</div><div class="stat-tile-value">${bucket.draws}</div></div>
     <div class="stat-tile"><div class="stat-tile-label">Sconfitte</div><div class="stat-tile-value">${bucket.losses}</div></div>
