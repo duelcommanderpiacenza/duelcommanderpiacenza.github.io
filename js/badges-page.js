@@ -23,9 +23,9 @@ import { hidePageLoading } from "./page-loading.js";
 
 const RULE_TEXT = {
   league_winner: "Vinci una lega: il badge resta tuo fino alla conclusione della lega successiva.",
-  league_rank_1: "Sei 1° nella classifica della lega in corso. Si aggiorna a ogni tappa.",
-  league_rank_2: "Sei 2° nella classifica della lega in corso. Si aggiorna a ogni tappa.",
-  league_rank_3: "Sei 3° nella classifica della lega in corso. Si aggiorna a ogni tappa.",
+  league_rank_1: "Sei 1° nella classifica della lega in corso.",
+  league_rank_2: "Sei 2° nella classifica della lega in corso.",
+  league_rank_3: "Sei 3° nella classifica della lega in corso.",
   top8_streak: `Entra in top 8 nei tuoi ultimi ${TOP8_STREAK_COUNT} eventi, tutti negli ultimi ${TOP8_STREAK_WINDOW_MONTHS} mesi e con almeno ${TOP8_STREAK_MIN_ENTRANTS} iscritti.`,
   highest_winrate: `Hai il winrate più alto tra tutti i giocatori (minimo ${MIN_EVENTS_FOR_WINRATE_BADGE} eventi giocati).`,
   most_matches_played: `Hai giocato più partite di tutti (minimo ${MIN_MATCHES_FOR_MOST_MATCHES_BADGE}).`,
