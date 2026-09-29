@@ -20,6 +20,8 @@ const RULE_LABELS = {
   completionist: "10 eventi consecutivi",
   league_champion: "Ha vinto almeno una lega",
   most_byes: "Più bye",
+  most_drops: "Più drop",
+  commander_loyalty: "Più fedele a un comandante",
 };
 
 // Priority is stored as a plain number (badges.priority, sorted on by

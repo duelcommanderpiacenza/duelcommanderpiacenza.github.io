@@ -34,6 +34,11 @@ export const MIN_COMMANDERS_FOR_DIVERSITY_BADGE = 5;
 export const COMPLETIST_EVENT_COUNT = 10;
 // "Più bye": the most byes received, among players with at least this many.
 export const MIN_BYES_FOR_MOST_BYES_BADGE = 5;
+// "Più drop": the most drops, among players with at least this many.
+export const MIN_DROPS_FOR_MOST_DROPS_BADGE = 5;
+// "Più fedele a un comandante": the most events played with one same
+// (primary) commander, among players who reach at least this many.
+export const MIN_EVENTS_FOR_COMMANDER_LOYALTY_BADGE = 10;
 
 // Every rule below only ever counts *published* (closed) events — same as
 // the public site. This runs in the admin (admin/js/badges-sync.js), where
@@ -292,6 +297,36 @@ async function mostByesPlayerIds(closedIds) {
   return playersWithMaxValue(byesByPlayer, (n) => n, MIN_BYES_FOR_MOST_BYES_BADGE, (n) => n);
 }
 
+// The player(s) with the most drops (leaving an event early — a match row
+// with is_drop, js/leaderboard.js's isDrop), among those with at least
+// MIN_DROPS_FOR_MOST_DROPS_BADGE. Ties all get it.
+async function mostDropsPlayerIds(closedIds) {
+  const matches = (await Matches.listAll()).filter((m) => closedIds.has(m.event_id));
+  const dropsByPlayer = new Map();
+  for (const m of matches) {
+    if (isDrop(m)) dropsByPlayer.set(m.player1_id, (dropsByPlayer.get(m.player1_id) ?? 0) + 1);
+  }
+  return playersWithMaxValue(dropsByPlayer, (n) => n, MIN_DROPS_FOR_MOST_DROPS_BADGE, (n) => n);
+}
+
+// The player(s) who've played one same commander in the most events — each
+// player's best single-commander count, compared among those reaching
+// MIN_EVENTS_FOR_COMMANDER_LOYALTY_BADGE. Primary commander only: a
+// different partner/background alongside it still counts as the same
+// commander. Not necessarily consecutive events. Ties all get it.
+async function commanderLoyaltyPlayerIds(closedIds) {
+  const entries = (await EventEntries.listAll()).filter((e) => closedIds.has(e.event_id));
+  const countsByPlayer = new Map(); // player id -> Map(commander id -> events)
+  for (const e of entries) {
+    if (!e.commander_id) continue;
+    if (!countsByPlayer.has(e.player_id)) countsByPlayer.set(e.player_id, new Map());
+    const counts = countsByPlayer.get(e.player_id);
+    counts.set(e.commander_id, (counts.get(e.commander_id) ?? 0) + 1);
+  }
+  const bestByPlayer = new Map([...countsByPlayer].map(([playerId, counts]) => [playerId, Math.max(...counts.values())]));
+  return playersWithMaxValue(bestByPlayer, (n) => n, MIN_EVENTS_FOR_COMMANDER_LOYALTY_BADGE, (n) => n);
+}
+
 /**
  * @returns {Promise<Map<string, Array<{id: string, name: string, icon: string}>>>}
  *   player id -> up to MAX_AUTO_BADGES_PER_PLAYER badges, highest priority first.
@@ -330,6 +365,10 @@ export async function computeAutoBadgeAssignments() {
       for (const playerId of await leagueChampionPlayerIds(leagues)) grant(playerId, badge);
     } else if (badge.auto_rule === "most_byes") {
       for (const playerId of await mostByesPlayerIds(closedIds)) grant(playerId, badge);
+    } else if (badge.auto_rule === "most_drops") {
+      for (const playerId of await mostDropsPlayerIds(closedIds)) grant(playerId, badge);
+    } else if (badge.auto_rule === "commander_loyalty") {
+      for (const playerId of await commanderLoyaltyPlayerIds(closedIds)) grant(playerId, badge);
     }
   }
 

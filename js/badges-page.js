@@ -17,6 +17,8 @@ import {
   MIN_COMMANDERS_FOR_DIVERSITY_BADGE,
   COMPLETIST_EVENT_COUNT,
   MIN_BYES_FOR_MOST_BYES_BADGE,
+  MIN_DROPS_FOR_MOST_DROPS_BADGE,
+  MIN_EVENTS_FOR_COMMANDER_LOYALTY_BADGE,
 } from "./auto-badges.js";
 import { escapeHtml, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
@@ -34,6 +36,8 @@ const RULE_TEXT = {
   completionist: `Hai partecipato a tutti gli ultimi ${COMPLETIST_EVENT_COUNT} eventi.`,
   league_champion: "Hai vinto almeno una lega. Una volta conquistato, resta tuo per sempre.",
   most_byes: `Hai ricevuto più bye di tutti (minimo ${MIN_BYES_FOR_MOST_BYES_BADGE}).`,
+  most_drops: `Hai fatto più drop di tutti (minimo ${MIN_DROPS_FOR_MOST_DROPS_BADGE}).`,
+  commander_loyalty: `Hai giocato lo stesso comandante in più eventi di tutti (minimo ${MIN_EVENTS_FOR_COMMANDER_LOYALTY_BADGE}).`,
 };
 
 function badgeText(b) {
