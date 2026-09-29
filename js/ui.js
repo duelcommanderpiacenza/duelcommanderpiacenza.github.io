@@ -10,6 +10,20 @@ export function escapeHtml(value) {
   }[c]));
 }
 
+// Giocatori/Comandanti/Archetipi's default "Dal": the last this-many years
+// only, so what each visit downloads stays bounded however long the history
+// grows (the filter button's dot shows it's set; "Cancella" clears it).
+export const DEFAULT_DATE_FROM_YEARS = 2;
+
+// Local calendar date `years` years before today, as YYYY-MM-DD (the value
+// format of an <input type="date">) — local, not toISOString()'s UTC, same
+// reasoning as js/db.js's todayLocalIso.
+export function isoDateYearsAgo(years) {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - years);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 export function formatDate(value) {
   if (!value) return "—";
   const d = new Date(value);

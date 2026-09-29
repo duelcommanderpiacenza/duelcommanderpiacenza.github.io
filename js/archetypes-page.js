@@ -3,7 +3,7 @@ import { computeGroupedStats } from "./stats.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { renderPieChart, renderBarChart, ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
 import { initChartCarousel } from "./chart-carousel.js";
-import { archetypeBadge, showError } from "./ui.js";
+import { archetypeBadge, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
 
@@ -127,6 +127,9 @@ async function init() {
     }
   }
 
+  // Default "Dal": the last DEFAULT_DATE_FROM_YEARS years (js/ui.js) — set before the
+  // first load, so that load already fetches only that window.
+  dateFromInput.value = isoDateYearsAgo(DEFAULT_DATE_FROM_YEARS);
   initFilterToggle("archetypes-filter-toggle", "archetypes-filter-panel");
 
   dateFromInput.addEventListener("change", () => render(effectiveEventIds()));

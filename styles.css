@@ -4700,6 +4700,31 @@ img.cs-option-icon {
   background: var(--brand-red-deep-2);
 }
 
+/* At least one filter in the panel is set (js/filter-toggle.js) — a white
+   dot on the circle's top right, ringed in the button's own red so it
+   reads as sitting on the edge rather than floating off it. */
+.filter-toggle-btn {
+  position: relative;
+}
+
+.filter-toggle-btn.has-active-filters::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 2px var(--brand-red);
+  pointer-events: none;
+}
+
+.filter-toggle-btn.has-active-filters:hover::after,
+.filter-toggle-btn.has-active-filters.is-open::after {
+  box-shadow: 0 0 0 2px var(--brand-red-deep-2);
+}
+
 .filter-toggle-btn svg {
   width: 18px;
   height: 18px;

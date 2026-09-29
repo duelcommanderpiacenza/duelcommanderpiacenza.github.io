@@ -4,7 +4,7 @@ import { initScopeFilter } from "./scope-filter.js";
 import { renderPieChart, renderBarChart } from "./metagame-chart.js";
 import { initChartCarousel } from "./chart-carousel.js";
 import { attachHoverTooltips, fullTextIfTruncated } from "./floating-tooltip.js";
-import { commanderPairWithColors, bannedBadge, showError } from "./ui.js";
+import { commanderPairWithColors, bannedBadge, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
 
@@ -276,6 +276,9 @@ async function init() {
     }
   }
 
+  // Default "Dal": the last DEFAULT_DATE_FROM_YEARS years (js/ui.js) — set before the
+  // first load, so that load already fetches only that window.
+  dateFromInput.value = isoDateYearsAgo(DEFAULT_DATE_FROM_YEARS);
   initFilterToggle("commanders-filter-toggle", "commanders-filter-panel");
 
   searchInput.addEventListener("input", () => renderTable(false));

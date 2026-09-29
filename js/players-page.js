@@ -2,7 +2,7 @@ import { Players, Events, fetchEventsResults } from "./db.js";
 import { matchRoundOutcome, isBye, isDrop } from "./leaderboard.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { fetchTopAutoBadgesByPlayer, playerBadgesHtml } from "./player-badges.js";
-import { escapeHtml, commanderPairWithColors, showError } from "./ui.js";
+import { escapeHtml, commanderPairWithColors, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
 
@@ -197,6 +197,9 @@ async function init() {
     }
   }
 
+  // Default "Dal": the last DEFAULT_DATE_FROM_YEARS years (js/ui.js) — set before the
+  // first load, so that load already fetches only that window.
+  dateFromInput.value = isoDateYearsAgo(DEFAULT_DATE_FROM_YEARS);
   initFilterToggle("players-filter-toggle", "players-filter-panel");
 
   searchInput.addEventListener("input", () => renderList(false));

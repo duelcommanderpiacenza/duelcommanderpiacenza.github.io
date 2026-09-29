@@ -18,11 +18,28 @@
 // the clip off, letting fields inside open their popups normally; closing
 // switches it back on immediately, before the collapse animation starts,
 // so the content still clips away as it shrinks.
+//
+// Active-filter dot: the button gets .has-active-filters (a white dot on
+// its top right, styles.css) whenever any filter inside the panel is set —
+// a select or date with a value, a checked checkbox — so a filter hidden in
+// the collapsed panel (e.g. the default "Dal" date) never goes unnoticed.
+// Kept in sync from the panel's own (bubbling) change events; a page that
+// sets a filter from code calls the returned refresh() instead.
 export function initFilterToggle(buttonId, panelId) {
   const btn = document.getElementById(buttonId);
   const panel = document.getElementById(panelId);
   const clip = panel?.querySelector(".filter-panel-clip");
-  if (!btn || !panel || !clip) return;
+  if (!btn || !panel || !clip) return { refresh() {} };
+
+  function refresh() {
+    const active = [...panel.querySelectorAll('select, input[type="date"], input[type="checkbox"]')].some((el) =>
+      el.type === "checkbox" ? el.checked : el.value !== ""
+    );
+    btn.classList.toggle("has-active-filters", active);
+    btn.setAttribute("aria-label", active ? "Filtri (attivi)" : "Filtri");
+  }
+  panel.addEventListener("change", refresh);
+  refresh();
 
   panel.addEventListener("transitionend", (e) => {
     if (e.target === panel && e.propertyName === "grid-template-rows" && !panel.classList.contains("is-collapsed")) {
@@ -44,4 +61,6 @@ export function initFilterToggle(buttonId, panelId) {
     btn.classList.toggle("is-open", opening);
     btn.setAttribute("aria-expanded", String(opening));
   });
+
+  return { refresh };
 }
