@@ -388,6 +388,13 @@ html {
   gap: 8px;
 }
 
+/* Badge list's "Ordina per" (Nome / Priorità): short options, and the list
+   column shares its row with the form — narrower than the public pages'
+   220px .filter-toggle-sort. */
+.filter-toggle-sort.badges-admin-sort {
+  width: 150px;
+}
+
 /* League bonus points, edited inline in an event's leaderboard
    (matches-admin.js) — same look as a form field (.field input), sized down
    to sit in a table row. */

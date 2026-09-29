@@ -22,6 +22,28 @@ const RULE_LABELS = {
   most_byes: "Più bye",
 };
 
+// Priority is stored as a plain number (badges.priority, sorted on by
+// players-page/auto-badges/badges-page) but only ever picked as one of three
+// levels in the form: Alta / Media / Bassa. Any other stored value snaps to
+// the nearest level when a badge is loaded for editing.
+const PRIORITY_HIGH = 10;
+const PRIORITY_MEDIUM = 5;
+const PRIORITY_LOW = 3;
+
+function priorityLevel(value) {
+  const n = Number(value) || 0;
+  if (n >= PRIORITY_HIGH) return PRIORITY_HIGH;
+  if (n >= PRIORITY_MEDIUM) return PRIORITY_MEDIUM;
+  return PRIORITY_LOW;
+}
+
+// List column: the level name for an automatic badge; a manual one has no
+// meaningful priority (it only ranks automatic badges).
+function priorityLabel(row) {
+  if (!row.auto_rule) return "—";
+  return { [PRIORITY_HIGH]: "Alta", [PRIORITY_MEDIUM]: "Media", [PRIORITY_LOW]: "Bassa" }[priorityLevel(row.priority)];
+}
+
 function ruleLabel(row) {
   return row.auto_rule ? RULE_LABELS[row.auto_rule] ?? row.auto_rule : "—";
 }
@@ -39,6 +61,7 @@ function iconCellHtml(row) {
 export function initBadgesAdmin() {
   const listEl = document.getElementById("badges-admin-list");
   const searchField = document.getElementById("badges-admin-search");
+  const sortField = document.getElementById("badges-admin-sort");
   const form = document.getElementById("badges-admin-form");
   const idField = document.getElementById("badges-admin-id");
   const nameField = document.getElementById("badges-admin-name");
@@ -117,11 +140,23 @@ export function initBadgesAdmin() {
     fillSelect(autoRuleField, options);
   }
 
+  // "Priorità": automatic badges highest level first, then manual ones (no
+  // meaningful priority) at the bottom; name breaks ties either way.
+  const byName = (a, b) => a.name.localeCompare(b.name, "it");
+  const SORTERS = {
+    name: byName,
+    priority: (a, b) =>
+      Number(Boolean(b.auto_rule)) - Number(Boolean(a.auto_rule)) ||
+      (a.auto_rule ? priorityLevel(b.priority) - priorityLevel(a.priority) : 0) ||
+      byName(a, b),
+  };
+
   // Live filter over the already-fetched list, so it's easy to check
   // whether a badge already exists before adding a duplicate.
   function renderList(animate = true) {
     const term = searchField.value.trim().toLowerCase();
-    const visible = term ? allBadges.filter((b) => b.name.toLowerCase().includes(term)) : allBadges;
+    const filtered = term ? allBadges.filter((b) => b.name.toLowerCase().includes(term)) : allBadges;
+    const visible = [...filtered].sort(SORTERS[sortField.value] ?? SORTERS.name);
     if (term && visible.length === 0) {
       listEl.innerHTML = '<p class="page-empty">Nessun badge corrisponde alla ricerca.</p>';
       return;
@@ -133,6 +168,7 @@ export function initBadgesAdmin() {
         { key: "icon", label: "Icona", render: iconCellHtml },
         { key: "name", label: "Nome" },
         { key: "auto_rule", label: "Regola automatica", render: ruleLabel },
+        { key: "priority", label: "Priorità", render: priorityLabel },
       ],
       { onEdit, onDelete },
       { animate }
@@ -152,6 +188,7 @@ export function initBadgesAdmin() {
   }
 
   searchField.addEventListener("input", () => renderList(false));
+  sortField.addEventListener("change", () => renderList(false));
 
   function onEdit(row) {
     idField.value = row.id;
@@ -159,7 +196,7 @@ export function initBadgesAdmin() {
     descriptionField.value = row.description ?? "";
     populateRuleOptions(row.id);
     autoRuleField.value = row.auto_rule ?? "";
-    priorityField.value = row.priority ?? 0;
+    priorityField.value = String(priorityLevel(row.priority));
     updatePriorityVisibility();
 
     selectedFile = null;
@@ -184,7 +221,7 @@ export function initBadgesAdmin() {
     idField.value = "";
     form.reset();
     populateRuleOptions(null);
-    priorityField.value = 0;
+    priorityField.value = String(PRIORITY_MEDIUM);
     updatePriorityVisibility();
     selectedFile = null;
     editingIconUrl = null;
@@ -242,7 +279,7 @@ export function initBadgesAdmin() {
       icon,
       icon_url: iconUrl,
       auto_rule: autoRuleField.value || null,
-      priority: parseInt(priorityField.value, 10) || 0,
+      priority: priorityLevel(priorityField.value),
     };
     // Hover text of the badge icon next to player names, manual and
     // automatic badges alike (empty = the name is shown instead).

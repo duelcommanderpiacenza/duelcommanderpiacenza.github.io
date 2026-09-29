@@ -194,7 +194,7 @@
             <input type="text" id="badges-admin-name" required>
           </div>
           <div class="field" id="badges-admin-description-field" hidden>
-            <label for="badges-admin-description">Descrizione <span class="field-hint">(mostrata passando il mouse sul badge; vuota = nome)</span></label>
+            <label for="badges-admin-description">Descrizione</label>
             <textarea id="badges-admin-description" rows="2"></textarea>
           </div>
           <div class="field">
@@ -244,8 +244,12 @@
             <select id="badges-admin-auto-rule"></select>
           </div>
           <div class="field" id="badges-admin-priority-field" hidden>
-            <label for="badges-admin-priority">Priorit&agrave; <span class="field-hint">(tra i badge automatici, vince il valore pi&ugrave; alto se un giocatore ne avrebbe diritto a pi&ugrave; di 3)</span></label>
-            <input type="number" id="badges-admin-priority" step="1" value="0">
+            <label for="badges-admin-priority">Priorit&agrave; <span class="field-hint">(tra i badge automatici, vince la priorit&agrave; pi&ugrave; alta se un giocatore ne avrebbe diritto a pi&ugrave; di 3)</span></label>
+            <select id="badges-admin-priority">
+              <option value="10">Alta</option>
+              <option value="5" selected>Media</option>
+              <option value="3">Bassa</option>
+            </select>
           </div>
           <div class="form-actions">
             <button type="submit" class="btn-primary">Salva</button>
@@ -255,9 +259,18 @@
         </form>
       </div>
       <div>
-        <div class="field">
-          <label for="badges-admin-search">Cerca</label>
-          <input type="search" id="badges-admin-search" placeholder="Nome badge...">
+        <div class="filter-toggle-line">
+          <div class="field filter-toggle-search">
+            <label for="badges-admin-search">Cerca</label>
+            <input type="search" id="badges-admin-search" placeholder="Nome badge...">
+          </div>
+          <div class="field filter-toggle-sort badges-admin-sort">
+            <label for="badges-admin-sort">Ordina per</label>
+            <select id="badges-admin-sort">
+              <option value="name">Nome</option>
+              <option value="priority">Priorit&agrave;</option>
+            </select>
+          </div>
         </div>
         <div id="badges-admin-list"><p class="page-loading">Caricamento...</p></div>
       </div>
