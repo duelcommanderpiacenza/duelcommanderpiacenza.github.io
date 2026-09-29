@@ -32,6 +32,8 @@ export const MIN_MATCHES_FOR_MOST_MATCHES_BADGE = 20;
 export const MIN_EVENTS_FOR_WINRATE_BADGE = 5;
 export const MIN_COMMANDERS_FOR_DIVERSITY_BADGE = 5;
 export const COMPLETIST_EVENT_COUNT = 10;
+// "Più bye": the most byes received, among players with at least this many.
+export const MIN_BYES_FOR_MOST_BYES_BADGE = 5;
 
 // Every rule below only ever counts *published* (closed) events — same as
 // the public site. This runs in the admin (admin/js/badges-sync.js), where
@@ -263,6 +265,33 @@ async function completistPlayerIds() {
   return qualifying ? Array.from(qualifying) : [];
 }
 
+// Everyone who has won at least one closed real (non-Topdeck) league — a
+// threshold, not "the latest league" like league_winner above, so it's
+// kept for good once earned. Same final standings as league.html's.
+async function leagueChampionPlayerIds(leagues) {
+  const closedLeagues = leagues.filter((l) => !l.is_topdeck && !l.is_open);
+  const winners = await Promise.all(
+    closedLeagues.map(async (league) => {
+      const { eventsData, scheduledEvents } = await fetchLeagueEventsData(league.id);
+      if (eventsData.length === 0) return null;
+      return computeLeaguePoints(eventsData, { leagueClosed: true, scheduledEvents })[0]?.player?.id ?? null;
+    })
+  );
+  return [...new Set(winners.filter(Boolean))];
+}
+
+// The player(s) with the most byes received (a bye: no opponent that round,
+// scored as a win — js/leaderboard.js's isBye), among those with at least
+// MIN_BYES_FOR_MOST_BYES_BADGE. Ties all get it.
+async function mostByesPlayerIds(closedIds) {
+  const matches = (await Matches.listAll()).filter((m) => closedIds.has(m.event_id));
+  const byesByPlayer = new Map();
+  for (const m of matches) {
+    if (isBye(m)) byesByPlayer.set(m.player1_id, (byesByPlayer.get(m.player1_id) ?? 0) + 1);
+  }
+  return playersWithMaxValue(byesByPlayer, (n) => n, MIN_BYES_FOR_MOST_BYES_BADGE, (n) => n);
+}
+
 /**
  * @returns {Promise<Map<string, Array<{id: string, name: string, icon: string}>>>}
  *   player id -> up to MAX_AUTO_BADGES_PER_PLAYER badges, highest priority first.
@@ -297,6 +326,10 @@ export async function computeAutoBadgeAssignments() {
       for (const playerId of await mostCommandersPlayedPlayerIds(closedIds)) grant(playerId, badge);
     } else if (badge.auto_rule === "completionist") {
       for (const playerId of await completistPlayerIds()) grant(playerId, badge);
+    } else if (badge.auto_rule === "league_champion") {
+      for (const playerId of await leagueChampionPlayerIds(leagues)) grant(playerId, badge);
+    } else if (badge.auto_rule === "most_byes") {
+      for (const playerId of await mostByesPlayerIds(closedIds)) grant(playerId, badge);
     }
   }
 

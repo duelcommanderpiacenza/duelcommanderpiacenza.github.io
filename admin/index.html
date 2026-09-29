@@ -213,7 +213,6 @@
               <label class="icon-swatch" aria-label="Medaglia d'argento"><input type="radio" name="badges-admin-icon" value="&#129352;">&#129352;</label>
               <label class="icon-swatch" aria-label="Medaglia di bronzo"><input type="radio" name="badges-admin-icon" value="&#129353;">&#129353;</label>
               <label class="icon-swatch" aria-label="Stella"><input type="radio" name="badges-admin-icon" value="&#11088;">&#11088;</label>
-              <label class="icon-swatch" aria-label="Stella brillante"><input type="radio" name="badges-admin-icon" value="&#127775;">&#127775;</label>
               <label class="icon-swatch" aria-label="Fuoco"><input type="radio" name="badges-admin-icon" value="&#128293;">&#128293;</label>
               <label class="icon-swatch" aria-label="Teschio"><input type="radio" name="badges-admin-icon" value="&#128128;">&#128128;</label>
               <label class="icon-swatch" aria-label="Bersaglio"><input type="radio" name="badges-admin-icon" value="&#127919;">&#127919;</label>
@@ -221,7 +220,6 @@
               <label class="icon-swatch" aria-label="Spade incrociate"><input type="radio" name="badges-admin-icon" value="&#9876;&#65039;">&#9876;&#65039;</label>
               <label class="icon-swatch" aria-label="Drago"><input type="radio" name="badges-admin-icon" value="&#128009;">&#128009;</label>
               <label class="icon-swatch" aria-label="Dadi"><input type="radio" name="badges-admin-icon" value="&#127922;">&#127922;</label>
-              <label class="icon-swatch" aria-label="Jolly"><input type="radio" name="badges-admin-icon" value="&#127183;">&#127183;</label>
               <label class="icon-swatch" aria-label="Corona"><input type="radio" name="badges-admin-icon" value="&#128081;">&#128081;</label>
               <label class="icon-swatch" aria-label="Gemma"><input type="radio" name="badges-admin-icon" value="&#128142;">&#128142;</label>
               <label class="icon-swatch" aria-label="Razzo"><input type="radio" name="badges-admin-icon" value="&#128640;">&#128640;</label>
@@ -229,10 +227,11 @@
               <label class="icon-swatch" aria-label="Bicipite"><input type="radio" name="badges-admin-icon" value="&#128170;">&#128170;</label>
               <label class="icon-swatch" aria-label="Quadrifoglio"><input type="radio" name="badges-admin-icon" value="&#127808;">&#127808;</label>
               <label class="icon-swatch" aria-label="Fulmine"><input type="radio" name="badges-admin-icon" value="&#9889;">&#9889;</label>
-              <label class="icon-swatch" aria-label="Maschere teatrali"><input type="radio" name="badges-admin-icon" value="&#127917;">&#127917;</label>
               <label class="icon-swatch" aria-label="Unicorno"><input type="radio" name="badges-admin-icon" value="&#129412;">&#129412;</label>
-              <label class="icon-swatch" aria-label="Coriandoli"><input type="radio" name="badges-admin-icon" value="&#127881;">&#127881;</label>
               <label class="icon-swatch" aria-label="Lumaca"><input type="radio" name="badges-admin-icon" value="&#128012;">&#128012;</label>
+              <label class="icon-swatch" aria-label="Anello"><input type="radio" name="badges-admin-icon" value="&#128141;">&#128141;</label>
+              <label class="icon-swatch" aria-label="Provetta"><input type="radio" name="badges-admin-icon" value="&#129514;">&#129514;</label>
+              <label class="icon-swatch" aria-label="Regalo"><input type="radio" name="badges-admin-icon" value="&#127873;">&#127873;</label>
             </div>
             <div id="badges-admin-icon-image-wrap" hidden>
               <input type="file" id="badges-admin-icon-file" accept="image/png,image/jpeg,image/webp">
@@ -287,6 +286,12 @@
 
         <dt>10 eventi consecutivi</dt>
         <dd>Assegnato a chi ha partecipato a tutti gli ultimi 10 eventi, indipendentemente dalla lega di appartenenza (o se standalone). Nessuno lo ottiene finch&eacute; non esistono almeno 10 eventi.</dd>
+
+        <dt>Ha vinto almeno una lega</dt>
+        <dd>Assegnato a chiunque abbia vinto almeno una lega (non Topdeck) conclusa. Resta per sempre: a differenza di &ldquo;Vincitore ultima lega&rdquo;, non passa al vincitore della lega successiva.</dd>
+
+        <dt>Pi&ugrave; bye</dt>
+        <dd>Assegnato a chi ha ricevuto pi&ugrave; bye, tra i giocatori con almeno 5 bye. In caso di parit&agrave; il badge va a tutti i pari merito.</dd>
       </dl>
       <p class="field-hint">Ogni giocatore mostra al massimo 3 badge automatici insieme: se ne avrebbe diritto a pi&ugrave;, vince il valore di Priorit&agrave; pi&ugrave; alto.</p>
     </details>
