@@ -4285,6 +4285,57 @@ img.cs-option-icon {
   background: var(--hairline-hover);
 }
 
+/* data-searchable selects (js/custom-select.js): the menu becomes a column
+   — the search field fixed at the top, only the option list below it
+   scrolling, so the field never scrolls out of view. */
+.cs-wrap.is-open .cs-menu.cs-menu-searchable {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.cs-search {
+  flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 0 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--text-body);
+  font: inherit;
+  font-size: 0.92rem;
+}
+
+.cs-search:focus {
+  outline: none;
+  border-color: var(--hairline-hover-strong);
+}
+
+.cs-options {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* .cs-option's display: flex would otherwise override the hidden attribute
+   the search filter sets on non-matching options. */
+.cs-option[hidden] {
+  display: none;
+}
+
+.cs-empty {
+  padding: 9px 12px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+:root[data-theme="dark"] .cs-search {
+  background: rgba(255, 255, 255, 0.06);
+}
+
 .cs-option[aria-selected="true"] {
   background: var(--brand-red);
   color: #fff;

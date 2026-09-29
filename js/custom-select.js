@@ -39,6 +39,12 @@ function openMenu(wrap) {
   if (wrap.classList.contains("is-disabled")) return;
   closeAllExcept(wrap);
   wrap.classList.remove("cs-open-upward");
+  // A searchable menu always opens unfiltered, whatever was typed last time.
+  const search = wrap.querySelector(".cs-search");
+  if (search) {
+    search.value = "";
+    applySearchFilter(wrap);
+  }
   wrap.classList.add("is-open");
   wrap.querySelector(".cs-trigger").setAttribute("aria-expanded", "true");
   const menu = wrap.querySelector(".cs-menu");
@@ -49,7 +55,44 @@ function openMenu(wrap) {
     wrap.classList.add("cs-open-upward");
   }
   const active = menu.querySelector('.cs-option[aria-selected="true"]') || menu.querySelector(".cs-option");
-  active?.focus();
+  if (search) {
+    // Typing starts right away; the current choice is scrolled into view.
+    active?.scrollIntoView({ block: "nearest" });
+    search.focus();
+  } else {
+    active?.focus();
+  }
+}
+
+// Case- and accent-insensitive, so "nicolo" finds "Nicolò".
+function normalizeForSearch(text) {
+  return text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+}
+
+// data-searchable selects only: hides the options whose label doesn't
+// contain the typed text, with a "Nessun risultato" line when none match.
+function applySearchFilter(wrap) {
+  const search = wrap.querySelector(".cs-search");
+  const list = wrap.querySelector(".cs-options");
+  if (!search || !list) return;
+  const term = normalizeForSearch(search.value.trim());
+  let visible = 0;
+  list.querySelectorAll(".cs-option").forEach((row) => {
+    const match = !term || normalizeForSearch(row.textContent).includes(term);
+    row.hidden = !match;
+    if (match) visible += 1;
+  });
+  let empty = list.querySelector(".cs-empty");
+  if (visible === 0) {
+    if (!empty) {
+      empty = document.createElement("div");
+      empty.className = "cs-empty";
+      empty.textContent = "Nessun risultato";
+      list.appendChild(empty);
+    }
+  } else {
+    empty?.remove();
+  }
 }
 
 function currentLabel(select) {
@@ -89,7 +132,9 @@ function appendOptionIcon(container, opt) {
 }
 
 function rebuildMenu(wrap, select) {
-  const menu = wrap.querySelector(".cs-menu");
+  // A searchable menu keeps its search field; only the list below it is
+  // rebuilt (and re-filtered by whatever is typed, at the end).
+  const menu = wrap.querySelector(".cs-options") ?? wrap.querySelector(".cs-menu");
   menu.innerHTML = "";
   Array.from(select.options).forEach((opt) => {
     // A native <option hidden> (e.g. a "Ordina per..." placeholder that's
@@ -140,6 +185,7 @@ function rebuildMenu(wrap, select) {
     });
     menu.appendChild(row);
   });
+  applySearchFilter(wrap);
 }
 
 function syncUI(wrap, select) {
@@ -160,10 +206,17 @@ function syncUI(wrap, select) {
   wrap.classList.toggle("is-disabled", select.disabled);
 }
 
+// Skips options hidden by the search filter. On a searchable menu, going up
+// from the first option returns to the search field.
 function moveMenuFocus(menu, delta) {
-  const rows = Array.from(menu.querySelectorAll(".cs-option"));
+  const rows = Array.from(menu.querySelectorAll(".cs-option")).filter((row) => !row.hidden);
   if (rows.length === 0) return;
   const idx = rows.indexOf(document.activeElement);
+  const search = menu.querySelector(".cs-search");
+  if (search && idx === 0 && delta < 0) {
+    search.focus();
+    return;
+  }
   const next = rows[(idx + delta + rows.length) % rows.length];
   next.focus();
 }
@@ -192,6 +245,25 @@ export function enhanceSelect(select) {
   menu.className = "cs-menu";
   menu.setAttribute("role", "listbox");
 
+  // Opt-in (data-searchable on the <select>, for long lists like the admin
+  // entry form's players/commanders): a search field at the top of the
+  // menu, filtering the options below it as you type. A plain text input,
+  // not type="search" — that one picks up the site's own search-box styles.
+  const search = select.hasAttribute("data-searchable") ? document.createElement("input") : null;
+  if (search) {
+    search.type = "text";
+    search.className = "cs-search";
+    search.placeholder = "Cerca…";
+    search.autocomplete = "off";
+    search.setAttribute("aria-label", "Cerca");
+    const list = document.createElement("div");
+    list.className = "cs-options";
+    menu.classList.add("cs-menu-searchable");
+    menu.appendChild(search);
+    menu.appendChild(list);
+    search.addEventListener("input", () => applySearchFilter(wrap));
+  }
+
   wrap.appendChild(trigger);
   wrap.appendChild(menu);
 
@@ -208,6 +280,26 @@ export function enhanceSelect(select) {
   });
 
   menu.addEventListener("keydown", (e) => {
+    // Keys typed in the search field: letters/space just type; arrows and
+    // Enter reach the (filtered) options.
+    if (search && e.target === search) {
+      const firstVisible = Array.from(menu.querySelectorAll(".cs-option")).find((row) => !row.hidden);
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        firstVisible?.focus();
+      } else if (e.key === "Enter") {
+        // Picks the first match — only once something is typed, so Enter
+        // in an empty field never silently selects the first entry.
+        e.preventDefault();
+        if (search.value.trim()) firstVisible?.click();
+      } else if (e.key === "Escape") {
+        closeMenu(wrap);
+        trigger.focus();
+      } else if (e.key === "Tab") {
+        closeMenu(wrap);
+      }
+      return;
+    }
     if (e.key === "ArrowDown") {
       e.preventDefault();
       moveMenuFocus(menu, 1);
