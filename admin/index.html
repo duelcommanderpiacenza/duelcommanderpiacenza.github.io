@@ -207,31 +207,14 @@
               <input type="radio" name="badges-admin-icon-mode" id="badges-admin-icon-mode-image" value="image">
               <label for="badges-admin-icon-mode-image" style="font-weight:600;text-transform:none;letter-spacing:normal;color:inherit;">Immagine personalizzata</label>
             </div>
-            <div id="badges-admin-icon-emoji-wrap" class="icon-swatch-row">
-              <label class="icon-swatch" aria-label="Coppa"><input type="radio" name="badges-admin-icon" value="&#127942;">&#127942;</label>
-              <label class="icon-swatch" aria-label="Medaglia d'oro"><input type="radio" name="badges-admin-icon" value="&#129351;">&#129351;</label>
-              <label class="icon-swatch" aria-label="Medaglia d'argento"><input type="radio" name="badges-admin-icon" value="&#129352;">&#129352;</label>
-              <label class="icon-swatch" aria-label="Medaglia di bronzo"><input type="radio" name="badges-admin-icon" value="&#129353;">&#129353;</label>
-              <label class="icon-swatch" aria-label="Stella"><input type="radio" name="badges-admin-icon" value="&#11088;">&#11088;</label>
-              <label class="icon-swatch" aria-label="Fuoco"><input type="radio" name="badges-admin-icon" value="&#128293;">&#128293;</label>
-              <label class="icon-swatch" aria-label="Teschio"><input type="radio" name="badges-admin-icon" value="&#128128;">&#128128;</label>
-              <label class="icon-swatch" aria-label="Bersaglio"><input type="radio" name="badges-admin-icon" value="&#127919;">&#127919;</label>
-              <label class="icon-swatch" aria-label="Scudo"><input type="radio" name="badges-admin-icon" value="&#128737;&#65039;">&#128737;&#65039;</label>
-              <label class="icon-swatch" aria-label="Spade incrociate"><input type="radio" name="badges-admin-icon" value="&#9876;&#65039;">&#9876;&#65039;</label>
-              <label class="icon-swatch" aria-label="Drago"><input type="radio" name="badges-admin-icon" value="&#128009;">&#128009;</label>
-              <label class="icon-swatch" aria-label="Dadi"><input type="radio" name="badges-admin-icon" value="&#127922;">&#127922;</label>
-              <label class="icon-swatch" aria-label="Corona"><input type="radio" name="badges-admin-icon" value="&#128081;">&#128081;</label>
-              <label class="icon-swatch" aria-label="Gemma"><input type="radio" name="badges-admin-icon" value="&#128142;">&#128142;</label>
-              <label class="icon-swatch" aria-label="Razzo"><input type="radio" name="badges-admin-icon" value="&#128640;">&#128640;</label>
-              <label class="icon-swatch" aria-label="Cervello"><input type="radio" name="badges-admin-icon" value="&#129504;">&#129504;</label>
-              <label class="icon-swatch" aria-label="Bicipite"><input type="radio" name="badges-admin-icon" value="&#128170;">&#128170;</label>
-              <label class="icon-swatch" aria-label="Quadrifoglio"><input type="radio" name="badges-admin-icon" value="&#127808;">&#127808;</label>
-              <label class="icon-swatch" aria-label="Fulmine"><input type="radio" name="badges-admin-icon" value="&#9889;">&#9889;</label>
-              <label class="icon-swatch" aria-label="Unicorno"><input type="radio" name="badges-admin-icon" value="&#129412;">&#129412;</label>
-              <label class="icon-swatch" aria-label="Lumaca"><input type="radio" name="badges-admin-icon" value="&#128012;">&#128012;</label>
-              <label class="icon-swatch" aria-label="Anello"><input type="radio" name="badges-admin-icon" value="&#128141;">&#128141;</label>
-              <label class="icon-swatch" aria-label="Provetta"><input type="radio" name="badges-admin-icon" value="&#129514;">&#129514;</label>
-              <label class="icon-swatch" aria-label="Regalo"><input type="radio" name="badges-admin-icon" value="&#127873;">&#127873;</label>
+            <div id="badges-admin-icon-emoji-wrap" class="emoji-picker-field">
+              <input type="hidden" id="badges-admin-icon">
+              <button type="button" class="emoji-picker-trigger" id="badges-admin-icon-trigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="badges-admin-emoji-picker">
+                <span class="emoji-picker-current">&mdash;</span>
+                <span class="emoji-picker-trigger-label">Scegli</span>
+                <span class="cs-trigger-arrow" aria-hidden="true"></span>
+              </button>
+              <div class="emoji-picker" id="badges-admin-emoji-picker" role="dialog" aria-label="Scegli un emoji" hidden></div>
             </div>
             <div id="badges-admin-icon-image-wrap" hidden>
               <input type="file" id="badges-admin-icon-file" accept="image/png,image/jpeg,image/webp">

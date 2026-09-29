@@ -372,7 +372,8 @@ html {
    contains an open popup, fixes that without permanently sitting above
    the sticky admin tabs bar (z-index 20) the rest of the time. */
 .admin-form-card:has(.cd-wrap.is-open),
-.admin-form-card:has(.cs-wrap.is-open) {
+.admin-form-card:has(.cs-wrap.is-open),
+.admin-form-card:has(.emoji-picker:not([hidden])) {
   position: relative;
   z-index: 30;
 }
@@ -386,6 +387,169 @@ html {
 .row-actions {
   display: flex;
   gap: 8px;
+}
+
+/* Badge form's keyboard-style emoji picker (js/emoji-picker.js): a compact
+   trigger showing the chosen emoji, opening a floating panel — category
+   tabs, a scrollable 8-column grid, and a field for any other emoji. */
+.emoji-picker-field {
+  position: relative;
+}
+
+.emoji-picker-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--text-body);
+  font: inherit;
+  cursor: pointer;
+}
+
+.emoji-picker-trigger:hover,
+.emoji-picker-trigger[aria-expanded="true"] {
+  border-color: var(--hairline-hover-strong);
+}
+
+.emoji-picker-trigger[aria-expanded="true"] .cs-trigger-arrow {
+  transform: rotate(180deg);
+}
+
+.emoji-picker-current {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.emoji-picker-trigger-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.emoji-picker {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 40;
+  width: 318px;
+  max-width: 90vw;
+  box-sizing: border-box;
+  padding: 8px;
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: var(--shadow-card-hover);
+  animation: cs-menu-in 140ms ease both;
+}
+
+.emoji-picker[hidden] {
+  display: none;
+}
+
+.emoji-picker-tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.emoji-picker-tab {
+  flex: 1;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  font-size: 1.05rem;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 120ms ease, background 120ms ease;
+}
+
+.emoji-picker-tab:hover,
+.emoji-picker-tab.is-active {
+  opacity: 1;
+  background: var(--hairline-hover);
+}
+
+/* position: relative so the sections' offsetTop (used to jump to a
+   category) is measured from the grid itself. */
+.emoji-picker-grid {
+  position: relative;
+  height: 216px;
+  overflow-y: auto;
+}
+
+.emoji-picker-section-title {
+  padding: 6px 2px 4px;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.emoji-picker-cells {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+}
+
+.emoji-picker-cell {
+  height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.emoji-picker-cell:hover,
+.emoji-picker-cell:focus-visible {
+  outline: none;
+  background: var(--hairline-hover);
+}
+
+.emoji-picker-cell.is-selected {
+  background: rgba(220, 24, 28, 0.18);
+}
+
+.emoji-picker-custom {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--text-body);
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.emoji-picker-custom:focus {
+  outline: none;
+  border-color: var(--hairline-hover-strong);
+}
+
+:root[data-theme="dark"] .emoji-picker {
+  background: #241a1d;
+}
+
+:root[data-theme="dark"] .emoji-picker-trigger,
+:root[data-theme="dark"] .emoji-picker-custom {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .emoji-picker {
+    animation: none;
+  }
 }
 
 /* Badge list's "Ordina per" (Nome / Priorità): short options, and the list

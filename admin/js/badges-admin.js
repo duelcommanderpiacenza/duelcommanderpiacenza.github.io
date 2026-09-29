@@ -2,6 +2,7 @@ import { Badges, BadgeIcons } from "../../js/db.js";
 import { renderTable, setMessage, fillSelect } from "./crud-ui.js";
 import { emit } from "./bus.js";
 import { syncAutoBadges } from "./badges-sync.js";
+import { initEmojiPicker } from "./emoji-picker.js";
 
 const MAX_ICON_FILE_BYTES = 300 * 1024;
 
@@ -74,7 +75,14 @@ export function initBadgesAdmin() {
   const priorityFieldWrap = document.getElementById("badges-admin-priority-field");
   const msgEl = document.getElementById("badges-admin-message");
   const cancelBtn = document.getElementById("badges-admin-cancel");
-  const iconRadios = () => Array.from(document.querySelectorAll('input[name="badges-admin-icon"]'));
+  // Keyboard-style emoji picker (./emoji-picker.js) writing into a hidden
+  // field — any emoji, not just a fixed handful.
+  const iconField = document.getElementById("badges-admin-icon");
+  const emojiPicker = initEmojiPicker({
+    input: iconField,
+    trigger: document.getElementById("badges-admin-icon-trigger"),
+    panel: document.getElementById("badges-admin-emoji-picker"),
+  });
   const modeRadios = () => Array.from(document.querySelectorAll('input[name="badges-admin-icon-mode"]'));
   const emojiWrap = document.getElementById("badges-admin-icon-emoji-wrap");
   const imageWrap = document.getElementById("badges-admin-icon-image-wrap");
@@ -208,13 +216,11 @@ export function initBadgesAdmin() {
     if (row.icon_url) {
       modeRadios().find((r) => r.value === "image").checked = true;
       renderPreview(row.icon_url);
-      iconRadios().forEach((radio) => (radio.checked = false));
+      emojiPicker.setValue("");
     } else {
       modeRadios().find((r) => r.value === "emoji").checked = true;
       renderPreview(null);
-      iconRadios().forEach((radio) => {
-        radio.checked = radio.value === row.icon;
-      });
+      emojiPicker.setValue(row.icon ?? "");
     }
     updateIconModeUI();
   }
@@ -228,6 +234,7 @@ export function initBadgesAdmin() {
     selectedFile = null;
     editingIconUrl = null;
     renderPreview(null);
+    emojiPicker.setValue("");
     updateIconModeUI();
     setMessage(msgEl, "", false);
   }
@@ -254,7 +261,7 @@ export function initBadgesAdmin() {
     let iconUrl = null;
 
     if (mode === "emoji") {
-      icon = iconRadios().find((radio) => radio.checked)?.value ?? null;
+      icon = iconField.value.trim() || null;
       if (!icon) {
         setMessage(msgEl, "Seleziona un'icona.", true);
         return;
