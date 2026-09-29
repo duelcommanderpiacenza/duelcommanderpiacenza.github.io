@@ -61,6 +61,7 @@ async function init() {
   const overallEl = document.getElementById("player-winrate-overall");
   const commanderFilter = document.getElementById("player-commander-filter");
   const leagueFilter = document.getElementById("player-league-filter");
+  const dateFromFilter = document.getElementById("player-date-from");
   const matchesEl = document.getElementById("player-matches");
 
   if (!id) {
@@ -262,13 +263,16 @@ async function init() {
         .map(([lid, name]) => `<option value="${lid}">${escapeHtml(name)}</option>`)
         .join("");
 
+    // "Dal": only events on/after that date (ISO dates compare as strings).
     function applyFilters() {
       const commanderId = commanderFilter.value;
       const leagueId = leagueFilter.value;
+      const from = dateFromFilter.value;
       const bucket = { wins: 0, draws: 0, losses: 0 };
       for (const r of rows) {
         if (commanderId && r.myCommander?.id !== commanderId && r.myPartner?.id !== commanderId) continue;
         if (leagueId && r.event?.league?.id !== leagueId) continue;
+        if (from && (r.event?.event_date ?? "") < from) continue;
         // A drop isn't a win, a loss, or a match played — skipped entirely.
         // A bye counts as a played match won, same as any other match win.
         if (r.isDrop) continue;
@@ -279,12 +283,14 @@ async function init() {
       const events = entries.filter((e) => {
         if (commanderId && e.commander?.id !== commanderId && e.partner_commander?.id !== commanderId) return false;
         if (leagueId && e.event?.league?.id !== leagueId) return false;
+        if (from && (e.event?.event_date ?? "") < from) return false;
         return true;
       }).length;
       renderWinrateTiles(overallEl, bucket, { events });
     }
     commanderFilter.addEventListener("change", applyFilters);
     leagueFilter.addEventListener("change", applyFilters);
+    dateFromFilter.addEventListener("change", applyFilters);
     applyFilters();
 
     renderPaginated(

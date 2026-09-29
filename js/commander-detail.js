@@ -106,6 +106,7 @@ async function init() {
   const winrateEl = document.getElementById("commander-winrate");
   const leagueFilter = document.getElementById("commander-league-filter");
   const eventFilter = document.getElementById("commander-event-filter");
+  const dateFromFilter = document.getElementById("commander-date-from");
   const playersEl = document.getElementById("commander-players");
   const matchesEl = document.getElementById("commander-matches");
   const decksChartEl = document.getElementById("commander-decks-chart");
@@ -350,11 +351,18 @@ async function init() {
           </table></div>`
     );
 
+    // The league/event scope (initScopeFilter below) and the "Dal" date
+    // combine: the date only narrows whatever the scope last reported, so a
+    // date change re-runs with that same scope.
+    let lastScopedEventIds = [];
     function computeWinrate(scopedEventIds) {
+      lastScopedEventIds = scopedEventIds;
       const scoped = new Set(scopedEventIds);
+      const from = dateFromFilter.value;
       const bucket = { wins: 0, draws: 0, losses: 0 };
       for (const r of rows) {
         if (r.event && !scoped.has(r.event.id)) continue;
+        if (from && (r.event?.event_date ?? "") < from) continue;
         // A bye is a free win for the player, not a "victory" for the
         // commander — it never actually beat anything. A drop isn't a
         // "victory" either, and isn't a match played at all.
@@ -371,6 +379,7 @@ async function init() {
       syncCardImageLayout(cardImageFrontEl);
     }
 
+    dateFromFilter.addEventListener("change", () => computeWinrate(lastScopedEventIds));
     await initScopeFilter({ leagueSelect: leagueFilter, eventSelect: eventFilter, onChange: computeWinrate });
   } catch (err) {
     showError(document.getElementById("commander-content"), err);
