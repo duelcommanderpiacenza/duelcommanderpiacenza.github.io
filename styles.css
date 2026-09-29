@@ -1603,8 +1603,7 @@ a.upcoming-row:hover .upcoming-row-title {
   border-top: 1px solid rgba(220, 24, 28, 0.14);
 }
 
-/* Round position badge: podium (1st-3rd) a stronger tint, the rest a faint
-   one. */
+/* Round position badge, the same red tint for every position. */
 .dashboard-standings-rank {
   display: inline-flex;
   align-items: center;
@@ -1612,14 +1611,10 @@ a.upcoming-row:hover .upcoming-row-title {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: rgba(220, 24, 28, 0.08);
+  background: rgba(220, 24, 28, 0.18);
   color: var(--brand-red-deep);
   font-size: 0.82rem;
   font-weight: 800;
-}
-
-.dashboard-standings-row:nth-child(-n + 3) .dashboard-standings-rank {
-  background: rgba(220, 24, 28, 0.18);
 }
 
 /* Name (+ handle) truncates; the player badges after it never shrink. */
@@ -5694,10 +5689,6 @@ html.nav-mobile .chart-carousel-arrow {
 }
 
 :root[data-theme="dark"] .dashboard-standings-rank {
-  background: rgba(255, 110, 110, 0.1);
-}
-
-:root[data-theme="dark"] .dashboard-standings-row:nth-child(-n + 3) .dashboard-standings-rank {
   background: rgba(255, 110, 110, 0.2);
 }
 
