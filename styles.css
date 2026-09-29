@@ -3238,9 +3238,9 @@ footer {
   color: var(--text-muted);
 }
 
+/* Name on the left, its figure (winrate, count) in red on the right. */
 .wrapped-rank-list {
   list-style: none;
-  counter-reset: wrapped-rank;
   margin: 0;
   padding: 0;
   display: grid;
@@ -3249,16 +3249,9 @@ footer {
 }
 
 .wrapped-rank-list li {
-  counter-increment: wrapped-rank;
   display: flex;
   align-items: baseline;
   gap: 8px;
-}
-
-.wrapped-rank-list li::before {
-  content: counter(wrapped-rank);
-  color: var(--brand-red);
-  min-width: 1ch;
 }
 
 .wrapped-rank-name {
@@ -3266,9 +3259,9 @@ footer {
   min-width: 0;
 }
 
-.wrapped-rank-count {
-  color: var(--text-muted);
-  font-size: 0.85rem;
+.wrapped-rank-value {
+  color: var(--brand-red);
+  font-size: 0.9rem;
   white-space: nowrap;
 }
 
@@ -6115,7 +6108,7 @@ html.nav-mobile .chart-carousel-arrow {
 :root[data-theme="dark"] .rank-cell,
 :root[data-theme="dark"] .stat-tile-value,
 :root[data-theme="dark"] .wrapped-tile-detail,
-:root[data-theme="dark"] .wrapped-rank-list li::before,
+:root[data-theme="dark"] .wrapped-rank-value,
 :root[data-theme="dark"] .cd-day.is-today {
   color: #ff6a6e;
 }

@@ -79,15 +79,23 @@ function renderWrapped(league, standings, wrapped, eventCount) {
     }
   }
 
+  // One row per (tied) player, the winrate beside each name; the V-S-P only
+  // for a single winner (tied players can share a winrate with different
+  // records — see js/stats.js's computeLeagueWrapped).
   const bw = wrapped.bestWinrate;
   tiles.push(
     bw
       ? wrappedTile(
           "Miglior winrate",
-          bw.players.map(playerLabel).join("<br>"),
-          bw.players.length === 1
-            ? `${bw.winRate.toFixed(1)}% · ${bw.wins}-${bw.losses}-${bw.draws}`
-            : `${bw.winRate.toFixed(1)}%`
+          `<ul class="wrapped-rank-list">${bw.players
+            .map(
+              (p) => `<li>
+                <span class="wrapped-rank-name">${playerLabel(p)}</span>
+                <span class="wrapped-rank-value">${bw.winRate.toFixed(1)}%</span>
+              </li>`
+            )
+            .join("")}</ul>`,
+          bw.players.length === 1 ? `${bw.wins}-${bw.losses}-${bw.draws}` : ""
         )
       : wrappedTile("Miglior winrate", EMPTY_VALUE)
   );
@@ -96,27 +104,27 @@ function renderWrapped(league, standings, wrapped, eventCount) {
   tiles.push(
     ta
       ? wrappedTile(
-          "Archetipo più usato",
+          "Archetipo più giocato",
           archetypeBadge(ta.archetype),
           `${ta.entries} ${ta.entries === 1 ? "presenza" : "presenze"} · ${ta.wins} ${ta.wins === 1 ? "vittoria" : "vittorie"}`
         )
-      : wrappedTile("Archetipo più usato", EMPTY_VALUE)
+      : wrappedTile("Archetipo più giocato", EMPTY_VALUE)
   );
 
   tiles.push(
     wrapped.topCommanders.length > 0
       ? wrappedTile(
-          "Comandanti più usati",
-          `<ol class="wrapped-rank-list">${wrapped.topCommanders
+          "Comandanti più giocati",
+          `<ul class="wrapped-rank-list">${wrapped.topCommanders
             .map(
               (c) => `<li>
                 <span class="wrapped-rank-name">${commanderPairLabel(c.commander, c.partner)}</span>
-                <span class="wrapped-rank-count">${c.entries}</span>
+                <span class="wrapped-rank-value">${c.entries}</span>
               </li>`
             )
-            .join("")}</ol>`
+            .join("")}</ul>`
         )
-      : wrappedTile("Comandanti più usati", EMPTY_VALUE)
+      : wrappedTile("Comandanti più giocati", EMPTY_VALUE)
   );
 
   return tiles.join("");
