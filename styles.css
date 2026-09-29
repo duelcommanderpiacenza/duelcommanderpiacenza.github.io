@@ -2639,6 +2639,54 @@ footer {
   margin: 0;
 }
 
+/* Card-shaped loading placeholder, shown from first paint in exactly the
+   spot and size the card will take (same positioning as
+   .commander-card-figure; Scryfall "normal" image proportions, 488×680), so
+   nothing around it moves when the real card replaces it — its height is
+   set by the same js/commander-detail.js syncCardImageLayout as the card's,
+   280px until then. A soft brand-red shimmer sweeps across while waiting.
+   js hides it once the card is revealed, or drops it if there's no image. */
+.commander-card-skeleton {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 280px;
+  aspect-ratio: 488 / 680;
+  border-radius: 12px;
+  background: linear-gradient(
+    100deg,
+    rgba(220, 24, 28, 0.06) 30%,
+    rgba(220, 24, 28, 0.16) 50%,
+    rgba(220, 24, 28, 0.06) 70%
+  );
+  background-size: 250% 100%;
+  animation: card-skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes card-skeleton-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0% 0;
+  }
+}
+
+:root[data-theme="dark"] .commander-card-skeleton {
+  background-image: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.04) 30%,
+    rgba(255, 110, 110, 0.14) 50%,
+    rgba(255, 255, 255, 0.04) 70%
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .commander-card-skeleton {
+    animation: none;
+  }
+}
+
 @keyframes commander-card-in {
   from {
     opacity: 0;
@@ -2808,6 +2856,18 @@ footer {
     top: auto;
     right: auto;
     margin: 14px 0 0;
+  }
+
+  /* Same in-flow spot and width as the card below the title — reserving
+     its full height from the start is what stops the rest of the page
+     jumping down once the image arrives. */
+  .commander-card-skeleton {
+    position: relative;
+    top: auto;
+    right: auto;
+    margin: 14px 0 0;
+    width: min(260px, 80vw);
+    height: auto;
   }
 
   /* min(260px, 80vw) rather than a flat 260px — that was wide enough to

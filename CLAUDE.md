@@ -94,6 +94,7 @@ the stat tiles (desktop), or stacked below the title (mobile, ≤640px).
   either one alone is ready risks measuring/sizing against the other's
   still-showing placeholder. A `cardImageReady`/`statsReady` two-flag latch
   (`revealCardIfReady()`) holds the card hidden until both are true.
+- **Loading placeholder**: `#commander-card-skeleton` (`.commander-card-skeleton`, brand-red shimmer) sits from first paint in the card's exact spot and size — same positioning as the figure, Scryfall "normal" proportions (`aspect-ratio: 488/680`), height set by the same `syncCardImageLayout`, whose padding-right uses the *placeholder's* width while it's showing — so neither the phone layout (card stacked in-flow below the title) nor the desktop stats move when the real card replaces it (`revealCardIfReady` hides it). `dropCardPlaceholder()` removes it when there's no image (Scryfall miss / image error), and the stats then take the full width.
 - **Flip (double-faced cards only)**: a real CSS 3D flip (`.commander-card-flipper`
   toggling `.is-flipped { transform: rotateY(180deg) }`, both faces stacked
   as separate `<img>`s with `backface-visibility: hidden`), not a

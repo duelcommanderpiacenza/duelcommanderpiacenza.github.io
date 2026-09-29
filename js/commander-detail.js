@@ -66,10 +66,19 @@ function scryfallCardImages(card) {
 // 640px the card drops below the title instead of floating beside it (see
 // the CSS), so there's no column layout to match there at all — both
 // inline overrides are cleared and the CSS fallbacks take over.
+//
+// The card-shaped loading placeholder (#commander-card-skeleton, same spot
+// and same Scryfall image proportions as the card) gets the very same
+// height, and while it's the one showing, *its* width drives the padding —
+// so the stats are already laid out for the card's final size, and swapping
+// the placeholder for the real image moves nothing. Once neither is showing
+// (no image for this commander), the padding shrinks to just the gap.
 function syncCardImageLayout(cardImageEl) {
   const mainColEl = document.querySelector(".commander-top-row-main");
+  const skeletonEl = document.getElementById("commander-card-skeleton");
   if (window.innerWidth <= 640) {
     cardImageEl.style.height = "";
+    if (skeletonEl) skeletonEl.style.height = "";
     if (mainColEl) mainColEl.style.paddingRight = "";
     return;
   }
@@ -78,9 +87,12 @@ function syncCardImageLayout(cardImageEl) {
   if (!headingEl || !mainColEl || !winrateBoxesEl) return;
   const top = headingEl.getBoundingClientRect().top;
   const bottom = winrateBoxesEl.getBoundingClientRect().bottom;
-  cardImageEl.style.height = `${Math.round(bottom - top)}px`;
-  const imageWidth = cardImageEl.getBoundingClientRect().width;
-  mainColEl.style.paddingRight = `${Math.round(imageWidth) + 24}px`;
+  const height = `${Math.round(bottom - top)}px`;
+  cardImageEl.style.height = height;
+  if (skeletonEl) skeletonEl.style.height = height;
+  const showing = skeletonEl && !skeletonEl.hidden ? skeletonEl : cardImageEl;
+  const width = showing.getBoundingClientRect().width;
+  mainColEl.style.paddingRight = `${Math.round(width) + 24}px`;
 }
 
 function outcomeFor(m, selfIsP1) {
@@ -113,6 +125,7 @@ async function init() {
 
   if (!id) {
     titleEl.textContent = "Commander non trovato";
+    document.getElementById("commander-card-skeleton")?.setAttribute("hidden", "");
     hidePageLoading();
     return;
   }
@@ -128,9 +141,19 @@ async function init() {
   // already at its final, correct size.
   let cardImageReady = false;
   let statsReady = false;
+  const cardSkeletonEl = document.getElementById("commander-card-skeleton");
   function revealCardIfReady() {
     if (!cardImageReady || !statsReady || !cardFigureEl.hidden) return;
+    // Same size and spot as the placeholder it replaces — nothing moves.
+    if (cardSkeletonEl) cardSkeletonEl.hidden = true;
     cardFigureEl.hidden = false;
+    syncCardImageLayout(cardImageFrontEl);
+  }
+  // No card image for this commander after all (Scryfall found nothing, or
+  // the image failed): drop the placeholder and give the stats that space.
+  function dropCardPlaceholder() {
+    if (!cardSkeletonEl || cardSkeletonEl.hidden) return;
+    cardSkeletonEl.hidden = true;
     syncCardImageLayout(cardImageFrontEl);
   }
 
@@ -155,7 +178,14 @@ async function init() {
       },
       { once: true }
     );
-    cardImageFrontEl.addEventListener("error", () => cardFigureEl.hidden = true, { once: true });
+    cardImageFrontEl.addEventListener(
+      "error",
+      () => {
+        cardFigureEl.hidden = true;
+        dropCardPlaceholder();
+      },
+      { once: true }
+    );
     window.addEventListener("resize", () => {
       syncCardImageLayout(cardImageFrontEl);
       fitTitleToOneLine(titleEl);
@@ -163,9 +193,9 @@ async function init() {
     });
 
     fetchScryfallCard(commander.name).then((card) => {
-      if (!card) return;
+      if (!card) return dropCardPlaceholder();
       const images = scryfallCardImages(card);
-      if (images.length === 0) return;
+      if (images.length === 0) return dropCardPlaceholder();
       cardImageFrontEl.src = images[0];
       if (images.length < 2) return;
 
