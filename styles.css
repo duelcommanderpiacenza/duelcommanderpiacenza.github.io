@@ -5030,7 +5030,12 @@ html.nav-mobile .help-toggle-btn {
   gap: 18px;
 }
 
+/* A column, so the "Attualmente" section (label + holders) can be pushed to
+   the bottom — cards in a row already stretch to the same height, so it
+   lines up across them whatever the length of the text above. */
 .badge-card {
+  display: flex;
+  flex-direction: column;
   border: 1px solid var(--hairline);
   border-radius: var(--radius-card-sm);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 248, 246, 0.95));
@@ -5091,6 +5096,7 @@ html.nav-mobile .help-toggle-btn {
 }
 
 .badge-card-holders-label {
+  margin-top: auto;
   margin-bottom: 6px;
   color: var(--text-muted);
   font-size: 0.72rem;
