@@ -268,6 +268,38 @@ $$;
 
 grant execute on function league_event_count(uuid) to anon, authenticated;
 
+-- Cached final standings of every closed event, one row per player per
+-- event — a pure derived cache like player_badges_auto: recomputed from the
+-- matches (js/leaderboard.js's computeEventLeaderboard, same tiebreakers as
+-- event.html) and fully replaced by admin/js/badges-sync.js on every
+-- event/league/badge change. Lets player.html show a player's position in
+-- each event from their own few rows instead of downloading every attended
+-- event's full entries + matches. Added after the initial schema; on an
+-- existing DB, run just this block (don't re-run this file, it wipes
+-- everything). Public read gated to closed events, same as event_entries.
+create table event_standings (
+  event_id uuid not null references events(id) on delete cascade,
+  player_id uuid not null references players(id) on delete cascade,
+  position integer not null, -- 1 = winner
+  points integer not null,   -- match points: 3 win / 1 draw / 0 loss
+  wins integer not null,
+  draws integer not null,
+  losses integer not null,
+  primary key (event_id, player_id)
+);
+
+create index event_standings_player_idx on event_standings (player_id);
+
+alter table event_standings enable row level security;
+create policy "event_standings_admin_insert" on event_standings for insert with check (auth.role() = 'authenticated');
+create policy "event_standings_admin_update" on event_standings for update using (auth.role() = 'authenticated');
+create policy "event_standings_admin_delete" on event_standings for delete using (auth.role() = 'authenticated');
+create policy "event_standings_public_read" on event_standings for select
+  using (
+    auth.role() = 'authenticated'
+    or exists (select 1 from events e where e.id = event_standings.event_id and e.is_open = false)
+  );
+
 -- Nightly cleanup of expired announcements (pg_cron): deletes every row
 -- whose expires_on is before today, at 03:15 UTC — the night after its last
 -- day, by which time the Bacheca has already stopped showing it (js/db.js's

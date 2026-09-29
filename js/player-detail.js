@@ -1,4 +1,4 @@
-import { Players, EventEntries, Matches, PlayerAutoBadges } from "./db.js";
+import { Players, EventEntries, Matches, PlayerAutoBadges, EventStandings } from "./db.js";
 import { matchRoundOutcome, isBye, isDrop, computeEventLeaderboard } from "./leaderboard.js";
 import { tallyOutcome, renderWinrateTiles } from "./winrate.js";
 import {
@@ -151,42 +151,49 @@ async function init() {
           </table></div>`
     );
 
-    // One row per event this player entered, with the full field's
-    // standings computed to find their own final position in each — not
-    // just this player's own matches, so it needs every entry/match of
-    // that event, not only the ones involving them.
+    // One row per event this player entered, with their final position in
+    // each. Read from the cached standings (EventStandings, rebuilt by the
+    // admin on every event change) — just this player's own few rows.
+    // Any event not in the cache yet (table not created on this DB, not
+    // yet rebuilt since the event closed, or an open event only a logged-in
+    // admin can see) falls back to computing it here from that event's full
+    // entries + matches, same as before the cache existed.
     const historyEventIds = [...new Set(entries.map((e) => e.event_id))];
-    const [historyEntries, historyMatches] = await Promise.all([
-      historyEventIds.length ? EventEntries.listByEvents(historyEventIds) : [],
-      historyEventIds.length ? Matches.listByEvents(historyEventIds) : [],
-    ]);
-    const historyEntriesByEvent = new Map();
-    for (const e of historyEntries) {
-      if (!historyEntriesByEvent.has(e.event_id)) historyEntriesByEvent.set(e.event_id, []);
-      historyEntriesByEvent.get(e.event_id).push(e);
+    const standingByEvent = new Map(); // event id -> { position, wins, draws, losses }
+    try {
+      for (const row of await EventStandings.listByPlayer(id)) standingByEvent.set(row.event_id, row);
+    } catch (err) {
+      console.error(err);
     }
-    const historyMatchesByEvent = new Map();
-    for (const m of historyMatches) {
-      if (!historyMatchesByEvent.has(m.event_id)) historyMatchesByEvent.set(m.event_id, []);
-      historyMatchesByEvent.get(m.event_id).push(m);
+    const uncachedIds = historyEventIds.filter((eventId) => !standingByEvent.has(eventId));
+    if (uncachedIds.length) {
+      const [historyEntries, historyMatches] = await Promise.all([
+        EventEntries.listByEvents(uncachedIds),
+        Matches.listByEvents(uncachedIds),
+      ]);
+      for (const eventId of uncachedIds) {
+        const standings = computeEventLeaderboard(
+          historyMatches.filter((m) => m.event_id === eventId),
+          historyEntries.filter((e) => e.event_id === eventId)
+        );
+        const index = standings.findIndex((s) => s.player?.id === id);
+        if (index === -1) continue;
+        const s = standings[index];
+        standingByEvent.set(eventId, { position: index + 1, wins: s.wins, draws: s.draws, losses: s.losses });
+      }
     }
     const eventHistoryRows = entries
       .filter((e) => e.event)
       .map((e) => {
-        const standings = computeEventLeaderboard(
-          historyMatchesByEvent.get(e.event_id) ?? [],
-          historyEntriesByEvent.get(e.event_id) ?? []
-        );
-        const position = standings.findIndex((s) => s.player?.id === id);
-        const standingRow = position === -1 ? null : standings[position];
+        const standing = standingByEvent.get(e.event_id);
         return {
           event: e.event,
           commander: e.commander,
           partner: e.partner_commander,
-          position: position === -1 ? null : position + 1,
-          wins: standingRow?.wins ?? 0,
-          losses: standingRow?.losses ?? 0,
-          draws: standingRow?.draws ?? 0,
+          position: standing ? standing.position : null,
+          wins: standing?.wins ?? 0,
+          losses: standing?.losses ?? 0,
+          draws: standing?.draws ?? 0,
         };
       })
       .sort((a, b) => (b.event?.event_date ?? "").localeCompare(a.event?.event_date ?? ""));

@@ -441,3 +441,27 @@ export const PlayerAutoBadges = {
     assertOk(await sb.from("player_badges_auto").insert(rows));
   },
 };
+
+// Cached final standings of every closed event (supabase/schema.sql's
+// event_standings) — recomputed and fully replaced by
+// admin/js/badges-sync.js, read by player.html so a player's position in
+// each event comes from their own few rows, not every attended event's full
+// entries + matches.
+export const EventStandings = {
+  listByPlayer: (playerId) =>
+    selectAllRows(() =>
+      sb
+        .from("event_standings")
+        .select("event_id, position, points, wins, draws, losses")
+        .eq("player_id", playerId)
+        .order("event_id")
+    ),
+  // Full replace, like PlayerAutoBadges.replaceAll. Inserted in batches so
+  // one request never carries the whole history (~20 rows per event).
+  replaceAll: async (rows) => {
+    assertOk(await sb.from("event_standings").delete().neq("player_id", "00000000-0000-0000-0000-000000000000"));
+    for (let i = 0; i < rows.length; i += 500) {
+      assertOk(await sb.from("event_standings").insert(rows.slice(i, i + 500)));
+    }
+  },
+};
