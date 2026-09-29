@@ -75,6 +75,16 @@ export function commanderPairWithColors(commander, partner) {
   return `${commanderPairLabel(commander, partner)}<span class="color-identity-inline">${colorIdentityPips(colors)}</span>`;
 }
 
+// A player badge icon's hover/focus text (site-wide js/floating-tooltip.js,
+// fed by data-tooltip): the badge's own description when the admin set one,
+// else just its name. The screen-reader label always leads with the name.
+export function badgeTooltipAttrs(badge) {
+  const description = badge.description?.trim();
+  const tooltip = description || badge.name;
+  const label = description ? `${badge.name}: ${description}` : badge.name;
+  return `data-tooltip="${escapeHtml(tooltip)}" aria-label="${escapeHtml(label)}"`;
+}
+
 // ⚠️ "Bannato" icon (tooltip via the site-wide js/floating-tooltip.js) —
 // Comandanti's table and commander.html's title.
 export function bannedBadge() {

@@ -3,7 +3,7 @@
 // standings preview.
 import { Players, PlayerAutoBadges } from "./db.js";
 import { MAX_AUTO_BADGES_PER_PLAYER } from "./auto-badges.js";
-import { escapeHtml } from "./ui.js";
+import { badgeTooltipAttrs } from "./ui.js";
 
 /**
  * Player id -> their top MAX_AUTO_BADGES_PER_PLAYER auto badges, highest
@@ -48,7 +48,8 @@ export async function fetchPlayerBadgesRenderer() {
 
 // Up to 2 manually assigned badges (p.badge1/badge2, from Players.list()'s
 // badge embed) plus the auto-assigned ones from fetchTopAutoBadgesByPlayer.
-// Hover/focus shows the badge's own name as a custom tooltip (styles.css) —
+// Hover/focus shows the badge's description (else its name) as a custom
+// tooltip (styles.css, js/ui.js's badgeTooltipAttrs) —
 // a native `title` attribute can't be restyled by any browser, so this
 // builds one from scratch instead, fed by data-tooltip and kept accessible
 // via aria-label. Meant to sit as a sibling of the name link (not nested
@@ -61,7 +62,7 @@ export function playerBadgesHtml(p, autoBadgesByPlayer) {
       const glyph = b.icon_url
         ? `<img src="${b.icon_url}" alt="" class="icon-badge-img badge-icon-box" style="width:1.1em;height:1.1em;">`
         : `<span class="badge-icon-box" style="width:1.1em;height:1.1em;">${b.icon ?? ""}</span>`;
-      return `<span class="icon-badge" data-tooltip="${escapeHtml(b.name)}" aria-label="${escapeHtml(b.name)}" tabindex="0">${glyph}</span>`;
+      return `<span class="icon-badge" ${badgeTooltipAttrs(b)} tabindex="0">${glyph}</span>`;
     })
     .join("");
 }

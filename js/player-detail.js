@@ -3,6 +3,7 @@ import { matchRoundOutcome, isBye, isDrop, computeEventLeaderboard } from "./lea
 import { tallyOutcome, renderWinrateTiles } from "./winrate.js";
 import {
   escapeHtml,
+  badgeTooltipAttrs,
   playerLabel,
   commanderPairLabel,
   commanderPairWithColors,
@@ -34,14 +35,19 @@ function viewerScoreLabel(m, viewerIsP1) {
 // plain read of PlayerAutoBadges, precomputed by admin/js/badges-sync.js
 // whenever an event/league closes, not a live js/auto-badges.js
 // computation (that would recompute every player's standings/stats just
-// to extract this one player's result).
-function playerBadgesHtml(badges) {
+// to extract this one player's result). An automatic badge (id in
+// `linkedIds`) links to its own card on badges.html, which explains how it's
+// earned; a manual one has no card there, so it stays a plain icon.
+function playerBadgesHtml(badges, linkedIds) {
   return badges
     .map((b) => {
       const glyph = b.icon_url
         ? `<img src="${b.icon_url}" alt="" class="icon-badge-img badge-icon-box" style="width:1.1em;height:1.1em;">`
         : `<span class="badge-icon-box" style="width:1.1em;height:1.1em;">${b.icon ?? ""}</span>`;
-      return `<span class="icon-badge" data-tooltip="${escapeHtml(b.name)}" aria-label="${escapeHtml(b.name)}" tabindex="0">${glyph}</span>`;
+      const attrs = `class="icon-badge" ${badgeTooltipAttrs(b)}`;
+      return linkedIds.has(b.id)
+        ? `<a ${attrs} href="badges.html#badge-${b.id}">${glyph}</a>`
+        : `<span ${attrs} tabindex="0">${glyph}</span>`;
     })
     .join("");
 }
@@ -79,7 +85,10 @@ async function init() {
     } catch (err) {
       console.error(err);
     }
-    titleEl.innerHTML = `${escapeHtml(nameLabel)} ${playerBadgesHtml([player.badge1, player.badge2, ...autoBadges].filter(Boolean))}`;
+    titleEl.innerHTML = `${escapeHtml(nameLabel)} ${playerBadgesHtml(
+      [player.badge1, player.badge2, ...autoBadges].filter(Boolean),
+      new Set(autoBadges.map((b) => b.id))
+    )}`;
 
     const entries = await EventEntries.listByPlayer(id);
 

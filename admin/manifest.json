@@ -2,7 +2,7 @@
   "id": "/admin/",
   "name": "Duel Commander Piacenza — Admin",
   "short_name": "DC Admin",
-  "description": "Pannello di gestione di leghe, eventi e classifiche del club Duel Commander Piacenza",
+  "description": "Pannello di gestione di leghe, eventi e classifiche di Duel Commander Piacenza",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",

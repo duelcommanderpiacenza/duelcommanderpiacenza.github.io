@@ -1241,7 +1241,8 @@ main {
 .dashboard-league-card:nth-child(2),
 .dashboard-league-chip:nth-child(2),
 .dashboard-event-row:nth-child(2),
-.stat-tile:nth-child(2) {
+.stat-tile:nth-child(2),
+.badge-card:nth-child(2) {
   animation-delay: 45ms;
 }
 
@@ -1249,7 +1250,8 @@ main {
 .dashboard-league-card:nth-child(3),
 .dashboard-league-chip:nth-child(3),
 .dashboard-event-row:nth-child(3),
-.stat-tile:nth-child(3) {
+.stat-tile:nth-child(3),
+.badge-card:nth-child(3) {
   animation-delay: 90ms;
 }
 
@@ -1257,7 +1259,8 @@ main {
 .dashboard-league-card:nth-child(4),
 .dashboard-league-chip:nth-child(4),
 .dashboard-event-row:nth-child(4),
-.stat-tile:nth-child(4) {
+.stat-tile:nth-child(4),
+.badge-card:nth-child(4) {
   animation-delay: 135ms;
 }
 
@@ -1265,7 +1268,8 @@ main {
 .dashboard-league-card:nth-child(5),
 .dashboard-league-chip:nth-child(5),
 .dashboard-event-row:nth-child(5),
-.stat-tile:nth-child(5) {
+.stat-tile:nth-child(5),
+.badge-card:nth-child(5) {
   animation-delay: 180ms;
 }
 
@@ -1273,7 +1277,8 @@ main {
 .dashboard-league-card:nth-child(n + 6),
 .dashboard-league-chip:nth-child(n + 6),
 .dashboard-event-row:nth-child(n + 6),
-.stat-tile:nth-child(n + 6) {
+.stat-tile:nth-child(n + 6),
+.badge-card:nth-child(n + 6) {
   animation-delay: 225ms;
 }
 
@@ -1288,7 +1293,8 @@ main {
   .admin-topbar h1,
   input[type="search"],
   .stat-tile,
-  .pie-chart-wrap {
+  .pie-chart-wrap,
+  .badge-card {
     animation: none;
   }
 }
@@ -4671,6 +4677,131 @@ img.cs-option-icon {
   margin-left: 0;
 }
 
+/* A small link-button beside a page title (Giocatori's "🏅 Badge") —
+   compact and never wrapping, so it stays on the title's line on phones. */
+.page-heading-link {
+  flex-shrink: 0;
+  white-space: nowrap;
+  min-height: 36px;
+  padding: 0 14px;
+  gap: 6px;
+  font-size: 0.9rem;
+}
+
+/* badges.html (js/badges-page.js): one card per automatic badge. */
+.badges-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+  gap: 18px;
+}
+
+.badge-card {
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card-sm);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 248, 246, 0.95));
+  box-shadow: var(--shadow-card);
+  padding: 18px;
+  transition: box-shadow 180ms ease, border-color 180ms ease;
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* The card a player page's badge link pointed at (badges.html#badge-<id>). */
+.badge-card.is-target {
+  border-color: var(--brand-red);
+  box-shadow: 0 0 0 3px rgba(220, 24, 28, 0.18), var(--shadow-card);
+}
+
+.badge-card-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.badge-card-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(220, 24, 28, 0.1);
+}
+
+.badge-card-icon-emoji {
+  font-size: 1.7rem;
+  line-height: 1;
+}
+
+.badge-card-icon-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.badge-card-name {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-title);
+}
+
+.badge-card-text {
+  margin: 0 0 14px;
+  color: var(--text-body);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.badge-card-holders-label {
+  margin-bottom: 6px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.badge-card-holders {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.badge-holder {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 11px;
+  border-radius: var(--radius-pill);
+  background: rgba(220, 24, 28, 0.08);
+  color: var(--brand-red-deep);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 150ms ease;
+}
+
+.badge-holder:hover {
+  background: rgba(220, 24, 28, 0.16);
+  text-decoration: none;
+}
+
+.badge-card-holders-empty {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+/* A player page's badge icons link to their card on badges.html — no
+   underline under the emoji/image from the global a:hover. */
+a.icon-badge,
+a.icon-badge:hover {
+  text-decoration: none;
+}
+
 .filter-panel {
   display: grid;
   grid-template-rows: 1fr;
@@ -5539,6 +5670,24 @@ html.nav-mobile .chart-carousel-arrow {
    their own inside the accent card. */
 :root[data-theme="dark"] .dashboard-card-leagues .dashboard-league-card {
   background: none;
+}
+
+/* badges.html: same faint light-on-dark surface as the other cards, and
+   the red tints brightened like the site's other dark-mode reds. */
+:root[data-theme="dark"] .badge-card {
+  background: rgba(255, 255, 255, 0.045);
+}
+
+:root[data-theme="dark"] .badge-card-icon {
+  background: rgba(255, 110, 110, 0.14);
+}
+
+:root[data-theme="dark"] .badge-holder {
+  background: rgba(255, 110, 110, 0.12);
+}
+
+:root[data-theme="dark"] .badge-holder:hover {
+  background: rgba(255, 110, 110, 0.2);
 }
 
 :root[data-theme="dark"] .dashboard-standings-rank {

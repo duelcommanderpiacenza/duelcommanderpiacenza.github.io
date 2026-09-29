@@ -63,6 +63,11 @@ create table commanders (
 create table badges ( -- small icon + name a player can be tagged with (e.g. "Campione", trophy icon)
   id uuid primary key default gen_random_uuid(),
   name text not null unique, -- shown as the tooltip when hovering the icon next to a player's name
+  -- Optional hover text of the badge icon next to player names (js/ui.js's badgeTooltipAttrs);
+  -- when empty, the name is shown instead. Not used by badges.html, whose cards show the name
+  -- plus a text generated from auto_rule. Added after the initial schema; on an existing DB:
+  -- alter table badges add column description text;
+  description text,
   -- Exactly one of these two is set: icon is a fixed emoji from the admin's
   -- pool, icon_url is a custom PNG/JPG/WEBP the admin uploaded to the
   -- "badge-icons" Supabase Storage bucket (see js/db.js's BadgeIcons and

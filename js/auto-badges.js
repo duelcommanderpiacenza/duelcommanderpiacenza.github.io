@@ -12,12 +12,12 @@
 import { Badges, Leagues, Events, EventEntries, Matches, fetchEventsResults } from "./db.js";
 import { computeEventLeaderboard, computeLeaguePoints, isBye, isDrop, matchRoundOutcome } from "./leaderboard.js";
 
-const TOP8_STREAK_COUNT = 3;
-const TOP8_STREAK_WINDOW_MONTHS = 3;
+export const TOP8_STREAK_COUNT = 3;
+export const TOP8_STREAK_WINDOW_MONTHS = 3;
 // A top-8 in a tiny event isn't the same achievement as a top-8 in a full
 // one — only events with at least this many entrants count toward the
 // streak at all.
-const TOP8_STREAK_MIN_ENTRANTS = 20;
+export const TOP8_STREAK_MIN_ENTRANTS = 20;
 // How many auto badges show per player — applied by js/players-page.js at
 // display time (sliced off the front of the priority-sorted array this
 // module returns), not baked into what gets stored. player.html shows a
@@ -27,11 +27,11 @@ export const MAX_AUTO_BADGES_PER_PLAYER = 3;
 // lucky win is a meaningless 100% winrate, and a handful of matches
 // shouldn't out-rank nobody-else-qualifies for "most played" either.
 // "Più match giocati": only players with at least this many matches played.
-const MIN_MATCHES_FOR_MOST_MATCHES_BADGE = 20;
+export const MIN_MATCHES_FOR_MOST_MATCHES_BADGE = 20;
 // "Winrate più alto": only players who've played at least this many events.
-const MIN_EVENTS_FOR_WINRATE_BADGE = 5;
-const MIN_COMMANDERS_FOR_DIVERSITY_BADGE = 5;
-const COMPLETIST_EVENT_COUNT = 10;
+export const MIN_EVENTS_FOR_WINRATE_BADGE = 5;
+export const MIN_COMMANDERS_FOR_DIVERSITY_BADGE = 5;
+export const COMPLETIST_EVENT_COUNT = 10;
 
 // Every rule below only ever counts *published* (closed) events — same as
 // the public site. This runs in the admin (admin/js/badges-sync.js), where

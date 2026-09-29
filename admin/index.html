@@ -57,7 +57,7 @@
   <div class="login-card">
     <img src="../dc_pc.png" alt="">
     <h1>Area riservata</h1>
-    <p class="hint">Accesso limitato agli amministratori del club.</p>
+    <p class="hint">Accesso limitato agli amministratori.</p>
     <form id="login-form">
       <div class="field">
         <label for="login-email">Email</label>
@@ -193,6 +193,10 @@
             <label for="badges-admin-name">Nome</label>
             <input type="text" id="badges-admin-name" required>
           </div>
+          <div class="field" id="badges-admin-description-field" hidden>
+            <label for="badges-admin-description">Descrizione <span class="field-hint">(mostrata passando il mouse sul badge; vuota = nome)</span></label>
+            <textarea id="badges-admin-description" rows="2"></textarea>
+          </div>
           <div class="field">
             <label>Icona</label>
             <div class="checkbox-inline" style="display:inline-flex;margin-right:20px;">
@@ -282,7 +286,7 @@
         <dd>Assegnato a chi ha pilotato pi&ugrave; comandanti distinti (contando anche i partner/background), tra i giocatori con almeno 5 comandanti diversi. In caso di parit&agrave; il badge va a tutti i pari merito.</dd>
 
         <dt>10 eventi consecutivi</dt>
-        <dd>Assegnato a chi ha partecipato a tutti gli ultimi 10 eventi del club, indipendentemente dalla lega di appartenenza (o se standalone). Nessuno lo ottiene finch&eacute; non esistono almeno 10 eventi.</dd>
+        <dd>Assegnato a chi ha partecipato a tutti gli ultimi 10 eventi, indipendentemente dalla lega di appartenenza (o se standalone). Nessuno lo ottiene finch&eacute; non esistono almeno 10 eventi.</dd>
       </dl>
       <p class="field-hint">Ogni giocatore mostra al massimo 3 badge automatici insieme: se ne avrebbe diritto a pi&ugrave;, vince il valore di Priorit&agrave; pi&ugrave; alto.</p>
     </details>

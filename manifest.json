@@ -1,7 +1,7 @@
 {
   "name": "Duel Commander Piacenza",
   "short_name": "DC Piacenza",
-  "description": "Classifiche, leghe ed eventi del club Duel Commander Piacenza",
+  "description": "Classifiche, leghe ed eventi di Duel Commander Piacenza",
   "start_url": "index.html",
   "scope": ".",
   "display": "standalone",

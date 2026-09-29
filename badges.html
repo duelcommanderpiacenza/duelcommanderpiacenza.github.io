@@ -14,7 +14,7 @@
       } catch (e) {}
     })();
   </script>
-  <title>Giocatori - Duel Commander Piacenza</title>
+  <title>Badge - Duel Commander Piacenza</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="view-transition" content="same-origin">
   <link rel="icon" type="image/png" href="dc_pc.png">
@@ -68,57 +68,23 @@
   </div>
 </nav>
 
-<main class="page-main">
-  <div class="page-heading page-heading-with-action">
-    <h1>Giocatori</h1>
-    <a class="btn-secondary page-heading-link" href="badges.html"><span aria-hidden="true">🏅</span> Badge</a>
+<main class="page-main" id="badges-page">
+  <div class="page-heading-row">
+    <a class="breadcrumb-link" href="players.html" aria-label="Giocatori" title="Giocatori">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+    </a>
+
+    <div class="page-heading-text">
+      <div class="page-heading">
+        <h1>Badge</h1>
+      </div>
+    </div>
   </div>
 
   <div class="page-loading-region">
     <div id="page-loading-overlay" class="page-loading-overlay"><p>Caricamento...</p></div>
 
-    <div class="filter-toggle-line">
-      <div class="field filter-toggle-search">
-        <label for="players-search">Cerca</label>
-        <input type="search" id="players-search" placeholder="Cerca giocatore...">
-      </div>
-      <div class="field filter-toggle-sort">
-        <label for="players-sort">Ordina per</label>
-        <select id="players-sort">
-          <option value="events">Eventi</option>
-          <option value="winrate">Winrate</option>
-          <option value="wins">Vittorie</option>
-        </select>
-      </div>
-      <button type="button" class="filter-toggle-btn" id="players-filter-toggle" aria-expanded="false" aria-controls="players-filter-panel" aria-label="Filtri">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
-      </button>
-    </div>
-
-    <div class="filter-panel is-collapsed" id="players-filter-panel">
-      <div class="filter-panel-clip">
-        <div class="filter-panel-body">
-          <div class="filter-bar">
-            <div class="field">
-              <label for="players-league-filter">Lega</label>
-              <select id="players-league-filter"><option value="">Tutte le leghe</option></select>
-            </div>
-            <div class="field">
-              <label for="players-event-filter">Evento</label>
-              <select id="players-event-filter"><option value="">Tutti gli eventi</option></select>
-            </div>
-            <div class="field">
-              <label for="players-date-from">Dal</label>
-              <input type="date" id="players-date-from" placeholder="Dal">
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div id="players-list">
-      <p class="page-loading">Caricamento giocatori...</p>
-    </div>
+    <div id="badges-content"><p class="page-loading">Caricamento badge...</p></div>
   </div>
 </main>
 
@@ -138,7 +104,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script type="module" src="js/layout.js"></script>
-<script type="module" src="js/players-page.js"></script>
+<script type="module" src="js/badges-page.js"></script>
 
 </body>
 </html>

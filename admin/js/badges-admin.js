@@ -40,6 +40,8 @@ export function initBadgesAdmin() {
   const form = document.getElementById("badges-admin-form");
   const idField = document.getElementById("badges-admin-id");
   const nameField = document.getElementById("badges-admin-name");
+  const descriptionFieldWrap = document.getElementById("badges-admin-description-field");
+  const descriptionField = document.getElementById("badges-admin-description");
   const autoRuleField = document.getElementById("badges-admin-auto-rule");
   const priorityField = document.getElementById("badges-admin-priority");
   const priorityFieldWrap = document.getElementById("badges-admin-priority-field");
@@ -53,6 +55,11 @@ export function initBadgesAdmin() {
   const previewEl = document.getElementById("badges-admin-icon-preview");
 
   let allBadges = [];
+  // Whether the DB has badges.description yet (added after the initial
+  // schema) — detected from the fetched rows, so the field only shows, and
+  // is only ever saved, once the column exists; before that, saving a badge
+  // keeps working exactly as it did.
+  let descriptionSupported = false;
   let selectedFile = null; // a newly-picked file, pending upload on submit
   let editingIconUrl = null; // the icon_url the badge being edited already had, if any
 
@@ -133,6 +140,8 @@ export function initBadgesAdmin() {
   async function refresh() {
     try {
       allBadges = await Badges.list();
+      descriptionSupported = allBadges.length > 0 && "description" in allBadges[0];
+      descriptionFieldWrap.hidden = !descriptionSupported;
       renderList();
       populateRuleOptions(null);
     } catch (err) {
@@ -145,6 +154,7 @@ export function initBadgesAdmin() {
   function onEdit(row) {
     idField.value = row.id;
     nameField.value = row.name;
+    descriptionField.value = row.description ?? "";
     populateRuleOptions(row.id);
     autoRuleField.value = row.auto_rule ?? "";
     priorityField.value = row.priority ?? 0;
@@ -232,6 +242,9 @@ export function initBadgesAdmin() {
       auto_rule: autoRuleField.value || null,
       priority: parseInt(priorityField.value, 10) || 0,
     };
+    // Hover text of the badge icon next to player names, manual and
+    // automatic badges alike (empty = the name is shown instead).
+    if (descriptionSupported) payload.description = descriptionField.value.trim() || null;
 
     try {
       if (idField.value) await Badges.update(idField.value, payload);

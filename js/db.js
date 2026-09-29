@@ -72,7 +72,7 @@ export const Commanders = {
 // badges.auto_rule via the precomputed PlayerAutoBadges below rather than
 // stored on this row.
 const BADGE_EMBED =
-  "badge1:badges!players_badge1_id_fkey(id,name,icon,icon_url), badge2:badges!players_badge2_id_fkey(id,name,icon,icon_url)";
+  "badge1:badges!players_badge1_id_fkey(id,name,description,icon,icon_url), badge2:badges!players_badge2_id_fkey(id,name,description,icon,icon_url)";
 
 export const Badges = {
   list: () => sb.from("badges").select("*").order("name").then(assertOk),
@@ -401,11 +401,11 @@ export const PlayerAutoBadges = {
   // don't guarantee row order without an explicit order() on the query,
   // and there's no direct column on this join table itself to order by.
   list: () =>
-    sb.from("player_badges_auto").select("player_id, badge:badges(id,name,icon,icon_url,priority)").then(assertOk),
+    sb.from("player_badges_auto").select("player_id, badge:badges(id,name,description,icon,icon_url,priority)").then(assertOk),
   listByPlayer: (playerId) =>
     sb
       .from("player_badges_auto")
-      .select("badge:badges(id,name,icon,icon_url,priority)")
+      .select("badge:badges(id,name,description,icon,icon_url,priority)")
       .eq("player_id", playerId)
       .then(assertOk),
   // Full replace, not a diff — simplest correct way to keep this in sync
