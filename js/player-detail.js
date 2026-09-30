@@ -8,6 +8,7 @@ import {
   playerLabel,
   commanderPairLabel,
   eventCellLabel,
+  eventTitle,
   showError,
   renderPaginated,
   isoDateYearsAgo,
@@ -67,8 +68,8 @@ async function init() {
   const commandersEl = document.getElementById("player-commanders");
   const eventHistoryEl = document.getElementById("player-event-history");
   const overallEl = document.getElementById("player-winrate-overall");
-  const commanderFilter = document.getElementById("player-commander-filter");
   const leagueFilter = document.getElementById("player-league-filter");
+  const eventFilter = document.getElementById("player-event-filter");
   const dateFromFilter = document.getElementById("player-date-from");
   // Same round button, box and active-filter dot as the list pages: a plain
   // collapsing panel, the rest of the page moving with it. Same default
@@ -268,23 +269,19 @@ async function init() {
     }
     carousel.setRecords(recordsByPair);
 
-    // Filters: the two dropdowns narrow the same rows already loaded above,
-    // updating the winrate tiles in place instead of separate breakdown tables.
-    // The commander filter matches either seat (primary or partner).
-    const commanderOptions = new Map();
+    // Filters (Lega, Evento, Dal): narrow the same rows already loaded
+    // above, updating the winrate tiles in place instead of separate
+    // breakdown tables. Only this player's own leagues and events are
+    // offered (unlike js/scope-filter.js's site-wide lists, which the
+    // commander page uses) — picking a league narrows Evento to that
+    // league's events, the same pairing as there.
     const leagueOptions = new Map();
-    for (const r of rows) {
-      if (r.myCommander) commanderOptions.set(r.myCommander.id, r.myCommander.name);
-      if (r.myPartner) commanderOptions.set(r.myPartner.id, r.myPartner.name);
-      const league = r.event?.league;
-      if (league) leagueOptions.set(league.id, league.name);
+    const playedEvents = new Map(); // event id -> event (with its league embed)
+    for (const e of entries) {
+      if (!e.event) continue;
+      playedEvents.set(e.event.id, e.event);
+      if (e.event.league) leagueOptions.set(e.event.league.id, e.event.league.name);
     }
-    commanderFilter.innerHTML =
-      '<option value="">Tutti</option>' +
-      Array.from(commanderOptions.entries())
-        .sort((a, b) => a[1].localeCompare(b[1]))
-        .map(([cid, name]) => `<option value="${cid}">${escapeHtml(name)}</option>`)
-        .join("");
     leagueFilter.innerHTML =
       '<option value="">Tutte</option>' +
       Array.from(leagueOptions.entries())
@@ -292,16 +289,42 @@ async function init() {
         .map(([lid, name]) => `<option value="${lid}">${escapeHtml(name)}</option>`)
         .join("");
 
-    // "Dal": only events on/after that date (ISO dates compare as strings).
-    function applyFilters() {
-      const commanderId = commanderFilter.value;
+    // Newest first. data-label/data-sublabel: js/custom-select.js's popup
+    // shows the event name with its league on a smaller line below (same
+    // as js/scope-filter.js); the option text stays the plain combined
+    // string for the native <select>.
+    function populateEvents() {
       const leagueId = leagueFilter.value;
+      const scoped = [...playedEvents.values()]
+        .filter((ev) => !leagueId || ev.league?.id === leagueId)
+        .sort((a, b) => (b.event_date ?? "").localeCompare(a.event_date ?? ""));
+      eventFilter.innerHTML =
+        '<option value="">Tutti</option>' +
+        scoped
+          .map((ev) => {
+            const name = eventTitle(ev);
+            return `<option value="${ev.id}" data-label="${escapeHtml(name)}"${
+              ev.league ? ` data-sublabel="${escapeHtml(ev.league.name)}"` : ""
+            }>${escapeHtml(name)}${ev.league ? ` — ${escapeHtml(ev.league.name)}` : ""}</option>`;
+          })
+          .join("");
+    }
+    populateEvents();
+
+    // "Dal": only events on/after that date (ISO dates compare as strings).
+    function inScope(event, leagueId, eventId, from) {
+      if (eventId && event?.id !== eventId) return false;
+      if (leagueId && event?.league?.id !== leagueId) return false;
+      if (from && (event?.event_date ?? "") < from) return false;
+      return true;
+    }
+    function applyFilters() {
+      const leagueId = leagueFilter.value;
+      const eventId = eventFilter.value;
       const from = dateFromFilter.value;
       const bucket = { wins: 0, draws: 0, losses: 0 };
       for (const r of rows) {
-        if (commanderId && r.myCommander?.id !== commanderId && r.myPartner?.id !== commanderId) continue;
-        if (leagueId && r.event?.league?.id !== leagueId) continue;
-        if (from && (r.event?.event_date ?? "") < from) continue;
+        if (!inScope(r.event, leagueId, eventId, from)) continue;
         // A drop isn't a win, a loss, or a match played — skipped entirely.
         // A bye counts as a played match won, same as any other match win.
         if (r.isDrop) continue;
@@ -309,16 +332,15 @@ async function init() {
       }
       // Events entered within the same filters (an entry, not a match, so an
       // event is counted even if the player dropped before playing a round).
-      const events = entries.filter((e) => {
-        if (commanderId && e.commander?.id !== commanderId && e.partner_commander?.id !== commanderId) return false;
-        if (leagueId && e.event?.league?.id !== leagueId) return false;
-        if (from && (e.event?.event_date ?? "") < from) return false;
-        return true;
-      }).length;
+      const events = entries.filter((e) => inScope(e.event, leagueId, eventId, from)).length;
       renderWinrateTiles(overallEl, bucket, { events });
     }
-    commanderFilter.addEventListener("change", applyFilters);
-    leagueFilter.addEventListener("change", applyFilters);
+    leagueFilter.addEventListener("change", () => {
+      // A new league: Evento lists just its events, back to "Tutti".
+      populateEvents();
+      applyFilters();
+    });
+    eventFilter.addEventListener("change", applyFilters);
     dateFromFilter.addEventListener("change", applyFilters);
     applyFilters();
 
