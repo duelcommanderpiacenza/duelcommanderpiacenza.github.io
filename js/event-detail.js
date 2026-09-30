@@ -79,7 +79,7 @@ async function init() {
     ]);
 
     titleEl.textContent = eventTitle(event);
-    const resultsHtml = resultsLink(event.results_url);
+    const resultsHtml = resultsLink(event.results_url, event.decklists_url);
     resultsEl.innerHTML = resultsHtml;
     resultsEl.hidden = !resultsHtml;
     initTitleFit(titleEl);

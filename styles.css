@@ -1547,17 +1547,22 @@ a.upcoming-row:hover .upcoming-row-title {
   text-decoration: underline;
 }
 
-/* mtgtop8 "Top 8" pill (js/results-link.js) as the row's last flex item:
+/* mtgtop8 "Top 8" pill / Moxfield split pill (js/results-link.js) as the row's last flex item:
    pushed to the right end, vertically centered on the date badge by the
    row's own align-items: center. Same size as the one beside event.html's
    title (.page-heading-pill). The name column still truncates first; the
    pill never shrinks. */
 .upcoming-row > .results-link {
   flex-shrink: 0;
-  min-height: 32px;
+  min-height: 36px;
   margin-left: auto;
   padding: 0 14px;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
+}
+
+.upcoming-row > .results-link-group {
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 /* "Leghe in corso" inside the accent card: the per-league blocks drop their
@@ -3501,14 +3506,24 @@ html.nav-mobile .help-toggle-btn.cmd-carousel-help-btn {
   }
 }
 
-/* A bit bigger than a plain .badge-status (26px) — both pills here, same
-   size, the results one included (its base style is em-based). */
+/* A bit bigger than a plain .badge-status (26px), the results one included
+   (its base style is em-based) — that one a bit taller still, the same
+   36px as the Moxfield split pill (.results-link-group). */
 .page-heading-pill > .badge-status,
 .page-heading-pill > .results-link {
   min-height: 32px;
   margin-left: 0;
   padding: 0 14px;
   font-size: 0.85rem;
+}
+
+.page-heading-pill > .results-link {
+  min-height: 36px;
+  font-size: 0.95rem;
+}
+
+.page-heading-pill > .results-link-group {
+  margin-left: 0;
 }
 
 /* Round icon-only back button — the destination ("Tutti i comandanti" etc.)
@@ -3746,6 +3761,81 @@ html.nav-mobile .help-toggle-btn.cmd-carousel-help-btn {
 .results-link:hover,
 .results-link:focus-visible {
   background: var(--brand-red-deep-2);
+}
+
+/* Moxfield + mtgtop8 split pill (js/results-link.js): white left half with
+   the Moxfield logo, red "Top 8" right half, red outline around both. With
+   no mtgtop8 link it's the white half alone, a round logo button. Fixed
+   36px tall (the size both placements give .results-link), not em-based. */
+.results-link-group {
+  display: inline-flex;
+  margin-left: 0.5em;
+  height: 36px;
+  box-sizing: border-box;
+  vertical-align: middle;
+  border: 2px solid var(--brand-red);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  background: var(--brand-red);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.results-link-seg {
+  display: inline-flex;
+  align-items: center;
+  /* Right side 2px less: the group's red outline adds its own 2px there. */
+  padding: 0 8px 0 10px;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 150ms ease;
+}
+
+.results-link-seg:hover,
+.results-link-seg:focus-visible {
+  background: var(--brand-red-deep-2);
+  text-decoration: none;
+}
+
+.results-link-seg-moxfield {
+  padding: 0 5px 0 7px;
+  background: #fff;
+}
+
+.results-link-seg-moxfield:only-child {
+  padding: 0 1px;
+}
+
+.results-link-seg-moxfield:hover,
+.results-link-seg-moxfield:focus-visible {
+  background: #fbe3e3;
+}
+
+.results-link-seg-moxfield img {
+  display: block;
+  width: 30px;
+  height: 30px;
+}
+
+/* Touch devices: a bit taller still, an easier tap target — both the
+   mtgtop8 pill (in both its placements) and the split pill. */
+html.nav-mobile .upcoming-row > .results-link,
+html.nav-mobile .page-heading-pill > .results-link {
+  min-height: 40px;
+}
+
+html.nav-mobile .results-link-group {
+  height: 40px;
+}
+
+html.nav-mobile .results-link-seg-moxfield img {
+  width: 34px;
+  height: 34px;
 }
 
 .entity-card-meta {

@@ -21,6 +21,7 @@ export function initEventsAdmin({ onOpenEvent }) {
   const dateField = document.getElementById("events-admin-date");
   const timeField = document.getElementById("events-admin-time");
   const resultsUrlField = document.getElementById("events-admin-results-url");
+  const decklistsUrlField = document.getElementById("events-admin-decklists-url");
   const msgEl = document.getElementById("events-admin-message");
   const cancelBtn = document.getElementById("events-admin-cancel");
 
@@ -74,6 +75,7 @@ export function initEventsAdmin({ onOpenEvent }) {
     dateField.value = row.event_date ?? "";
     timeField.value = formatTime(row.start_time) ?? "";
     resultsUrlField.value = row.results_url ?? "";
+    decklistsUrlField.value = row.decklists_url ?? "";
   }
 
   function resetForm() {
@@ -119,9 +121,10 @@ export function initEventsAdmin({ onOpenEvent }) {
     e.preventDefault();
     if (!currentLeague) return;
     const resultsUrl = resultsUrlField.value.trim();
-    // Same http(s)-only rule as the DB's own check constraint — caught here
+    const decklistsUrl = decklistsUrlField.value.trim();
+    // Same http(s)-only rule as the DB's own check constraints — caught here
     // first so the admin gets a clear message instead of a generic save error.
-    if (resultsUrl && !isHttpUrl(resultsUrl)) {
+    if ((resultsUrl && !isHttpUrl(resultsUrl)) || (decklistsUrl && !isHttpUrl(decklistsUrl))) {
       setMessage(msgEl, "Il link deve iniziare con http:// o https://.", true);
       return;
     }
@@ -130,6 +133,7 @@ export function initEventsAdmin({ onOpenEvent }) {
       event_date: dateField.value || null,
       start_time: timeField.value || null,
       results_url: resultsUrl || null,
+      decklists_url: decklistsUrl || null,
       league_id: currentLeague.id,
     };
     // Only a Topdeck event can be left unnamed — the public site then shows

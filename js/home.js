@@ -227,7 +227,7 @@ async function renderEventsSection(el) {
                   <span class="upcoming-row-title">${escapeHtml(title)}</span>
                   ${ev.league ? `<span class="upcoming-row-league">${escapeHtml(ev.league.name)}</span>` : ""}
                 </div>
-                ${nestedResultsLink(ev.results_url)}
+                ${nestedResultsLink(ev.results_url, ev.decklists_url)}
               </a>`;
               })
               .join("")}

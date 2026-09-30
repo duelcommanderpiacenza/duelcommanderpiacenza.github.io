@@ -24,7 +24,11 @@ enhanceSelects();
 enhanceDateInputs();
 
 // Every data-tooltip badge-like element on every page — player badges,
-// the banned-commander icon, the mtgtop8 "Top 8" pill — through the one
-// shared tooltip (js/floating-tooltip.js), delegated on the whole body so
+// the banned-commander icon, an event's mtgtop8/Moxfield links — through the
+// one shared tooltip (js/floating-tooltip.js), delegated on the whole body so
 // it covers markup rendered later too.
-attachHoverTooltips(document.body, ".icon-badge[data-tooltip], .results-link[data-tooltip]", (el) => el.dataset.tooltip);
+attachHoverTooltips(
+  document.body,
+  ".icon-badge[data-tooltip], .results-link[data-tooltip], .results-link-seg[data-tooltip]",
+  (el) => el.dataset.tooltip
+);

@@ -142,9 +142,15 @@ create table events (
     -- Added after the initial schema; on an existing DB (don't re-run this file, it wipes everything):
     --   alter table events add column results_url text
     --     constraint events_results_url_http check (results_url ~* '^https?://');
+  decklists_url text, -- optional link to the event's decklists on Moxfield, shown as the white Moxfield-logo half
+    -- of that same pill (or alone, as a round logo button, with no results_url). Same rules as results_url.
+    -- Added after the initial schema; on an existing DB:
+    --   alter table events add column decklists_url text
+    --     constraint events_decklists_url_http check (decklists_url ~* '^https?://');
   created_at timestamptz not null default now(),
   constraint events_unique_name_per_league unique (league_id, name), -- same name OK across leagues, not within one
-  constraint events_results_url_http check (results_url ~* '^https?://')
+  constraint events_results_url_http check (results_url ~* '^https?://'),
+  constraint events_decklists_url_http check (decklists_url ~* '^https?://')
 );
 
 -- Postgres treats every NULL as distinct for a plain unique constraint, so
