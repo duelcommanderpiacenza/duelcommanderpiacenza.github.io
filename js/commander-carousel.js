@@ -8,10 +8,13 @@
 // beside it on desktop (styles.css .cmd-carousel). The track is a native
 // scroll-snap row, so touch swipes and trackpads already land on whole
 // cards; ‹ › arrows (hidden on touch devices, like js/chart-carousel.js's),
-// the arrow keys, and clicking a peeking card move it too.
+// the arrow keys, clicking a peeking card, and dragging with the mouse
+// (js/drag-scroll.js's enableSnapDrag: glides to the next card in the
+// drag's direction on release, like the chart carousel) move it too.
 
 import { escapeHtml, commanderPairWithColors, formatDate } from "./ui.js";
 import { winRatePct } from "./winrate.js";
+import { enableSnapDrag } from "./drag-scroll.js";
 
 // Scryfall's collection endpoint takes up to this many cards per request —
 // one request for a whole player's commanders instead of one each (and
@@ -341,6 +344,17 @@ export function renderCommanderCarousel(el, items) {
     if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
     e.preventDefault();
     go(active + (e.key === "ArrowRight" ? 1 : -1));
+  });
+  // A drag released over a peeking card doesn't also jump to it (the
+  // click-to-go above) — enableSnapDrag swallows that click.
+  track.classList.toggle("is-draggable", items.length > 1);
+  enableSnapDrag(track, {
+    canDrag: () => items.length > 1,
+    targetLeft: (forward) => {
+      const at = track.scrollLeft / step;
+      const i = Math.max(0, Math.min(items.length - 1, forward ? Math.ceil(at) : Math.floor(at)));
+      return lefts[i] - lefts[0];
+    },
   });
   el.querySelector(".cmd-carousel-help-btn").addEventListener("click", openFoilInfo);
   prevBtn.addEventListener("click", () => go(active - 1));

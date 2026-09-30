@@ -4,11 +4,17 @@
 // there's room, 1 otherwise (sizes in styles.css, .chart-grid). The row
 // itself is a native scroll-snap container, so touch swipes and trackpads
 // already land on whole charts; this adds what a mouse user needs on top —
-// prev/next arrows (hidden on touch devices, html.nav-mobile) — plus dots
-// showing where you are, below the row.
+// prev/next arrows (hidden on touch devices, html.nav-mobile) and dragging
+// the row with the mouse — plus dots showing where you are, below the row.
+//
+// Mouse drag (js/drag-scroll.js's enableSnapDrag): on release the row glides
+// to the next whole chart in the drag's direction, however short the drag.
+// A drag that started on a link ("Vedi tutti") doesn't also follow it.
 //
 // Call after every render: both pages rebuild the chart markup from scratch
 // on each filter change, so the controls are rebuilt with it.
+
+import { enableSnapDrag } from "./drag-scroll.js";
 
 function stepWidth(grid) {
   const first = grid.firstElementChild;
@@ -65,6 +71,7 @@ export function initChartCarousel(containerEl, { navAfter = null } = {}) {
     const count = positionCount(grid);
     // Everything already fits (e.g. only 2 charts, 2 visible) — no controls.
     nav.hidden = count <= 1;
+    grid.classList.toggle("is-draggable", count > 1);
     if (dotsEl.children.length !== count) {
       dotsEl.innerHTML = Array.from({ length: count }, () => '<span class="chart-carousel-dot"></span>').join("");
     }
@@ -78,6 +85,14 @@ export function initChartCarousel(containerEl, { navAfter = null } = {}) {
     btn.addEventListener("click", () => {
       grid.scrollBy({ left: Number(btn.dataset.dir) * stepWidth(grid), behavior: "smooth" });
     });
+  });
+  enableSnapDrag(grid, {
+    canDrag: () => positionCount(grid) > 1,
+    targetLeft: (forward) => {
+      const step = stepWidth(grid);
+      const at = grid.scrollLeft / step;
+      return Math.max(0, Math.min(positionCount(grid) - 1, forward ? Math.ceil(at) : Math.floor(at))) * step;
+    },
   });
   grid.addEventListener("scroll", update, { passive: true });
   // A ResizeObserver on the row itself (not a window listener) — nothing to

@@ -3004,6 +3004,28 @@ html.nav-mobile .help-toggle-btn.cmd-carousel-help-btn {
   display: none;
 }
 
+/* Mouse drag (js/commander-carousel.js → js/drag-scroll.js): the current
+   card shows a grab cursor (peeking ones keep the pointer: a click still
+   moves to them); no text selection (the name-only fallback cards).
+   Snapping is off during the drag and its glide after. */
+html:not(.nav-mobile) .cmd-carousel-track.is-draggable {
+  user-select: none;
+}
+
+html:not(.nav-mobile) .cmd-carousel-track.is-draggable .cmd-carousel-slide.is-active {
+  cursor: grab;
+}
+
+.cmd-carousel-track.is-dragging {
+  scroll-snap-type: none;
+}
+
+/* As specific as the grab rule above, and after it, so it wins mid-drag. */
+html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging,
+html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel-slide {
+  cursor: grabbing;
+}
+
 .cmd-carousel-slide {
   position: relative;
   flex: 0 0 var(--cmd-card-w);
@@ -6247,6 +6269,23 @@ a.icon-badge:hover {
 
 .chart-grid::-webkit-scrollbar {
   display: none;
+}
+
+/* Mouse drag (js/chart-carousel.js): a grab cursor while there's anywhere
+   to go; no text selection, or the first px of a drag would start
+   selecting labels. Snapping is off during the drag and its glide after. */
+html:not(.nav-mobile) .chart-grid.is-draggable {
+  cursor: grab;
+  user-select: none;
+}
+
+.chart-grid.is-dragging {
+  scroll-snap-type: none;
+}
+
+/* As specific as the grab rule above, and after it, so it wins mid-drag. */
+html:not(.nav-mobile) .chart-grid.is-draggable.is-dragging {
+  cursor: grabbing;
 }
 
 /* border-box: the card's own padding/border must count inside that width,
