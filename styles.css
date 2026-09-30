@@ -2803,6 +2803,153 @@ footer {
   min-width: 0;
 }
 
+/* Foil card (js FOIL_MIN_TIMES_PLAYED): a holographic sheen over the image
+   — a still rainbow wash blended into the art, plus a bright glare band
+   sweeping diagonally across it (the only moving part; no-repeat, so no
+   tiled copy of the band ever wraps back in from another edge), then a
+   pause off-card before the next sweep. Blends with the card's own image
+   only: each slide is its own stacking context (js transform). */
+.cmd-carousel-slide.is-foil::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.55) 48%, transparent 60%),
+    linear-gradient(
+      125deg,
+      rgba(255, 0, 132, 0.5),
+      rgba(255, 196, 0, 0.45),
+      rgba(0, 255, 170, 0.45),
+      rgba(0, 170, 255, 0.5),
+      rgba(190, 0, 255, 0.45),
+      rgba(255, 0, 132, 0.5)
+    );
+  background-size: 300% 300%, 400% 400%;
+  background-repeat: no-repeat;
+  background-position: 100% 100%, 0% 50%;
+  mix-blend-mode: overlay;
+  animation: foil-shine 4.5s ease-in-out infinite;
+}
+
+/* Top-left → bottom-right in the first 55%, then waits off-card. */
+@keyframes foil-shine {
+  0% {
+    background-position: 100% 100%, 0% 50%;
+  }
+  55%,
+  100% {
+    background-position: 0% 0%, 0% 50%;
+  }
+}
+
+/* A thin iridescent rim too, so a foil reads as foil even at a glance. */
+.cmd-carousel-slide.is-foil {
+  box-shadow: 0 0 0 2px rgba(255, 196, 0, 0.55), 0 0 14px rgba(190, 0, 255, 0.25);
+}
+
+.cmd-carousel-slide.is-foil.is-active {
+  box-shadow: 0 0 0 2px rgba(255, 196, 0, 0.65), 0 0 18px rgba(190, 0, 255, 0.35), 0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
+/* "Volte giocato" + its "?" (opens the foil explanation). A smaller take
+   on the Matchups title's .help-toggle-btn. */
+.cmd-carousel-label-help {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.help-toggle-btn.cmd-carousel-help-btn {
+  width: 16px;
+  height: 16px;
+  font-size: 0.62rem;
+  letter-spacing: 0;
+}
+
+html.nav-mobile .help-toggle-btn.cmd-carousel-help-btn {
+  width: 20px;
+  height: 20px;
+  font-size: 0.72rem;
+}
+
+/* Small explanation pop-up (a <dialog> sharing .ecal-dialog's box). */
+.info-dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.info-dialog-head h3 {
+  margin: 0;
+  color: var(--text-title);
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.info-dialog p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* In: rises and scales up slightly as it fades in, backdrop fading with it.
+   Out: the reverse, a touch quicker — js adds .is-closing and waits for
+   the animation before the real close(). */
+.info-dialog[open] {
+  animation: info-dialog-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.info-dialog[open]::backdrop {
+  animation: info-backdrop-in 220ms ease;
+}
+
+.info-dialog.is-closing {
+  animation: info-dialog-out 160ms ease-in forwards;
+}
+
+.info-dialog.is-closing::backdrop {
+  animation: info-backdrop-out 160ms ease-in forwards;
+}
+
+@keyframes info-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+}
+
+@keyframes info-dialog-out {
+  to {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+}
+
+@keyframes info-backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes info-backdrop-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .info-dialog[open],
+  .info-dialog[open]::backdrop,
+  .info-dialog.is-closing,
+  .info-dialog.is-closing::backdrop {
+    animation: none;
+  }
+}
+
 /* The mask fades the track out from the current card's edges to its own
    left/right edges, so the peeking cards dissolve instead of being cut off.
    It fades the track's own visible box, not its scrolling content. */
@@ -2917,8 +3064,9 @@ footer {
   background: var(--brand-red);
 }
 
+/* Left-aligned at every width, like the page's own stat tiles above. */
 .cmd-carousel-stats {
-  text-align: center;
+  min-width: 0;
 }
 
 .cmd-carousel-name {
@@ -2962,8 +3110,6 @@ footer {
 
   .cmd-carousel-stats {
     flex: 1;
-    min-width: 0;
-    text-align: left;
   }
 
   .cmd-carousel-tiles {
@@ -2994,7 +3140,8 @@ footer {
     transition: none;
   }
 
-  .cmd-carousel-slide.is-loading {
+  .cmd-carousel-slide.is-loading,
+  .cmd-carousel-slide.is-foil::after {
     animation: none;
   }
 }

@@ -45,6 +45,56 @@ async function fetchCardImages(names) {
   return images;
 }
 
+// A commander played in at least this many events (its "Volte giocato")
+// gets the foil treatment in the album — a holographic sheen over its card.
+export const FOIL_MIN_TIMES_PLAYED = 10;
+
+// The "?" next to "Volte giocato" opens this, as a native modal <dialog>
+// (Escape/backdrop close for free, same as the Bacheca's events calendar,
+// whose .ecal-dialog look it shares). Built once, on first use.
+function openFoilInfo() {
+  let dialog = document.getElementById("foil-info-dialog");
+  if (!dialog) {
+    dialog = document.createElement("dialog");
+    dialog.id = "foil-info-dialog";
+    dialog.className = "ecal-dialog info-dialog";
+    dialog.setAttribute("aria-labelledby", "foil-info-title");
+    dialog.innerHTML = `
+      <div class="info-dialog-head">
+        <h3 id="foil-info-title">Carte foil</h3>
+        <button type="button" class="ecal-close" aria-label="Chiudi">&times;</button>
+      </div>
+      <p>Quando giochi lo stesso comandante in almeno <strong>${FOIL_MIN_TIMES_PLAYED} eventi</strong>, la sua carta nell&rsquo;album diventa <strong>foil</strong>.</p>`;
+    // Every way out (×, backdrop click, Escape) plays the exit animation
+    // (styles.css .info-dialog.is-closing) before the real close() — which
+    // would otherwise hide it on the spot. Closes straight away when there's
+    // no animation to wait for (reduced motion).
+    const closeAnimated = () => {
+      if (dialog.classList.contains("is-closing")) return;
+      if (getComputedStyle(dialog).animationName === "none") return dialog.close();
+      dialog.classList.add("is-closing");
+      dialog.addEventListener(
+        "animationend",
+        () => {
+          dialog.classList.remove("is-closing");
+          dialog.close();
+        },
+        { once: true }
+      );
+    };
+    dialog.querySelector(".ecal-close").addEventListener("click", closeAnimated);
+    dialog.addEventListener("click", (e) => {
+      if (e.target === dialog) closeAnimated();
+    });
+    dialog.addEventListener("cancel", (e) => {
+      e.preventDefault();
+      closeAnimated();
+    });
+    document.body.append(dialog);
+  }
+  dialog.showModal();
+}
+
 const ARROW_PREV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>';
 const ARROW_NEXT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>';
 
@@ -70,7 +120,9 @@ export function renderCommanderCarousel(el, items) {
       <div class="cmd-carousel-track" tabindex="0" role="region" aria-label="Album comandanti">
         ${items
           .map(
-            (c, i) => `<div class="cmd-carousel-slide is-loading" data-index="${i}">
+            (c, i) => `<div class="cmd-carousel-slide is-loading${
+              c.timesPlayed >= FOIL_MIN_TIMES_PLAYED ? " is-foil" : ""
+            }" data-index="${i}">
               <span class="cmd-carousel-fallback">${escapeHtml(c.commander.name)}</span>
             </div>`
           )
@@ -86,7 +138,10 @@ export function renderCommanderCarousel(el, items) {
       <div class="cmd-carousel-name"></div>
       <div class="cmd-carousel-tiles">
         <div class="stat-tile">
-          <div class="stat-tile-label">Volte giocato</div>
+          <div class="stat-tile-label cmd-carousel-label-help">
+            Volte giocato
+            <button type="button" class="help-toggle-btn cmd-carousel-help-btn" aria-haspopup="dialog" aria-label="Come si ottiene una carta foil">?</button>
+          </div>
           <div class="stat-tile-value cmd-carousel-stat-value" data-stat="times"></div>
         </div>
         <div class="stat-tile">
@@ -225,6 +280,7 @@ export function renderCommanderCarousel(el, items) {
     e.preventDefault();
     go(active + (e.key === "ArrowRight" ? 1 : -1));
   });
+  el.querySelector(".cmd-carousel-help-btn").addEventListener("click", openFoilInfo);
   prevBtn.addEventListener("click", () => go(active - 1));
   nextBtn.addEventListener("click", () => go(active + 1));
   measure();
