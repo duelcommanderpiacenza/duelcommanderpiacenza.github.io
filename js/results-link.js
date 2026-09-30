@@ -1,14 +1,11 @@
 // An event's external links next to its name — event.html's title and the
-// Bacheca's "Ultimi eventi" rows: its top decks on mtgtop8
-// (events.results_url) and its decklists on Moxfield (events.decklists_url),
+// Bacheca's "Ultimi eventi" rows: its decklists on Moxfield
+// (events.decklists_url) and its top decks on mtgtop8 (events.results_url),
 // both optional, set in the admin.
 //
-// - mtgtop8 only: the small red "🏆 Top 8" pill.
-// - Both: one split pill, white left half with the Moxfield logo, red right
-//   half "Top 8" (no trophy — the pill is wide enough already), each half
-//   its own link.
-// - Moxfield only: that white half alone, a round logo button.
-// - Neither: nothing.
+// Side by side in a .results-links wrapper: a round white button with the
+// Moxfield logo, then a white pill with mtgtop8's wordmark (top8.png) —
+// either one alone when the event only has that link, nothing with neither.
 //
 // Two shapes, because a Bacheca row is already one big <a> to the event
 // page — and an <a> nested inside another <a> isn't just invalid, the HTML
@@ -19,47 +16,30 @@
 import { escapeHtml, isHttpUrl } from "./ui.js";
 
 const TOP8_LABEL = "Top deck su mtgtop8";
-// Visible text on the pill itself — the icon alone didn't read as "results
-// link" at a glance, and on touch devices the hover tooltip never shows.
-const TOP8_TEXT = "Top8";
 const MOXFIELD_LABEL = "Decklist su Moxfield";
 
-const TROPHY_SVG =
-  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-  '<path d="M7 4h10v5a5 5 0 0 1-10 0V4z"></path>' +
-  '<path d="M17 6h3v1a3 3 0 0 1-3 3"></path>' +
-  '<path d="M7 6H4v1a3 3 0 0 0 3 3"></path>' +
-  '<path d="M12 14v4"></path>' +
-  '<path d="M8 21h8"></path>' +
-  "</svg>";
-
-const MOXFIELD_LOGO = '<img src="moxfield.png" alt="" width="30" height="30">';
+// width/height = the files' own size, so the browser knows each logo's
+// proportions before it loads (styles.css sets the displayed size).
+const MOXFIELD_LOGO = '<img src="moxfield.png" alt="" width="192" height="192">';
+const TOP8_LOGO = '<img src="top8.png" alt="" width="243" height="55">';
 
 // Hover tooltip: data-tooltip, styled by the same CSS as .icon-badge's
 // (player badges / banned icon) — not a native `title`, which can't be
 // restyled and would pop up its own second tooltip on top of that one.
-// The aria-label may differ from the tooltip: it starts with the pill's
-// visible text ("Top 8"), so the accessible name contains what's on screen.
-function linkTag(nested, url, className, label, tooltip, content) {
-  const attrs = `class="${className}" aria-label="${label}" data-tooltip="${tooltip}"`;
+// The logos are images with empty alt, so the aria-label names the link.
+function linkTag(nested, url, className, label, content) {
+  const attrs = `class="results-link ${className}" aria-label="${label}" data-tooltip="${label}"`;
   return nested
     ? `<span ${attrs} role="link" tabindex="0" data-ext-url="${escapeHtml(url)}">${content}</span>`
     : `<a ${attrs} href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${content}</a>`;
 }
 
 function render(nested, resultsUrl, decklistsUrl) {
-  const hasTop8 = isHttpUrl(resultsUrl);
-  const hasMoxfield = isHttpUrl(decklistsUrl);
-  if (!hasMoxfield) {
-    return hasTop8
-      ? linkTag(nested, resultsUrl, "results-link", `${TOP8_TEXT}: ${TOP8_LABEL}`, TOP8_LABEL, `${TROPHY_SVG}<span>${TOP8_TEXT}</span>`)
-      : "";
-  }
-  const moxfield = linkTag(nested, decklistsUrl, "results-link-seg results-link-seg-moxfield", MOXFIELD_LABEL, MOXFIELD_LABEL, MOXFIELD_LOGO);
-  const top8 = hasTop8
-    ? linkTag(nested, resultsUrl, "results-link-seg", `${TOP8_TEXT}: ${TOP8_LABEL}`, TOP8_LABEL, `<span>${TOP8_TEXT}</span>`)
-    : "";
-  return `<span class="results-link-group">${moxfield}${top8}</span>`;
+  const links = [
+    isHttpUrl(decklistsUrl) ? linkTag(nested, decklistsUrl, "results-link-moxfield", MOXFIELD_LABEL, MOXFIELD_LOGO) : "",
+    isHttpUrl(resultsUrl) ? linkTag(nested, resultsUrl, "results-link-top8", TOP8_LABEL, TOP8_LOGO) : "",
+  ].join("");
+  return links ? `<span class="results-links">${links}</span>` : "";
 }
 
 export function resultsLink(resultsUrl, decklistsUrl) {
@@ -72,7 +52,7 @@ export function nestedResultsLink(resultsUrl, decklistsUrl) {
 }
 
 // Capture phase on document, so it runs before the enclosing <a>'s own
-// navigation — stopped here, so the only thing a click on the pill does is
+// navigation — stopped here, so the only thing a click on the button does is
 // open the external site in a new tab.
 function openNested(e) {
   const link = e.target.closest?.("[data-ext-url]");

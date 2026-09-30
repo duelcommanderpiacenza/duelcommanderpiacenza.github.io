@@ -29,6 +29,6 @@ enhanceDateInputs();
 // it covers markup rendered later too.
 attachHoverTooltips(
   document.body,
-  ".icon-badge[data-tooltip], .results-link[data-tooltip], .results-link-seg[data-tooltip]",
+  ".icon-badge[data-tooltip], .results-link[data-tooltip]",
   (el) => el.dataset.tooltip
 );

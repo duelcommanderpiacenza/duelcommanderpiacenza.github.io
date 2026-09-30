@@ -1547,20 +1547,11 @@ a.upcoming-row:hover .upcoming-row-title {
   text-decoration: underline;
 }
 
-/* mtgtop8 "Top 8" pill / Moxfield split pill (js/results-link.js) as the row's last flex item:
-   pushed to the right end, vertically centered on the date badge by the
-   row's own align-items: center. Same size as the one beside event.html's
-   title (.page-heading-pill). The name column still truncates first; the
-   pill never shrinks. */
-.upcoming-row > .results-link {
-  flex-shrink: 0;
-  min-height: 36px;
-  margin-left: auto;
-  padding: 0 14px;
-  font-size: 0.95rem;
-}
-
-.upcoming-row > .results-link-group {
+/* The event's mtgtop8/Moxfield links (js/results-link.js) as the row's last
+   flex item: pushed to the right end, vertically centered on the date badge
+   by the row's own align-items: center. The name column still truncates
+   first; the links never shrink. */
+.upcoming-row > .results-links {
   flex-shrink: 0;
   margin-left: auto;
 }
@@ -3547,23 +3538,15 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   }
 }
 
-/* A bit bigger than a plain .badge-status (26px), the results one included
-   (its base style is em-based) — that one a bit taller still, the same
-   36px as the Moxfield split pill (.results-link-group). */
-.page-heading-pill > .badge-status,
-.page-heading-pill > .results-link {
+/* A bit bigger than a plain .badge-status (26px). */
+.page-heading-pill > .badge-status {
   min-height: 32px;
   margin-left: 0;
   padding: 0 14px;
   font-size: 0.85rem;
 }
 
-.page-heading-pill > .results-link {
-  min-height: 36px;
-  font-size: 0.95rem;
-}
-
-.page-heading-pill > .results-link-group {
+.page-heading-pill > .results-links {
   margin-left: 0;
 }
 
@@ -3762,121 +3745,67 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   margin-bottom: 6px;
 }
 
-/* mtgtop8 "🏆 Top 8" pill (js/results-link.js) — Bacheca "Ultimi eventi"
-   rows and beside event.html's title. The base is em-based (scales with
-   whatever text it follows); both current placements override it to a
-   fixed size instead (.page-heading-pill > .results-link,
-   .upcoming-row > .results-link). Same solid brand-red pill as
-   .badge-status-open. */
+/* An event's external links (js/results-link.js) — Bacheca "Ultimi eventi"
+   rows and beside event.html's title: a round white Moxfield-logo button
+   and a white pill with mtgtop8's wordmark (dark blue on transparent, only
+   readable on white), both with the brand-red outline, side by side in
+   .results-links (either one alone when the event has only that link).
+   32px tall, 36px on touch devices (an easier tap target). */
+.results-links {
+  --results-link-h: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 0.5em;
+  vertical-align: middle;
+}
+
+html.nav-mobile .results-links {
+  --results-link-h: 36px;
+}
+
 .results-link {
   display: inline-flex;
   align-items: center;
-  gap: 0.3em;
-  margin-left: 0.5em;
-  padding: 0.2em 0.6em;
-  vertical-align: middle;
+  justify-content: center;
+  height: var(--results-link-h);
+  box-sizing: border-box;
+  border: 2px solid var(--brand-red);
   border-radius: var(--radius-pill);
-  background: var(--brand-red);
-  color: #fff;
-  font-size: 0.72em;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  line-height: 1.3;
-  white-space: nowrap;
+  background: #fff;
   cursor: pointer;
   text-decoration: none;
   transition: background 150ms ease;
-}
-
-.results-link:hover {
-  text-decoration: none;
-}
-
-.results-link svg {
-  width: 1.1em;
-  height: 1.1em;
-  flex-shrink: 0;
 }
 
 /* Hover: color only, no lift (same as the badges). */
 .results-link:hover,
 .results-link:focus-visible {
-  background: var(--brand-red-deep-2);
-}
-
-/* Moxfield + mtgtop8 split pill (js/results-link.js): white left half with
-   the Moxfield logo, red "Top 8" right half, red outline around both. With
-   no mtgtop8 link it's the white half alone, a round logo button. Fixed
-   36px tall (the size both placements give .results-link), not em-based. */
-.results-link-group {
-  display: inline-flex;
-  margin-left: 0.5em;
-  height: 36px;
-  box-sizing: border-box;
-  vertical-align: middle;
-  border: 2px solid var(--brand-red);
-  border-radius: var(--radius-pill);
-  overflow: hidden;
-  background: var(--brand-red);
-  color: #fff;
-  font-size: 0.95rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  line-height: 1.3;
-  white-space: nowrap;
-}
-
-.results-link-seg {
-  display: inline-flex;
-  align-items: center;
-  /* Right side 2px less: the group's red outline adds its own 2px there. */
-  padding: 0 8px 0 10px;
-  color: inherit;
-  cursor: pointer;
-  text-decoration: none;
-  transition: background 150ms ease;
-}
-
-.results-link-seg:hover,
-.results-link-seg:focus-visible {
-  background: var(--brand-red-deep-2);
-  text-decoration: none;
-}
-
-.results-link-seg-moxfield {
-  padding: 0 5px 0 7px;
-  background: #fff;
-}
-
-.results-link-seg-moxfield:only-child {
-  padding: 0 1px;
-}
-
-.results-link-seg-moxfield:hover,
-.results-link-seg-moxfield:focus-visible {
   background: #fbe3e3;
+  text-decoration: none;
 }
 
-.results-link-seg-moxfield img {
+.results-link img {
   display: block;
-  width: 30px;
-  height: 30px;
 }
 
-/* Touch devices: a bit taller still, an easier tap target — both the
-   mtgtop8 pill (in both its placements) and the split pill. */
-html.nav-mobile .upcoming-row > .results-link,
-html.nav-mobile .page-heading-pill > .results-link {
-  min-height: 40px;
+.results-link-moxfield {
+  width: var(--results-link-h);
 }
 
-html.nav-mobile .results-link-group {
-  height: 40px;
+.results-link-moxfield img {
+  width: calc(var(--results-link-h) - 11px);
+  height: calc(var(--results-link-h) - 11px);
 }
 
-html.nav-mobile .results-link-seg-moxfield img {
-  width: 34px;
-  height: 34px;
+.results-link-top8 {
+  padding: 0 6px;
+}
+
+/* ~11px tall → ~49px wide (the wordmark is 243×55). */
+.results-link-top8 img {
+  width: auto;
+  height: calc(var(--results-link-h) * 0.35);
 }
 
 .entity-card-meta {
