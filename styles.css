@@ -2783,10 +2783,14 @@ footer {
 }
 
 /* player.html "Album comandanti" card carousel (js/commander-carousel.js):
-   one card centered in the track, its neighbours peeking in scaled down and
-   dimmed on either side (the track's side padding lets the first and last
-   card reach the center too). Stats stacked below on phones; from 880px
-   the carousel keeps a fixed width on the left, stats to its right. */
+   phones — the current card centered, its neighbours peeking on both
+   sides turned away like the sides of a drum, stats stacked below;
+   desktop (from 880px) — the current card lined up with the page's left
+   margin, the next ones peeking on the right (turned more steeply), a card
+   leaving on the left fading out through a gradient at that edge rather
+   than sliding past it, the carousel at a fixed width on the left and the
+   stats to its right. The per-card looks are js applyDepth, switched at
+   the same width. */
 .cmd-carousel {
   /* Phones: same size as commander.html's card on mobile
      (.commander-card-face). The tighter gap below keeps a sliver of the
@@ -2950,9 +2954,12 @@ html.nav-mobile .help-toggle-btn.cmd-carousel-help-btn {
   }
 }
 
-/* The mask fades the track out from the current card's edges to its own
-   left/right edges, so the peeking cards dissolve instead of being cut off.
-   It fades the track's own visible box, not its scrolling content. */
+/* Phones (below 880px): the current card centered in the track, the side
+   padding letting the first and last card reach the center too; the mask
+   fades the track out from the current card's edges to its own left/right
+   edges, so the peeking cards dissolve instead of being cut off (it fades
+   the track's own visible box, not its scrolling content). Desktop's
+   left-aligned version: the 880px block below. */
 .cmd-carousel-track {
   position: relative;
   display: flex;
@@ -3103,9 +3110,45 @@ html.nav-mobile .help-toggle-btn.cmd-carousel-help-btn {
     gap: 28px;
   }
 
-  /* Twice the card: half a neighbour's slot showing on either side. */
+  /* The current card plus room for the next one's steeply turned peek
+     (js applyDepth) — so the stats sit close to the cards. */
   .cmd-carousel-main {
-    flex: 0 0 calc(var(--cmd-card-w) * 2);
+    flex: 0 0 calc(var(--cmd-card-w) * 1.7);
+  }
+
+  /* Desktop: the current card snapped to the track's left edge — lined up
+     with the page's left margin — the right padding letting the last card
+     reach it too. The mask only fades the right side, from the current
+     card's right edge; a card leaving on the left gets its own moving fade
+     from js (applyDepth). */
+  .cmd-carousel-track {
+    -webkit-mask-image: linear-gradient(to right, #000 var(--cmd-card-w), transparent 100%);
+    mask-image: linear-gradient(to right, #000 var(--cmd-card-w), transparent 100%);
+    padding: 14px calc(100% - var(--cmd-card-w)) 26px 0;
+  }
+
+  .cmd-carousel-slide {
+    scroll-snap-align: start;
+  }
+
+  /* Cast down-right: the card sits flush with the track's left edge,
+     which would clip a shadow spreading left. */
+  .cmd-carousel-slide.is-active {
+    box-shadow: 5px 10px 20px rgba(0, 0, 0, 0.22);
+  }
+
+  .cmd-carousel-slide.is-foil.is-active {
+    box-shadow: 0 0 0 2px rgba(255, 196, 0, 0.65), 0 0 18px rgba(190, 0, 255, 0.35), 5px 10px 20px rgba(0, 0, 0, 0.22);
+  }
+
+  /* Drawn inside the card: outside, its left side would be clipped. */
+  .cmd-carousel-track:focus-visible .cmd-carousel-slide.is-active {
+    outline-offset: -2px;
+  }
+
+  /* Centered under the current card (at the left), not the whole track. */
+  .cmd-carousel-nav {
+    width: var(--cmd-card-w);
   }
 
   .cmd-carousel-stats {

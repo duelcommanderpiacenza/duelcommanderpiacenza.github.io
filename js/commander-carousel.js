@@ -1,6 +1,8 @@
 // player.html's "Album comandanti": a card carousel instead of a table —
-// one commander's card (Scryfall image) at a time, its neighbours peeking
-// in on either side turned away as if on a drum (applyDepth), with the
+// one commander's card (Scryfall image) at a time — on desktop lined up
+// with the page's left margin, the next ones peeking in on the right turned
+// away as if on a drum and a card leaving on the left fading out; on phones
+// centered, its neighbours peeking on both sides (applyDepth) — with the
 // current one's stats (times played, winrate, first and last played) under
 // it on phones and
 // beside it on desktop (styles.css .cmd-carousel). The track is a native
@@ -172,10 +174,11 @@ export function renderCommanderCarousel(el, items) {
   const nextBtn = el.querySelector('[data-dir="1"]');
   let active = -1;
 
-  // The slide whose center is nearest the track's — offsetLeft ignores the
-  // scale() on the non-active ones, so this doesn't shift as they animate.
+  // The slide nearest the current-card slot (the track's left edge) —
+  // measured from offsetLeft, which ignores the transforms, so this doesn't
+  // shift as they animate.
   function nearestIndex() {
-    return Math.max(0, Math.min(items.length - 1, Math.round((track.scrollLeft + halfWidth - centers[0]) / step)));
+    return Math.max(0, Math.min(items.length - 1, Math.round(track.scrollLeft / step)));
   }
 
   function setActive(i) {
@@ -218,40 +221,93 @@ export function renderCommanderCarousel(el, items) {
     ).join("");
   }
 
-  // The cylinder look: each card turns away and shrinks the further it is
-  // from the center (in card steps, capped at 2 — past that it's off-screen
-  // anyway), recomputed every scroll frame so it follows the finger rather
-  // than jumping between states. rotateY(+) turns a right-hand card's
-  // outer (right) edge away from the viewer, rotateY(-) a left-hand one's,
-  // like the sides of a drum.
-  // Card centers and step, measured once (and again on resize) rather than
-  // read back from the layout on every scroll frame — only scrollLeft is
-  // read per frame, keeping the drag smooth.
-  let centers = [];
+  // Card positions, step and width, measured once (and again on resize)
+  // rather than read back from the layout on every scroll frame — only
+  // scrollLeft is read per frame, keeping the drag smooth. The current-card
+  // slot is the track's left edge, where the first card sits at
+  // scrollLeft 0, so a card's distance from it is its own left minus the
+  // first card's.
+  let lefts = [];
   let step = 1;
-  let halfWidth = 0;
+  let cardWidth = 1;
   function measure() {
-    centers = slides.map((s) => s.offsetLeft + s.offsetWidth / 2);
+    lefts = slides.map((s) => s.offsetLeft);
+    cardWidth = slides[0].offsetWidth || 1;
     // A lone card has no neighbour to measure the step from — its own width
-    // stands in (a tiny fallback like 1px would blow a sub-pixel offset from
-    // the center up into "2 cards away" and turn it sideways).
-    step = (slides.length > 1 ? centers[1] - centers[0] : slides[0].offsetWidth) || 1;
-    halfWidth = track.clientWidth / 2;
+    // stands in (a tiny fallback like 1px would blow a sub-pixel offset
+    // up into "2 cards away" and turn it sideways).
+    step = (slides.length > 1 ? lefts[1] - lefts[0] : cardWidth) || 1;
   }
 
+  // Share of the card's width over which a card leaving on the left fades.
+  const LEAVE_FADE = 0.45;
+
+  // Two looks, switched at the same width as the layout (styles.css
+  // .cmd-carousel's 880px breakpoint), which also moves the current-card
+  // slot: the track's left edge on desktop, its center on phones. Either
+  // way the first card sits in the slot at scrollLeft 0, so positions,
+  // nearestIndex and go() work the same for both — only the looks differ.
+  const desktopQuery = window.matchMedia("(min-width: 880px)");
+
+  // Recomputed every scroll frame, so it follows the finger rather than
+  // jumping between states. Offsets are in card steps from the current-card
+  // slot, capped at ±2 (past that it's off-screen anyway).
+  // Phones (centered): the drum on both sides — each card turns away and
+  // shrinks the further it is from the center (rotateY(+) turns a
+  // right-hand card's outer edge away, rotateY(-) a left-hand one's), both
+  // sides dimmed by the track's edge fades (styles.css mask).
+  // Desktop (left-aligned):
+  // - Right (next cards): the drum, steeper — see below.
+  // - Left (a card leaving): it can't turn and peek like on the right —
+  //   that would go past the page's left edge — so it fades out instead: a
+  //   mask gradient that follows the track's left edge across the card (the
+  //   part past the edge is clipped by the track anyway, the part just
+  //   inside fades from transparent over LEAVE_FADE of the card), plus an
+  //   overall fade as it goes.
   function applyDepth() {
-    const center = track.scrollLeft + halfWidth;
+    const anchor = track.scrollLeft + lefts[0];
+    const desktop = desktopQuery.matches;
     slides.forEach((s, i) => {
-      const offset = Math.max(-2, Math.min(2, (centers[i] - center) / step));
-      const dist = Math.abs(offset);
-      s.style.transform = `perspective(1000px) rotateY(${offset * 26}deg) scale(${1 - dist * 0.1})`;
-      // Mild — the track's edge fade (styles.css mask) already dims them.
-      s.style.opacity = String(1 - Math.min(dist, 1) * 0.2);
+      let offset = Math.max(-2, Math.min(2, (lefts[i] - anchor) / step));
+      // A card at rest can sit a sub-pixel off its slot (fractional scroll
+      // positions vs. whole-px offsetLeft) — that's "in place", not leaving.
+      if (Math.abs(offset) < 0.01) offset = 0;
+      if (!desktop) {
+        const dist = Math.abs(offset);
+        s.style.transform = `perspective(1000px) rotateY(${offset * 26}deg) scale(${1 - dist * 0.1})`;
+        s.style.opacity = String(1 - Math.min(dist, 1) * 0.2);
+        s.style.maskImage = s.style.webkitMaskImage = "";
+        return;
+      }
+      if (offset >= 0) {
+        // Steeply turned, and pulled back toward the current card by a share
+        // of the step (its foreshortened silhouette would otherwise leave a
+        // gap), so the peek takes little width — the carousel's box is
+        // sized for it (styles.css .cmd-carousel-main).
+        s.style.transform = `perspective(1000px) translateX(${-offset * step * 0.15}px) rotateY(${
+          offset * 45
+        }deg) scale(${1 - offset * 0.1})`;
+        s.style.opacity = String(1 - Math.min(offset, 1) * 0.2);
+        s.style.maskImage = s.style.webkitMaskImage = "";
+        return;
+      }
+      const out = Math.min(1, -offset);
+      // Where the track's left edge crosses this card, in its own px.
+      const edge = out * step;
+      // The fade's strength grows with how far out the card is — fully
+      // transparent at the edge only from a fifth of a step on — so it
+      // eases in as the card starts to leave rather than switching on.
+      const edgeAlpha = 1 - Math.min(1, out * 5);
+      const mask = `linear-gradient(to right, rgba(0, 0, 0, ${edgeAlpha}) ${edge}px, #000 ${edge + LEAVE_FADE * cardWidth}px)`;
+      // Kept flat (no turn), so the mask's px line up with the track edge.
+      s.style.transform = "none";
+      s.style.opacity = String(1 - out * 0.8);
+      s.style.maskImage = s.style.webkitMaskImage = mask;
     });
   }
 
   function go(i) {
-    track.scrollTo({ left: centers[Math.max(0, Math.min(items.length - 1, i))] - halfWidth, behavior: "smooth" });
+    track.scrollTo({ left: lefts[Math.max(0, Math.min(items.length - 1, i))] - lefts[0], behavior: "smooth" });
   }
 
   let frame = 0;
@@ -269,8 +325,14 @@ export function renderCommanderCarousel(el, items) {
     { passive: true }
   );
   // Card width changes at the 880px breakpoint (and with the viewport on
-  // phones) — the depth goes by card steps, so recompute.
-  new ResizeObserver(() => (measure(), applyDepth())).observe(track);
+  // phones) — the depth goes by card steps, so recompute, and keep the
+  // current card in its slot (which the breakpoint moves: left edge ↔
+  // center).
+  new ResizeObserver(() => {
+    measure();
+    if (active >= 0) track.scrollLeft = lefts[active] - lefts[0];
+    applyDepth();
+  }).observe(track);
   track.addEventListener("click", (e) => {
     const slide = e.target.closest(".cmd-carousel-slide");
     if (slide && !slide.classList.contains("is-active")) go(Number(slide.dataset.index));
