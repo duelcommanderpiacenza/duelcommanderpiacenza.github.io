@@ -23,6 +23,7 @@ import {
 import { escapeHtml, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initTitleFit } from "./page-title-fit.js";
+import { enableDragScroll } from "./drag-scroll.js";
 
 const RULE_TEXT = {
   league_winner: "Vinci una lega: il badge resta tuo fino alla conclusione della lega successiva.",
@@ -113,6 +114,7 @@ async function init() {
       auto.length === 0
         ? '<p class="page-empty">Nessun badge ancora.</p>'
         : gridHtml(auto, holdersByBadge);
+    contentEl.querySelectorAll(".badge-card-holders").forEach(enableDragScroll);
 
     // Arriving from a badge on a player's page (badges.html#badge-<id>): the
     // cards didn't exist yet when the browser tried to jump to the anchor,

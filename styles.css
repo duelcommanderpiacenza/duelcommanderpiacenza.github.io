@@ -5577,6 +5577,7 @@ html.nav-mobile .help-toggle-btn {
 .badge-card {
   display: flex;
   flex-direction: column;
+  min-width: 0; /* the holder row scrolls instead of widening the card */
   border: 1px solid var(--hairline);
   border-radius: var(--radius-card-sm);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 248, 246, 0.95));
@@ -5646,13 +5647,58 @@ html.nav-mobile .help-toggle-btn {
   letter-spacing: 0.06em;
 }
 
+/* One row, scrolled sideways when the holders don't fit: swiped on touch,
+   dragged with the mouse on desktop (js/drag-scroll.js, which also sets the
+   classes below). No visible scrollbar; the edge fades show there's more.
+   The vertical padding (cancelled by the negative margin) keeps the pills'
+   focus ring from being clipped — overflow-x: auto clips vertically too. */
 .badge-card-holders {
   display: flex;
-  flex-wrap: wrap;
   gap: 6px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  padding: 3px 0;
+  margin: -3px 0;
+}
+
+.badge-card-holders::-webkit-scrollbar {
+  display: none;
+}
+
+/* No text selection either: a drag would otherwise start selecting names
+   in its first few px, before it counts as a drag. */
+.badge-card-holders.is-scrollable {
+  cursor: grab;
+  user-select: none;
+}
+
+.badge-card-holders.is-dragging {
+  cursor: grabbing;
+}
+
+.badge-card-holders.is-dragging .badge-holder {
+  cursor: grabbing;
+}
+
+.badge-card-holders.fade-right {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+}
+
+.badge-card-holders.fade-left {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 32px);
+  mask-image: linear-gradient(to right, transparent, #000 32px);
+}
+
+.badge-card-holders.fade-left.fade-right {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 32px, #000 calc(100% - 32px), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 32px, #000 calc(100% - 32px), transparent);
 }
 
 .badge-holder {
+  flex-shrink: 0;
+  white-space: nowrap;
   display: inline-flex;
   align-items: center;
   padding: 4px 11px;
