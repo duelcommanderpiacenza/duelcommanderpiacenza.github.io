@@ -103,11 +103,7 @@ function renderWrapped(league, standings, wrapped, eventCount) {
   const ta = wrapped.topArchetype;
   tiles.push(
     ta
-      ? wrappedTile(
-          "Archetipo più giocato",
-          archetypeBadge(ta.archetype),
-          `${ta.entries} ${ta.entries === 1 ? "presenza" : "presenze"} · ${ta.wins} ${ta.wins === 1 ? "vittoria" : "vittorie"}`
-        )
+      ? wrappedTile("Archetipo più giocato", archetypeBadge(ta.archetype))
       : wrappedTile("Archetipo più giocato", EMPTY_VALUE)
   );
 
