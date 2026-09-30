@@ -2782,6 +2782,223 @@ footer {
   }
 }
 
+/* player.html "Album comandanti" card carousel (js/commander-carousel.js):
+   one card centered in the track, its neighbours peeking in scaled down and
+   dimmed on either side (the track's side padding lets the first and last
+   card reach the center too). Stats stacked below on phones; from 880px
+   the carousel keeps a fixed width on the left, stats to its right. */
+.cmd-carousel {
+  /* Phones: same size as commander.html's card on mobile
+     (.commander-card-face). The tighter gap below keeps a sliver of the
+     neighbours in view beside a card this wide. */
+  --cmd-card-w: min(260px, 80vw);
+  --cmd-card-gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  /* No bottom margin: the next section's <h2> already brings its own. */
+}
+
+.cmd-carousel-main {
+  min-width: 0;
+}
+
+/* The mask fades the track out from the current card's edges to its own
+   left/right edges, so the peeking cards dissolve instead of being cut off.
+   It fades the track's own visible box, not its scrolling content. */
+.cmd-carousel-track {
+  position: relative;
+  display: flex;
+  gap: var(--cmd-card-gap);
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 calc(50% - var(--cmd-card-w) / 2), #000 calc(50% + var(--cmd-card-w) / 2), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, #000 calc(50% - var(--cmd-card-w) / 2), #000 calc(50% + var(--cmd-card-w) / 2), transparent 100%);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  /* Vertical room for the current card's shadow (an overflow-x scroller
+     clips vertically too). */
+  padding: 14px calc(50% - var(--cmd-card-w) / 2) 26px;
+  scrollbar-width: none;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cmd-carousel-track::-webkit-scrollbar {
+  display: none;
+}
+
+.cmd-carousel-slide {
+  position: relative;
+  flex: 0 0 var(--cmd-card-w);
+  aspect-ratio: 488 / 680;
+  scroll-snap-align: center;
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(220, 24, 28, 0.06);
+  border: 1px solid var(--hairline);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* transform/opacity/z-index are set per scroll frame by js
+     (applyDepth, the drum effect) — no transition on them, they already
+     follow the scroll continuously. */
+  cursor: pointer;
+  transition: box-shadow 260ms ease;
+  will-change: transform, opacity;
+}
+
+.cmd-carousel-slide.is-active {
+  cursor: default;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
+.cmd-carousel-track:focus-visible .cmd-carousel-slide.is-active {
+  outline: 2px solid var(--brand-red);
+  outline-offset: 2px;
+}
+
+.cmd-carousel-slide.is-loading {
+  background: linear-gradient(
+    100deg,
+    rgba(220, 24, 28, 0.06) 30%,
+    rgba(220, 24, 28, 0.16) 50%,
+    rgba(220, 24, 28, 0.06) 70%
+  );
+  background-size: 250% 100%;
+  animation: card-skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.cmd-carousel-slide.has-image {
+  border-color: transparent;
+}
+
+/* No image (not found on Scryfall): the name, in a card-shaped box. */
+.cmd-carousel-fallback {
+  padding: 12px;
+  text-align: center;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.cmd-carousel-slide.is-loading .cmd-carousel-fallback,
+.cmd-carousel-slide.has-image .cmd-carousel-fallback {
+  visibility: hidden;
+}
+
+.cmd-carousel-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 240ms ease;
+  user-select: none;
+}
+
+.cmd-carousel-slide.has-image .cmd-carousel-img {
+  opacity: 1;
+}
+
+.cmd-carousel-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: -8px;
+}
+
+/* 3-dot window (js renderDots): current card red, its neighbours a
+   lighter red. */
+.cmd-carousel-dots .chart-carousel-dot {
+  background: rgba(220, 24, 28, 0.3);
+}
+
+.cmd-carousel-dots .chart-carousel-dot.is-active {
+  background: var(--brand-red);
+}
+
+.cmd-carousel-stats {
+  text-align: center;
+}
+
+.cmd-carousel-name {
+  color: var(--text-title);
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1.35;
+  margin-bottom: 12px;
+  overflow-wrap: anywhere;
+}
+
+.cmd-carousel-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+/* Both tiles' values (count and date) at the same, smaller size. Two
+   classes: .stat-tile-value comes later in this file and would win over a
+   single-class rule. */
+.stat-tile-value.cmd-carousel-stat-value {
+  font-size: 1.15rem;
+  line-height: 1.3;
+  margin-top: 8px;
+}
+@media (min-width: 880px) {
+  .cmd-carousel {
+    /* About commander.html's own desktop card, whose height js stretches
+       from the title to the stat tiles, so it has no fixed size to copy. */
+    --cmd-card-w: 260px;
+    --cmd-card-gap: 16px;
+    flex-direction: row;
+    align-items: center;
+    gap: 28px;
+  }
+
+  /* Twice the card: half a neighbour's slot showing on either side. */
+  .cmd-carousel-main {
+    flex: 0 0 calc(var(--cmd-card-w) * 2);
+  }
+
+  .cmd-carousel-stats {
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+  }
+
+  .cmd-carousel-tiles {
+    max-width: 440px;
+  }
+}
+
+:root[data-theme="dark"] .cmd-carousel-slide.is-loading {
+  background-image: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.04) 30%,
+    rgba(255, 110, 110, 0.14) 50%,
+    rgba(255, 255, 255, 0.04) 70%
+  );
+}
+
+:root[data-theme="dark"] .cmd-carousel-dots .chart-carousel-dot {
+  background: rgba(255, 106, 110, 0.35);
+}
+
+:root[data-theme="dark"] .cmd-carousel-dots .chart-carousel-dot.is-active {
+  background: #ff6a6e;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cmd-carousel-slide,
+  .cmd-carousel-img {
+    transition: none;
+  }
+
+  .cmd-carousel-slide.is-loading {
+    animation: none;
+  }
+}
+
 @keyframes commander-card-in {
   from {
     opacity: 0;

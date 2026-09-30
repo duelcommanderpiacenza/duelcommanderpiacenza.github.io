@@ -7,9 +7,7 @@ import {
   uniqueBadges,
   playerLabel,
   commanderPairLabel,
-  commanderPairWithColors,
   eventCellLabel,
-  formatDate,
   showError,
   renderPaginated,
   isoDateYearsAgo,
@@ -18,6 +16,12 @@ import {
 import { hidePageLoading } from "./page-loading.js";
 import { initTitleFit } from "./page-title-fit.js";
 import { initFilterToggle } from "./filter-toggle.js";
+import { renderCommanderCarousel } from "./commander-carousel.js";
+
+// Album comandanti's grouping: one "deck" = the exact commander + partner pair.
+function commanderPairKey(commander, partner) {
+  return `${commander.id}_${partner?.id ?? ""}`;
+}
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
@@ -111,50 +115,41 @@ async function init() {
 
     const entries = await EventEntries.listByPlayer(id);
 
-    // Commander giocati: a plain, de-duplicated list — not split by event.
+    // Album comandanti: a plain, de-duplicated list — not split by event.
     // Keyed by the commander+partner pair, so "X / Y" and "X / Z" both show.
-    // timesPlayed counts the entries (events) with that pair; lastPlayed
-    // tracks the latest event_date across them, regardless of the order
-    // entries happen to be iterated in.
+    // timesPlayed counts the entries (events) with that pair; firstPlayed /
+    // lastPlayed track the earliest / latest event_date across them,
+    // regardless of the order entries happen to be iterated in.
     const uniqueCommanders = new Map();
     for (const e of entries) {
       if (!e.commander) continue;
-      const key = `${e.commander.id}_${e.partner_commander?.id ?? ""}`;
+      const key = commanderPairKey(e.commander, e.partner_commander);
       const eventDate = e.event?.event_date ?? null;
       const existing = uniqueCommanders.get(key);
       if (!existing) {
         uniqueCommanders.set(key, {
+          key,
           commander: e.commander,
           partner: e.partner_commander ?? null,
           timesPlayed: 1,
+          firstPlayed: eventDate,
           lastPlayed: eventDate,
         });
       } else {
         existing.timesPlayed += 1;
         if (eventDate && (!existing.lastPlayed || eventDate > existing.lastPlayed)) existing.lastPlayed = eventDate;
+        if (eventDate && (!existing.firstPlayed || eventDate < existing.firstPlayed)) existing.firstPlayed = eventDate;
       }
     }
-    const commanderList = Array.from(uniqueCommanders.values()).sort((a, b) =>
-      a.commander.name.localeCompare(b.commander.name)
+    // Shown as a card carousel (js/commander-carousel.js), most played
+    // first, then most recently played, then by name.
+    const commanderList = Array.from(uniqueCommanders.values()).sort(
+      (a, b) =>
+        b.timesPlayed - a.timesPlayed ||
+        (b.lastPlayed ?? "").localeCompare(a.lastPlayed ?? "") ||
+        a.commander.name.localeCompare(b.commander.name)
     );
-    renderPaginated(
-      commandersEl,
-      commanderList,
-      (visible) =>
-        visible.length === 0
-          ? '<p class="page-empty">Nessun dato registrato per questo giocatore.</p>'
-          : `<div class="data-table-wrap"><table class="data-table">
-            <thead><tr><th>Commander</th><th>Volte giocato</th><th>Ultima volta giocato</th></tr></thead>
-            <tbody>
-              ${visible
-                .map(
-                  (c) =>
-                    `<tr><td>${commanderPairWithColors(c.commander, c.partner)}</td><td>${c.timesPlayed}</td><td>${formatDate(c.lastPlayed)}</td></tr>`
-                )
-                .join("")}
-            </tbody>
-          </table></div>`
-    );
+    const carousel = renderCommanderCarousel(commandersEl, commanderList);
 
     // One row per event this player entered, with their final position in
     // each. Read from the cached standings (EventStandings, rebuilt by the
@@ -259,6 +254,19 @@ async function init() {
         oppPartner: oppEntry?.partner_commander ?? null,
       };
     });
+
+    // Album comandanti's Winrate tile: each pair's match record over the
+    // player's whole history (not the filters below, same as the rest of
+    // the carousel), counted like the overall tiles — a drop is skipped, a
+    // bye counts as a win.
+    const recordsByPair = new Map();
+    for (const r of rows) {
+      if (!r.myCommander || r.isDrop) continue;
+      const key = commanderPairKey(r.myCommander, r.myPartner);
+      if (!recordsByPair.has(key)) recordsByPair.set(key, { wins: 0, draws: 0, losses: 0 });
+      tallyOutcome(recordsByPair.get(key), r.outcome);
+    }
+    carousel.setRecords(recordsByPair);
 
     // Filters: the two dropdowns narrow the same rows already loaded above,
     // updating the winrate tiles in place instead of separate breakdown tables.
