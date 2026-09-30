@@ -2069,6 +2069,25 @@ a.upcoming-row:hover .upcoming-row-title {
   margin: 0;
 }
 
+/* A count on its own line below a title, e.g. event.html's "Giocatori" →
+   "12 partecipanti", players.html's → "40 totali". Same muted uppercase
+   look as the other small meta labels (.entity-card-meta), a fixed size
+   whatever the title's own. */
+.heading-count {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* No count to show (an event with no entries): no empty line either. */
+.heading-count:empty {
+  display: none;
+}
+
 #deck-filters-slot,
 #video-filters-slot {
   min-height: 42px;

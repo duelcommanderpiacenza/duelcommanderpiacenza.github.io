@@ -60,6 +60,7 @@ async function init() {
   const colorCheckboxes = Array.from(document.querySelectorAll('input[name="commanders-color-filter"]'));
   const colorExactWrap = document.getElementById("commanders-color-exact-wrap");
   const colorExactCheckbox = document.getElementById("commanders-color-exact");
+  const countEl = document.getElementById("commanders-count");
 
   // Full commander name on hover for any bar-chart label (Winrate) cut off
   // with an ellipsis — delegated on chartEl, which survives re-renders.
@@ -124,6 +125,9 @@ async function init() {
     // Commanders no one has ever played are always left out — an all-"—"
     // row isn't useful, filtered or not.
     const base = lastRows.filter((r) => r.entries > 0);
+    // Table rows (commander + partner pairs) matching the filter panel —
+    // Lega/Evento/Dal and colors; like players.html's, not the search box.
+    countEl.textContent = `${base.filter(matchesColorFilter).length} totali`;
     const anyFilterActive = Boolean(term) || colorCheckboxes.some((cb) => cb.checked);
     const filtered = base.filter((r) => (!term || r.name.toLowerCase().includes(term)) && matchesColorFilter(r));
     if (filtered.length === 0) {

@@ -57,6 +57,7 @@ async function init() {
   const eventSelect = document.getElementById("players-event-filter");
   const dateFromInput = document.getElementById("players-date-from");
   const sortSelect = document.getElementById("players-sort");
+  const countEl = document.getElementById("players-count");
 
   let allPlayers = [];
   let eventDateById = new Map();
@@ -108,6 +109,9 @@ async function init() {
   function renderList(animate = true) {
     const term = searchInput.value.trim().toLowerCase();
     const base = lastRows.filter((r) => r.eventsPlayed > 0);
+    // Players with data in the filters' scope (Lega/Evento/Dal) — the
+    // search box doesn't change it, it only looks within them.
+    countEl.textContent = `${base.length} totali`;
     const filtered = term ? base.filter((r) => r.searchText.includes(term)) : base;
     const sorter = SORTERS[sortSelect.value] ?? SORTERS.events;
     const visible = [...filtered].sort((a, b) => sorter(a, b) || a.nameHtml.localeCompare(b.nameHtml));

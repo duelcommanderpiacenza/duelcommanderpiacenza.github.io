@@ -62,6 +62,7 @@ async function init() {
   const metaEl = document.getElementById("event-meta");
   const resultsEl = document.getElementById("event-results");
   const entriesEl = document.getElementById("event-entries");
+  const entriesCountEl = document.getElementById("event-entries-count");
   const matchesEl = document.getElementById("event-matches");
   const leaderboardEl = document.getElementById("event-leaderboard");
 
@@ -89,6 +90,9 @@ async function init() {
         : ""
     }`;
 
+    // Nothing with no entries: the empty message below already says so.
+    entriesCountEl.textContent =
+      entries.length === 0 ? "" : `${entries.length} ${entries.length === 1 ? "partecipante" : "partecipanti"}`;
     entriesEl.innerHTML =
       entries.length === 0
         ? '<p class="page-empty">Nessun iscritto registrato.</p>'
