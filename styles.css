@@ -2849,13 +2849,18 @@ footer {
   min-width: 0;
 }
 
-/* Foil card (js FOIL_MIN_TIMES_PLAYED): a holographic sheen over the image
-   — a still rainbow wash blended into the art, plus a bright glare band
-   sweeping diagonally across it (the only moving part; no-repeat, so no
-   tiled copy of the band ever wraps back in from another edge), then a
-   pause off-card before the next sweep. Blends with the card's own image
-   only: each slide is its own stacking context (js transform). */
-.cmd-carousel-slide.is-foil::after {
+/* Special card finishes (js/commander-carousel.js's CARD_FINISHES), each a
+   class on the album card and on the "?" dialog's small preview card
+   (.card-finish-preview) alike.
+
+   Foil (.is-foil): a holographic sheen over the image — a still rainbow
+   wash blended into the art, plus a bright glare band sweeping diagonally
+   across it (the only moving part; no-repeat, so no tiled copy of the band
+   ever wraps back in from another edge), then a pause off-card before the
+   next sweep. Blends with the card's own image only: each slide is its own
+   stacking context (js transform). */
+.cmd-carousel-slide.is-foil::after,
+.card-finish-preview.is-foil::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -2900,6 +2905,61 @@ footer {
   box-shadow: 0 0 0 2px rgba(255, 196, 0, 0.65), 0 0 18px rgba(190, 0, 255, 0.35), 0 10px 24px rgba(0, 0, 0, 0.22);
 }
 
+/* Gilded (.is-gilded, on top of the foil): a gold frame drawn just inside
+   the card's edge, with one bright highlight travelling round it at a
+   steady pace — a conic gradient turned by animating its start angle
+   (@property makes that angle animatable, so it rotates smoothly; a browser
+   without @property shows the frame still). The ring is the gradient masked
+   down to the padding box: the whole layer, minus its content box. */
+@property --gilded-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.cmd-carousel-slide.is-gilded::before,
+.card-finish-preview.is-gilded::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  padding: var(--gilded-width, 4px);
+  border-radius: inherit;
+  pointer-events: none;
+  background: conic-gradient(
+    from var(--gilded-angle),
+    #fff6d0,
+    #f2d77a 8%,
+    #b8892a 22%,
+    #8a6a16 50%,
+    #b8892a 78%,
+    #f2d77a 92%,
+    #fff6d0
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation: gilded-turn 4s linear infinite;
+}
+
+@keyframes gilded-turn {
+  to {
+    --gilded-angle: 360deg;
+  }
+}
+
+/* No outer glow or rim, unlike the foil's: on desktop the current card sits
+   flush with the track's left edge, which clips anything spreading left
+   into a hard edge — the frame is inside the card, which keeps just its
+   usual shadow (desktop's down-right one: the 880px block below). */
+.cmd-carousel-slide.is-gilded {
+  box-shadow: none;
+}
+
+.cmd-carousel-slide.is-gilded.is-active {
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
 /* "Volte giocato" + its "?" (opens the foil explanation). A smaller take
    on the Matchups title's .help-toggle-btn. */
 .cmd-carousel-label-help {
@@ -2940,6 +3000,52 @@ html.nav-mobile .help-toggle-btn.cmd-carousel-help-btn {
 .info-dialog p {
   margin: 0;
   line-height: 1.5;
+}
+
+/* The album's "Carte speciali" explanation: one row per finish, lowest
+   first — a small live preview of its look, its name and from how many
+   events, then what it looks like. */
+.card-finish-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card-finish-list li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* A blank card (neutral "art" gradient, so the foil's sheen has something
+   to shine on) wearing the finish's own classes — the same CSS as the
+   album's cards (see .cmd-carousel-slide.is-foil / .is-gilded). */
+.card-finish-preview {
+  --gilded-width: 2.5px;
+  position: relative;
+  flex-shrink: 0;
+  width: 40px;
+  aspect-ratio: 488 / 680;
+  border-radius: 4px;
+  overflow: hidden;
+  background: linear-gradient(160deg, #46577a, #7a5a8c 55%, #a06a4a);
+}
+
+.card-finish-preview.is-foil:not(.is-gilded) {
+  box-shadow: 0 0 0 1.5px rgba(255, 196, 0, 0.6);
+}
+
+.card-finish-text {
+  line-height: 1.4;
+}
+
+.card-finish-look {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.9rem;
 }
 
 /* In: rises and scales up slightly as it fades in, backdrop fading with it.
@@ -3205,6 +3311,10 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
     box-shadow: 0 0 0 2px rgba(255, 196, 0, 0.65), 0 0 18px rgba(190, 0, 255, 0.35), 5px 10px 20px rgba(0, 0, 0, 0.22);
   }
 
+  .cmd-carousel-slide.is-gilded.is-active {
+    box-shadow: 5px 10px 20px rgba(0, 0, 0, 0.22);
+  }
+
   /* Drawn inside the card: outside, its left side would be clipped. */
   .cmd-carousel-track:focus-visible .cmd-carousel-slide.is-active {
     outline-offset: -2px;
@@ -3248,7 +3358,10 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   }
 
   .cmd-carousel-slide.is-loading,
-  .cmd-carousel-slide.is-foil::after {
+  .cmd-carousel-slide.is-foil::after,
+  .cmd-carousel-slide.is-gilded::before,
+  .card-finish-preview.is-foil::after,
+  .card-finish-preview.is-gilded::before {
     animation: none;
   }
 }

@@ -50,26 +50,63 @@ async function fetchCardImages(names) {
   return images;
 }
 
-// A commander played in at least this many events (its "Volte giocato")
-// gets the foil treatment in the album — a holographic sheen over its card.
-export const FOIL_MIN_TIMES_PLAYED = 10;
+// Special card finishes in the album, earned by how many events the player
+// has played that commander in (its "Volte giocato"). Lowest first; a card
+// gets the highest one it qualifies for, and each one's classes (styles.css)
+// usually include the ones below it — the gilded card is still a foil. The
+// "?" explanation is built from this same list, so a new finish is a row
+// here plus its look in styles.css (.cmd-carousel-slide.<class> and the
+// dialog's .card-finish-preview.<class>), nothing else.
+export const CARD_FINISHES = [
+  {
+    minTimesPlayed: 10,
+    classes: "is-foil",
+    name: "Foil",
+    look: "Riflessi olografici che attraversano la carta.",
+  },
+  {
+    minTimesPlayed: 50,
+    classes: "is-foil is-gilded",
+    name: "Foil dorata",
+    look: "La foil, in più una cornice d&rsquo;oro con una luce che le gira intorno.",
+  },
+];
+
+function cardFinish(timesPlayed) {
+  let finish = null;
+  for (const f of CARD_FINISHES) if (timesPlayed >= f.minTimesPlayed) finish = f;
+  return finish;
+}
 
 // The "?" next to "Volte giocato" opens this, as a native modal <dialog>
 // (Escape/backdrop close for free, same as the Bacheca's events calendar,
-// whose .ecal-dialog look it shares). Built once, on first use.
-function openFoilInfo() {
-  let dialog = document.getElementById("foil-info-dialog");
+// whose .ecal-dialog look it shares). Built once, on first use: one row per
+// finish, each with a small live preview of its look on a blank card.
+function openFinishInfo() {
+  let dialog = document.getElementById("card-finish-dialog");
   if (!dialog) {
     dialog = document.createElement("dialog");
-    dialog.id = "foil-info-dialog";
+    dialog.id = "card-finish-dialog";
     dialog.className = "ecal-dialog info-dialog";
-    dialog.setAttribute("aria-labelledby", "foil-info-title");
+    dialog.setAttribute("aria-labelledby", "card-finish-title");
     dialog.innerHTML = `
       <div class="info-dialog-head">
-        <h3 id="foil-info-title">Carte foil</h3>
+        <h3 id="card-finish-title">Carte speciali</h3>
         <button type="button" class="ecal-close" aria-label="Chiudi">&times;</button>
       </div>
-      <p>Quando giochi lo stesso comandante in almeno <strong>${FOIL_MIN_TIMES_PLAYED} eventi</strong>, la sua carta nell&rsquo;album diventa <strong>foil</strong>.</p>`;
+      <p>Più eventi giochi con lo stesso comandante, più la sua carta nell&rsquo;album diventa speciale:</p>
+      <ul class="card-finish-list">
+        ${CARD_FINISHES.map(
+          (f) => `
+          <li>
+            <span class="card-finish-preview ${f.classes}" aria-hidden="true"></span>
+            <span class="card-finish-text">
+              <strong>${f.name}</strong> &middot; da ${f.minTimesPlayed} eventi
+              <span class="card-finish-look">${f.look}</span>
+            </span>
+          </li>`
+        ).join("")}
+      </ul>`;
     // Every way out (×, backdrop click, Escape) plays the exit animation
     // (styles.css .info-dialog.is-closing) before the real close() — which
     // would otherwise hide it on the spot. Closes straight away when there's
@@ -125,8 +162,8 @@ export function renderCommanderCarousel(el, items) {
       <div class="cmd-carousel-track" tabindex="0" role="region" aria-label="Album comandanti">
         ${items
           .map(
-            (c, i) => `<div class="cmd-carousel-slide is-loading${
-              c.timesPlayed >= FOIL_MIN_TIMES_PLAYED ? " is-foil" : ""
+            (c, i) => `<div class="cmd-carousel-slide is-loading ${
+              cardFinish(c.timesPlayed)?.classes ?? ""
             }" data-index="${i}">
               <span class="cmd-carousel-fallback">${escapeHtml(c.commander.name)}</span>
             </div>`
@@ -145,7 +182,7 @@ export function renderCommanderCarousel(el, items) {
         <div class="stat-tile">
           <div class="stat-tile-label cmd-carousel-label-help">
             Volte giocato
-            <button type="button" class="help-toggle-btn cmd-carousel-help-btn" aria-haspopup="dialog" aria-label="Come si ottiene una carta foil">?</button>
+            <button type="button" class="help-toggle-btn cmd-carousel-help-btn" aria-haspopup="dialog" aria-label="Come si ottiene una carta speciale">?</button>
           </div>
           <div class="stat-tile-value cmd-carousel-stat-value" data-stat="times"></div>
         </div>
@@ -424,7 +461,7 @@ export function renderCommanderCarousel(el, items) {
       return lefts[i] - lefts[0];
     },
   });
-  el.querySelector(".cmd-carousel-help-btn").addEventListener("click", openFoilInfo);
+  el.querySelector(".cmd-carousel-help-btn").addEventListener("click", openFinishInfo);
   prevBtn.addEventListener("click", () => go(active - 1));
   nextBtn.addEventListener("click", () => go(active + 1));
   measure();
