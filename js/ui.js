@@ -108,7 +108,7 @@ export function badgeTooltipAttrs(badge) {
   return `data-tooltip="${escapeHtml(tooltip)}" aria-label="${escapeHtml(label)}"`;
 }
 
-// A badge's icon in its light-red disc (styles.css .badge-disc) — the one
+// A badge's icon in its disc (styles.css .badge-disc: white, red ring) — the one
 // look for a badge wherever it appears: next to player names, the player
 // page title, the admin lists. The disc is sized in em from the text around
 // it, the glyph centered in it; an uploaded/custom picture (icon_url) or an

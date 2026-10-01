@@ -4415,7 +4415,11 @@ table.data-table tbody tr.is-top8:hover {
   margin-left: 5px;
 }
 
-/* A badge's icon in a light-red disc (js/ui.js's badgeDiscHtml) — the one
+#player-title .badge-disc {
+  border-width: 3px;
+}
+
+/* A badge's icon in a disc (js/ui.js's badgeDiscHtml) — the one
    look for a badge everywhere: next to player names, the player page title,
    the admin lists (badges.html's big .badge-card-icon is the same disc at
    its own size). Sized in em from the surrounding text, so it follows each
@@ -4423,16 +4427,24 @@ table.data-table tbody tr.is-top8:hover {
    emoji as text — sits in a same-size self-centering box: an emoji left as
    plain text sits wherever the font's glyph metrics place it, which won't
    line up with a flex-centered <img>. */
+/* White with a brand-red ring (border-box: the ring is inside the 1.6em,
+   so the size doesn't change) — on white every icon keeps its own colours
+   at full contrast, which a tinted fill didn't for some of them. The ring
+   is a whole number of px (2px; 3px on the bigger player-title discs): a
+   fractional width — what an em-based one came to — renders blurry. */
 .badge-disc {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-sizing: border-box;
   width: 1.6em;
   height: 1.6em;
   vertical-align: middle;
+  /* The brand red, softened (half see-through over the white page). */
+  border: 2px solid rgba(220, 24, 28, 0.45);
   border-radius: 50%;
-  background: rgba(220, 24, 28, 0.12);
+  background: #fff;
   line-height: 1;
 }
 
@@ -5786,11 +5798,13 @@ html.nav-mobile .help-toggle-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
   width: 52px;
   height: 52px;
+  /* Same look as the small .badge-disc everywhere else. */
+  border: 2.5px solid rgba(220, 24, 28, 0.45);
   border-radius: 50%;
-  /* Same tint as the small .badge-disc everywhere else. */
-  background: rgba(220, 24, 28, 0.12);
+  background: #fff;
 }
 
 .badge-card-icon-emoji {
@@ -6804,9 +6818,11 @@ html.nav-mobile .chart-carousel-arrow {
   background: rgba(255, 255, 255, 0.045);
 }
 
+/* Dark mode keeps the white disc (the icons need it for contrast), with the
+   ring in the theme's lighter red so it still reads on the dark page. */
 :root[data-theme="dark"] .badge-card-icon,
 :root[data-theme="dark"] .badge-disc {
-  background: rgba(255, 110, 110, 0.16);
+  border-color: rgba(255, 106, 110, 0.6);
 }
 
 :root[data-theme="dark"] .badge-holder {
