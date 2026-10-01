@@ -60,8 +60,8 @@ async function fetchCardImages(names) {
 // dialog's .card-finish-preview.<class>), nothing else.
 export const CARD_FINISHES = [
   { minTimesPlayed: 10, classes: "is-foil", name: "Foil" },
-  { minTimesPlayed: 50, classes: "is-foil is-gilded", name: "Foil dorata" },
-  { minTimesPlayed: 100, classes: "is-foil is-gilded is-sparks", name: "Leggendaria" },
+  { minTimesPlayed: 25, classes: "is-foil is-gilded", name: "Foil dorata" },
+  { minTimesPlayed: 50, classes: "is-foil is-gilded is-sparks", name: "Leggendaria" },
 ];
 
 // Every card (album and dialog preview) carries this empty layer for the

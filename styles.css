@@ -1687,7 +1687,12 @@ html.nav-mobile .upcoming-row > .results-links {
   font-weight: 800;
 }
 
-/* Name (+ handle) truncates; the player badges after it never shrink. */
+/* The name (+ handle) comes first: always shown whole — cut with an
+   ellipsis only if it alone is wider than the column — and the player
+   badges get whatever room is left after it, as many *whole* badges as fit:
+   their strip is one disc tall with overflow hidden and wraps, so a badge
+   that doesn't fit drops onto the hidden second line instead of showing
+   half cut off. */
 .dashboard-standings-name {
   display: flex;
   align-items: center;
@@ -1696,13 +1701,22 @@ html.nav-mobile .upcoming-row > .results-links {
 }
 
 .dashboard-standings-name-text {
+  flex: 0 0 auto;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.dashboard-standings-name > .icon-badge {
-  flex-shrink: 0;
+.dashboard-standings-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  flex: 1 1 0;
+  min-width: 0;
+  /* One .badge-disc tall: 1.6em of .icon-badge's 1rem. */
+  height: 1.6rem;
+  overflow: hidden;
 }
 
 .dashboard-standings-name a {
