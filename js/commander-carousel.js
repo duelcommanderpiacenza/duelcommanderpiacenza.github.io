@@ -177,6 +177,73 @@ export function renderCommanderCarousel(el, items) {
   const nextBtn = el.querySelector('[data-dir="1"]');
   let active = -1;
 
+  // Card images: once Scryfall's batch lookup has answered, downloaded
+  // nearest-first from the current card, a few at a time — not all at once,
+  // where a player's 30 cards would share the connection with the one card
+  // actually on screen. The order is re-picked from the current card each
+  // time a download finishes, so moving to another card moves its
+  // neighbourhood to the front of the queue; the current card itself never
+  // waits for a free slot.
+  const MAX_PARALLEL_IMAGES = 3;
+  let imageUrls = null; // slide index -> image URL (null = no image), once Scryfall answers
+  const imageStarted = new Set();
+  let imagesInFlight = 0;
+
+  function startImage(i) {
+    imageStarted.add(i);
+    const slide = slides[i];
+    const url = imageUrls[i];
+    if (!url) return slide.classList.remove("is-loading");
+    imagesInFlight += 1;
+    const done = () => {
+      imagesInFlight -= 1;
+      loadNextImages();
+    };
+    const img = new Image();
+    img.alt = items[i].commander.name;
+    img.className = "cmd-carousel-img";
+    img.draggable = false;
+    if (i === active) img.fetchPriority = "high";
+    img.onload = () => {
+      slide.classList.replace("is-loading", "has-image");
+      done();
+    };
+    img.onerror = () => {
+      img.remove();
+      slide.classList.remove("is-loading");
+      done();
+    };
+    img.src = url;
+    slide.append(img);
+  }
+
+  // The not-yet-started slide nearest the current card; at equal distance
+  // the next one (on the right, where the desktop peeks) before the previous.
+  function nextImageIndex() {
+    let best = -1;
+    let bestKey = Infinity;
+    for (let i = 0; i < slides.length; i++) {
+      if (imageStarted.has(i)) continue;
+      const d = i - active;
+      const key = Math.abs(d) * 2 + (d < 0 ? 1 : 0);
+      if (key < bestKey) {
+        bestKey = key;
+        best = i;
+      }
+    }
+    return best;
+  }
+
+  function loadNextImages() {
+    if (!imageUrls) return;
+    if (!imageStarted.has(active)) startImage(active);
+    while (imagesInFlight < MAX_PARALLEL_IMAGES) {
+      const i = nextImageIndex();
+      if (i < 0) return;
+      startImage(i);
+    }
+  }
+
   // The slide nearest the current-card slot (the track's left edge) —
   // measured from offsetLeft, which ignores the transforms, so this doesn't
   // shift as they animate.
@@ -197,6 +264,7 @@ export function renderCommanderCarousel(el, items) {
     prevBtn.disabled = i === 0;
     nextBtn.disabled = i === items.length - 1;
     renderDots(i);
+    loadNextImages();
   }
 
   // Match-basis winrate (js/winrate.js). "—" for a commander with no match
@@ -364,18 +432,8 @@ export function renderCommanderCarousel(el, items) {
   applyDepth();
 
   fetchCardImages([...new Set(items.map((c) => c.commander.name))]).then((images) => {
-    slides.forEach((slide, i) => {
-      const url = images.get(items[i].commander.name.toLowerCase());
-      if (!url) return slide.classList.remove("is-loading");
-      const img = new Image();
-      img.alt = items[i].commander.name;
-      img.className = "cmd-carousel-img";
-      img.draggable = false;
-      img.onload = () => slide.classList.replace("is-loading", "has-image");
-      img.onerror = () => (img.remove(), slide.classList.remove("is-loading"));
-      img.src = url;
-      slide.append(img);
-    });
+    imageUrls = items.map((c) => images.get(c.commander.name.toLowerCase()) ?? null);
+    loadNextImages();
   });
 
   return {

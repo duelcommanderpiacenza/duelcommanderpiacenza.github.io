@@ -86,7 +86,19 @@ async function init() {
   }
 
   try {
-    const player = await Players.get(id);
+    // Three independent requests (each needs only the id), all started at
+    // once rather than one after another — then used in this order, so the
+    // title still shows as soon as the player's own row arrives. The no-op
+    // catches only mark the other two as handled, should the player request
+    // fail first and leave them never awaited; awaiting them below still
+    // throws as usual.
+    const playerRequest = Players.get(id);
+    const autoBadgesRequest = PlayerAutoBadges.listByPlayer(id);
+    const entriesRequest = EventEntries.listByPlayer(id);
+    autoBadgesRequest.catch(() => {});
+    entriesRequest.catch(() => {});
+
+    const player = await playerRequest;
     const nameLabel = player.handle ? `${player.name} (${player.handle})` : player.name;
     // Not fatal if this fails — the page still works with just the
     // manually assigned badges, so it's kept out of this try/catch.
@@ -95,7 +107,7 @@ async function init() {
       // The player list caps this to a few (highest priority first); this
       // page shows every auto badge a player has, uncapped — still sorted
       // the same way, just not sliced.
-      autoBadges = (await PlayerAutoBadges.listByPlayer(id))
+      autoBadges = (await autoBadgesRequest)
         .map((r) => r.badge)
         .filter(Boolean)
         .sort((a, b) => b.priority - a.priority);
@@ -114,7 +126,7 @@ async function init() {
     // and keeps the back button vertically centered on it.
     initTitleFit(titleEl);
 
-    const entries = await EventEntries.listByPlayer(id);
+    const entries = await entriesRequest;
 
     // Album comandanti: a plain, de-duplicated list — not split by event.
     // Keyed by the commander+partner pair, so "X / Y" and "X / Z" both show.
