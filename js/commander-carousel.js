@@ -15,6 +15,7 @@
 import { escapeHtml, commanderPairWithColors, formatDate } from "./ui.js";
 import { winRatePct } from "./winrate.js";
 import { enableSnapDrag } from "./drag-scroll.js";
+import { openInfoDialog } from "./info-dialog.js";
 
 // Scryfall's collection endpoint takes up to this many cards per request —
 // one request for a whole player's commanders instead of one each (and
@@ -74,22 +75,14 @@ function cardFinish(timesPlayed) {
   return finish;
 }
 
-// The "?" next to "Volte giocato" opens this, as a native modal <dialog>
-// (Escape/backdrop close for free, same as the Bacheca's events calendar,
-// whose .ecal-dialog look it shares). Built once, on first use: one row per
-// finish, each with a small live preview of its look on a blank card.
+// The "?" next to "Volte giocato" opens this (js/info-dialog.js's shared
+// pop-up): one row per finish, each with a small live preview of its look
+// on a blank card.
 function openFinishInfo() {
-  let dialog = document.getElementById("card-finish-dialog");
-  if (!dialog) {
-    dialog = document.createElement("dialog");
-    dialog.id = "card-finish-dialog";
-    dialog.className = "ecal-dialog info-dialog";
-    dialog.setAttribute("aria-labelledby", "card-finish-title");
-    dialog.innerHTML = `
-      <div class="info-dialog-head">
-        <h3 id="card-finish-title">Carte speciali</h3>
-        <button type="button" class="ecal-close" aria-label="Chiudi">&times;</button>
-      </div>
+  openInfoDialog({
+    id: "card-finish-dialog",
+    title: "Carte speciali",
+    bodyHtml: `
       <p>Più eventi giochi con lo stesso comandante, più la sua carta nell&rsquo;album diventa speciale:</p>
       <ul class="card-finish-list">
         ${CARD_FINISHES.map(
@@ -99,35 +92,8 @@ function openFinishInfo() {
             <span class="card-finish-text"><strong>${f.name}</strong> &middot; da ${f.minTimesPlayed} eventi</span>
           </li>`
         ).join("")}
-      </ul>`;
-    // Every way out (×, backdrop click, Escape) plays the exit animation
-    // (styles.css .info-dialog.is-closing) before the real close() — which
-    // would otherwise hide it on the spot. Closes straight away when there's
-    // no animation to wait for (reduced motion).
-    const closeAnimated = () => {
-      if (dialog.classList.contains("is-closing")) return;
-      if (getComputedStyle(dialog).animationName === "none") return dialog.close();
-      dialog.classList.add("is-closing");
-      dialog.addEventListener(
-        "animationend",
-        () => {
-          dialog.classList.remove("is-closing");
-          dialog.close();
-        },
-        { once: true }
-      );
-    };
-    dialog.querySelector(".ecal-close").addEventListener("click", closeAnimated);
-    dialog.addEventListener("click", (e) => {
-      if (e.target === dialog) closeAnimated();
-    });
-    dialog.addEventListener("cancel", (e) => {
-      e.preventDefault();
-      closeAnimated();
-    });
-    document.body.append(dialog);
-  }
-  dialog.showModal();
+      </ul>`,
+  });
 }
 
 const ARROW_PREV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>';
