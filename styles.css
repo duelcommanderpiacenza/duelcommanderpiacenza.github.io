@@ -1523,12 +1523,17 @@ main {
   color: var(--brand-red-deep);
 }
 
+/* One line, cut with an ellipsis like the name above it, rather than
+   wrapping onto a second one when the row is narrow. */
 .upcoming-row-league {
   font-size: 0.78rem;
   font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.03em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* "Ultimi eventi" reuses the upcoming-row markup, but each row is a link
@@ -1554,6 +1559,28 @@ a.upcoming-row:hover .upcoming-row-title {
 .upcoming-row > .results-links {
   flex-shrink: 0;
   margin-left: auto;
+}
+
+/* Touch devices: the links on their own line under the name and league
+   instead of beside them, so the name gets the row's full width — a grid,
+   the date badge spanning both lines and centered on them. Only rows that
+   have links (an empty second line would still add the row gap). */
+html.nav-mobile .upcoming-row:has(> .results-links) {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 14px;
+  row-gap: 8px;
+}
+
+html.nav-mobile .upcoming-row:has(> .results-links) > .upcoming-date-badge {
+  grid-row: 1 / span 2;
+  align-self: center;
+}
+
+html.nav-mobile .upcoming-row > .results-links {
+  grid-column: 2;
+  justify-self: start;
+  margin-left: 0;
 }
 
 /* "Leghe in corso" inside the accent card: the per-league blocks drop their
