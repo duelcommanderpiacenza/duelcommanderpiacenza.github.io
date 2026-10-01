@@ -13,8 +13,20 @@
 // This file relies on the Supabase UMD build being loaded first as a plain
 // (non-module) <script> tag on every page, which exposes `window.supabase`.
 
-const SUPABASE_URL = "https://avgogarpoqsfzstmputm.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_1QnaqckaDwM6uKRpls4gbw_z4ktDQgx";
+// Two projects: the live one, and "dcp-dev" (a copy for development, safe to
+// break) used whenever the site runs locally — so local testing can never
+// touch live data, and a page served from anywhere else always gets the
+// live one.
+const LIVE = {
+  url: "https://avgogarpoqsfzstmputm.supabase.co",
+  key: "sb_publishable_1QnaqckaDwM6uKRpls4gbw_z4ktDQgx",
+};
+const DEV = {
+  url: "https://xylxqwufckkyzrgtfbxi.supabase.co",
+  key: "sb_publishable_P_G-uZDqWhIws94jnWYMhQ_njOyG7qr",
+};
+const isLocal = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+const { url: SUPABASE_URL, key: SUPABASE_ANON_KEY } = isLocal ? DEV : LIVE;
 
 // Public pages must never carry an auth session — the RLS policies show
 // open/unpublished events, entries and matches to "authenticated" callers
