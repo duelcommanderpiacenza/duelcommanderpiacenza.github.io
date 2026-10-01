@@ -27,6 +27,7 @@ const CUSTOM_ICONS = [
   "crossed-swords",
   "fire",
   "snake",
+  "fox",
   "four-leaf-clover",
   "woman-dancing",
 ];
