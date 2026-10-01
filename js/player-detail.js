@@ -3,6 +3,7 @@ import { matchRoundOutcome, isBye, isDrop, computeEventLeaderboard } from "./lea
 import { tallyOutcome, renderWinrateTiles } from "./winrate.js";
 import {
   escapeHtml,
+  badgeDiscHtml,
   badgeTooltipAttrs,
   uniqueBadges,
   playerLabel,
@@ -51,9 +52,7 @@ function viewerScoreLabel(m, viewerIsP1) {
 function playerBadgesHtml(badges, linkedIds) {
   return badges
     .map((b) => {
-      const glyph = b.icon_url
-        ? `<img src="${b.icon_url}" alt="" class="icon-badge-img badge-icon-box" style="width:1.1em;height:1.1em;">`
-        : `<span class="badge-icon-box" style="width:1.1em;height:1.1em;">${b.icon ?? ""}</span>`;
+      const glyph = badgeDiscHtml(b);
       const attrs = `class="icon-badge" ${badgeTooltipAttrs(b)}`;
       return linkedIds.has(b.id)
         ? `<a ${attrs} href="badges.html#badge-${b.id}">${glyph}</a>`

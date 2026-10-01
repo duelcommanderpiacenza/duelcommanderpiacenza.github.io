@@ -4403,32 +4403,57 @@ table.data-table tbody tr.is-top8:hover {
   vertical-align: 0.2em;
 }
 
-.icon-badge-img {
-  width: 1.1em;
-  height: 1.1em;
-  object-fit: contain;
-  border-radius: 3px;
+/* Same reasoning for the badges after the name in player.html's title:
+   scaled with the title (the disc ≈ 36px next to the 1.9rem name, instead
+   of the lists' ≈ 26px), em so it follows the mobile title shrink too. */
+#player-title .icon-badge {
+  font-size: 0.75em;
+  margin-left: 12px;
 }
 
-/* Reusable icon box for anywhere a badge's uploaded image and its emoji
-   fallback can appear side by side (admin player/badge lists, player
-   badge tooltips) — same flex-centering fix as .cs-option-icon in the
-   custom dropdown: an emoji left as plain text sits wherever the font's
-   own glyph metrics place it, which won't match an <img> centered by
-   flexbox. Giving both an identically-sized, self-centering box fixes it
-   everywhere at once. Width/height are set per call site via inline style. */
-.badge-icon-box {
+#player-title .icon-badge + .icon-badge {
+  margin-left: 5px;
+}
+
+/* A badge's icon in a light-red disc (js/ui.js's badgeDiscHtml) — the one
+   look for a badge everywhere: next to player names, the player page title,
+   the admin lists (badges.html's big .badge-card-icon is the same disc at
+   its own size). Sized in em from the surrounding text, so it follows each
+   spot's own font size. The glyph — an <img> (uploaded/custom icon) or an
+   emoji as text — sits in a same-size self-centering box: an emoji left as
+   plain text sits wherever the font's glyph metrics place it, which won't
+   line up with a flex-centered <img>. */
+.badge-disc {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  vertical-align: middle;
   flex-shrink: 0;
+  width: 1.6em;
+  height: 1.6em;
+  vertical-align: middle;
+  border-radius: 50%;
+  background: rgba(220, 24, 28, 0.12);
   line-height: 1;
 }
 
-img.badge-icon-box {
+.badge-disc-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1em;
+  height: 1em;
+  font-size: 0.95em;
+  line-height: 1;
+}
+
+img.badge-disc-glyph {
   object-fit: contain;
-  border-radius: 3px;
+}
+
+/* Side by side (admin player list's two badges, a name's several). */
+.badge-disc + .badge-disc,
+.icon-badge + .icon-badge {
+  margin-left: 4px;
 }
 
 /* Badges: archetypes, color identity pips, provisional notice */
@@ -5764,7 +5789,8 @@ html.nav-mobile .help-toggle-btn {
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: rgba(220, 24, 28, 0.1);
+  /* Same tint as the small .badge-disc everywhere else. */
+  background: rgba(220, 24, 28, 0.12);
 }
 
 .badge-card-icon-emoji {
@@ -5773,10 +5799,9 @@ html.nav-mobile .help-toggle-btn {
 }
 
 .badge-card-icon-img {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   object-fit: contain;
-  border-radius: 4px;
 }
 
 .badge-card-name {
@@ -6779,8 +6804,9 @@ html.nav-mobile .chart-carousel-arrow {
   background: rgba(255, 255, 255, 0.045);
 }
 
-:root[data-theme="dark"] .badge-card-icon {
-  background: rgba(255, 110, 110, 0.14);
+:root[data-theme="dark"] .badge-card-icon,
+:root[data-theme="dark"] .badge-disc {
+  background: rgba(255, 110, 110, 0.16);
 }
 
 :root[data-theme="dark"] .badge-holder {

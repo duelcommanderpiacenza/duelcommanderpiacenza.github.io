@@ -519,6 +519,15 @@ html {
   background: rgba(220, 24, 28, 0.18);
 }
 
+/* The "Custom" tab's SVG icons (and the trigger / tab showing one): sized
+   like an emoji in the same spot, centered in its cell. */
+.emoji-picker-svg {
+  display: block;
+  width: 1.2em;
+  height: 1.2em;
+  margin: 0 auto;
+}
+
 .emoji-picker-custom {
   width: 100%;
   box-sizing: border-box;

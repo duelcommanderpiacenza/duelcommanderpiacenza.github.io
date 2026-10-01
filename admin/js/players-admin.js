@@ -1,5 +1,5 @@
 import { Players, Badges, EventEntries } from "../../js/db.js";
-import { escapeHtml } from "../../js/ui.js";
+import { escapeHtml, badgeDiscHtml } from "../../js/ui.js";
 import { renderTable, setMessage, fillSelect } from "./crud-ui.js";
 import { emit, on } from "./bus.js";
 
@@ -37,10 +37,11 @@ export function initPlayersAdmin() {
       '<option value="">&mdash; nessuno &mdash;</option>' +
       manualBadges
         .map((b) => {
+          // data-icon-disc: in the badges' light-red disc, as everywhere else.
           const iconAttr = b.icon_url
-            ? ` data-icon="${escapeHtml(b.icon_url)}"`
+            ? ` data-icon="${escapeHtml(b.icon_url)}" data-icon-disc`
             : b.icon
-            ? ` data-icon-text="${escapeHtml(b.icon)}"`
+            ? ` data-icon-text="${escapeHtml(b.icon)}" data-icon-disc`
             : "";
           // Two-line option in the custom dropdown for an automatic one.
           const autoAttr = b.auto_rule ? ` data-label="${escapeHtml(b.name)}" data-sublabel="Badge automatico"` : "";
@@ -71,18 +72,11 @@ export function initPlayersAdmin() {
         {
           key: "badges",
           label: "Badge",
-          // .badge-icon-box gives the image and the emoji the same
-          // flex-centered box (see styles.css) so they share a vertical
-          // anchor — an emoji as bare text sits per font glyph metrics,
-          // which doesn't line up with a flex-centered <img>.
+          // Each in the same light-red disc as on the public site (js/ui.js).
           render: (r) =>
             [r.badge1, r.badge2]
               .filter(Boolean)
-              .map((b) =>
-                b.icon_url
-                  ? `<img src="${b.icon_url}" alt="" class="badge-icon-box" style="width:1.2em;height:1.2em;">`
-                  : `<span class="badge-icon-box" style="width:1.2em;height:1.2em;">${b.icon ?? ""}</span>`
-              )
+              .map((b) => badgeDiscHtml(b, "1.1rem"))
               .join(" ") || "—",
         },
       ],
