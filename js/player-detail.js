@@ -46,18 +46,11 @@ function viewerScoreLabel(m, viewerIsP1) {
 // plain read of PlayerAutoBadges, precomputed by admin/js/badges-sync.js
 // whenever an event/league closes, not a live js/auto-badges.js
 // computation (that would recompute every player's standings/stats just
-// to extract this one player's result). An automatic badge (id in
-// `linkedIds`) links to its own card on badges.html, which explains how it's
-// earned; a manual one has no card there, so it stays a plain icon.
-function playerBadgesHtml(badges, linkedIds) {
+// to extract this one player's result). Plain icons with their tooltip, not
+// links — same as next to names everywhere else.
+function playerBadgesHtml(badges) {
   return badges
-    .map((b) => {
-      const glyph = badgeDiscHtml(b);
-      const attrs = `class="icon-badge" ${badgeTooltipAttrs(b)}`;
-      return linkedIds.has(b.id)
-        ? `<a ${attrs} href="badges.html#badge-${b.id}">${glyph}</a>`
-        : `<span ${attrs} tabindex="0">${glyph}</span>`;
-    })
+    .map((b) => `<span class="icon-badge" ${badgeTooltipAttrs(b)} tabindex="0">${badgeDiscHtml(b)}</span>`)
     .join("");
 }
 
@@ -113,14 +106,8 @@ async function init() {
     } catch (err) {
       console.error(err);
     }
-    // An automatic badge links to its Badge-page card whether it was earned
-    // or assigned by hand in a manual slot (auto_rule set); a manual-only
-    // badge has no card there.
     const playerBadges = uniqueBadges([player.badge1, player.badge2, ...autoBadges]);
-    titleEl.innerHTML = `${escapeHtml(nameLabel)} ${playerBadgesHtml(
-      playerBadges,
-      new Set([...autoBadges.map((b) => b.id), ...playerBadges.filter((b) => b.auto_rule).map((b) => b.id)])
-    )}`;
+    titleEl.innerHTML = `${escapeHtml(nameLabel)} ${playerBadgesHtml(playerBadges)}`;
     // Same as the other detail pages: on phones, fits the name to one line
     // and keeps the back button vertically centered on it.
     initTitleFit(titleEl);

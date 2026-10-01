@@ -5918,12 +5918,6 @@ html.nav-mobile .help-toggle-btn {
   font-style: italic;
 }
 
-/* A player page's badge icons link to their card on badges.html — no
-   underline under the emoji/image from the global a:hover. */
-a.icon-badge,
-a.icon-badge:hover {
-  text-decoration: none;
-}
 
 .filter-panel {
   display: grid;
