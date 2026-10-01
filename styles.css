@@ -2948,6 +2948,61 @@ footer {
   }
 }
 
+/* Sparks (.is-sparks, the Leggendaria on top of the gilded foil): small
+   gold sparks rising slowly from the bottom of the card and fading out
+   toward the top, drawn on the card's extra layer (.card-finish-fx — the
+   card's own ::before/::after are the frame and the foil). A tile of four
+   sparks repeated over the card and scrolled up by exactly one tile height
+   per loop, so it never jumps; --sparks-tile-h keeps the two in step. */
+.card-finish-fx {
+  display: none;
+}
+
+.is-sparks > .card-finish-fx {
+  --sparks-tile-w: 80px;
+  --sparks-tile-h: 120px;
+  display: block;
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 20% 30%, #ffe48a 0 1.5px, rgba(255, 200, 80, 0.5) 2.5px, transparent 5px),
+    radial-gradient(circle at 65% 70%, #fff3c4 0 1px, rgba(255, 210, 100, 0.5) 2px, transparent 4px),
+    radial-gradient(circle at 85% 20%, #ffd76a 0 2px, rgba(255, 190, 60, 0.45) 3px, transparent 6px),
+    radial-gradient(circle at 40% 90%, #fff 0 1px, rgba(255, 220, 120, 0.5) 2px, transparent 4px);
+  background-size: var(--sparks-tile-w) var(--sparks-tile-h);
+  mix-blend-mode: screen;
+  -webkit-mask-image: linear-gradient(to top, #000 40%, transparent);
+  mask-image: linear-gradient(to top, #000 40%, transparent);
+  animation: sparks-rise 6s linear infinite;
+}
+
+@keyframes sparks-rise {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 0 calc(var(--sparks-tile-h) * -1);
+  }
+}
+
+/* The dialog's small preview card: sparks sized up for it (the album's are
+   1-2px, invisible at this scale), on a tighter tile and fading out later,
+   so a handful show over its short height. */
+.card-finish-preview.is-sparks > .card-finish-fx {
+  --sparks-tile-w: 28px;
+  --sparks-tile-h: 36px;
+  background-image:
+    radial-gradient(circle at 25% 30%, #fff3c4 0 1.5px, rgba(255, 205, 90, 0.7) 2.5px, transparent 4px),
+    radial-gradient(circle at 75% 75%, #ffe48a 0 1.5px, rgba(255, 190, 60, 0.7) 2.5px, transparent 4px);
+  -webkit-mask-image: linear-gradient(to top, #000 20%, transparent);
+  mask-image: linear-gradient(to top, #000 20%, transparent);
+  animation-duration: 3s;
+}
+
 /* No outer glow or rim, unlike the foil's: on desktop the current card sits
    flush with the track's left edge, which clips anything spreading left
    into a hard edge — the frame is inside the card, which keeps just its
@@ -3003,8 +3058,8 @@ html.nav-mobile .help-toggle-btn.cmd-carousel-help-btn {
 }
 
 /* The album's "Carte speciali" explanation: one row per finish, lowest
-   first — a small live preview of its look, its name and from how many
-   events, then what it looks like. */
+   first — a small live preview of its look, then its name and from how
+   many events. */
 .card-finish-list {
   display: flex;
   flex-direction: column;
@@ -3024,28 +3079,18 @@ html.nav-mobile .help-toggle-btn.cmd-carousel-help-btn {
    to shine on) wearing the finish's own classes — the same CSS as the
    album's cards (see .cmd-carousel-slide.is-foil / .is-gilded). */
 .card-finish-preview {
-  --gilded-width: 2.5px;
+  --gilded-width: 3px;
   position: relative;
   flex-shrink: 0;
-  width: 40px;
+  width: 52px;
   aspect-ratio: 488 / 680;
-  border-radius: 4px;
+  border-radius: 5px;
   overflow: hidden;
   background: linear-gradient(160deg, #46577a, #7a5a8c 55%, #a06a4a);
 }
 
-.card-finish-preview.is-foil:not(.is-gilded) {
-  box-shadow: 0 0 0 1.5px rgba(255, 196, 0, 0.6);
-}
-
 .card-finish-text {
   line-height: 1.4;
-}
-
-.card-finish-look {
-  display: block;
-  color: var(--text-muted);
-  font-size: 0.9rem;
 }
 
 /* In: rises and scales up slightly as it fades in, backdrop fading with it.
@@ -3361,7 +3406,8 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   .cmd-carousel-slide.is-foil::after,
   .cmd-carousel-slide.is-gilded::before,
   .card-finish-preview.is-foil::after,
-  .card-finish-preview.is-gilded::before {
+  .card-finish-preview.is-gilded::before,
+  .is-sparks > .card-finish-fx {
     animation: none;
   }
 }

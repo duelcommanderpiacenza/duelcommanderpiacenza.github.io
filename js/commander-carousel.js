@@ -58,19 +58,15 @@ async function fetchCardImages(names) {
 // here plus its look in styles.css (.cmd-carousel-slide.<class> and the
 // dialog's .card-finish-preview.<class>), nothing else.
 export const CARD_FINISHES = [
-  {
-    minTimesPlayed: 10,
-    classes: "is-foil",
-    name: "Foil",
-    look: "Riflessi olografici che attraversano la carta.",
-  },
-  {
-    minTimesPlayed: 50,
-    classes: "is-foil is-gilded",
-    name: "Foil dorata",
-    look: "La foil, in più una cornice d&rsquo;oro con una luce che le gira intorno.",
-  },
+  { minTimesPlayed: 10, classes: "is-foil", name: "Foil" },
+  { minTimesPlayed: 50, classes: "is-foil is-gilded", name: "Foil dorata" },
+  { minTimesPlayed: 100, classes: "is-foil is-gilded is-sparks", name: "Leggendaria" },
 ];
+
+// Every card (album and dialog preview) carries this empty layer for the
+// finishes that need more than the card's own ::before/::after (taken by
+// the gilded frame and the foil sheen) — e.g. .is-sparks draws on it.
+const FINISH_LAYER = '<span class="card-finish-fx" aria-hidden="true"></span>';
 
 function cardFinish(timesPlayed) {
   let finish = null;
@@ -99,11 +95,8 @@ function openFinishInfo() {
         ${CARD_FINISHES.map(
           (f) => `
           <li>
-            <span class="card-finish-preview ${f.classes}" aria-hidden="true"></span>
-            <span class="card-finish-text">
-              <strong>${f.name}</strong> &middot; da ${f.minTimesPlayed} eventi
-              <span class="card-finish-look">${f.look}</span>
-            </span>
+            <span class="card-finish-preview ${f.classes}" aria-hidden="true">${FINISH_LAYER}</span>
+            <span class="card-finish-text"><strong>${f.name}</strong> &middot; da ${f.minTimesPlayed} eventi</span>
           </li>`
         ).join("")}
       </ul>`;
@@ -166,6 +159,7 @@ export function renderCommanderCarousel(el, items) {
               cardFinish(c.timesPlayed)?.classes ?? ""
             }" data-index="${i}">
               <span class="cmd-carousel-fallback">${escapeHtml(c.commander.name)}</span>
+              ${FINISH_LAYER}
             </div>`
           )
           .join("")}
