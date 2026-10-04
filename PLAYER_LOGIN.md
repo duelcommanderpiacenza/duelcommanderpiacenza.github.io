@@ -36,7 +36,7 @@ admin can block or delete accounts.
 |---|---|---|
 | 0 | Admins vs signed-in users | Done on **dev**, committed (`96435a7`), **not on live** |
 | 1 | Accounts (sign in with Google, logout) | Done on **dev**, **not on live** |
-| 2 | Claim a player, with admin approval | To do |
+| 2 | Claim a player (request side; approval UI is step 3) | Done on **dev**, **not on live** |
 | 3 | Admin "Utenti" tab | To do |
 | 4 | Own profile editing | To do — waiting on an open question |
 | 5 | Go live | To do |
@@ -157,15 +157,33 @@ an account can never sign in. No email form is offered on the site.
 
 ## Step 2 — Claim a player, with admin approval
 
-- [ ] Migration `002_...`: a `user_id` link on `players` (one account per
-  player, set **only** by the admin), and a pending-requests table (one
-  pending request per user; a player can't be requested by two users at
-  once).
-- [ ] Database functions for the user: request a player, cancel own request,
-  see own request/link. No broad write permission on `players`.
-- [ ] Public "Account" page: pick a player not yet linked, send the request,
-  show "in attesa di approvazione" until the admin acts, then the linked
-  player.
+- [x] Migration `002_player_claims.sql` (+ rollback), **run on dev**:
+  `players.user_id` (the link, unique, written only by the admin via the
+  existing `players_admin_update` policy) and `player_claims` (pending
+  requests: one per account, one per player; users read only their own).
+  Folded into `schema.sql`. Note: `players` is publicly readable, so
+  `user_id` (an internal id, nothing personal) is too — needed to list the
+  players still free.
+- [x] Database functions for the user: `request_player_claim(player)` (checks
+  every rule, errors are codes: not_signed_in, already_linked,
+  request_pending, player_not_found, player_taken, player_requested) and
+  `cancel_player_claim()`. Signed-in accounts only. No direct write
+  permission on either table.
+- [x] `js/db.js`'s `PlayerClaims` + `account.html` "Il tuo giocatore": the
+  linked player (link to its page), or the pending request with "Annulla
+  richiesta", or a searchable list of the players not yet linked with
+  "Invia richiesta".
+- [x] **Test on dev:** request, cancel, request again, approved by hand
+  (SQL below), linked view ("Il tuo account è collegato a Michele Ferri.")
+  — all working. On dev, Michele's account (also the admin) is now linked
+  to the player "Michele Ferri".
+- Approving/rejecting comes with the admin tab (step 3). Until then a
+  request can be approved by hand in the SQL editor (dev only — this
+  approves **every** pending request):
+  ```sql
+  update players set user_id = c.user_id from player_claims c where players.id = c.player_id;
+  delete from player_claims;
+  ```
 
 ## Step 3 — Admin "Utenti" tab
 

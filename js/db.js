@@ -120,6 +120,28 @@ export const Players = {
   remove: (id) => sb.from("players").delete().eq("id", id).then(assertOk),
 };
 
+// Player login (supabase/migrations/002_player_claims.sql): the account ↔
+// player link (players.user_id, written only by the admin) and a signed-in
+// user's own pending request to be linked (player_claims — RLS shows a user
+// only their own; the admin sees all, hence the user_id filter).
+export const PlayerClaims = {
+  linkedPlayer: (userId) =>
+    sb.from("players").select("id, name, handle").eq("user_id", userId).maybeSingle().then(assertOk),
+  mine: (userId) =>
+    sb
+      .from("player_claims")
+      .select("player_id, created_at, player:players(id, name, handle)")
+      .eq("user_id", userId)
+      .maybeSingle()
+      .then(assertOk),
+  // Players no account is linked to yet. One someone else has already
+  // requested still shows up — request() then fails with player_requested.
+  unlinkedPlayers: () => sb.from("players").select("id, name, handle").is("user_id", null).order("name").then(assertOk),
+  // Errors come back with a code as their message (see the migration).
+  request: (playerId) => sb.rpc("request_player_claim", { p_player_id: playerId }).then(assertOk),
+  cancel: () => sb.rpc("cancel_player_claim").then(assertOk),
+};
+
 export const Leagues = {
   // Newest-created first, so a just-added league/topdeck shows up front
   // rather than wherever it happens to fall alphabetically.

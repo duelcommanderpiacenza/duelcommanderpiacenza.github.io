@@ -100,6 +100,34 @@
           <button type="button" class="btn-secondary" id="account-logout">Esci</button>
         </div>
         <p class="form-message" data-message></p>
+
+        <!-- Il tuo giocatore: one of the three [data-claim] blocks at a time -->
+        <div class="account-player">
+          <h3>Il tuo giocatore</h3>
+          <p class="page-loading" data-claim="loading">Caricamento...</p>
+
+          <p data-claim="linked" hidden>Il tuo account è collegato a <a id="account-linked-player"></a>.</p>
+
+          <div data-claim="pending" hidden>
+            <p>Hai chiesto di collegare il tuo account a <strong id="account-pending-player"></strong>: in attesa dell'approvazione di un amministratore.</p>
+            <div class="form-actions">
+              <button type="button" class="btn-secondary" id="account-claim-cancel">Annulla richiesta</button>
+            </div>
+          </div>
+
+          <form id="account-claim-form" data-claim="none" hidden>
+            <p class="account-hint">Sei già nelle classifiche? Scegli il tuo nome: dopo l'approvazione di un amministratore il tuo account sarà collegato al tuo giocatore e ai suoi risultati.</p>
+            <div class="field">
+              <label for="account-claim-player">Giocatore</label>
+              <select id="account-claim-player" data-searchable></select>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn-primary">Invia richiesta</button>
+            </div>
+          </form>
+
+          <p class="form-message" data-claim-message></p>
+        </div>
       </section>
     </div>
   </div>

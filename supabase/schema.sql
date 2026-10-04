@@ -29,6 +29,7 @@ drop table if exists event_entries cascade;
 drop table if exists decks cascade;
 drop table if exists events cascade;
 drop table if exists leagues cascade;
+drop table if exists player_claims cascade;
 drop table if exists players cascade;
 drop table if exists badges cascade;
 drop table if exists commanders cascade;
@@ -133,6 +134,9 @@ create table players (
   -- see player_badges_auto below, not stored on this row.
   badge1_id uuid,
   badge2_id uuid,
+  -- The login account linked to this player (player_claims below): at most
+  -- one each way. Written only by the admin (players_admin_update).
+  user_id uuid unique references auth.users(id) on delete set null,
   created_at timestamptz not null default now(),
   constraint players_badge1_id_fkey foreign key (badge1_id) references badges(id) on delete set null,
   constraint players_badge2_id_fkey foreign key (badge2_id) references badges(id) on delete set null,
@@ -395,3 +399,67 @@ create policy "matches_public_read" on matches for select
   );
 
 create policy "player_badges_auto_public_read" on player_badges_auto for select using (true);
+
+-- ---------------------------------------------------------------------------
+-- Player login: an account asks to be linked to a player (players.user_id),
+-- the admin approves or rejects. Pending requests live here — at most one
+-- per account and one per player. Users read only their own and write only
+-- through the two functions below, which check every rule first. Added by
+-- supabase/migrations/002_player_claims.sql.
+-- ---------------------------------------------------------------------------
+
+create table player_claims (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  player_id uuid not null unique references players(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+
+alter table player_claims enable row level security;
+
+create policy "player_claims_read_own" on player_claims for select
+  using (user_id = auth.uid() or is_admin());
+
+create policy "player_claims_admin_delete" on player_claims for delete
+  using (is_admin());
+
+-- Errors are codes js/account-page.js translates: not_signed_in,
+-- already_linked, request_pending, player_not_found, player_taken,
+-- player_requested.
+create or replace function request_player_claim(p_player_id uuid) returns void
+language plpgsql security definer set search_path = public as $$
+declare
+  uid uuid := auth.uid();
+begin
+  if uid is null then
+    raise exception 'not_signed_in';
+  end if;
+  if exists (select 1 from players where user_id = uid) then
+    raise exception 'already_linked';
+  end if;
+  if exists (select 1 from player_claims where user_id = uid) then
+    raise exception 'request_pending';
+  end if;
+  if not exists (select 1 from players where id = p_player_id) then
+    raise exception 'player_not_found';
+  end if;
+  if exists (select 1 from players where id = p_player_id and user_id is not null) then
+    raise exception 'player_taken';
+  end if;
+  if exists (select 1 from player_claims where player_id = p_player_id) then
+    raise exception 'player_requested';
+  end if;
+  insert into player_claims (user_id, player_id) values (uid, p_player_id);
+exception
+  when unique_violation then
+    raise exception 'player_requested';
+end $$;
+
+create or replace function cancel_player_claim() returns void
+language sql security definer set search_path = public as $$
+  delete from player_claims where user_id = auth.uid();
+$$;
+
+revoke execute on function request_player_claim(uuid) from public, anon;
+revoke execute on function cancel_player_claim() from public, anon;
+grant execute on function request_player_claim(uuid) to authenticated;
+grant execute on function cancel_player_claim() to authenticated;

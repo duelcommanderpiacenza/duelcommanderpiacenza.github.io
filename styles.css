@@ -5346,6 +5346,28 @@ img.cs-option-icon {
   font-size: 0.9rem;
 }
 
+/* "Il tuo giocatore" under the signed-in account details. */
+.account-player {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--hairline);
+}
+
+.account-player h3 {
+  margin: 0 0 10px;
+  font-size: 1.05rem;
+  color: var(--text-title);
+}
+
+.account-player p {
+  margin: 0 0 12px;
+}
+
+.account-player a {
+  font-weight: 800;
+  color: var(--brand-red-deep);
+}
+
 /* White with Google's own multicolour "G", as Google's sign-in branding asks
    (not restyled in the site's red). */
 .google-signin-btn {
