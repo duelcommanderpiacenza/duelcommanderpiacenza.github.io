@@ -20,6 +20,7 @@
   --hairline: rgba(154, 28, 32, 0.18);
   --hairline-hover: rgba(220, 24, 28, 0.32);
   --hairline-hover-strong: rgba(220, 24, 28, 0.36);
+  --table-row-line: rgba(154, 28, 32, 0.08);
 
   --shadow-soft: 0 18px 42px rgba(69, 29, 34, 0.08);
   --shadow-card: 0 12px 28px rgba(40, 24, 26, 0.08);
@@ -4321,13 +4322,17 @@ html.nav-mobile .results-links {
   }
 }
 
-/* Data tables (leaderboards, match lists, admin lists) */
+/* Data tables (leaderboards, match lists, admin lists) — styled as a list
+   inside a card rather than a spreadsheet grid: no filled header band, only
+   the header's own line at full strength, faint row separators, and the
+   rows inset from the card's edges (the wrapper's padding). */
 
 .data-table-wrap {
   border: 1px solid var(--hairline);
   border-radius: var(--radius-card-sm);
   background: rgba(255, 255, 255, 0.9);
   box-shadow: var(--shadow-card);
+  padding: 6px 10px;
   overflow: hidden;
   overflow-x: auto;
   animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
@@ -4340,34 +4345,48 @@ html.nav-mobile .results-links {
   animation: none;
 }
 
+/* separate + 0 spacing looks the same as collapse with bottom-only borders,
+   but keeps each cell's own box intact for the top-8 accent bar below (a
+   positioned ::before on a cell). tabular-nums keeps digits equal-width, so
+   scores/percentages line up down a column. */
 table.data-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
 }
 
 table.data-table th,
 table.data-table td {
-  padding: 12px 14px;
+  padding: 13px 14px;
   text-align: left;
-  border-bottom: 1px solid var(--hairline);
+  vertical-align: middle;
+  border-bottom: 1px solid var(--table-row-line);
   white-space: nowrap;
 }
 
 table.data-table th {
-  color: var(--brand-red-darker);
-  font-size: 0.78rem;
+  padding-top: 12px;
+  padding-bottom: 10px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  background: #ffe9e2;
+  letter-spacing: 0.08em;
+  border-bottom-color: var(--hairline);
 }
 
 table.data-table tbody tr:last-child td {
   border-bottom: none;
 }
 
+table.data-table tbody tr {
+  transition: background 150ms ease;
+}
+
 table.data-table tbody tr:hover {
-  background: #fff3f0;
+  background: rgba(220, 24, 28, 0.04);
 }
 
 .rank-cell {
@@ -4375,15 +4394,34 @@ table.data-table tbody tr:hover {
   color: var(--brand-red);
 }
 
-/* league.html leaderboard: the top 8 positions get a faint brand-red tint.
-   Explicit :hover rule since tr.is-top8 ties the generic tr:hover on
-   specificity and, coming later, would otherwise mask it. */
+/* league.html leaderboard: the top 8 positions get a red accent bar on
+   their first cell plus a faint tint. Explicit :hover rule since
+   tr.is-top8 ties the generic tr:hover on specificity and, coming later,
+   would otherwise mask it. */
 table.data-table tbody tr.is-top8 {
-  background: rgba(220, 24, 28, 0.05);
+  background: rgba(220, 24, 28, 0.035);
 }
 
 table.data-table tbody tr.is-top8:hover {
-  background: rgba(220, 24, 28, 0.09);
+  background: rgba(220, 24, 28, 0.07);
+}
+
+/* A real 3px strip rather than an inset box-shadow: the shadow version
+   anti-aliased its inner edges on fractional row heights, leaving a faint
+   red hairline across the cell between rows. bottom: -1px runs it over the
+   cell's own separator line, so consecutive top-8 bars join seamlessly. */
+table.data-table tbody tr.is-top8 td:first-child {
+  position: relative;
+}
+
+table.data-table tbody tr.is-top8 td:first-child::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: -1px;
+  left: 0;
+  width: 3px;
+  background: var(--brand-red);
 }
 
 /* Small inline icon with a hover/focus tooltip — player badges (Giocatori
@@ -6091,7 +6129,11 @@ html.nav-mobile .help-toggle-btn {
   background: rgba(220, 24, 28, 0.25);
 }
 
+/* padding: 0 undoes .data-table-wrap's inset — the sticky row-name column
+   sticks inside the padding, so cells would scroll visibly through the gap
+   to its left. */
 .matchups-matrix-wrap {
+  padding: 0;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
@@ -6671,9 +6713,18 @@ html.nav-mobile .chart-carousel-arrow {
     padding: 20px 16px 36px;
   }
 
+  .data-table-wrap:not(.matchups-matrix-wrap) {
+    padding: 4px 6px;
+  }
+
   table.data-table th,
   table.data-table td {
-    padding: 10px 10px;
+    padding: 12px 10px;
+  }
+
+  table.data-table th {
+    padding-top: 11px;
+    padding-bottom: 9px;
   }
 }
 
@@ -6707,6 +6758,7 @@ html.nav-mobile .chart-carousel-arrow {
   --hairline: rgba(255, 255, 255, 0.1);
   --hairline-hover: rgba(255, 110, 110, 0.32);
   --hairline-hover-strong: rgba(255, 110, 110, 0.42);
+  --table-row-line: rgba(255, 255, 255, 0.06);
 
   --shadow-soft: 0 18px 42px rgba(0, 0, 0, 0.5);
   --shadow-card: 0 12px 28px rgba(0, 0, 0, 0.4);
@@ -6804,21 +6856,16 @@ html.nav-mobile .chart-carousel-arrow {
   background: linear-gradient(135deg, rgba(220, 24, 28, 0.18), rgba(255, 255, 255, 0.045));
 }
 
-:root[data-theme="dark"] table.data-table th {
-  color: #ff9195;
-  background: rgba(255, 110, 110, 0.1);
-}
-
 :root[data-theme="dark"] table.data-table tbody tr:hover {
   background: rgba(255, 110, 110, 0.06);
 }
 
 :root[data-theme="dark"] table.data-table tbody tr.is-top8 {
-  background: rgba(255, 110, 110, 0.08);
+  background: rgba(255, 110, 110, 0.05);
 }
 
 :root[data-theme="dark"] table.data-table tbody tr.is-top8:hover {
-  background: rgba(255, 110, 110, 0.13);
+  background: rgba(255, 110, 110, 0.1);
 }
 
 :root[data-theme="dark"] .rank-cell,
