@@ -232,7 +232,7 @@ async function init() {
                 .map(
                   (s, i) => `
                 <tr${i < LEAGUE_TOP_HIGHLIGHT ? ' class="is-top8"' : ""}>
-                  <td class="rank-cell">${i + 1}</td>
+                  <td class="rank-cell"><span class="rank-chip">${i + 1}</span></td>
                   <td>${playerLabel(s.player)}${badgesFor(s.player)}</td>
                   <td><strong>${s.points}</strong></td>
                   <td>${s.wins}-${s.losses}-${s.draws}</td>

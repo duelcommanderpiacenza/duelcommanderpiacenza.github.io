@@ -478,10 +478,13 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
         </a>
         <div class="page-heading">
-          <h3 id="event-detail-title"></h3>
-          <div style="display:flex;gap:10px;">
-            <button type="button" class="btn-secondary" id="event-detail-toggle-open">Chiudi evento</button>
-            <button type="button" class="btn-secondary" id="open-matches-btn">Gestisci partite &rarr;</button>
+          <div class="page-heading-title-group">
+            <h3 id="event-detail-title"></h3>
+            <button type="button" class="badge-status badge-status-toggle badge-status-open" id="event-detail-toggle-open" title="Clic per chiudere">Aperto</button>
+          </div>
+          <div class="view-switch" role="group" aria-label="Sezione dell'evento">
+            <button type="button" class="view-switch-option is-active" aria-pressed="true">Giocatori</button>
+            <button type="button" class="view-switch-option" id="open-matches-btn" aria-pressed="false">Partite</button>
           </div>
         </div>
       </div>
@@ -528,12 +531,18 @@
     <!-- Partite, divise in tab per turno, di un evento -->
     <div class="admin-subview" id="subview-matches-detail" hidden>
       <div class="page-heading-row">
-        <a href="#" class="breadcrumb-link" id="matches-detail-back" aria-label="Torna agli iscritti" title="Torna agli iscritti">
+        <a href="#" class="breadcrumb-link" id="matches-detail-back" aria-label="Torna agli eventi" title="Torna agli eventi">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
         </a>
         <div class="page-heading">
-          <h3 id="matches-detail-title"></h3>
-          <button type="button" class="btn-secondary" id="matches-toggle-event-open">Chiudi evento</button>
+          <div class="page-heading-title-group">
+            <h3 id="matches-detail-title"></h3>
+            <button type="button" class="badge-status badge-status-toggle badge-status-open" id="matches-toggle-event-open" title="Clic per chiudere">Aperto</button>
+          </div>
+          <div class="view-switch" role="group" aria-label="Sezione dell'evento">
+            <button type="button" class="view-switch-option" id="open-entries-btn" aria-pressed="false">Giocatori</button>
+            <button type="button" class="view-switch-option is-active" aria-pressed="true">Partite</button>
+          </div>
         </div>
       </div>
 

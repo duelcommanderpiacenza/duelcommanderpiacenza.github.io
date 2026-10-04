@@ -1,7 +1,7 @@
 import { EventEntries, Matches, Events } from "../../js/db.js";
 import { isBye, isDrop, computeEventLeaderboard } from "../../js/leaderboard.js";
 import { escapeHtml } from "../../js/ui.js";
-import { setMessage, fillSelect } from "./crud-ui.js";
+import { setMessage, fillSelect, setStatusToggle } from "./crud-ui.js";
 import { on } from "./bus.js";
 
 /**
@@ -220,7 +220,7 @@ export function initMatchesAdmin({ onToggleOpen } = {}) {
                 : "<td>—</td>";
             return `
           <tr>
-            <td class="rank-cell">${i + 1}</td>
+            <td class="rank-cell"><span class="rank-chip">${i + 1}</span></td>
             <td>${escapeHtml(s.player?.name ?? "")}</td>
             <td><strong>${s.points}</strong></td>
             <td>${s.wins}-${s.losses}-${s.draws}</td>
@@ -292,7 +292,7 @@ export function initMatchesAdmin({ onToggleOpen } = {}) {
   }
 
   function updateToggleEventOpenBtn() {
-    toggleEventOpenBtn.textContent = currentEvent?.is_open ? "Chiudi evento" : "Riapri evento";
+    setStatusToggle(toggleEventOpenBtn, Boolean(currentEvent?.is_open), "event");
   }
 
   toggleEventOpenBtn.addEventListener("click", () => onToggleOpen?.());

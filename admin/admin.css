@@ -594,6 +594,14 @@ html {
   background: rgba(255, 255, 255, 0.06);
 }
 
+/* The event's Aperto/Chiuso pill, right after its name on the Iscritti/Partite
+   title bars (.page-heading-title-group):
+   .badge-status-toggle's font: inherit would take the heading's size here,
+   so it's pinned to the list tables' own (table.data-table) to look the same. */
+.page-heading .badge-status-toggle {
+  font-size: 0.95rem;
+}
+
 /* Excludes .icon-btn (Modifica/Elimina) — those are fixed-size circles
    (../../styles.css) and would get squashed into an oval by this padding. */
 .row-actions button:not(.icon-btn) {
@@ -707,6 +715,42 @@ html {
   border-color: var(--brand-red);
 }
 
+/* Giocatori | Partite switch on an event's two pages (same markup on both,
+   the current page's option active) — same pill language as .round-tab,
+   joined into one control so it reads as "which view", not two actions.
+   The active option has no click handler: it's the page you're on. */
+.view-switch {
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-pill);
+  background: #fff;
+}
+
+.view-switch-option {
+  border: none;
+  background: transparent;
+  color: var(--brand-red-darker);
+  border-radius: var(--radius-pill);
+  padding: 7px 16px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 180ms ease, color 180ms ease;
+}
+
+.view-switch-option:hover {
+  background: rgba(220, 24, 28, 0.08);
+}
+
+.view-switch-option.is-active {
+  background: var(--brand-red);
+  color: #fff;
+  cursor: default;
+}
+
 .round-tab-wrap {
   display: inline-flex;
   align-items: center;
@@ -813,6 +857,11 @@ html {
     font-size: 0.85rem;
   }
 
+  .view-switch-option {
+    padding: 7px 12px;
+    font-size: 0.85rem;
+  }
+
   .score-input-row {
     flex-wrap: wrap;
   }
@@ -835,6 +884,7 @@ html {
 :root[data-theme="dark"] .admin-form-card,
 :root[data-theme="dark"] .admin-tab,
 :root[data-theme="dark"] .round-tab,
+:root[data-theme="dark"] .view-switch,
 :root[data-theme="dark"] .badges-legend {
   background: rgba(255, 255, 255, 0.05);
 }

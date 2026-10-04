@@ -4,6 +4,7 @@ import { setupThemeToggle } from "../../js/theme.js";
 import { eventTitle } from "../../js/ui.js";
 import { enhanceSelects } from "../../js/custom-select.js";
 import { enhanceDateInputs } from "../../js/custom-date.js";
+import { setStatusToggle } from "./crud-ui.js";
 import { emit } from "./bus.js";
 import { initPlayersAdmin } from "./players-admin.js";
 import { initCommandersAdmin } from "./commanders-admin.js";
@@ -38,6 +39,7 @@ const leagueDetailBack = document.getElementById("league-detail-back");
 const eventDetailBack = document.getElementById("event-detail-back");
 const matchesDetailBack = document.getElementById("matches-detail-back");
 const openMatchesBtn = document.getElementById("open-matches-btn");
+const openEntriesBtn = document.getElementById("open-entries-btn");
 const eventDetailToggleBtn = document.getElementById("event-detail-toggle-open");
 
 let modulesInitialized = false;
@@ -144,7 +146,7 @@ function showAdmin(session) {
     function openEvent(event) {
       currentEvent = event;
       eventDetailTitle.textContent = eventTitle(event);
-      eventDetailToggleBtn.textContent = event.is_open ? "Chiudi evento" : "Riapri evento";
+      setStatusToggle(eventDetailToggleBtn, event.is_open, "event");
       entriesCtl.openEvent(event);
       enterEventFlow();
     }
@@ -160,7 +162,7 @@ function showAdmin(session) {
       try {
         const updated = await Events.update(currentEvent.id, { is_open: !wasOpen });
         currentEvent.is_open = updated.is_open;
-        eventDetailToggleBtn.textContent = currentEvent.is_open ? "Chiudi evento" : "Riapri evento";
+        setStatusToggle(eventDetailToggleBtn, currentEvent.is_open, "event");
         entriesCtl.openEvent(currentEvent);
         matchesCtl.refreshOpenState();
         emit("events:changed");
@@ -190,20 +192,26 @@ function showAdmin(session) {
       showLeaguesListSubview();
     });
 
-    eventDetailBack.addEventListener("click", (e) => {
+    // Back from either event page returns to the list the event was opened
+    // from — exitEventFlow just reveals the tab area as it was left: the
+    // league's event list for a league event, Eventi singoli for a
+    // standalone one (the only two places an event can be opened from).
+    function backToEventList(e) {
       e.preventDefault();
       exitEventFlow();
-    });
+    }
+
+    eventDetailBack.addEventListener("click", backToEventList);
+    matchesDetailBack.addEventListener("click", backToEventList);
 
     openMatchesBtn.addEventListener("click", () => {
       if (!currentEvent) return;
-      matchesDetailTitle.textContent = `${eventTitle(currentEvent)} — Partite`;
+      matchesDetailTitle.textContent = eventTitle(currentEvent);
       matchesCtl.openEvent(currentEvent);
       showMatchesDetailSubview();
     });
 
-    matchesDetailBack.addEventListener("click", (e) => {
-      e.preventDefault();
+    openEntriesBtn.addEventListener("click", () => {
       // currentEvent is the same object reference matchesCtl was handed, so
       // an open/close toggle made there is already reflected on it — just
       // re-run openEvent to refresh the entries form's locked state and list.

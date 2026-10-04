@@ -4389,11 +4389,41 @@ table.data-table tbody tr:hover {
   background: rgba(220, 24, 28, 0.04);
 }
 
+/* Player/commander/event names: red on hover rather than the site-wide
+   underline — reads as a row you can open, not a spreadsheet hyperlink. */
+table.data-table td a {
+  transition: color 150ms ease;
+}
+
+table.data-table td a:hover {
+  color: var(--brand-red-deep);
+  text-decoration: none;
+}
+
+/* width: 1% shrinks the column to its chip instead of sharing spare width. */
 .rank-cell {
+  width: 1%;
   font-weight: 800;
   color: var(--brand-red);
 }
 
+/* Same look as the Bacheca standings preview's .dashboard-standings-rank,
+   one color for every position; min-width + padding only so a 3-digit
+   rank would stretch it into a pill instead of overflowing. */
+.rank-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  box-sizing: border-box;
+  border-radius: var(--radius-pill);
+  background: rgba(220, 24, 28, 0.18);
+  color: var(--brand-red-deep);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
 /* league.html leaderboard: the top 8 positions get a red accent bar on
    their first cell plus a faint tint. Explicit :hover rule since
    tr.is-top8 ties the generic tr:hover on specificity and, coming later,
@@ -6868,6 +6898,9 @@ html.nav-mobile .chart-carousel-arrow {
   background: rgba(255, 110, 110, 0.1);
 }
 
+:root[data-theme="dark"] .rank-chip {
+  background: rgba(255, 110, 110, 0.2);
+}
 :root[data-theme="dark"] .rank-cell,
 :root[data-theme="dark"] .stat-tile-value,
 :root[data-theme="dark"] .wrapped-tile-detail,

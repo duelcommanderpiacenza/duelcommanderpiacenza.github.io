@@ -128,7 +128,7 @@ async function init() {
                 .map(
                   (s, i) => `
                 <tr>
-                  <td class="rank-cell">${i + 1}</td>
+                  <td class="rank-cell"><span class="rank-chip">${i + 1}</span></td>
                   <td>${playerLabel(s.player)}</td>
                   <td><strong>${s.points}</strong></td>
                   <td>${s.wins}-${s.losses}-${s.draws}</td>
