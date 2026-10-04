@@ -14,7 +14,7 @@
       } catch (e) {}
     })();
   </script>
-  <title>Account - Duel Commander Piacenza</title>
+  <title>Profilo - Duel Commander Piacenza</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="view-transition" content="same-origin">
   <link rel="icon" type="image/png" href="dc_pc.png">
@@ -60,7 +60,7 @@
 </header>
 
 <nav class="site-nav" aria-label="Navigazione principale">
-  <button type="button" class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false"><span class="nav-dropdown-label">Account</span><span class="nav-dropdown-caret" aria-hidden="true"></span></button>
+  <button type="button" class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false"><span class="nav-dropdown-label">Profilo</span><span class="nav-dropdown-caret" aria-hidden="true"></span></button>
   <div class="site-nav-inner">
     <a class="nav-link" data-nav="current" href="index.html">Bacheca</a>
     <a class="nav-link" data-nav="events" href="events.html">Leghe <span class="amp">&amp;</span> Eventi</a>
@@ -73,62 +73,142 @@
 </nav>
 
 <main class="page-main">
-  <div class="page-heading"><h1>Account</h1></div>
+  <div class="page-heading"><h1>Profilo</h1></div>
 
   <div class="page-loading-region">
     <div id="page-loading-overlay" class="page-loading-overlay"><p>Caricamento...</p></div>
 
-    <div class="card account-card">
-      <!-- Non connesso -->
-      <section data-view="login" hidden>
-        <h2>Accedi</h2>
-        <p class="account-hint">Entra con il tuo account Google: la prima volta l'account viene creato in automatico.</p>
-        <div class="form-actions">
-          <button type="button" class="btn-secondary google-signin-btn" id="account-google">
-            <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#ffc107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#ff3d00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4caf50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.5-4.5 2.4-7.2 2.4-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976d2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
-            Accedi con Google
-          </button>
+    <!-- Non connesso -->
+    <section class="card account-card" data-view="login" hidden>
+      <h2>Accedi</h2>
+      <p class="account-hint">Entra con il tuo account Google: la prima volta il tuo profilo viene creato in automatico.</p>
+      <div class="form-actions">
+        <button type="button" class="btn-secondary google-signin-btn" id="account-google">
+          <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#ffc107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#ff3d00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4caf50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.5-4.5 2.4-7.2 2.4-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976d2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
+          Accedi con Google
+        </button>
+      </div>
+      <p class="form-message" data-message></p>
+    </section>
+
+    <!-- Connesso: profile header (cover, avatar, bio, facts) → edit form
+         (hidden until "Modifica profilo") → "Il tuo giocatore" -->
+    <div class="profile" data-view="signed-in" hidden>
+      <!-- Il tuo giocatore: at the top, inviting the account to claim its
+           player — only until it's linked (then "Le tue statistiche" shows
+           the player). One [data-claim] block at a time. -->
+      <section class="card profile-card profile-claim" id="profile-claim" hidden>
+        <h3>Il tuo giocatore</h3>
+
+        <div data-claim="pending" hidden>
+          <p>Hai chiesto di collegare il tuo account a <strong id="account-pending-player"></strong>: in attesa dell'approvazione di un amministratore.</p>
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" id="account-claim-cancel">Annulla richiesta</button>
+          </div>
         </div>
-        <p class="form-message" data-message></p>
+
+        <form id="account-claim-form" data-claim="none" hidden>
+          <p class="account-hint">Sei già nelle classifiche? Scegli il tuo nome: dopo l'approvazione di un amministratore il tuo account sarà collegato al tuo giocatore e ai suoi risultati.</p>
+          <div class="field">
+            <label for="account-claim-player">Giocatore</label>
+            <select id="account-claim-player" data-searchable></select>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Invia richiesta</button>
+          </div>
+        </form>
+
+        <p class="form-message" data-claim-message></p>
       </section>
 
-      <!-- Connesso -->
-      <section data-view="signed-in" hidden>
-        <h2>Il tuo account</h2>
-        <p class="account-hint">Sei connesso come <strong id="account-email"></strong>.</p>
+      <section class="card profile-header">
+        <div class="profile-cover" aria-hidden="true"></div>
+        <div class="profile-identity">
+          <div class="profile-avatar">
+            <img id="profile-avatar" alt="" referrerpolicy="no-referrer" hidden>
+            <span id="profile-initial" aria-hidden="true"></span>
+          </div>
+          <div class="profile-actions">
+            <button type="button" class="btn-secondary" id="profile-edit-toggle" aria-expanded="false" aria-controls="profile-edit">Modifica profilo</button>
+          </div>
+        </div>
+        <div class="profile-body">
+          <h2 class="profile-name" id="profile-name"></h2>
+          <p class="profile-bio" id="profile-bio"></p>
+          <dl class="profile-facts">
+            <div class="profile-fact"><dt>Giocatore</dt><dd id="profile-fact-player"></dd></div>
+            <div class="profile-fact"><dt>Colori preferiti</dt><dd id="profile-fact-colors"></dd></div>
+            <div class="profile-fact"><dt>Commander preferito</dt><dd id="profile-fact-commander"></dd></div>
+            <div class="profile-fact"><dt>Archetipo preferito</dt><dd id="profile-fact-archetype"></dd></div>
+          </dl>
+          <p class="form-message" data-message></p>
+        </div>
+      </section>
+
+      <section class="card profile-card" id="profile-edit" hidden>
+        <h3>Modifica profilo</h3>
+        <form id="profile-form">
+          <div class="field">
+            <label>Colori preferiti</label>
+            <div class="color-swatch-row profile-colors">
+              <label class="color-swatch color-swatch-W" title="Bianco"><input type="checkbox" name="profile-color" value="W" aria-label="Bianco"></label>
+              <label class="color-swatch color-swatch-U" title="Blu"><input type="checkbox" name="profile-color" value="U" aria-label="Blu"></label>
+              <label class="color-swatch color-swatch-B" title="Nero"><input type="checkbox" name="profile-color" value="B" aria-label="Nero"></label>
+              <label class="color-swatch color-swatch-R" title="Rosso"><input type="checkbox" name="profile-color" value="R" aria-label="Rosso"></label>
+              <label class="color-swatch color-swatch-G" title="Verde"><input type="checkbox" name="profile-color" value="G" aria-label="Verde"></label>
+            </div>
+          </div>
+          <div class="field">
+            <label for="profile-commander">Commander preferito</label>
+            <select id="profile-commander" data-searchable></select>
+          </div>
+          <div class="field">
+            <label>Archetipo preferito</label>
+            <div class="archetype-picker" role="radiogroup" aria-label="Archetipo preferito">
+              <label class="archetype-option"><input type="radio" name="profile-archetype" value=""><span class="badge-archetype archetype-option-none">Nessuno</span></label>
+              <label class="archetype-option"><input type="radio" name="profile-archetype" value="aggro"><span class="badge-archetype badge-archetype-aggro">aggro</span></label>
+              <label class="archetype-option"><input type="radio" name="profile-archetype" value="control"><span class="badge-archetype badge-archetype-control">control</span></label>
+              <label class="archetype-option"><input type="radio" name="profile-archetype" value="combo"><span class="badge-archetype badge-archetype-combo">combo</span></label>
+              <label class="archetype-option"><input type="radio" name="profile-archetype" value="tempo"><span class="badge-archetype badge-archetype-tempo">tempo</span></label>
+              <label class="archetype-option"><input type="radio" name="profile-archetype" value="midrange"><span class="badge-archetype badge-archetype-midrange">midrange</span></label>
+            </div>
+          </div>
+          <div class="field">
+            <label for="profile-description">Descrizione</label>
+            <textarea id="profile-description" rows="4" maxlength="500" placeholder="Raccontaci qualcosa di te come giocatore&hellip;"></textarea>
+            <span class="profile-counter" id="profile-counter">0/500</span>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Salva profilo</button>
+            <button type="button" class="btn-secondary" id="profile-edit-cancel">Annulla</button>
+          </div>
+          <p class="form-message" id="profile-message"></p>
+        </form>
+      </section>
+
+      <!-- Le tue statistiche: only once the account is linked to a player -->
+      <section class="card profile-card" id="profile-stats" hidden>
+        <div class="profile-card-heading">
+          <h3>Le tue statistiche</h3>
+          <a class="btn-secondary" id="profile-stats-link" href="players.html">Pagina giocatore &rarr;</a>
+        </div>
+        <div class="stat-grid profile-stats-tiles" id="profile-stats-tiles"></div>
+        <dl class="profile-facts profile-stats-facts">
+          <div class="profile-fact"><dt>Commander più giocato</dt><dd id="profile-stats-commander"></dd></div>
+          <div class="profile-fact"><dt>Miglior piazzamento</dt><dd id="profile-stats-best"></dd></div>
+        </dl>
+      </section>
+
+      <!-- Account: the Google login itself, and signing out -->
+      <section class="card profile-card" id="profile-account">
+        <h3>Account</h3>
+        <p>Sei connesso con Google come <strong id="account-email"></strong>.</p>
         <div class="form-actions">
           <button type="button" class="btn-secondary" id="account-logout">Esci</button>
         </div>
-        <p class="form-message" data-message></p>
-
-        <!-- Il tuo giocatore: one of the three [data-claim] blocks at a time -->
-        <div class="account-player">
-          <h3>Il tuo giocatore</h3>
-          <p class="page-loading" data-claim="loading">Caricamento...</p>
-
-          <p data-claim="linked" hidden>Il tuo account è collegato a <a id="account-linked-player"></a>.</p>
-
-          <div data-claim="pending" hidden>
-            <p>Hai chiesto di collegare il tuo account a <strong id="account-pending-player"></strong>: in attesa dell'approvazione di un amministratore.</p>
-            <div class="form-actions">
-              <button type="button" class="btn-secondary" id="account-claim-cancel">Annulla richiesta</button>
-            </div>
-          </div>
-
-          <form id="account-claim-form" data-claim="none" hidden>
-            <p class="account-hint">Sei già nelle classifiche? Scegli il tuo nome: dopo l'approvazione di un amministratore il tuo account sarà collegato al tuo giocatore e ai suoi risultati.</p>
-            <div class="field">
-              <label for="account-claim-player">Giocatore</label>
-              <select id="account-claim-player" data-searchable></select>
-            </div>
-            <div class="form-actions">
-              <button type="submit" class="btn-primary">Invia richiesta</button>
-            </div>
-          </form>
-
-          <p class="form-message" data-claim-message></p>
-        </div>
+        <p class="form-message" id="account-message"></p>
       </section>
+
     </div>
   </div>
 </main>

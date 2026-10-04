@@ -5327,9 +5327,8 @@ img.cs-option-icon {
   color: var(--accent-green-2);
 }
 
-/* account.html: one narrow card, showing one section at a time (signed out:
-   the Google button; signed in) — js/account-page.js toggles each section's
-   hidden attribute. */
+/* account.html ("Profilo") — js/account-page.js shows one [data-view] at a
+   time: signed out, the narrow "Accedi" card; signed in, the profile. */
 .account-card {
   max-width: 420px;
 }
@@ -5346,26 +5345,329 @@ img.cs-option-icon {
   font-size: 0.9rem;
 }
 
-/* "Il tuo giocatore" under the signed-in account details. */
-.account-player {
-  margin-top: 18px;
-  padding-top: 18px;
-  border-top: 1px solid var(--hairline);
+/* Profile header, laid out like a profile on other sites: a cover band in
+   the site header's own red gradient, the avatar overlapping its bottom
+   edge with the actions beside it, then name, email, bio and the facts.
+   The card's own padding moves to .profile-identity / .profile-body, so the
+   cover runs edge to edge (overflow: hidden clips it to the rounded
+   corners). */
+.profile-header {
+  padding: 0;
+  overflow: hidden;
 }
 
-.account-player h3 {
-  margin: 0 0 10px;
-  font-size: 1.05rem;
+.profile-cover {
+  height: 130px;
+  background:
+    radial-gradient(circle at 85% 15%, rgba(255, 255, 255, 0.2), transparent 45%),
+    linear-gradient(135deg, var(--brand-red-dark), rgba(220, 24, 28, 0.96)),
+    var(--brand-red);
+}
+
+.profile-identity {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: -56px;
+  padding: 0 24px;
+}
+
+/* The Google picture, or the name's initial on red when there's none. The
+   ring is the page's own background colour, so it reads as a cut-out of
+   the cover in both themes rather than a white outline in dark mode. */
+.profile-avatar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 112px;
+  height: 112px;
+  overflow: hidden;
+  border: 4px solid var(--bg-cream-2);
+  border-radius: 50%;
+  background: var(--brand-red);
+  color: #fff;
+  font-size: 2.6rem;
+  font-weight: 800;
+  box-shadow: var(--shadow-card);
+}
+
+.profile-avatar img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-bottom: 6px;
+}
+
+.profile-body {
+  padding: 14px 24px 24px;
+}
+
+.profile-name {
+  margin: 0;
+  font-size: 1.6rem;
+  line-height: 1.2;
+  color: var(--text-title);
+  overflow-wrap: anywhere;
+}
+
+/* pre-line keeps the line breaks typed in the description. */
+.profile-bio {
+  margin: 16px 0 0;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--text-body);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.profile-bio.is-empty {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.profile-facts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 20px 0 0;
+}
+
+.profile-fact {
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.profile-fact dt {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.profile-fact dd {
+  margin: 6px 0 0;
+  color: var(--text-title);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.profile-fact dd a,
+.profile-card a {
+  color: var(--brand-red-deep);
+  font-weight: 800;
+}
+
+.profile-empty {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* "in attesa" after a requested (not yet approved) player. */
+.profile-pending {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  margin-left: 4px;
+  padding: 0 8px;
+  border-radius: var(--radius-pill);
+  background: rgba(220, 24, 28, 0.1);
+  color: var(--brand-red-deep);
+  font-size: 0.72rem;
+  font-weight: 800;
+  vertical-align: middle;
+}
+
+/* The header's own message line only takes room when it has something. */
+.profile-header .form-message {
+  min-height: 0;
+  margin-top: 12px;
+}
+
+.profile-card h3 {
+  margin: 0 0 14px;
+  font-size: 1.1rem;
   color: var(--text-title);
 }
 
-.account-player p {
+/* overflow-wrap: a long email in the Account card wraps instead of
+   overflowing on a phone. */
+.profile-card p {
   margin: 0 0 12px;
+  overflow-wrap: anywhere;
 }
 
-.account-player a {
-  font-weight: 800;
-  color: var(--brand-red-deep);
+/* "Il tuo giocatore" while the account isn't linked yet: at the top of the
+   page, tinted in the brand red as an invitation to claim the player first. */
+.card.profile-claim {
+  border-color: rgba(220, 24, 28, 0.35);
+  background: linear-gradient(135deg, rgba(220, 24, 28, 0.08), rgba(255, 255, 255, 0.9) 60%);
+}
+
+/* A card title with an action on its right ("Le tue statistiche" + the
+   player page link); wraps under it on a narrow screen. */
+.profile-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin-bottom: 14px;
+}
+
+.profile-card-heading h3 {
+  margin: 0;
+}
+
+/* The player page's stat tiles, inside a card here: no shadow of their own
+   (the card already has one), a touch smaller. */
+.profile-stats-tiles {
+  margin-bottom: 0;
+}
+
+.profile-card .stat-tile {
+  padding: 14px;
+  box-shadow: none;
+}
+
+.profile-card .stat-tile-value {
+  font-size: 1.7rem;
+}
+
+.profile-stats-facts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* The cards under the header follow it in, one beat after another. */
+.profile > .card:nth-child(2) {
+  animation-delay: 60ms;
+}
+
+.profile > .card:nth-child(3) {
+  animation-delay: 120ms;
+}
+
+.profile > .card:nth-child(n + 4) {
+  animation-delay: 180ms;
+}
+
+/* "123/500" under the description. */
+.profile-counter {
+  align-self: flex-end;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+/* Favourite archetype: the archetypes' own coloured pills as radio
+   buttons — faded until picked, the picked one full colour with a ring. */
+.archetype-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.archetype-option {
+  position: relative;
+  cursor: pointer;
+}
+
+.archetype-option input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.archetype-option .badge-archetype {
+  min-height: 32px;
+  padding: 0 14px;
+  font-size: 0.82rem;
+  opacity: 0.4;
+  transition: opacity 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+}
+
+.archetype-option:hover .badge-archetype {
+  opacity: 0.7;
+}
+
+.archetype-option input:checked + .badge-archetype {
+  opacity: 1;
+  box-shadow: 0 0 0 3px rgba(220, 24, 28, 0.25);
+  transform: scale(1.05);
+}
+
+.archetype-option input:focus-visible + .badge-archetype {
+  outline: 2px solid var(--brand-red);
+  outline-offset: 2px;
+}
+
+.archetype-option-none {
+  background: var(--text-muted);
+}
+
+@media (max-width: 760px) {
+  .profile-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Phones: avatar, name, buttons and bio centred, as mobile profile pages
+   usually are; the facts stay left-aligned tiles. */
+@media (max-width: 640px) {
+  .profile-cover {
+    height: 100px;
+  }
+
+  .profile-identity {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-top: -52px;
+    padding: 0 16px;
+  }
+
+  .profile-avatar {
+    width: 96px;
+    height: 96px;
+    font-size: 2.2rem;
+  }
+
+  .profile-actions {
+    justify-content: center;
+    padding-bottom: 0;
+  }
+
+  .profile-body {
+    padding: 12px 16px 20px;
+    text-align: center;
+  }
+
+  .profile-facts {
+    text-align: left;
+  }
+
+  /* Two stat tiles per row: .stat-grid's own auto-fit (150px minimum each)
+     fits only one in a phone-width card. */
+  .profile-stats-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
 }
 
 /* White with Google's own multicolour "G", as Google's sign-in branding asks
@@ -6922,6 +7224,25 @@ html[data-theme="dark"]:not(.nav-mobile) .site-search-results {
 
 :root[data-theme="dark"] .color-swatch-colorless {
   background: repeating-linear-gradient(45deg, #2a2224 0, #2a2224 5px, #362c2e 5px, #362c2e 10px);
+}
+
+/* account.html's profile: the fact tiles on a faint dark surface, and the
+   near-black "combo" pill of the archetype picker outlined so it doesn't
+   disappear into the dark card (an outline, not a box-shadow, which the
+   picked state already uses for its ring). */
+:root[data-theme="dark"] .profile-fact {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* The claim invitation's red tint — compound selector so it outranks the
+   generic dark-mode .card surface (gotcha #8 in CLAUDE.md). */
+:root[data-theme="dark"] .card.profile-claim {
+  background: linear-gradient(135deg, rgba(220, 24, 28, 0.18), rgba(255, 255, 255, 0.045));
+}
+
+:root[data-theme="dark"] .archetype-option .badge-archetype-combo {
+  outline: 1px solid rgba(255, 255, 255, 0.3);
+  outline-offset: -1px;
 }
 
 /* Theme toggle switch — sits in the footer bar. A plain icon button rather

@@ -11,7 +11,7 @@ function render(session) {
   if (!link) return;
   link.querySelector(".site-account-avatar")?.remove();
   link.classList.toggle("is-signed-in", Boolean(session));
-  const label = session ? `Il tuo account (${session.user.email})` : "Accedi";
+  const label = session ? `Il tuo profilo (${session.user.email})` : "Accedi";
   link.setAttribute("aria-label", label);
   link.title = label;
 

@@ -38,7 +38,7 @@ admin can block or delete accounts.
 | 1 | Accounts (sign in with Google, logout) | Done on **dev**, **not on live** |
 | 2 | Claim a player (request side; approval UI is step 3) | Done on **dev**, **not on live** |
 | 3 | Admin "Utenti" tab | Done on **dev**, **not on live** |
-| 4 | Own profile editing | To do — waiting on an open question |
+| 4 | Profile page ("Profilo") | Done on **dev**, **not on live** |
 | 5 | Go live | To do |
 
 ## Setup: the dev database
@@ -217,14 +217,52 @@ an account can never sign in. No email form is offered on the site.
   Attivo/Bloccato; the sign-in method column was dropped (players always
   use Google).
 
-## Step 4 — Own profile
+## Step 4 — Profile page
 
-- [ ] **Open question:** which fields can a player edit? Proposal: only the
-  handle. The name appears in every result and standing, so changing it stays
-  with the admin.
-- [ ] A database function that lets a user edit only their own linked
-  player, only those fields.
-- [ ] Edit form on the Account page.
+Decided: `account.html` becomes **"Profilo"**, laid out like a profile page
+on other sites. The player's own name/handle stay with the admin; the user
+edits a profile of their own instead: description, favourite colours,
+favourite commander, favourite archetype.
+
+- [x] Migration `004_profiles.sql` (+ rollback), **run on dev**, folded into
+  `schema.sql`: `profiles`, one row per **account** (not per player — it's
+  there before any claim is approved, and follows the person if the admin
+  moves the player link). `description` ≤ 500 chars, `fav_colors` a
+  WUBRG-ordered string ('' = none, checked by the database),
+  `fav_commander_id`, `fav_archetype`. Plain RLS: only the owner inserts /
+  updates, the owner and the admin read. Not public yet.
+- [x] `js/db.js`'s `Profiles` (`mine`, `save` = upsert).
+- [x] `account.html` + `js/account-page.js` rewritten:
+  - profile header card: red cover band, the Google picture as a big
+    avatar overlapping it (initial on red if none), "Modifica profilo",
+    name, the description as bio, and four facts (Giocatore
+    — linked, or requested "in attesa" —, Colori preferiti as pips,
+    Commander preferito, Archetipo preferito);
+  - "Modifica profilo" card, hidden until opened: colour swatches, a
+    searchable commander list, the archetypes as their coloured pills,
+    description with a 0/500 counter; Salva / Annulla;
+  - "Il tuo giocatore" card (the step 2 claim) **at the top, only while the
+    account isn't linked** (no request yet, or one waiting) — tinted red, to
+    invite a new account to claim its player first; hidden once linked;
+  - "Le tue statistiche" card, **only once linked**, under the profile (and
+    the edit card): the player page's own winrate tiles (Winrate, Eventi,
+    Vittorie, Pareggi, Sconfitte — same counting as `player-detail.js`,
+    whole history), most played commander, best placement (from the cached
+    `event_standings`), and a "Pagina giocatore →" link;
+  - "Account" card, last: the Google email it's signed in with, and "Esci";
+  - the page stays behind its loading splash until profile, claim and
+    commanders are loaded, then fades in together (cards one beat apart);
+  - phones: avatar, name, buttons and bio centred, facts and stat tiles
+    two per row;
+    dark mode: the cover stays red, the avatar ring takes the page colour.
+- [x] **Test on dev:** saving the profile, stats when linked (same numbers
+  as the player page), the claim card on top when not linked, the Account
+  card and "Esci", phone and dark mode — all working (phone stat tiles
+  fixed to two per row).
+
+Possible later: showing the profile on the public player page
+(`player.html`) of the linked player — would need a public read rule on
+`profiles` for linked accounts.
 
 ## Step 5 — Go live
 
@@ -233,7 +271,8 @@ an account can never sign in. No email form is offered on the site.
   insert into admins (user_id) select id from auth.users where email = '...';
   ```
   Check with the step 0 query above (expects 34), and that the admin still
-  saves. Then the later migrations, in order.
+  saves. Then the later migrations, in order, each checked like on dev:
+  `002_player_claims.sql`, `003_admin_users.sql`, `004_profiles.sql`.
 - [ ] Live dashboard: the step 1 settings — Allow new users to sign up, the
   Google provider (same Client ID and secret; the live callback URL is
   already in the Google client), and the live site's address as Site URL /
@@ -243,4 +282,6 @@ an account can never sign in. No email form is offered on the site.
 
 ## Open questions
 
-- Step 4: which profile fields a player can edit (proposal: handle only).
+- None right now. (Step 4's "which fields can a player edit" was answered:
+  a profile of the account's own — description, favourite colours,
+  commander, archetype — instead of the player's name/handle.)

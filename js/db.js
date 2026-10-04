@@ -142,6 +142,22 @@ export const PlayerClaims = {
   cancel: () => sb.rpc("cancel_player_claim").then(assertOk),
 };
 
+// A signed-in account's own profile (supabase/migrations/004_profiles.sql):
+// one row per account, readable/writable only by its owner (and readable by
+// the admin). fav_colors is a WUBRG-ordered string, '' for none.
+const PROFILE_SELECT = "*, fav_commander:commanders(id, name, color_identity)";
+
+export const Profiles = {
+  mine: (userId) => sb.from("profiles").select(PROFILE_SELECT).eq("user_id", userId).maybeSingle().then(assertOk),
+  save: (userId, fields) =>
+    sb
+      .from("profiles")
+      .upsert({ user_id: userId, ...fields, updated_at: new Date().toISOString() })
+      .select(PROFILE_SELECT)
+      .single()
+      .then(assertOk),
+};
+
 // The admin's user management (supabase/migrations/003_admin_users.sql):
 // login accounts live in Supabase Auth, out of the API's reach, so it's all
 // admin-only database functions (each checks is_admin()). Errors come back

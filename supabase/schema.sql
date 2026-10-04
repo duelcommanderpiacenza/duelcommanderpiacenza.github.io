@@ -32,6 +32,7 @@ drop table if exists leagues cascade;
 drop table if exists player_claims cascade;
 drop table if exists players cascade;
 drop table if exists badges cascade;
+drop table if exists profiles cascade;
 drop table if exists commanders cascade;
 drop table if exists admins cascade;
 drop type if exists deck_archetype;
@@ -628,3 +629,34 @@ grant execute on function admin_reject_claim(uuid) to authenticated;
 grant execute on function admin_set_user_player(uuid, uuid) to authenticated;
 grant execute on function admin_set_user_blocked(uuid, boolean) to authenticated;
 grant execute on function admin_delete_user(uuid) to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Player login: each account's own profile (account.html, "Profilo") — one
+-- row per account, not per player, so it's there before any player claim is
+-- approved and stays with the person if the admin moves the link. Only its
+-- owner writes it; the owner and the admin read it. Added by
+-- supabase/migrations/004_profiles.sql.
+-- ---------------------------------------------------------------------------
+
+create table profiles (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  description text check (char_length(description) <= 500),
+  -- Favourite colors as a WUBRG-ordered string ('' = none, 'UB', 'WUBRG'…);
+  -- the check allows only that order, each color at most once.
+  fav_colors text not null default '' check (fav_colors ~ '^W?U?B?R?G?$'),
+  fav_commander_id uuid references commanders(id) on delete set null,
+  fav_archetype deck_archetype,
+  updated_at timestamptz not null default now()
+);
+
+alter table profiles enable row level security;
+
+create policy "profiles_read_own" on profiles for select
+  using (user_id = auth.uid() or is_admin());
+
+create policy "profiles_insert_own" on profiles for insert
+  with check (user_id = auth.uid());
+
+create policy "profiles_update_own" on profiles for update
+  using (user_id = auth.uid())
+  with check (user_id = auth.uid());
