@@ -50,6 +50,7 @@
     <button type="button" class="admin-tab" data-tab="leagues">Leghe</button>
     <button type="button" class="admin-tab" data-tab="standalone-events">Eventi standalone</button>
     <button type="button" class="admin-tab" data-tab="announcements">Annunci</button>
+    <button type="button" class="admin-tab" data-tab="users">Utenti</button>
   </div>
 </div>
 
@@ -460,6 +461,44 @@
           <input type="search" id="announcements-admin-search" placeholder="Titolo annuncio...">
         </div>
         <div id="announcements-admin-list"><p class="page-loading">Caricamento...</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Utenti: account dei giocatori (accesso con Google da account.html), le
+       richieste di collegamento a un giocatore, blocco ed eliminazione -->
+  <section class="admin-panel" id="panel-users">
+    <div class="users-admin-requests-block">
+      <h3>Richieste in attesa <span id="users-admin-requests-count"></span></h3>
+      <div id="users-admin-requests"><p class="page-loading">Caricamento...</p></div>
+    </div>
+
+    <div class="admin-panel-layout">
+      <div class="admin-form-card">
+        <h3>Collega a un giocatore</h3>
+        <form id="users-admin-form">
+          <input type="hidden" id="users-admin-id">
+          <div class="field">
+            <label>Account</label>
+            <p class="users-admin-selected" id="users-admin-selected"></p>
+          </div>
+          <div class="field">
+            <label for="users-admin-player">Giocatore</label>
+            <select id="users-admin-player" data-searchable></select>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Salva</button>
+            <button type="button" class="btn-secondary" id="users-admin-cancel">Annulla</button>
+          </div>
+          <p class="form-message" id="users-admin-message"></p>
+        </form>
+      </div>
+      <div>
+        <div class="field">
+          <label for="users-admin-search">Cerca</label>
+          <input type="search" id="users-admin-search" placeholder="Email o giocatore...">
+        </div>
+        <div id="users-admin-list"><p class="page-loading">Caricamento...</p></div>
       </div>
     </div>
   </section>

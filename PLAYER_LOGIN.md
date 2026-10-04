@@ -37,7 +37,7 @@ admin can block or delete accounts.
 | 0 | Admins vs signed-in users | Done on **dev**, committed (`96435a7`), **not on live** |
 | 1 | Accounts (sign in with Google, logout) | Done on **dev**, **not on live** |
 | 2 | Claim a player (request side; approval UI is step 3) | Done on **dev**, **not on live** |
-| 3 | Admin "Utenti" tab | To do |
+| 3 | Admin "Utenti" tab | Done on **dev**, **not on live** |
 | 4 | Own profile editing | To do — waiting on an open question |
 | 5 | Go live | To do |
 
@@ -118,6 +118,8 @@ Left:
   4. Copy the Client ID and Client secret (kept by Michele, not in the repo).
   - Done: project created, consent screen (External, still in **Testing**),
     client with both redirect URIs.
+  - While in Testing, other Google accounts must be listed under Audience →
+    Test users to sign in.
 - [x] **dcp-dev dashboard:** Authentication → Sign In / Providers → **Google**:
   enable, paste the Client ID and secret, save. Callback URL confirmed.
 - [x] **Code:** `js/supabase-client.js` keeps a login session on every page
@@ -140,8 +142,10 @@ Left:
   (Providers: "Email, Google") — signing in with that Google account is the
   admin. Player tests need a second Google account (added under Google
   Auth Platform → Audience → Test users while the app is in Testing);
-  `giocatore.test@example.com` can't sign in on the site any more (no
-  email form), but still works for testing the admin's refusal at `/admin/`.
+  the admin's own account can also claim a player like anyone else, which
+  is how steps 2-3 were tested. (`giocatore.test@example.com` was deleted
+  in step 3; to test the admin's refusal at `/admin/` again, recreate a
+  non-admin account in dcp-dev → Authentication → Users.)
 - [x] **Code:** an account button in the public header, after the search,
   in all 13 public pages (`#site-account` → `account.html`), driven by
   `js/header-account.js`: person icon when signed out, Google profile
@@ -187,14 +191,31 @@ an account can never sign in. No email form is offered on the site.
 
 ## Step 3 — Admin "Utenti" tab
 
-- [ ] Admin-only database functions (`security definer`, checking
-  `is_admin()`): list users with email, sign-up date, last login, linked
-  player and status; approve/reject requests; set/change/remove a link;
-  block/unblock; delete.
-  - Block = setting the user's ban date in Supabase Auth. It stops new logins
-    at once, but an already logged-in user keeps access until their current
-    session expires (up to about an hour).
-- [ ] New admin tab "Utenti": pending requests at the top, user list below.
+- [x] Migration `003_admin_users.sql` (+ rollback), **run on dev**, folded
+  into `schema.sql`. Admin-only functions (`security definer`, each checks
+  `is_admin()` first, else raises `not_admin` — verified from the SQL
+  editor, which isn't an admin): `admin_list_users()`,
+  `admin_approve_claim(user)`, `admin_reject_claim(user)`,
+  `admin_set_user_player(user, player or null)` (can move a player from
+  another account), `admin_set_user_blocked(user, bool)`,
+  `admin_delete_user(user)` (the player stays, just unlinked). Admin
+  accounts can't be blocked or deleted through them (`admin_account`).
+  - Block = Supabase Auth's ban date, 100 years ahead, plus deleting the
+    account's saved sessions: no new sign-in, signed out at the latest when
+    the current access token expires (up to about an hour).
+- [x] `js/db.js`'s `AdminUsers` + admin tab **"Utenti"**
+  (`admin/js/users-admin.js`): pending requests on top (Approva / Rifiuta);
+  below, the accounts (email, dates, linked player or
+  pending request, Attivo/Bloccato toggle — "Admin" for admin accounts,
+  ✕ to delete) with a search, and a "Collega a un giocatore" form (✎ on a
+  row, searchable player list, "— nessun giocatore —" unlinks; moving a
+  player already linked elsewhere asks for confirmation).
+- [x] **Test on dev:** list, link / unlink via the form, block / unblock,
+  approve and reject a request (made from account.html), delete (refused
+  on the admin's own row; the test account `giocatore.test@example.com`
+  was deleted) — all working. The "Admin" pill is green, same size as
+  Attivo/Bloccato; the sign-in method column was dropped (players always
+  use Google).
 
 ## Step 4 — Own profile
 

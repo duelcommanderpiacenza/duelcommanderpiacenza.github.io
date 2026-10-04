@@ -559,6 +559,43 @@ html {
   width: 150px;
 }
 
+/* Utenti tab (users-admin.js): pending link requests above the usual
+   form + list layout. */
+.users-admin-requests-block {
+  margin-bottom: 28px;
+}
+
+.users-admin-requests-block h3 {
+  margin: 0 0 12px;
+  font-size: 1.05rem;
+  color: var(--text-title);
+}
+
+/* The account picked with ✎, shown read-only in the link form. */
+.users-admin-selected {
+  margin: 0;
+  font-weight: 700;
+  color: var(--text-body);
+  overflow-wrap: anywhere;
+}
+
+/* "Admin" in the Stato column: not clickable (admin accounts can't be
+   blocked), green to set it apart from Attivo/Bloccato, and the same size as
+   them — those are .badge-status-toggle buttons, whose font: inherit takes
+   the table's text size instead of .badge-status's smaller one. */
+.badge-status-admin {
+  font: inherit;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  background: var(--accent-green-2);
+}
+
+/* "richiesto: …" in the Giocatore column — a request, not a link yet. */
+.users-admin-pending {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
 /* League bonus points, edited inline in an event's leaderboard
    (matches-admin.js) — same look as a form field (.field input), sized down
    to sit in a table row. */

@@ -142,6 +142,22 @@ export const PlayerClaims = {
   cancel: () => sb.rpc("cancel_player_claim").then(assertOk),
 };
 
+// The admin's user management (supabase/migrations/003_admin_users.sql):
+// login accounts live in Supabase Auth, out of the API's reach, so it's all
+// admin-only database functions (each checks is_admin()). Errors come back
+// with a code as their message (see the migration).
+export const AdminUsers = {
+  list: () => sb.rpc("admin_list_users").then(assertOk),
+  approveClaim: (userId) => sb.rpc("admin_approve_claim", { p_user_id: userId }).then(assertOk),
+  rejectClaim: (userId) => sb.rpc("admin_reject_claim", { p_user_id: userId }).then(assertOk),
+  // playerId null = unlink.
+  setPlayer: (userId, playerId) =>
+    sb.rpc("admin_set_user_player", { p_user_id: userId, p_player_id: playerId }).then(assertOk),
+  setBlocked: (userId, blocked) =>
+    sb.rpc("admin_set_user_blocked", { p_user_id: userId, p_blocked: blocked }).then(assertOk),
+  remove: (userId) => sb.rpc("admin_delete_user", { p_user_id: userId }).then(assertOk),
+};
+
 export const Leagues = {
   // Newest-created first, so a just-added league/topdeck shows up front
   // rather than wherever it happens to fall alphabetically.

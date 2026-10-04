@@ -12,6 +12,7 @@ import { initLeaguesAdmin } from "./leagues-admin.js";
 import { initEventsAdmin } from "./events-admin.js";
 import { initStandaloneEventsAdmin } from "./standalone-events-admin.js";
 import { initAnnouncementsAdmin } from "./announcements-admin.js";
+import { initUsersAdmin } from "./users-admin.js";
 import { initEntriesAdmin } from "./entries-admin.js";
 import { initMatchesAdmin } from "./matches-admin.js";
 import { initAdminNavDropdown } from "./admin-nav-dropdown.js";
@@ -137,6 +138,7 @@ function showAdmin(session) {
     initPlayersAdmin();
     initCommandersAdmin();
     initAnnouncementsAdmin();
+    initUsersAdmin();
 
     const entriesCtl = initEntriesAdmin();
     const matchesCtl = initMatchesAdmin({ onToggleOpen: toggleEventOpen });
