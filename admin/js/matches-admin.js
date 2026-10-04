@@ -1,7 +1,7 @@
 import { EventEntries, Matches, Events } from "../../js/db.js";
 import { isBye, isDrop, computeEventLeaderboard } from "../../js/leaderboard.js";
 import { escapeHtml } from "../../js/ui.js";
-import { setMessage, fillSelect, setStatusToggle } from "./crud-ui.js";
+import { setMessage, fillSelect } from "./crud-ui.js";
 import { on } from "./bus.js";
 
 /**
@@ -16,7 +16,7 @@ import { on } from "./bus.js";
  * event and this round isn't scored at all) — picked via the two mutually
  * exclusive checkboxes below Giocatore 1.
  */
-export function initMatchesAdmin({ onToggleOpen } = {}) {
+export function initMatchesAdmin() {
   const roundTabsEl = document.getElementById("matches-round-tabs");
   const listEl = document.getElementById("matches-admin-list");
   const form = document.getElementById("matches-admin-form");
@@ -32,7 +32,6 @@ export function initMatchesAdmin({ onToggleOpen } = {}) {
   const p2WinsField = document.getElementById("matches-admin-p2wins");
   const msgEl = document.getElementById("matches-admin-message");
   const cancelBtn = document.getElementById("matches-admin-cancel");
-  const toggleEventOpenBtn = document.getElementById("matches-toggle-event-open");
   const eventLeaderboardEl = document.getElementById("matches-event-leaderboard");
 
   let currentEvent = null;
@@ -291,19 +290,12 @@ export function initMatchesAdmin({ onToggleOpen } = {}) {
     }
   }
 
-  function updateToggleEventOpenBtn() {
-    setStatusToggle(toggleEventOpenBtn, Boolean(currentEvent?.is_open), "event");
-  }
-
-  toggleEventOpenBtn.addEventListener("click", () => onToggleOpen?.());
-
-  // The open/closed toggle now also lives on the Iscritti title bar, so the
-  // actual API call is centralized in app.js (the only place holding the one
-  // currentEvent object both this module and entries-admin share) — this
-  // just re-renders whatever this module already has on screen afterward.
+  // The open/closed toggle lives in the event's shared title bar, owned by
+  // app.js (the only place holding the one currentEvent object both this
+  // module and entries-admin share) — this just re-renders what depends on
+  // it here: the "+ Turno" tab and the leaderboard's editable controls.
   function refreshOpenState() {
     if (!currentEvent) return;
-    updateToggleEventOpenBtn();
     renderRoundTabs();
     renderEventLeaderboard();
   }
@@ -487,13 +479,14 @@ export function initMatchesAdmin({ onToggleOpen } = {}) {
 
   on("entries:changed", populateEntrants);
 
+  // Resolves once the entrants and matches are loaded and rendered, so
+  // app.js can reveal this view with its content already in place.
   function openEvent(event) {
     currentEvent = event;
     currentRound = 1;
     renderRoundTabs();
-    updateToggleEventOpenBtn();
     resetForm();
-    populateEntrants().then(refresh);
+    return populateEntrants().then(refresh);
   }
 
   return { openEvent, refreshOpenState };

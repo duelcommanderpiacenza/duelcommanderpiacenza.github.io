@@ -715,21 +715,40 @@ html {
   border-color: var(--brand-red);
 }
 
-/* Giocatori | Partite switch on an event's two pages (same markup on both,
-   the current page's option active) — same pill language as .round-tab,
-   joined into one control so it reads as "which view", not two actions.
-   The active option has no click handler: it's the page you're on. */
+/* Giocatori | Partite switch in an event's title bar — same pill language as
+   .round-tab, joined into one control so it reads as "which view", not two
+   actions. Two equal columns, so the red pill (.view-switch-indicator,
+   behind the labels) is exactly one column wide and moves by translateX(100%)
+   — no measuring in JS. js/app.js sets data-active; clicking the active
+   option does nothing. */
 .view-switch {
-  display: inline-flex;
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
   flex-shrink: 0;
-  gap: 2px;
   padding: 3px;
   border: 1px solid var(--hairline);
   border-radius: var(--radius-pill);
   background: #fff;
 }
 
+.view-switch-indicator {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
+  border-radius: var(--radius-pill);
+  background: var(--brand-red);
+  transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.view-switch[data-active="matches"] .view-switch-indicator {
+  transform: translateX(100%);
+}
+
 .view-switch-option {
+  position: relative;
   border: none;
   background: transparent;
   color: var(--brand-red-darker);
@@ -738,17 +757,58 @@ html {
   font: inherit;
   font-weight: 700;
   cursor: pointer;
-  transition: background 180ms ease, color 180ms ease;
+  transition: background 180ms ease, color 220ms ease;
 }
 
-.view-switch-option:hover {
+.view-switch-option:not(.is-active):hover {
   background: rgba(220, 24, 28, 0.08);
 }
 
 .view-switch-option.is-active {
-  background: var(--brand-red);
   color: #fff;
   cursor: default;
+}
+
+/* The event's content below its title bar, swapped by the switch: slides in
+   from the side of the option picked (Partite on the right, Giocatori on the
+   left) while the title bar stays still. No fill-mode, so the transform is
+   gone once it ends — a lingering one would trap the forms' select/date
+   popups in a stacking context (see .admin-form-card's own note above). */
+.view-enter-right {
+  animation: view-enter-right 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.view-enter-left {
+  animation: view-enter-left 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes view-enter-right {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes view-enter-left {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The event views animate as a whole (entering the flow, or a switch), and
+   only once their data is loaded — tables replaying their own fade-up on
+   top of that (or on every save) read as the page reloading. */
+#admin-event-flow .data-table-wrap {
+  animation: none;
 }
 
 .round-tab-wrap {
@@ -814,8 +874,9 @@ html {
 }
 
 /* Re-triggerable entrance animation for drill-down subviews (leagues ->
-   events -> entries -> matches); js/app.js toggles this class each time a
-   subview is shown, forcing a reflow first so it replays every time. */
+   league's events) and for the whole event flow when an event is opened;
+   js/app.js toggles this class each time, forcing a reflow first so it
+   replays every time. */
 .subview-enter {
   animation: subview-enter 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
@@ -832,8 +893,14 @@ html {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .subview-enter {
+  .subview-enter,
+  .view-enter-left,
+  .view-enter-right {
     animation: none;
+  }
+
+  .view-switch-indicator {
+    transition: none;
   }
 }
 

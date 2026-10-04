@@ -26,7 +26,7 @@ export function initEntriesAdmin() {
 
   // Once an event is closed its results are published — locking the form
   // stops new/edited entrants from silently changing an already-public
-  // standing. Re-opening the event (from the Partite subview) unlocks it
+  // standing. Re-opening the event (its Aperto/Chiuso pill) unlocks it
   // again.
   function applyLockState() {
     const locked = currentEvent ? !currentEvent.is_open : false;
@@ -149,11 +149,13 @@ export function initEntriesAdmin() {
   on("players:changed", populatePlayers);
   on("commanders:changed", populateCommanders);
 
+  // Resolves once the entries are loaded and rendered (see matches-admin.js's
+  // openEvent: app.js waits on it before revealing the view).
   function openEvent(event) {
     currentEvent = event;
     resetForm();
     applyLockState();
-    refresh();
+    return refresh();
   }
 
   Promise.all([populatePlayers(), populateCommanders()]);
