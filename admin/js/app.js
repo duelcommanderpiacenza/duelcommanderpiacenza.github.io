@@ -239,10 +239,12 @@ logoutBtn.addEventListener("click", async () => {
   await signOut();
 });
 
-// A signed-in account that isn't in the admins table (a player) is signed
-// straight back out — the database would refuse its writes anyway, but it
-// shouldn't see the admin UI at all. If the check itself fails, same thing:
-// never show the admin without a positive answer.
+// A signed-in account that isn't in the admins table (a player) never sees
+// the admin UI — the database would refuse its writes anyway. It stays on
+// the login form with a message, but isn't signed out: the session is
+// shared with the public site, where it's the player's own login. Signing
+// in here with the admin's credentials replaces it. If the check itself
+// fails, same thing: never show the admin without a positive answer.
 async function handleSession(session) {
   if (!session) {
     showLogin();
@@ -255,7 +257,6 @@ async function handleSession(session) {
     console.error(err);
     showLogin();
     loginError.textContent = "Impossibile verificare l'account, riprova.";
-    await signOut();
     return;
   }
   if (allowed) {
@@ -263,8 +264,7 @@ async function handleSession(session) {
     return;
   }
   showLogin();
-  loginError.textContent = "Questo account non è un amministratore.";
-  await signOut();
+  loginError.textContent = `${session.user.email} non è un account amministratore.`;
 }
 
 onAuthChange(handleSession);

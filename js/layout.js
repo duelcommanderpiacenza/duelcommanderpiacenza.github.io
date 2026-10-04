@@ -17,6 +17,7 @@ import { enhanceDateInputs } from "./custom-date.js";
 import "./pwa-install.js";
 import "./nav-dropdown.js";
 import "./site-search.js";
+import "./header-account.js";
 import { attachHoverTooltips } from "./floating-tooltip.js";
 
 setupThemeToggle();

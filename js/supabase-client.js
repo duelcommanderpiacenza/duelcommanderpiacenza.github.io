@@ -3,9 +3,12 @@
 // SETUP (do this once):
 // 1. Create a free project at https://supabase.com.
 // 2. In the SQL editor, run supabase/schema.sql from this repo.
-// 3. In Authentication > Providers, disable public email sign-up so nobody
-//    but the admin account(s) you create by hand can ever be "authenticated".
-// 4. In Authentication > Users, manually add one admin user (email + password).
+// 3. In Authentication > Users, manually add the admin user (email +
+//    password), then add it to the admins table (see schema.sql, "admins").
+// 4. Players sign in with Google: in Authentication > Sign In / Providers,
+//    allow new users to sign up and enable the Google provider (with a Google
+//    OAuth client), and in Authentication > URL Configuration set the site's
+//    address as Site URL / Redirect URL — see PLAYER_LOGIN.md, step 1.
 // 5. In Project Settings > API, copy the "Project URL" and the "anon public"
 //    key below. The anon key is meant to be public in client code — see the
 //    Row Level Security policies in schema.sql for the real access control.
@@ -28,16 +31,12 @@ const DEV = {
 const isLocal = ["localhost", "127.0.0.1"].includes(window.location.hostname);
 const { url: SUPABASE_URL, key: SUPABASE_ANON_KEY } = isLocal ? DEV : LIVE;
 
-// Public pages must never carry an auth session — the RLS policies show
-// open/unpublished events, entries and matches to "authenticated" callers
-// (so an admin can preview their own in-progress work), and this file is
-// shared by both the admin app and every public page. Without this guard, a
-// browser logged into /admin/ would have that same session picked up by the
-// public pages too (same origin, same localStorage), making them see
-// unpublished data as if they were the admin. Only the admin app persists a
-// session at all; public pages always start (and stay) fully anonymous.
-const isAdmin = window.location.pathname.includes("/admin/");
-
+// One login session for the whole site (same origin, same localStorage):
+// players sign in on the public pages (account.html), the admin in /admin/.
+// Safe since the RLS policies grant extra rights only to is_admin() (the
+// admins table), not to every signed-in account — a player's session reads
+// exactly what an anonymous visitor does. The admin's own session does show
+// unpublished events on the public pages too, if they browse them signed in.
 export const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: { persistSession: isAdmin, autoRefreshToken: isAdmin },
+  auth: { persistSession: true, autoRefreshToken: true },
 });

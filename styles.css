@@ -263,6 +263,70 @@ html.nav-mobile .site-search-trigger {
   height: 19px;
 }
 
+/* The header's right side: search, then the account button —
+   margin-left: auto keeps both together at the right end of
+   .site-header-inner's space-between row (a third child would otherwise
+   pull search into the middle). */
+.site-search {
+  margin-left: auto;
+}
+
+/* Account button (js/header-account.js, links to account.html): the same
+   round 38px shape as the phone's search button. Desktop: translucent like
+   the search pill beside it; touch devices (html.nav-mobile): white with a
+   red icon, like the search trigger. Signed in with a Google picture: the
+   picture fills the circle inside a white ring. */
+.site-account {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.site-account:hover {
+  background: rgba(255, 255, 255, 0.26);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.site-account:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+html.nav-mobile .site-account {
+  border: none;
+  background: #fff;
+  color: var(--brand-red);
+  box-shadow: var(--shadow-card);
+}
+
+.site-account.is-signed-in:has(.site-account-avatar) {
+  border: 2px solid #fff;
+}
+
+.site-account-icon {
+  width: 19px;
+  height: 19px;
+}
+
+.site-account-avatar {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .site-search-box {
   position: relative;
 }
@@ -1173,14 +1237,23 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
     padding: 9px 16px;
   }
 
+  /* Logo + title + two round buttons (search, account) in one row: the
+     title scales with the screen width (14px at 360px, 16px at 412px, up to
+     1.1rem) instead of a fixed size, the logo and gaps a touch smaller —
+     enough for "Duel Commander Piacenza" to stay on one line on a common
+     phone; on a narrower one it wraps to two lines rather than being cut. */
+  .site-header-inner {
+    gap: 12px;
+  }
+
   .site-header-brand {
-    font-size: 1.25rem;
-    gap: 10px;
+    font-size: clamp(0.82rem, 3.9vw, 1.1rem);
+    gap: 8px;
   }
 
   .site-logo-sm {
-    width: 38px;
-    height: 38px;
+    width: 34px;
+    height: 34px;
   }
 
   .nav-link {
@@ -5235,6 +5308,55 @@ img.cs-option-icon {
   display: flex;
   gap: 10px;
   margin-top: 8px;
+}
+
+/* A form's result line (admin forms, account.html) — js sets is-error /
+   is-ok, or clears the text. */
+.form-message {
+  min-height: 20px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+.form-message.is-error {
+  color: #b3261e;
+}
+
+.form-message.is-ok {
+  color: var(--accent-green-2);
+}
+
+/* account.html: one narrow card, showing one section at a time (signed out:
+   the Google button; signed in) — js/account-page.js toggles each section's
+   hidden attribute. */
+.account-card {
+  max-width: 420px;
+}
+
+.account-card h2 {
+  margin: 0 0 6px;
+  font-size: 1.2rem;
+  color: var(--text-title);
+}
+
+.account-hint {
+  margin: 0 0 18px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* White with Google's own multicolour "G", as Google's sign-in branding asks
+   (not restyled in the site's red). */
+.google-signin-btn {
+  width: 100%;
+  gap: 10px;
+}
+
+.google-signin-btn svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
 }
 
 /* League/event scope filter (Commanders, Archetypes) */

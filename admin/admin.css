@@ -651,21 +651,6 @@ html {
   font-size: 0.92rem;
 }
 
-.form-message {
-  min-height: 20px;
-  font-weight: 700;
-  font-size: 0.85rem;
-  margin-top: 4px;
-}
-
-.form-message.is-error {
-  color: #b3261e;
-}
-
-.form-message.is-ok {
-  color: var(--accent-green-2);
-}
-
 /* Round tabs (Matches level) — same pill language as .admin-tab */
 
 .round-tabs {

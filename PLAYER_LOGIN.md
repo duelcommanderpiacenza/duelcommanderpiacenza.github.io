@@ -5,8 +5,13 @@ Branch: `player-login`. Work in progress, not on the live site yet. Update the
 
 ## What we're building
 
-- **Open sign-up:** anyone can create an account (email + password, with email
-  confirmation).
+- **Open sign-up with Google:** anyone with a Google account can sign in on
+  `account.html`; the first sign-in creates their account. No email/password
+  for players (decided after Supabase's built-in email sender proved too
+  limited: it only emails the project team, a couple of emails per hour).
+  With Google, Supabase sends no emails at all — no confirmation, no
+  password reset — so no email service is needed. The admin keeps its own
+  email/password login in `/admin/`.
 - **Claiming a player:** a signed-in user asks to be linked to an existing
   player (with all its history). The **admin approves or rejects** the
   request. Until then the request grants nothing.
@@ -29,8 +34,8 @@ admin can block or delete accounts.
 
 | # | Step | Status |
 |---|---|---|
-| 0 | Admins vs signed-in users | Done on **dev**, code ready to commit, **not on live** |
-| 1 | Accounts (sign-up, login, logout, password reset) | To do |
+| 0 | Admins vs signed-in users | Done on **dev**, committed (`96435a7`), **not on live** |
+| 1 | Accounts (sign in with Google, logout) | Done on **dev**, **not on live** |
 | 2 | Claim a player, with admin approval | To do |
 | 3 | Admin "Utenti" tab | To do |
 | 4 | Own profile editing | To do — waiting on an open question |
@@ -71,8 +76,9 @@ Done:
   locally, still works.
 - [x] Admin app refuses non-admin accounts: `admin/js/auth.js`'s `isAdmin()`
   asks the database, `admin/js/app.js`'s `handleSession` shows the admin only
-  if it says yes, otherwise signs the account out with "Questo account non è
-  un amministratore." Tested on dev with a non-admin test account
+  if it says yes, otherwise keeps the login form with "… non è un account
+  amministratore." (since step 1 it no longer signs the account out: the
+  session is shared with the public site). Tested on dev with a non-admin test account
   (`giocatore.test@example.com`, created in dcp-dev → Authentication → Users,
   not in `admins`).
   - Note: `onAuthChange` defers its callback with `setTimeout`, because
@@ -83,29 +89,71 @@ Done:
 - [x] `CLAUDE.md` updated (RLS line: `is_admin()`, the migrations convention,
   the dev database).
 
+- [x] Committed in `96435a7`.
+
 Left:
 
-- [ ] **Commit** the step 0 code: `admin/js/auth.js`, `admin/js/app.js`,
-  `supabase/schema.sql`, `CLAUDE.md` (and this file).
 - [ ] On **live**: done at step 5 (see there).
 
 ## Step 1 — Accounts
 
-- [ ] **You, dcp-dev dashboard:** Authentication → Providers → Email: allow
-  new users to sign up, keep **Confirm email** on. Set the redirect URLs for
-  email confirmation and password reset (Authentication → URL
-  Configuration) so local testing works (`http://localhost:8000/...`).
-- [ ] **Code:** `js/supabase-client.js` currently never keeps a login session
-  outside `/admin/` (public pages were deliberately anonymous, because
-  "signed in" used to mean "admin"). Step 0 made sessions safe, so public
-  pages can keep one. Update that file's comments too: its setup notes still
-  say to disable public sign-up.
-- [ ] **Code:** sign-up / login / logout / forgotten password, and an
-  "Account" entry in the public header. The nav markup is duplicated in every
-  public HTML page (see CLAUDE.md), so a header change touches all of them.
-- [ ] Keep in mind: an admin also browsing the public site while logged in
-  will see unpublished events there (they pass `is_admin()`). Acceptable, or
-  decide otherwise in this step.
+- [x] **dcp-dev dashboard:** Authentication → Sign In / Providers, User
+  Signups section: **Allow new users to sign up** on — the section has its
+  own Save button (missing it gives "Signups not allowed for this instance").
+  This switch covers Google sign-ins too. The Email provider stays enabled
+  for the admin's own login. Authentication → URL Configuration: Site URL
+  `http://localhost:8000`, Redirect URLs `http://localhost:8000/**` and
+  `http://127.0.0.1:8000/**`.
+- [x] **Google OAuth client** (Google Cloud Console, console.cloud.google.com,
+  free — no billing account needed), one for both projects:
+  1. Create a Google Cloud project (e.g. "Duel Commander Piacenza").
+  2. Google Auth Platform (APIs & Services → OAuth consent screen):
+     app name, support email, Audience **External**. To let anyone sign in,
+     **publish** it ("In production"); in "Testing" only the listed test
+     users can. Only the basic scopes (email, profile) are used, which need
+     no Google review.
+  3. Clients → Create client → **Web application**. Authorized redirect URIs:
+     `https://xylxqwufckkyzrgtfbxi.supabase.co/auth/v1/callback` (dev) and
+     `https://avgogarpoqsfzstmputm.supabase.co/auth/v1/callback` (live).
+  4. Copy the Client ID and Client secret (kept by Michele, not in the repo).
+  - Done: project created, consent screen (External, still in **Testing**),
+    client with both redirect URIs.
+- [x] **dcp-dev dashboard:** Authentication → Sign In / Providers → **Google**:
+  enable, paste the Client ID and secret, save. Callback URL confirmed.
+- [x] **Code:** `js/supabase-client.js` keeps a login session on every page
+  now (public pages were deliberately anonymous before, because "signed in"
+  meant "admin"; step 0 made that safe). One session for the whole site:
+  the admin app no longer signs out a non-admin account, it just shows
+  "… non è un account amministratore." (signing out would also log the
+  player out of the public site).
+  - Consequence, accepted: the admin browsing the public site while logged
+    in sees unpublished events there (they pass `is_admin()`).
+- [x] **Code:** `account.html` + `js/account-page.js`: "Accedi con Google"
+  button (Google comes back to `account.html`), signed-in view with the
+  email and "Esci". `.form-message` moved from `admin/admin.css` to
+  `styles.css` (shared). An earlier email/password version (sign-up,
+  confirmation, reset) was tested and then replaced by Google.
+  - Tested on dev with the test account: login, the session shared with
+    the admin (refused there, still logged in on the site), logout.
+- [x] **Test Google sign-in on dev:** works. Michele's Gmail is the same
+  email as the admin account, so Supabase attached the Google sign-in to it
+  (Providers: "Email, Google") — signing in with that Google account is the
+  admin. Player tests need a second Google account (added under Google
+  Auth Platform → Audience → Test users while the app is in Testing);
+  `giocatore.test@example.com` can't sign in on the site any more (no
+  email form), but still works for testing the admin's refusal at `/admin/`.
+- [x] **Code:** an account button in the public header, after the search,
+  in all 13 public pages (`#site-account` → `account.html`), driven by
+  `js/header-account.js`: person icon when signed out, Google profile
+  picture when signed in. On phones (≤480px) the title "Duel Commander
+  Piacenza" shrinks with the screen width to make room.
+- [x] **Test the header button** on desktop and phone: works (picture when
+  signed in, icon after "Esci", opens the account page; phone header fits).
+
+Note: with sign-up allowed and the Email provider on (for the admin), an
+email sign-up through Supabase's API is still technically possible, but it
+needs a confirmation email that the built-in sender won't deliver, so such
+an account can never sign in. No email form is offered on the site.
 
 ## Step 2 — Claim a player, with admin approval
 
@@ -147,8 +195,11 @@ Left:
   ```
   Check with the step 0 query above (expects 34), and that the admin still
   saves. Then the later migrations, in order.
-- [ ] Live dashboard: the step 1 sign-up settings, with the live site's
-  redirect URLs.
+- [ ] Live dashboard: the step 1 settings — Allow new users to sign up, the
+  Google provider (same Client ID and secret; the live callback URL is
+  already in the Google client), and the live site's address as Site URL /
+  Redirect URLs (`https://duelcommanderpiacenza.github.io/**`).
+- [ ] Google client: published ("In production"), so anyone can sign in.
 - [ ] Merge `player-login` into `main`.
 
 ## Open questions
