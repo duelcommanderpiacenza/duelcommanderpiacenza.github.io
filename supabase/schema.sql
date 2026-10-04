@@ -32,10 +32,32 @@ drop table if exists leagues cascade;
 drop table if exists players cascade;
 drop table if exists badges cascade;
 drop table if exists commanders cascade;
+drop table if exists admins cascade;
 drop type if exists deck_archetype;
 drop type if exists match_result;
 
 create type deck_archetype as enum ('aggro', 'control', 'combo', 'tempo', 'midrange');
+
+-- Who the admin is: signed in AND listed here. Being signed in alone isn't
+-- enough, since players can sign up too — every admin-only policy below
+-- checks is_admin(). RLS on with no policies: nobody reads or writes it
+-- through the API, only is_admin() (security definer) and the SQL editor.
+-- Added by supabase/migrations/001_admins.sql. After a fresh setup, add the
+-- admin account(s):
+--   insert into admins (user_id) select id from auth.users where email = 'admin@example.com';
+create table admins (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+
+alter table admins enable row level security;
+
+create or replace function is_admin() returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from admins where user_id = auth.uid());
+$$;
+
+grant execute on function is_admin() to anon, authenticated;
 
 -- ---------------------------------------------------------------------------
 -- Tables
@@ -297,12 +319,12 @@ create table event_standings (
 create index event_standings_player_idx on event_standings (player_id);
 
 alter table event_standings enable row level security;
-create policy "event_standings_admin_insert" on event_standings for insert with check (auth.role() = 'authenticated');
-create policy "event_standings_admin_update" on event_standings for update using (auth.role() = 'authenticated');
-create policy "event_standings_admin_delete" on event_standings for delete using (auth.role() = 'authenticated');
+create policy "event_standings_admin_insert" on event_standings for insert with check (is_admin());
+create policy "event_standings_admin_update" on event_standings for update using (is_admin());
+create policy "event_standings_admin_delete" on event_standings for delete using (is_admin());
 create policy "event_standings_public_read" on event_standings for select
   using (
-    auth.role() = 'authenticated'
+    is_admin()
     or exists (select 1 from events e where e.id = event_standings.event_id and e.is_open = false)
   );
 
@@ -322,16 +344,15 @@ select cron.schedule(
 
 -- ---------------------------------------------------------------------------
 -- Row Level Security: public read (with the open/closed publishing rule
--- below), admin-only write. "authenticated" = signed in via Supabase Auth.
--- Public sign-up must be disabled in the Supabase dashboard (Authentication
--- > Providers > Email) so only the manually-created admin account(s) can
--- ever be "authenticated".
+-- below), admin-only write. "Admin" = is_admin() (listed in the admins
+-- table above), not just signed in: players can sign up and sign in too,
+-- and get no write access from that alone.
 --
 -- Publishing rule: a league is visible whether it's open or closed (an
 -- ongoing league still shows on the public site). An *event*'s data
--- (its entries and matches) is only visible to anonymous visitors once the
--- event itself is closed — admins (authenticated) always see everything,
--- open or closed, so they can keep editing it before publishing.
+-- (its entries and matches) is only visible to everyone else once the
+-- event itself is closed — admins always see everything, open or closed,
+-- so they can keep editing it before publishing.
 -- ---------------------------------------------------------------------------
 
 do $$
@@ -341,9 +362,9 @@ begin
   foreach t in array array['announcements', 'commanders', 'players', 'badges', 'leagues', 'events', 'event_entries', 'matches', 'player_badges_auto']
   loop
     execute format('alter table %I enable row level security;', t);
-    execute format('create policy "%I_admin_insert" on %I for insert with check (auth.role() = ''authenticated'');', t, t);
-    execute format('create policy "%I_admin_update" on %I for update using (auth.role() = ''authenticated'');', t, t);
-    execute format('create policy "%I_admin_delete" on %I for delete using (auth.role() = ''authenticated'');', t, t);
+    execute format('create policy "%I_admin_insert" on %I for insert with check (is_admin());', t, t);
+    execute format('create policy "%I_admin_update" on %I for update using (is_admin());', t, t);
+    execute format('create policy "%I_admin_delete" on %I for delete using (is_admin());', t, t);
   end loop;
 end $$;
 
@@ -359,17 +380,17 @@ create policy "leagues_public_read" on leagues for select using (true);
 -- actually been played — event_entries/matches stay gated to is_open =
 -- false regardless (see below), so no results ever leak early this way.
 create policy "events_public_read" on events for select
-  using (is_open = false or event_date >= current_date or auth.role() = 'authenticated');
+  using (is_open = false or event_date >= current_date or is_admin());
 
 create policy "event_entries_public_read" on event_entries for select
   using (
-    auth.role() = 'authenticated'
+    is_admin()
     or exists (select 1 from events e where e.id = event_entries.event_id and e.is_open = false)
   );
 
 create policy "matches_public_read" on matches for select
   using (
-    auth.role() = 'authenticated'
+    is_admin()
     or exists (select 1 from events e where e.id = matches.event_id and e.is_open = false)
   );
 

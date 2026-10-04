@@ -1,5 +1,5 @@
 import { Events } from "../../js/db.js";
-import { getSession, signIn, signOut, onAuthChange } from "./auth.js";
+import { getSession, signIn, signOut, isAdmin, onAuthChange } from "./auth.js";
 import { setupThemeToggle } from "../../js/theme.js";
 import { eventTitle } from "../../js/ui.js";
 import { enhanceSelects } from "../../js/custom-select.js";
@@ -239,15 +239,37 @@ logoutBtn.addEventListener("click", async () => {
   await signOut();
 });
 
-onAuthChange((session) => {
-  if (session) showAdmin(session);
-  else showLogin();
-});
+// A signed-in account that isn't in the admins table (a player) is signed
+// straight back out — the database would refuse its writes anyway, but it
+// shouldn't see the admin UI at all. If the check itself fails, same thing:
+// never show the admin without a positive answer.
+async function handleSession(session) {
+  if (!session) {
+    showLogin();
+    return;
+  }
+  let allowed = false;
+  try {
+    allowed = await isAdmin();
+  } catch (err) {
+    console.error(err);
+    showLogin();
+    loginError.textContent = "Impossibile verificare l'account, riprova.";
+    await signOut();
+    return;
+  }
+  if (allowed) {
+    showAdmin(session);
+    return;
+  }
+  showLogin();
+  loginError.textContent = "Questo account non è un amministratore.";
+  await signOut();
+}
 
-getSession().then((session) => {
-  if (session) showAdmin(session);
-  else showLogin();
-});
+onAuthChange(handleSession);
+
+getSession().then(handleSession);
 
 setupThemeToggle();
 enhanceSelects();
