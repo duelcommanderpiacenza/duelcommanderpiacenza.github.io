@@ -665,10 +665,10 @@ document.getElementById("account-claim-cancel").addEventListener("click", async 
 
 // For an upcoming event (open, today or later) or a closed one the player
 // is in, emailed to the organisers by the send-decklist Edge Function
-// (js/db.js's Decklists) — never stored, only *that* it was sent: one per
-// player and event (supabase/migrations/008). The function checks it all
-// again; this only offers the events that qualify, shows the ones already
-// sent, and asks for confirmation before sending (there's no second try).
+// (js/db.js's Decklists) — never stored, only *that* it was sent: two per
+// player and event (supabase/migrations/008-009). The function checks it
+// all again; this only offers the events that qualify, shows the ones
+// already sent, and asks for confirmation before each send.
 const decklistCard = document.getElementById("profile-decklist");
 const decklistNoneEl = document.getElementById("decklist-none");
 const decklistForm = document.getElementById("decklist-form");
@@ -719,14 +719,53 @@ const DECKLIST_ERROR_TEXT = {
   not_linked: "Il tuo account non è collegato a un giocatore.",
   event_not_found: "Evento non trovato: ricarica la pagina.",
   event_not_allowed: "Per questo evento non puoi inviare la decklist.",
-  already_sent: "Hai già inviato una decklist per questo evento.",
+  already_sent: "Hai già inviato due decklist per questo evento.",
 };
+
+// When the send itself fails (Resend refusing or over its limits, the
+// function unreachable, the network), the user is pointed to sending it by
+// hand to the same address — a mail link already filled in like the
+// function's own email (subject, and the list as the body when it fits a
+// mail link: those get cut past ~2000 characters in some mail apps). Public
+// here, unlike DECKLIST_TO (the function's secret).
+const DECKLIST_FALLBACK_TO = "lamialistadeck@gmail.com";
+const DECKLIST_MAILTO_MAX = 1800;
+
+function decklistFallbackHtml(ev, text) {
+  // The same subject as supabase/functions/send-decklist's.
+  const eventName = ev.name || ev.league?.name || "Evento";
+  const date = (ev.event_date ?? "").split("-").reverse().join("/");
+  const subject = `${eventName} - ${date} - ${playerLabel(claim.linked)}`;
+  const base = `mailto:${DECKLIST_FALLBACK_TO}?subject=${encodeURIComponent(subject)}`;
+  const withBody = `${base}&body=${encodeURIComponent(text.trim())}`;
+  const fits = withBody.length <= DECKLIST_MAILTO_MAX;
+  return `Invio non riuscito. Puoi mandare la lista via email a <a href="${
+    fits ? withBody : base
+  }">${DECKLIST_FALLBACK_TO}</a>, con oggetto «${escapeHtml(subject)}»${
+    fits ? "" : ": incolla la lista nel testo dell'email"
+  }.`;
+}
 
 // The events that can still get a list (id → event: upcoming first, soonest
 // first, then the ones played, newest first) and the ones already sent
-// ({ event, isNew }, newest event first).
+// ({ event, sentAt, isNew }, most recently sent first — "Ultime inviate"
+// shows the first DECKLIST_SENT_SHOWN; all of them stay out of the list).
+const DECKLIST_SENT_SHOWN = 3;
+// Sends allowed per event (the send-decklist function's MAX_SENDS, migration
+// 009); how many each event has had so far (event id → 1 or 2).
+const DECKLIST_MAX_SENDS = 2;
 let decklistEvents = new Map();
 let sentDecklists = [];
+let decklistSendCount = new Map();
+
+// One more send recorded for an event: it moves to the front of "Ultime
+// inviate" (one chip per event) and leaves the list once out of sends.
+function recordDecklistSend(ev, count) {
+  decklistSendCount.set(ev.id, count);
+  if (count >= DECKLIST_MAX_SENDS) decklistEvents.delete(ev.id);
+  sentDecklists = sentDecklists.filter((item) => item.event.id !== ev.id);
+  sentDecklists.unshift({ event: ev, sentAt: new Date().toISOString(), isNew: true });
+}
 
 async function loadDecklistCard(player, entries) {
   decklistCard.hidden = false;
@@ -747,23 +786,32 @@ async function loadDecklistCard(player, entries) {
     .map((e) => e.event)
     .filter((ev) => ev && !ev.is_open)
     .sort((a, b) => (b.event_date ?? "").localeCompare(a.event_date ?? ""));
-  const sentIds = new Set(sent.map((s) => s.event_id));
+  // One row per send: per event, how many and the latest.
+  decklistSendCount = new Map();
+  const lastSentAt = new Map();
+  for (const row of sent) {
+    decklistSendCount.set(row.event_id, (decklistSendCount.get(row.event_id) ?? 0) + 1);
+    if ((row.sent_at ?? "") > (lastSentAt.get(row.event_id) ?? "")) lastSentAt.set(row.event_id, row.sent_at);
+  }
   const known = new Map([...upcoming, ...played].map((ev) => [ev.id, ev]));
   decklistEvents = new Map(
     [...upcoming.map((ev) => ({ ...ev, upcoming: true })), ...played]
-      .filter((ev) => !sentIds.has(ev.id))
+      .filter((ev) => (decklistSendCount.get(ev.id) ?? 0) < DECKLIST_MAX_SENDS)
       .map((ev) => [ev.id, ev])
   );
-  sentDecklists = [...sentIds]
+  sentDecklists = [...lastSentAt.keys()]
     .map((id) => known.get(id))
     .filter(Boolean)
-    .sort((a, b) => (b.event_date ?? "").localeCompare(a.event_date ?? ""))
-    .map((event) => ({ event, isNew: false }));
+    .map((event) => ({ event, sentAt: lastSentAt.get(event.id) ?? "", isNew: false }))
+    .sort((a, b) => b.sentAt.localeCompare(a.sentAt));
   renderDecklistCard();
 }
 
 function decklistEventSublabel(ev) {
-  return [ev.upcoming ? "In arrivo" : "Giocato", formatDate(ev.event_date), ev.league?.name].filter(Boolean).join(" · ");
+  const sentOnce = (decklistSendCount.get(ev.id) ?? 0) > 0;
+  return [ev.upcoming ? "In arrivo" : "Giocato", formatDate(ev.event_date), ev.league?.name, sentOnce && "1 invio rimasto"]
+    .filter(Boolean)
+    .join(" · ");
 }
 
 function renderDecklistCard() {
@@ -788,11 +836,11 @@ function renderDecklistCard() {
       .join("");
   decklistSentBox.hidden = sentDecklists.length === 0;
   decklistSentList.innerHTML = sentDecklists
+    .slice(0, DECKLIST_SENT_SHOWN)
     .map(
       ({ event, isNew }) => `<li class="decklist-sent-chip${isNew ? " is-new" : ""}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
         <span class="decklist-sent-name">${escapeHtml(eventTitle(event))}</span>
-        <span class="decklist-sent-date">${formatDate(event.event_date)}</span>
       </li>`
     )
     .join("");
@@ -831,9 +879,15 @@ function updateDecklistMeter() {
 
 // The warning before sending slides open in place of the send button.
 function openDecklistConfirm(ev) {
+  // First send: one more possible; second: the last, replacing the first.
+  const last = (decklistSendCount.get(ev.id) ?? 0) + 1 >= DECKLIST_MAX_SENDS;
   decklistConfirmText.innerHTML = `Inviare la decklist per <strong>${escapeHtml(eventTitle(ev))}</strong> del ${formatDate(
     ev.event_date
-  )}? Potrai inviarne <strong>una sola</strong> per questo evento: controlla che sia quella giusta.`;
+  )}? ${
+    last
+      ? "È il tuo <strong>ultimo invio</strong> per questo evento: sostituirà la lista che hai già mandato."
+      : "Potrai inviarne <strong>al massimo due</strong> per questo evento: la seconda sostituirà la prima."
+  }`;
   decklistConfirm.classList.add("is-open");
   decklistConfirm.inert = false;
   decklistActions.hidden = true;
@@ -893,19 +947,24 @@ decklistConfirmSend.addEventListener("click", async () => {
     console.error(err);
     setDecklistSending(false);
     closeDecklistConfirm();
-    setMessage(decklistMessageEl, DECKLIST_ERROR_TEXT[err?.message] ?? "Invio non riuscito, riprova più tardi.");
-    // Already sent (another tab, another device): it moves to "Già inviate".
+    const known = DECKLIST_ERROR_TEXT[err?.message];
+    if (known) {
+      setMessage(decklistMessageEl, known);
+    } else {
+      // The send itself failed: by hand, to the same address.
+      decklistMessageEl.className = "form-message is-error";
+      decklistMessageEl.innerHTML = decklistFallbackHtml(ev, decklistText.value);
+    }
+    // Out of sends (another tab, another device): it leaves the list.
     if (err?.message === "already_sent") {
-      decklistEvents.delete(ev.id);
-      sentDecklists.unshift({ event: ev, isNew: true });
+      recordDecklistSend(ev, DECKLIST_MAX_SENDS);
       renderDecklistCard();
     }
     return;
   }
   setDecklistSending(false);
   closeDecklistConfirm();
-  decklistEvents.delete(ev.id);
-  sentDecklists.unshift({ event: ev, isNew: true });
+  recordDecklistSend(ev, (decklistSendCount.get(ev.id) ?? 0) + 1);
   decklistText.value = "";
   updateDecklistMeter();
   renderDecklistCard();

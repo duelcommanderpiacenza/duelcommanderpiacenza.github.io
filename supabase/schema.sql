@@ -732,9 +732,9 @@ grant execute on function delete_my_account() to authenticated;
 
 -- ---------------------------------------------------------------------------
 -- Decklists sent by email (account.html → the send-decklist Edge Function):
--- only *that* a player sent one for an event, never the list — one per
--- player and event; the admin deletes the row to allow a resend. Written
--- only by the function (service role). Added by
+-- only *that* a player sent one for an event, never the list — up to two
+-- per player and event (attempt 1, 2; 009); the admin deletes a row to allow
+-- another. Written only by the function (service role). Added by
 -- supabase/migrations/008_decklist_submissions.sql.
 -- ---------------------------------------------------------------------------
 
@@ -744,7 +744,9 @@ create table decklist_submissions (
   -- The account that sent it (the link can move to another account later).
   user_id uuid references auth.users(id) on delete set null,
   sent_at timestamptz not null default now(),
-  primary key (player_id, event_id)
+  -- 1st or 2nd send for that event (supabase/migrations/009).
+  attempt smallint not null default 1 check (attempt between 1 and 2),
+  primary key (player_id, event_id, attempt)
 );
 
 alter table decklist_submissions enable row level security;

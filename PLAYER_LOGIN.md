@@ -507,13 +507,14 @@ its ID token to Supabase (`signInWithIdToken`), so Google names the site.
 
 A signed-in account linked to a player sends its decklist for an event
 from account.html; it's emailed to the organisers, **never stored** — only
-*that* it was sent, so each player sends one per event. Subject:
+*that* it was sent, so each player sends at most two per event (one at
+  first, two since migration 009 — the second replacing the first). Subject:
 `<Event name> - <dd/mm/yyyy> - <Player name>`.
 
 - Events offered: upcoming (open, today or later) or closed ones the player
   is in. One text box: the pasted list or any link. Sending twice for the
   same event isn't allowed; an in-card warning comes before the send. To
-  allow a resend (wrong list), the admin deletes the player's row for that
+  allow another send, the admin deletes one of the player's rows for that
   event in `decklist_submissions`.
 - Sent with **Resend** (resend.com, free: 100 emails a day). Without an own
   domain it only delivers to the Resend account's own address, so the
@@ -535,6 +536,16 @@ from account.html; it's emailed to the organisers, **never stored** — only
   played event, the warning, a second try refused, the email's subject and
   Reply-To).
 - [x] **Live:** the same three (008, the function, its secrets).
+- [x] Two sends per event: migration `009_two_decklists_per_event.sql` (+
+  rollback, folded into `schema.sql`) numbers each send (`attempt` 1-2, in
+  the primary key); the function claims 1, else 2, else `already_sent`, and
+  a second send's email starts with a note that it replaces the first. The
+  page keeps an event with one send in the list ("1 invio rimasto"), the
+  warning saying when it's the last; "Ultime inviate" one chip per event
+  (its name only).
+- [ ] Run 009, then redeploy the function (both projects: 009 first — the
+  old function keeps working with it, at one send — then the new code in
+  the dashboard's editor).
 - [ ] Push, then test on live with the admin's own account (and delete
   that test's row in `decklist_submissions` afterwards).
 

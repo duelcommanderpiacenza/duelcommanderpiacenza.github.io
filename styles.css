@@ -6873,6 +6873,15 @@ html.nav-mobile .pc-cancel-btn svg {
   margin-top: 12px;
 }
 
+/* The address to send it to by hand, when sending fails: a clear link
+   inside the message. */
+#decklist-message a {
+  color: inherit;
+  font-weight: 800;
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+
 /* Events already sent: green chips, the newest first; one just sent pops in. */
 .decklist-sent {
   margin-top: 20px;
@@ -6919,11 +6928,6 @@ html.nav-mobile .pc-cancel-btn svg {
   width: 15px;
   height: 15px;
   color: var(--accent-green-2);
-}
-
-.decklist-sent-date {
-  color: var(--text-muted);
-  font-weight: 600;
 }
 
 .decklist-sent-chip.is-new {

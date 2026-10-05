@@ -10,9 +10,10 @@
 //
 // Checks everything itself, never the browser's word: a signed-in account,
 // not blocked, linked to a player; an event that is upcoming (open, today
-// or later) or closed with that player in it; no list sent yet by this
-// player for it (supabase/migrations/008's decklist_submissions — the only
-// thing kept: *that* it was sent, never the list). The subject is built here
+// or later) or closed with that player in it; fewer than MAX_SENDS lists
+// sent by this player for it (supabase/migrations/008-009's
+// decklist_submissions — the only thing kept: *that* it was sent, never the
+// list). The subject is built here
 // from the database: "<Event name> - <dd/mm/yyyy> - <Player name>"; the
 // email's Reply-To is the account's email.
 //
@@ -22,6 +23,8 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const MAX_LENGTH = 10000;
+// Sends per player and event (migration 009's attempt 1..2).
+const MAX_SENDS = 2;
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -102,23 +105,30 @@ Deno.serve(async (req) => {
   }
   if (!allowed) return reply(403, { error: "event_not_allowed" });
 
-  // The one send for this player and event is claimed first — the primary
-  // key settles two sends at the same instant — then the email goes out; if
-  // that fails, the claim is given back so the player can retry.
-  const { error: claimError } = await admin
-    .from("decklist_submissions")
-    .insert({ player_id: player.id, event_id: eventId, user_id: user.id });
-  if (claimError) {
-    if (claimError.code === "23505") return reply(409, { error: "already_sent" });
-    console.error("claim", claimError);
-    return reply(500, { error: "send_failed" });
+  // A free send for this player and event is claimed first — attempt 1,
+  // else 2: the primary key settles two sends at the same instant — then the
+  // email goes out; if that fails, the claim is given back so the player can
+  // retry.
+  let attempt = 0;
+  for (let n = 1; n <= MAX_SENDS && !attempt; n++) {
+    const { error: claimError } = await admin
+      .from("decklist_submissions")
+      .insert({ player_id: player.id, event_id: eventId, user_id: user.id, attempt: n });
+    if (!claimError) attempt = n;
+    else if (claimError.code !== "23505") {
+      console.error("claim", claimError);
+      return reply(500, { error: "send_failed" });
+    }
   }
+  if (!attempt) return reply(409, { error: "already_sent" });
 
   const league = Array.isArray(event.league) ? event.league[0] : event.league;
   const eventName = event.name || league?.name || "Evento";
   const playerName = player.handle ? `${player.name} (${player.handle})` : player.name;
   const subject = `${eventName} - ${italianDate(event.event_date)} - ${playerName}`;
-  const text = `${decklist}\n\n—\nInviata da ${playerName} (${user.email}) dal sito Duel Commander Piacenza.`;
+  // A second send says so first: it replaces the first one.
+  const note = attempt > 1 ? `[${attempt}° invio per questo evento: sostituisce il precedente]\n\n` : "";
+  const text = `${note}${decklist}\n\n—\nInviata da ${playerName} (${user.email}) dal sito Duel Commander Piacenza.`;
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -133,9 +143,14 @@ Deno.serve(async (req) => {
   });
   if (!res.ok) {
     console.error("resend", res.status, await res.text());
-    await admin.from("decklist_submissions").delete().eq("player_id", player.id).eq("event_id", eventId);
+    await admin
+      .from("decklist_submissions")
+      .delete()
+      .eq("player_id", player.id)
+      .eq("event_id", eventId)
+      .eq("attempt", attempt);
     return reply(502, { error: "send_failed" });
   }
 
-  return reply(200, { ok: true, event_id: eventId });
+  return reply(200, { ok: true, event_id: eventId, attempt, remaining: MAX_SENDS - attempt });
 });

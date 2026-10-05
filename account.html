@@ -279,7 +279,7 @@
             <div class="decklist-body" id="decklist-body" inert>
               <div class="decklist-body-clip" id="decklist-body-clip">
                 <div class="decklist-body-inner">
-                  <p class="account-hint decklist-hint">La lista arriva agli organizzatori via email e non viene salvata sul sito. Puoi inviarne una sola per evento.</p>
+                  <p class="account-hint decklist-hint">La lista arriva agli organizzatori via email e non viene salvata sul sito. Puoi inviarne al massimo due per evento: la seconda sostituisce la prima.</p>
                   <p class="page-empty decklist-none" id="decklist-none" hidden></p>
 
                   <form class="decklist-form" id="decklist-form" novalidate hidden>
@@ -290,7 +290,7 @@
                     <div class="field">
                       <label for="decklist-text">Decklist</label>
                       <div class="decklist-text-wrap">
-                        <textarea id="decklist-text" rows="9" maxlength="10000" spellcheck="false" autocomplete="off" placeholder="Incolla la lista, una carta per riga (es. 1 Sol Ring) — oppure un link (Moxfield, Archidekt, …)"></textarea>
+                        <textarea id="decklist-text" rows="9" maxlength="10000" spellcheck="false" autocomplete="off" placeholder="Incolla la lista oppure un link (Moxfield, Archidekt, …)"></textarea>
                         <span class="decklist-meter" id="decklist-meter" aria-live="polite"></span>
                       </div>
                     </div>
@@ -317,9 +317,9 @@
                   </form>
                   <p class="form-message" id="decklist-message"></p>
 
-                  <!-- Events this player already sent a list for. -->
+                  <!-- The last 3 events this player sent a list for. -->
                   <div class="decklist-sent" id="decklist-sent" hidden>
-                    <p class="decklist-sent-title">Già inviate</p>
+                    <p class="decklist-sent-title">Ultime inviate</p>
                     <ul class="decklist-sent-list" id="decklist-sent-list"></ul>
                   </div>
                 </div>
