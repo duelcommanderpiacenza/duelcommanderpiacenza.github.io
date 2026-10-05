@@ -190,7 +190,12 @@ async function init() {
         return d && (!min || d < min) ? d : min;
       }, null);
       const cardWrapEl = document.getElementById("player-page-card");
-      renderPublicPlayerCard(cardWrapEl, card, { name: nameLabel, since: firstDate ? firstDate.slice(0, 4) : null });
+      renderPublicPlayerCard(cardWrapEl, card, {
+        name: nameLabel,
+        since: firstDate ? firstDate.slice(0, 4) : null,
+        // The same badges as next to the title.
+        badges: playerBadges,
+      });
       cardWrapEl.hidden = false;
       document.getElementById("player-filter-panel").classList.add("detail-filter-panel");
       // The stat tiles on one row beside it (styles.css .player-stats-col.has-card).

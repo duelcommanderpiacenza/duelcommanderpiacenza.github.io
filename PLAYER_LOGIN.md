@@ -332,6 +332,20 @@ favourite commander, favourite archetype.
   card on its player page; switch off → gone; never saved → no card,
   switch disabled; a player with no account → page as before.
 
+### Badges on the card
+
+- [x] The linked player's badges (manual slots, then automatic by priority —
+  the same as next to the name on the player page) in the card's top-left
+  corner, on both account.html and player.html: small discs in `main`'s
+  badge look (white, red ring — the lighter red, the card being dark) drawn
+  by the card itself (`js/player-card.js`'s `cardBadgesHtml`, `.pc-badges`),
+  with the site-wide hover text. account.html loads them with the stats
+  (`Players.get` + `PlayerAutoBadges.listByPlayer`); no badges when not
+  linked. **After merging `main`** (5.1): its badges revamp draws badges
+  differently (`badgeDiscHtml`, `.badge-disc`) — the card's discs copy its
+  look already; check them with the new icons, and switch them to
+  `badgeDiscHtml` if simpler.
+
 ### Sign-in card
 
 - [x] "Entra con il tuo account Google." plus what an account is for (link

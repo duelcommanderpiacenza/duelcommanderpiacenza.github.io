@@ -37,12 +37,22 @@
 // Scryfall's guidelines ask for the artist to be credited where its art
 // crops are shown — see PLAYER_LOGIN.md, step 4.
 import { sb } from "./supabase-client.js";
-import { Commanders, PlayerClaims, Profiles, MyAccount, EventEntries, Matches, EventStandings } from "./db.js";
+import {
+  Commanders,
+  PlayerClaims,
+  Profiles,
+  MyAccount,
+  Players,
+  PlayerAutoBadges,
+  EventEntries,
+  Matches,
+  EventStandings,
+} from "./db.js";
 import { matchRoundOutcome, isDrop } from "./leaderboard.js";
 import { tallyOutcome, renderWinrateTiles } from "./winrate.js";
-import { escapeHtml, colorIdentityPips } from "./ui.js";
+import { escapeHtml, colorIdentityPips, uniqueBadges } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
-import { applyCardAccents, archetypeLabel, EMPTY_VALUE, createArtPainter } from "./player-card.js";
+import { applyCardAccents, archetypeLabel, EMPTY_VALUE, createArtPainter, cardBadgesHtml } from "./player-card.js";
 
 const ACCOUNT_URL = new URL("account.html", window.location.href).href;
 const COLOR_ORDER = ["W", "U", "B", "R", "G"];
@@ -63,6 +73,7 @@ const archetypeEl = document.getElementById("pc-archetype");
 const colorsEl = document.getElementById("pc-colors");
 const bioEl = document.getElementById("profile-bio");
 const sinceEl = document.getElementById("pc-since");
+const badgesEl = document.getElementById("pc-badges");
 const editToggleBtn = document.getElementById("profile-edit-toggle");
 const editCancelBtn = document.getElementById("profile-edit-cancel");
 const emailEl = document.getElementById("account-email");
@@ -102,12 +113,13 @@ const accountDeleteBtn = document.getElementById("account-delete");
 let loginNotice = null;
 
 // What's on screen: the account, its saved profile, its player link/request,
-// and the linked player's first event year (the card's "Dal …").
+// and the linked player's first event year (the card's "Dal …") and badges.
 let user = null;
 let profile = null;
 let claim = { linked: null, pending: null };
 let commandersById = new Map();
 let firstYear = null;
+let playerBadges = [];
 
 // --- Helpers ------------------------------------------------------------------
 
@@ -179,8 +191,9 @@ function renderCard(values) {
   bioEl.textContent = description || "Nessuna descrizione: premi ✎ per raccontare qualcosa di te.";
   bioEl.classList.toggle("is-empty", !description);
 
-  // The player's (not the account's) first event, once linked.
+  // The player's (not the account's) first event and badges, once linked.
   sinceEl.textContent = claim.linked && firstYear ? `Dal ${firstYear}` : "";
+  badgesEl.innerHTML = claim.linked ? cardBadgesHtml(playerBadges) : "";
 
   paintArt(values.commander?.name ?? null);
 }
@@ -551,7 +564,7 @@ function matchOutcome(m, isPlayer1) {
 
 async function loadStats(player) {
   statsLink.href = `player.html?id=${player.id}`;
-  const [entries, { asP1, asP2 }, standings] = await Promise.all([
+  const [entries, { asP1, asP2 }, standings, badgeSlots, autoBadgeRows] = await Promise.all([
     EventEntries.listByPlayer(player.id),
     Matches.listByPlayer(player.id),
     // Cached final standings of closed events; the best placement only.
@@ -559,6 +572,25 @@ async function loadStats(player) {
       console.error(err);
       return [];
     }),
+    // The card's badges, same as next to the name on the player page: the
+    // two manual slots (Players' badge embed), then the automatic ones by
+    // priority. Not fatal: the card just shows none.
+    Players.get(player.id).catch((err) => {
+      console.error(err);
+      return {};
+    }),
+    PlayerAutoBadges.listByPlayer(player.id).catch((err) => {
+      console.error(err);
+      return [];
+    }),
+  ]);
+  playerBadges = uniqueBadges([
+    badgeSlots.badge1,
+    badgeSlots.badge2,
+    ...autoBadgeRows
+      .map((r) => r.badge)
+      .filter(Boolean)
+      .sort((a, b) => b.priority - a.priority),
   ]);
 
   const bucket = { wins: 0, draws: 0, losses: 0 };
@@ -634,6 +666,7 @@ async function loadSignedIn(sessionUser) {
   user = sessionUser;
   profile = null;
   firstYear = null;
+  playerBadges = [];
   setEditing(false, { animate: false });
   accountDangerEl.hidden = true;
   setMessage(accountMessageEl, "");

@@ -3,12 +3,13 @@
 // (js/player-detail.js): the border/glow colours, the commander art
 // (Scryfall), and the public card's markup. Its look is styles.css's
 // .player-card / .pc-* rules.
-import { escapeHtml, colorIdentityPips } from "./ui.js";
+import { escapeHtml, colorIdentityPips, badgeTooltipAttrs } from "./ui.js";
 
 // The card border's gradient and the avatar's glow, per favourite colour —
-// brighter than the color-pip fills, since they glow on a dark card. No
-// colours: silver.
-const ACCENT = { W: "#f3ead0", U: "#3b8ae0", B: "#8f8288", R: "#e8492f", G: "#33a866" };
+// brighter than the color-pip fills, since they glow on a dark card. White
+// is a deeper cream (the Comandanti colour chart's own, js/commanders-page.js):
+// a near-white border vanished against the light page. No colours: silver.
+const ACCENT = { W: "#e3d58a", U: "#3b8ae0", B: "#8f8288", R: "#e8492f", G: "#33a866" };
 const NO_ACCENT = ["#d6dbe0", "#8d959c"];
 
 // Border gradient + glow from the colours (a WUBRG-ordered string); one
@@ -76,14 +77,31 @@ export function createArtPainter(artEl) {
   };
 }
 
+// The player's badges in the card's top-left corner (.pc-badges): one small
+// glass disc each, in the order given (manual slots, then automatic by
+// priority — the caller's uniqueBadges list). Drawn here rather than with
+// the site's own badge icons, to suit the dark card; .icon-badge +
+// data-tooltip still give them the site-wide hover text (js/layout.js).
+export function cardBadgesHtml(badges) {
+  return badges
+    .map((b) => {
+      const glyph = b.icon_url
+        ? `<img src="${escapeHtml(b.icon_url)}" alt="" class="pc-badge-glyph">`
+        : `<span class="pc-badge-glyph">${escapeHtml(b.icon ?? "")}</span>`;
+      return `<span class="icon-badge pc-badge" ${badgeTooltipAttrs(b)} tabindex="0">${glyph}</span>`;
+    })
+    .join("");
+}
+
 // player.html's card, view only: the same layout as account.html's card
 // outside edit mode. `card` is db.js's PlayerCards.get() row, `name` the
-// player's name, `since` the year of their first event (or null). The
+// player's name, `since` the year of their first event (or null), `badges`
+// the player's badges (cardBadgesHtml). The
 // avatar: the Google picture when shown; hidden by the owner → no circle at
 // all; no Google picture → the initial. No description → no description
 // line (account.html's "premi ✎" invitation is for the owner only).
 // Returns the card element.
-export function renderPublicPlayerCard(containerEl, card, { name, since }) {
+export function renderPublicPlayerCard(containerEl, card, { name, since, badges = [] }) {
   let avatar = "";
   if (card.avatar_url) {
     avatar = `<div class="pc-avatar"><img src="${escapeHtml(card.avatar_url)}" alt="" referrerpolicy="no-referrer"></div>`;
@@ -95,6 +113,7 @@ export function renderPublicPlayerCard(containerEl, card, { name, since }) {
     <div class="pc-frame">
       <div class="pc-surface">
         <div class="pc-art" aria-hidden="true"></div>
+        <div class="pc-badges">${cardBadgesHtml(badges)}</div>
         <div class="pc-content">
           <div class="pc-art-space" aria-hidden="true"></div>
           <div class="pc-nameplate">

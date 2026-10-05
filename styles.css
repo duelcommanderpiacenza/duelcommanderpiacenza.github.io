@@ -5581,9 +5581,19 @@ img.cs-option-icon {
   padding: 3px;
   border-radius: 22px;
   background: var(--pc-gradient, linear-gradient(135deg, #d6dbe0, #8d959c));
+  /* The 1px edge outlines a light border (cream, silver) against the light
+     page. */
   box-shadow:
+    0 0 0 1px rgba(20, 8, 10, 0.14),
     0 22px 48px rgba(20, 8, 10, 0.35),
     0 0 36px -8px var(--pc-glow, #d6dbe0);
+}
+
+/* Dark mode: no outer glow — in the card's first colour, it reads as a
+   white halo on the dark page when that's silver (no colours) or white.
+   Just a deeper drop shadow to lift the card off the page. */
+:root[data-theme="dark"] .pc-frame {
+  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.5);
 }
 
 /* Scryfall's card proportions (488×680). */
@@ -5670,6 +5680,62 @@ img.cs-option-icon {
   to {
     opacity: 1;
   }
+}
+
+/* Top-left corner: the player's badges (js/player-card.js cardBadgesHtml) —
+   discs over the art, wrapping onto a second row if there are many. Above
+   .pc-content, so they get the hover tooltip. Nothing to show (no badges,
+   or not linked): no box. */
+.pc-badges {
+  position: absolute;
+  top: 4.5cqw;
+  left: 4.5cqw;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.6cqw;
+  max-width: 62%;
+}
+
+.pc-badges:empty {
+  display: none;
+}
+
+/* The site's badge look (main's .badge-disc): white, so every icon keeps
+   its own colours at full contrast, with a red ring — the lighter red the
+   site uses on dark backgrounds, since the card is always dark — a whole
+   number of px wide (a fractional ring renders blurry), inside the disc's
+   size (border-box). .pc-badges .pc-badge: outranks the site's own
+   .icon-badge sizing. */
+.pc-badges .pc-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 9.5cqw;
+  height: 9.5cqw;
+  margin: 0;
+  border: 2px solid rgba(255, 106, 110, 0.6);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  line-height: 1;
+}
+
+/* The icon in a same-size centred box — an emoji left as plain text sits
+   wherever its font puts it, off-centre next to an image. */
+.pc-badge-glyph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 5.6cqw;
+  height: 5.6cqw;
+  font-size: 5.2cqw;
+  line-height: 1;
+}
+
+img.pc-badge-glyph {
+  object-fit: contain;
 }
 
 .pc-content {
