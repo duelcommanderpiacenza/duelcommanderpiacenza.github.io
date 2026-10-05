@@ -124,7 +124,8 @@ async function init() {
   // "Dal" too: the last DEFAULT_DATE_FROM_YEARS years (js/ui.js) — set
   // before the stats first render, which read it.
   dateFromFilter.value = isoDateYearsAgo(DEFAULT_DATE_FROM_YEARS);
-  initFilterToggle("player-filter-toggle", "player-filter-panel");
+  // Open from the start on desktop, closed on phones.
+  initFilterToggle("player-filter-toggle", "player-filter-panel", { openOnDesktop: true });
   const matchesEl = document.getElementById("player-matches");
 
   if (!id) {

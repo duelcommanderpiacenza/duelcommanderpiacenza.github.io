@@ -153,7 +153,8 @@ async function init() {
   // DEFAULT_DATE_FROM_YEARS years (js/ui.js) — set before the stats first
   // render, which read it.
   dateFromFilter.value = isoDateYearsAgo(DEFAULT_DATE_FROM_YEARS);
-  initFilterToggle("commander-filter-toggle", "commander-filter-panel");
+  // Open from the start on desktop, closed on phones.
+  initFilterToggle("commander-filter-toggle", "commander-filter-panel", { openOnDesktop: true });
   const playersEl = document.getElementById("commander-players");
   const matchesEl = document.getElementById("commander-matches");
   const decksChartEl = document.getElementById("commander-decks-chart");
