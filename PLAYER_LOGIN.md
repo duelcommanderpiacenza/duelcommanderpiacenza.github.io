@@ -278,9 +278,11 @@ favourite commander, favourite archetype.
   - "Le tue statistiche" card, **only once linked**, right of the player
     card on desktop: the player page's own winrate tiles (Winrate, Eventi,
     Vittorie, Pareggi, Sconfitte — same counting as `player-detail.js`,
-    whole history) plus **Miglior piazzamento** as one more tile of the same
-    look (from the cached `event_standings`), and a "Pagina giocatore →"
-    link. ("Commander più giocato" was dropped);
+    whole history) plus **Leghe** as one more tile of the same look, right
+    before Eventi — the leagues, open or closed, the player has played at
+    least one closed event of (from the player's own entries) — and a
+    "Pagina giocatore →" link. ("Commander più giocato" and, after go-live,
+    "Miglior piazzamento" were dropped);
   - "Account" card, under the stats: the Google login as one row (logo,
     email, "Esci"), then **"Elimina account"** — not shown to admin
     accounts. `delete_my_account()` (migration 006) deletes the auth user:
@@ -474,6 +476,32 @@ live first (5.3), so that page exists before Google is given its address.
   feature): as configured it sets cookies without asking; under the Italian
   Garante's rules analytics cookies like these need prior consent (a cookie
   banner), unless GA is removed or set up not to. Decide before/at go-live.
+
+## After go-live: Google's own sign-in button
+
+Google's sign-in window said "Continua su avgogarpoqsfzstmputm.supabase.co":
+with the redirect flow, Google names the address it returns to, Supabase's.
+A Supabase custom domain would fix that but is paid and needs an owned
+domain; instead the sign-in card uses **Google's own button** (Google
+Identity Services): the sign-in happens on the site's page and Google hands
+its ID token to Supabase (`signInWithIdToken`), so Google names the site.
+
+- [x] Google Cloud → the Web client → **Authorized JavaScript origins**:
+  `https://duelcommanderpiacenza.github.io`, `http://localhost`,
+  `http://localhost:8000` (redirect URIs unchanged — the fallback uses
+  them). Client ID in `js/account-page.js` (public; the secret stays only in
+  Supabase).
+- [x] `account.html` / `js/account-page.js`: Google's script loaded only on
+  the sign-in card, the button drawn by Google (pill, outline / black in
+  dark mode, the card's width), a fresh SHA-256 nonce per attempt,
+  `auto_select: false`, `disableAutoSelect()` on "Esci"; fallback to the
+  old redirect button if the script is blocked or takes over 5s.
+  `privacy.html` mentions Google's script on the profile page. No Supabase
+  change; existing accounts stay as they are (same Google identity).
+- [ ] **Test on dev**: sign in with the new button (the window should name
+  the site), sign out and in again (no automatic sign-in), the fallback
+  (block `accounts.google.com` in the browser's dev tools → the old button
+  shows and works), phone and dark mode. Then live.
 
 ## Open questions
 

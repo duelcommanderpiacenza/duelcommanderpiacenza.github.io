@@ -20,14 +20,17 @@
 //    under it, once linked, the switch showing it on the player page too
 //    (js/player-detail.js, migration 007);
 //  - on the right: "Le tue statistiche" once linked (the player page's own
-//    winrate tiles over the whole history plus best placement as one more
-//    tile, link to the player page) and "Account" (the Google email,
+//    winrate tiles over the whole history plus the leagues played as one
+//    more tile, link to the player page) and "Account" (the Google email,
 //    "Esci", and — not for admins — "Elimina account").
 //
 // Google only for players, no email/password: Supabase never has to send a
 // confirmation or reset email (its built-in sender only reaches the project
-// team). Google comes back to this page (ACCOUNT_URL, allowed in Supabase's
-// Authentication > URL Configuration) and supabase-js reports SIGNED_IN.
+// team). Normally through Google's own button on this page (Google Identity
+// Services → signInWithIdToken, so Google names the site); if its script is
+// blocked, the redirect flow instead: Google comes back to this page
+// (ACCOUNT_URL, allowed in Supabase's Authentication > URL Configuration).
+// Either way supabase-js reports SIGNED_IN.
 //
 // The page stays behind its loading splash until everything a signed-in
 // view shows has loaded (the commander art excepted — it fades in when
@@ -46,7 +49,6 @@ import {
   PlayerAutoBadges,
   EventEntries,
   Matches,
-  EventStandings,
 } from "./db.js";
 import { matchRoundOutcome, isDrop } from "./leaderboard.js";
 import { tallyOutcome, renderWinrateTiles } from "./winrate.js";
@@ -564,14 +566,9 @@ function matchOutcome(m, isPlayer1) {
 
 async function loadStats(player) {
   statsLink.href = `player.html?id=${player.id}`;
-  const [entries, { asP1, asP2 }, standings, badgeSlots, autoBadgeRows] = await Promise.all([
+  const [entries, { asP1, asP2 }, badgeSlots, autoBadgeRows] = await Promise.all([
     EventEntries.listByPlayer(player.id),
     Matches.listByPlayer(player.id),
-    // Cached final standings of closed events; the best placement only.
-    EventStandings.listByPlayer(player.id).catch((err) => {
-      console.error(err);
-      return [];
-    }),
     // The card's badges, same as next to the name on the player page: the
     // two manual slots (Players' badge embed), then the automatic ones by
     // priority. Not fatal: the card just shows none.
@@ -598,16 +595,20 @@ async function loadStats(player) {
   for (const m of asP2) if (!isDrop(m)) tallyOutcome(bucket, matchOutcome(m, false));
   renderWinrateTiles(statsTilesEl, bucket, { events: entries.length });
 
-  // "Miglior piazzamento" as one more tile, same look as the others — only
-  // when the tiles are there (no matches yet: just the "not enough data"
-  // line).
-  if (statsTilesEl.querySelector(".stat-tile")) {
-    const best = standings.reduce((min, s) => (min === null || s.position < min ? s.position : min), null);
-    statsTilesEl.insertAdjacentHTML(
-      "beforeend",
-      `<div class="stat-tile"><div class="stat-tile-label">Miglior piazzamento</div><div class="stat-tile-value">${
-        best === null ? "—" : `#${best}`
-      }</div></div>`
+  // "Leghe" as one more tile, same look as the others, right before
+  // "Eventi": the leagues (open or closed) the player has played at least
+  // one closed event of. Only when the tiles are there (no matches yet: just
+  // the "not enough data" line).
+  const eventsTile = [...statsTilesEl.querySelectorAll(".stat-tile")].find(
+    (tile) => tile.querySelector(".stat-tile-label")?.textContent === "Eventi"
+  );
+  if (eventsTile) {
+    const leagueIds = new Set(
+      entries.filter((e) => e.event && !e.event.is_open && e.event.league).map((e) => e.event.league.id)
+    );
+    eventsTile.insertAdjacentHTML(
+      "beforebegin",
+      `<div class="stat-tile"><div class="stat-tile-label">Leghe</div><div class="stat-tile-value">${leagueIds.size}</div></div>`
     );
   }
 
@@ -708,6 +709,7 @@ sb.auth.onAuthStateChange((_event, session) => {
       user = null;
       profile = null;
       show("login");
+      showGoogleButton();
       const loginMessageEl = viewOf("login").querySelector("[data-message]");
       if (loginNotice) {
         setMessage(loginMessageEl, loginNotice, "ok");
@@ -719,6 +721,94 @@ sb.auth.onAuthStateChange((_event, session) => {
     if (isFirst) hidePageLoading();
   }, 0);
 });
+
+// --- Sign in with Google's own button ------------------------------------------
+
+// Google Identity Services: Google's button, drawn on this page, signs the
+// user in itself and hands its ID token to Supabase (signInWithIdToken) —
+// the sign-in never leaves the site, so Google's window names the site
+// instead of Supabase's address (the redirect flow below does that). The
+// script loads only here, only while the sign-in card is shown; if it's
+// blocked or slow (privacy browsers, ad blockers), the redirect button below
+// takes its place. Same Google client as Supabase's Google provider (its
+// Client ID is public; the secret stays in Supabase); this site's addresses
+// are its "Authorized JavaScript origins" (PLAYER_LOGIN.md).
+const GOOGLE_CLIENT_ID = "758643767973-5akt6sepj004h3l0qjn1o9tts8nld00g.apps.googleusercontent.com";
+const GOOGLE_SCRIPT_TIMEOUT_MS = 5000;
+const googleButtonEl = document.getElementById("account-google-gsi");
+const googleFallbackBtn = document.getElementById("account-google");
+
+let googleScript = null;
+
+function loadGoogleScript() {
+  googleScript ??= new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.onload = () => (window.google?.accounts?.id ? resolve(window.google.accounts.id) : reject(new Error("gsi_missing")));
+    script.onerror = () => reject(new Error("gsi_blocked"));
+    document.head.appendChild(script);
+    setTimeout(() => reject(new Error("gsi_timeout")), GOOGLE_SCRIPT_TIMEOUT_MS);
+  });
+  return googleScript;
+}
+
+// A one-time value tying Google's token to this attempt, so a token can't be
+// replayed: Google gets its SHA-256 (hex), Supabase the value itself, and
+// checks they match.
+async function newNonce() {
+  const raw = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(24))));
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
+  const hashed = [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+  return { raw, hashed };
+}
+
+// Draws (or redraws, each with a fresh nonce) Google's button on the
+// sign-in card; the fallback instead if Google's script can't be had.
+async function showGoogleButton() {
+  const loginMessageEl = viewOf("login").querySelector("[data-message]");
+  let gsi;
+  let nonce;
+  try {
+    [gsi, nonce] = await Promise.all([loadGoogleScript(), newNonce()]);
+  } catch (err) {
+    console.error(err);
+    googleButtonEl.hidden = true;
+    googleFallbackBtn.hidden = false;
+    return;
+  }
+  gsi.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    nonce: nonce.hashed,
+    // Never signs in by itself: after "Esci" (or on a shared device) only
+    // a click signs in again.
+    auto_select: false,
+    callback: async ({ credential }) => {
+      setMessage(loginMessageEl, "");
+      const { error } = await sb.auth.signInWithIdToken({ provider: "google", token: credential, nonce: nonce.raw });
+      if (error) {
+        console.error(error);
+        setMessage(loginMessageEl, "Accesso con Google non riuscito, riprova.");
+        // The nonce is spent: a fresh button for the next try.
+        showGoogleButton();
+      }
+      // On success the SIGNED_IN event switches to the profile.
+    },
+  });
+  googleButtonEl.hidden = false;
+  googleFallbackBtn.hidden = true;
+  googleButtonEl.innerHTML = "";
+  gsi.renderButton(googleButtonEl, {
+    type: "standard",
+    theme: document.documentElement.dataset.theme === "dark" ? "filled_black" : "outline",
+    size: "large",
+    shape: "pill",
+    text: "signin_with",
+    locale: "it",
+    // Google's own limits: 200–400px.
+    width: Math.max(200, Math.min(400, Math.floor(googleButtonEl.clientWidth || 320))),
+  });
+}
 
 document.getElementById("account-google").addEventListener("click", async () => {
   const { error } = await sb.auth.signInWithOAuth({
@@ -733,6 +823,9 @@ document.getElementById("account-google").addEventListener("click", async () => 
 });
 
 document.getElementById("account-logout").addEventListener("click", async () => {
+  // Google's button never signs in by itself (auto_select: false); this also
+  // makes Google forget the last choice, if its script was loaded here.
+  window.google?.accounts?.id?.disableAutoSelect();
   const { error } = await sb.auth.signOut();
   if (error) {
     console.error(error);

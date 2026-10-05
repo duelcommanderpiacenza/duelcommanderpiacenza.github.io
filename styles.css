@@ -6856,6 +6856,30 @@ html.nav-mobile .pc-cancel-btn svg {
   gap: 10px;
 }
 
+/* Google's own sign-in button (js/account-page.js showGoogleButton): the
+   card's full width, Google drawing it centred inside; its 40px reserved
+   from the start, so nothing moves when it appears. */
+.google-gsi-btn {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-height: 40px;
+  /* Google draws the button in its own frame, whose page is light: in dark
+     mode (color-scheme: dark on the site) the browser gives a frame of a
+     different scheme a solid white background — a white box around the
+     button. The frame matching it, light, stays transparent; the button
+     itself keeps its own dark look (theme: "filled_black"). */
+  color-scheme: light;
+}
+
+.google-gsi-btn[hidden],
+.google-signin-btn[hidden] {
+  /* The fallback button's own .btn-secondary display: inline-flex would
+     otherwise beat the hidden attribute (author styles win over the
+     browser's [hidden] rule). */
+  display: none;
+}
+
 .google-signin-btn svg {
   width: 20px;
   height: 20px;
