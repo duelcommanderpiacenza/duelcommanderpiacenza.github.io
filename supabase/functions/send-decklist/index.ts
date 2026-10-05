@@ -13,9 +13,9 @@
 // or later) or closed with that player in it; fewer than MAX_SENDS lists
 // sent by this player for it (supabase/migrations/008-009's
 // decklist_submissions — the only thing kept: *that* it was sent, never the
-// list). The subject is built here
-// from the database: "<Event name> - <dd/mm/yyyy> - <Player name>"; the
-// email's Reply-To is the account's email.
+// list). The subject is built here from the database: "<Event name> -
+// <dd/mm/yyyy> - <Player name>" (a second send's body starts by saying it
+// replaces the first); the email's Reply-To is the account's email.
 //
 // Errors are codes js/account-page.js translates: not_signed_in, blocked,
 // bad_request, empty, too_long, not_linked, event_not_found,

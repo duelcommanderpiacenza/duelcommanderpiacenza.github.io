@@ -543,7 +543,7 @@ from account.html; it's emailed to the organisers, **never stored** — only
   page keeps an event with one send in the list ("1 invio rimasto"), the
   warning saying when it's the last; "Ultime inviate" one chip per event
   (its name only).
-- [ ] Run 009, then redeploy the function (both projects: 009 first — the
+- [x] Run 009, then redeploy the function (both projects: 009 first — the
   old function keeps working with it, at one send — then the new code in
   the dashboard's editor).
 - [ ] Push, then test on live with the admin's own account (and delete
