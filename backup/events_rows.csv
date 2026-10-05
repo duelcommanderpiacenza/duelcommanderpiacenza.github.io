@@ -1,0 +1,12 @@
+id,name,event_date,league_id,rounds,is_open,created_at,start_time,results_url,decklists_url
+2a33f252-bbf1-43e4-a40d-1b70a009970a,Tappa 3/7,2026-10-25,38952dd9-b487-4a79-aad5-4092ce5a44aa,1,true,2026-09-22 07:35:00.432067+00,15:00:00,,
+4884aaf1-a10b-4ea1-a2b4-6281c72de629,Topdeck 15/09,2026-09-15,1c6512e6-70cf-42e5-9f48-6b30183504cd,4,false,2026-09-21 12:08:11.666042+00,21:00:00,https://www.mtgtop8.com/event?e=90912&f=EDH,
+50508a71-df1d-408a-b46f-8042fa3cc6e1,Tappa 6/7,2026-12-05,38952dd9-b487-4a79-aad5-4092ce5a44aa,1,true,2026-09-22 07:39:32.045721+00,15:00:00,,
+633639e1-dcb3-43af-acab-5e2ba42a1190,Tappa 4/7,2026-11-07,38952dd9-b487-4a79-aad5-4092ce5a44aa,1,true,2026-09-22 07:37:12.240985+00,15:00:00,,
+84a73939-bcc7-46f1-99db-16d738bfdb16,Topdeck 29/09,2026-09-29,9ff511d7-cb75-4b4a-aed6-59a1148fdac8,3,false,2026-09-23 09:43:30.790397+00,21:00:00,https://www.mtgtop8.com/event?e=91403&d=894192&f=EDH,https://moxfield.com/lists/Dvp15-autumn-topdeck-26-09-29-
+a3618c6f-3da8-4c8c-aa1a-bed5a1d81f6c,Tappa 2/7,2026-10-10,38952dd9-b487-4a79-aad5-4092ce5a44aa,1,true,2026-09-22 07:33:52.639694+00,15:00:00,,
+a525ed43-ec35-4b1c-b960-26ed2deeafe9,Tappa 7/7,2026-12-12,38952dd9-b487-4a79-aad5-4092ce5a44aa,1,true,2026-09-22 07:39:43.507902+00,15:00:00,,
+c7e42b64-428c-49a7-a060-6756087787aa,Topdeck 22/09,2026-09-22,9ff511d7-cb75-4b4a-aed6-59a1148fdac8,3,false,2026-09-22 07:40:09.013563+00,21:00:00,https://www.mtgtop8.com/event?e=91177&f=EDH,
+cb85a155-f273-4ad7-aca7-2d1c281a1393,Topdeck 06/10,2026-10-06,9ff511d7-cb75-4b4a-aed6-59a1148fdac8,1,true,2026-10-05 08:43:56.382938+00,21:00:00,,
+ec33ab22-8e04-44c8-80d8-d9c198daa70c,Tappa 1/7,2026-09-26,38952dd9-b487-4a79-aad5-4092ce5a44aa,4,false,2026-09-22 07:32:58.916888+00,15:00:00,https://mtgtop8.com/event?e=91296&f=EDH,https://moxfield.com/lists/Dv7qp-duel-commander-piacenza-league-w26-1-7-26-09-26-
+ec7fe01d-d023-4510-a037-da92c2ab8c76,Master of Duel Vol. 3 (Tappa 5/7),2026-11-22,38952dd9-b487-4a79-aad5-4092ce5a44aa,1,true,2026-09-22 07:39:12.996435+00,,,
