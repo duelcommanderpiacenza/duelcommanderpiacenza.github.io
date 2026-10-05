@@ -151,35 +151,43 @@ export function initUsersAdmin() {
 
   // --- Link form ----------------------------------------------------------------
 
-  // Every player, each one already linked marked with its account's email —
-  // picking it moves the link here (the admin can change any link).
+  // Only the players no account is linked to yet — plus the selected
+  // account's own, so its current link still shows (and "nessun giocatore"
+  // unlinks it). A player someone has asked for but isn't linked to stays in
+  // the list, marked with who asked: linking it here settles that request.
+  // To move a player from one account to another, unlink it first.
   function renderPlayerOptions() {
-    const emailByPlayer = new Map(users.filter((u) => u.player_id).map((u) => [u.player_id, u.email]));
+    const selectedUserId = idField.value;
+    const linkedPlayerIds = new Set(users.filter((u) => u.player_id && u.user_id !== selectedUserId).map((u) => u.player_id));
+    const requestedBy = new Map(users.filter((u) => u.claim_player_id).map((u) => [u.claim_player_id, u.email]));
     fillSelect(
       playerField,
       '<option value="">&mdash; nessun giocatore &mdash;</option>' +
         players
+          .filter((p) => !linkedPlayerIds.has(p.id))
           .map((p) => {
-            const linkedTo = emailByPlayer.get(p.id);
+            const asker = requestedBy.get(p.id);
             return `<option value="${p.id}">${escapeHtml(playerLabel(p.name, p.handle))}${
-              linkedTo ? ` — collegato a ${escapeHtml(linkedTo)}` : ""
+              asker ? ` — richiesto da ${escapeHtml(asker)}` : ""
             }</option>`;
           })
           .join("")
     );
+    playerField.value = users.find((u) => u.user_id === selectedUserId)?.player_id ?? "";
   }
 
   function onEdit(u) {
     idField.value = u.user_id;
     selectedEl.textContent = u.email;
-    playerField.value = u.player_id ?? "";
+    // The list depends on which account is selected (its own player is in it).
+    renderPlayerOptions();
     setMessage(msgEl, "", false);
   }
 
   function resetForm() {
     idField.value = "";
     selectedEl.textContent = "Scegli un account dalla lista";
-    playerField.value = "";
+    renderPlayerOptions();
     setMessage(msgEl, "", false);
   }
 

@@ -208,8 +208,10 @@ an account can never sign in. No email form is offered on the site.
   below, the accounts (email, dates, linked player or
   pending request, Attivo/Bloccato toggle — "Admin" for admin accounts,
   ✕ to delete) with a search, and a "Collega a un giocatore" form (✎ on a
-  row, searchable player list, "— nessun giocatore —" unlinks; moving a
-  player already linked elsewhere asks for confirmation).
+  row, searchable player list, "— nessun giocatore —" unlinks). The list
+  offers only players no account is linked to yet, plus the selected
+  account's own (requested ones marked "richiesto da …"); to move a player
+  to another account, unlink it first (changed after go-live).
 - [x] **Test on dev:** list, link / unlink via the form, block / unblock,
   approve and reject a request (made from account.html), delete (refused
   on the admin's own row; the test account `giocatore.test@example.com`
@@ -425,8 +427,15 @@ running too).
 
 ### 5.2 — Live database and settings
 
-- [ ] **Back up the live database** first (Supabase dashboard).
-- [ ] Live SQL editor: run `001_admins.sql`, then add the admin account:
+Done on 2026-10-05: backup exported (CSV, kept outside the repo); 001 run
+together with the admin insert in one transaction (check: `admins |
+is_admin() | 34 | 1`), the admin's live save tested; 002–007 each in its
+own `begin`/`commit`, each checked; URL Configuration, Google provider,
+Email (Confirm email on) and sign-ups set; the Google client published
+after filling in Branding.
+
+- [x] **Back up the live database** first (Supabase dashboard).
+- [x] Live SQL editor: run `001_admins.sql`, then add the admin account:
   ```sql
   insert into admins (user_id) select id from auth.users where email = '...';
   ```
@@ -436,11 +445,11 @@ running too).
   `004_profiles.sql`, `005_profile_show_avatar.sql`,
   `006_short_description_delete_account.sql`, `007_public_player_card.sql`.
   (Each has a `_rollback.sql` if one goes wrong.)
-- [ ] Live dashboard: the step 1 settings — Allow new users to sign up, the
+- [x] Live dashboard: the step 1 settings — Allow new users to sign up, the
   Google provider (same Client ID and secret; the live callback URL is
   already in the Google client), and the live site's address as Site URL /
   Redirect URLs (`https://duelcommanderpiacenza.github.io/**`).
-- [ ] Google client: published ("In production"), so anyone can sign in.
+- [x] Google client: published ("In production"), so anyone can sign in.
 
 Publishing the Google client turned out to need, under **Google Auth
 Platform → Branding**: an app name, a support email, a **home page URL**
@@ -453,7 +462,7 @@ live first (5.3), so that page exists before Google is given its address.
 
 ### 5.3 — Code live
 
-- [ ] Merge `player-login` into `main` (`git checkout main`, `git merge
+- [x] Merge `player-login` into `main` (`git checkout main`, `git merge
   player-login` — no conflicts expected after 5.1) and push: GitHub Pages
   publishes it.
 - [ ] On the live site: sign in with Google; the admin app still works for
