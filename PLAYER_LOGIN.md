@@ -328,7 +328,7 @@ favourite commander, favourite archetype.
   collapsing;
   stacked below the title on phones. "Dal <year>" from the player's first
   event.
-- [x] `account.html`: a "Mostra la carta nella pagina giocatore" switch
+- [x] `account.html`: a "Mostra nella pagina giocatore" switch
   under the player card (once linked), saved right away; disabled (label "Salva
   prima la tua carta almeno una volta.") until the card has been saved once. Card + switch
   together are as tall as the stats + Account cards beside them.

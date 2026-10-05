@@ -3012,13 +3012,13 @@ body.is-loading .filter-panel.detail-filter-panel {
     margin: 14px 0 0 -58px;
   }
 
-  /* Exactly commander.html's mobile card size (.commander-card-face's own
-     width), set outright — not as a max-width, which any other width or
-     max-width rule on .player-card could still narrow. */
+  /* As wide as the page's other cards: its line already spans the whole
+     content width (reaching back under the back button, above), so the
+     card just fills it — set outright, not as a max-width, which another
+     rule on .player-card could still narrow. */
   .player-page-card .player-card {
-    width: min(260px, 80vw);
+    width: 100%;
     max-width: none;
-    margin-inline: auto;
   }
 }
 
@@ -7430,6 +7430,16 @@ html.nav-mobile .pc-cancel-btn svg {
 }
 
 @media (max-width: 640px) {
+  /* Phones: the player card — and the switch under it — as wide as the
+     page's other cards (300px from 641px to 820px, where full width would
+     make it far too tall; js/account-page.js's alignment is desktop only).
+     Scoped to the card's column so it outranks those 300px rules, one of
+     which comes later in this file. */
+  .profile-card-col .player-card,
+  .profile-card-col .profile-switch {
+    max-width: none;
+  }
+
   /* Two stat tiles per row: .stat-grid's own auto-fit (150px minimum each)
      fits only one in a phone-width card. */
   .profile-stats-tiles {

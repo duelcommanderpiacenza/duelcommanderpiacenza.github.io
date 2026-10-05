@@ -417,7 +417,10 @@ const sideBySide = window.matchMedia("(min-width: 821px)");
 const CARD_RATIO = 680 / 488;
 const CARD_FRAME = 6; // .pc-frame's 3px all around
 const MIN_CARD_WIDTH = 240;
-const MAX_CARD_WIDTH = 340;
+// Kept small on desktop: with the stats, the decklist, Seguiti and Account
+// beside it the column is usually taller than this card — it then just stays
+// at this width, the cards beside it getting the room.
+const MAX_CARD_WIDTH = 280;
 
 // The widths just tried: the card's width changes the side cards' width,
 // and so possibly their height (tiles wrapping differently) — a width that
@@ -520,7 +523,7 @@ function renderPublicSwitch(errorText = "") {
   publicInput.disabled = !saved;
   publicInput.checked = saved && (profile.show_on_player_page ?? true);
   // Not saved yet: what to do first takes the label's place.
-  publicLabelEl.textContent = saved ? "Mostra la carta nella pagina giocatore" : "Salva prima la tua carta almeno una volta.";
+  publicLabelEl.textContent = saved ? "Mostra nella pagina giocatore" : "Salva prima la tua carta almeno una volta.";
   publicHintEl.textContent = errorText;
   publicHintEl.classList.toggle("is-error", Boolean(errorText));
 }
