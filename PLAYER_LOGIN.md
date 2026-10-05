@@ -511,8 +511,9 @@ from account.html; it's emailed to the organisers, **never stored** — only
   first, two since migration 009 — the second replacing the first). Subject:
 `<Event name> - <dd/mm/yyyy> - <Player name>`.
 
-- Events offered: upcoming (open, today or later) or closed ones the player
-  is in. One text box: the pasted list or any link. Sending twice for the
+- Events offered: the next 2 upcoming (open, today or later) and the last 2
+  closed ones the player is in (the page only; the function accepts any
+  upcoming or played event). One text box: the pasted list or any link. Sending twice for the
   same event isn't allowed; an in-card warning comes before the send. To
   allow another send, the admin deletes one of the player's rows for that
   event in `decklist_submissions`.

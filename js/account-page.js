@@ -787,6 +787,10 @@ function decklistFallbackHtml(ev, text) {
 // ({ event, sentAt, isNew }, most recently sent first — "Ultime inviate"
 // shows the first DECKLIST_SENT_SHOWN; all of them stay out of the list).
 const DECKLIST_SENT_SHOWN = 3;
+// Only recent events are offered: the next DECKLIST_EVENTS_EACH upcoming and
+// the last DECKLIST_EVENTS_EACH played (by date — one out of sends just
+// isn't listed, no older one takes its place).
+const DECKLIST_EVENTS_EACH = 2;
 // Sends allowed per event (the send-decklist function's MAX_SENDS, migration
 // 009); how many each event has had so far (event id → 1 or 2).
 const DECKLIST_MAX_SENDS = 2;
@@ -829,9 +833,14 @@ async function loadDecklistCard(player, entries) {
     decklistSendCount.set(row.event_id, (decklistSendCount.get(row.event_id) ?? 0) + 1);
     if ((row.sent_at ?? "") > (lastSentAt.get(row.event_id) ?? "")) lastSentAt.set(row.event_id, row.sent_at);
   }
+  // Every event the player has, for the "Ultime inviate" chips — the list
+  // itself offers only the recent ones.
   const known = new Map([...upcoming, ...played].map((ev) => [ev.id, ev]));
   decklistEvents = new Map(
-    [...upcoming.map((ev) => ({ ...ev, upcoming: true })), ...played]
+    [
+      ...upcoming.slice(0, DECKLIST_EVENTS_EACH).map((ev) => ({ ...ev, upcoming: true })),
+      ...played.slice(0, DECKLIST_EVENTS_EACH),
+    ]
       .filter((ev) => (decklistSendCount.get(ev.id) ?? 0) < DECKLIST_MAX_SENDS)
       .map((ev) => [ev.id, ev])
   );
@@ -856,7 +865,7 @@ function renderDecklistCard() {
   decklistNoneEl.hidden = events.length > 0;
   decklistNoneEl.textContent = sentDecklists.length
     ? "Hai già inviato la decklist per tutti gli eventi disponibili."
-    : "Nessun evento disponibile: puoi inviare la decklist per un evento in arrivo o per uno che hai giocato.";
+    : "Nessun evento disponibile: puoi inviare la decklist per i prossimi due eventi o per gli ultimi due che hai giocato.";
   // data-label / data-sublabel: js/custom-select.js shows the name with a
   // smaller line below (in arrivo / giocato · date · league).
   decklistEventSelect.innerHTML =
