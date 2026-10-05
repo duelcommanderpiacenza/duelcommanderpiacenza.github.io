@@ -2982,6 +2982,12 @@ body.is-loading .filter-panel.detail-filter-panel {
   position: absolute;
   top: 0;
   right: 0;
+  /* Above the page below the heading: the card hangs down beside the stats,
+     over .page-loading-region (position: relative, later in the page),
+     which would otherwise paint over its lower half and take the clicks
+     meant for its links. Not a trap for the filters' popups: that region
+     isn't a stacking context, so their own z-index still outranks this. */
+  z-index: 2;
   width: 280px;
 }
 
