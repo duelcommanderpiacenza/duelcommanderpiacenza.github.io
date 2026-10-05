@@ -818,15 +818,25 @@ body[data-active-nav="commanders"] .nav-link[data-nav="commanders"],
 body[data-active-nav="matchups"] .nav-link[data-nav="matchups"],
 body[data-active-nav="archetypes"] .nav-link[data-nav="archetypes"],
 body[data-active-nav="players"] .nav-link[data-nav="players"],
+body[data-active-nav="account"] .nav-link[data-nav="account"],
 body[data-active-nav="current"] .nav-link[data-nav="current"]:hover,
 body[data-active-nav="events"] .nav-link[data-nav="events"]:hover,
 body[data-active-nav="commanders"] .nav-link[data-nav="commanders"]:hover,
 body[data-active-nav="matchups"] .nav-link[data-nav="matchups"]:hover,
 body[data-active-nav="archetypes"] .nav-link[data-nav="archetypes"]:hover,
-body[data-active-nav="players"] .nav-link[data-nav="players"]:hover {
+body[data-active-nav="players"] .nav-link[data-nav="players"]:hover,
+body[data-active-nav="account"] .nav-link[data-nav="account"]:hover {
   background: var(--brand-red);
   color: #fff;
   border-color: transparent;
+}
+
+/* "Profilo" (account.html) — a tab in the phone pill's list only: on
+   desktop the header's round account button (js/header-account.js) already
+   leads there. html.nav-mobile .nav-link's own display: flex (below)
+   outranks this, showing it on touch screens. */
+.nav-link.nav-link-mobile-only {
+  display: none;
 }
 
 /* Social's own tab: pushed to the far right of the row (margin-left: auto,
