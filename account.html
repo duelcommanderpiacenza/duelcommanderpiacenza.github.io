@@ -214,6 +214,26 @@
                       <textarea id="profile-description" rows="3" maxlength="140" aria-label="Descrizione" placeholder="Raccontaci qualcosa di te come giocatore&hellip;"></textarea>
                       <span class="pc-counter" id="profile-counter">0/140</span>
                     </div>
+
+                    <!-- The owner's profiles elsewhere (js/player-card.js): icons
+                         when set; in edit mode a username or that site's own
+                         profile link each. -->
+                    <div class="pc-links pc-view-only" id="pc-links"></div>
+                    <div class="pc-links-edit pc-edit-only">
+                      <p class="pc-label">Link</p>
+                      <label class="pc-link-field">
+                        <span class="pc-link pc-link-instagram" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="0.6" fill="currentColor"></circle></svg></span>
+                        <input type="text" id="profile-instagram" maxlength="200" autocomplete="off" spellcheck="false" aria-label="Instagram" placeholder="Instagram: nome utente o link">
+                      </label>
+                      <label class="pc-link-field">
+                        <span class="pc-link pc-link-moxfield" aria-hidden="true"><img src="moxfield.png" alt=""></span>
+                        <input type="text" id="profile-moxfield" maxlength="200" autocomplete="off" spellcheck="false" aria-label="Moxfield" placeholder="Moxfield: nome utente o link">
+                      </label>
+                      <label class="pc-link-field">
+                        <span class="pc-link pc-link-archidekt" aria-hidden="true"><span class="pc-link-letter">A</span></span>
+                        <input type="text" id="profile-archidekt" maxlength="200" autocomplete="off" spellcheck="false" aria-label="Archidekt" placeholder="Archidekt: nome utente o link">
+                      </label>
+                    </div>
                   </div>
 
                   <div class="pc-foot">
@@ -325,6 +345,15 @@
                 </div>
               </div>
             </div>
+          </section>
+
+          <!-- Seguiti: the players and commanders this account follows (the ★
+               button on their pages) with each one's latest result, and ✕ to
+               unfollow. Any signed-in account. js/account-page.js. -->
+          <section class="card profile-card profile-follows" id="profile-follows" hidden>
+            <h3>Seguiti</h3>
+            <p class="page-empty follows-empty" id="follows-empty" hidden>Non segui ancora nessuno: usa &#9734; Segui nelle pagine dei giocatori e dei comandanti.</p>
+            <ul class="follows-list" id="follows-list"></ul>
           </section>
 
           <!-- Account: the Google login, signing out, and deleting the

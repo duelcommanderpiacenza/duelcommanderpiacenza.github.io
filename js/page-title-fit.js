@@ -50,9 +50,13 @@ export function alignBackButtonToTitle(titleEl) {
     linkEl.style.marginTop = "";
     return;
   }
-  const titleHeight = titleEl.getBoundingClientRect().height;
+  // With the follow button's line right below the name (js/follow-button.js),
+  // centred on the two together.
+  const titleRect = titleEl.getBoundingClientRect();
+  const followRow = titleEl.nextElementSibling?.classList.contains("follow-btn-row") ? titleEl.nextElementSibling : null;
+  const blockHeight = (followRow ? followRow.getBoundingClientRect().bottom : titleRect.bottom) - titleRect.top;
   const linkHeight = linkEl.getBoundingClientRect().height;
-  linkEl.style.marginTop = `${Math.round((titleHeight - linkHeight) / 2)}px`;
+  linkEl.style.marginTop = `${Math.round((blockHeight - linkHeight) / 2)}px`;
 }
 
 // Fits the title now and again on every resize/rotation.

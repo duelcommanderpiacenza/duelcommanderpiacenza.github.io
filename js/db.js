@@ -197,6 +197,57 @@ export const Decklists = {
   },
 };
 
+// The players and commanders an account follows (supabase/migrations/010's
+// follows — private, each account reads and writes only its own): the ★
+// button on player.html / commander.html (js/follow-button.js) and
+// account.html's "Seguiti" card. kind: "player" or "commander".
+const followColumn = (kind) => (kind === "player" ? "player_id" : "commander_id");
+
+export const Follows = {
+  mine: (userId) =>
+    sb
+      .from("follows")
+      .select("player_id, commander_id, created_at, player:players(id,name,handle), commander:commanders(id,name,color_identity)")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .then(assertOk),
+  isFollowing: (userId, kind, id) =>
+    sb
+      .from("follows")
+      .select("created_at")
+      .eq("user_id", userId)
+      .eq(followColumn(kind), id)
+      .maybeSingle()
+      .then(assertOk)
+      .then(Boolean),
+  follow: (userId, kind, id) =>
+    sb
+      .from("follows")
+      .insert({ user_id: userId, [followColumn(kind)]: id })
+      .then(assertOk),
+  unfollow: (userId, kind, id) =>
+    sb.from("follows").delete().eq("user_id", userId).eq(followColumn(kind), id).then(assertOk),
+  // For "Seguiti"'s players: every cached final standing of theirs (closed
+  // events — the same win/draw/loss counting as the player page's winrate),
+  // the latest picked in the page.
+  playerResults: (playerIds) =>
+    sb
+      .from("event_standings")
+      .select("player_id, position, wins, draws, losses, event:events!inner(id,name,event_date)")
+      .in("player_id", playerIds)
+      .then(assertOk),
+  // …and its commanders: every closed event's entry with them (as commander
+  // or partner) — who played it and where; the matches come separately
+  // (fetchEventsResults), for a winrate counted like the commander page's.
+  commanderAppearances: (commanderIds) =>
+    sb
+      .from("event_entries")
+      .select("commander_id, partner_commander_id, player:players(id,name), event:events!inner(id,name,event_date,is_open)")
+      .or(`commander_id.in.(${commanderIds.join(",")}),partner_commander_id.in.(${commanderIds.join(",")})`)
+      .eq("event.is_open", false)
+      .then(assertOk),
+};
+
 // The signed-in user's own login account (account.html's "Account" card).
 // remove(): supabase/migrations/006's delete_my_account() — refused for an
 // admin (admin_account); its profile and pending request go with it, its

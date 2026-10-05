@@ -1445,6 +1445,7 @@ main {
   .filter-toggle-btn,
   .filter-panel.detail-filter-panel,
   #player-filter-panel,
+  .follow-btn-row,
   .player-card,
   .pc-art {
     /* !important: most of these declare their own animation later in this
@@ -4654,11 +4655,59 @@ table.data-table tbody tr.is-top8 td:first-child::before {
   background: var(--brand-red);
 }
 
+/* "Tu" (js/me-highlight.js): the signed-in account's own player — a small
+   brand-red pill after its name wherever it's linked, and its table rows
+   tinted more than a top-8 row (after those rules, same weight, so a top-8
+   row of yours takes this one; dark mode: below, with the others). */
+.me-pill {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 2px;
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-red);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+  vertical-align: 0.12em;
+  white-space: nowrap;
+}
+
+a.is-me {
+  font-weight: 800;
+}
+
+table.data-table tbody tr.is-me-row {
+  background: rgba(220, 24, 28, 0.08);
+}
+
+table.data-table tbody tr.is-me-row:hover {
+  background: rgba(220, 24, 28, 0.12);
+}
+
 /* Small inline icon with a hover/focus tooltip — player badges (Giocatori
    tab) and the banned-commander warning icon (Comandanti tab) both use
    this. data-tooltip feeds the tooltip text, shown by the site-wide
    js/floating-tooltip.js (wired in js/layout.js; .floating-tooltip below) —
    no native `title` involved, since no browser lets that be restyled. */
+/* player.html's title: the player's badges as one unit that never splits —
+   beside the name while they fit, otherwise all of them on the next line
+   (js/player-detail.js). */
+.badge-group {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+/* No left margin on the first badge: on the next line it would indent the
+   group. The space before the group (js/player-detail.js) is the gap beside
+   the name — and a line's leading space vanishes, so wrapped, the badges
+   start right under the name. */
+#player-title .badge-group > .icon-badge:first-child {
+  margin-left: 0;
+}
+
 .icon-badge {
   display: inline-flex;
   align-items: center;
@@ -4679,7 +4728,7 @@ table.data-table tbody tr.is-top8 td:first-child::before {
   vertical-align: 0.1em;
 }
 
-/* The ⚠️ "Bannato" icon after the color pips in commander.html's title —
+/* The ⚠️ "Bannato" icon after the name in commander.html's title —
    the table-sized 1rem reads as a speck next to the 1.9rem name, so it's
    scaled with the title instead (em, so it also follows the mobile title
    shrink, js/page-title-fit.js). */
@@ -6437,6 +6486,121 @@ img.pc-badge-glyph {
   text-align: right;
 }
 
+/* The owner's profiles elsewhere (js/player-card.js cardLinksHtml): white
+   discs with the badges' red ring, on the glass panel; none set, no row.
+   In edit mode one field per site, the same translucent look as the
+   description's. */
+.pc-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2cqw;
+}
+
+.pc-links:empty {
+  display: none;
+}
+
+.pc-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 8cqw;
+  height: 8cqw;
+  border: 2px solid rgba(255, 106, 110, 0.6);
+  border-radius: 50%;
+  background: #fff;
+  color: #1d1315;
+  transition: transform 150ms ease;
+}
+
+a.pc-link:hover {
+  transform: scale(1.08);
+}
+
+a.pc-link:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.pc-link svg {
+  width: 4.6cqw;
+  height: 4.6cqw;
+}
+
+.pc-link-instagram {
+  color: #d6249f;
+}
+
+.pc-link img {
+  width: 5cqw;
+  height: 5cqw;
+  object-fit: contain;
+}
+
+.pc-link-letter {
+  color: #1b6ec2;
+  font-size: 4.4cqw;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.pc-links-edit {
+  padding-top: 3cqw;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.pc-link-field {
+  display: flex;
+  align-items: center;
+  gap: 2cqw;
+  margin-top: 1.6cqw;
+}
+
+.pc-link-field input {
+  box-sizing: border-box;
+  flex: 1;
+  min-width: 0;
+  padding: 1.4cqw 2.4cqw;
+  border: 1px dashed rgba(255, 255, 255, 0.35);
+  border-radius: 2.4cqw;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.95);
+  font: inherit;
+  font-size: 3.4cqw;
+}
+
+.pc-link-field input:focus {
+  outline: none;
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 0.65);
+}
+
+.pc-link-field input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Touch screens: finger-sized, 16px so iOS doesn't zoom (like the other
+   edit-mode fields). */
+html.nav-mobile .pc-link-field input {
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 16px;
+}
+
+html.nav-mobile .pc-link-field .pc-link {
+  width: 34px;
+  height: 34px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pc-link {
+    transition: none;
+  }
+}
+
 /* ---- ✎ / ✓ (save) and ✕ (cancel), on the card's top-right corner ---- */
 
 /* Brand red, like the site's other small floating controls; ✎ outside edit
@@ -6622,6 +6786,272 @@ html.nav-mobile .pc-cancel-btn {
 html.nav-mobile .pc-cancel-btn svg {
   width: 18px;
   height: 18px;
+}
+
+/* ---- Following (js/follow-button.js, account.html "Seguiti") ----
+   The button right below the name on player.html / commander.html: a
+   brand-red outline pill, "☆ Segui"; filled red once following, "★
+   Seguito", its star popping in. The profile's "Seguiti" card: one compact
+   row per followed player (initial on red) or commander (its colour pips),
+   its latest result below the name, ✕ to unfollow — the row folds away. */
+/* On its own line right below the name, in .page-heading (a flex row that
+   wraps): the full line, the button at its start. Fades up with the page
+   (paused until it shows, like everything else). */
+.follow-btn-row {
+  display: flex;
+  flex: 0 0 100%;
+  /* Up into .page-heading's 10px gap, close under the name. */
+  margin-top: -6px;
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Desktop: right after the name (and its badges), on the same line,
+   centred on it — the heading packed to the left instead of spreading its
+   items apart. Phones: its own line below, as above. */
+@media (min-width: 641px) {
+  .page-heading:has(> .follow-btn-row) {
+    justify-content: flex-start;
+    align-items: center;
+  }
+
+  .follow-btn-row {
+    flex: 0 0 auto;
+    margin-top: 0;
+  }
+}
+
+.follow-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1.5px solid var(--brand-red);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--brand-red);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.follow-btn:hover {
+  background: rgba(220, 24, 28, 0.08);
+}
+
+.follow-btn.is-following {
+  background: var(--brand-red);
+  color: #fff;
+}
+
+.follow-btn.is-following:hover {
+  background: var(--brand-red-deep-2);
+}
+
+.follow-btn:focus-visible {
+  outline: 3px solid rgba(220, 24, 28, 0.45);
+  outline-offset: 2px;
+}
+
+.follow-btn:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.follow-btn-star {
+  font-size: 1.05em;
+  line-height: 1;
+}
+
+.follow-btn.is-following .follow-btn-star {
+  animation: follow-star-pop 420ms cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
+@keyframes follow-star-pop {
+  from {
+    transform: scale(0.3) rotate(-60deg);
+  }
+  to {
+    transform: none;
+  }
+}
+
+.follows-empty {
+  margin: 0;
+}
+
+.follows-empty[hidden] {
+  display: none;
+}
+
+.follows-list,
+.follow-group-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.follow-group + .follow-group {
+  margin-top: 14px;
+}
+
+.follow-group-title {
+  margin: 0 0 4px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.follow-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.follow-row:last-child {
+  border-bottom: 0;
+}
+
+/* The name, then its chips beside it (wrapping below it when narrow). */
+.follow-main {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  min-width: 0;
+}
+
+.follow-name {
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-title);
+  font-weight: 800;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.follow-name:hover {
+  color: var(--brand-red-deep);
+}
+
+/* The name with its badges (players), kept together on one line. */
+.follow-title {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.follow-badges {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.follow-badges:empty {
+  display: none;
+}
+
+.follow-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  min-width: 0;
+}
+
+.follow-stats.is-ready .follow-chip {
+  animation: entrance-fade-up 300ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+
+.follow-chip {
+  max-width: 100%;
+  overflow: hidden;
+  padding: 2px 9px;
+  border-radius: var(--radius-pill);
+  background: rgba(220, 24, 28, 0.07);
+  color: var(--text-body);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.follow-chip.is-strong {
+  color: var(--brand-red);
+  font-weight: 800;
+}
+
+:root[data-theme="dark"] .follow-chip {
+  background: rgba(255, 110, 110, 0.1);
+}
+
+/* Unfollow: the filled red star (following), hollow on hover — the same
+   star as the button on their pages. */
+.follow-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--brand-red);
+  cursor: pointer;
+  transition: background 150ms ease, transform 150ms ease;
+}
+
+.follow-remove:hover {
+  background: rgba(220, 24, 28, 0.08);
+  transform: scale(1.08);
+}
+
+.follow-remove:focus-visible {
+  outline: 3px solid rgba(220, 24, 28, 0.45);
+  outline-offset: 1px;
+}
+
+.follow-remove-star::before {
+  content: "★";
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.follow-remove:hover .follow-remove-star::before,
+.follow-remove:focus-visible .follow-remove-star::before {
+  content: "☆";
+}
+
+.follow-row.is-leaving {
+  animation: follow-row-out 260ms ease forwards;
+}
+
+@keyframes follow-row-out {
+  to {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .follow-btn,
+  .follow-remove {
+    transition: none;
+  }
+
+  .follow-btn.is-following .follow-btn-star,
+  .follow-stats.is-ready .follow-chip {
+    animation: none;
+  }
 }
 
 /* ---- account.html "Invia la tua decklist" (js/account-page.js) ----
@@ -8686,6 +9116,14 @@ html.nav-mobile .chart-carousel-arrow {
 
 :root[data-theme="dark"] table.data-table tbody tr.is-top8:hover {
   background: rgba(255, 110, 110, 0.1);
+}
+
+:root[data-theme="dark"] table.data-table tbody tr.is-me-row {
+  background: rgba(255, 110, 110, 0.12);
+}
+
+:root[data-theme="dark"] table.data-table tbody tr.is-me-row:hover {
+  background: rgba(255, 110, 110, 0.17);
 }
 
 :root[data-theme="dark"] .rank-chip {

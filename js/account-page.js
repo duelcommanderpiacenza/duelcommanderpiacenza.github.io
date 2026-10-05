@@ -49,14 +49,27 @@ import {
   PlayerAutoBadges,
   Events,
   Decklists,
+  Follows,
+  Leagues,
+  fetchEventsResults,
   EventEntries,
   Matches,
 } from "./db.js";
-import { matchRoundOutcome, isDrop } from "./leaderboard.js";
+import { matchRoundOutcome, isDrop, isBye, computeLeaguePoints } from "./leaderboard.js";
 import { tallyOutcome, renderWinrateTiles } from "./winrate.js";
 import { escapeHtml, colorIdentityPips, uniqueBadges, eventTitle, formatDate } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
-import { applyCardAccents, archetypeLabel, EMPTY_VALUE, createArtPainter, cardBadgesHtml } from "./player-card.js";
+import { fetchPlayerBadgesRenderer } from "./player-badges.js";
+import {
+  applyCardAccents,
+  archetypeLabel,
+  EMPTY_VALUE,
+  createArtPainter,
+  cardBadgesHtml,
+  cardLinksHtml,
+  parseCardLink,
+  CARD_LINK_SITES,
+} from "./player-card.js";
 
 const ACCOUNT_URL = new URL("account.html", window.location.href).href;
 const COLOR_ORDER = ["W", "U", "B", "R", "G"];
@@ -78,6 +91,7 @@ const colorsEl = document.getElementById("pc-colors");
 const bioEl = document.getElementById("profile-bio");
 const sinceEl = document.getElementById("pc-since");
 const badgesEl = document.getElementById("pc-badges");
+const linksEl = document.getElementById("pc-links");
 const editToggleBtn = document.getElementById("profile-edit-toggle");
 const editCancelBtn = document.getElementById("profile-edit-cancel");
 const emailEl = document.getElementById("account-email");
@@ -90,6 +104,8 @@ const archetypeSelect = document.getElementById("profile-archetype");
 const colorInputs = Array.from(profileForm.querySelectorAll('input[name="profile-color"]'));
 const descriptionEl = document.getElementById("profile-description");
 const counterEl = document.getElementById("profile-counter");
+// One field per site (CARD_LINK_SITES: instagram, moxfield, archidekt).
+const linkInputs = Object.fromEntries(Object.keys(CARD_LINK_SITES).map((key) => [key, document.getElementById(`profile-${key}`)]));
 
 // "Il tuo giocatore" (top, until linked)
 const claimCard = document.getElementById("profile-claim");
@@ -154,6 +170,9 @@ function savedValues() {
     archetype: profile?.fav_archetype ?? null,
     description: profile?.description ?? "",
     showAvatar: profile?.show_avatar ?? true,
+    instagram: profile?.instagram ?? null,
+    moxfield: profile?.moxfield ?? null,
+    archidekt: profile?.archidekt ?? null,
   };
 }
 
@@ -195,6 +214,9 @@ function renderCard(values) {
   bioEl.textContent = description || "Nessuna descrizione: premi ✎ per raccontare qualcosa di te.";
   bioEl.classList.toggle("is-empty", !description);
 
+  // The links: what's saved (the edit fields are only read on save).
+  linksEl.innerHTML = cardLinksHtml(savedValues());
+
   // The player's (not the account's) first event and badges, once linked.
   sinceEl.textContent = claim.linked && firstYear ? `Dal ${firstYear}` : "";
   badgesEl.innerHTML = claim.linked ? cardBadgesHtml(playerBadges) : "";
@@ -216,6 +238,7 @@ function fillForm() {
   archetypeSelect.value = saved.archetype ?? "";
   for (const input of colorInputs) input.checked = saved.colors.includes(input.value);
   descriptionEl.value = saved.description;
+  for (const [key, input] of Object.entries(linkInputs)) input.value = saved[key] ?? "";
   updateCounter();
 }
 
@@ -447,7 +470,20 @@ descriptionEl.addEventListener("input", updateCounter);
 profileForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const values = formValues();
+  // The links: a username, or that site's own profile link — anything else
+  // is refused here (the database only takes a plain username anyway).
+  const links = {};
+  for (const [key, input] of Object.entries(linkInputs)) {
+    const parsed = parseCardLink(key, input.value);
+    if (parsed.error) {
+      setMessage(pageMessageEl(), parsed.error);
+      input.focus();
+      return;
+    }
+    links[key] = parsed.username;
+  }
   const fields = {
+    ...links,
     description: values.description.trim() || null,
     fav_colors: values.colors,
     fav_commander_id: values.commander?.id ?? null,
@@ -971,6 +1007,212 @@ decklistConfirmSend.addEventListener("click", async () => {
   setMessage(decklistMessageEl, `Decklist inviata per ${eventTitle(ev)}.`, "ok");
 });
 
+// --- Seguiti -----------------------------------------------------------------------------
+
+// The players and commanders this account follows (★ on their pages,
+// js/follow-button.js), newest follow first, in two groups (each only when
+// it has someone): just the names, linked to their pages, and a filled ★ to
+// unfollow (hollow on hover — the same star as on their pages). Any
+// signed-in account — following needs no linked player.
+const followsCard = document.getElementById("profile-follows");
+const followsListEl = document.getElementById("follows-list");
+const followsEmptyEl = document.getElementById("follows-empty");
+
+function followRowHtml(kind, target) {
+  const href = kind === "player" ? `player.html?id=${target.id}` : `commander.html?id=${target.id}`;
+  const name = kind === "player" ? playerLabel(target) : target.name;
+  return `<li class="follow-row" data-kind="${kind}" data-id="${target.id}">
+    <div class="follow-main">
+      <span class="follow-title">
+        <a class="follow-name" href="${href}">${escapeHtml(name)}</a>${kind === "player" ? '<span class="follow-badges"></span>' : ""}
+      </span>
+      <span class="follow-stats"></span>
+    </div>
+    <button type="button" class="follow-remove" aria-label="Non seguire più ${escapeHtml(name)}" title="Non seguire più">
+      <span class="follow-remove-star" aria-hidden="true"></span>
+    </button>
+  </li>`;
+}
+
+function followGroupHtml(title, kind, targets) {
+  if (!targets.length) return "";
+  return `<li class="follow-group">
+    <p class="follow-group-title">${title}</p>
+    <ul class="follow-group-list">${targets.map((t) => followRowHtml(kind, t)).join("")}</ul>
+  </li>`;
+}
+
+function updateFollowsEmpty() {
+  // A group whose last row went goes too.
+  for (const group of followsListEl.querySelectorAll(".follow-group")) {
+    if (!group.querySelector(".follow-row")) group.remove();
+  }
+  followsEmptyEl.hidden = followsListEl.querySelector(".follow-row") !== null;
+}
+
+async function loadFollows() {
+  let follows;
+  try {
+    follows = await Follows.mine(user.id);
+  } catch (err) {
+    // E.g. migration 010 not run yet: no card rather than a broken one.
+    console.error(err);
+    followsCard.hidden = true;
+    return;
+  }
+  followsListEl.innerHTML =
+    followGroupHtml("Giocatori", "player", follows.map((f) => f.player).filter(Boolean)) +
+    followGroupHtml("Comandanti", "commander", follows.map((f) => f.commander).filter(Boolean));
+  updateFollowsEmpty();
+  followsCard.hidden = false;
+  // The numbers next to each name come after, without holding up the page.
+  fillFollowStats(follows).catch((err) => console.error(err));
+}
+
+// --- Seguiti: the numbers next to each name ---
+
+// Small chips beside a name, the full text on hover:
+//  - a player: its badges right after the name (the same icons as in the
+//    lists, js/player-badges.js), then winrate (its cached standings —
+//    closed events, counted like the player page's), latest placement with
+//    the event, and its position in the open league's standings (a real
+//    league, not a Topdeck series; computed like the Bacheca's, js/home.js);
+//  - a commander: winrate counted like commander.html's (a bye or a drop
+//    isn't a match it played), how many events it was played in, the
+//    latest of them.
+const winrate = ({ wins, draws, losses }) => {
+  const played = wins + draws + losses;
+  return played ? `${Math.round((wins / played) * 100)}%` : null;
+};
+
+function chip(text, title, extraClass = "") {
+  return `<span class="follow-chip${extraClass}" title="${escapeHtml(title)}">${escapeHtml(text)}</span>`;
+}
+
+function setFollowStats(kind, id, html) {
+  const slot = followsListEl.querySelector(`.follow-row[data-kind="${kind}"][data-id="${id}"] .follow-stats`);
+  if (!slot || !html) return;
+  slot.innerHTML = html;
+  slot.classList.add("is-ready");
+}
+
+const latestEvent = (rows) =>
+  rows.reduce((best, row) => (!best || (row.event?.event_date ?? "") > (best.event?.event_date ?? "") ? row : best), null);
+
+async function openLeagueStandings() {
+  const league = await Leagues.getOpen();
+  if (!league) return null;
+  const allEvents = await Events.listByLeague(league.id);
+  const [eventsData, scheduledEvents] = await Promise.all([
+    fetchEventsResults(allEvents.filter((ev) => !ev.is_open).map((ev) => ev.id)),
+    Leagues.eventCount(league.id, allEvents.length),
+  ]);
+  return { league, standings: computeLeaguePoints(eventsData, { scheduledEvents }) };
+}
+
+async function fillPlayerStats(playerIds) {
+  const [results, open, badgesFor] = await Promise.all([
+    Follows.playerResults(playerIds),
+    openLeagueStandings().catch((err) => (console.error(err), null)),
+    // Never rejects: without them the names just have no badges.
+    fetchPlayerBadgesRenderer(),
+  ]);
+  for (const id of playerIds) {
+    const badgesSlot = followsListEl.querySelector(`.follow-row[data-kind="player"][data-id="${id}"] .follow-badges`);
+    if (badgesSlot) badgesSlot.innerHTML = badgesFor({ id });
+    const rows = results.filter((r) => r.player_id === id);
+    const totals = rows.reduce(
+      (t, r) => ({ wins: t.wins + r.wins, draws: t.draws + r.draws, losses: t.losses + r.losses }),
+      { wins: 0, draws: 0, losses: 0 }
+    );
+    const chips = [];
+    const rate = winrate(totals);
+    if (rate) chips.push(chip(`WR ${rate}`, "Winrate su tutti gli eventi", " is-strong"));
+    const latest = latestEvent(rows);
+    if (latest) {
+      chips.push(
+        chip(`#${latest.position} · ${eventTitle(latest.event)}`, `Ultimo evento: ${eventTitle(latest.event)}, ${formatDate(latest.event.event_date)}`)
+      );
+    }
+    const index = open ? open.standings.findIndex((row) => row.player?.id === id) : -1;
+    if (index >= 0) chips.push(chip(`#${index + 1} · ${open.league.name}`, `${open.league.name}: ${index + 1}° in classifica`));
+    setFollowStats("player", id, chips.join(""));
+  }
+}
+
+async function fillCommanderStats(commanderIds) {
+  const appearances = await Follows.commanderAppearances(commanderIds);
+  const eventIds = [...new Set(appearances.map((a) => a.event.id))];
+  const results = await fetchEventsResults(eventIds);
+  const plays = (entry, id) => entry && (entry.commander_id === id || entry.partner_commander_id === id);
+  for (const id of commanderIds) {
+    const mine = appearances.filter((a) => a.commander_id === id || a.partner_commander_id === id);
+    if (!mine.length) continue;
+    const bucket = { wins: 0, draws: 0, losses: 0 };
+    for (const { entries, matches } of results) {
+      const entryByPlayer = new Map(entries.map((e) => [e.player_id, e]));
+      for (const m of matches) {
+        if (isBye(m) || isDrop(m)) continue;
+        const outcome = matchRoundOutcome(m);
+        // Each side that piloted it (both, in a mirror) counts.
+        for (const [playerId, side] of [
+          [m.player1_id, "player1"],
+          [m.player2_id, "player2"],
+        ]) {
+          if (!plays(entryByPlayer.get(playerId), id)) continue;
+          tallyOutcome(bucket, outcome === "draw" ? "draw" : outcome === side ? "win" : "loss");
+        }
+      }
+    }
+    const chips = [];
+    const rate = winrate(bucket);
+    if (rate) chips.push(chip(`WR ${rate}`, "Winrate su tutti gli eventi", " is-strong"));
+    chips.push(chip(`${mine.length} ${mine.length === 1 ? "evento" : "eventi"}`, `Giocato in ${mine.length} ${mine.length === 1 ? "evento" : "eventi"}`));
+    const latest = latestEvent(mine);
+    chips.push(
+      chip(
+        `Ultimo: ${eventTitle(latest.event)}`,
+        `${eventTitle(latest.event)}, ${formatDate(latest.event.event_date)} — giocato da ${latest.player?.name ?? "—"}`
+      )
+    );
+    setFollowStats("commander", id, chips.join(""));
+  }
+}
+
+async function fillFollowStats(follows) {
+  const playerIds = follows.filter((f) => f.player).map((f) => f.player.id);
+  const commanderIds = follows.filter((f) => f.commander).map((f) => f.commander.id);
+  await Promise.all([
+    playerIds.length ? fillPlayerStats(playerIds) : null,
+    commanderIds.length ? fillCommanderStats(commanderIds) : null,
+  ]);
+}
+
+// ★: unfollowed, and the row slides away (or just goes, with reduced motion).
+followsListEl.addEventListener("click", async (e) => {
+  const button = e.target.closest(".follow-remove");
+  if (!button) return;
+  const row = button.closest(".follow-row");
+  button.disabled = true;
+  try {
+    await Follows.unfollow(user.id, row.dataset.kind, row.dataset.id);
+  } catch (err) {
+    console.error(err);
+    button.disabled = false;
+    return;
+  }
+  const remove = () => {
+    row.remove();
+    updateFollowsEmpty();
+  };
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    remove();
+    return;
+  }
+  row.classList.add("is-leaving");
+  row.addEventListener("animationend", remove, { once: true });
+});
+
 // --- Loading the signed-in view -----------------------------------------------------
 
 // Also kept by id, for the card's live preview of a commander picked in
@@ -991,6 +1233,7 @@ async function loadSignedIn(sessionUser) {
   setEditing(false, { animate: false });
   accountDangerEl.hidden = true;
   decklistCard.hidden = true;
+  followsCard.hidden = true;
   setMessage(accountMessageEl, "");
   try {
     let isAdmin;
@@ -1002,6 +1245,7 @@ async function loadSignedIn(sessionUser) {
     console.error(err);
     setMessage(pageMessageEl(), "Impossibile caricare il profilo, ricarica la pagina.");
   }
+  await loadFollows();
   renderCard(savedValues());
   renderPublicSwitch();
   show("signed-in");

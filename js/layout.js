@@ -18,11 +18,15 @@ import "./pwa-install.js";
 import "./nav-dropdown.js";
 import "./site-search.js";
 import "./header-account.js";
+import { initMeHighlight } from "./me-highlight.js";
 import { attachHoverTooltips } from "./floating-tooltip.js";
 
 setupThemeToggle();
 enhanceSelects();
 enhanceDateInputs();
+
+// "Tu" next to the signed-in account's own player, wherever it appears.
+initMeHighlight();
 
 // Every data-tooltip badge-like element on every page — player badges,
 // the banned-commander icon, an event's mtgtop8/Moxfield links — through the

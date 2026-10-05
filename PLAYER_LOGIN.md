@@ -549,6 +549,28 @@ from account.html; it's emailed to the organisers, **never stored** — only
 - [ ] Push, then test on live with the admin's own account (and delete
   that test's row in `decklist_submissions` afterwards).
 
+## After go-live: "Tu", links on the card, following
+
+- [x] **"Tu"** (`js/me-highlight.js`, loaded by `layout.js`): the signed-in
+  account's own player marked everywhere it's linked — a "Tu" pill, its
+  table rows tinted. No database change.
+- [x] **Links on the card**: Instagram, Moxfield, Archidekt usernames
+  (`profiles.instagram` / `moxfield` / `archidekt`, migration 010, checked
+  by the database); in edit mode a username or a profile link from that
+  site's own address only; shown as icons on the card, also the public one
+  (`public_player_card()` returns them — dropped and created again).
+- [x] **Following**: `follows` (migration 010, private; not one's own
+  player — refused by the insert rule, no button on that page); "☆ Segui"
+  right after the name on desktop, below it on phones, on player and
+  commander pages; a "Seguiti" card on the profile (before
+  Account): in two groups (Giocatori, Comandanti), a ★ to unfollow, and
+  beside each name small chips filled in after the page shows — a player's
+  winrate, latest placement, open-league position; a commander's winrate
+  (counted like its page), events played, latest event.
+- [x] `privacy.html`: the links (public on a shown card), follows
+  (private).
+- [ ] **Run 010** (dev, test locally, then live), then push.
+
 ## Open questions
 
 - None right now. (Step 4's "which fields can a player edit" was answered:

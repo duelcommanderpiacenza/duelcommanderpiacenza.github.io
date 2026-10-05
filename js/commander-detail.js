@@ -7,7 +7,6 @@ import {
   escapeHtml,
   playerLabel,
   commanderPairLabel,
-  colorIdentityPips,
   bannedBadge,
   eventCellLabel,
   formatDate,
@@ -19,6 +18,7 @@ import {
 import { hidePageLoading } from "./page-loading.js";
 import { fitTitleToOneLine, alignBackButtonToTitle } from "./page-title-fit.js";
 import { initFilterToggle } from "./filter-toggle.js";
+import { initFollowButton } from "./follow-button.js";
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
@@ -159,6 +159,10 @@ async function init() {
   const matchesEl = document.getElementById("commander-matches");
   const decksChartEl = document.getElementById("commander-decks-chart");
 
+  // "☆ Segui" right below the name, for signed-in accounts (not awaited: it
+  // never holds up the page).
+  if (id) initFollowButton(titleEl, "commander", id);
+
   if (!id) {
     titleEl.textContent = "Commander non trovato";
     document.getElementById("commander-card-skeleton")?.setAttribute("hidden", "");
@@ -195,7 +199,9 @@ async function init() {
 
   try {
     const commander = await Commanders.get(id);
-    titleEl.innerHTML = `${escapeHtml(commander.name)} ${colorIdentityPips(commander.color_identity)}${
+    // The name (and the ⚠️ if banned) — no colour pips: the card image beside
+    // it already shows the commander's colours.
+    titleEl.innerHTML = `${escapeHtml(commander.name)}${
       commander.is_banned ? bannedBadge() : ""
     }`;
     fitTitleToOneLine(titleEl);

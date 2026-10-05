@@ -93,6 +93,77 @@ export function cardBadgesHtml(badges) {
     .join("");
 }
 
+// --- Links on the card (Instagram, Moxfield, Archidekt) ---------------------------
+
+// The owner's usernames on those sites (profiles.instagram / moxfield /
+// archidekt, supabase/migrations/010). Only the username is ever stored —
+// the database allows nothing else — and the links are built here. In edit
+// mode a pasted profile link is accepted too, but only from that site's own
+// address (hosts below): its username is taken out of it.
+export const CARD_LINK_SITES = {
+  instagram: {
+    label: "Instagram",
+    hosts: ["instagram.com", "www.instagram.com"],
+    path: /^\/([A-Za-z0-9._]{1,30})\/?$/,
+    username: /^[A-Za-z0-9._]{1,30}$/,
+    url: (u) => `https://www.instagram.com/${u}/`,
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="0.6" fill="currentColor"></circle></svg>',
+  },
+  moxfield: {
+    label: "Moxfield",
+    hosts: ["moxfield.com", "www.moxfield.com"],
+    path: /^\/users\/([A-Za-z0-9_-]{1,40})\/?$/,
+    username: /^[A-Za-z0-9_-]{1,40}$/,
+    url: (u) => `https://moxfield.com/users/${u}`,
+    icon: '<img src="moxfield.png" alt="">',
+  },
+  archidekt: {
+    label: "Archidekt",
+    hosts: ["archidekt.com", "www.archidekt.com"],
+    path: /^\/u\/([A-Za-z0-9_.-]{1,40})\/?$/,
+    username: /^[A-Za-z0-9_.-]{1,40}$/,
+    url: (u) => `https://archidekt.com/u/${u}`,
+    icon: '<span class="pc-link-letter" aria-hidden="true">A</span>',
+  },
+};
+
+// What's typed in edit mode → { username } (null when empty), or { error }
+// with a message: a link from another site, or not a valid username.
+export function parseCardLink(site, raw) {
+  const def = CARD_LINK_SITES[site];
+  const value = raw.trim().replace(/^@/, "");
+  if (!value) return { username: null };
+  const looksLikeLink = /[/:]/.test(value) || /^(www\.)?[a-z0-9-]+\.(com|net|org|it)\b/i.test(value);
+  if (looksLikeLink) {
+    let url;
+    try {
+      url = new URL(/^https?:\/\//i.test(value) ? value : `https://${value}`);
+    } catch {
+      return { error: `Il link ${def.label} non è valido.` };
+    }
+    if (!def.hosts.includes(url.hostname.toLowerCase())) {
+      return { error: `Il link ${def.label} deve essere un indirizzo di ${def.hosts[0]}.` };
+    }
+    const match = url.pathname.match(def.path);
+    return match ? { username: match[1] } : { error: `Dal link ${def.label} non si capisce il nome utente.` };
+  }
+  return def.username.test(value) ? { username: value } : { error: `Nome utente ${def.label} non valido.` };
+}
+
+// The card's link icons, in this order, only the ones set; each opens the
+// profile in a new tab.
+export function cardLinksHtml(links) {
+  return Object.entries(CARD_LINK_SITES)
+    .filter(([key]) => links[key])
+    .map(([key, def]) => {
+      const user = links[key];
+      return `<a class="pc-link pc-link-${key}" href="${escapeHtml(def.url(encodeURIComponent(user)))}" target="_blank" rel="noopener noreferrer" title="${
+        def.label
+      }: ${escapeHtml(user)}" aria-label="${def.label}: ${escapeHtml(user)}">${def.icon}</a>`;
+    })
+    .join("");
+}
+
 // player.html's card, view only: the same layout as account.html's card
 // outside edit mode. `card` is db.js's PlayerCards.get() row, `name` the
 // player's name, `since` the year of their first event (or null), `badges`
@@ -132,6 +203,7 @@ export function renderPublicPlayerCard(containerEl, card, { name, since, badges 
               </div>
             </div>
             ${description ? `<p class="pc-description">${escapeHtml(description)}</p>` : ""}
+            <div class="pc-links">${cardLinksHtml(card)}</div>
           </div>
           <div class="pc-foot">
             <span class="pc-since">${since ? `Dal ${escapeHtml(since)}` : ""}</span>

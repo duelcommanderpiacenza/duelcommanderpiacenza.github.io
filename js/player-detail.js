@@ -20,6 +20,7 @@ import { initTitleFit, fitTitleToOneLine, alignBackButtonToTitle } from "./page-
 import { initFilterToggle } from "./filter-toggle.js";
 import { renderCommanderCarousel } from "./commander-carousel.js";
 import { renderPublicPlayerCard } from "./player-card.js";
+import { initFollowButton } from "./follow-button.js";
 
 // Album comandanti's grouping: one "deck" = the exact commander + partner pair.
 function commanderPairKey(commander, partner) {
@@ -50,9 +51,13 @@ function viewerScoreLabel(m, viewerIsP1) {
 // to extract this one player's result). Plain icons with their tooltip, not
 // links — same as next to names everywhere else.
 function playerBadgesHtml(badges) {
-  return badges
+  if (!badges.length) return "";
+  // In one group (.badge-group) that never splits: when they don't all fit
+  // beside the name in the title, they go to the next line together, not
+  // one by one.
+  return `<span class="badge-group">${badges
     .map((b) => `<span class="icon-badge" ${badgeTooltipAttrs(b)} tabindex="0">${badgeDiscHtml(b)}</span>`)
-    .join("");
+    .join("")}</span>`;
 }
 
 // --- The player's card ---------------------------------------------------------------
@@ -92,10 +97,10 @@ function syncPlayerCardLayout() {
   if (window.innerWidth <= 640) {
     cardWrapEl.style.width = "";
     statsColEl.style.paddingRight = "";
-    if (titleEl.style.paddingRight) {
+    if (headingEl.style.paddingRight) {
       // Coming from desktop: the title was fitted with the room kept for
       // the card still taken off — fitted again on its full width.
-      titleEl.style.paddingRight = "";
+      headingEl.style.paddingRight = "";
       fitTitleToOneLine(titleEl);
       alignBackButtonToTitle(titleEl);
     }
@@ -105,7 +110,10 @@ function syncPlayerCardLayout() {
     const height = layoutTop(tilesEl) + tilesEl.offsetHeight - layoutTop(headingEl);
     const width = Math.min(MAX_CARD_WIDTH, Math.round((height - CARD_FRAME) / CARD_RATIO + CARD_FRAME));
     cardWrapEl.style.width = `${width}px`;
-    titleEl.style.paddingRight = `${width + 24}px`;
+    // On the heading, not the title: the follow button sits right after the
+    // name, and both stay clear of the card (still at the heading's right
+    // edge — absolute, against the padding box).
+    headingEl.style.paddingRight = `${width + 24}px`;
     statsColEl.style.paddingRight = `${width + 24}px`;
   }
 }
@@ -127,6 +135,10 @@ async function init() {
   // Open from the start on desktop, closed on phones.
   initFilterToggle("player-filter-toggle", "player-filter-panel", { openOnDesktop: true });
   const matchesEl = document.getElementById("player-matches");
+
+  // "☆ Segui" right below the name, for signed-in accounts (not awaited: it
+  // never holds up the page).
+  if (id) initFollowButton(titleEl, "player", id);
 
   if (!id) {
     titleEl.textContent = "Giocatore non trovato";
@@ -154,6 +166,9 @@ async function init() {
     entriesRequest.catch(() => {});
 
     const player = await playerRequest;
+    // Known before the title is drawn (started alongside, so barely a wait):
+    // with a card shown, the badges are on the card, not after the name.
+    const card = await cardRequest;
     const nameLabel = player.handle ? `${player.name} (${player.handle})` : player.name;
     // Not fatal if this fails — the page still works with just the
     // manually assigned badges, so it's kept out of this try/catch.
@@ -170,13 +185,12 @@ async function init() {
       console.error(err);
     }
     const playerBadges = uniqueBadges([player.badge1, player.badge2, ...autoBadges]);
-    titleEl.innerHTML = `${escapeHtml(nameLabel)} ${playerBadgesHtml(playerBadges)}`;
+    titleEl.innerHTML = `${escapeHtml(nameLabel)} ${card ? "" : playerBadgesHtml(playerBadges)}`;
     // Same as the other detail pages: on phones, fits the name to one line
     // and keeps the back button vertically centered on it.
     initTitleFit(titleEl);
 
     const entries = await entriesRequest;
-    const card = await cardRequest;
 
     // The card, once the year of the player's first event ("Dal …") is
     // known: shown with the rest of the page, sized once the stat tiles are

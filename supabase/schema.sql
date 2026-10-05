@@ -653,6 +653,11 @@ create table profiles (
   -- Whether the card is shown on the player's page (public_player_card()
   -- below). Added by supabase/migrations/007_public_player_card.sql.
   show_on_player_page boolean not null default true,
+  -- The owner's usernames, shown as links on the card (the site builds the
+  -- links). Added by supabase/migrations/010_card_links_follows.sql.
+  instagram text check (instagram ~ '^[A-Za-z0-9._]{1,30}$'),
+  moxfield text check (moxfield ~ '^[A-Za-z0-9_-]{1,40}$'),
+  archidekt text check (archidekt ~ '^[A-Za-z0-9_.-]{1,40}$'),
   updated_at timestamptz not null default now()
 );
 
@@ -674,7 +679,8 @@ create policy "profiles_update_own" on profiles for update
 -- owner hides it, or the account is blocked. The Google picture only when
 -- shown on the card; has_picture tells "hidden by the owner" (no circle)
 -- from "no Google picture" (the initial). Added by
--- supabase/migrations/007_public_player_card.sql.
+-- supabase/migrations/007_public_player_card.sql; the card's links since
+-- 010.
 create or replace function public_player_card(p_player_id uuid)
 returns table (
   description text,
@@ -683,7 +689,10 @@ returns table (
   show_avatar boolean,
   has_picture boolean,
   avatar_url text,
-  commander_name text
+  commander_name text,
+  instagram text,
+  moxfield text,
+  archidekt text
 )
 language sql stable security definer set search_path = public as $$
   select
@@ -693,7 +702,10 @@ language sql stable security definer set search_path = public as $$
     pr.show_avatar,
     (u.raw_user_meta_data ->> 'avatar_url') is not null,
     case when pr.show_avatar then u.raw_user_meta_data ->> 'avatar_url' end,
-    c.name
+    c.name,
+    pr.instagram,
+    pr.moxfield,
+    pr.archidekt
   from players p
   join profiles pr on pr.user_id = p.user_id
   join auth.users u on u.id = p.user_id
@@ -759,3 +771,36 @@ create policy "decklist_submissions_read_own" on decklist_submissions for select
 
 create policy "decklist_submissions_admin_delete" on decklist_submissions for delete
   using (is_admin());
+
+-- ---------------------------------------------------------------------------
+-- The players and commanders an account follows (account.html's "Seguiti",
+-- the ★ button on player.html / commander.html). Private: each account
+-- reads and writes only its own. Added by
+-- supabase/migrations/010_card_links_follows.sql.
+-- ---------------------------------------------------------------------------
+
+create table follows (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  player_id uuid references players(id) on delete cascade,
+  commander_id uuid references commanders(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  -- Exactly one of the two.
+  check ((player_id is null) <> (commander_id is null)),
+  unique (user_id, player_id),
+  unique (user_id, commander_id)
+);
+
+alter table follows enable row level security;
+
+create policy "follows_read_own" on follows for select
+  using (user_id = auth.uid());
+
+-- Not one's own player (the one linked to the account).
+create policy "follows_insert_own" on follows for insert
+  with check (
+    user_id = auth.uid()
+    and not exists (select 1 from players p where p.id = follows.player_id and p.user_id = auth.uid())
+  );
+
+create policy "follows_delete_own" on follows for delete
+  using (user_id = auth.uid());
