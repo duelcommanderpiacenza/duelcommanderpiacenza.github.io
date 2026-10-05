@@ -1,19 +1,28 @@
-// account.html — "Profilo": a signed-in account's own profile page, laid out
-// like a profile on other sites. Signed out: an "Accedi con Google" card
-// (the first sign-in creates the account). Signed in, top to bottom:
-//  - "Il tuo giocatore", only while the account isn't linked to a player:
-//    the list of players not linked yet to request one, or the pending
-//    request (with "Annulla richiesta") — linking itself is the admin's
-//    (PLAYER_LOGIN.md). At the top, to invite a new account to do it first;
-//  - a profile header: cover, the Google picture as avatar, name and email,
-//    the description as a bio, and the favourite colors / commander /
-//    archetype and the linked player as facts;
-//  - "Modifica profilo" opens the edit card (supabase/migrations/004_profiles.sql:
-//    one row per account, only its owner writes it);
-//  - "Le tue statistiche", once linked: the player page's own winrate tiles
-//    over the whole history, most played commander, best placement, and a
-//    link to the player page;
-//  - "Account": the Google email it's signed in with, and "Esci".
+// account.html — "Profilo": a signed-in account's own profile page. Signed
+// out: an "Accedi con Google" card (the first sign-in creates the account).
+// Signed in:
+//  - "Il tuo giocatore" on top, only while the account isn't linked to a
+//    player: the list of players not linked yet to request one, or the
+//    pending request (with "Annulla richiesta") — linking itself is the
+//    admin's (PLAYER_LOGIN.md);
+//  - the player card (left on desktop): Magic-card proportions, the
+//    favourite commander's art (Scryfall) as its background, a glowing border
+//    in the favourite colours; the upper part left to the art; a nameplate
+//    straight on the art — avatar (the Google picture — hidden by the
+//    owner, no circle at all outside edit mode) and name — then, on a glass
+//    panel at the bottom, archetype and colours, then the description (140
+//    characters at most); "Dal <year>" of the linked player's first event at
+//    the bottom. The favourite commander is shown only as the art; ✎ edits
+//    the card without changing its layout (each value turns into its own
+//    list / toggles / text, plus the commander list and "Mostra foto", live
+//    preview) and becomes ✓ to save, with ✕ (or Esc) to cancel — saved to
+//    the account's own row in `profiles` (supabase/migrations/004-006);
+//    under it, once linked, the switch showing it on the player page too
+//    (js/player-detail.js, migration 007);
+//  - on the right: "Le tue statistiche" once linked (the player page's own
+//    winrate tiles over the whole history plus best placement as one more
+//    tile, link to the player page) and "Account" (the Google email,
+//    "Esci", and — not for admins — "Elimina account").
 //
 // Google only for players, no email/password: Supabase never has to send a
 // confirmation or reset email (its built-in sender only reaches the project
@@ -21,42 +30,51 @@
 // Authentication > URL Configuration) and supabase-js reports SIGNED_IN.
 //
 // The page stays behind its loading splash until everything a signed-in
-// view shows has loaded, so it all fades in together, already filled.
+// view shows has loaded (the commander art excepted — it fades in when
+// Scryfall answers), so it all appears together, already filled.
+//
+// The art isn't credited on the card (Michele's choice), although
+// Scryfall's guidelines ask for the artist to be credited where its art
+// crops are shown — see PLAYER_LOGIN.md, step 4.
 import { sb } from "./supabase-client.js";
-import { Commanders, PlayerClaims, Profiles, EventEntries, Matches, EventStandings } from "./db.js";
+import { Commanders, PlayerClaims, Profiles, MyAccount, EventEntries, Matches, EventStandings } from "./db.js";
 import { matchRoundOutcome, isDrop } from "./leaderboard.js";
 import { tallyOutcome, renderWinrateTiles } from "./winrate.js";
-import { escapeHtml, colorIdentityPips, commanderLabel, commanderPairLabel, archetypeBadge } from "./ui.js";
+import { escapeHtml, colorIdentityPips } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
+import { applyCardAccents, archetypeLabel, EMPTY_VALUE, createArtPainter } from "./player-card.js";
 
 const ACCOUNT_URL = new URL("account.html", window.location.href).href;
 const COLOR_ORDER = ["W", "U", "B", "R", "G"];
-const DESCRIPTION_MAX = 500;
+// Also enforced by the database (supabase/migrations/006).
+const DESCRIPTION_MAX = 140;
 
 const views = Array.from(document.querySelectorAll("[data-view]"));
 const viewOf = (name) => views.find((v) => v.dataset.view === name);
+const pageMessageEl = () => viewOf("signed-in").querySelector("[data-message]");
 
-// Header
+// Player card
+const cardEl = document.getElementById("player-card");
+const artEl = document.getElementById("pc-art");
 const avatarImg = document.getElementById("profile-avatar");
 const initialEl = document.getElementById("profile-initial");
 const nameEl = document.getElementById("profile-name");
-const emailEl = document.getElementById("account-email");
+const archetypeEl = document.getElementById("pc-archetype");
+const colorsEl = document.getElementById("pc-colors");
 const bioEl = document.getElementById("profile-bio");
-const factPlayerEl = document.getElementById("profile-fact-player");
-const factColorsEl = document.getElementById("profile-fact-colors");
-const factCommanderEl = document.getElementById("profile-fact-commander");
-const factArchetypeEl = document.getElementById("profile-fact-archetype");
+const sinceEl = document.getElementById("pc-since");
 const editToggleBtn = document.getElementById("profile-edit-toggle");
+const editCancelBtn = document.getElementById("profile-edit-cancel");
+const emailEl = document.getElementById("account-email");
 
-// Edit card
-const editCard = document.getElementById("profile-edit");
+// The card's edit mode: each value's editable twin, in its place.
 const profileForm = document.getElementById("profile-form");
-const colorInputs = Array.from(profileForm.querySelectorAll('input[name="profile-color"]'));
+const showAvatarInput = document.getElementById("profile-show-avatar");
 const commanderSelect = document.getElementById("profile-commander");
-const archetypeInputs = Array.from(profileForm.querySelectorAll('input[name="profile-archetype"]'));
+const archetypeSelect = document.getElementById("profile-archetype");
+const colorInputs = Array.from(profileForm.querySelectorAll('input[name="profile-color"]'));
 const descriptionEl = document.getElementById("profile-description");
 const counterEl = document.getElementById("profile-counter");
-const profileMessageEl = document.getElementById("profile-message");
 
 // "Il tuo giocatore" (top, until linked)
 const claimCard = document.getElementById("profile-claim");
@@ -69,13 +87,27 @@ const pendingPlayerEl = document.getElementById("account-pending-player");
 const statsCard = document.getElementById("profile-stats");
 const statsLink = document.getElementById("profile-stats-link");
 const statsTilesEl = document.getElementById("profile-stats-tiles");
-const statsCommanderEl = document.getElementById("profile-stats-commander");
-const statsBestEl = document.getElementById("profile-stats-best");
+const publicWrapEl = document.getElementById("profile-public-wrap");
+const publicInput = document.getElementById("profile-public");
+const publicLabelEl = document.getElementById("profile-public-label");
+const publicHintEl = document.getElementById("profile-public-hint");
 
-// What's on screen: the account, its saved profile, its player link/request.
+// "Account"
+const accountMessageEl = document.getElementById("account-message");
+const accountDangerEl = document.getElementById("account-danger");
+const accountDeleteBtn = document.getElementById("account-delete");
+
+// Shown on the sign-in card right after the account is deleted (the
+// SIGNED_OUT that follows switches to it).
+let loginNotice = null;
+
+// What's on screen: the account, its saved profile, its player link/request,
+// and the linked player's first event year (the card's "Dal …").
 let user = null;
 let profile = null;
 let claim = { linked: null, pending: null };
+let commandersById = new Map();
+let firstYear = null;
 
 // --- Helpers ------------------------------------------------------------------
 
@@ -92,43 +124,68 @@ function playerLabel(player) {
   return player.handle ? `${player.name} (${player.handle})` : player.name;
 }
 
-// Displayed as a placeholder wherever a fact isn't set.
-const EMPTY = '<span class="profile-empty">—</span>';
+// The commander art behind the card (js/player-card.js: Scryfall's art crop).
+const paintArt = createArtPainter(artEl);
 
-// --- Profile header -------------------------------------------------------------
+// --- Player card ------------------------------------------------------------------
 
-function renderHeader() {
+// What the card shows: the saved profile, or — in edit mode — the form's
+// current values (the live preview).
+function savedValues() {
+  return {
+    colors: profile?.fav_colors ?? "",
+    commander: profile?.fav_commander ?? null,
+    archetype: profile?.fav_archetype ?? null,
+    description: profile?.description ?? "",
+    showAvatar: profile?.show_avatar ?? true,
+  };
+}
+
+function formValues() {
+  return {
+    colors: COLOR_ORDER.filter((c) => colorInputs.some((i) => i.value === c && i.checked)).join(""),
+    commander: commandersById.get(commanderSelect.value) ?? null,
+    archetype: archetypeSelect.value || null,
+    description: descriptionEl.value,
+    showAvatar: showAvatarInput.checked,
+  };
+}
+
+function renderCard(values) {
   const meta = user.user_metadata ?? {};
-  const displayName = meta.full_name || meta.name || user.email;
+  // The linked player's own name once there is one, the Google name before.
+  const displayName = claim.linked ? playerLabel(claim.linked) : meta.full_name || meta.name || user.email;
   nameEl.textContent = displayName;
   emailEl.textContent = user.email;
 
+  // The Google picture. Hidden by the owner: outside edit mode no avatar
+  // circle at all, leaving the commander art in view (.hides-avatar); in
+  // edit mode the circle stays, with the initial, next to its "Mostra foto"
+  // switch. No Google picture at all: the initial on red, no switch.
   initialEl.textContent = (displayName.trim()[0] ?? "?").toUpperCase();
-  if (meta.avatar_url) {
-    avatarImg.src = meta.avatar_url;
-    avatarImg.hidden = false;
-  } else {
-    avatarImg.hidden = true;
-  }
+  const hasPicture = Boolean(meta.avatar_url);
+  const showPicture = hasPicture && values.showAvatar;
+  if (showPicture) avatarImg.src = meta.avatar_url;
+  avatarImg.hidden = !showPicture;
+  cardEl.classList.toggle("hides-avatar", hasPicture && !values.showAvatar);
+  document.getElementById("profile-show-avatar-wrap").classList.toggle("is-unavailable", !hasPicture);
 
-  const description = profile?.description?.trim();
-  bioEl.textContent = description || "Nessuna descrizione: raccontaci qualcosa di te con «Modifica profilo».";
+  applyCardAccents(cardEl, values.colors);
+
+  archetypeEl.innerHTML = values.archetype ? escapeHtml(archetypeLabel(values.archetype)) : EMPTY_VALUE;
+  colorsEl.innerHTML = values.colors ? colorIdentityPips(values.colors) : EMPTY_VALUE;
+
+  const description = values.description.trim();
+  bioEl.textContent = description || "Nessuna descrizione: premi ✎ per raccontare qualcosa di te.";
   bioEl.classList.toggle("is-empty", !description);
 
-  if (claim.linked) {
-    factPlayerEl.innerHTML = `<a href="player.html?id=${claim.linked.id}">${escapeHtml(playerLabel(claim.linked))}</a>`;
-  } else if (claim.pending) {
-    factPlayerEl.innerHTML = `${escapeHtml(playerLabel(claim.pending.player))} <span class="profile-pending">in attesa</span>`;
-  } else {
-    factPlayerEl.innerHTML = EMPTY;
-  }
+  // The player's (not the account's) first event, once linked.
+  sinceEl.textContent = claim.linked && firstYear ? `Dal ${firstYear}` : "";
 
-  factColorsEl.innerHTML = profile?.fav_colors ? colorIdentityPips(profile.fav_colors) : EMPTY;
-  factCommanderEl.innerHTML = profile?.fav_commander ? commanderLabel(profile.fav_commander) : EMPTY;
-  factArchetypeEl.innerHTML = profile?.fav_archetype ? archetypeBadge(profile.fav_archetype) : EMPTY;
+  paintArt(values.commander?.name ?? null);
 }
 
-// --- Edit card ---------------------------------------------------------------------
+// --- Edit mode (on the card itself, same layout) -----------------------------------
 
 function updateCounter() {
   counterEl.textContent = `${descriptionEl.value.length}/${DESCRIPTION_MAX}`;
@@ -136,48 +193,294 @@ function updateCounter() {
 
 // Puts the saved profile into the form (also how "Annulla" discards edits).
 function fillForm() {
-  const colors = profile?.fav_colors ?? "";
-  for (const input of colorInputs) input.checked = colors.includes(input.value);
+  const saved = savedValues();
+  showAvatarInput.checked = saved.showAvatar;
   commanderSelect.value = profile?.fav_commander_id ?? "";
-  const archetype = profile?.fav_archetype ?? "";
-  for (const input of archetypeInputs) input.checked = input.value === archetype;
-  descriptionEl.value = profile?.description ?? "";
+  archetypeSelect.value = saved.archetype ?? "";
+  for (const input of colorInputs) input.checked = saved.colors.includes(input.value);
+  descriptionEl.value = saved.description;
   updateCounter();
 }
 
-function setEditing(open) {
-  editCard.hidden = !open;
-  editToggleBtn.setAttribute("aria-expanded", String(open));
-  setMessage(profileMessageEl, "");
-  if (open) {
-    fillForm();
-    editCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
+const isEditing = () => cardEl.classList.contains("is-editing");
+
+// The animated switch between the two modes (animateSwitch) — one motion,
+// not each piece moving on its own: the glass panel's contents fade out;
+// the panel then grows/shrinks to its new height, the nameplate riding on
+// top of it (the name sliding over when the avatar comes or goes, the
+// avatar and "Mostra foto" growing/fading in or out with it); and the
+// contents fade back in, already in their new places, as it settles.
+const NAMEPLATE_PIECES = ".pc-avatar, .pc-name, .pc-avatar-toggle";
+const SWITCH_MS = 320;
+const FADE_OUT_MS = 120;
+const FADE_IN_DELAY_MS = 140;
+const FADE_IN_MS = 220;
+const EASE = "cubic-bezier(0.2, 0.8, 0.2, 1)";
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+// True while a switch animates: ✎/✓, ✕ and Esc wait for it to end.
+let switching = false;
+
+const finished = (animation) => animation.finished.catch(() => {});
+
+// ✕ slides out from under ✓ when editing starts, and back under it after.
+function showCancelButton(open, animate) {
+  const tucked = { opacity: 0, transform: "translateX(40px) scale(0.6)" };
+  const out = { opacity: 1, transform: "none" };
+  if (!animate) {
+    editCancelBtn.hidden = !open;
+  } else if (open) {
+    editCancelBtn.hidden = false;
+    editCancelBtn.animate([tucked, out], { duration: SWITCH_MS, easing: EASE });
+  } else {
+    finished(editCancelBtn.animate([out, tucked], { duration: 200, easing: "ease-in" })).then(() => {
+      if (!isEditing()) editCancelBtn.hidden = true;
+    });
   }
 }
 
-editToggleBtn.addEventListener("click", () => setEditing(editCard.hidden));
-document.getElementById("profile-edit-cancel").addEventListener("click", () => setEditing(false));
+async function animateSwitch(open) {
+  const panel = cardEl.querySelector(".pc-panel");
+  const pieces = Array.from(cardEl.querySelectorAll(NAMEPLATE_PIECES));
+  const visible = (els) => els.filter((el) => el.getClientRects().length);
+
+  // Which nameplate pieces each mode shows: the other mode tried for a
+  // moment, within this same frame, so it never paints.
+  const before = new Set(visible(pieces));
+  cardEl.classList.toggle("is-editing", open);
+  const after = new Set(visible(pieces));
+  cardEl.classList.toggle("is-editing", !open);
+  const leaving = pieces.filter((el) => before.has(el) && !after.has(el));
+  const entering = pieces.filter((el) => after.has(el) && !before.has(el));
+  const staying = pieces.filter((el) => before.has(el) && after.has(el));
+
+  const fadeOuts = [...visible(Array.from(panel.children)), ...leaving].map((el) =>
+    el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: FADE_OUT_MS, easing: "ease-in", fill: "forwards" })
+  );
+  await Promise.all(fadeOuts.map(finished));
+
+  // Where the name is now, and the panel's top edge: the nameplate sits
+  // right on the panel, so the name's move is measured against it — the
+  // panel's own animated height carries the nameplate the rest of the way.
+  const panelBefore = panel.getBoundingClientRect();
+  const rectsBefore = new Map(staying.map((el) => [el, el.getBoundingClientRect()]));
+  cardEl.classList.toggle("is-editing", open);
+  const panelAfter = panel.getBoundingClientRect();
+
+  const animations = [];
+  // The new contents start hidden (fill: backwards) in this same frame the
+  // old ones' faded-out state is dropped, so nothing flashes in between.
+  for (const el of visible(Array.from(panel.children))) {
+    animations.push(
+      el.animate([{ opacity: 0 }, { opacity: 1 }], {
+        duration: FADE_IN_MS,
+        delay: FADE_IN_DELAY_MS,
+        easing: "ease-out",
+        fill: "backwards",
+      })
+    );
+  }
+  for (const animation of fadeOuts) animation.cancel();
+
+  panel.style.boxSizing = "border-box";
+  panel.style.overflow = "hidden";
+  animations.push(
+    panel.animate([{ height: `${panelBefore.height}px` }, { height: `${panelAfter.height}px` }], {
+      duration: SWITCH_MS,
+      easing: EASE,
+    })
+  );
+  for (const el of staying) {
+    const was = rectsBefore.get(el);
+    const is = el.getBoundingClientRect();
+    const dx = was.left - is.left;
+    const dy = was.top - panelBefore.top - (is.top - panelAfter.top);
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) continue;
+    animations.push(
+      el.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: "none" }], {
+        duration: SWITCH_MS,
+        easing: EASE,
+      })
+    );
+  }
+  for (const el of entering) {
+    const from = el.classList.contains("pc-avatar") ? "scale(0.5)" : "translateY(4px)";
+    animations.push(
+      el.animate([{ opacity: 0, transform: from }, { opacity: 1, transform: "none" }], {
+        duration: SWITCH_MS,
+        easing: EASE,
+      })
+    );
+  }
+  await Promise.all(animations.map(finished));
+  panel.style.boxSizing = "";
+  panel.style.overflow = "";
+}
+
+async function setEditing(open, { animate = true } = {}) {
+  if (open === isEditing()) return;
+  const label = open ? "Salva le modifiche" : "Modifica la tua carta";
+  editToggleBtn.setAttribute("aria-label", label);
+  editToggleBtn.title = label;
+  editToggleBtn.classList.toggle("is-save", open);
+  // The values first (hidden ones included), so both modes are measured
+  // with what they'll show.
+  if (open) {
+    fillForm();
+    renderCard(formValues());
+  } else {
+    renderCard(savedValues());
+  }
+  const animated = animate && !reducedMotion.matches && cardEl.getClientRects().length > 0;
+  showCancelButton(open, animated);
+  if (!animated) {
+    cardEl.classList.toggle("is-editing", open);
+    return;
+  }
+  switching = true;
+  try {
+    await animateSwitch(open);
+  } finally {
+    switching = false;
+  }
+}
+
+// ✎ enters edit mode; there, the same button is ✓ and saves.
+editToggleBtn.addEventListener("click", () => {
+  if (switching) return;
+  setMessage(pageMessageEl(), "");
+  if (isEditing()) profileForm.requestSubmit();
+  else setEditing(true);
+});
+editCancelBtn.addEventListener("click", () => {
+  if (!switching) setEditing(false);
+});
+document.addEventListener("keydown", (e) => {
+  // Not while a dropdown is open: Escape closes that first.
+  if (e.key === "Escape" && isEditing() && !switching && !cardEl.querySelector(".cs-wrap.is-open")) setEditing(false);
+});
+
+// --- Card height = the cards beside it (desktop) ------------------------------------
+
+// From 821px the card column (the card, then the switch under it once
+// linked) stands beside "Le tue statistiche" + "Account": the card's width
+// is set so that, at Magic-card proportions, the column is exactly as tall
+// as those cards together (within MIN/MAX_CARD_WIDTH). When they're shorter
+// than the smallest card, the last of them is padded down to the column's
+// bottom edge instead (styles.css --pc-side-stretch). Phones: one column,
+// nothing to line up. Edit mode can make the card taller for a while; it's
+// measured against its own proportions, not its current height.
+const layoutEl = document.querySelector(".profile-layout");
+const cardColEl = document.querySelector(".profile-card-col");
+const sideEl = document.querySelector(".profile-side");
+const sideBySide = window.matchMedia("(min-width: 821px)");
+const CARD_RATIO = 680 / 488;
+const CARD_FRAME = 6; // .pc-frame's 3px all around
+const MIN_CARD_WIDTH = 240;
+const MAX_CARD_WIDTH = 340;
+
+// The widths just tried: the card's width changes the side cards' width,
+// and so possibly their height (tiles wrapping differently) — a width that
+// comes back means two widths would keep swapping, so the current one stays.
+let recentWidths = [];
+let recentReset = null;
+
+function alignCardToSide() {
+  if (!sideBySide.matches || !sideEl.getClientRects().length) {
+    layoutEl.style.removeProperty("--pc-width");
+    sideEl.style.removeProperty("--pc-side-stretch");
+    return;
+  }
+  const stretch = parseFloat(sideEl.style.getPropertyValue("--pc-side-stretch")) || 0;
+  const sideHeight = sideEl.offsetHeight - stretch;
+  // What's under the card in its column (the switch, a message).
+  const below = cardColEl.offsetHeight - cardEl.offsetHeight;
+  const fitting = (sideHeight - below - CARD_FRAME) / CARD_RATIO + CARD_FRAME;
+  let width = Math.round(Math.min(MAX_CARD_WIDTH, Math.max(MIN_CARD_WIDTH, fitting)));
+  const current = parseFloat(layoutEl.style.getPropertyValue("--pc-width"));
+  if (width !== current) {
+    if (recentWidths.includes(width)) {
+      width = current;
+    } else {
+      recentWidths.push(width);
+      clearTimeout(recentReset);
+      recentReset = setTimeout(() => (recentWidths = []), 500);
+      layoutEl.style.setProperty("--pc-width", `${width}px`);
+    }
+  }
+  const cardHeight = (width - CARD_FRAME) * CARD_RATIO + CARD_FRAME;
+  sideEl.style.setProperty("--pc-side-stretch", `${Math.max(0, Math.round(cardHeight + below - sideHeight))}px`);
+}
+
+// A frame later: resizing the observed side cards from inside their own
+// ResizeObserver callback is the "ResizeObserver loop" error.
+// Both columns: the switch under the card can change height too (its hint).
+const alignObserver = new ResizeObserver(() => requestAnimationFrame(alignCardToSide));
+alignObserver.observe(sideEl);
+alignObserver.observe(cardColEl);
+sideBySide.addEventListener("change", alignCardToSide);
+
+// Live preview: every change in edit mode redraws the card from the form.
+profileForm.addEventListener("change", () => renderCard(formValues()));
 descriptionEl.addEventListener("input", updateCounter);
 
 profileForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-  setMessage(profileMessageEl, "");
+  const values = formValues();
   const fields = {
-    description: descriptionEl.value.trim() || null,
-    fav_colors: COLOR_ORDER.filter((c) => colorInputs.some((i) => i.value === c && i.checked)).join(""),
-    fav_commander_id: commanderSelect.value || null,
-    fav_archetype: archetypeInputs.find((i) => i.checked)?.value || null,
+    description: values.description.trim() || null,
+    fav_colors: values.colors,
+    fav_commander_id: values.commander?.id ?? null,
+    fav_archetype: values.archetype,
+    show_avatar: values.showAvatar,
   };
+  editToggleBtn.disabled = true;
   try {
     profile = await Profiles.save(user.id, fields);
   } catch (err) {
     console.error(err);
-    setMessage(profileMessageEl, "Salvataggio non riuscito, riprova.");
+    setMessage(pageMessageEl(), "Salvataggio non riuscito, riprova.");
+    return;
+  } finally {
+    editToggleBtn.disabled = false;
+  }
+  // Back to the card itself is the confirmation — no message.
+  setEditing(false);
+  // The first save makes the card showable on the player page.
+  renderPublicSwitch();
+});
+
+// --- The card on the player page ----------------------------------------------------
+
+// The switch under the card: whether player.html shows this card too
+// (profiles.show_on_player_page, read there through
+// supabase/migrations/007's public_player_card()). Only while linked to a
+// player (no player page otherwise), and usable only once the card has
+// been saved at least once — before that there's no profile at all, and
+// nothing to show; on by default from the first save. Saved right away.
+function renderPublicSwitch(errorText = "") {
+  publicWrapEl.hidden = !claim.linked;
+  const saved = Boolean(profile);
+  publicInput.disabled = !saved;
+  publicInput.checked = saved && (profile.show_on_player_page ?? true);
+  // Not saved yet: what to do first takes the label's place.
+  publicLabelEl.textContent = saved ? "Mostra la carta nella pagina giocatore" : "Salva prima la tua carta almeno una volta.";
+  publicHintEl.textContent = errorText;
+  publicHintEl.classList.toggle("is-error", Boolean(errorText));
+}
+
+publicInput.addEventListener("change", async () => {
+  const show = publicInput.checked;
+  publicInput.disabled = true;
+  try {
+    profile = await Profiles.save(user.id, { show_on_player_page: show });
+  } catch (err) {
+    console.error(err);
+    // Back to what's saved.
+    renderPublicSwitch("Salvataggio non riuscito, riprova.");
     return;
   }
-  renderHeader();
-  setEditing(false);
-  setMessage(viewOf("signed-in").querySelector("[data-message]"), "Profilo salvato.", "ok");
+  renderPublicSwitch();
 });
 
 // --- Il tuo giocatore -------------------------------------------------------------
@@ -227,7 +530,10 @@ async function reloadClaim(okText) {
     setMessage(claimMessageEl, "Impossibile caricare il tuo giocatore, ricarica la pagina.");
     return;
   }
-  renderHeader();
+  // The card's name follows the link (the player's name once approved), and
+  // the switch under it comes with it.
+  renderCard(cardEl.classList.contains("is-editing") ? formValues() : savedValues());
+  renderPublicSwitch();
   setMessage(claimMessageEl, okText, "ok");
 }
 
@@ -260,23 +566,25 @@ async function loadStats(player) {
   for (const m of asP2) if (!isDrop(m)) tallyOutcome(bucket, matchOutcome(m, false));
   renderWinrateTiles(statsTilesEl, bucket, { events: entries.length });
 
-  // Most played deck (commander + partner pair), then the most recent of a tie.
-  const decks = new Map();
-  for (const e of entries) {
-    if (!e.commander) continue;
-    const key = `${e.commander.id}_${e.partner_commander?.id ?? ""}`;
-    const deck = decks.get(key) ?? { commander: e.commander, partner: e.partner_commander ?? null, count: 0, last: "" };
-    deck.count += 1;
-    if ((e.event?.event_date ?? "") > deck.last) deck.last = e.event.event_date;
-    decks.set(key, deck);
+  // "Miglior piazzamento" as one more tile, same look as the others — only
+  // when the tiles are there (no matches yet: just the "not enough data"
+  // line).
+  if (statsTilesEl.querySelector(".stat-tile")) {
+    const best = standings.reduce((min, s) => (min === null || s.position < min ? s.position : min), null);
+    statsTilesEl.insertAdjacentHTML(
+      "beforeend",
+      `<div class="stat-tile"><div class="stat-tile-label">Miglior piazzamento</div><div class="stat-tile-value">${
+        best === null ? "—" : `#${best}`
+      }</div></div>`
+    );
   }
-  const top = [...decks.values()].sort((a, b) => b.count - a.count || b.last.localeCompare(a.last))[0];
-  statsCommanderEl.innerHTML = top
-    ? `${commanderPairLabel(top.commander, top.partner)} <span class="profile-empty">(${top.count} ${top.count === 1 ? "evento" : "eventi"})</span>`
-    : EMPTY;
 
-  const best = standings.reduce((min, s) => (min === null || s.position < min ? s.position : min), null);
-  statsBestEl.innerHTML = best === null ? EMPTY : `#${best}`;
+  // The player card's "Dal …": the year of the player's first event.
+  const firstDate = entries.reduce((min, e) => {
+    const d = e.event?.event_date;
+    return d && (!min || d < min) ? d : min;
+  }, null);
+  firstYear = firstDate ? firstDate.slice(0, 4) : null;
 }
 
 document.getElementById("account-claim-form").addEventListener("submit", async (e) => {
@@ -312,8 +620,11 @@ document.getElementById("account-claim-cancel").addEventListener("click", async 
 
 // --- Loading the signed-in view -----------------------------------------------------
 
+// Also kept by id, for the card's live preview of a commander picked in
+// edit mode (its name → Scryfall art).
 async function loadCommanders() {
   const commanders = await Commanders.list();
+  commandersById = new Map(commanders.map((c) => [c.id, c]));
   commanderSelect.innerHTML =
     '<option value="">&mdash; nessuno &mdash;</option>' +
     commanders.map((c) => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
@@ -321,15 +632,23 @@ async function loadCommanders() {
 
 async function loadSignedIn(sessionUser) {
   user = sessionUser;
-  setEditing(false);
+  profile = null;
+  firstYear = null;
+  setEditing(false, { animate: false });
+  accountDangerEl.hidden = true;
+  setMessage(accountMessageEl, "");
   try {
-    [profile] = await Promise.all([Profiles.mine(user.id), loadClaim(), loadCommanders()]);
+    let isAdmin;
+    [profile, , , isAdmin] = await Promise.all([Profiles.mine(user.id), loadClaim(), loadCommanders(), MyAccount.isAdmin()]);
+    // Admins can't delete their own account from here (nor in the database).
+    accountDangerEl.hidden = isAdmin;
     if (claim.linked) await loadStats(claim.linked);
   } catch (err) {
     console.error(err);
-    setMessage(viewOf("signed-in").querySelector("[data-message]"), "Impossibile caricare il profilo, ricarica la pagina.");
+    setMessage(pageMessageEl(), "Impossibile caricare il profilo, ricarica la pagina.");
   }
-  renderHeader();
+  renderCard(savedValues());
+  renderPublicSwitch();
   show("signed-in");
 }
 
@@ -356,8 +675,12 @@ sb.auth.onAuthStateChange((_event, session) => {
       user = null;
       profile = null;
       show("login");
-      if (isFirst && returnedError()) {
-        setMessage(viewOf("login").querySelector("[data-message]"), "Accesso con Google non riuscito o annullato: riprova.");
+      const loginMessageEl = viewOf("login").querySelector("[data-message]");
+      if (loginNotice) {
+        setMessage(loginMessageEl, loginNotice, "ok");
+        loginNotice = null;
+      } else if (isFirst && returnedError()) {
+        setMessage(loginMessageEl, "Accesso con Google non riuscito o annullato: riprova.");
       }
     }
     if (isFirst) hidePageLoading();
@@ -380,7 +703,41 @@ document.getElementById("account-logout").addEventListener("click", async () => 
   const { error } = await sb.auth.signOut();
   if (error) {
     console.error(error);
-    setMessage(document.getElementById("account-message"), "Uscita non riuscita, riprova.");
+    setMessage(accountMessageEl, "Uscita non riuscita, riprova.");
   }
   // The SIGNED_OUT event switches back to the login view.
+});
+
+// Deletes the login account for good (supabase/migrations/006's
+// delete_my_account()): its card and pending request go with it, its
+// player is unlinked and kept. Signing in with Google again later creates a
+// new, empty account.
+accountDeleteBtn.addEventListener("click", async () => {
+  if (
+    !confirm(
+      "Eliminare definitivamente il tuo account?\n\nLa tua carta verrà cancellata e il collegamento al tuo giocatore rimosso. Il giocatore e i suoi risultati restano."
+    )
+  ) {
+    return;
+  }
+  setMessage(accountMessageEl, "");
+  accountDeleteBtn.disabled = true;
+  try {
+    await MyAccount.remove();
+  } catch (err) {
+    console.error(err);
+    accountDeleteBtn.disabled = false;
+    setMessage(
+      accountMessageEl,
+      err?.message === "admin_account"
+        ? "Un account amministratore non può essere eliminato da qui."
+        : "Eliminazione non riuscita, riprova."
+    );
+    return;
+  }
+  accountDeleteBtn.disabled = false;
+  loginNotice = "Account eliminato. Puoi accedere di nuovo con Google quando vuoi.";
+  // The account no longer exists, so only this browser's session is
+  // cleared (a server-side sign-out would just fail); SIGNED_OUT follows.
+  await sb.auth.signOut({ scope: "local" });
 });

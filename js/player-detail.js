@@ -1,4 +1,4 @@
-import { Players, EventEntries, Matches, PlayerAutoBadges, EventStandings } from "./db.js";
+import { Players, EventEntries, Matches, PlayerAutoBadges, EventStandings, PlayerCards } from "./db.js";
 import { matchRoundOutcome, isBye, isDrop, computeEventLeaderboard } from "./leaderboard.js";
 import { tallyOutcome, renderWinrateTiles } from "./winrate.js";
 import {
@@ -15,9 +15,10 @@ import {
   DEFAULT_DATE_FROM_YEARS,
 } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
-import { initTitleFit } from "./page-title-fit.js";
+import { initTitleFit, fitTitleToOneLine, alignBackButtonToTitle } from "./page-title-fit.js";
 import { initFilterToggle } from "./filter-toggle.js";
 import { renderCommanderCarousel } from "./commander-carousel.js";
+import { renderPublicPlayerCard } from "./player-card.js";
 
 // Album comandanti's grouping: one "deck" = the exact commander + partner pair.
 function commanderPairKey(commander, partner) {
@@ -62,6 +63,61 @@ function playerBadgesHtml(badges, linkedIds) {
     .join("");
 }
 
+// --- The player's card ---------------------------------------------------------------
+
+// Document-relative top of an element's *layout* box (offsetTop ignores
+// transforms): with the filters collapsed beside the card, the stat tiles
+// are only visually slid up, their layout spot is unchanged — same as
+// js/commander-detail.js.
+function layoutTop(el) {
+  let y = 0;
+  for (let n = el; n; n = n.offsetParent) y += n.offsetTop;
+  return y;
+}
+
+const CARD_RATIO = 680 / 488;
+const CARD_FRAME = 6; // .pc-frame's 3px all around
+const MAX_CARD_WIDTH = 320; // same ceiling as commander.html's card
+
+// Like commander.html's card (js/commander-detail.js syncCardImageLayout):
+// on desktop, from the title's top down to the stat tiles' bottom — their
+// expanded-filters spot, so collapsing the filters never resizes it — with
+// the width that height gives at Magic-card proportions, and the title and
+// the stats kept clear of it. Run twice: the card's width narrows the
+// tiles, which can wrap onto one more row and so make the card taller.
+// Phones (≤640px): stacked below the title at its CSS size, nothing to fit.
+function syncPlayerCardLayout() {
+  const cardWrapEl = document.getElementById("player-page-card");
+  if (cardWrapEl.hidden) return;
+  const headingEl = cardWrapEl.closest(".page-heading");
+  const titleEl = document.getElementById("player-title");
+  const statsColEl = document.getElementById("player-stats-col");
+  const panelEl = document.getElementById("player-filter-panel");
+  const tilesEl = document.getElementById("player-winrate-overall");
+  // Filters collapsed: the tiles slide up by exactly the filter row's height
+  // (styles.css .detail-filter-panel).
+  statsColEl.style.setProperty("--detail-filters-shift", `${layoutTop(tilesEl) - layoutTop(panelEl)}px`);
+  if (window.innerWidth <= 640) {
+    cardWrapEl.style.width = "";
+    statsColEl.style.paddingRight = "";
+    if (titleEl.style.paddingRight) {
+      // Coming from desktop: the title was fitted with the room kept for
+      // the card still taken off — fitted again on its full width.
+      titleEl.style.paddingRight = "";
+      fitTitleToOneLine(titleEl);
+      alignBackButtonToTitle(titleEl);
+    }
+    return;
+  }
+  for (let pass = 0; pass < 2; pass++) {
+    const height = layoutTop(tilesEl) + tilesEl.offsetHeight - layoutTop(headingEl);
+    const width = Math.min(MAX_CARD_WIDTH, Math.round((height - CARD_FRAME) / CARD_RATIO + CARD_FRAME));
+    cardWrapEl.style.width = `${width}px`;
+    titleEl.style.paddingRight = `${width + 24}px`;
+    statsColEl.style.paddingRight = `${width + 24}px`;
+  }
+}
+
 async function init() {
   const id = getId();
   const titleEl = document.getElementById("player-title");
@@ -86,7 +142,15 @@ async function init() {
   }
 
   try {
-    const player = await Players.get(id);
+    const [player, card] = await Promise.all([
+      Players.get(id),
+      // The linked account's card, when there's one to show. Not fatal: the
+      // page works the same without it.
+      PlayerCards.get(id).catch((err) => {
+        console.error(err);
+        return null;
+      }),
+    ]);
     const nameLabel = player.handle ? `${player.name} (${player.handle})` : player.name;
     // Not fatal if this fails — the page still works with just the
     // manually assigned badges, so it's kept out of this try/catch.
@@ -115,6 +179,24 @@ async function init() {
     initTitleFit(titleEl);
 
     const entries = await EventEntries.listByPlayer(id);
+
+    // The card, once the year of the player's first event ("Dal …") is
+    // known: shown with the rest of the page, sized once the stat tiles are
+    // there (applyFilters below). The filters beside it fade instead of
+    // collapsing, like commander.html's, so collapsing them never moves it.
+    if (card) {
+      const firstDate = entries.reduce((min, e) => {
+        const d = e.event?.event_date;
+        return d && (!min || d < min) ? d : min;
+      }, null);
+      const cardWrapEl = document.getElementById("player-page-card");
+      renderPublicPlayerCard(cardWrapEl, card, { name: nameLabel, since: firstDate ? firstDate.slice(0, 4) : null });
+      cardWrapEl.hidden = false;
+      document.getElementById("player-filter-panel").classList.add("detail-filter-panel");
+      // The stat tiles on one row beside it (styles.css .player-stats-col.has-card).
+      document.getElementById("player-stats-col").classList.add("has-card");
+      window.addEventListener("resize", syncPlayerCardLayout);
+    }
 
     // Album comandanti: a plain, de-duplicated list — not split by event.
     // Keyed by the commander+partner pair, so "X / Y" and "X / Z" both show.
@@ -334,6 +416,8 @@ async function init() {
       // event is counted even if the player dropped before playing a round).
       const events = entries.filter((e) => inScope(e.event, leagueId, eventId, from)).length;
       renderWinrateTiles(overallEl, bucket, { events });
+      // The tiles just (re)rendered: the card spans down to them.
+      syncPlayerCardLayout();
     }
     leagueFilter.addEventListener("change", () => {
       // A new league: Evento lists just its events, back to "Tutti".

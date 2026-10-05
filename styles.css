@@ -532,7 +532,12 @@ html.nav-mobile .site-search-field {
    a phone-width viewport has the same mismatch, just usually too subtle to
    notice at that size. */
 html.nav-mobile .site-search-bar {
-  padding-right: calc(var(--search-close-size, 38px) + 16px);
+  /* The ✕ sits where the header's search button was — no longer the
+     header's last button since the account button came after it, so its
+     distance from the screen's right edge (--search-close-right) counts
+     too, not just its size: the field stops 10px before it. The overlay's
+     own 16px side padding is already part of that distance. */
+  padding-right: calc(var(--search-close-right, 16px) + var(--search-close-size, 38px) - 6px);
   min-height: var(--search-close-size, 38px);
 }
 
@@ -1414,7 +1419,9 @@ main {
   .upcoming-row,
   .league-group,
   .bar-chart-row,
-  .filter-toggle-btn {
+  .filter-toggle-btn,
+  .player-card,
+  .pc-art {
     /* !important: most of these declare their own animation later in this
        file, which would otherwise win on source order (equal specificity)
        and keep animating despite the visitor's reduced-motion setting. */
@@ -2725,46 +2732,48 @@ footer {
   margin-left: 0;
 }
 
-/* The commander page's filters collapse differently from the list pages':
+/* A detail page's filters beside a card (commander.html always, player.html
+   when it shows the player's card — js/player-detail.js adds the class)
+   collapse differently from the list pages':
    the row keeps its space and only fades out (visibility too, so hidden
    fields can't be tabbed to), while the stat tiles right after it slide up
-   into that space — --commander-filters-shift, set by js/commander-detail.js
-   to the filter row's exact height. The layout never changes, so the card
+   into that space — --detail-filters-shift, set by js/commander-detail.js /
+   js/player-detail.js to the filter row's exact height. The layout never changes, so the card
    beside it keeps its size and nothing further down the page moves.
    Expanded, the fields sit in the same box as the list pages' filter
    panels (.filter-panel-body), and it's never clipped (no height collapse
    to clip for), so the select/date popups open freely. */
-/* .filter-panel.commander-filter-panel (not just the one class): the
+/* .filter-panel.detail-filter-panel (not just the one class): the
    shared .filter-panel / .filter-panel.is-collapsed rules come later in
    this file with the same specificity, and would otherwise win — really
    collapsing the row and replacing this fade transition. */
-.filter-panel.commander-filter-panel,
-.filter-panel.commander-filter-panel.is-collapsed {
+.filter-panel.detail-filter-panel,
+.filter-panel.detail-filter-panel.is-collapsed {
   grid-template-rows: 1fr;
 }
 
-.filter-panel.commander-filter-panel {
+.filter-panel.detail-filter-panel {
   opacity: 1;
   visibility: visible;
   transition: opacity 220ms ease, visibility 0s linear 0s;
 }
 
-.filter-panel.commander-filter-panel.is-collapsed {
+.filter-panel.detail-filter-panel.is-collapsed {
   opacity: 0;
   visibility: hidden;
   transition: opacity 220ms ease, visibility 0s linear 220ms;
 }
 
-.commander-filter-panel .filter-panel-clip {
+.detail-filter-panel .filter-panel-clip {
   overflow: visible;
 }
 
-#commander-winrate {
+.detail-filter-panel + .stat-grid {
   transition: transform 280ms ease;
 }
 
-.commander-filter-panel.is-collapsed + #commander-winrate {
-  transform: translateY(calc(-1 * var(--commander-filters-shift, 0px)));
+.detail-filter-panel.is-collapsed + .stat-grid {
+  transform: translateY(calc(-1 * var(--detail-filters-shift, 0px)));
 }
 
 /* Phones: the card is stacked above the stats, not beside them, so there's
@@ -2773,32 +2782,32 @@ footer {
    lifted by js/filter-toggle.js once open) and the rest of the page moves
    up with it; no slide-up of the tiles. */
 @media (max-width: 640px) {
-  .filter-panel.commander-filter-panel {
+  .filter-panel.detail-filter-panel {
     transition: grid-template-rows 280ms ease, opacity 220ms ease, visibility 0s linear 0s;
   }
 
-  .filter-panel.commander-filter-panel.is-collapsed {
+  .filter-panel.detail-filter-panel.is-collapsed {
     grid-template-rows: 0fr;
     transition: grid-template-rows 280ms ease, opacity 220ms ease, visibility 0s linear 280ms;
   }
 
-  .commander-filter-panel .filter-panel-clip {
+  .detail-filter-panel .filter-panel-clip {
     overflow: hidden;
   }
 
-  .commander-filter-panel .filter-panel-clip.is-open {
+  .detail-filter-panel .filter-panel-clip.is-open {
     overflow: visible;
   }
 
-  .commander-filter-panel.is-collapsed + #commander-winrate {
+  .detail-filter-panel.is-collapsed + .stat-grid {
     transform: none;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .filter-panel.commander-filter-panel,
-  .filter-panel.commander-filter-panel.is-collapsed,
-  #commander-winrate {
+  .filter-panel.detail-filter-panel,
+  .filter-panel.detail-filter-panel.is-collapsed,
+  .detail-filter-panel + .stat-grid {
     transition: none;
   }
 }
@@ -2867,6 +2876,57 @@ footer {
 @media (prefers-reduced-motion: reduce) {
   .commander-card-skeleton {
     animation: none;
+  }
+}
+
+/* player.html's player card (js/player-detail.js, markup from
+   js/player-card.js; the card itself is the .player-card / .pc-* rules of
+   account.html), placed and sized like commander.html's card above: pinned
+   to the title's top-right, its width set in JS so that, at Magic-card
+   proportions, it reaches exactly down to the stat tiles' bottom; the title
+   and the stats kept clear of it (padding-right, also JS). Same entrance as
+   the commander card, played with the rest of the page. */
+.player-page-card {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 280px;
+}
+
+.player-page-card .player-card {
+  animation: commander-card-in 450ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Beside the card, the player's five stat tiles fit on one row (.stat-grid's
+   own 150px minimum fits only four), like the commander page's four — so the
+   card, spanning title to tiles, comes out the commander card's size. */
+@media (min-width: 641px) {
+  .player-stats-col.has-card .stat-grid {
+    grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  }
+}
+
+/* Phones: below the title on a line of its own, like the commander card,
+   same width, centred on the page — its line reaches back under the back
+   button (.breadcrumb-link's 44px + .page-heading-row's 14px gap), since
+   .page-heading itself starts right of it. */
+@media (max-width: 640px) {
+  .player-page-card {
+    position: relative;
+    top: auto;
+    right: auto;
+    flex: 0 0 calc(100% + 58px);
+    width: auto;
+    margin: 14px 0 0 -58px;
+  }
+
+  /* Exactly commander.html's mobile card size (.commander-card-face's own
+     width), set outright — not as a max-width, which any other width or
+     max-width rule on .player-card could still narrow. */
+  .player-page-card .player-card {
+    width: min(260px, 80vw);
+    max-width: none;
+    margin-inline: auto;
   }
 }
 
@@ -3351,13 +3411,21 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   transform: rotateY(180deg);
 }
 
+/* The space it takes is imposed, not left to the downloaded image: always
+   Scryfall's card proportions (488×680, same as the loading placeholder and
+   the player card), one side set (the JS height on desktop, the width on
+   phones) and the other following from this ratio; an image that ever came
+   in other proportions is cropped to fill the box (object-fit: cover), not
+   resized around. */
 .commander-card-face {
   display: block;
   width: auto;
   height: auto;
+  aspect-ratio: 488 / 680;
+  object-fit: cover;
   /* A cap this low would fight the JS-set height above: with width: auto
-     and an explicit height, the browser computes width from the image's
-     own aspect ratio — if that computed width would exceed max-width, the
+     and an explicit height, the browser computes width from the
+     aspect-ratio — if that computed width would exceed max-width, the
      browser shrinks the rendered height back down to match the capped
      width instead, undershooting the actual target height. 320px is
      comfortably above what the real height (title-to-stat-tiles) implies,
@@ -3454,20 +3522,29 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
     padding-right: 0;
   }
 
-  /* No longer floating beside anything at this width — back to a normal,
-     left-aligned in-flow block (still sits right after the name and
-     before the rest of the page either way, since that's already where it
-     is in the markup: inside .page-heading, ahead of .page-loading-region
-     entirely). Kept position: relative (not static) rather than removing
-     positioning altogether — .commander-card-flip-btn is position:
-     absolute and needs *this* element as its anchor, not whatever
-     positioned ancestor is next up the tree (.page-heading, spanning the
-     full page width) once this one stops being one. */
+  /* The title takes its whole line, so the card always goes on the next
+     one, below it (a short name would otherwise leave room beside it on a
+     wider phone). */
+  #commander-title {
+    flex: 0 0 100%;
+  }
+
+  /* No longer floating beside anything at this width — an in-flow block
+     below the name, centred on the page like player.html's card: auto
+     margins centre it in .page-heading, which starts right of the back
+     button (.breadcrumb-link's 44px + .page-heading-row's 14px gap), and
+     left: -29px (half of that) moves it back to the page's own centre. The
+     figure itself stays card-sized (not stretched across the line):
+     .commander-card-flip-btn is position: absolute and needs *this*
+     element, card-sized, as its anchor — hence position: relative here, not
+     static, rather than whatever positioned ancestor is next up the tree
+     (.page-heading, spanning the full page width). */
   .commander-card-figure {
     position: relative;
     top: auto;
     right: auto;
-    margin: 14px 0 0;
+    left: -29px;
+    margin: 14px auto 0;
   }
 
   /* Same in-flow spot and width as the card below the title — reserving
@@ -3477,7 +3554,8 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
     position: relative;
     top: auto;
     right: auto;
-    margin: 14px 0 0;
+    left: -29px;
+    margin: 14px auto 0;
     width: min(260px, 80vw);
     height: auto;
   }
@@ -5345,129 +5423,6 @@ img.cs-option-icon {
   font-size: 0.9rem;
 }
 
-/* Profile header, laid out like a profile on other sites: a cover band in
-   the site header's own red gradient, the avatar overlapping its bottom
-   edge with the actions beside it, then name, email, bio and the facts.
-   The card's own padding moves to .profile-identity / .profile-body, so the
-   cover runs edge to edge (overflow: hidden clips it to the rounded
-   corners). */
-.profile-header {
-  padding: 0;
-  overflow: hidden;
-}
-
-.profile-cover {
-  height: 130px;
-  background:
-    radial-gradient(circle at 85% 15%, rgba(255, 255, 255, 0.2), transparent 45%),
-    linear-gradient(135deg, var(--brand-red-dark), rgba(220, 24, 28, 0.96)),
-    var(--brand-red);
-}
-
-.profile-identity {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  margin-top: -56px;
-  padding: 0 24px;
-}
-
-/* The Google picture, or the name's initial on red when there's none. The
-   ring is the page's own background colour, so it reads as a cut-out of
-   the cover in both themes rather than a white outline in dark mode. */
-.profile-avatar {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  box-sizing: border-box;
-  width: 112px;
-  height: 112px;
-  overflow: hidden;
-  border: 4px solid var(--bg-cream-2);
-  border-radius: 50%;
-  background: var(--brand-red);
-  color: #fff;
-  font-size: 2.6rem;
-  font-weight: 800;
-  box-shadow: var(--shadow-card);
-}
-
-.profile-avatar img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.profile-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding-bottom: 6px;
-}
-
-.profile-body {
-  padding: 14px 24px 24px;
-}
-
-.profile-name {
-  margin: 0;
-  font-size: 1.6rem;
-  line-height: 1.2;
-  color: var(--text-title);
-  overflow-wrap: anywhere;
-}
-
-/* pre-line keeps the line breaks typed in the description. */
-.profile-bio {
-  margin: 16px 0 0;
-  font-size: 1rem;
-  line-height: 1.55;
-  color: var(--text-body);
-  white-space: pre-line;
-  overflow-wrap: anywhere;
-}
-
-.profile-bio.is-empty {
-  color: var(--text-muted);
-  font-style: italic;
-}
-
-.profile-facts {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  margin: 20px 0 0;
-}
-
-.profile-fact {
-  min-width: 0;
-  padding: 12px 14px;
-  border: 1px solid var(--hairline);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.6);
-}
-
-.profile-fact dt {
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.profile-fact dd {
-  margin: 6px 0 0;
-  color: var(--text-title);
-  font-weight: 700;
-  overflow-wrap: anywhere;
-}
-
-.profile-fact dd a,
 .profile-card a {
   color: var(--brand-red-deep);
   font-weight: 800;
@@ -5476,27 +5431,6 @@ img.cs-option-icon {
 .profile-empty {
   color: var(--text-muted);
   font-weight: 400;
-}
-
-/* "in attesa" after a requested (not yet approved) player. */
-.profile-pending {
-  display: inline-flex;
-  align-items: center;
-  min-height: 20px;
-  margin-left: 4px;
-  padding: 0 8px;
-  border-radius: var(--radius-pill);
-  background: rgba(220, 24, 28, 0.1);
-  color: var(--brand-red-deep);
-  font-size: 0.72rem;
-  font-weight: 800;
-  vertical-align: middle;
-}
-
-/* The header's own message line only takes room when it has something. */
-.profile-header .form-message {
-  min-height: 0;
-  margin-top: 12px;
 }
 
 .profile-card h3 {
@@ -5517,6 +5451,32 @@ img.cs-option-icon {
 .card.profile-claim {
   border-color: rgba(220, 24, 28, 0.35);
   background: linear-gradient(135deg, rgba(220, 24, 28, 0.08), rgba(255, 255, 255, 0.9) 60%);
+}
+
+/* Its entrance animation makes the card a stacking context (gotcha #10), so
+   the player list's dropdown painted under the player card and the Account
+   card below it. Lifted above them while the list is open. */
+.card.profile-claim:has(.cs-wrap.is-open) {
+  position: relative;
+  z-index: 30;
+}
+
+/* "Sei già nelle classifiche? …": the card's main sentence, not a hint. */
+.profile-claim .account-hint {
+  color: var(--text-body);
+  font-size: 1.02rem;
+  line-height: 1.5;
+}
+
+/* "Richiesta inviata." etc.: its own line under the card's buttons, with
+   the same spacing as the rest of the card; no gap at all when empty. */
+.profile-claim .form-message {
+  margin-top: 14px;
+}
+
+.profile-claim .form-message:empty {
+  min-height: 0;
+  margin-top: 0;
 }
 
 /* A card title with an action on its right ("Le tue statistiche" + the
@@ -5549,44 +5509,451 @@ img.cs-option-icon {
   font-size: 1.7rem;
 }
 
-.profile-stats-facts {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+/* account.html, signed in: the player card on the left, "Le tue
+   statistiche" and "Account" stacked on its right; one column on phones,
+   card first and centred. The claim invitation, when shown, sits above
+   both, full width. On desktop the card is as tall as the cards beside it:
+   js/account-page.js's alignCardToSide sets the card's width (--pc-width)
+   from their height and, when they're shorter than the smallest card, pads
+   the last one (--pc-side-stretch) down to the card's bottom edge. */
+.profile-layout {
+  display: grid;
+  grid-template-columns: minmax(0, var(--pc-width, 320px)) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
 }
 
-/* The cards under the header follow it in, one beat after another. */
-.profile > .card:nth-child(2) {
+.profile-side > .card:last-child {
+  margin-bottom: 0;
+}
+
+@media (min-width: 821px) {
+  .profile-side > .card:last-child {
+    padding-bottom: calc(22px + var(--pc-side-stretch, 0px));
+  }
+}
+
+/* The cards beside the player card follow it in, one beat after another. */
+.profile-side > .card:nth-child(1) {
   animation-delay: 60ms;
 }
 
-.profile > .card:nth-child(3) {
+.profile-side > .card:nth-child(n + 2) {
   animation-delay: 120ms;
 }
 
-.profile > .card:nth-child(n + 4) {
-  animation-delay: 180ms;
+.profile-card-col > .form-message {
+  text-align: center;
 }
 
-/* "123/500" under the description. */
-.profile-counter {
-  align-self: flex-end;
-  color: var(--text-muted);
-  font-size: 0.78rem;
+/* No message (the usual case): no empty line under the card either. */
+.profile-card-col > .form-message:empty {
+  min-height: 0;
+  margin-top: 0;
 }
 
-/* Favourite archetype: the archetypes' own coloured pills as radio
-   buttons — faded until picked, the picked one full colour with a ring. */
-.archetype-picker {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
+/* ---------------------------------------------------------------------------
+   The player card (js/account-page.js renderCard): Magic-card proportions,
+   the favourite commander's art (Scryfall art crop) as its background, a
+   glowing border in a gradient of the favourite colours (--pc-gradient,
+   --pc-glow, set from JS). The upper part is the art alone; then avatar and
+   name straight on it; then a frosted-glass panel with archetype, colours
+   and description; "Dal <year>" and the logo at the foot. Always dark — it reads as an object, the same in both
+   themes. Everything inside sizes in cqw (% of the card's width), so the
+   card scales as one piece on any screen.
+   --------------------------------------------------------------------------- */
 
-.archetype-option {
+.player-card {
   position: relative;
+  width: 100%;
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* The entrance animation makes the card a stacking context (gotcha #10): a
+   commander-list dropdown opened in edit mode is lifted with it above the
+   cards beside/under it, only while open (same fix as .admin-form-card). */
+.player-card:has(.cs-wrap.is-open) {
+  z-index: 30;
+}
+
+/* The glowing border: the colour gradient showing through a 3px gap. */
+.pc-frame {
+  padding: 3px;
+  border-radius: 22px;
+  background: var(--pc-gradient, linear-gradient(135deg, #d6dbe0, #8d959c));
+  box-shadow:
+    0 22px 48px rgba(20, 8, 10, 0.35),
+    0 0 36px -8px var(--pc-glow, #d6dbe0);
+}
+
+/* Scryfall's card proportions (488×680). */
+.pc-surface {
+  position: relative;
+  display: flex;
+  aspect-ratio: 488 / 680;
+  border-radius: 19px;
+  background: #160e10;
+  color: #fff;
+  container-type: inline-size;
+}
+
+/* Edit mode: those proportions become the minimum, and the card grows
+   taller with its form instead (on touch screens especially, where the
+   controls are finger-sized px, not cqw) — not left to aspect-ratio's own
+   "grow to fit the content" minimum, which didn't hold here: the controls
+   spilled out of the card. The minimum height is the view-mode one, from
+   the card's width — .player-card is a size container just for this (the
+   surface is its width minus .pc-frame's 3px each side), the content's own
+   cqw still being the surface's. */
+.player-card {
+  container-type: inline-size;
+}
+
+.player-card.is-editing .pc-surface {
+  aspect-ratio: auto;
+  min-height: calc((100cqw - 6px) * 680 / 488);
+}
+
+/* The art, under everything, centred a little high (where faces usually
+   are in a landscape art crop shown portrait). */
+.pc-art {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-color: #1d1315;
+  background-size: cover;
+  background-position: center 30%;
+}
+
+/* Before any art (no favourite commander, Scryfall unreachable, or still
+   loading): a glow in the card's colour with the logo faintly in it. */
+.pc-art::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    url("dc_pc.png") center 30% / 38% no-repeat,
+    radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--pc-glow, #8d959c) 55%, transparent), transparent 70%);
+  opacity: 0.32;
+  transition: opacity 400ms ease;
+}
+
+.pc-art.is-loaded::before {
+  opacity: 0;
+}
+
+/* Darkens towards the bottom, so the panel's text reads on any art. */
+.pc-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    180deg,
+    rgba(12, 7, 8, 0.35) 0%,
+    rgba(12, 7, 8, 0) 22%,
+    rgba(12, 7, 8, 0.12) 45%,
+    rgba(12, 7, 8, 0.82) 70%,
+    rgba(12, 7, 8, 0.96) 100%
+  );
+}
+
+.pc-art.is-loaded {
+  animation: pc-art-in 600ms ease;
+}
+
+@keyframes pc-art-in {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.pc-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3cqw;
+  min-width: 0;
+  padding: 4.5cqw;
+}
+
+/* The upper part of the card: nothing but the commander art. */
+.pc-art-space {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Nameplate, straight on the art just above the glass panel: avatar (the
+   Google picture, or the initial on red) with a ring in the card's colour,
+   the name beside it. */
+.pc-nameplate {
+  display: flex;
+  align-items: center;
+  gap: 3cqw;
+  min-width: 0;
+  padding-inline: 1cqw;
+}
+
+.pc-nameplate-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.pc-avatar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 15cqw;
+  height: 15cqw;
+  overflow: hidden;
+  border: 0.8cqw solid rgba(255, 255, 255, 0.92);
+  border-radius: 50%;
+  background: var(--brand-red);
+  color: #fff;
+  font-size: 6.5cqw;
+  font-weight: 800;
+  box-shadow:
+    0 0 0 0.8cqw color-mix(in srgb, var(--pc-glow, #8d959c) 55%, transparent),
+    0 4px 12px rgba(0, 0, 0, 0.45);
+}
+
+.pc-avatar img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The owner hid the Google picture: outside edit mode, no circle at all —
+   the nameplate is just the name (js/account-page.js renderCard). */
+.player-card.hides-avatar:not(.is-editing) .pc-avatar {
+  display: none;
+}
+
+.pc-name {
+  margin: 0;
+  color: #fff;
+  font-size: 6cqw;
+  font-weight: 800;
+  line-height: 1.15;
+  /* No box behind it: a tight shadow plus a wide one keep it readable on
+     any art. */
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.85),
+    0 2px 12px rgba(0, 0, 0, 0.75);
+  overflow-wrap: anywhere;
+}
+
+/* Bottom: the frosted-glass panel — (edit mode only) the commander list,
+   archetype | colours, then the description. */
+.pc-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 3cqw;
+  padding: 4cqw;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 4.5cqw;
+  background: rgba(14, 9, 10, 0.58);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.pc-field {
+  min-width: 0;
+}
+
+.pc-field-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 3cqw;
+}
+
+.pc-label {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 2.8cqw;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.pc-value {
+  min-height: 5.6cqw;
+  margin: 1cqw 0 0;
+  color: #fff;
+  font-size: 4.4cqw;
+  font-weight: 800;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.pc-value a {
+  color: #fff;
+}
+
+.pc-value .profile-empty {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.pc-value .color-identity {
+  gap: 1.4cqw;
+  vertical-align: middle;
+}
+
+.pc-value .color-pip {
+  width: 4.6cqw;
+  height: 4.6cqw;
+}
+
+/* Up to five lines on the card (it keeps its proportions); the whole text
+   is in edit mode. */
+.pc-description {
+  display: -webkit-box;
+  margin: 0;
+  padding-top: 3cqw;
+  overflow: hidden;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 3.7cqw;
+  font-style: italic;
+  line-height: 1.45;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+  line-clamp: 5;
+}
+
+.pc-description.is-empty {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* Footer: since when the player plays (first event's year), the logo. */
+.pc-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3cqw;
+  min-height: 6cqw;
+  margin-top: -1cqw;
+}
+
+.pc-since {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 3cqw;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.pc-logo {
+  flex-shrink: 0;
+  width: 6cqw;
+  height: 6cqw;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+  opacity: 0.7;
+}
+
+/* ---- Edit mode: same layout, each value swapped for its editable twin ---- */
+
+.pc-edit-only {
+  display: none;
+}
+
+.player-card.is-editing .pc-view-only {
+  display: none;
+}
+
+.player-card.is-editing .pc-edit-only {
+  display: block;
+}
+
+/* Under the name, in the nameplate: show the Google picture or not. Not
+   offered when the account has no picture at all. */
+.player-card.is-editing .pc-avatar-toggle.pc-edit-only {
+  display: inline-flex;
+}
+
+.player-card.is-editing .pc-avatar-toggle.is-unavailable {
+  display: none;
+}
+
+.pc-avatar-toggle {
+  align-items: center;
+  gap: 1.6cqw;
+  margin-top: 1.4cqw;
+  padding: 0.8cqw 2.6cqw;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: var(--radius-pill);
+  background: rgba(12, 7, 8, 0.6);
+  color: #fff;
+  font-size: 3cqw;
+  font-weight: 700;
   cursor: pointer;
 }
 
-.archetype-option input {
+.pc-avatar-toggle input {
+  width: 3.4cqw;
+  height: 3.4cqw;
+  margin: 0;
+  accent-color: var(--brand-red);
+}
+
+/* The commander / archetype lists in place of their names: same size,
+   translucent on the glass instead of the site's white field. Specific
+   enough to outrank the dark-mode .cs-trigger rule too. */
+.player-card .pc-select .cs-wrap {
+  margin-top: 1cqw;
+}
+
+.player-card .pc-panel .pc-select .cs-trigger {
+  padding: 1.2cqw 2.4cqw;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 2.4cqw;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 4cqw;
+  font-weight: 800;
+}
+
+.player-card .pc-panel .pc-select .cs-trigger:hover,
+.player-card .pc-panel .pc-select .cs-trigger:focus-visible {
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+/* The colour pips as toggles — faded until picked. */
+.player-card.is-editing .pc-colors-edit.pc-edit-only {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.8cqw;
+  margin-top: 1.4cqw;
+}
+
+.pc-mana {
+  position: relative;
+  width: 5.4cqw;
+  height: 5.4cqw;
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  border-radius: 50%;
+  opacity: 0.35;
+  cursor: pointer;
+  transition: opacity 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+}
+
+.pc-mana input {
   position: absolute;
   inset: 0;
   margin: 0;
@@ -5594,74 +5961,260 @@ img.cs-option-icon {
   cursor: pointer;
 }
 
-.archetype-option .badge-archetype {
-  min-height: 32px;
-  padding: 0 14px;
-  font-size: 0.82rem;
-  opacity: 0.4;
-  transition: opacity 150ms ease, transform 150ms ease, box-shadow 150ms ease;
-}
-
-.archetype-option:hover .badge-archetype {
-  opacity: 0.7;
-}
-
-.archetype-option input:checked + .badge-archetype {
+.pc-mana:has(input:checked) {
   opacity: 1;
-  box-shadow: 0 0 0 3px rgba(220, 24, 28, 0.25);
-  transform: scale(1.05);
+  box-shadow: 0 0 0 2px #fff;
+  transform: scale(1.08);
 }
 
-.archetype-option input:focus-visible + .badge-archetype {
-  outline: 2px solid var(--brand-red);
+.pc-mana:has(input:focus-visible) {
+  outline: 2px solid #fff;
   outline-offset: 2px;
 }
 
-.archetype-option-none {
-  background: var(--text-muted);
+/* The description as editable text, in its own place and style. */
+.pc-description-edit {
+  padding-top: 3cqw;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
 }
 
-@media (max-width: 760px) {
-  .profile-facts {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+/* A fixed size the user can't drag bigger: 140 characters fit in it. */
+.pc-description-edit textarea {
+  box-sizing: border-box;
+  width: 100%;
+  height: 20cqw;
+  padding: 2cqw 2.4cqw;
+  border: 1px dashed rgba(255, 255, 255, 0.35);
+  border-radius: 2.4cqw;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.95);
+  font: inherit;
+  font-size: 3.7cqw;
+  font-style: italic;
+  line-height: 1.45;
+  resize: none;
+}
+
+.pc-description-edit textarea:focus {
+  outline: none;
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 0.65);
+}
+
+.pc-description-edit textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.pc-counter {
+  display: block;
+  margin-top: 1cqw;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 2.6cqw;
+  text-align: right;
+}
+
+/* ---- ✎ / ✓ (save) and ✕ (cancel), on the card's top-right corner ---- */
+
+/* Brand red, like the site's other small floating controls; ✎ outside edit
+   mode, ✓ in it. */
+.pc-edit-btn {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: var(--brand-red);
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(220, 24, 28, 0.4);
+  cursor: pointer;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.pc-edit-btn:hover {
+  transform: translateY(-1px) scale(1.05);
+  box-shadow: 0 12px 24px rgba(220, 24, 28, 0.5);
+}
+
+.pc-edit-btn:focus-visible,
+.pc-cancel-btn:focus-visible {
+  outline: 3px solid rgba(220, 24, 28, 0.45);
+  outline-offset: 3px;
+}
+
+.pc-edit-btn:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+/* ✎ and ✓ stacked in the same spot, one turning out as the other turns in
+   (.is-save is set by js/account-page.js the moment the mode switches). */
+.pc-edit-btn svg {
+  grid-area: 1 / 1;
+  width: 20px;
+  height: 20px;
+  transition:
+    opacity 180ms ease,
+    transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.pc-icon-save,
+.pc-edit-btn.is-save .pc-icon-edit {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.4);
+}
+
+.pc-edit-btn.is-save .pc-icon-edit {
+  transform: rotate(90deg) scale(0.4);
+}
+
+.pc-edit-btn.is-save .pc-icon-save {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pc-edit-btn svg {
+    transition: none;
   }
 }
 
-/* Phones: avatar, name, buttons and bio centred, as mobile profile pages
-   usually are; the facts stay left-aligned tiles. */
+.pc-cancel-btn {
+  position: absolute;
+  top: -8px;
+  right: 40px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 50%;
+  background: #fff;
+  color: #6f5a5e;
+  box-shadow: 0 6px 14px rgba(20, 8, 10, 0.25);
+  cursor: pointer;
+  transition: transform 150ms ease;
+}
+
+.pc-cancel-btn:hover {
+  transform: translateY(-1px) scale(1.05);
+}
+
+.pc-cancel-btn[hidden] {
+  display: none;
+}
+
+.pc-cancel-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ---- Edit mode on touch screens (html.nav-mobile) ----
+   The card sizes everything in cqw, so on a ~300px card its controls come
+   out finger-unfriendly (colour toggles ~16px, the "Mostra foto" checkbox
+   ~10px, ~22px-tall lists). On touch, edit mode switches them to fixed,
+   finger-sized px instead — taps of 36-44px, text fields at 16px so iOS
+   doesn't zoom the page in when they're focused — and archetype / colours
+   stack, so the five colour toggles get the panel's whole width. The card
+   just grows taller while editing (its proportions are a minimum, see
+   .pc-surface); view mode is untouched. */
+html.nav-mobile .player-card.is-editing .pc-field-row {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+
+html.nav-mobile .player-card.is-editing .pc-label {
+  font-size: 11px;
+}
+
+html.nav-mobile .player-card .pc-panel .pc-select .cs-trigger {
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 16px;
+}
+
+html.nav-mobile .player-card .cs-search {
+  padding: 10px 12px;
+  font-size: 16px;
+}
+
+html.nav-mobile .player-card .cs-option {
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+html.nav-mobile .player-card.is-editing .pc-colors-edit.pc-edit-only {
+  gap: 12px;
+  margin-top: 8px;
+}
+
+html.nav-mobile .pc-mana {
+  width: 36px;
+  height: 36px;
+}
+
+html.nav-mobile .pc-description-edit textarea {
+  /* 140 characters fit at this size, still not resizable. */
+  height: 136px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 16px;
+}
+
+html.nav-mobile .pc-counter {
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+html.nav-mobile .pc-avatar-toggle {
+  box-sizing: border-box;
+  gap: 8px;
+  min-height: 36px;
+  margin-top: 6px;
+  padding: 6px 14px;
+  font-size: 13px;
+}
+
+html.nav-mobile .pc-avatar-toggle input {
+  width: 18px;
+  height: 18px;
+}
+
+/* ✕ at ✓'s 44px, a 12px gap beside it. */
+html.nav-mobile .pc-cancel-btn {
+  top: -12px;
+  right: 44px;
+  width: 44px;
+  height: 44px;
+}
+
+html.nav-mobile .pc-cancel-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Phones and narrow tablets: one column, the player card first, centred,
+   as far from the stats card as the stacked cards are from each other. */
+@media (max-width: 820px) {
+  .profile-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+  }
+
+  .player-card {
+    margin: 0 auto;
+    max-width: 300px;
+  }
+}
+
 @media (max-width: 640px) {
-  .profile-cover {
-    height: 100px;
-  }
-
-  .profile-identity {
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    margin-top: -52px;
-    padding: 0 16px;
-  }
-
-  .profile-avatar {
-    width: 96px;
-    height: 96px;
-    font-size: 2.2rem;
-  }
-
-  .profile-actions {
-    justify-content: center;
-    padding-bottom: 0;
-  }
-
-  .profile-body {
-    padding: 12px 16px 20px;
-    text-align: center;
-  }
-
-  .profile-facts {
-    text-align: left;
-  }
-
   /* Two stat tiles per row: .stat-grid's own auto-fit (150px minimum each)
      fits only one in a phone-width card. */
   .profile-stats-tiles {
@@ -5672,6 +6225,218 @@ img.cs-option-icon {
 
 /* White with Google's own multicolour "G", as Google's sign-in branding asks
    (not restyled in the site's red). */
+/* account.html's "Account" card: the Google login as one row (logo,
+   email, "Esci"), then — for non-admin accounts — a separate delete
+   section, set apart by a line and the danger button. */
+.account-login-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.account-provider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--hairline);
+  border-radius: 50%;
+  background: #fff;
+}
+
+.account-provider svg {
+  width: 20px;
+  height: 20px;
+}
+
+.account-login-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.account-login-label {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.account-login-text strong {
+  overflow: hidden;
+  color: var(--text-title);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-danger {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--hairline);
+}
+
+.account-danger[hidden] {
+  display: none;
+}
+
+.account-danger-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.account-danger-text p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.account-danger-text .account-danger-title {
+  margin-bottom: 4px;
+  color: var(--text-title);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.account-danger .btn-danger {
+  flex-shrink: 0;
+}
+
+.profile-account .form-message:empty {
+  min-height: 0;
+  margin-top: 0;
+}
+
+@media (max-width: 480px) {
+  .account-danger {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* Under the player card, once linked: the on/off switch showing the card on
+   the player page too, as a small card of its own (the column's card +
+   switch together are as tall as the cards beside them — alignCardToSide).
+   The text on the left, a brand-red sliding switch on the right; the whole
+   box toggles it. The real checkbox stays, invisible, for keyboard and
+   screen readers. */
+.profile-switch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 16px 0 0;
+  padding: 14px 18px;
+  cursor: pointer;
+}
+
+.profile-switch[hidden] {
+  display: none;
+}
+
+/* Phones: as wide as the card above it, centred with it. */
+@media (max-width: 820px) {
+  .profile-switch {
+    max-width: 300px;
+    margin-inline: auto;
+    box-sizing: border-box;
+  }
+}
+
+.profile-switch:has(input:disabled) {
+  cursor: default;
+}
+
+.profile-switch-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.profile-switch-label {
+  color: var(--text-title);
+  font-size: 0.92rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.profile-switch-hint {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.profile-switch-hint:empty {
+  display: none;
+}
+
+.profile-switch-hint.is-error {
+  color: #b3261e;
+  font-weight: 700;
+}
+
+.profile-switch input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.profile-switch-track {
+  position: relative;
+  flex-shrink: 0;
+  width: 44px;
+  height: 26px;
+  border-radius: var(--radius-pill);
+  background: rgba(120, 104, 108, 0.35);
+  transition: background 180ms ease, opacity 180ms ease;
+}
+
+.profile-switch-track::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.profile-switch input:checked + .profile-switch-track {
+  background: var(--brand-red);
+}
+
+.profile-switch input:checked + .profile-switch-track::after {
+  transform: translateX(18px);
+}
+
+.profile-switch input:focus-visible + .profile-switch-track {
+  outline: 3px solid rgba(220, 24, 28, 0.45);
+  outline-offset: 2px;
+}
+
+.profile-switch input:disabled + .profile-switch-track {
+  opacity: 0.45;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-switch-track,
+  .profile-switch-track::after {
+    transition: none;
+  }
+}
+
 .google-signin-btn {
   width: 100%;
   gap: 10px;
@@ -5681,6 +6446,43 @@ img.cs-option-icon {
   width: 20px;
   height: 20px;
   flex-shrink: 0;
+}
+
+/* account.html's sign-in card: what an account is for (a list with
+   brand-red ticks), then what Google shares — small and muted, right under
+   "Accedi con Google", where the data is collected. */
+.account-perks {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0 18px;
+  padding: 0;
+  list-style: none;
+}
+
+.account-perks li {
+  position: relative;
+  padding-left: 26px;
+  line-height: 1.45;
+}
+
+.account-perks li::before {
+  content: "";
+  position: absolute;
+  top: 0.32em;
+  left: 2px;
+  width: 6px;
+  height: 11px;
+  border: solid var(--brand-red);
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(45deg);
+}
+
+.account-privacy-note {
+  margin: 14px 0 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.45;
 }
 
 /* League/event scope filter (Commanders, Archetypes) */
@@ -7224,25 +8026,6 @@ html[data-theme="dark"]:not(.nav-mobile) .site-search-results {
 
 :root[data-theme="dark"] .color-swatch-colorless {
   background: repeating-linear-gradient(45deg, #2a2224 0, #2a2224 5px, #362c2e 5px, #362c2e 10px);
-}
-
-/* account.html's profile: the fact tiles on a faint dark surface, and the
-   near-black "combo" pill of the archetype picker outlined so it doesn't
-   disappear into the dark card (an outline, not a box-shadow, which the
-   picked state already uses for its ring). */
-:root[data-theme="dark"] .profile-fact {
-  background: rgba(255, 255, 255, 0.04);
-}
-
-/* The claim invitation's red tint — compound selector so it outranks the
-   generic dark-mode .card surface (gotcha #8 in CLAUDE.md). */
-:root[data-theme="dark"] .card.profile-claim {
-  background: linear-gradient(135deg, rgba(220, 24, 28, 0.18), rgba(255, 255, 255, 0.045));
-}
-
-:root[data-theme="dark"] .archetype-option .badge-archetype-combo {
-  outline: 1px solid rgba(255, 255, 255, 0.3);
-  outline-offset: -1px;
 }
 
 /* Theme toggle switch — sits in the footer bar. A plain icon button rather

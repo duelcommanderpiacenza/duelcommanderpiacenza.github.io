@@ -640,12 +640,19 @@ grant execute on function admin_delete_user(uuid) to authenticated;
 
 create table profiles (
   user_id uuid primary key references auth.users(id) on delete cascade,
-  description text check (char_length(description) <= 500),
+  -- 140 since supabase/migrations/006_short_description_delete_account.sql.
+  description text check (char_length(description) <= 140),
   -- Favourite colors as a WUBRG-ordered string ('' = none, 'UB', 'WUBRG'…);
   -- the check allows only that order, each color at most once.
   fav_colors text not null default '' check (fav_colors ~ '^W?U?B?R?G?$'),
   fav_commander_id uuid references commanders(id) on delete set null,
   fav_archetype deck_archetype,
+  -- Whether the player card shows the Google picture (false: the initial).
+  -- Added by supabase/migrations/005_profile_show_avatar.sql.
+  show_avatar boolean not null default true,
+  -- Whether the card is shown on the player's page (public_player_card()
+  -- below). Added by supabase/migrations/007_public_player_card.sql.
+  show_on_player_page boolean not null default true,
   updated_at timestamptz not null default now()
 );
 
@@ -660,3 +667,65 @@ create policy "profiles_insert_own" on profiles for insert
 create policy "profiles_update_own" on profiles for update
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
+
+-- The card of the account linked to a player, for everyone (player.html) —
+-- profiles itself stays private. Nothing when the player isn't linked, the
+-- account never saved its card (no profiles row before the first save), its
+-- owner hides it, or the account is blocked. The Google picture only when
+-- shown on the card; has_picture tells "hidden by the owner" (no circle)
+-- from "no Google picture" (the initial). Added by
+-- supabase/migrations/007_public_player_card.sql.
+create or replace function public_player_card(p_player_id uuid)
+returns table (
+  description text,
+  fav_colors text,
+  fav_archetype deck_archetype,
+  show_avatar boolean,
+  has_picture boolean,
+  avatar_url text,
+  commander_name text
+)
+language sql stable security definer set search_path = public as $$
+  select
+    pr.description,
+    pr.fav_colors,
+    pr.fav_archetype,
+    pr.show_avatar,
+    (u.raw_user_meta_data ->> 'avatar_url') is not null,
+    case when pr.show_avatar then u.raw_user_meta_data ->> 'avatar_url' end,
+    c.name
+  from players p
+  join profiles pr on pr.user_id = p.user_id
+  join auth.users u on u.id = p.user_id
+  left join commanders c on c.id = pr.fav_commander_id
+  where p.id = p_player_id
+    and pr.show_on_player_page
+    and not coalesce(u.banned_until > now(), false);
+$$;
+
+grant execute on function public_player_card(uuid) to anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Player login: a user deletes their own login account (account.html). Its
+-- profile and pending request go with it, its player is unlinked (and kept).
+-- Not for admin accounts. Added by
+-- supabase/migrations/006_short_description_delete_account.sql.
+-- ---------------------------------------------------------------------------
+
+-- Errors are codes js/account-page.js translates: not_signed_in, admin_account.
+create or replace function delete_my_account() returns void
+language plpgsql security definer set search_path = public as $$
+declare
+  uid uuid := auth.uid();
+begin
+  if uid is null then
+    raise exception 'not_signed_in';
+  end if;
+  if is_admin() then
+    raise exception 'admin_account';
+  end if;
+  delete from auth.users where id = uid;
+end $$;
+
+revoke execute on function delete_my_account() from public, anon;
+grant execute on function delete_my_account() to authenticated;

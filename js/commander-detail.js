@@ -79,7 +79,7 @@ function scryfallCardImages(card) {
 // Document-relative top of an element's *layout* box — offsetTop ignores
 // CSS transforms, unlike getBoundingClientRect, which matters here: with
 // the filters collapsed, the stat tiles are only visually slid up (see
-// .commander-filter-panel in styles.css), their layout spot is unchanged.
+// .detail-filter-panel in styles.css), their layout spot is unchanged.
 function layoutTop(el) {
   let y = 0;
   for (let n = el; n; n = n.offsetParent) y += n.offsetTop;
@@ -87,14 +87,14 @@ function layoutTop(el) {
 }
 
 // Filters collapsed: the stat tiles slide up by exactly the filter row's
-// height into its (now invisible) space, via --commander-filters-shift,
+// height into its (now invisible) space, via --detail-filters-shift,
 // while the layout itself — card size, everything below — stays put.
 function syncFiltersShift() {
   const mainColEl = document.querySelector(".commander-top-row-main");
   const panelEl = document.getElementById("commander-filter-panel");
   const winrateBoxesEl = document.getElementById("commander-winrate");
   if (!mainColEl || !panelEl || !winrateBoxesEl) return;
-  mainColEl.style.setProperty("--commander-filters-shift", `${layoutTop(winrateBoxesEl) - layoutTop(panelEl)}px`);
+  mainColEl.style.setProperty("--detail-filters-shift", `${layoutTop(winrateBoxesEl) - layoutTop(panelEl)}px`);
 }
 
 function syncCardImageLayout(cardImageEl) {
@@ -148,7 +148,7 @@ async function init() {
   const eventFilter = document.getElementById("commander-event-filter");
   const dateFromFilter = document.getElementById("commander-date-from");
   // Same round button + active-filter dot as the list pages; this page's
-  // panel fades instead of collapsing (styles.css .commander-filter-panel).
+  // panel fades instead of collapsing (styles.css .detail-filter-panel).
   // Same default "Dal" as the list pages too: the last
   // DEFAULT_DATE_FROM_YEARS years (js/ui.js) — set before the stats first
   // render, which read it.

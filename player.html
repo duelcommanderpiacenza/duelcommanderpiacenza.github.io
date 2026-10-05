@@ -80,12 +80,18 @@
 
     <div class="page-heading">
       <h1 id="player-title">Caricamento...</h1>
+      <!-- The player card of the account linked to this player (js/player-card.js),
+           only when its owner saved one and shows it: placed and sized like
+           commander.html's card, beside the title down to the stat tiles. -->
+      <div class="player-page-card" id="player-page-card" hidden></div>
     </div>
   </div>
 
   <div class="page-loading-region">
     <div id="page-loading-overlay" class="page-loading-overlay"><p>Caricamento...</p></div>
 
+    <!-- Kept clear of the player card beside it (js/player-detail.js). -->
+    <div class="player-stats-col" id="player-stats-col">
     <div class="stats-heading">
       <h2>Statistiche</h2>
       <button type="button" class="filter-toggle-btn" id="player-filter-toggle" aria-expanded="false" aria-controls="player-filter-panel" aria-label="Filtri">
@@ -113,6 +119,7 @@
       </div>
     </div>
     <div id="player-winrate-overall" class="stat-grid page-loading">Caricamento...</div>
+    </div>
 
     <h2 style="margin-top:28px;">Album comandanti</h2>
     <div id="player-commanders" class="page-loading">Caricamento...</div>

@@ -233,36 +233,111 @@ favourite commander, favourite archetype.
   updates, the owner and the admin read. Not public yet.
 - [x] `js/db.js`'s `Profiles` (`mine`, `save` = upsert).
 - [x] `account.html` + `js/account-page.js` rewritten:
-  - profile header card: red cover band, the Google picture as a big
-    avatar overlapping it (initial on red if none), "Modifica profilo",
-    name, the description as bio, and four facts (Giocatore
-    — linked, or requested "in attesa" —, Colori preferiti as pips,
-    Commander preferito, Archetipo preferito);
-  - "Modifica profilo" card, hidden until opened: colour swatches, a
-    searchable commander list, the archetypes as their coloured pills,
-    description with a 0/500 counter; Salva / Annulla;
+  - **player card** (left on desktop; replaced an earlier "cover + avatar"
+    profile header and a separate edit card): Magic-card proportions
+    (488:680), but a game-style player card inside, not a Magic card's
+    layout. The favourite commander's **art** (Scryfall `art_crop`, front
+    face, cached) fills it, darkening towards the bottom; no commander → a
+    colour glow with the logo. **Not credited on the card**, by Michele's
+    choice — Scryfall's guidelines do ask for the artist to be credited
+    where its art crops are shown (it was in the footer before). Border: a
+    glowing **gradient of the favourite colours** (one colour → that colour
+    into a darker shade; none → silver). The upper part of the card is left
+    to the art alone. Below it, straight on the art (no box behind it): a
+    **nameplate** (small avatar with a ring in the card's colour — the Google picture;
+    hidden by the owner → **no circle at all** outside edit mode; no Google
+    picture → the initial on red — and the name beside it: the linked
+    player's, else the Google name); then a frosted-glass panel at the
+    bottom with archetype | colours side by side
+    (label + value), then the
+    description (**140 characters at most**, migration 006). The favourite
+    commander isn't written on the card — it *is* the art. Footer:
+    **"Dal <year>"** of the linked player's first event (not the
+    account's), and the logo. Always dark, the same in both themes; sized in
+    `cqw` so it scales as one piece;
+  - **✎ edits without changing the layout**: each value becomes editable
+    in its place — archetype becomes a list, the colour pips toggles, the
+    description editable text (0/140, fixed size, can't be resized), plus
+    a "Commander preferito (sfondo)" list that appears only in edit mode
+    and a "Mostra foto" switch under the name (`profiles.show_avatar`,
+    migration 005). Border, art, pips and avatar preview live. ✎ itself
+    becomes ✓ (save), with ✕ beside it (or Esc) to cancel. The card grows
+    taller in edit mode if needed. The switch is animated both ways, as one
+    motion (the glass panel's contents fade out, the panel grows/shrinks
+    carrying the nameplate, the contents fade back in; ✕ slides out from under ✓, the
+    icons turn into each other). On desktop the card is exactly as tall as
+    the stats + Account cards beside it (its width follows their height,
+    the switch under it counted);
+    on phones it's 300px wide;
   - "Il tuo giocatore" card (the step 2 claim) **at the top, only while the
     account isn't linked** (no request yet, or one waiting) — tinted red, to
-    invite a new account to claim its player first; hidden once linked;
-  - "Le tue statistiche" card, **only once linked**, under the profile (and
-    the edit card): the player page's own winrate tiles (Winrate, Eventi,
+    invite a new account to claim its player first; hidden once linked. Its
+    player list's dropdown is lifted above the cards below while open;
+  - "Le tue statistiche" card, **only once linked**, right of the player
+    card on desktop: the player page's own winrate tiles (Winrate, Eventi,
     Vittorie, Pareggi, Sconfitte — same counting as `player-detail.js`,
-    whole history), most played commander, best placement (from the cached
-    `event_standings`), and a "Pagina giocatore →" link;
-  - "Account" card, last: the Google email it's signed in with, and "Esci";
-  - the page stays behind its loading splash until profile, claim and
-    commanders are loaded, then fades in together (cards one beat apart);
-  - phones: avatar, name, buttons and bio centred, facts and stat tiles
-    two per row;
-    dark mode: the cover stays red, the avatar ring takes the page colour.
-- [x] **Test on dev:** saving the profile, stats when linked (same numbers
-  as the player page), the claim card on top when not linked, the Account
-  card and "Esci", phone and dark mode — all working (phone stat tiles
-  fixed to two per row).
+    whole history) plus **Miglior piazzamento** as one more tile of the same
+    look (from the cached `event_standings`), and a "Pagina giocatore →"
+    link. ("Commander più giocato" was dropped);
+  - "Account" card, under the stats: the Google login as one row (logo,
+    email, "Esci"), then **"Elimina account"** — not shown to admin
+    accounts. `delete_my_account()` (migration 006) deletes the auth user:
+    its profile and pending request go with it, its player is unlinked and
+    kept; refused for admins in the database too. After it, the page goes
+    back to the sign-in card ("Account eliminato…"); signing in with Google
+    again creates a new, empty account;
+  - the page stays behind its loading splash until profile, claim,
+    commanders and the admin check are loaded, then fades in together;
+  - ≤820px: one column, the player card first and centred; phones: stat
+    tiles two per row.
+- Header search on phones: the ✕ of the open search sits where the
+  header's search button was — no longer the last button since the account
+  button — so the field now reserves room for it based on its real position
+  (`html.nav-mobile .site-search-bar`'s padding-right), instead of running
+  under it.
+- [x] **Test on dev** (earlier header layout): saving the profile, stats
+  when linked (same numbers as the player page), the claim card on top
+  when not linked, the Account card and "Esci", phone and dark mode — all
+  working.
+- [x] **Migrations 005 and 006 run on dev** (`005_profile_show_avatar.sql`,
+  `006_short_description_delete_account.sql`); saving the card works.
+- [ ] **Test the player card, account deletion and the phone search on
+  dev** (layout tests before going live).
 
-Possible later: showing the profile on the public player page
-(`player.html`) of the linked player — would need a public read rule on
-`profiles` for linked accounts.
+### The card on the player page
+
+- [x] Migration `007_public_player_card.sql` (+ rollback), folded into
+  `schema.sql` — **to run on dev**: `profiles.show_on_player_page` (default
+  on) and `public_player_card(p_player_id)`, a security-definer function
+  everyone can call, returning the card of the account linked to that
+  player — nothing if the player isn't linked, the account never saved its
+  card (no `profiles` row before the first save), its owner hides it, or
+  the account is blocked. `profiles` itself stays private. The Google
+  picture comes from the account's sign-in data, only when shown on the
+  card.
+- [x] `player.html`: the card (view only, `js/player-card.js`'s
+  `renderPublicPlayerCard`, the account page's own colours/art/markup
+  helpers moved there too) placed and sized like `commander.html`'s card —
+  beside the title from its top down to the stat tiles' bottom on desktop
+  (≤320px wide; the five stat tiles fit on one row beside it, so it comes
+  out the commander card's size), the filters beside it fading instead of
+  collapsing;
+  stacked below the title on phones. "Dal <year>" from the player's first
+  event.
+- [x] `account.html`: a "Mostra la carta nella pagina giocatore" switch
+  under the player card (once linked), saved right away; disabled (label "Salva
+  prima la tua carta almeno una volta.") until the card has been saved once. Card + switch
+  together are as tall as the stats + Account cards beside them.
+- [ ] **Run 007 on dev and test**: a linked account with a saved card →
+  card on its player page; switch off → gone; never saved → no card,
+  switch disabled; a player with no account → page as before.
+
+### Sign-in card
+
+- [x] "Entra con il tuo account Google." plus what an account is for (link
+  to your player and your stats, your own player card, showing it on your
+  player page), and under "Accedi con Google" a muted line on what Google
+  shares (name, email, photo). A full privacy page was tried and dropped.
 
 ## Step 5 — Go live
 
@@ -272,12 +347,18 @@ Possible later: showing the profile on the public player page
   ```
   Check with the step 0 query above (expects 34), and that the admin still
   saves. Then the later migrations, in order, each checked like on dev:
-  `002_player_claims.sql`, `003_admin_users.sql`, `004_profiles.sql`.
+  `002_player_claims.sql`, `003_admin_users.sql`, `004_profiles.sql`,
+  `005_profile_show_avatar.sql`, `006_short_description_delete_account.sql`,
+  `007_public_player_card.sql`.
 - [ ] Live dashboard: the step 1 settings — Allow new users to sign up, the
   Google provider (same Client ID and secret; the live callback URL is
   already in the Google client), and the live site's address as Site URL /
   Redirect URLs (`https://duelcommanderpiacenza.github.io/**`).
 - [ ] Google client: published ("In production"), so anyone can sign in.
+- [ ] Google Analytics (index.html, social.html — there before this
+  feature): as configured it sets cookies without asking; under the Italian
+  Garante's rules analytics cookies like these need prior consent (a cookie
+  banner), unless GA is removed or set up not to. Decide before/at go-live.
 - [ ] Merge `player-login` into `main`.
 
 ## Open questions

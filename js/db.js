@@ -158,6 +158,27 @@ export const Profiles = {
       .then(assertOk),
 };
 
+// A player's card on their public page (player.html): the linked account's
+// profile, through supabase/migrations/007's public_player_card() — null
+// when there's none to show (not linked, never saved, hidden by its owner,
+// blocked account).
+export const PlayerCards = {
+  get: (playerId) =>
+    sb
+      .rpc("public_player_card", { p_player_id: playerId })
+      .then(assertOk)
+      .then((rows) => rows?.[0] ?? null),
+};
+
+// The signed-in user's own login account (account.html's "Account" card).
+// remove(): supabase/migrations/006's delete_my_account() — refused for an
+// admin (admin_account); its profile and pending request go with it, its
+// player is unlinked and kept.
+export const MyAccount = {
+  isAdmin: () => sb.rpc("is_admin").then(assertOk).then((data) => data === true),
+  remove: () => sb.rpc("delete_my_account").then(assertOk),
+};
+
 // The admin's user management (supabase/migrations/003_admin_users.sql):
 // login accounts live in Supabase Auth, out of the API's reach, so it's all
 // admin-only database functions (each checks is_admin()). Errors come back
