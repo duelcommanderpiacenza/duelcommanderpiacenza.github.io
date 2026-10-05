@@ -341,25 +341,101 @@ favourite commander, favourite archetype.
 
 ## Step 5 — Go live
 
+Database first, code second: the new code calls tables and functions
+(`admins`/`is_admin()`, `profiles`, `public_player_card()`, …) that don't
+exist on live until the migrations run, while the current live code keeps
+working with them already in place (the admin account is in `admins` from
+001 on, so its saves still pass `is_admin()`). In order:
+
+### 5.1 — Bring `main` into `player-login` (code, no live impact)
+
+`main` moved on while this branch was open. Merge it **into the branch**
+first, so any surprise shows up here, tested on dev, never on the live site.
+
+```
+git checkout player-login
+git fetch origin
+git merge origin/main
+```
+
+State when last checked (2026-10-05, branch commit `0eae990`):
+
+- `main` had 16 commits not on the branch (tables restyle, admin event
+  pages, badges revamp with `icons/badges/*.svg` and `js/info-dialog.js`,
+  foil card styles, …); the branch 7.
+- Changed on both sides: `CLAUDE.md`, `admin/admin.css`, `admin/index.html`,
+  `admin/js/app.js`, `js/player-detail.js`, `matchups.html`, `social.html`,
+  `styles.css`. A dry run (`git merge-tree --write-tree --name-only HEAD
+  origin/main`, changes nothing) merged all but two by itself:
+  - **`js/player-detail.js`**: `main` made `init()` start its three
+    requests at once (`playerRequest = Players.get(id)`,
+    `autoBadgesRequest`, `entriesRequest`, awaited later in order) and
+    turned the title's badges into plain icons (`badgeDiscHtml`); the
+    branch changed the same `const player = await Players.get(id)` into a
+    `Promise.all` with `PlayerCards.get(id)`. Resolve by keeping `main`'s
+    version and adding the card as a fourth request started alongside the
+    others — `const cardRequest = PlayerCards.get(id).catch((err) => {
+    console.error(err); return null; });` (not fatal: the page works without
+    it), then `const card = await cardRequest;` — and keep the branch's card
+    block after `const entries = await entriesRequest;`, its imports
+    (`PlayerCards`, `renderPublicPlayerCard`, `fitTitleToOneLine`,
+    `alignBackButtonToTitle`), `syncPlayerCardLayout()` and its call at the
+    end of `applyFilters()`.
+  - **`CLAUDE.md`**: documentation only, both sides added text — keep both.
+- No silent problems found: `main` added no public page (a new page would
+  lack the header's account button, `#site-account`, added to every public
+  page on this branch), nothing on `main` uses the CSS names this branch
+  renamed (`.commander-filter-panel` → `.detail-filter-panel`,
+  `#commander-winrate` in those rules → `.detail-filter-panel + .stat-grid`,
+  `--commander-filters-shift` → `--detail-filters-shift`), and `main`
+  changed nothing under `supabase/`.
+
+**If `main` has moved again since**, redo the dry run first, and check its
+new commits for exactly those three things: new public pages (copy the
+`#site-account` header markup into them), uses of the old CSS names, and
+database changes (a `main` migration would need numbering after 007 and
+running too).
+
+- [ ] Merge `origin/main` into `player-login`, conflicts resolved.
+- [ ] Test locally on dev (`python -m http.server 8000`): `main`'s new
+  features and the whole player login together — sign-in, claim, admin
+  "Utenti", profile card (edit, save, switch), the card on player.html,
+  commander.html's card and filters (renamed CSS), phone and dark mode.
+- [ ] Commit the merge on `player-login`.
+
+### 5.2 — Live database and settings
+
+- [ ] **Back up the live database** first (Supabase dashboard).
 - [ ] Live SQL editor: run `001_admins.sql`, then add the admin account:
   ```sql
   insert into admins (user_id) select id from auth.users where email = '...';
   ```
   Check with the step 0 query above (expects 34), and that the admin still
-  saves. Then the later migrations, in order, each checked like on dev:
-  `002_player_claims.sql`, `003_admin_users.sql`, `004_profiles.sql`,
-  `005_profile_show_avatar.sql`, `006_short_description_delete_account.sql`,
-  `007_public_player_card.sql`.
+  saves on the live site. Then the later migrations, in order, each checked
+  like on dev: `002_player_claims.sql`, `003_admin_users.sql`,
+  `004_profiles.sql`, `005_profile_show_avatar.sql`,
+  `006_short_description_delete_account.sql`, `007_public_player_card.sql`.
+  (Each has a `_rollback.sql` if one goes wrong.)
 - [ ] Live dashboard: the step 1 settings — Allow new users to sign up, the
   Google provider (same Client ID and secret; the live callback URL is
   already in the Google client), and the live site's address as Site URL /
   Redirect URLs (`https://duelcommanderpiacenza.github.io/**`).
 - [ ] Google client: published ("In production"), so anyone can sign in.
+
+### 5.3 — Code live
+
+- [ ] Merge `player-login` into `main` (`git checkout main`, `git merge
+  player-login` — no conflicts expected after 5.1) and push: GitHub Pages
+  publishes it.
+- [ ] On the live site: sign in with Google; the admin app still works for
+  the admin account; a player page with no linked account looks as before.
+
+### Still to decide
+
 - [ ] Google Analytics (index.html, social.html — there before this
   feature): as configured it sets cookies without asking; under the Italian
   Garante's rules analytics cookies like these need prior consent (a cookie
   banner), unless GA is removed or set up not to. Decide before/at go-live.
-- [ ] Merge `player-login` into `main`.
 
 ## Open questions
 
