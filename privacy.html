@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (t !== "light" && t !== "dark") {
+          t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+        document.documentElement.dataset.theme = t;
+        if (navigator.maxTouchPoints > 0) document.documentElement.classList.add("nav-mobile");
+      } catch (e) {}
+    })();
+  </script>
+  <title>Privacy - Duel Commander Piacenza</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="view-transition" content="same-origin">
+  <link rel="icon" type="image/png" href="dc_pc.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#dc181c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-active-nav="privacy">
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="site-header-brand" href="index.html">
+      <img src="dc_pc.png" alt="" class="site-logo-sm">
+      <span>Duel Commander Piacenza</span>
+    </a>
+
+    <div class="site-search">
+      <button type="button" class="site-search-trigger" id="site-search-trigger" aria-label="Cerca" aria-haspopup="true" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      </button>
+
+      <div class="site-search-box" id="site-search-box">
+        <div class="site-search-bar">
+          <div class="site-search-field">
+            <svg class="site-search-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="search" id="site-search-input" class="site-search-input" placeholder="Cerca giocatori, eventi, &hellip;" aria-label="Cerca nel sito" autocomplete="off">
+          </div>
+          <button type="button" class="site-search-close" id="site-search-close" aria-label="Chiudi ricerca">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="6" y1="18" x2="18" y2="6"></line></svg>
+          </button>
+        </div>
+        <div class="site-search-results" id="site-search-results"></div>
+      </div>
+    </div>
+
+    <a class="site-account" id="site-account" href="account.html" aria-label="Accedi" title="Accedi">
+      <svg class="site-account-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"></path></svg>
+    </a>
+  </div>
+</header>
+
+<nav class="site-nav" aria-label="Navigazione principale">
+  <button type="button" class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false"><span class="nav-dropdown-label">Privacy</span><span class="nav-dropdown-caret" aria-hidden="true"></span></button>
+  <div class="site-nav-inner">
+    <a class="nav-link" data-nav="current" href="index.html">Bacheca</a>
+    <a class="nav-link" data-nav="events" href="events.html">Leghe <span class="amp">&amp;</span> Eventi</a>
+    <a class="nav-link" data-nav="commanders" href="commanders.html">Comandanti</a>
+    <a class="nav-link" data-nav="matchups" href="matchups.html">Matchups</a>
+    <a class="nav-link" data-nav="archetypes" href="archetypes.html">Archetipi</a>
+    <a class="nav-link" data-nav="players" href="players.html">Giocatori</a>
+    <a class="nav-link" data-nav="social" href="social.html">Social</a>
+  </div>
+</nav>
+
+<main class="page-main privacy-page">
+  <div class="page-heading"><h1>Privacy</h1></div>
+
+  <!-- The site's privacy notice. Google requires its address to let anyone
+       sign in with Google (Google Auth Platform → Branding); linked from
+       account.html's sign-in card, where the data is collected. Keep it in step with what the site actually does — new
+       data, new third-party services, the analytics on index.html and
+       social.html. -->
+  <section class="card privacy-card">
+    <p class="privacy-lead">Duel Commander Piacenza è un sito amatoriale che raccoglie risultati e statistiche dei tornei di Duel Commander a Piacenza. Questa pagina spiega quali dati usiamo, perché e cosa puoi fare.</p>
+    <p class="privacy-updated">Ultimo aggiornamento: ottobre 2026</p>
+
+    <h2>Chi gestisce i dati</h2>
+    <p>Il sito è curato da Michele Ferri, titolare del trattamento. Per qualsiasi domanda o richiesta sui tuoi dati scrivi a <a href="mailto:michele.ferri.2403@gmail.com">michele.ferri.2403@gmail.com</a>.</p>
+
+    <h2>Risultati dei tornei</h2>
+    <p>Nomi dei giocatori, commander e archetipi giocati e risultati degli eventi sono pubblicati come classifiche e statistiche, come avviene di solito nei tornei di Magic. Li inseriscono gli organizzatori e non serve un account. Se vuoi correggere o togliere qualcosa che ti riguarda, scrivici.</p>
+
+    <h2>Se accedi con Google</h2>
+    <p>L'account è facoltativo: serve solo per collegarti al tuo giocatore e creare la tua carta. Accedendo, Google ci comunica:</p>
+    <ul>
+      <li>il tuo nome e la tua email;</li>
+      <li>la tua foto profilo;</li>
+      <li>un identificativo del tuo account Google.</li>
+    </ul>
+    <p>Non riceviamo la tua password. La tua email la vedi solo tu e gli amministratori del sito.</p>
+
+    <h2>La tua carta e il tuo profilo</h2>
+    <p>Quello che inserisci nella tua carta (descrizione, colori, commander e archetipo preferiti) resta privato finché non scegli di mostrarla: con l'interruttore <em>“Mostra la carta nella pagina giocatore”</em> la carta diventa visibile a tutti nella pagina del tuo giocatore, con il tuo nome e — solo se hai attivato <em>“Mostra foto”</em> — la tua foto profilo. Puoi nasconderla di nuovo in qualsiasi momento.</p>
+    <p>Quando chiedi di essere collegato a un giocatore, la richiesta è visibile agli amministratori, che la approvano o la rifiutano.</p>
+
+    <h2>Dove sono conservati</h2>
+    <ul>
+      <li><strong>Supabase</strong>: database del sito e gestione degli accessi;</li>
+      <li><strong>GitHub Pages</strong>: ospita il sito e registra dati tecnici delle visite, come l'indirizzo IP;</li>
+      <li><strong>Google</strong>: accesso con il tuo account Google;</li>
+      <li><strong>Scryfall</strong>: le immagini delle carte vengono richieste dal tuo browser direttamente a Scryfall.</li>
+    </ul>
+    <p>Alcuni di questi servizi possono trattare dati anche fuori dall'Unione Europea, con le garanzie previste dal GDPR.</p>
+
+    <h2>Cookie e statistiche</h2>
+    <p>Il sito salva nel tuo browser solo quello che serve a farlo funzionare: la sessione di accesso e la scelta del tema chiaro o scuro. Le pagine Bacheca e Social usano inoltre Google Analytics per statistiche sulle visite, che può impostare propri cookie.</p>
+
+    <h2>Perché e per quanto tempo</h2>
+    <p>Usiamo i dati del tuo account per darti il servizio che hai chiesto (la tua carta e il collegamento al tuo giocatore) e li conserviamo finché non elimini l'account. I risultati dei tornei restano nell'archivio storico degli eventi, nell'interesse di tutti i giocatori a classifiche e statistiche complete.</p>
+
+    <h2>I tuoi diritti</h2>
+    <p>Puoi chiedere in qualsiasi momento di vedere, correggere o cancellare i tuoi dati, scrivendo all'indirizzo qui sopra. Per eliminare l'account non serve scriverci: usa <em>“Elimina account”</em> nella pagina <a href="account.html">Profilo</a> — account, carta e collegamento al giocatore vengono cancellati, mentre i risultati restano al giocatore.</p>
+    <p>Puoi anche presentare reclamo al Garante per la protezione dei dati personali.</p>
+  </section>
+</main>
+
+<footer>
+  <div class="footer-spacer" aria-hidden="true"></div>
+  <div class="footer-center">
+    <div>&copy; 2026 Duel Commander Piacenza</div>
+    <div class="footer-credit">
+      Created by Michele Ferri
+      <a href="https://www.instagram.com/michele__f/" target="_blank" rel="noopener noreferrer" aria-label="Instagram di Michele Ferri">
+        <img src="instagram.png" alt="Instagram" width="16" height="16">
+      </a>
+    </div>
+  </div>
+  <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="false" aria-label="Cambia tema"></button>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script type="module" src="js/layout.js"></script>
+
+</body>
+</html>

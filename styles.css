@@ -6860,6 +6860,48 @@ html.nav-mobile .pc-cancel-btn svg {
   line-height: 1.45;
 }
 
+.account-privacy-note a {
+  color: var(--brand-red);
+  font-weight: 700;
+}
+
+/* privacy.html (also the address Google's sign-in setup requires; linked
+   from account.html's sign-in card): one card of plain prose, at a readable
+   line length. */
+.privacy-card {
+  max-width: 760px;
+  line-height: 1.6;
+}
+
+.privacy-card h2 {
+  margin: 26px 0 8px;
+  font-size: 1.15rem;
+  color: var(--text-title);
+}
+
+.privacy-card p,
+.privacy-card ul {
+  margin: 0 0 10px;
+}
+
+.privacy-card ul {
+  padding-left: 22px;
+}
+
+.privacy-card a {
+  color: var(--brand-red);
+  font-weight: 700;
+}
+
+.privacy-lead {
+  font-size: 1.05rem;
+}
+
+.privacy-updated {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
 /* League/event scope filter (Commanders, Archetypes) */
 
 .filter-bar {

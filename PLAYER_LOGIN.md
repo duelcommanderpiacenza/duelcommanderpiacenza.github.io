@@ -442,6 +442,15 @@ running too).
   Redirect URLs (`https://duelcommanderpiacenza.github.io/**`).
 - [ ] Google client: published ("In production"), so anyone can sign in.
 
+Publishing the Google client turned out to need, under **Google Auth
+Platform → Branding**: an app name, a support email, a **home page URL**
+(`https://duelcommanderpiacenza.github.io`), a **privacy policy URL**
+(`https://duelcommanderpiacenza.github.io/privacy.html`) and the authorized
+domain `duelcommanderpiacenza.github.io`. So `privacy.html` came back (it
+had been dropped earlier), with its contact email, linked again from the
+sign-in card's Google line — and the code went
+live first (5.3), so that page exists before Google is given its address.
+
 ### 5.3 — Code live
 
 - [ ] Merge `player-login` into `main` (`git checkout main`, `git merge
