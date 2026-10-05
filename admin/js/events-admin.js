@@ -39,7 +39,7 @@ export function initEventsAdmin({ onOpenEvent }) {
           { key: "name", label: "Nome", render: (r) => r.name ?? "—" },
           { key: "event_date", label: "Data", render: (r) => formatDate(r.event_date) },
           { key: "start_time", label: "Orario", render: (r) => formatTime(r.start_time) ?? "—" },
-          { key: "status", label: "Stato", render: (r) => statusToggleButton(r.is_open, r.id) },
+          { key: "status", label: "Stato", render: (r) => statusToggleButton(r.is_open, r.id, "event") },
           {
             key: "manage",
             label: "",
@@ -164,7 +164,7 @@ export function initEventsAdmin({ onOpenEvent }) {
 
   // The event's open/closed state can also be toggled from the Matches
   // view (drilled further in), so this list needs to catch up when that
-  // happens instead of showing a stale "Chiudi"/"Riapri" label.
+  // happens instead of showing a stale Aperto/Chiuso pill.
   on("events:changed", () => {
     if (currentLeague) refresh();
   });

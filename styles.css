@@ -20,6 +20,7 @@
   --hairline: rgba(154, 28, 32, 0.18);
   --hairline-hover: rgba(220, 24, 28, 0.32);
   --hairline-hover-strong: rgba(220, 24, 28, 0.36);
+  --table-row-line: rgba(154, 28, 32, 0.08);
 
   --shadow-soft: 0 18px 42px rgba(69, 29, 34, 0.08);
   --shadow-card: 0 12px 28px rgba(40, 24, 26, 0.08);
@@ -1603,12 +1604,17 @@ main {
   color: var(--brand-red-deep);
 }
 
+/* One line, cut with an ellipsis like the name above it, rather than
+   wrapping onto a second one when the row is narrow. */
 .upcoming-row-league {
   font-size: 0.78rem;
   font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.03em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* "Ultimi eventi" reuses the upcoming-row markup, but each row is a link
@@ -1634,6 +1640,28 @@ a.upcoming-row:hover .upcoming-row-title {
 .upcoming-row > .results-links {
   flex-shrink: 0;
   margin-left: auto;
+}
+
+/* Touch devices: the links on their own line under the name and league
+   instead of beside them, so the name gets the row's full width — a grid,
+   the date badge spanning both lines and centered on them. Only rows that
+   have links (an empty second line would still add the row gap). */
+html.nav-mobile .upcoming-row:has(> .results-links) {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 14px;
+  row-gap: 8px;
+}
+
+html.nav-mobile .upcoming-row:has(> .results-links) > .upcoming-date-badge {
+  grid-row: 1 / span 2;
+  align-self: center;
+}
+
+html.nav-mobile .upcoming-row > .results-links {
+  grid-column: 2;
+  justify-self: start;
+  margin-left: 0;
 }
 
 /* "Leghe in corso" inside the accent card: the per-league blocks drop their
@@ -1740,7 +1768,12 @@ a.upcoming-row:hover .upcoming-row-title {
   font-weight: 800;
 }
 
-/* Name (+ handle) truncates; the player badges after it never shrink. */
+/* The name (+ handle) comes first: always shown whole — cut with an
+   ellipsis only if it alone is wider than the column — and the player
+   badges get whatever room is left after it, as many *whole* badges as fit:
+   their strip is one disc tall with overflow hidden and wraps, so a badge
+   that doesn't fit drops onto the hidden second line instead of showing
+   half cut off. */
 .dashboard-standings-name {
   display: flex;
   align-items: center;
@@ -1749,13 +1782,22 @@ a.upcoming-row:hover .upcoming-row-title {
 }
 
 .dashboard-standings-name-text {
+  flex: 0 0 auto;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.dashboard-standings-name > .icon-badge {
-  flex-shrink: 0;
+.dashboard-standings-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  flex: 1 1 0;
+  min-width: 0;
+  /* One .badge-disc tall: 1.6em of .icon-badge's 1rem. */
+  height: 1.6rem;
+  overflow: hidden;
 }
 
 .dashboard-standings-name a {
@@ -2955,13 +2997,18 @@ footer {
   min-width: 0;
 }
 
-/* Foil card (js FOIL_MIN_TIMES_PLAYED): a holographic sheen over the image
-   — a still rainbow wash blended into the art, plus a bright glare band
-   sweeping diagonally across it (the only moving part; no-repeat, so no
-   tiled copy of the band ever wraps back in from another edge), then a
-   pause off-card before the next sweep. Blends with the card's own image
-   only: each slide is its own stacking context (js transform). */
-.cmd-carousel-slide.is-foil::after {
+/* Special card finishes (js/commander-carousel.js's CARD_FINISHES), each a
+   class on the album card and on the "?" dialog's small preview card
+   (.card-finish-preview) alike.
+
+   Foil (.is-foil): a holographic sheen over the image — a still rainbow
+   wash blended into the art, plus a bright glare band sweeping diagonally
+   across it (the only moving part; no-repeat, so no tiled copy of the band
+   ever wraps back in from another edge), then a pause off-card before the
+   next sweep. Blends with the card's own image only: each slide is its own
+   stacking context (js transform). */
+.cmd-carousel-slide.is-foil::after,
+.card-finish-preview.is-foil::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -3006,6 +3053,116 @@ footer {
   box-shadow: 0 0 0 2px rgba(255, 196, 0, 0.65), 0 0 18px rgba(190, 0, 255, 0.35), 0 10px 24px rgba(0, 0, 0, 0.22);
 }
 
+/* Gilded (.is-gilded, on top of the foil): a gold frame drawn just inside
+   the card's edge, with one bright highlight travelling round it at a
+   steady pace — a conic gradient turned by animating its start angle
+   (@property makes that angle animatable, so it rotates smoothly; a browser
+   without @property shows the frame still). The ring is the gradient masked
+   down to the padding box: the whole layer, minus its content box. */
+@property --gilded-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.cmd-carousel-slide.is-gilded::before,
+.card-finish-preview.is-gilded::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  padding: var(--gilded-width, 4px);
+  border-radius: inherit;
+  pointer-events: none;
+  background: conic-gradient(
+    from var(--gilded-angle),
+    #fff6d0,
+    #f2d77a 8%,
+    #b8892a 22%,
+    #8a6a16 50%,
+    #b8892a 78%,
+    #f2d77a 92%,
+    #fff6d0
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation: gilded-turn 4s linear infinite;
+}
+
+@keyframes gilded-turn {
+  to {
+    --gilded-angle: 360deg;
+  }
+}
+
+/* Sparks (.is-sparks, the Leggendaria on top of the gilded foil): small
+   gold sparks rising slowly from the bottom of the card and fading out
+   toward the top, drawn on the card's extra layer (.card-finish-fx — the
+   card's own ::before/::after are the frame and the foil). A tile of four
+   sparks repeated over the card and scrolled up by exactly one tile height
+   per loop, so it never jumps; --sparks-tile-h keeps the two in step. */
+.card-finish-fx {
+  display: none;
+}
+
+.is-sparks > .card-finish-fx {
+  --sparks-tile-w: 80px;
+  --sparks-tile-h: 120px;
+  display: block;
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 20% 30%, #ffe48a 0 1.5px, rgba(255, 200, 80, 0.5) 2.5px, transparent 5px),
+    radial-gradient(circle at 65% 70%, #fff3c4 0 1px, rgba(255, 210, 100, 0.5) 2px, transparent 4px),
+    radial-gradient(circle at 85% 20%, #ffd76a 0 2px, rgba(255, 190, 60, 0.45) 3px, transparent 6px),
+    radial-gradient(circle at 40% 90%, #fff 0 1px, rgba(255, 220, 120, 0.5) 2px, transparent 4px);
+  background-size: var(--sparks-tile-w) var(--sparks-tile-h);
+  mix-blend-mode: screen;
+  -webkit-mask-image: linear-gradient(to top, #000 40%, transparent);
+  mask-image: linear-gradient(to top, #000 40%, transparent);
+  animation: sparks-rise 6s linear infinite;
+}
+
+@keyframes sparks-rise {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 0 calc(var(--sparks-tile-h) * -1);
+  }
+}
+
+/* The dialog's small preview card: sparks sized up for it (the album's are
+   1-2px, invisible at this scale), on a tighter tile and fading out later,
+   so a handful show over its short height. */
+.card-finish-preview.is-sparks > .card-finish-fx {
+  --sparks-tile-w: 28px;
+  --sparks-tile-h: 36px;
+  background-image:
+    radial-gradient(circle at 25% 30%, #fff3c4 0 1.5px, rgba(255, 205, 90, 0.7) 2.5px, transparent 4px),
+    radial-gradient(circle at 75% 75%, #ffe48a 0 1.5px, rgba(255, 190, 60, 0.7) 2.5px, transparent 4px);
+  -webkit-mask-image: linear-gradient(to top, #000 20%, transparent);
+  mask-image: linear-gradient(to top, #000 20%, transparent);
+  animation-duration: 3s;
+}
+
+/* No outer glow or rim, unlike the foil's: on desktop the current card sits
+   flush with the track's left edge, which clips anything spreading left
+   into a hard edge — the frame is inside the card, which keeps just its
+   usual shadow (desktop's down-right one: the 880px block below). */
+.cmd-carousel-slide.is-gilded {
+  box-shadow: none;
+}
+
+.cmd-carousel-slide.is-gilded.is-active {
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
 /* "Volte giocato" + its "?" (opens the foil explanation). A smaller take
    on the Matchups title's .help-toggle-btn. */
 .cmd-carousel-label-help {
@@ -3046,6 +3203,46 @@ html.nav-mobile .help-toggle-btn.cmd-carousel-help-btn {
 .info-dialog p {
   margin: 0;
   line-height: 1.5;
+}
+
+.info-dialog p + p {
+  margin-top: 10px;
+}
+
+/* The album's "Carte speciali" explanation: one row per finish, lowest
+   first — a small live preview of its look, then its name and from how
+   many events. */
+.card-finish-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card-finish-list li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* A blank card (neutral "art" gradient, so the foil's sheen has something
+   to shine on) wearing the finish's own classes — the same CSS as the
+   album's cards (see .cmd-carousel-slide.is-foil / .is-gilded). */
+.card-finish-preview {
+  --gilded-width: 3px;
+  position: relative;
+  flex-shrink: 0;
+  width: 52px;
+  aspect-ratio: 488 / 680;
+  border-radius: 5px;
+  overflow: hidden;
+  background: linear-gradient(160deg, #46577a, #7a5a8c 55%, #a06a4a);
+}
+
+.card-finish-text {
+  line-height: 1.4;
 }
 
 /* In: rises and scales up slightly as it fades in, backdrop fading with it.
@@ -3311,6 +3508,10 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
     box-shadow: 0 0 0 2px rgba(255, 196, 0, 0.65), 0 0 18px rgba(190, 0, 255, 0.35), 5px 10px 20px rgba(0, 0, 0, 0.22);
   }
 
+  .cmd-carousel-slide.is-gilded.is-active {
+    box-shadow: 5px 10px 20px rgba(0, 0, 0, 0.22);
+  }
+
   /* Drawn inside the card: outside, its left side would be clipped. */
   .cmd-carousel-track:focus-visible .cmd-carousel-slide.is-active {
     outline-offset: -2px;
@@ -3354,7 +3555,11 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   }
 
   .cmd-carousel-slide.is-loading,
-  .cmd-carousel-slide.is-foil::after {
+  .cmd-carousel-slide.is-foil::after,
+  .cmd-carousel-slide.is-gilded::before,
+  .card-finish-preview.is-foil::after,
+  .card-finish-preview.is-gilded::before,
+  .is-sparks > .card-finish-fx {
     animation: none;
   }
 }
@@ -4268,13 +4473,17 @@ html.nav-mobile .results-links {
   }
 }
 
-/* Data tables (leaderboards, match lists, admin lists) */
+/* Data tables (leaderboards, match lists, admin lists) — styled as a list
+   inside a card rather than a spreadsheet grid: no filled header band, only
+   the header's own line at full strength, faint row separators, and the
+   rows inset from the card's edges (the wrapper's padding). */
 
 .data-table-wrap {
   border: 1px solid var(--hairline);
   border-radius: var(--radius-card-sm);
   background: rgba(255, 255, 255, 0.9);
   box-shadow: var(--shadow-card);
+  padding: 6px 10px;
   overflow: hidden;
   overflow-x: auto;
   animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
@@ -4287,50 +4496,113 @@ html.nav-mobile .results-links {
   animation: none;
 }
 
+/* separate + 0 spacing looks the same as collapse with bottom-only borders,
+   but keeps each cell's own box intact for the top-8 accent bar below (a
+   positioned ::before on a cell). tabular-nums keeps digits equal-width, so
+   scores/percentages line up down a column. */
 table.data-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
 }
 
 table.data-table th,
 table.data-table td {
-  padding: 12px 14px;
+  padding: 13px 14px;
   text-align: left;
-  border-bottom: 1px solid var(--hairline);
+  vertical-align: middle;
+  border-bottom: 1px solid var(--table-row-line);
   white-space: nowrap;
 }
 
 table.data-table th {
-  color: var(--brand-red-darker);
-  font-size: 0.78rem;
+  padding-top: 12px;
+  padding-bottom: 10px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  background: #ffe9e2;
+  letter-spacing: 0.08em;
+  border-bottom-color: var(--hairline);
 }
 
 table.data-table tbody tr:last-child td {
   border-bottom: none;
 }
 
-table.data-table tbody tr:hover {
-  background: #fff3f0;
+table.data-table tbody tr {
+  transition: background 150ms ease;
 }
 
+table.data-table tbody tr:hover {
+  background: rgba(220, 24, 28, 0.04);
+}
+
+/* Player/commander/event names: red on hover rather than the site-wide
+   underline — reads as a row you can open, not a spreadsheet hyperlink. */
+table.data-table td a {
+  transition: color 150ms ease;
+}
+
+table.data-table td a:hover {
+  color: var(--brand-red-deep);
+  text-decoration: none;
+}
+
+/* width: 1% shrinks the column to its chip instead of sharing spare width. */
 .rank-cell {
+  width: 1%;
   font-weight: 800;
   color: var(--brand-red);
 }
 
-/* league.html leaderboard: the top 8 positions get a faint brand-red tint.
-   Explicit :hover rule since tr.is-top8 ties the generic tr:hover on
-   specificity and, coming later, would otherwise mask it. */
+/* Same look as the Bacheca standings preview's .dashboard-standings-rank,
+   one color for every position; min-width + padding only so a 3-digit
+   rank would stretch it into a pill instead of overflowing. */
+.rank-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  box-sizing: border-box;
+  border-radius: var(--radius-pill);
+  background: rgba(220, 24, 28, 0.18);
+  color: var(--brand-red-deep);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+/* league.html leaderboard: the top 8 positions get a red accent bar on
+   their first cell plus a faint tint. Explicit :hover rule since
+   tr.is-top8 ties the generic tr:hover on specificity and, coming later,
+   would otherwise mask it. */
 table.data-table tbody tr.is-top8 {
-  background: rgba(220, 24, 28, 0.05);
+  background: rgba(220, 24, 28, 0.035);
 }
 
 table.data-table tbody tr.is-top8:hover {
-  background: rgba(220, 24, 28, 0.09);
+  background: rgba(220, 24, 28, 0.07);
+}
+
+/* A real 3px strip rather than an inset box-shadow: the shadow version
+   anti-aliased its inner edges on fractional row heights, leaving a faint
+   red hairline across the cell between rows. bottom: -1px runs it over the
+   cell's own separator line, so consecutive top-8 bars join seamlessly. */
+table.data-table tbody tr.is-top8 td:first-child {
+  position: relative;
+}
+
+table.data-table tbody tr.is-top8 td:first-child::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: -1px;
+  left: 0;
+  width: 3px;
+  background: var(--brand-red);
 }
 
 /* Small inline icon with a hover/focus tooltip — player badges (Giocatori
@@ -4368,32 +4640,69 @@ table.data-table tbody tr.is-top8:hover {
   vertical-align: 0.2em;
 }
 
-.icon-badge-img {
-  width: 1.1em;
-  height: 1.1em;
-  object-fit: contain;
-  border-radius: 3px;
+/* Same reasoning for the badges after the name in player.html's title:
+   scaled with the title (the disc ≈ 36px next to the 1.9rem name, instead
+   of the lists' ≈ 26px), em so it follows the mobile title shrink too. */
+#player-title .icon-badge {
+  font-size: 0.75em;
+  margin-left: 12px;
 }
 
-/* Reusable icon box for anywhere a badge's uploaded image and its emoji
-   fallback can appear side by side (admin player/badge lists, player
-   badge tooltips) — same flex-centering fix as .cs-option-icon in the
-   custom dropdown: an emoji left as plain text sits wherever the font's
-   own glyph metrics place it, which won't match an <img> centered by
-   flexbox. Giving both an identically-sized, self-centering box fixes it
-   everywhere at once. Width/height are set per call site via inline style. */
-.badge-icon-box {
+#player-title .icon-badge + .icon-badge {
+  margin-left: 5px;
+}
+
+#player-title .badge-disc {
+  border-width: 3px;
+}
+
+/* A badge's icon in a disc (js/ui.js's badgeDiscHtml) — the one
+   look for a badge everywhere: next to player names, the player page title,
+   the admin lists (badges.html's big .badge-card-icon is the same disc at
+   its own size). Sized in em from the surrounding text, so it follows each
+   spot's own font size. The glyph — an <img> (uploaded/custom icon) or an
+   emoji as text — sits in a same-size self-centering box: an emoji left as
+   plain text sits wherever the font's glyph metrics place it, which won't
+   line up with a flex-centered <img>. */
+/* White with a brand-red ring (border-box: the ring is inside the 1.6em,
+   so the size doesn't change) — on white every icon keeps its own colours
+   at full contrast, which a tinted fill didn't for some of them. The ring
+   is a whole number of px (2px; 3px on the bigger player-title discs): a
+   fractional width — what an em-based one came to — renders blurry. */
+.badge-disc {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  vertical-align: middle;
   flex-shrink: 0;
+  box-sizing: border-box;
+  width: 1.6em;
+  height: 1.6em;
+  vertical-align: middle;
+  /* The brand red, softened (half see-through over the white page). */
+  border: 2px solid rgba(220, 24, 28, 0.45);
+  border-radius: 50%;
+  background: #fff;
   line-height: 1;
 }
 
-img.badge-icon-box {
+.badge-disc-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1em;
+  height: 1em;
+  font-size: 0.95em;
+  line-height: 1;
+}
+
+img.badge-disc-glyph {
   object-fit: contain;
-  border-radius: 3px;
+}
+
+/* Side by side (admin player list's two badges, a name's several). */
+.badge-disc + .badge-disc,
+.icon-badge + .icon-badge {
+  margin-left: 4px;
 }
 
 /* Badges: archetypes, color identity pips, provisional notice */
@@ -6744,9 +7053,9 @@ body.is-loading .filter-toggle-btn {
   min-width: 0;
 }
 
-/* Round black "?" that shows/hides a page's explanation (.help-box below) —
-   black by request rather than brand red; a thin light ring in dark mode
-   keeps it from vanishing into the dark background. */
+/* Round black "?" that opens a page's explanation pop-up (js/info-dialog.js,
+   .info-dialog) — black by request rather than brand red; a thin light ring
+   in dark mode keeps it from vanishing into the dark background. */
 .help-toggle-btn {
   flex-shrink: 0;
   display: inline-flex;
@@ -6768,8 +7077,7 @@ body.is-loading .filter-toggle-btn {
   transition: background 150ms ease;
 }
 
-.help-toggle-btn:hover,
-.help-toggle-btn.is-open {
+.help-toggle-btn:hover {
   background: #333;
 }
 
@@ -6782,59 +7090,6 @@ html.nav-mobile .help-toggle-btn {
 
 :root[data-theme="dark"] .help-toggle-btn {
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35);
-}
-
-/* Slides open/closed (js/matchups-page.js toggles .is-open): the same
-   grid-template-rows 0fr/1fr collapse as .filter-panel, plus a fade. A
-   transition, not an entrance animation — so it also plays while the page
-   is still loading, when body.is-loading freezes animations (not
-   transitions) on their first, invisible frame. The clip's overflow:
-   hidden is what lets the row actually collapse to nothing; the box's own
-   margin sits inside it, so no gap is left behind when closed. */
-.help-box-wrap {
-  display: grid;
-  grid-template-rows: 0fr;
-  opacity: 0;
-  transition: grid-template-rows 240ms ease, opacity 240ms ease;
-}
-
-.help-box-wrap.is-open {
-  grid-template-rows: 1fr;
-  opacity: 1;
-}
-
-.help-box-clip {
-  min-height: 0;
-  overflow: hidden;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .help-box-wrap {
-    transition: none;
-  }
-}
-
-.help-box {
-  margin: 0 0 22px;
-  padding: 14px 18px;
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius-card-sm);
-  background: rgba(255, 255, 255, 0.7);
-  color: var(--text-muted);
-  font-size: 0.95rem;
-  line-height: 1.5;
-}
-
-.help-box p {
-  margin: 0;
-}
-
-.help-box p + p {
-  margin-top: 8px;
-}
-
-:root[data-theme="dark"] .help-box {
-  background: rgba(255, 255, 255, 0.045);
 }
 
 /* A small link-button beside a page title (Giocatori's "🏅 Badge") —
@@ -6889,10 +7144,13 @@ html.nav-mobile .help-toggle-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
   width: 52px;
   height: 52px;
+  /* Same look as the small .badge-disc everywhere else. */
+  border: 2.5px solid rgba(220, 24, 28, 0.45);
   border-radius: 50%;
-  background: rgba(220, 24, 28, 0.1);
+  background: #fff;
 }
 
 .badge-card-icon-emoji {
@@ -6901,10 +7159,9 @@ html.nav-mobile .help-toggle-btn {
 }
 
 .badge-card-icon-img {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   object-fit: contain;
-  border-radius: 4px;
 }
 
 .badge-card-name {
@@ -7007,12 +7264,6 @@ html.nav-mobile .help-toggle-btn {
   font-style: italic;
 }
 
-/* A player page's badge icons link to their card on badges.html — no
-   underline under the emoji/image from the global a:hover. */
-a.icon-badge,
-a.icon-badge:hover {
-  text-decoration: none;
-}
 
 .filter-panel {
   display: grid;
@@ -7222,7 +7473,11 @@ a.icon-badge:hover {
   background: rgba(220, 24, 28, 0.25);
 }
 
+/* padding: 0 undoes .data-table-wrap's inset — the sticky row-name column
+   sticks inside the padding, so cells would scroll visibly through the gap
+   to its left. */
 .matchups-matrix-wrap {
+  padding: 0;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
@@ -7802,9 +8057,18 @@ html.nav-mobile .chart-carousel-arrow {
     padding: 20px 16px 36px;
   }
 
+  .data-table-wrap:not(.matchups-matrix-wrap) {
+    padding: 4px 6px;
+  }
+
   table.data-table th,
   table.data-table td {
-    padding: 10px 10px;
+    padding: 12px 10px;
+  }
+
+  table.data-table th {
+    padding-top: 11px;
+    padding-bottom: 9px;
   }
 }
 
@@ -7838,6 +8102,7 @@ html.nav-mobile .chart-carousel-arrow {
   --hairline: rgba(255, 255, 255, 0.1);
   --hairline-hover: rgba(255, 110, 110, 0.32);
   --hairline-hover-strong: rgba(255, 110, 110, 0.42);
+  --table-row-line: rgba(255, 255, 255, 0.06);
 
   --shadow-soft: 0 18px 42px rgba(0, 0, 0, 0.5);
   --shadow-card: 0 12px 28px rgba(0, 0, 0, 0.4);
@@ -7907,8 +8172,11 @@ html.nav-mobile .chart-carousel-arrow {
   background: rgba(255, 255, 255, 0.045);
 }
 
-:root[data-theme="dark"] .badge-card-icon {
-  background: rgba(255, 110, 110, 0.14);
+/* Dark mode keeps the white disc (the icons need it for contrast), with the
+   ring in the theme's lighter red so it still reads on the dark page. */
+:root[data-theme="dark"] .badge-card-icon,
+:root[data-theme="dark"] .badge-disc {
+  border-color: rgba(255, 106, 110, 0.6);
 }
 
 :root[data-theme="dark"] .badge-holder {
@@ -7932,23 +8200,21 @@ html.nav-mobile .chart-carousel-arrow {
   background: linear-gradient(135deg, rgba(220, 24, 28, 0.18), rgba(255, 255, 255, 0.045));
 }
 
-:root[data-theme="dark"] table.data-table th {
-  color: #ff9195;
-  background: rgba(255, 110, 110, 0.1);
-}
-
 :root[data-theme="dark"] table.data-table tbody tr:hover {
   background: rgba(255, 110, 110, 0.06);
 }
 
 :root[data-theme="dark"] table.data-table tbody tr.is-top8 {
-  background: rgba(255, 110, 110, 0.08);
+  background: rgba(255, 110, 110, 0.05);
 }
 
 :root[data-theme="dark"] table.data-table tbody tr.is-top8:hover {
-  background: rgba(255, 110, 110, 0.13);
+  background: rgba(255, 110, 110, 0.1);
 }
 
+:root[data-theme="dark"] .rank-chip {
+  background: rgba(255, 110, 110, 0.2);
+}
 :root[data-theme="dark"] .rank-cell,
 :root[data-theme="dark"] .stat-tile-value,
 :root[data-theme="dark"] .wrapped-tile-detail,

@@ -71,7 +71,7 @@ function renderLeagueCard({ league, summary, standings }, badgesFor) {
             <li class="dashboard-standings-row">
               <span class="dashboard-standings-rank">${i + 1}</span>
               <span class="dashboard-standings-name">
-                <span class="dashboard-standings-name-text">${playerLabel(s.player)}</span>${badgesFor(s.player)}
+                <span class="dashboard-standings-name-text">${playerLabel(s.player)}</span><span class="dashboard-standings-badges">${badgesFor(s.player)}</span>
               </span>
               <span class="dashboard-standings-points">${s.points}</span>
             </li>`

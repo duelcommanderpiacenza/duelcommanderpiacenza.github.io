@@ -15,6 +15,7 @@
 import { escapeHtml, commanderPairWithColors, formatDate } from "./ui.js";
 import { winRatePct } from "./winrate.js";
 import { enableSnapDrag } from "./drag-scroll.js";
+import { openInfoDialog } from "./info-dialog.js";
 
 // Scryfall's collection endpoint takes up to this many cards per request —
 // one request for a whole player's commanders instead of one each (and
@@ -50,54 +51,49 @@ async function fetchCardImages(names) {
   return images;
 }
 
-// A commander played in at least this many events (its "Volte giocato")
-// gets the foil treatment in the album — a holographic sheen over its card.
-export const FOIL_MIN_TIMES_PLAYED = 10;
+// Special card finishes in the album, earned by how many events the player
+// has played that commander in (its "Volte giocato"). Lowest first; a card
+// gets the highest one it qualifies for, and each one's classes (styles.css)
+// usually include the ones below it — the gilded card is still a foil. The
+// "?" explanation is built from this same list, so a new finish is a row
+// here plus its look in styles.css (.cmd-carousel-slide.<class> and the
+// dialog's .card-finish-preview.<class>), nothing else.
+export const CARD_FINISHES = [
+  { minTimesPlayed: 10, classes: "is-foil", name: "Foil" },
+  { minTimesPlayed: 25, classes: "is-foil is-gilded", name: "Foil dorata" },
+  { minTimesPlayed: 50, classes: "is-foil is-gilded is-sparks", name: "Leggendaria" },
+];
 
-// The "?" next to "Volte giocato" opens this, as a native modal <dialog>
-// (Escape/backdrop close for free, same as the Bacheca's events calendar,
-// whose .ecal-dialog look it shares). Built once, on first use.
-function openFoilInfo() {
-  let dialog = document.getElementById("foil-info-dialog");
-  if (!dialog) {
-    dialog = document.createElement("dialog");
-    dialog.id = "foil-info-dialog";
-    dialog.className = "ecal-dialog info-dialog";
-    dialog.setAttribute("aria-labelledby", "foil-info-title");
-    dialog.innerHTML = `
-      <div class="info-dialog-head">
-        <h3 id="foil-info-title">Carte foil</h3>
-        <button type="button" class="ecal-close" aria-label="Chiudi">&times;</button>
-      </div>
-      <p>Quando giochi lo stesso comandante in almeno <strong>${FOIL_MIN_TIMES_PLAYED} eventi</strong>, la sua carta nell&rsquo;album diventa <strong>foil</strong>.</p>`;
-    // Every way out (×, backdrop click, Escape) plays the exit animation
-    // (styles.css .info-dialog.is-closing) before the real close() — which
-    // would otherwise hide it on the spot. Closes straight away when there's
-    // no animation to wait for (reduced motion).
-    const closeAnimated = () => {
-      if (dialog.classList.contains("is-closing")) return;
-      if (getComputedStyle(dialog).animationName === "none") return dialog.close();
-      dialog.classList.add("is-closing");
-      dialog.addEventListener(
-        "animationend",
-        () => {
-          dialog.classList.remove("is-closing");
-          dialog.close();
-        },
-        { once: true }
-      );
-    };
-    dialog.querySelector(".ecal-close").addEventListener("click", closeAnimated);
-    dialog.addEventListener("click", (e) => {
-      if (e.target === dialog) closeAnimated();
-    });
-    dialog.addEventListener("cancel", (e) => {
-      e.preventDefault();
-      closeAnimated();
-    });
-    document.body.append(dialog);
-  }
-  dialog.showModal();
+// Every card (album and dialog preview) carries this empty layer for the
+// finishes that need more than the card's own ::before/::after (taken by
+// the gilded frame and the foil sheen) — e.g. .is-sparks draws on it.
+const FINISH_LAYER = '<span class="card-finish-fx" aria-hidden="true"></span>';
+
+function cardFinish(timesPlayed) {
+  let finish = null;
+  for (const f of CARD_FINISHES) if (timesPlayed >= f.minTimesPlayed) finish = f;
+  return finish;
+}
+
+// The "?" next to "Volte giocato" opens this (js/info-dialog.js's shared
+// pop-up): one row per finish, each with a small live preview of its look
+// on a blank card.
+function openFinishInfo() {
+  openInfoDialog({
+    id: "card-finish-dialog",
+    title: "Carte speciali",
+    bodyHtml: `
+      <p>Più eventi giochi con lo stesso comandante, più la sua carta nell&rsquo;album diventa speciale:</p>
+      <ul class="card-finish-list">
+        ${CARD_FINISHES.map(
+          (f) => `
+          <li>
+            <span class="card-finish-preview ${f.classes}" aria-hidden="true">${FINISH_LAYER}</span>
+            <span class="card-finish-text"><strong>${f.name}</strong> &middot; da ${f.minTimesPlayed} eventi</span>
+          </li>`
+        ).join("")}
+      </ul>`,
+  });
 }
 
 const ARROW_PREV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>';
@@ -125,10 +121,11 @@ export function renderCommanderCarousel(el, items) {
       <div class="cmd-carousel-track" tabindex="0" role="region" aria-label="Album comandanti">
         ${items
           .map(
-            (c, i) => `<div class="cmd-carousel-slide is-loading${
-              c.timesPlayed >= FOIL_MIN_TIMES_PLAYED ? " is-foil" : ""
+            (c, i) => `<div class="cmd-carousel-slide is-loading ${
+              cardFinish(c.timesPlayed)?.classes ?? ""
             }" data-index="${i}">
               <span class="cmd-carousel-fallback">${escapeHtml(c.commander.name)}</span>
+              ${FINISH_LAYER}
             </div>`
           )
           .join("")}
@@ -145,7 +142,7 @@ export function renderCommanderCarousel(el, items) {
         <div class="stat-tile">
           <div class="stat-tile-label cmd-carousel-label-help">
             Volte giocato
-            <button type="button" class="help-toggle-btn cmd-carousel-help-btn" aria-haspopup="dialog" aria-label="Come si ottiene una carta foil">?</button>
+            <button type="button" class="help-toggle-btn cmd-carousel-help-btn" aria-haspopup="dialog" aria-label="Come si ottiene una carta speciale">?</button>
           </div>
           <div class="stat-tile-value cmd-carousel-stat-value" data-stat="times"></div>
         </div>
@@ -177,6 +174,73 @@ export function renderCommanderCarousel(el, items) {
   const nextBtn = el.querySelector('[data-dir="1"]');
   let active = -1;
 
+  // Card images: once Scryfall's batch lookup has answered, downloaded
+  // nearest-first from the current card, a few at a time — not all at once,
+  // where a player's 30 cards would share the connection with the one card
+  // actually on screen. The order is re-picked from the current card each
+  // time a download finishes, so moving to another card moves its
+  // neighbourhood to the front of the queue; the current card itself never
+  // waits for a free slot.
+  const MAX_PARALLEL_IMAGES = 3;
+  let imageUrls = null; // slide index -> image URL (null = no image), once Scryfall answers
+  const imageStarted = new Set();
+  let imagesInFlight = 0;
+
+  function startImage(i) {
+    imageStarted.add(i);
+    const slide = slides[i];
+    const url = imageUrls[i];
+    if (!url) return slide.classList.remove("is-loading");
+    imagesInFlight += 1;
+    const done = () => {
+      imagesInFlight -= 1;
+      loadNextImages();
+    };
+    const img = new Image();
+    img.alt = items[i].commander.name;
+    img.className = "cmd-carousel-img";
+    img.draggable = false;
+    if (i === active) img.fetchPriority = "high";
+    img.onload = () => {
+      slide.classList.replace("is-loading", "has-image");
+      done();
+    };
+    img.onerror = () => {
+      img.remove();
+      slide.classList.remove("is-loading");
+      done();
+    };
+    img.src = url;
+    slide.append(img);
+  }
+
+  // The not-yet-started slide nearest the current card; at equal distance
+  // the next one (on the right, where the desktop peeks) before the previous.
+  function nextImageIndex() {
+    let best = -1;
+    let bestKey = Infinity;
+    for (let i = 0; i < slides.length; i++) {
+      if (imageStarted.has(i)) continue;
+      const d = i - active;
+      const key = Math.abs(d) * 2 + (d < 0 ? 1 : 0);
+      if (key < bestKey) {
+        bestKey = key;
+        best = i;
+      }
+    }
+    return best;
+  }
+
+  function loadNextImages() {
+    if (!imageUrls) return;
+    if (!imageStarted.has(active)) startImage(active);
+    while (imagesInFlight < MAX_PARALLEL_IMAGES) {
+      const i = nextImageIndex();
+      if (i < 0) return;
+      startImage(i);
+    }
+  }
+
   // The slide nearest the current-card slot (the track's left edge) —
   // measured from offsetLeft, which ignores the transforms, so this doesn't
   // shift as they animate.
@@ -197,6 +261,7 @@ export function renderCommanderCarousel(el, items) {
     prevBtn.disabled = i === 0;
     nextBtn.disabled = i === items.length - 1;
     renderDots(i);
+    loadNextImages();
   }
 
   // Match-basis winrate (js/winrate.js). "—" for a commander with no match
@@ -356,7 +421,7 @@ export function renderCommanderCarousel(el, items) {
       return lefts[i] - lefts[0];
     },
   });
-  el.querySelector(".cmd-carousel-help-btn").addEventListener("click", openFoilInfo);
+  el.querySelector(".cmd-carousel-help-btn").addEventListener("click", openFinishInfo);
   prevBtn.addEventListener("click", () => go(active - 1));
   nextBtn.addEventListener("click", () => go(active + 1));
   measure();
@@ -364,18 +429,8 @@ export function renderCommanderCarousel(el, items) {
   applyDepth();
 
   fetchCardImages([...new Set(items.map((c) => c.commander.name))]).then((images) => {
-    slides.forEach((slide, i) => {
-      const url = images.get(items[i].commander.name.toLowerCase());
-      if (!url) return slide.classList.remove("is-loading");
-      const img = new Image();
-      img.alt = items[i].commander.name;
-      img.className = "cmd-carousel-img";
-      img.draggable = false;
-      img.onload = () => slide.classList.replace("is-loading", "has-image");
-      img.onerror = () => (img.remove(), slide.classList.remove("is-loading"));
-      img.src = url;
-      slide.append(img);
-    });
+    imageUrls = items.map((c) => images.get(c.commander.name.toLowerCase()) ?? null);
+    loadNextImages();
   });
 
   return {

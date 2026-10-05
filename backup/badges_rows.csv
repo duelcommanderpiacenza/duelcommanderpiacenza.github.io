@@ -1,0 +1,15 @@
+id,name,icon,created_at,auto_rule,priority,icon_url,description
+16519bcb-c062-42bf-b04c-6bea9c903fc1,Duellante,,2026-09-21 18:00:08.28274+00,most_matches_played,5,/icons/badges/crossed-swords.svg,Più match giocati
+39efc6d5-39d4-48e6-a5d6-0d023662498d,Primo,,2026-09-21 11:36:15.533089+00,league_rank_1,10,/icons/badges/1st-place-medal.svg,Primo nella lega in corso
+3dab8612-0f29-4c43-9b35-d3d25e16bcdd,Secondo,,2026-09-21 11:36:30.301906+00,league_rank_2,10,/icons/badges/2nd-place-medal.svg,Secondo nella lega in corso
+48abae53-53d3-4bfd-891b-1319b419646e,Mutaforma,,2026-09-21 18:02:59.603241+00,most_commanders_played,3,/icons/badges/snake.svg,Più comandanti giocati
+94f768ac-be8b-4b85-873b-80ac16a60e9c,Instancabile,,2026-09-21 18:17:57.084055+00,completionist,5,/icons/badges/gem-stone.svg,10 eventi consecutivi giocati
+98e03121-ca04-4fdf-8fbd-88d46ab30766,Cenerentola,,2026-09-29 23:16:24.777824+00,most_drops,3,/icons/badges/woman-dancing.svg,
+9f1e87cf-3fef-4f3e-81f1-b455fb1d0fcd,Monogamo,💍,2026-09-29 23:12:28.827781+00,commander_loyalty,3,,
+a3b29378-941b-4286-8854-5747d68bd6bb,Volpe,,2026-10-01 12:14:10.448587+00,,5,/icons/badges/fox.svg,La Volpe
+b1837bcf-d6f5-441d-9352-38cd270628e2,On Fire,,2026-09-21 11:10:54.433355+00,top8_streak,5,/icons/badges/fire.svg,In una serie di top 8
+b52786ce-6572-458b-b838-2a2b1662101d,Fortunello,,2026-09-29 08:53:40.092167+00,most_byes,3,/icons/badges/four-leaf-clover.svg,Più bye presi
+b740f011-3314-4340-a56e-c48b4ea3eb13,Campione,,2026-09-21 11:07:19.928599+00,league_winner,10,/icons/badges/trophy.svg,Campione in carica
+c5274eb4-d493-4be5-b1ad-0151ede00acc,Terzo,,2026-09-21 11:36:51.602812+00,league_rank_3,10,/icons/badges/3rd-place-medal.svg,Terzo nella lega in corso
+ce3e4231-4f4c-4048-acf0-734ed5ffbd3f,Imbattibile,,2026-09-21 18:00:29.866226+00,highest_winrate,5,/icons/badges/shield.svg,Winrate più alto (5+ eventi)
+f0b4c633-f273-430a-8243-cc261457512f,Leggendario,,2026-09-29 08:59:10.767898+00,league_champion,3,/icons/badges/crown.svg,Vincitore di una lega

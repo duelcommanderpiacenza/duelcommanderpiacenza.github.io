@@ -1,16 +1,48 @@
 // Keyboard-style emoji picker for the admin Badge form: one compact trigger
-// button (the chosen emoji + "Scegli") opening a floating panel with
-// category tabs over a scrollable grid, like a phone keyboard's picker.
+// button (the chosen emoji or custom icon + "Scegli") opening a floating
+// panel with category tabs over a scrollable grid, like a phone keyboard's
+// picker — the first tab the site's own SVG icons, the rest emoji.
 // The value lives in a plain hidden <input> (the form reads it like any
 // other field). A small text box at the bottom accepts any other emoji
 // typed or pasted (e.g. Windows' Win + . panel), so nothing is out of
 // reach even if it isn't in the grid — and a badge saved with an emoji
 // outside the grid still shows as selected when edited.
 
+// "Custom": the site's own SVG icons (icons/badges/, same look on every
+// device, unlike emoji). There's no build step to list that folder, so a new
+// icon is a file there plus its name here. Picking one sets the value to the
+// icon's site path (CUSTOM_ICON_DIR + name + ".svg") instead of an emoji —
+// the badge form saves that as the badge's icon_url, which every page
+// already draws as an image (see isCustomIcon / badges-admin.js).
+export const CUSTOM_ICON_DIR = "/icons/badges/";
+const CUSTOM_ICONS = [
+  "trophy",
+  "1st-place-medal",
+  "2nd-place-medal",
+  "3rd-place-medal",
+  "crown",
+  "gem-stone",
+  "ring",
+  "shield",
+  "crossed-swords",
+  "fire",
+  "snake",
+  "fox",
+  "four-leaf-clover",
+  "woman-dancing",
+];
+
+export function isCustomIcon(value) {
+  return typeof value === "string" && value.startsWith(CUSTOM_ICON_DIR);
+}
+
+const iconImg = (path) => `<img src="${path}" alt="" class="emoji-picker-svg">`;
+
 // Space-separated rather than arrays, to keep the list compact. The first
-// category is the curated set the old fixed swatch list offered.
+// category is the custom icons above (`icons`, image cells), the rest plain
+// emoji.
 const CATEGORIES = [
-  { icon: "🏆", label: "Badge", emoji: "🏆 🥇 🥈 🥉 ⭐ 🔥 💀 🎯 🛡️ ⚔️ 🐉 🎲 👑 💎 🚀 🧠 💪 🍀 ⚡ 🦄 🐌 💍 🧪 🎁" },
+  { icon: iconImg(`${CUSTOM_ICON_DIR}trophy.svg`), label: "Custom", icons: CUSTOM_ICONS.map((n) => `${CUSTOM_ICON_DIR}${n}.svg`) },
   {
     icon: "😀",
     label: "Faccine",
@@ -84,11 +116,22 @@ export function initEmojiPicker({ input, trigger, panel }) {
         (c, i) => `
         <div class="emoji-picker-section" data-section="${i}">
           <div class="emoji-picker-section-title">${c.label}</div>
-          <div class="emoji-picker-cells">${c.emoji
-            .split(/\s+/)
-            .filter(Boolean)
-            .map((e) => `<button type="button" class="emoji-picker-cell" data-emoji="${e}">${e}</button>`)
-            .join("")}</div>
+          <div class="emoji-picker-cells">${
+            c.icons
+              ? c.icons
+                  .map(
+                    (path) =>
+                      `<button type="button" class="emoji-picker-cell" data-emoji="${path}" title="${path
+                        .slice(CUSTOM_ICON_DIR.length)
+                        .replace(/\.svg$/, "")}">${iconImg(path)}</button>`
+                  )
+                  .join("")
+              : c.emoji
+                  .split(/\s+/)
+                  .filter(Boolean)
+                  .map((e) => `<button type="button" class="emoji-picker-cell" data-emoji="${e}">${e}</button>`)
+                  .join("")
+          }</div>
         </div>`
       ).join("")}
     </div>
@@ -101,7 +144,8 @@ export function initEmojiPicker({ input, trigger, panel }) {
 
   function setValue(value) {
     input.value = value ?? "";
-    current.textContent = input.value || "—";
+    if (isCustomIcon(input.value)) current.innerHTML = iconImg(input.value);
+    else current.textContent = input.value || "—";
     panel.querySelectorAll(".emoji-picker-cell.is-selected").forEach((c) => c.classList.remove("is-selected"));
     if (input.value) {
       panel.querySelectorAll(`.emoji-picker-cell[data-emoji="${CSS.escape(input.value)}"]`).forEach((c) => c.classList.add("is-selected"));
@@ -116,8 +160,8 @@ export function initEmojiPicker({ input, trigger, panel }) {
     panel.hidden = false;
     trigger.setAttribute("aria-expanded", "true");
     custom.value = "";
-    // Start on the chosen emoji's own section if it's in the grid, else on
-    // the first (the curated badge set).
+    // Start on the chosen icon's own section if it's in the grid, else on
+    // the first (the custom icons).
     const selected = grid.querySelector(".emoji-picker-cell.is-selected");
     // Scrolls the grid only (not the whole page, as scrollIntoView could).
     grid.scrollTop = selected ? selected.offsetTop - grid.clientHeight / 2 : 0;

@@ -3,7 +3,7 @@
 // standings preview.
 import { Players, PlayerAutoBadges } from "./db.js";
 import { MAX_AUTO_BADGES_PER_PLAYER } from "./auto-badges.js";
-import { badgeTooltipAttrs, uniqueBadges } from "./ui.js";
+import { badgeDiscHtml, badgeTooltipAttrs, uniqueBadges } from "./ui.js";
 
 /**
  * Player id -> their top MAX_AUTO_BADGES_PER_PLAYER auto badges, highest
@@ -58,11 +58,6 @@ export async function fetchPlayerBadgesRenderer() {
 export function playerBadgesHtml(p, autoBadgesByPlayer) {
   const badges = uniqueBadges([p.badge1, p.badge2, ...(autoBadgesByPlayer.get(p.id) ?? [])]);
   return badges
-    .map((b) => {
-      const glyph = b.icon_url
-        ? `<img src="${b.icon_url}" alt="" class="icon-badge-img badge-icon-box" style="width:1.1em;height:1.1em;">`
-        : `<span class="badge-icon-box" style="width:1.1em;height:1.1em;">${b.icon ?? ""}</span>`;
-      return `<span class="icon-badge" ${badgeTooltipAttrs(b)} tabindex="0">${glyph}</span>`;
-    })
+    .map((b) => `<span class="icon-badge" ${badgeTooltipAttrs(b)} tabindex="0">${badgeDiscHtml(b)}</span>`)
     .join("");
 }

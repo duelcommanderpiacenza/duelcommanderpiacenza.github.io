@@ -14,6 +14,7 @@ import { hidePageLoading } from "./page-loading.js";
 import { attachHoverTooltips, fullTextIfTruncated } from "./floating-tooltip.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { initFilterToggle } from "./filter-toggle.js";
+import { openInfoDialog } from "./info-dialog.js";
 
 const MAX_SELECTED = 10;
 const TOP_PLAYED_COUNT = 10;
@@ -39,21 +40,17 @@ function heatColor(winPct) {
 
 const MAX_DROPDOWN_RESULTS = 8;
 
-// The round "?" beside the title shows/hides how to read the matrix (closed
-// by default) — wired first, so it works even while the data still loads.
-// The box slides open/closed via CSS (.help-box-wrap.is-open); while closed
-// it's `inert`, so its collapsed text can't be focused or read out.
+// The round "?" beside the title opens how to read the matrix, in the
+// site's shared explanation pop-up (js/info-dialog.js, same as player.html's
+// "Carte speciali"); the text itself lives in matchups.html's <template>.
+// Wired first, so it works even while the data still loads.
 function initHelpToggle() {
   const btn = document.getElementById("matchups-help-toggle");
-  const box = document.getElementById("matchups-help");
-  if (!btn || !box) return;
-  btn.addEventListener("click", () => {
-    const opening = !box.classList.contains("is-open");
-    box.classList.toggle("is-open", opening);
-    box.inert = !opening;
-    btn.setAttribute("aria-expanded", String(opening));
-    btn.classList.toggle("is-open", opening);
-  });
+  const text = document.getElementById("matchups-help-text");
+  if (!btn || !text) return;
+  btn.addEventListener("click", () =>
+    openInfoDialog({ id: "matchups-help-dialog", title: "Come si legge la matrice", bodyHtml: text.innerHTML })
+  );
 }
 
 async function init() {

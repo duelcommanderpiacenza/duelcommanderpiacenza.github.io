@@ -60,7 +60,7 @@ export function initLeaguesAdmin({ onOpenLeague }) {
       [
         { key: "name", label: "Nome" },
         { key: "type", label: "Tipo", render: (l) => (l.is_topdeck ? "Topdeck" : "Lega") },
-        { key: "status", label: "Stato", render: (l) => statusToggleButton(l.is_open, l.id) },
+        { key: "status", label: "Stato", render: (l) => statusToggleButton(l.is_open, l.id, "league") },
         {
           key: "manage",
           label: "",

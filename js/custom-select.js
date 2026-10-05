@@ -113,22 +113,30 @@ function selectValue(select, value) {
 // label would sit wherever the font's own glyph metrics happen to place
 // it, which rarely lines up with a flex-centered <img>. Built as real DOM
 // elements rather than an HTML string, so there's no need to hand-escape
-// the option's own text.
+// the option's own text. Opt-in data-icon-disc puts the icon in the badges'
+// light-red disc instead (styles.css .badge-disc, same as js/ui.js's
+// badgeDiscHtml) — for options that *are* badges.
 function appendOptionIcon(container, opt) {
   const iconUrl = opt.dataset.icon;
   const iconText = opt.dataset.iconText;
+  const inDisc = "iconDisc" in opt.dataset;
+  let icon = null;
   if (iconUrl) {
-    const img = document.createElement("img");
-    img.className = "cs-option-icon";
-    img.src = iconUrl;
-    img.alt = "";
-    container.appendChild(img);
+    icon = document.createElement("img");
+    icon.className = inDisc ? "badge-disc-glyph" : "cs-option-icon";
+    icon.src = iconUrl;
+    icon.alt = "";
   } else if (iconText) {
-    const span = document.createElement("span");
-    span.className = "cs-option-icon cs-option-icon-text";
-    span.textContent = iconText;
-    container.appendChild(span);
+    icon = document.createElement("span");
+    icon.className = inDisc ? "badge-disc-glyph" : "cs-option-icon cs-option-icon-text";
+    icon.textContent = iconText;
   }
+  if (!icon) return;
+  if (!inDisc) return container.appendChild(icon);
+  const disc = document.createElement("span");
+  disc.className = "badge-disc";
+  disc.appendChild(icon);
+  container.appendChild(disc);
 }
 
 function rebuildMenu(wrap, select) {

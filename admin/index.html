@@ -510,21 +510,27 @@
        events list — the event itself doesn't care which. -->
   <div id="admin-event-flow" hidden>
 
-    <!-- Iscritti di un evento -->
-    <div class="admin-subview" id="subview-event-detail" hidden>
-      <div class="page-heading-row">
-        <a href="#" class="breadcrumb-link" id="event-detail-back" aria-label="Torna agli eventi" title="Torna agli eventi">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
-        </a>
-        <div class="page-heading">
-          <h3 id="event-detail-title"></h3>
-          <div style="display:flex;gap:10px;">
-            <button type="button" class="btn-secondary" id="event-detail-toggle-open">Chiudi evento</button>
-            <button type="button" class="btn-secondary" id="open-matches-btn">Gestisci partite &rarr;</button>
-          </div>
+    <!-- One heading for both of the event's pages: it stays put while the
+         Giocatori/Partite switch swaps only the content below it. -->
+    <div class="page-heading-row">
+      <a href="#" class="breadcrumb-link" id="event-flow-back" aria-label="Torna agli eventi" title="Torna agli eventi">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+      </a>
+      <div class="page-heading">
+        <div class="page-heading-title-group">
+          <h3 id="event-flow-title"></h3>
+          <button type="button" class="badge-status badge-status-toggle badge-status-open" id="event-flow-toggle-open" title="Clic per chiudere">Aperto</button>
+        </div>
+        <div class="view-switch" id="event-flow-switch" data-active="entries" role="group" aria-label="Sezione dell'evento">
+          <span class="view-switch-indicator" aria-hidden="true"></span>
+          <button type="button" class="view-switch-option is-active" data-view="entries" aria-pressed="true">Giocatori</button>
+          <button type="button" class="view-switch-option" data-view="matches" aria-pressed="false">Partite</button>
         </div>
       </div>
+    </div>
 
+    <!-- Iscritti di un evento -->
+    <div class="admin-subview" id="subview-event-detail" hidden>
       <h4>Iscritti</h4>
       <div class="admin-panel-layout">
         <div class="admin-form-card">
@@ -566,16 +572,6 @@
 
     <!-- Partite, divise in tab per turno, di un evento -->
     <div class="admin-subview" id="subview-matches-detail" hidden>
-      <div class="page-heading-row">
-        <a href="#" class="breadcrumb-link" id="matches-detail-back" aria-label="Torna agli iscritti" title="Torna agli iscritti">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
-        </a>
-        <div class="page-heading">
-          <h3 id="matches-detail-title"></h3>
-          <button type="button" class="btn-secondary" id="matches-toggle-event-open">Chiudi evento</button>
-        </div>
-      </div>
-
       <div class="round-tabs" id="matches-round-tabs"></div>
 
       <div class="admin-panel-layout">

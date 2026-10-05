@@ -1,0 +1,38 @@
+id,name,color_identity,created_at,is_banned
+068b6406-4ab2-4cc0-8c0e-c7dd63b531e8,"Yoshimaru, Ever Faithful",W,2026-09-21 12:54:15.525+00,false
+08f528e6-2891-4c82-ad23-bced2a9ffdfd,"Terra, Magical Adept",WUBRG,2026-09-22 22:52:46.80665+00,false
+0a13cd69-dcbb-4708-841e-5646ca9219da,Acererak the Archlich,B,2026-09-21 07:49:50.905405+00,false
+0aa6c8a2-5395-4dbb-9193-7461c2114a36,"Averna, the Chaos Bloom",URG,2026-09-29 22:37:37.354887+00,false
+0ee241f7-8c9b-41b5-b39f-38a3de48e7fa,"Phlage, Titan of Fire's Fury",WR,2026-09-21 07:49:12.754707+00,false
+108c918d-8f9d-4ee9-a9cc-8d5e1753e854,"Phelia, Exuberant Shepherd",W,2026-09-29 22:40:52.351639+00,false
+12e8da56-91c9-4025-bc89-32fd993a1769,Ingris Stingerquill,BR,2026-09-29 22:40:03.472778+00,false
+177832af-960f-4534-8310-0db879e8b7e3,"Tokka & Rahzar, Terrible Twos",BR,2026-09-21 12:51:41.170455+00,false
+17f88b9f-5828-4a30-a7e2-566ebe7685b7,"Kraum, Ludevic's Opus",UR,2026-09-26 21:40:59.408108+00,false
+1ae0fb2f-0abb-4bf5-b6f1-193cf08e0bd4,"Brigid, Clachan's Heart",WG,2026-09-21 07:58:42.207917+00,false
+1f5f1bd5-00a8-4397-a713-c870c5e9adbe,"Grist, the Hunger Tide",BG,2026-09-21 12:33:34.869814+00,false
+20ec2557-6ea5-4894-98f4-c877f89c7a7e,"Magda, Brazen Outlaw",R,2026-09-21 07:48:26.026721+00,false
+2b578036-7436-4f77-8d27-90894547cdf9,"Toph, Greatest Earthbender",RG,2026-09-21 07:49:35.189783+00,false
+397a1170-3c13-4fa7-86e9-53f6a8d0ec04,Spider-Man 2099,UR,2026-09-21 11:57:17.701632+00,true
+4f64ad7c-a7c3-4960-b8d8-d601d5074bb3,Zurgo Bellstriker,R,2026-09-21 12:10:56.880285+00,false
+5458c2f4-b3bf-4297-85fd-644f995e9a21,Hidetsugu and Kairi,UB,2026-09-26 21:41:40.200609+00,false
+5724c294-2010-4088-aed0-26def0cb6ee6,"Melira, the Living Cure",WG,2026-09-22 22:54:16.251077+00,false
+63b5d956-f5c0-43a7-9da8-d3d91f642054,"Breeches, Brazen Plunderer",R,2026-09-21 12:50:12.163085+00,false
+74f2caa6-d63f-4d2d-924d-3391e564133e,"Tana, the Bloodsower",RG,2026-09-26 21:39:20.491068+00,false
+7aea3059-a0bb-4761-80ee-707716257850,"Aang, Swift Savior",WU,2026-09-21 07:40:14.595378+00,false
+81c5a12b-c169-4a52-b6f3-af6b1b39b0e9,"Juri, Master of the Revue",BR,2026-09-26 21:40:09.112149+00,false
+87be1f27-f92d-481d-887d-04680d382ac1,"Magda, the Hoardmaster",R,2026-09-21 12:10:37.018818+00,false
+9453b028-1753-4e9e-8ff6-1414c5ca07e9,"Deadpool, Trading Card",BR,2026-09-22 22:55:53.045109+00,false
+97f0aec3-df1b-404c-afc9-c8ec36755fe2,"Klothys, God of Destiny",RG,2026-09-26 21:38:15.199908+00,false
+9a3facf9-7ad2-4e68-b400-720ab646bcfb,"Venser, Shaper Savant",U,2026-09-26 21:42:20.940889+00,false
+a6199f71-7af1-4b73-9e64-6c249718a64c,"Light-Paws, Emperor's Voice",W,2026-09-21 07:48:08.722675+00,false
+a626d2a2-5964-4213-babf-ccf62e5bfa62,"Tasigur, the Golden Fang",UBG,2026-09-26 21:43:45.882237+00,false
+a6e9f20f-b9fe-48c1-81e2-b1866de32c77,Tifa Lockhart,G,2026-09-21 07:40:10.760166+00,false
+bd14a9a5-0aa5-4ca6-a0da-081e9cc057c1,"Aragorn, King of Gondor",WUR,2026-09-21 07:50:13.413469+00,false
+be1d962b-c918-4758-91e1-f37647758211,Errant and Giada,WU,2026-09-22 22:59:41.592561+00,false
+c8d5b170-18f1-49c2-8518-faac41ac08af,"Aminatou, the Fateshifter",WUB,2026-09-21 12:33:58.965851+00,false
+c94fb654-92b8-4b2f-96b2-50596c82f77b,"Atraxa, Grand Unifier",WUBG,2026-09-21 07:48:48.669072+00,false
+d2fed0bb-e9cf-47c5-8f05-b0ede406fccd,"Cloud, Midgar Mercenary",W,2026-09-21 12:12:07.112118+00,false
+e3d7c56a-1a73-48e5-955a-5af14eafa9af,"Dargo, the Shipwrecker",R,2026-09-26 21:34:35.069964+00,false
+ea920b0f-7b79-466e-931b-81ecf9db346c,"Emry, Lurker of the Loch",U,2026-09-21 12:39:09.481838+00,false
+f13afddd-01ef-4dd0-a905-cf141c5a44f1,"Kefka, Court Mage",UBR,2026-09-29 22:39:14.945066+00,false
+f2572710-54ad-4335-ab58-6d61e255cdd7,"Quintorius, History Chaser",WR,2026-09-26 21:46:35.807702+00,false

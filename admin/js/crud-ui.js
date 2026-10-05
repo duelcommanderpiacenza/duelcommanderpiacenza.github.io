@@ -66,17 +66,37 @@ export function renderTable(container, rows, columns, actions, { animate = true 
 }
 
 // A single clickable pill combining an open/closed status badge (same
-// .badge-status look as the public site's) with the action
-// to flip it — one row-actions button and one table column fewer than
-// having both a status badge and a separate "Chiudi"/"Riapri" button side
-// by side. Callers wire up the click the same way they already do for any
-// other data-toggle button (see leagues-admin.js/events-admin.js).
-export function statusToggleButton(isOpen, id) {
-  return `<button type="button" class="badge-status badge-status-toggle ${
-    isOpen ? "badge-status-open" : "badge-status-closed"
-  }" data-toggle="${id}" title="${isOpen ? "Clic per chiudere" : "Clic per riaprire"}">${
-    isOpen ? "Aperta" : "Chiusa"
-  }</button>`;
+// .badge-status look as the public site's) with the action to flip it —
+// one button instead of a status badge plus a separate "Chiudi"/"Riapri"
+// one. kind picks the grammatical gender: "league" (la lega → Aperta) or
+// "event" (l'evento → Aperto).
+const STATUS_LABELS = {
+  league: { open: "Aperta", closed: "Chiusa" },
+  event: { open: "Aperto", closed: "Chiuso" },
+};
+
+function statusToggle(isOpen, kind) {
+  return {
+    className: `badge-status badge-status-toggle ${isOpen ? "badge-status-open" : "badge-status-closed"}`,
+    label: STATUS_LABELS[kind][isOpen ? "open" : "closed"],
+    title: isOpen ? "Clic per chiudere" : "Clic per riaprire",
+  };
+}
+
+// For list rows: callers wire up the click the same way they already do for
+// any other data-toggle button (see leagues-admin.js/events-admin.js).
+export function statusToggleButton(isOpen, id, kind) {
+  const { className, label, title } = statusToggle(isOpen, kind);
+  return `<button type="button" class="${className}" data-toggle="${id}" title="${title}">${label}</button>`;
+}
+
+// For a toggle button that already exists in the page (the event's
+// Iscritti/Partite title bars): re-skins it in place to the current state.
+export function setStatusToggle(button, isOpen, kind) {
+  const { className, label, title } = statusToggle(isOpen, kind);
+  button.className = className;
+  button.textContent = label;
+  button.title = title;
 }
 
 export function setMessage(el, text, isError) {

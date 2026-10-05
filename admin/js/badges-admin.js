@@ -1,8 +1,9 @@
 import { Badges, BadgeIcons } from "../../js/db.js";
+import { badgeDiscHtml } from "../../js/ui.js";
 import { renderTable, setMessage, fillSelect } from "./crud-ui.js";
 import { emit } from "./bus.js";
 import { syncAutoBadges } from "./badges-sync.js";
-import { initEmojiPicker } from "./emoji-picker.js";
+import { initEmojiPicker, isCustomIcon } from "./emoji-picker.js";
 
 const MAX_ICON_FILE_BYTES = 300 * 1024;
 
@@ -51,14 +52,9 @@ function ruleLabel(row) {
   return row.auto_rule ? RULE_LABELS[row.auto_rule] ?? row.auto_rule : "—";
 }
 
-// .badge-icon-box gives the image and the emoji the same flex-centered box
-// (see styles.css) so they share a vertical anchor — an emoji as bare text
-// sits per font glyph metrics, which doesn't line up with a flex-centered
-// <img>.
+// In the same light-red disc as on the public site (js/ui.js).
 function iconCellHtml(row) {
-  return row.icon_url
-    ? `<img src="${row.icon_url}" alt="" class="badge-icon-box" style="width:1.3rem;height:1.3rem;">`
-    : `<span class="badge-icon-box" style="width:1.3rem;height:1.3rem;font-size:1.3rem;">${row.icon ?? ""}</span>`;
+  return badgeDiscHtml(row, "1.2rem");
 }
 
 export function initBadgesAdmin() {
@@ -213,7 +209,13 @@ export function initBadgesAdmin() {
     fileInput.value = "";
     editingIconUrl = row.icon_url ?? null;
 
-    if (row.icon_url) {
+    // A custom icon (the picker's "Custom" tab) is stored as an icon_url
+    // too, but it's picked in the emoji mode, not uploaded — reopen it there.
+    if (isCustomIcon(row.icon_url)) {
+      modeRadios().find((r) => r.value === "emoji").checked = true;
+      renderPreview(null);
+      emojiPicker.setValue(row.icon_url);
+    } else if (row.icon_url) {
       modeRadios().find((r) => r.value === "image").checked = true;
       renderPreview(row.icon_url);
       emojiPicker.setValue("");
@@ -261,11 +263,15 @@ export function initBadgesAdmin() {
     let iconUrl = null;
 
     if (mode === "emoji") {
-      icon = iconField.value.trim() || null;
-      if (!icon) {
+      const picked = iconField.value.trim();
+      if (!picked) {
         setMessage(msgEl, "Seleziona un'icona.", true);
         return;
       }
+      // A custom icon is the site path of its SVG: saved as icon_url, which
+      // every page draws as an image (an emoji goes in icon, as text).
+      if (isCustomIcon(picked)) iconUrl = picked;
+      else icon = picked;
     } else {
       if (selectedFile) {
         try {

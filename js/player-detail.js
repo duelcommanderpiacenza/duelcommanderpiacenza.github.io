@@ -3,6 +3,7 @@ import { matchRoundOutcome, isBye, isDrop, computeEventLeaderboard } from "./lea
 import { tallyOutcome, renderWinrateTiles } from "./winrate.js";
 import {
   escapeHtml,
+  badgeDiscHtml,
   badgeTooltipAttrs,
   uniqueBadges,
   playerLabel,
@@ -46,20 +47,11 @@ function viewerScoreLabel(m, viewerIsP1) {
 // plain read of PlayerAutoBadges, precomputed by admin/js/badges-sync.js
 // whenever an event/league closes, not a live js/auto-badges.js
 // computation (that would recompute every player's standings/stats just
-// to extract this one player's result). An automatic badge (id in
-// `linkedIds`) links to its own card on badges.html, which explains how it's
-// earned; a manual one has no card there, so it stays a plain icon.
-function playerBadgesHtml(badges, linkedIds) {
+// to extract this one player's result). Plain icons with their tooltip, not
+// links — same as next to names everywhere else.
+function playerBadgesHtml(badges) {
   return badges
-    .map((b) => {
-      const glyph = b.icon_url
-        ? `<img src="${b.icon_url}" alt="" class="icon-badge-img badge-icon-box" style="width:1.1em;height:1.1em;">`
-        : `<span class="badge-icon-box" style="width:1.1em;height:1.1em;">${b.icon ?? ""}</span>`;
-      const attrs = `class="icon-badge" ${badgeTooltipAttrs(b)}`;
-      return linkedIds.has(b.id)
-        ? `<a ${attrs} href="badges.html#badge-${b.id}">${glyph}</a>`
-        : `<span ${attrs} tabindex="0">${glyph}</span>`;
-    })
+    .map((b) => `<span class="icon-badge" ${badgeTooltipAttrs(b)} tabindex="0">${badgeDiscHtml(b)}</span>`)
     .join("");
 }
 
@@ -142,15 +134,25 @@ async function init() {
   }
 
   try {
-    const [player, card] = await Promise.all([
-      Players.get(id),
-      // The linked account's card, when there's one to show. Not fatal: the
-      // page works the same without it.
-      PlayerCards.get(id).catch((err) => {
-        console.error(err);
-        return null;
-      }),
-    ]);
+    // Four independent requests (each needs only the id), all started at
+    // once rather than one after another — then used in this order, so the
+    // title still shows as soon as the player's own row arrives. The no-op
+    // catches only mark the badges and entries requests as handled, should
+    // the player request fail first and leave them never awaited; awaiting
+    // them below still throws as usual. The linked account's card, when
+    // there's one to show, is never fatal: the page works the same without
+    // it.
+    const playerRequest = Players.get(id);
+    const autoBadgesRequest = PlayerAutoBadges.listByPlayer(id);
+    const entriesRequest = EventEntries.listByPlayer(id);
+    const cardRequest = PlayerCards.get(id).catch((err) => {
+      console.error(err);
+      return null;
+    });
+    autoBadgesRequest.catch(() => {});
+    entriesRequest.catch(() => {});
+
+    const player = await playerRequest;
     const nameLabel = player.handle ? `${player.name} (${player.handle})` : player.name;
     // Not fatal if this fails — the page still works with just the
     // manually assigned badges, so it's kept out of this try/catch.
@@ -159,26 +161,21 @@ async function init() {
       // The player list caps this to a few (highest priority first); this
       // page shows every auto badge a player has, uncapped — still sorted
       // the same way, just not sliced.
-      autoBadges = (await PlayerAutoBadges.listByPlayer(id))
+      autoBadges = (await autoBadgesRequest)
         .map((r) => r.badge)
         .filter(Boolean)
         .sort((a, b) => b.priority - a.priority);
     } catch (err) {
       console.error(err);
     }
-    // An automatic badge links to its Badge-page card whether it was earned
-    // or assigned by hand in a manual slot (auto_rule set); a manual-only
-    // badge has no card there.
     const playerBadges = uniqueBadges([player.badge1, player.badge2, ...autoBadges]);
-    titleEl.innerHTML = `${escapeHtml(nameLabel)} ${playerBadgesHtml(
-      playerBadges,
-      new Set([...autoBadges.map((b) => b.id), ...playerBadges.filter((b) => b.auto_rule).map((b) => b.id)])
-    )}`;
+    titleEl.innerHTML = `${escapeHtml(nameLabel)} ${playerBadgesHtml(playerBadges)}`;
     // Same as the other detail pages: on phones, fits the name to one line
     // and keeps the back button vertically centered on it.
     initTitleFit(titleEl);
 
-    const entries = await EventEntries.listByPlayer(id);
+    const entries = await entriesRequest;
+    const card = await cardRequest;
 
     // The card, once the year of the player's first event ("Dal …") is
     // known: shown with the rest of the page, sized once the stat tiles are

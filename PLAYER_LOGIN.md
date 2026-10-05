@@ -410,7 +410,13 @@ new commits for exactly those three things: new public pages (copy the
 database changes (a `main` migration would need numbering after 007 and
 running too).
 
-- [ ] Merge `origin/main` into `player-login`, conflicts resolved.
+- [x] Merge `origin/main` into `player-login`, conflicts resolved (`main` had
+  17 commits by then, the last adding `backup/` table exports): the two
+  expected conflicts, `js/player-detail.js` resolved as above (the card a
+  fourth request beside `main`'s three) and `CLAUDE.md` (each page row from
+  the side that changed it); checked after — the admin app's "Utenti" tab
+  and admin check, `js/moxfield.js`'s new path in social.html, the account
+  button on every public page, no old CSS names left.
 - [ ] Test locally on dev (`python -m http.server 8000`): `main`'s new
   features and the whole player login together — sign-in, claim, admin
   "Utenti", profile card (edit, save, switch), the card on player.html,

@@ -108,6 +108,20 @@ export function badgeTooltipAttrs(badge) {
   return `data-tooltip="${escapeHtml(tooltip)}" aria-label="${escapeHtml(label)}"`;
 }
 
+// A badge's icon in its disc (styles.css .badge-disc: white, red ring) — the one
+// look for a badge wherever it appears: next to player names, the player
+// page title, the admin lists. The disc is sized in em from the text around
+// it, the glyph centered in it; an uploaded/custom picture (icon_url) or an
+// emoji (icon) alike. `size` optionally sets that font size (e.g. "1.2rem"
+// in an admin table cell). badges.html's big .badge-card-icon is the same
+// disc, styled at its own size.
+export function badgeDiscHtml(badge, size = null) {
+  const glyph = badge.icon_url
+    ? `<img src="${escapeHtml(badge.icon_url)}" alt="" class="badge-disc-glyph">`
+    : `<span class="badge-disc-glyph">${escapeHtml(badge.icon ?? "")}</span>`;
+  return `<span class="badge-disc"${size ? ` style="font-size:${size}"` : ""}>${glyph}</span>`;
+}
+
 // ⚠️ "Bannato" icon (tooltip via the site-wide js/floating-tooltip.js) —
 // Comandanti's table and commander.html's title.
 export function bannedBadge() {

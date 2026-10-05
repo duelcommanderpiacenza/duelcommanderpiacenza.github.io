@@ -76,20 +76,17 @@
   <div class="page-heading page-heading-with-action">
     <div class="page-heading-title-group">
       <h1>Matchups</h1>
-      <button type="button" class="help-toggle-btn" id="matchups-help-toggle" aria-expanded="false" aria-controls="matchups-help" aria-label="Come si legge la matrice">?</button>
+      <button type="button" class="help-toggle-btn" id="matchups-help-toggle" aria-haspopup="dialog" aria-label="Come si legge la matrice">?</button>
     </div>
     <button type="button" class="filter-toggle-btn" id="matchups-filter-toggle" aria-expanded="false" aria-controls="matchups-filter-panel" aria-label="Filtri">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
     </button>
   </div>
-  <div class="help-box-wrap" id="matchups-help" inert>
-    <div class="help-box-clip">
-      <div class="help-box">
-        <p>La matchup matrix mostra, per ogni coppia di comandanti, la percentuale di vittorie dell&rsquo;uno contro l&rsquo;altro nelle partite gi&agrave; giocate tra loro.</p>
-        <p>Si legge per riga: la percentuale &egrave; la vittoria del comandante di riga contro quello di colonna. Tra parentesi il suo risultato in vittorie-sconfitte-pareggi (V-S-P).</p>
-      </div>
-    </div>
-  </div>
+  <!-- The "?" pop-up's text (js/matchups-page.js opens it via js/info-dialog.js). -->
+  <template id="matchups-help-text">
+    <p>La matchup matrix mostra, per ogni coppia di comandanti, la percentuale di vittorie dell&rsquo;uno contro l&rsquo;altro nelle partite gi&agrave; giocate tra loro.</p>
+    <p>Si legge per riga: la percentuale &egrave; la vittoria del comandante di riga contro quello di colonna. Tra parentesi il suo risultato in vittorie-sconfitte-pareggi (V-S-P).</p>
+  </template>
   <div class="filter-panel is-collapsed" id="matchups-filter-panel">
     <div class="filter-panel-clip">
       <div class="filter-panel-body">
