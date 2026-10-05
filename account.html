@@ -258,6 +258,75 @@
             <div class="stat-grid profile-stats-tiles" id="profile-stats-tiles"></div>
           </section>
 
+          <!-- Invia la tua decklist: once linked, between the stats and
+               Account — for an upcoming event or a closed one the player is
+               in, emailed to the organisers by the send-decklist Edge
+               Function, never stored (only *that* it was sent: one per
+               event). js/account-page.js. -->
+          <section class="card profile-card profile-decklist is-collapsed" id="profile-decklist" hidden>
+            <!-- The header opens / closes the rest (closed at first). -->
+            <button type="button" class="decklist-toggle" id="decklist-toggle" aria-expanded="false" aria-controls="decklist-body">
+              <span class="decklist-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="3" width="13" height="17" rx="2"></rect><path d="M4 7v12a2 2 0 0 0 2 2h9"></path><path d="M11 8h5M11 12h5M11 16h3"></path></svg>
+              </span>
+              <span class="decklist-toggle-text">
+                <span class="decklist-title">Invia la tua decklist</span>
+                <span class="decklist-subtitle">Per un evento in arrivo o che hai giocato</span>
+              </span>
+              <span class="league-group-toggle-icon" aria-hidden="true"></span>
+            </button>
+
+            <div class="decklist-body" id="decklist-body" inert>
+              <div class="decklist-body-clip" id="decklist-body-clip">
+                <div class="decklist-body-inner">
+                  <p class="account-hint decklist-hint">La lista arriva agli organizzatori via email e non viene salvata sul sito. Puoi inviarne una sola per evento.</p>
+                  <p class="page-empty decklist-none" id="decklist-none" hidden></p>
+
+                  <form class="decklist-form" id="decklist-form" novalidate hidden>
+                    <div class="field">
+                      <label for="decklist-event">Evento</label>
+                      <select id="decklist-event" data-searchable></select>
+                    </div>
+                    <div class="field">
+                      <label for="decklist-text">Decklist</label>
+                      <div class="decklist-text-wrap">
+                        <textarea id="decklist-text" rows="9" maxlength="10000" spellcheck="false" autocomplete="off" placeholder="Incolla la lista, una carta per riga (es. 1 Sol Ring) — oppure un link (Moxfield, Archidekt, …)"></textarea>
+                        <span class="decklist-meter" id="decklist-meter" aria-live="polite"></span>
+                      </div>
+                    </div>
+
+                    <!-- The warning before sending: slides open in place of the button. -->
+                    <div class="decklist-confirm" id="decklist-confirm" inert>
+                      <div class="decklist-confirm-clip">
+                        <div class="decklist-confirm-box">
+                          <p id="decklist-confirm-text"></p>
+                          <div class="form-actions">
+                            <button type="button" class="btn-secondary" id="decklist-confirm-cancel">Annulla</button>
+                            <button type="button" class="btn-primary" id="decklist-confirm-send">Conferma e invia</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="form-actions decklist-actions" id="decklist-actions">
+                      <button type="submit" class="btn-primary decklist-submit" id="decklist-submit">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"></path><path d="M22 2 15 22l-4-9-9-4Z"></path></svg>
+                        Invia decklist
+                      </button>
+                    </div>
+                  </form>
+                  <p class="form-message" id="decklist-message"></p>
+
+                  <!-- Events this player already sent a list for. -->
+                  <div class="decklist-sent" id="decklist-sent" hidden>
+                    <p class="decklist-sent-title">Già inviate</p>
+                    <ul class="decklist-sent-list" id="decklist-sent-list"></ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
           <!-- Account: the Google login, signing out, and deleting the
                account (not offered to admin accounts). -->
           <section class="card profile-card profile-account" id="profile-account">
@@ -285,7 +354,6 @@
           </section>
         </div>
       </div>
-
     </div>
   </div>
 </main>

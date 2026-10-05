@@ -503,6 +503,41 @@ its ID token to Supabase (`signInWithIdToken`), so Google names the site.
   (block `accounts.google.com` in the browser's dev tools → the old button
   shows and works), phone and dark mode. Then live.
 
+## After go-live: sending a decklist by email
+
+A signed-in account linked to a player sends its decklist for an event
+from account.html; it's emailed to the organisers, **never stored** — only
+*that* it was sent, so each player sends one per event. Subject:
+`<Event name> - <dd/mm/yyyy> - <Player name>`.
+
+- Events offered: upcoming (open, today or later) or closed ones the player
+  is in. One text box: the pasted list or any link. Sending twice for the
+  same event isn't allowed; an in-card warning comes before the send. To
+  allow a resend (wrong list), the admin deletes the player's row for that
+  event in `decklist_submissions`.
+- Sent with **Resend** (resend.com, free: 100 emails a day). Without an own
+  domain it only delivers to the Resend account's own address, so the
+  account is the destination address's own: **lamialistadeck@gmail.com**
+  (a first test account on michele.ferri.2403@gmail.com was replaced, its
+  key too — `RESEND_API_KEY` and `DECKLIST_TO` updated on both projects) —
+  and there's no copy to the sender (the
+  page confirms on screen instead).
+- [x] Code: migration `008_decklist_submissions.sql` (+ rollback, folded
+  into `schema.sql`); the Edge Function
+  `supabase/functions/send-decklist/index.ts`; `js/db.js`'s `Decklists`;
+  the card on account.html (`js/account-page.js`, styles.css): in the
+  column beside the player card, between the stats and Account (Account
+  always last), closed at first — its header opens / closes the form.
+- [x] Resend account and API key (kept by Michele — only ever in Supabase).
+- [x] **Dev:** run 008; deploy the function (Edge Functions → new function,
+  via the editor, name `send-decklist`, the file's code); its secrets
+  `RESEND_API_KEY` and `DECKLIST_TO`; test (send for an upcoming and a
+  played event, the warning, a second try refused, the email's subject and
+  Reply-To).
+- [x] **Live:** the same three (008, the function, its secrets).
+- [ ] Push, then test on live with the admin's own account (and delete
+  that test's row in `decklist_submissions` afterwards).
+
 ## Open questions
 
 - None right now. (Step 4's "which fields can a player edit" was answered:

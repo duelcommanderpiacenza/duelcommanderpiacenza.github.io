@@ -47,12 +47,14 @@ import {
   MyAccount,
   Players,
   PlayerAutoBadges,
+  Events,
+  Decklists,
   EventEntries,
   Matches,
 } from "./db.js";
 import { matchRoundOutcome, isDrop } from "./leaderboard.js";
 import { tallyOutcome, renderWinrateTiles } from "./winrate.js";
-import { escapeHtml, colorIdentityPips, uniqueBadges } from "./ui.js";
+import { escapeHtml, colorIdentityPips, uniqueBadges, eventTitle, formatDate } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { applyCardAccents, archetypeLabel, EMPTY_VALUE, createArtPainter, cardBadgesHtml } from "./player-card.js";
 
@@ -408,9 +410,12 @@ function alignCardToSide() {
   }
   const stretch = parseFloat(sideEl.style.getPropertyValue("--pc-side-stretch")) || 0;
   const sideHeight = sideEl.offsetHeight - stretch;
+  // The card is sized without "Invia la tua decklist"'s open part: opening
+  // it (animated) mustn't resize the card — the column just grows below.
+  const decklistOpenPart = document.getElementById("decklist-body")?.offsetHeight ?? 0;
   // What's under the card in its column (the switch, a message).
   const below = cardColEl.offsetHeight - cardEl.offsetHeight;
-  const fitting = (sideHeight - below - CARD_FRAME) / CARD_RATIO + CARD_FRAME;
+  const fitting = (sideHeight - decklistOpenPart - below - CARD_FRAME) / CARD_RATIO + CARD_FRAME;
   let width = Math.round(Math.min(MAX_CARD_WIDTH, Math.max(MIN_CARD_WIDTH, fitting)));
   const current = parseFloat(layoutEl.style.getPropertyValue("--pc-width"));
   if (width !== current) {
@@ -522,6 +527,8 @@ async function loadClaim() {
   claim = { linked, pending };
   claimCard.hidden = Boolean(linked);
   statsCard.hidden = !linked;
+  // Shown by loadDecklistCard once linked.
+  if (!linked) decklistCard.hidden = true;
   if (linked) return;
   if (pending) {
     pendingPlayerEl.textContent = playerLabel(pending.player);
@@ -618,6 +625,9 @@ async function loadStats(player) {
     return d && (!min || d < min) ? d : min;
   }, null);
   firstYear = firstDate ? firstDate.slice(0, 4) : null;
+
+  // "Invia la tua decklist" needs the same entries (the closed events played).
+  await loadDecklistCard(player, entries);
 }
 
 document.getElementById("account-claim-form").addEventListener("submit", async (e) => {
@@ -651,6 +661,257 @@ document.getElementById("account-claim-cancel").addEventListener("click", async 
   await reloadClaim("Richiesta annullata.");
 });
 
+// --- Invia la tua decklist ------------------------------------------------------------
+
+// For an upcoming event (open, today or later) or a closed one the player
+// is in, emailed to the organisers by the send-decklist Edge Function
+// (js/db.js's Decklists) — never stored, only *that* it was sent: one per
+// player and event (supabase/migrations/008). The function checks it all
+// again; this only offers the events that qualify, shows the ones already
+// sent, and asks for confirmation before sending (there's no second try).
+const decklistCard = document.getElementById("profile-decklist");
+const decklistNoneEl = document.getElementById("decklist-none");
+const decklistForm = document.getElementById("decklist-form");
+const decklistEventSelect = document.getElementById("decklist-event");
+const decklistText = document.getElementById("decklist-text");
+const decklistMeter = document.getElementById("decklist-meter");
+const decklistConfirm = document.getElementById("decklist-confirm");
+const decklistConfirmText = document.getElementById("decklist-confirm-text");
+const decklistConfirmSend = document.getElementById("decklist-confirm-send");
+const decklistConfirmCancel = document.getElementById("decklist-confirm-cancel");
+const decklistActions = document.getElementById("decklist-actions");
+const decklistMessageEl = document.getElementById("decklist-message");
+const decklistSentBox = document.getElementById("decklist-sent");
+const decklistSentList = document.getElementById("decklist-sent-list");
+const decklistToggle = document.getElementById("decklist-toggle");
+const decklistBody = document.getElementById("decklist-body");
+const decklistBodyClip = document.getElementById("decklist-body-clip");
+
+// The header opens / closes the rest — closed at first. Same grid-rows
+// collapse as Leghe & Eventi's cards; once fully open the clip lifts, so the
+// event list's dropdown isn't cut off at the card's edge (CLAUDE.md gotcha
+// #13), and drops again before closing, so the content still clips away.
+function setDecklistOpen(open) {
+  decklistCard.classList.toggle("is-collapsed", !open);
+  decklistToggle.setAttribute("aria-expanded", String(open));
+  decklistBody.inert = !open;
+  if (!open) {
+    decklistBodyClip.classList.remove("is-open");
+  } else if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    // No transition plays, so its transitionend below never fires.
+    decklistBodyClip.classList.add("is-open");
+  }
+}
+
+decklistToggle.addEventListener("click", () => setDecklistOpen(decklistCard.classList.contains("is-collapsed")));
+decklistBody.addEventListener("transitionend", (e) => {
+  if (e.target === decklistBody && e.propertyName === "grid-template-rows" && !decklistCard.classList.contains("is-collapsed")) {
+    decklistBodyClip.classList.add("is-open");
+  }
+});
+
+// The send-decklist function's error codes.
+const DECKLIST_ERROR_TEXT = {
+  not_signed_in: "Sessione scaduta: accedi di nuovo e riprova.",
+  blocked: "Il tuo account è bloccato.",
+  empty: "Scegli l'evento e incolla la decklist.",
+  too_long: "La decklist è troppo lunga.",
+  not_linked: "Il tuo account non è collegato a un giocatore.",
+  event_not_found: "Evento non trovato: ricarica la pagina.",
+  event_not_allowed: "Per questo evento non puoi inviare la decklist.",
+  already_sent: "Hai già inviato una decklist per questo evento.",
+};
+
+// The events that can still get a list (id → event: upcoming first, soonest
+// first, then the ones played, newest first) and the ones already sent
+// ({ event, isNew }, newest event first).
+let decklistEvents = new Map();
+let sentDecklists = [];
+
+async function loadDecklistCard(player, entries) {
+  decklistCard.hidden = false;
+  setDecklistOpen(false);
+  closeDecklistConfirm();
+  setMessage(decklistMessageEl, "");
+  let upcoming;
+  let sent;
+  try {
+    [upcoming, sent] = await Promise.all([Events.listUpcoming(), Decklists.sentEvents(player.id)]);
+  } catch (err) {
+    // E.g. migration 008 not run yet: no card rather than a broken one.
+    console.error(err);
+    decklistCard.hidden = true;
+    return;
+  }
+  const played = entries
+    .map((e) => e.event)
+    .filter((ev) => ev && !ev.is_open)
+    .sort((a, b) => (b.event_date ?? "").localeCompare(a.event_date ?? ""));
+  const sentIds = new Set(sent.map((s) => s.event_id));
+  const known = new Map([...upcoming, ...played].map((ev) => [ev.id, ev]));
+  decklistEvents = new Map(
+    [...upcoming.map((ev) => ({ ...ev, upcoming: true })), ...played]
+      .filter((ev) => !sentIds.has(ev.id))
+      .map((ev) => [ev.id, ev])
+  );
+  sentDecklists = [...sentIds]
+    .map((id) => known.get(id))
+    .filter(Boolean)
+    .sort((a, b) => (b.event_date ?? "").localeCompare(a.event_date ?? ""))
+    .map((event) => ({ event, isNew: false }));
+  renderDecklistCard();
+}
+
+function decklistEventSublabel(ev) {
+  return [ev.upcoming ? "In arrivo" : "Giocato", formatDate(ev.event_date), ev.league?.name].filter(Boolean).join(" · ");
+}
+
+function renderDecklistCard() {
+  const events = [...decklistEvents.values()];
+  decklistForm.hidden = events.length === 0;
+  decklistNoneEl.hidden = events.length > 0;
+  decklistNoneEl.textContent = sentDecklists.length
+    ? "Hai già inviato la decklist per tutti gli eventi disponibili."
+    : "Nessun evento disponibile: puoi inviare la decklist per un evento in arrivo o per uno che hai giocato.";
+  // data-label / data-sublabel: js/custom-select.js shows the name with a
+  // smaller line below (in arrivo / giocato · date · league).
+  decklistEventSelect.innerHTML =
+    '<option value="">Scegli un evento&hellip;</option>' +
+    events
+      .map((ev) => {
+        const name = eventTitle(ev);
+        const sub = decklistEventSublabel(ev);
+        return `<option value="${ev.id}" data-label="${escapeHtml(name)}" data-sublabel="${escapeHtml(sub)}">${escapeHtml(
+          name
+        )} — ${escapeHtml(sub)}</option>`;
+      })
+      .join("");
+  decklistSentBox.hidden = sentDecklists.length === 0;
+  decklistSentList.innerHTML = sentDecklists
+    .map(
+      ({ event, isNew }) => `<li class="decklist-sent-chip${isNew ? " is-new" : ""}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+        <span class="decklist-sent-name">${escapeHtml(eventTitle(event))}</span>
+        <span class="decklist-sent-date">${formatDate(event.event_date)}</span>
+      </li>`
+    )
+    .join("");
+  // Animated once, as it's added — not again on the next redraw.
+  for (const item of sentDecklists) item.isNew = false;
+}
+
+// What's in the box, said under it as you type: a link, or the cards counted
+// from the list (a leading number is the quantity, "1 Sol Ring" / "1x Sol
+// Ring"; section names like "Commander" or "Sideboard:" aren't cards). A
+// Duel Commander deck is 100 cards: that count turns green.
+const DECKLIST_SECTION = /^(commander|commanders|deck|mainboard|main|sideboard|companion|maybeboard)\s*:?$/i;
+
+function updateDecklistMeter() {
+  const text = decklistText.value.trim();
+  decklistMeter.className = "decklist-meter";
+  if (!text) {
+    decklistMeter.textContent = "";
+    return;
+  }
+  if (/^https?:\/\/\S+$/i.test(text)) {
+    decklistMeter.textContent = "Link alla decklist";
+    decklistMeter.classList.add("is-link");
+    return;
+  }
+  let cards = 0;
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line || /^(\/\/|#)/.test(line) || DECKLIST_SECTION.test(line)) continue;
+    const quantity = line.match(/^(\d+)\s*x?\s+\S/i);
+    cards += quantity ? Number(quantity[1]) : 1;
+  }
+  decklistMeter.textContent = `${cards} ${cards === 1 ? "carta" : "carte"}`;
+  decklistMeter.classList.toggle("is-full", cards === 100);
+}
+
+// The warning before sending slides open in place of the send button.
+function openDecklistConfirm(ev) {
+  decklistConfirmText.innerHTML = `Inviare la decklist per <strong>${escapeHtml(eventTitle(ev))}</strong> del ${formatDate(
+    ev.event_date
+  )}? Potrai inviarne <strong>una sola</strong> per questo evento: controlla che sia quella giusta.`;
+  decklistConfirm.classList.add("is-open");
+  decklistConfirm.inert = false;
+  decklistActions.hidden = true;
+  decklistConfirmSend.focus({ preventScroll: true });
+}
+
+function closeDecklistConfirm() {
+  decklistConfirm.classList.remove("is-open");
+  decklistConfirm.inert = true;
+  decklistActions.hidden = false;
+}
+
+function setDecklistSending(sending) {
+  decklistConfirmSend.disabled = sending;
+  decklistConfirmCancel.disabled = sending;
+  decklistConfirmSend.classList.toggle("is-sending", sending);
+  decklistConfirmSend.textContent = sending ? "Invio in corso…" : "Conferma e invia";
+}
+
+decklistText.addEventListener("input", () => {
+  updateDecklistMeter();
+  // Changed after the warning: it's for the old text, so it goes.
+  if (decklistConfirm.classList.contains("is-open")) closeDecklistConfirm();
+});
+decklistEventSelect.addEventListener("change", () => {
+  if (decklistConfirm.classList.contains("is-open")) closeDecklistConfirm();
+});
+decklistConfirmCancel.addEventListener("click", closeDecklistConfirm);
+
+decklistForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  setMessage(decklistMessageEl, "");
+  // Checked here, not with `required`: the native <select> is hidden behind
+  // js/custom-select.js's skin, where the browser can't show its warning.
+  const ev = decklistEvents.get(decklistEventSelect.value);
+  if (!ev) {
+    setMessage(decklistMessageEl, "Scegli l'evento.");
+    return;
+  }
+  if (!decklistText.value.trim()) {
+    setMessage(decklistMessageEl, "Incolla la decklist o un link.");
+    return;
+  }
+  openDecklistConfirm(ev);
+});
+
+decklistConfirmSend.addEventListener("click", async () => {
+  const ev = decklistEvents.get(decklistEventSelect.value);
+  if (!ev) {
+    closeDecklistConfirm();
+    return;
+  }
+  setDecklistSending(true);
+  try {
+    await Decklists.send(ev.id, decklistText.value);
+  } catch (err) {
+    console.error(err);
+    setDecklistSending(false);
+    closeDecklistConfirm();
+    setMessage(decklistMessageEl, DECKLIST_ERROR_TEXT[err?.message] ?? "Invio non riuscito, riprova più tardi.");
+    // Already sent (another tab, another device): it moves to "Già inviate".
+    if (err?.message === "already_sent") {
+      decklistEvents.delete(ev.id);
+      sentDecklists.unshift({ event: ev, isNew: true });
+      renderDecklistCard();
+    }
+    return;
+  }
+  setDecklistSending(false);
+  closeDecklistConfirm();
+  decklistEvents.delete(ev.id);
+  sentDecklists.unshift({ event: ev, isNew: true });
+  decklistText.value = "";
+  updateDecklistMeter();
+  renderDecklistCard();
+  setMessage(decklistMessageEl, `Decklist inviata per ${eventTitle(ev)}.`, "ok");
+});
+
 // --- Loading the signed-in view -----------------------------------------------------
 
 // Also kept by id, for the card's live preview of a commander picked in
@@ -670,6 +931,7 @@ async function loadSignedIn(sessionUser) {
   playerBadges = [];
   setEditing(false, { animate: false });
   accountDangerEl.hidden = true;
+  decklistCard.hidden = true;
   setMessage(accountMessageEl, "");
   try {
     let isAdmin;

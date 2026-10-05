@@ -6624,6 +6624,363 @@ html.nav-mobile .pc-cancel-btn svg {
   height: 18px;
 }
 
+/* ---- account.html "Invia la tua decklist" (js/account-page.js) ----
+   In the column beside the player card, between the stats and Account
+   (Account always last). Closed at first: its header — a brand-red icon
+   tile, the title, Leghe & Eventi's red round arrow — is the button that
+   opens / closes the rest, with the same grid-rows collapse. Inside: the
+   list in a monospaced box with a live count in its corner (green at a
+   full 100-card deck); the warning before sending sliding open in place of
+   the button; the events already sent as green chips, a new one popping
+   in. */
+.decklist-toggle {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.decklist-toggle:focus-visible {
+  outline: 3px solid rgba(220, 24, 28, 0.45);
+  outline-offset: 6px;
+  border-radius: 14px;
+}
+
+.decklist-toggle-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.decklist-title {
+  color: var(--text-title);
+  font-size: 1.17rem;
+  font-weight: 800;
+}
+
+.decklist-subtitle {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+/* Leghe & Eventi's arrow: up when open, down when closed. */
+.decklist-toggle:hover .league-group-toggle-icon {
+  background: var(--brand-red-deep-2);
+}
+
+.profile-decklist.is-collapsed .league-group-toggle-icon::before {
+  transform: rotate(180deg);
+}
+
+.decklist-body {
+  display: grid;
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transition: grid-template-rows 300ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 240ms ease;
+}
+
+.profile-decklist.is-collapsed .decklist-body {
+  grid-template-rows: 0fr;
+  opacity: 0;
+}
+
+/* Clips the content while it slides (min-height: 0, so the row can really
+   shrink); lifted once fully open (.is-open, js), so the event list's
+   dropdown can open past the card's edge. */
+.decklist-body-clip {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.decklist-body-clip.is-open {
+  overflow: visible;
+}
+
+.decklist-body-inner {
+  padding-top: 18px;
+}
+
+.decklist-hint {
+  margin: 0 0 16px;
+}
+
+/* An open dropdown inside lifts the whole card above the Account card
+   below it (the card's entrance animation makes it a stacking context —
+   same fix as the claim card's). */
+.card.profile-decklist:has(.cs-wrap.is-open) {
+  position: relative;
+  z-index: 30;
+}
+
+.decklist-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--brand-red), rgba(150, 12, 16, 1));
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(220, 24, 28, 0.3);
+}
+
+.decklist-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.decklist-form .field {
+  margin-bottom: 14px;
+}
+
+.decklist-text-wrap {
+  position: relative;
+}
+
+.decklist-form textarea {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-height: 210px;
+  padding: 12px 14px 34px;
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--text-body);
+  font: 0.92rem/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  resize: vertical;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.decklist-form textarea:focus {
+  outline: none;
+  border-color: var(--brand-red);
+  box-shadow: 0 0 0 3px rgba(220, 24, 28, 0.15);
+}
+
+/* The live count, in the box's bottom-right corner. */
+.decklist-meter {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(220, 24, 28, 0.08);
+  color: var(--brand-red);
+  font-size: 0.78rem;
+  font-weight: 800;
+  pointer-events: none;
+  transition: background 200ms ease, color 200ms ease;
+}
+
+.decklist-meter:empty {
+  display: none;
+}
+
+.decklist-meter.is-full {
+  background: rgba(30, 140, 80, 0.12);
+  color: var(--accent-green-2);
+}
+
+.decklist-meter.is-full::after {
+  content: " ✓";
+}
+
+/* The warning: slides open in place of the send button. */
+.decklist-confirm {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 260ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 200ms ease;
+}
+
+.decklist-confirm.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.decklist-confirm-clip {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.decklist-confirm-box {
+  margin-top: 4px;
+  padding: 14px 16px;
+  border-left: 4px solid var(--brand-red);
+  border-radius: 12px;
+  background: rgba(220, 24, 28, 0.06);
+}
+
+.decklist-confirm-box p {
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+
+.decklist-confirm-box .form-actions {
+  flex-wrap: wrap;
+  margin-top: 0;
+}
+
+.decklist-actions[hidden] {
+  display: none;
+}
+
+.decklist-submit,
+#decklist-confirm-send {
+  gap: 8px;
+}
+
+.decklist-submit svg {
+  width: 18px;
+  height: 18px;
+  transition: transform 200ms ease;
+}
+
+.decklist-submit:hover svg {
+  transform: translate(2px, -2px);
+}
+
+/* Sending: the button pulses while the email goes out. */
+#decklist-confirm-send.is-sending {
+  animation: decklist-sending 1s ease-in-out infinite;
+  cursor: progress;
+}
+
+@keyframes decklist-sending {
+  50% {
+    opacity: 0.65;
+  }
+}
+
+#decklist-message:empty {
+  min-height: 0;
+  margin-top: 0;
+}
+
+#decklist-message {
+  margin-top: 12px;
+}
+
+/* Events already sent: green chips, the newest first; one just sent pops in. */
+.decklist-sent {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--hairline);
+}
+
+.decklist-sent[hidden] {
+  display: none;
+}
+
+.decklist-sent-title {
+  margin: 0 0 10px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.decklist-sent-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.decklist-sent-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: rgba(30, 140, 80, 0.1);
+  color: var(--text-title);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.decklist-sent-chip svg {
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  color: var(--accent-green-2);
+}
+
+.decklist-sent-date {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.decklist-sent-chip.is-new {
+  animation: decklist-chip-in 520ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+@keyframes decklist-chip-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+:root[data-theme="dark"] .decklist-form textarea {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+:root[data-theme="dark"] .decklist-confirm-box {
+  background: rgba(255, 110, 110, 0.1);
+}
+
+:root[data-theme="dark"] .decklist-sent-chip {
+  background: rgba(60, 190, 110, 0.14);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .decklist-body,
+  .decklist-confirm,
+  .decklist-form textarea,
+  .decklist-meter,
+  .decklist-submit svg {
+    transition: none;
+  }
+
+  #decklist-confirm-send.is-sending,
+  .decklist-sent-chip.is-new {
+    animation: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .decklist-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+  }
+
+  .decklist-icon svg {
+    width: 21px;
+    height: 21px;
+  }
+}
+
 /* Phones and narrow tablets: one column, the player card first, centred,
    as far from the stats card as the stacked cards are from each other. */
 @media (max-width: 820px) {

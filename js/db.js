@@ -170,6 +170,33 @@ export const PlayerCards = {
       .then((rows) => rows?.[0] ?? null),
 };
 
+// Decklists sent by email (account.html): sentEvents() — the events a player
+// already sent one for (supabase/migrations/008's decklist_submissions, the
+// list itself is never stored); send() — the send-decklist Edge Function
+// (supabase/functions/send-decklist), which checks and emails it. send()
+// throws an Error whose message is the function's error code
+// (already_sent, event_not_allowed, …).
+export const Decklists = {
+  sentEvents: (playerId) =>
+    sb
+      .from("decklist_submissions")
+      .select("event_id, sent_at")
+      .eq("player_id", playerId)
+      .then(assertOk),
+  send: async (eventId, decklist) => {
+    const { error } = await sb.functions.invoke("send-decklist", { body: { event_id: eventId, decklist } });
+    if (!error) return;
+    // A refusal from the function itself carries its code in the JSON body.
+    let code = "send_failed";
+    try {
+      code = (await error.context.json())?.error ?? code;
+    } catch {
+      // Not the function's answer (network, not deployed): the generic code.
+    }
+    throw new Error(code);
+  },
+};
+
 // The signed-in user's own login account (account.html's "Account" card).
 // remove(): supabase/migrations/006's delete_my_account() — refused for an
 // admin (admin_account); its profile and pending request go with it, its
