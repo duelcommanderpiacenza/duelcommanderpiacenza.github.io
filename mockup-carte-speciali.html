@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <!-- MOCKUP: the album's special card finishes side by side, with the real
+       styles (styles.css) and markup (js/commander-carousel.js). Not a real
+       page: delete when done. -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (t !== "light" && t !== "dark") t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    })();
+  </script>
+  <title>MOCKUP — Carte speciali - Duel Commander Piacenza</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="dc_pc.png">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .mockup-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 28px;
+      justify-content: center;
+      margin-top: 24px;
+    }
+    .mockup-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      --cmd-card-w: 240px;
+    }
+    /* flex: none — the album's own flex: 0 0 var(--cmd-card-w) is for its
+       horizontal row; in this column it would set the height, squaring
+       the card. Its aspect-ratio (488 / 680) then gives the card shape. */
+    .mockup-item .cmd-carousel-slide {
+      flex: none;
+      width: var(--cmd-card-w);
+      height: auto;
+      cursor: default;
+    }
+    .mockup-label {
+      margin: 0;
+      color: var(--text-title);
+      font-weight: 800;
+      text-align: center;
+    }
+    .mockup-label small {
+      display: block;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .mockup-note {
+      margin: 0 0 14px;
+      padding: 8px 14px;
+      border-radius: 12px;
+      background: rgba(220, 24, 28, 0.1);
+      color: var(--brand-red-deep);
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+<main class="page-main">
+  <p class="mockup-note">Mockup: le carte speciali dell'Album comandanti, in ordine. Stile e markup reali del sito.</p>
+  <div class="page-heading">
+    <h1>Carte speciali</h1>
+    <button type="button" class="btn-secondary" id="mockup-theme">Tema chiaro / scuro</button>
+  </div>
+
+  <div class="mockup-row">
+    <div class="mockup-item">
+      <div class="cmd-carousel-slide is-active has-image">
+        <img class="cmd-carousel-img" alt="" data-card>
+        <span class="card-finish-fx" aria-hidden="true"></span>
+      </div>
+      <p class="mockup-label">Normale<small>meno di 10 eventi</small></p>
+    </div>
+    <div class="mockup-item">
+      <div class="cmd-carousel-slide is-active has-image is-foil">
+        <img class="cmd-carousel-img" alt="" data-card>
+        <span class="card-finish-fx" aria-hidden="true"></span>
+      </div>
+      <p class="mockup-label">Foil<small>10+ eventi</small></p>
+    </div>
+    <div class="mockup-item">
+      <div class="cmd-carousel-slide is-active has-image is-foil is-gilded">
+        <img class="cmd-carousel-img" alt="" data-card>
+        <span class="card-finish-fx" aria-hidden="true"></span>
+      </div>
+      <p class="mockup-label">Foil dorata<small>25+ eventi</small></p>
+    </div>
+    <div class="mockup-item">
+      <div class="cmd-carousel-slide is-active has-image is-foil is-gilded is-sparks">
+        <img class="cmd-carousel-img" alt="" data-card>
+        <span class="card-finish-fx" aria-hidden="true"></span>
+      </div>
+      <p class="mockup-label">Leggendaria<small>50+ eventi</small></p>
+    </div>
+  </div>
+</main>
+
+<script>
+  // The same commander's card on all four (Scryfall's normal image).
+  fetch("https://api.scryfall.com/cards/named?exact=" + encodeURIComponent("Tymna the Weaver"))
+    .then(function (res) { return res.json(); })
+    .then(function (card) {
+      var src = (card.image_uris || card.card_faces[0].image_uris).normal;
+      document.querySelectorAll("[data-card]").forEach(function (img) { img.src = src; });
+    })
+    .catch(function (err) { console.error(err); });
+
+  document.getElementById("mockup-theme").addEventListener("click", function () {
+    var root = document.documentElement;
+    root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
+  });
+</script>
+</body>
+</html>

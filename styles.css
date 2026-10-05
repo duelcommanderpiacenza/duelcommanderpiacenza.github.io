@@ -3100,14 +3100,8 @@ body.is-loading .filter-panel.detail-filter-panel {
   }
 }
 
-/* A thin iridescent rim too, so a foil reads as foil even at a glance. */
-.cmd-carousel-slide.is-foil {
-  box-shadow: 0 0 0 2px rgba(255, 196, 0, 0.55), 0 0 14px rgba(190, 0, 255, 0.25);
-}
-
-.cmd-carousel-slide.is-foil.is-active {
-  box-shadow: 0 0 0 2px rgba(255, 196, 0, 0.65), 0 0 18px rgba(190, 0, 255, 0.35), 0 10px 24px rgba(0, 0, 0, 0.22);
-}
+/* No rim of its own: a foil is just the sheen above (the gilded frame
+   below is the next finish's). */
 
 /* Gilded (.is-gilded, on top of the foil): a gold frame drawn just inside
    the card's edge, with one bright highlight travelling round it at a
@@ -3130,15 +3124,18 @@ body.is-loading .filter-panel.detail-filter-panel {
   padding: var(--gilded-width, 4px);
   border-radius: inherit;
   pointer-events: none;
+  /* Bright golds all the way round — its darkest point a warm gold, not a
+     brown that faded into dark art — the highlight near-white. Same width:
+     only the colours changed. */
   background: conic-gradient(
     from var(--gilded-angle),
-    #fff6d0,
-    #f2d77a 8%,
-    #b8892a 22%,
-    #8a6a16 50%,
-    #b8892a 78%,
-    #f2d77a 92%,
-    #fff6d0
+    #fffbe6,
+    #ffe17d 8%,
+    #f0bd3c 22%,
+    #c8901a 50%,
+    #f0bd3c 78%,
+    #ffe17d 92%,
+    #fffbe6
   );
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
@@ -3207,7 +3204,7 @@ body.is-loading .filter-panel.detail-filter-panel {
   animation-duration: 3s;
 }
 
-/* No outer glow or rim, unlike the foil's: on desktop the current card sits
+/* No outer glow or rim (nor does the plain foil have one): on desktop the current card sits
    flush with the track's left edge, which clips anything spreading left
    into a hard edge — the frame is inside the card, which keeps just its
    usual shadow (desktop's down-right one: the 880px block below). */
@@ -3558,10 +3555,6 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
      which would clip a shadow spreading left. */
   .cmd-carousel-slide.is-active {
     box-shadow: 5px 10px 20px rgba(0, 0, 0, 0.22);
-  }
-
-  .cmd-carousel-slide.is-foil.is-active {
-    box-shadow: 0 0 0 2px rgba(255, 196, 0, 0.65), 0 0 18px rgba(190, 0, 255, 0.35), 5px 10px 20px rgba(0, 0, 0, 0.22);
   }
 
   .cmd-carousel-slide.is-gilded.is-active {
