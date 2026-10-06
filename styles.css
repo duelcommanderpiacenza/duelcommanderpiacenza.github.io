@@ -3347,7 +3347,12 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   flex: 0 0 var(--cmd-card-w);
   aspect-ratio: 488 / 680;
   scroll-snap-align: center;
-  border-radius: 10px;
+  /* Rounded like the card image itself (a Magic card's corner ≈ 4.75% of
+     its width), measured on the image — the box inside the border
+     (--rim: a frame's width, else the 1px edge) — plus that border: so the
+     inside curve the image is clipped to is exactly the image's own corner,
+     and a frame follows the card's edge all the way round. */
+  border-radius: calc((var(--cmd-card-w) - 2 * var(--rim, 1px)) * 0.0475 + var(--rim, 1px));
   overflow: hidden;
   background: rgba(220, 24, 28, 0.06);
   border: 1px solid var(--hairline);
@@ -3401,12 +3406,16 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   visibility: hidden;
 }
 
+/* fill, not cover: the box inside the border is a hair off the card's
+   proportions (the border takes the same px from both sides), and cover
+   cropped a px or two off the image's edges — shifting its rounded corners
+   off the box's. The stretch is under 1%, invisible. */
 .cmd-carousel-img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: fill;
   opacity: 0;
   transition: opacity 240ms ease;
   user-select: none;
