@@ -3064,169 +3064,6 @@ body.is-loading .filter-panel.detail-filter-panel {
   min-width: 0;
 }
 
-/* Special card finishes (js/commander-carousel.js's CARD_FINISHES), each a
-   class on the album card and on the "?" dialog's small preview card
-   (.card-finish-preview) alike.
-
-   Foil (.is-foil): a holographic sheen over the image — a still rainbow
-   wash blended into the art, plus a bright glare band sweeping diagonally
-   across it (the only moving part; no-repeat, so no tiled copy of the band
-   ever wraps back in from another edge), then a pause off-card before the
-   next sweep. Blends with the card's own image only: each slide is its own
-   stacking context (js transform). */
-.cmd-carousel-slide.is-foil::after,
-.card-finish-preview.is-foil::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  border-radius: inherit;
-  pointer-events: none;
-  background:
-    linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.55) 48%, transparent 60%),
-    linear-gradient(
-      125deg,
-      rgba(255, 0, 132, 0.5),
-      rgba(255, 196, 0, 0.45),
-      rgba(0, 255, 170, 0.45),
-      rgba(0, 170, 255, 0.5),
-      rgba(190, 0, 255, 0.45),
-      rgba(255, 0, 132, 0.5)
-    );
-  background-size: 300% 300%, 400% 400%;
-  background-repeat: no-repeat;
-  background-position: 100% 100%, 0% 50%;
-  mix-blend-mode: overlay;
-  animation: foil-shine 4.5s ease-in-out infinite;
-}
-
-/* Top-left → bottom-right in the first 55%, then waits off-card. */
-@keyframes foil-shine {
-  0% {
-    background-position: 100% 100%, 0% 50%;
-  }
-  55%,
-  100% {
-    background-position: 0% 0%, 0% 50%;
-  }
-}
-
-/* No rim of its own: a foil is just the sheen above (the gilded frame
-   below is the next finish's). */
-
-/* Gilded (.is-gilded, on top of the foil): a gold frame drawn just inside
-   the card's edge, with one bright highlight travelling round it at a
-   steady pace — a conic gradient turned by animating its start angle
-   (@property makes that angle animatable, so it rotates smoothly; a browser
-   without @property shows the frame still). The ring is the gradient masked
-   down to the padding box: the whole layer, minus its content box. */
-@property --gilded-angle {
-  syntax: "<angle>";
-  inherits: false;
-  initial-value: 0deg;
-}
-
-.cmd-carousel-slide.is-gilded::before,
-.card-finish-preview.is-gilded::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  padding: var(--gilded-width, 4px);
-  border-radius: inherit;
-  pointer-events: none;
-  /* Bright golds all the way round — its darkest point a warm gold, not a
-     brown that faded into dark art — the highlight near-white. Same width:
-     only the colours changed. */
-  background: conic-gradient(
-    from var(--gilded-angle),
-    #fffbe6,
-    #ffe17d 8%,
-    #f0bd3c 22%,
-    #c8901a 50%,
-    #f0bd3c 78%,
-    #ffe17d 92%,
-    #fffbe6
-  );
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
-  animation: gilded-turn 4s linear infinite;
-}
-
-@keyframes gilded-turn {
-  to {
-    --gilded-angle: 360deg;
-  }
-}
-
-/* Sparks (.is-sparks, the Leggendaria on top of the gilded foil): small
-   gold sparks rising slowly from the bottom of the card and fading out
-   toward the top, drawn on the card's extra layer (.card-finish-fx — the
-   card's own ::before/::after are the frame and the foil). A tile of four
-   sparks repeated over the card and scrolled up by exactly one tile height
-   per loop, so it never jumps; --sparks-tile-h keeps the two in step. */
-.card-finish-fx {
-  display: none;
-}
-
-.is-sparks > .card-finish-fx {
-  --sparks-tile-w: 80px;
-  --sparks-tile-h: 120px;
-  display: block;
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  border-radius: inherit;
-  overflow: hidden;
-  pointer-events: none;
-  background-image:
-    radial-gradient(circle at 20% 30%, #ffe48a 0 1.5px, rgba(255, 200, 80, 0.5) 2.5px, transparent 5px),
-    radial-gradient(circle at 65% 70%, #fff3c4 0 1px, rgba(255, 210, 100, 0.5) 2px, transparent 4px),
-    radial-gradient(circle at 85% 20%, #ffd76a 0 2px, rgba(255, 190, 60, 0.45) 3px, transparent 6px),
-    radial-gradient(circle at 40% 90%, #fff 0 1px, rgba(255, 220, 120, 0.5) 2px, transparent 4px);
-  background-size: var(--sparks-tile-w) var(--sparks-tile-h);
-  mix-blend-mode: screen;
-  -webkit-mask-image: linear-gradient(to top, #000 40%, transparent);
-  mask-image: linear-gradient(to top, #000 40%, transparent);
-  animation: sparks-rise 6s linear infinite;
-}
-
-@keyframes sparks-rise {
-  from {
-    background-position: 0 0;
-  }
-  to {
-    background-position: 0 calc(var(--sparks-tile-h) * -1);
-  }
-}
-
-/* The dialog's small preview card: sparks sized up for it (the album's are
-   1-2px, invisible at this scale), on a tighter tile and fading out later,
-   so a handful show over its short height. */
-.card-finish-preview.is-sparks > .card-finish-fx {
-  --sparks-tile-w: 28px;
-  --sparks-tile-h: 36px;
-  background-image:
-    radial-gradient(circle at 25% 30%, #fff3c4 0 1.5px, rgba(255, 205, 90, 0.7) 2.5px, transparent 4px),
-    radial-gradient(circle at 75% 75%, #ffe48a 0 1.5px, rgba(255, 190, 60, 0.7) 2.5px, transparent 4px);
-  -webkit-mask-image: linear-gradient(to top, #000 20%, transparent);
-  mask-image: linear-gradient(to top, #000 20%, transparent);
-  animation-duration: 3s;
-}
-
-/* No outer glow or rim (nor does the plain foil have one): on desktop the current card sits
-   flush with the track's left edge, which clips anything spreading left
-   into a hard edge — the frame is inside the card, which keeps just its
-   usual shadow (desktop's down-right one: the 880px block below). */
-.cmd-carousel-slide.is-gilded {
-  box-shadow: none;
-}
-
-.cmd-carousel-slide.is-gilded.is-active {
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
-}
-
 /* "Volte giocato" + its "?" (opens the foil explanation). A smaller take
    on the Matchups title's .help-toggle-btn. */
 .cmd-carousel-label-help {
@@ -3249,12 +3086,34 @@ html.nav-mobile .help-toggle-btn.cmd-carousel-help-btn {
 }
 
 /* Small explanation pop-up (a <dialog> sharing .ecal-dialog's box). */
+/* Open: a column — the title fixed, the content scrolling on its own under
+   it (.info-dialog-body), its scrollbar inside the rounded box rather than
+   over its corners (as when the dialog itself scrolled). Never closer than
+   24px to the screen's edges (so on a phone it doesn't touch them). */
+.ecal-dialog.info-dialog {
+  width: min(360px, calc(100vw - 48px));
+}
+
+.info-dialog[open] {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 48px);
+  overflow: hidden;
+}
+
 .info-dialog-head {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
   margin-bottom: 10px;
+}
+
+.info-dialog-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .info-dialog-head h3 {
@@ -3273,40 +3132,109 @@ html.nav-mobile .help-toggle-btn.cmd-carousel-help-btn {
   margin-top: 10px;
 }
 
-/* The album's "Carte speciali" explanation: one row per finish, lowest
-   first — a small live preview of its look, then its name and from how
-   many events. */
-.card-finish-list {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin: 14px 0 0;
+/* account.html's "Effetti della carta" (js/card-cosmetics.js
+   openCardEffectsInfo): a bit wider than the other pop-ups for a row of up
+   to four previews; per family, its name, a line, then one small live
+   preview per tier (a blank .player-card dressed by the real code) with its
+   name and how much it takes. Scrolls inside on a short screen (the
+   dialog's own max-height). */
+#card-effects-dialog {
+  width: min(440px, calc(100vw - 48px));
+}
+
+.card-effects-family {
+  margin-top: 18px;
+}
+
+.card-effects-family h4 {
+  margin: 0 0 4px;
+  color: var(--brand-red-deep);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.card-effects-family p {
+  color: var(--text-muted-2);
+  font-size: 0.9rem;
+}
+
+.card-effects-tiers {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 12px 0 0;
   padding: 0;
   list-style: none;
 }
 
-.card-finish-list li {
+.card-effects-tiers li {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 8px;
+  text-align: center;
+  font-size: 0.78rem;
+  line-height: 1.3;
 }
 
-/* A blank card (neutral "art" gradient, so the foil's sheen has something
-   to shine on) wearing the finish's own classes — the same CSS as the
-   album's cards (see .cmd-carousel-slide.is-foil / .is-gilded). */
-.card-finish-preview {
-  --gilded-width: 3px;
-  position: relative;
-  flex-shrink: 0;
-  width: 52px;
-  aspect-ratio: 488 / 680;
-  border-radius: 5px;
-  overflow: hidden;
+.card-effects-tiers li strong {
+  display: block;
+  color: var(--text-title);
+}
+
+.player-card.pc-preview {
+  width: 64px;
+  animation: none;
+}
+
+.pc-preview .pc-art {
   background: linear-gradient(160deg, #46577a, #7a5a8c 55%, #a06a4a);
 }
 
-.card-finish-text {
-  line-height: 1.4;
+/* An invisible stand-in for a real card's glass panel — just its height —
+   so the name (and the Podio bar behind it) sits where it does on a real
+   card. */
+.pc-preview .pc-panel {
+  height: 34cqw;
+  padding: 0;
+  border: none;
+  background: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* The seal and the stars, real size, would be a few px here: bigger in
+   the previews so they read. */
+.pc-preview .pc-fx-seal {
+  width: 22cqw;
+  height: 12cqw;
+}
+
+/* Centred in the preview's foot (on a 64px card the left edge is only a
+   few px away — the star ran into it). */
+.pc-preview .pc-foot {
+  justify-content: center;
+}
+
+.pc-preview .pc-fx-stars {
+  margin-left: 0;
+}
+
+.pc-preview .pc-fx-star {
+  font-size: 13cqw;
+}
+
+.pc-preview .pc-fx-star-count {
+  font-size: 10cqw;
+}
+
+/* A small card's shadow, not the full-size card's (scoped to the list to
+   outrank .player-card.fx-rim .pc-frame, later in this file). */
+.card-effects-tiers .player-card.pc-preview .pc-frame,
+:root[data-theme="dark"] .card-effects-tiers .player-card.pc-preview .pc-frame {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.28);
 }
 
 /* In: rises and scales up slightly as it fades in, backdrop fading with it.
@@ -3411,8 +3339,11 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   cursor: grabbing;
 }
 
+/* border-box: a card with a frame (.fx-rim, below — a wider border) stays
+   exactly as wide as the others, so the cards keep an even step. */
 .cmd-carousel-slide {
   position: relative;
+  box-sizing: border-box;
   flex: 0 0 var(--cmd-card-w);
   aspect-ratio: 488 / 680;
   scroll-snap-align: center;
@@ -3441,7 +3372,8 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   outline-offset: 2px;
 }
 
-.cmd-carousel-slide.is-loading {
+/* Not on a framed card (.fx-rim): its background is the frame. */
+.cmd-carousel-slide.is-loading:not(.fx-rim) {
   background: linear-gradient(
     100deg,
     rgba(220, 24, 28, 0.06) 30%,
@@ -3482,6 +3414,103 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
 
 .cmd-carousel-slide.has-image .cmd-carousel-img {
   opacity: 1;
+}
+
+/* Album cards' special effects (js/commander-carousel.js ALBUM_EFFECTS),
+   on the album's cards and the "?" pop-up's small previews alike
+   (.album-card), the same looks as the player card's (js/card-cosmetics.js):
+   - a frame for the events played with that commander (.fx-rim-1…4:
+     silver → animated foil → gold → mythic orange) — the card's own border,
+     the gradient painted on the border box under a dark padding-box fill, so
+     the image (absolute, inset 0 = the padding box) and the clip
+     (overflow, the inner radius) sit wholly inside it: nothing dark can
+     show through the frame's edge;
+   - a finish over the image for the matches won with it (.fx-art-1…4, the
+     player card's .pc-fx-art / .pc-fx-sparks layers and rules, here over
+     the whole image — no panel to fade out for — and above the image,
+     appended once it loads). A size container, so those layers' cqw scale
+     with the card. */
+.album-card {
+  container-type: inline-size;
+}
+
+.album-card.fx-rim {
+  border: var(--rim) solid transparent;
+}
+
+.album-card.fx-rim-1 {
+  --rim: 4px;
+  background:
+    linear-gradient(#1d1315, #1d1315) padding-box,
+    linear-gradient(135deg, #f4f6f8, #9aa3ab 35%, #e9edf0 55%, #8a939b 80%, #f4f6f8) border-box;
+}
+
+.album-card.fx-rim-2 {
+  --rim: 4px;
+  background:
+    linear-gradient(#1d1315, #1d1315) padding-box,
+    conic-gradient(from var(--pc-fx-angle), #ffffff, #c9f3ff 8%, #b9c4ff 18%, #e9b8ff 30%, #ffd3e8 42%, #fff2c2 55%, #c6ffe2 68%, #b8eaff 82%, #ffffff) border-box;
+  animation: pc-fx-turn 5s linear infinite;
+}
+
+.album-card.fx-rim-3 {
+  --rim: 4px;
+  background:
+    linear-gradient(#1d1315, #1d1315) padding-box,
+    conic-gradient(from var(--pc-fx-angle), #fffbe6, #ffe17d 8%, #f0bd3c 22%, #c8901a 50%, #f0bd3c 78%, #ffe17d 92%, #fffbe6) border-box;
+  animation: pc-fx-turn 4s linear infinite;
+}
+
+.album-card.fx-rim-4 {
+  --rim: 4px;
+  background:
+    linear-gradient(#1d1315, #1d1315) padding-box,
+    conic-gradient(from var(--pc-fx-angle), #ffe2c4, #ffab5e 8%, #f26b1d 22%, #b8400c 50%, #f26b1d 78%, #ffab5e 92%, #ffe2c4) border-box;
+  animation: pc-fx-turn 4s linear infinite;
+}
+
+.album-card .pc-fx-art {
+  z-index: 1;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+/* The "?" pop-up's small blank album card: a neutral "art" (so the foil
+   has something to shine on) inside its frame. */
+.album-preview {
+  position: relative;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 52px;
+  aspect-ratio: 488 / 680;
+  overflow: hidden;
+  border-radius: 5px;
+  background: #1d1315;
+}
+
+.album-preview-art {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, #46577a, #7a5a8c 55%, #a06a4a);
+}
+
+/* The sparks' 1-2px dots would vanish at this size: bigger, on a tighter
+   tile, fading out later. */
+.album-preview .pc-fx-sparks {
+  --sparks-tile-w: 28px;
+  --sparks-tile-h: 36px;
+  background-image:
+    radial-gradient(circle at 25% 30%, #fff3c4 0 1.5px, rgba(255, 205, 90, 0.7) 2.5px, transparent 4px),
+    radial-gradient(circle at 75% 75%, #ffe48a 0 1.5px, rgba(255, 190, 60, 0.7) 2.5px, transparent 4px);
+  -webkit-mask-image: linear-gradient(to top, #000 20%, transparent);
+  mask-image: linear-gradient(to top, #000 20%, transparent);
+  animation-duration: 3s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .album-card.fx-rim {
+    animation: none;
+  }
 }
 
 .cmd-carousel-nav {
@@ -3567,10 +3596,6 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
     box-shadow: 5px 10px 20px rgba(0, 0, 0, 0.22);
   }
 
-  .cmd-carousel-slide.is-gilded.is-active {
-    box-shadow: 5px 10px 20px rgba(0, 0, 0, 0.22);
-  }
-
   /* Drawn inside the card: outside, its left side would be clipped. */
   .cmd-carousel-track:focus-visible .cmd-carousel-slide.is-active {
     outline-offset: -2px;
@@ -3583,7 +3608,7 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
 
 }
 
-:root[data-theme="dark"] .cmd-carousel-slide.is-loading {
+:root[data-theme="dark"] .cmd-carousel-slide.is-loading:not(.fx-rim) {
   background-image: linear-gradient(
     100deg,
     rgba(255, 255, 255, 0.04) 30%,
@@ -3606,12 +3631,7 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
     transition: none;
   }
 
-  .cmd-carousel-slide.is-loading,
-  .cmd-carousel-slide.is-foil::after,
-  .cmd-carousel-slide.is-gilded::before,
-  .card-finish-preview.is-foil::after,
-  .card-finish-preview.is-gilded::before,
-  .is-sparks > .card-finish-fx {
+  .cmd-carousel-slide.is-loading {
     animation: none;
   }
 }
@@ -6506,6 +6526,13 @@ img.cs-option-icon {
   margin: 0;
 }
 
+/* "Le tue statistiche" + its "?" (the card effects' explanation). */
+.profile-card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 /* The player page's stat tiles, inside a card here: no shadow of their own
    (the card already has one), a touch smaller. */
 .profile-stats-tiles {
@@ -6566,9 +6593,10 @@ img.cs-option-icon {
 
 /* ---------------------------------------------------------------------------
    The player card (js/account-page.js renderCard): Magic-card proportions,
-   the favourite commander's art (Scryfall art crop) as its background, a
-   glowing border in a gradient of the favourite colours (--pc-gradient,
-   --pc-glow, set from JS). The upper part is the art alone; then avatar and
+   the favourite commander's art (Scryfall art crop) as its background, the
+   first favourite colour as its glow (--pc-glow, set from JS: the avatar's
+   ring), and the cosmetics earned by playing (js/card-cosmetics.js, the
+   .fx-* rules at the end of this section). The upper part is the art alone; then avatar and
    name straight on it; then a frosted-glass panel with archetype, colours
    and description; "Dal <year>" and the logo at the foot. Always dark — it reads as an object, the same in both
    themes. Everything inside sizes in cqw (% of the card's width), so the
@@ -6588,23 +6616,36 @@ img.cs-option-icon {
   z-index: 30;
 }
 
-/* The glowing border: the colour gradient showing through a 3px gap. */
+/* The card's edge: no border of its own any more (the favourite colours
+   used to draw one) — a thin outline and a drop shadow. From 10 events
+   played, the Presenze frame (js/card-cosmetics.js, .fx-rim-* below) is
+   drawn here, as the frame's padding + background with the surface wholly
+   inside it: drawn as a ring over the dark surface instead, along the same
+   rounded edge, the surface's dark edge pixels showed through it (a thin
+   black line outside, worst at the corners). --rim: its width (0 = none);
+   the sizing code reads the padding (js/card-cosmetics.js cardFrameWidth). */
 .pc-frame {
-  padding: 3px;
-  border-radius: 22px;
-  background: var(--pc-gradient, linear-gradient(135deg, #d6dbe0, #8d959c));
-  /* The 1px edge outlines a light border (cream, silver) against the light
-     page. */
+  --rim: 0px;
+  padding: var(--rim);
+  border-radius: calc(19px + var(--rim));
   box-shadow:
-    0 0 0 1px rgba(20, 8, 10, 0.14),
-    0 22px 48px rgba(20, 8, 10, 0.35),
-    0 0 36px -8px var(--pc-glow, #d6dbe0);
+    0 0 0 1px rgba(20, 8, 10, 0.18),
+    0 22px 48px rgba(20, 8, 10, 0.35);
 }
 
-/* Dark mode: no outer glow — in the card's first colour, it reads as a
-   white halo on the dark page when that's silver (no colours) or white.
-   Just a deeper drop shadow to lift the card off the page. */
 :root[data-theme="dark"] .pc-frame {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 22px 48px rgba(0, 0, 0, 0.5);
+}
+
+/* With a Presenze frame: no dark outline (it would ring the frame), just
+   the shadow. */
+.player-card.fx-rim .pc-frame {
+  box-shadow: 0 22px 48px rgba(20, 8, 10, 0.35);
+}
+
+:root[data-theme="dark"] .player-card.fx-rim .pc-frame {
   box-shadow: 0 22px 48px rgba(0, 0, 0, 0.5);
 }
 
@@ -6625,15 +6666,16 @@ img.cs-option-icon {
    "grow to fit the content" minimum, which didn't hold here: the controls
    spilled out of the card. The minimum height is the view-mode one, from
    the card's width — .player-card is a size container just for this (the
-   surface is its width minus .pc-frame's 3px each side), the content's own
-   cqw still being the surface's. */
+   surface is its width minus .pc-frame's --rim each side: 0, or the
+   Presenze frame's width; inherited from the frame), the content's own cqw
+   still being the surface's. */
 .player-card {
   container-type: inline-size;
 }
 
 .player-card.is-editing .pc-surface {
   aspect-ratio: auto;
-  min-height: calc((100cqw - 6px) * 680 / 488);
+  min-height: calc((100cqw - 2 * var(--rim, 0px)) * 680 / 488);
 }
 
 /* The art, under everything, centred a little high (where faces usually
@@ -6770,9 +6812,11 @@ img.pc-badge-glyph {
 /* Nameplate, straight on the art just above the glass panel: avatar (the
    Google picture, or the initial on red) with a ring in the card's colour,
    the name beside it. */
+/* The name sits on the avatar's bottom line rather than its middle — lower,
+   closer to the glass panel below. */
 .pc-nameplate {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 3cqw;
   min-width: 0;
   padding-inline: 1cqw;
@@ -6943,6 +6987,374 @@ img.pc-badge-glyph {
   object-fit: contain;
   filter: brightness(0) invert(1);
   opacity: 0.7;
+}
+
+/* ---- Cosmetics earned by playing (js/card-cosmetics.js) ----
+   Each family dresses its own part of the card, so they stack: the frame
+   (Presenze, .fx-rim-*), over the art (Vittorie, .fx-art-*), behind the
+   name (Podio, .fx-podium-*), the foot's seal (Collezione, .fx-seal-*) and
+   stars (Campione). Their extra layers are .pc-fx elements added by JS. */
+@property --pc-fx-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes pc-fx-turn {
+  to {
+    --pc-fx-angle: 360deg;
+  }
+}
+
+.pc-fx {
+  pointer-events: none;
+}
+
+/* Presenze — 10 eventi: a silver frame, still. Every tier's frame is
+   the same 4px wide, only its look changes. */
+.fx-rim-1 .pc-frame {
+  --rim: 4px;
+  background: linear-gradient(135deg, #f4f6f8, #9aa3ab 35%, #e9edf0 55%, #8a939b 80%, #f4f6f8);
+}
+
+/* 25 eventi: foil — rainbow-tinted silver, a highlight travelling round. */
+.fx-rim-2 .pc-frame {
+  --rim: 4px;
+  background: conic-gradient(
+    from var(--pc-fx-angle),
+    #ffffff,
+    #c9f3ff 8%,
+    #b9c4ff 18%,
+    #e9b8ff 30%,
+    #ffd3e8 42%,
+    #fff2c2 55%,
+    #c6ffe2 68%,
+    #b8eaff 82%,
+    #ffffff
+  );
+  animation: pc-fx-turn 5s linear infinite;
+}
+
+/* 50 eventi: gold (the album's gilded frame). */
+.fx-rim-3 .pc-frame {
+  --rim: 4px;
+  background: conic-gradient(
+    from var(--pc-fx-angle),
+    #fffbe6,
+    #ffe17d 8%,
+    #f0bd3c 22%,
+    #c8901a 50%,
+    #f0bd3c 78%,
+    #ffe17d 92%,
+    #fffbe6
+  );
+  animation: pc-fx-turn 4s linear infinite;
+}
+
+/* 100 eventi: mythic orange (Magic's mythic-rarity colour). */
+.fx-rim-4 .pc-frame {
+  --rim: 4px;
+  background: conic-gradient(
+    from var(--pc-fx-angle),
+    #ffe2c4,
+    #ffab5e 8%,
+    #f26b1d 22%,
+    #b8400c 50%,
+    #f26b1d 78%,
+    #ffab5e 92%,
+    #ffe2c4
+  );
+  animation: pc-fx-turn 4s linear infinite;
+}
+
+/* Vittorie — a finish over the commander art, fading out over its lower,
+   darkened part where the panel sits. Right after .pc-art, under the
+   content. */
+.pc-fx-art {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent 78%);
+  mask-image: linear-gradient(to bottom, #000 45%, transparent 78%);
+}
+
+/* 25 vittorie: a light foil sheen — soft rainbow wash + a glare band
+   sweeping across, then a pause. */
+.fx-art-1 .pc-fx-art {
+  background:
+    linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.45) 48%, transparent 60%),
+    linear-gradient(125deg, rgba(255, 0, 132, 0.35), rgba(255, 196, 0, 0.3), rgba(0, 255, 170, 0.3), rgba(0, 170, 255, 0.35), rgba(190, 0, 255, 0.3));
+  background-size: 300% 300%, 100% 100%;
+  background-repeat: no-repeat;
+  background-position: 100% 100%, 0 0;
+  mix-blend-mode: overlay;
+  animation: pc-fx-glare 5s ease-in-out infinite;
+}
+
+@keyframes pc-fx-glare {
+  0% {
+    background-position: 100% 100%, 0 0;
+  }
+  55%,
+  100% {
+    background-position: 0% 0%, 0 0;
+  }
+}
+
+/* 50 and 100 vittorie: a moving rainbow that loops without a seam — a
+   repeating gradient on an oversized layer (::before, inset -100%) slid by
+   exactly one period along the gradient's own direction, so the last frame
+   is the first (shifting a background by a percentage of its size didn't
+   land on a repeat, and visibly reset). The blend is on .pc-fx-art itself,
+   so the whole layer group blends with the art underneath. */
+.fx-art-2 .pc-fx-art::before,
+.fx-art-3 .pc-fx-art::before,
+.fx-art-2 .pc-fx-art::after,
+.fx-art-3 .pc-fx-art::after {
+  content: "";
+  position: absolute;
+}
+
+.fx-art-2 .pc-fx-art::before,
+.fx-art-3 .pc-fx-art::before {
+  inset: -100%;
+}
+
+.fx-art-2 .pc-fx-art::after,
+.fx-art-3 .pc-fx-art::after {
+  inset: 0;
+}
+
+/* 50 vittorie: etched foil — fine diagonal lines (::after, still) catching
+   a drifting rainbow light (::before; period 80cqw along 115deg: one period
+   = (sin 115°, −cos 115°) × 80cqw). */
+.fx-art-2 .pc-fx-art {
+  mix-blend-mode: overlay;
+}
+
+.fx-art-2 .pc-fx-art::before {
+  background: repeating-linear-gradient(
+    115deg,
+    rgba(255, 60, 160, 0.5) 0,
+    rgba(255, 210, 60, 0.45) 16cqw,
+    rgba(60, 255, 190, 0.45) 32cqw,
+    rgba(60, 170, 255, 0.5) 48cqw,
+    rgba(200, 60, 255, 0.45) 64cqw,
+    rgba(255, 60, 160, 0.5) 80cqw
+  );
+  animation: pc-fx-etched 7s linear infinite;
+}
+
+.fx-art-2 .pc-fx-art::after {
+  background:
+    repeating-linear-gradient(60deg, rgba(255, 255, 255, 0.22) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(-60deg, rgba(255, 255, 255, 0.12) 0 1px, transparent 1px 6px);
+}
+
+@keyframes pc-fx-etched {
+  to {
+    transform: translate(72.5cqw, 33.8cqw);
+  }
+}
+
+/* 100 vittorie (and 150, which adds the sparks): rainbow holo — strong
+   prismatic bands drifting (::before; period 60cqw along 125deg), glitter
+   over them (::after, moved by exactly one tile, seamless too). */
+.fx-art-3 .pc-fx-art {
+  mix-blend-mode: color-dodge;
+  opacity: 0.55;
+}
+
+.fx-art-3 .pc-fx-art::before {
+  background: repeating-linear-gradient(
+    125deg,
+    #ff3f8e 0,
+    #ffcf3f 12cqw,
+    #3fffb0 24cqw,
+    #3fb4ff 36cqw,
+    #b43fff 48cqw,
+    #ff3f8e 60cqw
+  );
+  animation: pc-fx-holo 9s linear infinite;
+}
+
+.fx-art-3 .pc-fx-art::after {
+  background:
+    radial-gradient(circle at 20% 25%, rgba(255, 255, 255, 0.9) 0 1px, transparent 2px),
+    radial-gradient(circle at 70% 60%, rgba(255, 255, 255, 0.8) 0 1px, transparent 2px);
+  background-size: 26px 26px, 34px 34px;
+  animation: pc-fx-glitter 9s linear infinite;
+}
+
+@keyframes pc-fx-holo {
+  to {
+    transform: translate(49.1cqw, 34.4cqw);
+  }
+}
+
+@keyframes pc-fx-glitter {
+  to {
+    background-position: 26px 26px, -34px 34px;
+  }
+}
+
+/* 150 vittorie: sparks rising over the whole card, on top of the holo. */
+.pc-fx-sparks {
+  --sparks-tile-w: 70px;
+  --sparks-tile-h: 100px;
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  background-image:
+    radial-gradient(circle at 20% 30%, #ffe48a 0 1.5px, rgba(255, 200, 80, 0.5) 2.5px, transparent 5px),
+    radial-gradient(circle at 65% 70%, #fff3c4 0 1px, rgba(255, 210, 100, 0.5) 2px, transparent 4px),
+    radial-gradient(circle at 85% 20%, #ffd76a 0 2px, rgba(255, 190, 60, 0.45) 3px, transparent 6px),
+    radial-gradient(circle at 40% 90%, #fff 0 1px, rgba(255, 220, 120, 0.5) 2px, transparent 4px);
+  background-size: var(--sparks-tile-w) var(--sparks-tile-h);
+  mix-blend-mode: screen;
+  -webkit-mask-image: linear-gradient(to top, #000 35%, transparent);
+  mask-image: linear-gradient(to top, #000 35%, transparent);
+  animation: pc-fx-sparks 6s linear infinite;
+}
+
+@keyframes pc-fx-sparks {
+  to {
+    background-position: 0 calc(var(--sparks-tile-h) * -1);
+  }
+}
+
+/* Podio — a bar behind the name in Magic's rarity colours: grey (3 top 8)
+   → gold (10) → mythic orange (20), fading out at both ends. The nameplate
+   isolates it, so it sits behind the name, not behind the art. */
+.pc-nameplate {
+  position: relative;
+  isolation: isolate;
+}
+
+/* Anchored to the nameplate's bottom, where the name sits (on the avatar's
+   bottom line): centred on the name's one line (6cqw × 1.15 line height),
+   not on the avatar. */
+.pc-fx-ribbon {
+  position: absolute;
+  z-index: -1;
+  left: -4.5cqw;
+  right: -4.5cqw;
+  bottom: calc((6.9cqw - 11cqw) / 2);
+  height: 11cqw;
+  clip-path: polygon(0 0, 100% 0, 96% 50%, 100% 100%, 0 100%, 4% 50%);
+}
+
+/* Edit mode: the "Mostra foto" switch sits under the name, where the bar
+   would be — none while editing. */
+.player-card.is-editing .pc-fx-ribbon {
+  display: none;
+}
+
+.fx-podium-1 .pc-fx-ribbon {
+  background: linear-gradient(90deg, transparent, rgba(150, 156, 162, 0.45) 12%, rgba(196, 201, 206, 0.55) 50%, rgba(140, 146, 152, 0.45) 88%, transparent);
+}
+
+.fx-podium-2 .pc-fx-ribbon {
+  background: linear-gradient(90deg, transparent, rgba(240, 189, 60, 0.45) 12%, rgba(255, 220, 110, 0.6) 50%, rgba(200, 144, 26, 0.45) 88%, transparent);
+}
+
+.fx-podium-3 .pc-fx-ribbon {
+  background: linear-gradient(90deg, transparent, rgba(232, 92, 28, 0.55) 12%, rgba(255, 140, 50, 0.68) 50%, rgba(214, 70, 20, 0.55) 88%, transparent);
+}
+
+/* Collezione — a foil seal centred in the foot, like real rares: silver
+   (5 commanders) → gold (10) → rainbow (20), a glint passing over it. Its
+   hover text says how many. */
+.pc-foot {
+  position: relative;
+}
+
+.pc-fx-seal {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 10cqw;
+  height: 5.4cqw;
+  overflow: hidden;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 0.4cqw rgba(0, 0, 0, 0.25), 0 1px 3px rgba(0, 0, 0, 0.5);
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+
+.pc-fx-seal::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.85) 48%, transparent 62%);
+  background-size: 300% 100%;
+  background-repeat: no-repeat;
+  animation: pc-fx-seal 3.5s ease-in-out infinite;
+}
+
+@keyframes pc-fx-seal {
+  0% {
+    background-position: 120% 0;
+  }
+  60%,
+  100% {
+    background-position: -20% 0;
+  }
+}
+
+.fx-seal-1 .pc-fx-seal {
+  background: radial-gradient(ellipse at 35% 35%, #ffffff, #c3cad1 45%, #7e8790);
+}
+
+.fx-seal-2 .pc-fx-seal {
+  background: radial-gradient(ellipse at 35% 35%, #fff6d0, #f0bd3c 45%, #a8760f);
+}
+
+.fx-seal-3 .pc-fx-seal {
+  background: conic-gradient(from var(--pc-fx-angle), #ff3f8e, #ffcf3f, #3fffb0, #3fb4ff, #b43fff, #ff3f8e);
+  animation: pc-fx-turn 4s linear infinite;
+}
+
+/* Campione — one gold star after "Dal …" with the number of real leagues
+   won beside it, the leagues on hover (js/card-cosmetics.js). */
+.pc-fx-stars {
+  display: inline-flex;
+  gap: 0.8cqw;
+  margin-left: 1.6cqw;
+  vertical-align: middle;
+  pointer-events: auto;
+}
+
+.pc-fx-star {
+  color: #ffd34f;
+  font-size: 4cqw;
+  line-height: 1;
+  letter-spacing: 0;
+  text-shadow: 0 0 1.5cqw rgba(255, 200, 60, 0.9);
+  cursor: default;
+}
+
+.pc-fx-star-count {
+  margin-left: 0.6cqw;
+  font-size: 3.2cqw;
+  font-weight: 800;
+  vertical-align: 0.3cqw;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-rim-2 .pc-frame,
+  .fx-rim-3 .pc-frame,
+  .fx-rim-4 .pc-frame,
+  .pc-fx-art,
+  .pc-fx-art::before,
+  .pc-fx-art::after,
+  .pc-fx-sparks,
+  .pc-fx-seal,
+  .pc-fx-seal::after {
+    animation: none !important;
+  }
 }
 
 /* ---- Edit mode: same layout, each value swapped for its editable twin ---- */
@@ -8221,6 +8633,27 @@ a.history-item:hover .follow-name {
 
 .profile-switch:has(input:disabled) {
   cursor: default;
+}
+
+/* Desktop: "Mostra nella pagina giocatore" on one line, in a box only as
+   wide as the card (240–280px): a little less padding, and the label's
+   size from the box's own width — what's left beside the 44px toggle
+   (100cqw, the content box, − 10px gap − 44px) over the label's ~16em — up
+   to its usual 0.92rem. Only while it's the switch's label: disabled, it's
+   "Salva prima la tua carta…", a sentence to read, left to wrap. */
+@media (min-width: 821px) {
+  .profile-card-col .profile-switch {
+    container-type: inline-size;
+    gap: 10px;
+    padding-inline: 14px;
+  }
+
+  .profile-card-col .profile-switch:not(:has(input:disabled)) .profile-switch-label {
+    overflow: hidden;
+    font-size: min(0.92rem, calc((100cqw - 54px) / 16));
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 .profile-switch-text {

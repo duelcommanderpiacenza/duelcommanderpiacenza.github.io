@@ -23,6 +23,7 @@
 
 create extension if not exists pgcrypto;
 
+drop table if exists player_progress cascade;
 drop table if exists announcements cascade;
 drop table if exists matches cascade;
 drop table if exists event_entries cascade;
@@ -332,6 +333,27 @@ create policy "event_standings_public_read" on event_standings for select
     is_admin()
     or exists (select 1 from events e where e.id = event_standings.event_id and e.is_open = false)
   );
+
+-- Player progress, the numbers behind the player card's cosmetics (events
+-- played, matches won, top 8s in events of 20+ players, distinct commander
+-- pairs, names of the real leagues won) — a pure derived cache like
+-- event_standings: computed by js/card-progress.js and fully replaced by
+-- admin/js/badges-sync.js on every event/league/badge change. Public read
+-- (it only summarises public results). supabase/migrations/011_player_progress.sql.
+create table player_progress (
+  player_id uuid primary key references players(id) on delete cascade,
+  events_played integer not null default 0,
+  matches_won integer not null default 0,
+  big_top8s integer not null default 0,   -- top 8s in events with 20+ players
+  commanders integer not null default 0,  -- distinct commander + partner pairs
+  leagues_won text[] not null default '{}' -- names of the real leagues won
+);
+
+alter table player_progress enable row level security;
+create policy "player_progress_admin_insert" on player_progress for insert with check (is_admin());
+create policy "player_progress_admin_update" on player_progress for update using (is_admin());
+create policy "player_progress_admin_delete" on player_progress for delete using (is_admin());
+create policy "player_progress_public_read" on player_progress for select using (true);
 
 -- Nightly cleanup of expired announcements (pg_cron): deletes every row
 -- whose expires_on is before today, at 03:15 UTC — the night after its last

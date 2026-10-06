@@ -270,19 +270,29 @@ async function completistPlayerIds() {
   return qualifying ? Array.from(qualifying) : [];
 }
 
-// Everyone who has won at least one closed real (non-Topdeck) league — a
-// threshold, not "the latest league" like league_winner above, so it's
-// kept for good once earned. Same final standings as league.html's.
-async function leagueChampionPlayerIds(leagues) {
+// Every closed real (non-Topdeck) league with its winner (null for a league
+// with no results) — same final standings as league.html's. Also used by
+// the player card's progress (js/card-progress.js, its "Campione" stars).
+export async function closedLeagueWinners(leagues) {
   const closedLeagues = leagues.filter((l) => !l.is_topdeck && !l.is_open);
-  const winners = await Promise.all(
+  return Promise.all(
     closedLeagues.map(async (league) => {
       const { eventsData, scheduledEvents } = await fetchLeagueEventsData(league.id);
-      if (eventsData.length === 0) return null;
-      return computeLeaguePoints(eventsData, { leagueClosed: true, scheduledEvents })[0]?.player?.id ?? null;
+      const playerId =
+        eventsData.length === 0
+          ? null
+          : computeLeaguePoints(eventsData, { leagueClosed: true, scheduledEvents })[0]?.player?.id ?? null;
+      return { league, playerId };
     })
   );
-  return [...new Set(winners.filter(Boolean))];
+}
+
+// Everyone who has won at least one closed real (non-Topdeck) league — a
+// threshold, not "the latest league" like league_winner above, so it's
+// kept for good once earned.
+async function leagueChampionPlayerIds(leagues) {
+  const winners = await closedLeagueWinners(leagues);
+  return [...new Set(winners.map((w) => w.playerId).filter(Boolean))];
 }
 
 // The player(s) with the most byes received (a bye: no opponent that round,

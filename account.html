@@ -272,7 +272,12 @@
           <!-- Le tue statistiche: only once the account is linked to a player -->
           <section class="card profile-card" id="profile-stats" hidden>
             <div class="profile-card-heading">
-              <h3>Le tue statistiche</h3>
+              <!-- The "?": how the card's effects are earned from these
+                   numbers (js/account-page.js, the shared pop-up). -->
+              <div class="profile-card-title-group">
+                <h3>Le tue statistiche</h3>
+                <button type="button" class="help-toggle-btn" id="card-effects-help" aria-haspopup="dialog" aria-label="Come si ottengono gli effetti della carta">?</button>
+              </div>
               <a class="btn-secondary" id="profile-stats-link" href="players.html">Pagina giocatore &rarr;</a>
             </div>
             <div class="stat-grid profile-stats-tiles" id="profile-stats-tiles"></div>

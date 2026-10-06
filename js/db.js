@@ -595,6 +595,27 @@ export const PlayerAutoBadges = {
   },
 };
 
+// A player's progress (supabase/migrations/011): the numbers behind the
+// player card's cosmetics (js/card-cosmetics.js). get() → the row or null
+// (no results yet, or the table not created on this DB — callers treat a
+// failure the same: a card without cosmetics). replaceAll(): the admin's
+// full rebuild (admin/js/badges-sync.js), like EventStandings.replaceAll.
+export const PlayerProgress = {
+  get: (playerId) =>
+    sb
+      .from("player_progress")
+      .select("events_played, matches_won, big_top8s, commanders, leagues_won")
+      .eq("player_id", playerId)
+      .maybeSingle()
+      .then(assertOk),
+  replaceAll: async (rows) => {
+    assertOk(await sb.from("player_progress").delete().neq("player_id", "00000000-0000-0000-0000-000000000000"));
+    for (let i = 0; i < rows.length; i += 500) {
+      assertOk(await sb.from("player_progress").insert(rows.slice(i, i + 500)));
+    }
+  },
+};
+
 // Cached final standings of every closed event (supabase/schema.sql's
 // event_standings) — recomputed and fully replaced by
 // admin/js/badges-sync.js, read by player.html so a player's position in

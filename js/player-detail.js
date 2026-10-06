@@ -1,4 +1,4 @@
-import { Players, EventEntries, Matches, PlayerAutoBadges, EventStandings, PlayerCards } from "./db.js";
+import { Players, EventEntries, Matches, PlayerAutoBadges, EventStandings, PlayerCards, PlayerProgress } from "./db.js";
 import { matchRoundOutcome, isBye, isDrop, computeEventLeaderboard } from "./leaderboard.js";
 import { tallyOutcome, renderWinrateTiles } from "./winrate.js";
 import {
@@ -18,6 +18,7 @@ import { initFilterToggle } from "./filter-toggle.js";
 import { renderCommanderCarousel } from "./commander-carousel.js";
 import { matchGroupsHtml, initScrollFade, setHistoryCount } from "./history-list.js";
 import { renderPublicPlayerCard } from "./player-card.js";
+import { cardFrameWidth } from "./card-cosmetics.js";
 import { initFollowButton } from "./follow-button.js";
 
 // Album comandanti's grouping: one "deck" = the exact commander + partner pair.
@@ -92,7 +93,6 @@ function layoutTop(el) {
 }
 
 const CARD_RATIO = 680 / 488;
-const CARD_FRAME = 6; // .pc-frame's 3px all around
 const MAX_CARD_WIDTH = 320; // same ceiling as commander.html's card
 
 // Like commander.html's card (js/commander-detail.js syncCardImageLayout):
@@ -125,9 +125,12 @@ function syncPlayerCardLayout() {
     }
     return;
   }
+  // The frame round the surface (none, or the Presenze cosmetic's): the
+  // surface keeps Magic-card proportions, the frame adds to both sides.
+  const frame = 2 * cardFrameWidth(cardWrapEl);
   for (let pass = 0; pass < 2; pass++) {
     const height = layoutTop(tilesEl) + tilesEl.offsetHeight - layoutTop(headingEl);
-    const width = Math.min(MAX_CARD_WIDTH, Math.round((height - CARD_FRAME) / CARD_RATIO + CARD_FRAME));
+    const width = Math.min(MAX_CARD_WIDTH, Math.round((height - frame) / CARD_RATIO + frame));
     cardWrapEl.style.width = `${width}px`;
     // On the heading, not the title: the follow button sits right after the
     // name, and both stay clear of the card (still at the heading's right
@@ -180,6 +183,12 @@ async function init() {
       console.error(err);
       return null;
     });
+    // The card's cosmetics (js/card-cosmetics.js) — never fatal either: no
+    // progress just means a card without them.
+    const progressRequest = PlayerProgress.get(id).catch((err) => {
+      console.error(err);
+      return null;
+    });
     autoBadgesRequest.catch(() => {});
     entriesRequest.catch(() => {});
 
@@ -225,6 +234,7 @@ async function init() {
         since: firstDate ? firstDate.slice(0, 4) : null,
         // The same badges as next to the title.
         badges: playerBadges,
+        progress: await progressRequest,
       });
       cardWrapEl.hidden = false;
       document.getElementById("player-filter-panel").classList.add("detail-filter-panel");

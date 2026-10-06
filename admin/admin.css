@@ -462,6 +462,68 @@ html.nav-mobile .admin-tab.is-active .admin-tab-count {
   gap: 8px;
 }
 
+/* The badges + caches sync's progress (js/badges-sync.js): a small dark
+   bar bottom-left while it runs (with a spinning ring), then "aggiornati"
+   for a moment — red if it failed. On touch screens above the nav pill. */
+.sync-status {
+  position: fixed;
+  left: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100vw - 32px);
+  padding: 10px 16px;
+  border-radius: var(--radius-pill);
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  box-shadow: var(--shadow-card-hover);
+  animation: entrance-fade-up 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.sync-status[hidden] {
+  display: none;
+}
+
+.sync-status[data-state="running"]::before {
+  content: "";
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: sync-spin 800ms linear infinite;
+}
+
+.sync-status[data-state="done"] {
+  background: #14914a;
+}
+
+.sync-status[data-state="error"] {
+  background: var(--brand-red);
+}
+
+@keyframes sync-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+html.nav-mobile .sync-status {
+  bottom: calc(16px + 56px + 12px + env(safe-area-inset-bottom));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sync-status,
+  .sync-status[data-state="running"]::before {
+    animation: none;
+  }
+}
+
 /* The admin lists (js/crud-ui.js renderTable): the public site's sub-card
    look (.history-panel / .history-item, ../../styles.css), one card per row
    — not clickable, so no hover change; only its buttons react. Title on the

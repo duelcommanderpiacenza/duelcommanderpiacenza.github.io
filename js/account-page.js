@@ -54,9 +54,11 @@ import {
   fetchEventsResults,
   EventEntries,
   Matches,
+  PlayerProgress,
 } from "./db.js";
 import { matchRoundOutcome, isDrop, isBye, computeLeaguePoints } from "./leaderboard.js";
 import { tallyOutcome, renderWinrateTiles } from "./winrate.js";
+import { applyCardCosmetics, cardFrameWidth, openCardEffectsInfo } from "./card-cosmetics.js";
 import { escapeHtml, colorIdentityPips, uniqueBadges, eventTitle, formatDate } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { fetchPlayerBadgesRenderer } from "./player-badges.js";
@@ -140,6 +142,9 @@ let profile = null;
 let claim = { linked: null, pending: null };
 let commandersById = new Map();
 let firstYear = null;
+// The linked player's progress row (player_progress): the card's cosmetics
+// (js/card-cosmetics.js). null: none (not linked, no results, no table).
+let cardProgress = null;
 let playerBadges = [];
 
 // --- Helpers ------------------------------------------------------------------
@@ -221,6 +226,10 @@ function renderCard(values) {
   // The player's (not the account's) first event and badges, once linked.
   sinceEl.textContent = claim.linked && firstYear ? `Dal ${firstYear}` : "";
   badgesEl.innerHTML = claim.linked ? cardBadgesHtml(playerBadges) : "";
+
+  // After "Dal …" above (the stars go after it); taken off and put back on
+  // every redraw.
+  applyCardCosmetics(cardEl, claim.linked ? cardProgress : null);
 
   paintArt(values.commander?.name ?? null);
 }
@@ -416,7 +425,6 @@ const cardColEl = document.querySelector(".profile-card-col");
 const sideEl = document.querySelector(".profile-side");
 const sideBySide = window.matchMedia("(min-width: 821px)");
 const CARD_RATIO = 680 / 488;
-const CARD_FRAME = 6; // .pc-frame's 3px all around
 const MIN_CARD_WIDTH = 240;
 // Kept small on desktop: with the stats, the decklist, Seguiti and Account
 // beside it the column is usually taller than this card — it then just stays
@@ -442,7 +450,10 @@ function alignCardToSide() {
   const decklistOpenPart = document.getElementById("decklist-body")?.offsetHeight ?? 0;
   // What's under the card in its column (the switch, a message).
   const below = cardColEl.offsetHeight - cardEl.offsetHeight;
-  const fitting = (sideHeight - decklistOpenPart - below - CARD_FRAME) / CARD_RATIO + CARD_FRAME;
+  // The frame round the surface (none, or the Presenze cosmetic's): the
+  // surface keeps Magic-card proportions, the frame adds to both sides.
+  const frame = 2 * cardFrameWidth(cardEl);
+  const fitting = (sideHeight - decklistOpenPart - below - frame) / CARD_RATIO + frame;
   let width = Math.round(Math.min(MAX_CARD_WIDTH, Math.max(MIN_CARD_WIDTH, fitting)));
   const current = parseFloat(layoutEl.style.getPropertyValue("--pc-width"));
   if (width !== current) {
@@ -455,7 +466,7 @@ function alignCardToSide() {
       layoutEl.style.setProperty("--pc-width", `${width}px`);
     }
   }
-  const cardHeight = (width - CARD_FRAME) * CARD_RATIO + CARD_FRAME;
+  const cardHeight = (width - frame) * CARD_RATIO + frame;
   sideEl.style.setProperty("--pc-side-stretch", `${Math.max(0, Math.round(cardHeight + below - sideHeight))}px`);
 }
 
@@ -666,9 +677,18 @@ async function loadStats(player) {
   }, null);
   firstYear = firstDate ? firstDate.slice(0, 4) : null;
 
+  // The card's cosmetics: never fatal (a card without them).
+  cardProgress = await PlayerProgress.get(player.id).catch((err) => {
+    console.error(err);
+    return null;
+  });
+
   // "Invia la tua decklist" needs the same entries (the closed events played).
   await loadDecklistCard(player, entries);
 }
+
+// "?" next to "Le tue statistiche": how the card's effects are earned.
+document.getElementById("card-effects-help").addEventListener("click", openCardEffectsInfo);
 
 document.getElementById("account-claim-form").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -1259,6 +1279,7 @@ async function loadSignedIn(sessionUser) {
   user = sessionUser;
   profile = null;
   firstYear = null;
+  cardProgress = null;
   playerBadges = [];
   setEditing(false, { animate: false });
   accountDangerEl.hidden = true;

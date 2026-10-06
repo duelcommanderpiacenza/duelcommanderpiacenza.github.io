@@ -16,6 +16,8 @@ import { escapeHtml } from "./ui.js";
 /**
  * @param {{ id: string, title: string, bodyHtml: string }} options
  *   bodyHtml: the content under the title (trusted markup, not escaped).
+ * @returns {HTMLDialogElement} the dialog (e.g. to finish its content with
+ *   JS — js/card-cosmetics.js dresses its preview cards).
  */
 export function openInfoDialog({ id, title, bodyHtml }) {
   let dialog = document.getElementById(id);
@@ -24,12 +26,14 @@ export function openInfoDialog({ id, title, bodyHtml }) {
     dialog.id = id;
     dialog.className = "ecal-dialog info-dialog";
     dialog.setAttribute("aria-labelledby", `${id}-title`);
+    // The content scrolls on its own under the title (.info-dialog-body), so
+    // a long one's scrollbar stays inside the rounded box.
     dialog.innerHTML = `
       <div class="info-dialog-head">
         <h3 id="${id}-title">${escapeHtml(title)}</h3>
         <button type="button" class="ecal-close" aria-label="Chiudi">&times;</button>
       </div>
-      ${bodyHtml}`;
+      <div class="info-dialog-body">${bodyHtml}</div>`;
     const closeAnimated = () => {
       if (dialog.classList.contains("is-closing")) return;
       if (getComputedStyle(dialog).animationName === "none") return dialog.close();
@@ -54,4 +58,5 @@ export function openInfoDialog({ id, title, bodyHtml }) {
     document.body.append(dialog);
   }
   dialog.showModal();
+  return dialog;
 }

@@ -4,21 +4,19 @@
 // (Scryfall), and the public card's markup. Its look is styles.css's
 // .player-card / .pc-* rules.
 import { escapeHtml, colorIdentityPips, badgeTooltipAttrs } from "./ui.js";
+import { applyCardCosmetics } from "./card-cosmetics.js";
 
-// The card border's gradient and the avatar's glow, per favourite colour —
-// brighter than the color-pip fills, since they glow on a dark card. White
-// is a deeper cream (the Comandanti colour chart's own, js/commanders-page.js):
-// a near-white border vanished against the light page. No colours: silver.
+// The card's glow colour (the avatar's ring, the glow behind the logo while
+// there's no art), from the first favourite colour — brighter than the
+// color-pip fills, since it glows on a dark card. No colours: silver. (The
+// card no longer has a border in the favourite colours: its frame is the
+// Presenze cosmetic's, js/card-cosmetics.js.)
 const ACCENT = { W: "#e3d58a", U: "#3b8ae0", B: "#8f8288", R: "#e8492f", G: "#33a866" };
-const NO_ACCENT = ["#d6dbe0", "#8d959c"];
+const NO_ACCENT = "#d6dbe0";
 
-// Border gradient + glow from the colours (a WUBRG-ordered string); one
-// colour fades into a darker shade of itself.
+// The glow from the colours (a WUBRG-ordered string).
 export function applyCardAccents(cardEl, colors) {
-  const accents = colors ? [...colors].map((c) => ACCENT[c]) : NO_ACCENT;
-  const stops = accents.length === 1 ? [accents[0], `color-mix(in srgb, ${accents[0]} 55%, #000)`] : accents;
-  cardEl.style.setProperty("--pc-gradient", `linear-gradient(135deg, ${stops.join(", ")})`);
-  cardEl.style.setProperty("--pc-glow", accents[0]);
+  cardEl.style.setProperty("--pc-glow", colors ? ACCENT[colors[0]] : NO_ACCENT);
 }
 
 export const archetypeLabel = (archetype) => archetype.charAt(0).toUpperCase() + archetype.slice(1);
@@ -167,13 +165,14 @@ export function cardLinksHtml(links) {
 // player.html's card, view only: the same layout as account.html's card
 // outside edit mode. `card` is db.js's PlayerCards.get() row, `name` the
 // player's name, `since` the year of their first event (or null), `badges`
-// the player's badges (cardBadgesHtml). The
+// the player's badges (cardBadgesHtml), `progress` the player's
+// player_progress row for the cosmetics (js/card-cosmetics.js; null: none). The
 // avatar: the Google picture when shown; otherwise (hidden by the owner, or
 // no Google picture) no circle at all, leaving the name the room. No
 // description → no description line (account.html's "premi ✎" invitation
 // is for the owner only).
 // Returns the card element.
-export function renderPublicPlayerCard(containerEl, card, { name, since, badges = [] }) {
+export function renderPublicPlayerCard(containerEl, card, { name, since, badges = [], progress = null }) {
   const avatar = card.avatar_url
     ? `<div class="pc-avatar"><img src="${escapeHtml(card.avatar_url)}" alt="" referrerpolicy="no-referrer"></div>`
     : "";
@@ -213,6 +212,7 @@ export function renderPublicPlayerCard(containerEl, card, { name, since, badges 
   </article>`;
   const cardEl = containerEl.firstElementChild;
   applyCardAccents(cardEl, card.fav_colors);
+  applyCardCosmetics(cardEl, progress);
   createArtPainter(cardEl.querySelector(".pc-art"))(card.commander_name);
   return cardEl;
 }

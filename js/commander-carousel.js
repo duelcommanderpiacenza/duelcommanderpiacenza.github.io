@@ -51,49 +51,95 @@ async function fetchCardImages(names) {
   return images;
 }
 
-// Special card finishes in the album, earned by how many events the player
-// has played that commander in (its "Volte giocato"). Lowest first; a card
-// gets the highest one it qualifies for, and each one's classes (styles.css)
-// usually include the ones below it — the gilded card is still a foil. The
-// "?" explanation is built from this same list, so a new finish is a row
-// here plus its look in styles.css (.cmd-carousel-slide.<class> and the
-// dialog's .card-finish-preview.<class>), nothing else.
-export const CARD_FINISHES = [
-  { minTimesPlayed: 10, classes: "is-foil", name: "Foil" },
-  { minTimesPlayed: 25, classes: "is-foil is-gilded", name: "Foil dorata" },
-  { minTimesPlayed: 50, classes: "is-foil is-gilded is-sparks", name: "Leggendaria" },
-];
+// Special effects on the album's cards, the same looks as the player card's
+// (js/card-cosmetics.js, styles.css .album-card): a frame for how many events
+// the player has played that commander in (its "Volte giocato") and a foil
+// finish for how many matches they've won with it (counted like its
+// Winrate tile: a bye is a win, a drop isn't a match). Each family shows its
+// highest tier reached; the two stack. Thresholds lowest first; the "?"
+// explanation is built from this same table.
+export const ALBUM_EFFECTS = {
+  rim: {
+    title: "Eventi giocati",
+    text: "Il bordo della carta, per gli eventi giocati con quel comandante",
+    // ⚠️ TEMPORARY — LOWERED FOR TESTING, DO NOT COMMIT: real [10, 25, 50, 75].
+    thresholds: [1, 2, 3, 4],
+    count: (n) => `${n} eventi`,
+    tiers: ["Argento", "Foil", "Oro", "Mitica"],
+  },
+  art: {
+    title: "Vittorie",
+    text: "Effetti foil, per le partite vinte con quel comandante",
+    // ⚠️ TEMPORARY — LOWERED FOR TESTING, DO NOT COMMIT: real [10, 25, 50, 75].
+    thresholds: [1, 3, 5, 8],
+    count: (n) => `${n} vittorie`,
+    tiers: ["Foil", "Foil inciso", "Olografica", "Olografica con scintille"],
+  },
+};
 
-// Every card (album and dialog preview) carries this empty layer for the
-// finishes that need more than the card's own ::before/::after (taken by
-// the gilded frame and the foil sheen) — e.g. .is-sparks draws on it.
-const FINISH_LAYER = '<span class="card-finish-fx" aria-hidden="true"></span>';
+const effectTier = (family, value) => ALBUM_EFFECTS[family].thresholds.filter((t) => value >= t).length;
 
-function cardFinish(timesPlayed) {
-  let finish = null;
-  for (const f of CARD_FINISHES) if (timesPlayed >= f.minTimesPlayed) finish = f;
-  return finish;
+// The frame (events played): classes on the card (styles.css
+// .album-card.fx-rim-*), set once at render.
+function applyAlbumRim(cardEl, timesPlayed) {
+  cardEl.classList.remove(...[...cardEl.classList].filter((c) => c.startsWith("fx-rim")));
+  const tier = effectTier("rim", timesPlayed);
+  if (tier) cardEl.classList.add("fx-rim", `fx-rim-${tier}`);
+}
+
+// The foil (matches won): the player card's .pc-fx-art layer over the image
+// (and its sparks at the top tier) — set once the matches have loaded.
+function applyAlbumFoil(cardEl, wins) {
+  cardEl.querySelectorAll(".pc-fx").forEach((el) => el.remove());
+  cardEl.classList.remove(...[...cardEl.classList].filter((c) => c.startsWith("fx-art")));
+  const tier = effectTier("art", wins);
+  if (!tier) return;
+  cardEl.classList.add(`fx-art-${tier}`);
+  // The top tier is the one below's holo plus the sparks.
+  if (tier === 4) cardEl.classList.add("fx-art-3");
+  cardEl.insertAdjacentHTML(
+    "beforeend",
+    `<span class="pc-fx pc-fx-art" aria-hidden="true"></span>${
+      tier === 4 ? '<span class="pc-fx pc-fx-sparks" aria-hidden="true"></span>' : ""
+    }`
+  );
 }
 
 // The "?" next to "Volte giocato" opens this (js/info-dialog.js's shared
-// pop-up): one row per finish, each with a small live preview of its look
-// on a blank card.
+// pop-up): per family its line and one small live preview per tier (a blank
+// album card dressed by the same code) with what it takes.
 function openFinishInfo() {
-  openInfoDialog({
+  const dialog = openInfoDialog({
     id: "card-finish-dialog",
     title: "Carte speciali",
     bodyHtml: `
-      <p>Più eventi giochi con lo stesso comandante, più la sua carta nell&rsquo;album diventa speciale:</p>
-      <ul class="card-finish-list">
-        ${CARD_FINISHES.map(
-          (f) => `
-          <li>
-            <span class="card-finish-preview ${f.classes}" aria-hidden="true">${FINISH_LAYER}</span>
-            <span class="card-finish-text"><strong>${f.name}</strong> &middot; da ${f.minTimesPlayed} eventi</span>
-          </li>`
-        ).join("")}
-      </ul>`,
+      <p>Le carte dell&rsquo;album si arricchiscono giocando con quel comandante</p>
+      ${Object.entries(ALBUM_EFFECTS)
+        .map(
+          ([family, info]) => `
+        <section class="card-effects-family">
+          <h4>${info.title}</h4>
+          <p>${info.text}</p>
+          <ul class="card-effects-tiers">
+            ${info.thresholds
+              .map(
+                (threshold, i) => `
+              <li>
+                <span class="album-card album-preview" data-family="${family}" data-value="${threshold}" aria-hidden="true"><span class="album-preview-art"></span></span>
+                <span><strong>${info.tiers[i]}</strong>${info.count(threshold)}</span>
+              </li>`
+              )
+              .join("")}
+          </ul>
+        </section>`
+        )
+        .join("")}`,
   });
+  for (const preview of dialog.querySelectorAll(".album-preview[data-family]")) {
+    const value = Number(preview.dataset.value);
+    if (preview.dataset.family === "rim") applyAlbumRim(preview, value);
+    else applyAlbumFoil(preview, value);
+  }
 }
 
 const ARROW_PREV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>';
@@ -121,11 +167,8 @@ export function renderCommanderCarousel(el, items) {
       <div class="cmd-carousel-track" tabindex="0" role="region" aria-label="Album comandanti">
         ${items
           .map(
-            (c, i) => `<div class="cmd-carousel-slide is-loading ${
-              cardFinish(c.timesPlayed)?.classes ?? ""
-            }" data-index="${i}">
+            (c, i) => `<div class="cmd-carousel-slide album-card is-loading" data-index="${i}">
               <span class="cmd-carousel-fallback">${escapeHtml(c.commander.name)}</span>
-              ${FINISH_LAYER}
             </div>`
           )
           .join("")}
@@ -173,6 +216,9 @@ export function renderCommanderCarousel(el, items) {
   const prevBtn = el.querySelector('[data-dir="-1"]');
   const nextBtn = el.querySelector('[data-dir="1"]');
   let active = -1;
+  // Each card's frame from its events played; its foil comes with the
+  // matches (setRecords).
+  slides.forEach((slide, i) => applyAlbumRim(slide, items[i].timesPlayed));
 
   // Card images: once Scryfall's batch lookup has answered, downloaded
   // nearest-first from the current card, a few at a time — not all at once,
@@ -437,6 +483,7 @@ export function renderCommanderCarousel(el, items) {
     setRecords(map) {
       records = map;
       renderWinrate();
+      slides.forEach((slide, i) => applyAlbumFoil(slide, map.get(items[i].key)?.wins ?? 0));
     },
   };
 }
