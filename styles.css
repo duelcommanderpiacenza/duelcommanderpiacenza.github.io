@@ -1721,9 +1721,9 @@ html.nav-mobile .upcoming-row > .results-links {
 
 .dashboard-card-leagues .dashboard-league-card {
   position: relative;
-  border: 1px solid var(--table-row-line);
+  border: 1px solid rgba(154, 28, 32, 0.14);
   border-radius: 14px;
-  background: rgba(220, 24, 28, 0.025);
+  background: rgba(220, 24, 28, 0.055);
   padding: 14px;
   transition: background 150ms ease, border-color 150ms ease;
 }
@@ -1766,12 +1766,12 @@ html.nav-mobile .upcoming-row > .results-links {
 .dashboard-card-leagues .dashboard-league-card:hover {
   transform: none;
   box-shadow: none;
-  border-color: var(--table-row-line);
+  border-color: rgba(154, 28, 32, 0.14);
 }
 
 .dashboard-card-leagues .dashboard-league-card:hover:not(:has(.dashboard-standing:hover, .btn-secondary:hover)) {
-  background: rgba(220, 24, 28, 0.05);
-  border-color: var(--hairline);
+  background: rgba(220, 24, 28, 0.09);
+  border-color: rgba(154, 28, 32, 0.26);
 }
 
 .dashboard-card-leagues .dashboard-league-card:hover:not(:has(.dashboard-standing:hover, .btn-secondary:hover)) .dashboard-league-card-name {
@@ -5131,17 +5131,17 @@ a.btn-secondary:hover {
 
 .history-item {
   flex-shrink: 0;
-  border: 1px solid var(--table-row-line);
+  border: 1px solid rgba(154, 28, 32, 0.14);
   border-radius: 14px;
-  background: rgba(220, 24, 28, 0.025);
+  background: rgba(220, 24, 28, 0.055);
   padding: 12px 14px;
   font-variant-numeric: tabular-nums;
   transition: background 150ms ease, border-color 150ms ease;
 }
 
 a.history-item:hover {
-  background: rgba(220, 24, 28, 0.05);
-  border-color: var(--hairline);
+  background: rgba(220, 24, 28, 0.09);
+  border-color: rgba(154, 28, 32, 0.26);
 }
 
 .history-main {
@@ -5490,12 +5490,12 @@ html.nav-mobile .back-to-top {
    LEAGUE_TOP_HIGHLIGHT) with a brand-red edge on the left and a faint tint,
    like the old table's top-8 rows ("Tu", below, still wins the tint). */
 .history-item.is-top8 {
-  background: rgba(220, 24, 28, 0.05);
+  background: rgba(220, 24, 28, 0.085);
   box-shadow: inset 3px 0 0 var(--brand-red);
 }
 
 a.history-item.is-top8:hover {
-  background: rgba(220, 24, 28, 0.08);
+  background: rgba(220, 24, 28, 0.12);
 }
 
 /* Redrawn on every keystroke of a search box: no entrance replay. */
@@ -5515,11 +5515,13 @@ a.history-item.is-top8:hover {
 /* "Tu" (js/me-highlight.js): the signed-in account's own player's card,
    tinted like its table rows. */
 .history-item.is-me-row {
-  background: rgba(220, 24, 28, 0.08);
+  border-color: rgba(154, 28, 32, 0.22);
+  background: rgba(220, 24, 28, 0.12);
 }
 
 a.history-item.is-me-row:hover {
-  background: rgba(220, 24, 28, 0.12);
+  border-color: rgba(154, 28, 32, 0.3);
+  background: rgba(220, 24, 28, 0.16);
 }
 
 /* One sub-card per event, its rounds as rows. On top: event + deck on the
@@ -10599,19 +10601,21 @@ html.nav-mobile .chart-carousel-arrow {
 /* Same trap: "Leghe in corso"'s league sub-cards keep their own faint
    surface inside the accent card, the player cards in them a step lighter. */
 :root[data-theme="dark"] .dashboard-card-leagues .dashboard-league-card {
-  background: rgba(255, 255, 255, 0.03);
-}
-
-:root[data-theme="dark"] .dashboard-card-leagues .dashboard-league-card:hover:not(:has(.dashboard-standing:hover, .btn-secondary:hover)) {
-  background: rgba(255, 110, 110, 0.06);
-}
-
-:root[data-theme="dark"] .dashboard-card-leagues .dashboard-standing {
+  border-color: rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.06);
 }
 
-:root[data-theme="dark"] .dashboard-card-leagues a.dashboard-standing:hover {
+:root[data-theme="dark"] .dashboard-card-leagues .dashboard-league-card:hover:not(:has(.dashboard-standing:hover, .btn-secondary:hover)) {
+  border-color: rgba(255, 255, 255, 0.16);
   background: rgba(255, 110, 110, 0.1);
+}
+
+:root[data-theme="dark"] .dashboard-card-leagues .dashboard-standing {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme="dark"] .dashboard-card-leagues a.dashboard-standing:hover {
+  background: rgba(255, 110, 110, 0.14);
 }
 
 /* badges.html: same faint light-on-dark surface as the other cards, and
@@ -10671,27 +10675,31 @@ html.nav-mobile .chart-carousel-arrow {
 /* player.html's history sub-cards: a faint light-on-dark surface inside the
    panel's own, the tints brightened like the site's other dark-mode reds. */
 :root[data-theme="dark"] .history-item {
-  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 :root[data-theme="dark"] a.history-item:hover {
-  background: rgba(255, 110, 110, 0.06);
-}
-
-:root[data-theme="dark"] .history-item.is-top8 {
-  background: rgba(255, 110, 110, 0.06);
-}
-
-:root[data-theme="dark"] a.history-item.is-top8:hover {
+  border-color: rgba(255, 255, 255, 0.16);
   background: rgba(255, 110, 110, 0.1);
 }
 
+:root[data-theme="dark"] .history-item.is-top8 {
+  background: rgba(255, 110, 110, 0.09);
+}
+
+:root[data-theme="dark"] a.history-item.is-top8:hover {
+  background: rgba(255, 110, 110, 0.13);
+}
+
 :root[data-theme="dark"] .history-item.is-me-row {
-  background: rgba(255, 110, 110, 0.12);
+  border-color: rgba(255, 110, 110, 0.22);
+  background: rgba(255, 110, 110, 0.15);
 }
 
 :root[data-theme="dark"] a.history-item.is-me-row:hover {
-  background: rgba(255, 110, 110, 0.17);
+  border-color: rgba(255, 110, 110, 0.3);
+  background: rgba(255, 110, 110, 0.2);
 }
 
 :root[data-theme="dark"] .history-pos,
