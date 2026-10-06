@@ -2,38 +2,26 @@ import { Players, Events, fetchEventsResults } from "./db.js";
 import { matchRoundOutcome, isBye, isDrop } from "./leaderboard.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { fetchTopAutoBadgesByPlayer, playerBadgesHtml } from "./player-badges.js";
-import { escapeHtml, commanderPairWithColors, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
+import { escapeHtml, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
+import { historyPanelHtml, historyStatsHtml } from "./history-list.js";
+import { initBackToTop } from "./back-to-top.js";
 
-// Keyed by the commander+partner pair, not just the primary commander, so
-// "Thrasios / Tymna" and "Thrasios / Vial Smasher" count as different decks.
-function mostUsedCommander(entries) {
-  const counts = new Map(); // "commanderId_partnerId" -> { commander, partner, count }
-  for (const e of entries) {
-    if (!e.commander) continue;
-    const key = `${e.commander.id}_${e.partner_commander?.id ?? ""}`;
-    if (!counts.has(key)) counts.set(key, { commander: e.commander, partner: e.partner_commander ?? null, count: 0 });
-    counts.get(key).count += 1;
-  }
-  let best = null;
-  for (const v of counts.values()) {
-    if (!best || v.count > best.count || (v.count === best.count && v.commander.name.localeCompare(best.commander.name) < 0)) {
-      best = v;
-    }
-  }
-  return best;
-}
-
+// One sub-card per player (js/history-list.js): name + badges, the numbers
+// on the right.
 function renderRow(r) {
   return `
-    <tr>
-      <td><a href="player.html?id=${r.id}">${r.nameHtml}</a>${r.badgesHtml}</td>
-      <td>${r.eventsPlayed}</td>
-      <td>${r.wins}-${r.losses}-${r.draws}</td>
-      <td>${r.rate}</td>
-      <td>${r.topCommanderHtml}</td>
-    </tr>`;
+    <article class="history-item history-ranked">
+      <div class="history-main">
+        <span class="history-title"><a href="player.html?id=${r.id}">${r.nameHtml}</a>${r.badgesHtml}</span>
+      </div>
+      ${historyStatsHtml([
+        { label: "Eventi", value: r.eventsPlayed },
+        { label: "V-S-P", value: `${r.wins}-${r.losses}-${r.draws}` },
+        { label: "Winrate", value: r.rate, main: true },
+      ])}
+    </article>`;
 }
 
 // Entries + matches of every event in scope, batched (js/db.js) rather than
@@ -58,6 +46,8 @@ async function init() {
   const dateFromInput = document.getElementById("players-date-from");
   const sortSelect = document.getElementById("players-sort");
   const countEl = document.getElementById("players-count");
+  // A long list: a round button back to the top once scrolled down.
+  initBackToTop();
 
   let allPlayers = [];
   let eventDateById = new Map();
@@ -118,10 +108,7 @@ async function init() {
     listEl.innerHTML =
       visible.length === 0
         ? `<p class="page-empty">${term ? "Nessun giocatore corrisponde alla ricerca." : "Nessun giocatore ha ancora dati registrati."}</p>`
-        : `<div class="data-table-wrap${animate ? "" : " no-entrance-anim"}"><table class="data-table">
-      <thead><tr><th>Giocatore</th><th>Eventi</th><th>V-S-P</th><th>Winrate</th><th>Commander pi&ugrave; usato</th></tr></thead>
-      <tbody>${visible.map(renderRow).join("")}</tbody>
-    </table></div>`;
+        : historyPanelHtml(visible.map(renderRow).join(""), { animate, scroll: false });
   }
 
   async function render(eventIds) {
@@ -175,7 +162,6 @@ async function init() {
         const playerEntries = entriesByPlayer.get(p.id) ?? [];
         const eventsPlayed = new Set(playerEntries.map((e) => e.event_id)).size;
         const record = recordByPlayer.get(p.id) ?? { wins: 0, draws: 0, losses: 0 };
-        const topCommander = mostUsedCommander(playerEntries);
         const played = record.wins + record.draws + record.losses;
         const winRate = played > 0 ? (record.wins / played) * 100 : null;
         return {
@@ -189,7 +175,6 @@ async function init() {
           losses: record.losses,
           winRate,
           rate: winRate === null ? "—" : `${winRate.toFixed(1)}%`,
-          topCommanderHtml: topCommander ? commanderPairWithColors(topCommander.commander, topCommander.partner) : "—",
         };
       });
 

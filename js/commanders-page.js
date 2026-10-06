@@ -7,6 +7,8 @@ import { attachHoverTooltips, fullTextIfTruncated } from "./floating-tooltip.js"
 import { commanderPairWithColors, bannedBadge, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
+import { historyPanelHtml, historyStatsHtml } from "./history-list.js";
+import { initBackToTop } from "./back-to-top.js";
 
 // Both charts are built from the *current filter's* data only (league /
 // event / date): Metashare = its 6 most played commanders + "Altri",
@@ -61,6 +63,8 @@ async function init() {
   const colorExactWrap = document.getElementById("commanders-color-exact-wrap");
   const colorExactCheckbox = document.getElementById("commanders-color-exact");
   const countEl = document.getElementById("commanders-count");
+  // A long list: a round button back to the top once scrolled down.
+  initBackToTop();
 
   // Full commander name on hover for any bar-chart label (Winrate) cut off
   // with an ellipsis — delegated on chartEl, which survives re-renders.
@@ -118,7 +122,7 @@ async function init() {
 
   // The search box only re-filters the already-computed rows (no new
   // network/stat work), so it can react live on every keystroke. animate
-  // is false for that keystroke re-render so .data-table-wrap's entrance
+  // is false for that keystroke re-render so .history-panel's entrance
   // animation doesn't replay on every character typed.
   function renderTableSection(animate = true) {
     const term = searchInput.value.trim().toLowerCase();
@@ -133,28 +137,32 @@ async function init() {
     if (filtered.length === 0) {
       return `<p class="page-empty">${anyFilterActive ? "Nessun comandante corrisponde ai filtri." : "Nessun comandante ha ancora dati registrati."}</p>`;
     }
+    // One sub-card per deck (js/history-list.js): name with its colours, the
+    // numbers on the right.
     const sorter = SORTERS[sortSelect.value] ?? SORTERS.played;
     const rows = [...filtered].sort((a, b) => sorter(a, b) || a.name.localeCompare(b.name));
-    return `<div class="data-table-wrap${animate ? "" : " no-entrance-anim"}"><table class="data-table">
-              <thead><tr><th>Nome</th><th>Giocato</th><th>Metashare</th><th>V-S-P</th><th>Winrate</th></tr></thead>
-              <tbody>
-                ${rows
-                  .map(
-                    (r) => `
-                  <tr>
-                    <td>${commanderPairWithColors(r.commander, r.partner)}${r.isBanned ? bannedBadge() : ""}</td>
-                    <td>${r.entries}</td>
-                    <td>${r.entries > 0 ? `${r.share.toFixed(1)}%` : "—"}</td>
-                    <td>${r.wins}-${r.losses}-${r.draws}</td>
-                    <td>${r.winRate === null ? "—" : `${r.winRate.toFixed(1)}%`}</td>
-                  </tr>`
-                  )
-                  .join("")}
-              </tbody>
-            </table></div>`;
+    return historyPanelHtml(
+      rows
+        .map(
+          (r) => `
+      <article class="history-item history-ranked">
+        <div class="history-main">
+          <span class="history-title">${commanderPairWithColors(r.commander, r.partner)}${r.isBanned ? bannedBadge() : ""}</span>
+        </div>
+        ${historyStatsHtml([
+          { label: "Giocato", value: r.entries },
+          { label: "Metashare", value: `${r.share.toFixed(1)}%` },
+          { label: "V-S-P", value: `${r.wins}-${r.losses}-${r.draws}` },
+          { label: "Winrate", value: r.winRate === null ? "—" : `${r.winRate.toFixed(1)}%`, main: true },
+        ])}
+      </article>`
+        )
+        .join(""),
+      { animate, scroll: false }
+    );
   }
 
-  // Only touches the table, not the chart — search/sort never change the
+  // Only touches the list, not the chart — search/sort never change the
   // chart's own content (that's keyed off the scope/date filters only), so
   // re-setting chartEl.innerHTML here too would just replay its entrance
   // animation for no reason on every keystroke.

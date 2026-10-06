@@ -1,14 +1,32 @@
-// The "Storico partite" lists of player.html and commander.html (and
-// commander.html's "Giocatori"): a card (.history-panel) holding sub-cards
+// The site's lists of sub-cards — player.html's and commander.html's
+// "Storico partite", commander.html's "Giocatori", and the Comandanti and
+// Giocatori pages' ranked lists: a card (.history-panel) holding sub-cards
 // (.history-item) that scrolls inside instead of paginating, its top/bottom
 // edge fading while there's more that way. Matches are grouped one sub-card
 // per event (per event + pilot on commander.html), its rounds as rows. Looks:
 // styles.css .history-*.
 import { escapeHtml, eventTitle, playerLabel, commanderPairLabel } from "./ui.js";
 
-// The list's frame; `itemsHtml` its sub-cards.
-export function historyPanelHtml(itemsHtml) {
-  return `<div class="history-panel"><div class="history-scroll">${itemsHtml}</div></div>`;
+// The list's frame; `itemsHtml` its sub-cards. `animate: false` for a list
+// redrawn on every keystroke (a search box), so its entrance doesn't replay;
+// `scroll: false` for one as tall as its content, never scrolling (the
+// Comandanti and Giocatori pages' lists).
+export function historyPanelHtml(itemsHtml, { animate = true, scroll = true } = {}) {
+  const classes = ["history-panel", animate ? "" : "no-entrance-anim", scroll ? "" : "no-scroll"].filter(Boolean).join(" ");
+  return `<div class="${classes}"><div class="history-scroll">${itemsHtml}</div></div>`;
+}
+
+// A ResizeObserver on `target` calling `fn`, dropped once `target` leaves the
+// page (a list redrawn by its filters), so redraws don't pile observers up.
+function observeSize(target, fn) {
+  const observer = new ResizeObserver(() => {
+    if (!target.isConnected) {
+      observer.disconnect();
+      return;
+    }
+    fn();
+  });
+  observer.observe(target);
 }
 
 // The edge fades (.can-scroll-up/-down) of the list drawn into `el`, kept in
@@ -21,8 +39,23 @@ export function initScrollFade(el) {
     scrollEl.classList.toggle("can-scroll-down", scrollEl.scrollTop + scrollEl.clientHeight < scrollEl.scrollHeight - 1);
   };
   scrollEl.addEventListener("scroll", update, { passive: true });
-  new ResizeObserver(update).observe(scrollEl);
+  observeSize(scrollEl, update);
   update();
+}
+
+// The numbers on the right of a ranked list's sub-card (Comandanti,
+// Giocatori): one labelled value each, in fixed-width columns so they line up
+// down the list like a table's. `stats`: [{ label, value, main }] — `main`
+// (the winrate) in brand red.
+export function historyStatsHtml(stats) {
+  return `<div class="history-stats" style="--stat-count:${stats.length}">${stats
+    .map(
+      (s) => `<div class="history-stat${s.main ? " is-main" : ""}">
+          <span class="history-stat-value">${s.value}</span>
+          <span class="history-stat-label">${s.label}</span>
+        </div>`
+    )
+    .join("")}</div>`;
 }
 
 // Caps the list drawn into `el` at its first `count` elements matching
@@ -43,7 +76,7 @@ export function capScrollToItems(el, selector, count) {
     // A little past the last one, so the fade falls on the next one instead.
     scrollEl.style.maxHeight = `${Math.ceil(last.bottom - top + 14)}px`;
   };
-  new ResizeObserver(apply).observe(scrollEl);
+  observeSize(scrollEl, apply);
   apply();
 }
 
@@ -58,7 +91,7 @@ export function capScrollToHeightOf(el, sourceEl, minHeight = 200) {
   const apply = () => {
     scrollEl.style.maxHeight = `${Math.max(minHeight, sourceScrollEl.offsetHeight)}px`;
   };
-  new ResizeObserver(apply).observe(sourceScrollEl);
+  observeSize(sourceScrollEl, apply);
   apply();
 }
 

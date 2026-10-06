@@ -5151,6 +5151,155 @@ a.history-title:hover,
   letter-spacing: 0.06em;
 }
 
+/* The Comandanti / Giocatori pages' lists: name (+ a second line) | the
+   numbers (js/history-list.js historyStatsHtml), in fixed-width columns so
+   they line up down the list like a table's; the winrate in red. Phones:
+   the numbers on their own row below, sharing its width. */
+.history-ranked {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+}
+
+.history-stats {
+  display: grid;
+  grid-template-columns: repeat(var(--stat-count), 88px);
+  gap: 6px;
+}
+
+.history-stats .history-stat {
+  align-items: center;
+}
+
+.history-stats .history-stat-value {
+  color: var(--text-value);
+  white-space: nowrap;
+}
+
+.history-stats .history-stat.is-main .history-stat-value {
+  color: var(--brand-red-deep);
+}
+
+@media (max-width: 640px) {
+  .history-ranked {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .history-ranked .history-stats {
+    grid-template-columns: repeat(var(--stat-count), minmax(0, 1fr));
+    padding-top: 10px;
+    border-top: 1px solid var(--table-row-line);
+  }
+}
+
+/* "Torna all'inizio" (js/back-to-top.js, Comandanti / Giocatori): a round
+   white button with a brand-red ring and arrow (the .results-link look),
+   fixed bottom-right, fading/rising in once the page is scrolled down —
+   visibility too, so while hidden it's neither clickable nor tabbable.
+   z-index under .site-nav's (20): the phone nav's open menu covers it. On
+   touch screens it sits right beside the floating nav pill (56px tall,
+   16px from the bottom) when the screen has room for it, otherwise just
+   above the pill. */
+.back-to-top {
+  position: fixed;
+  right: 24px;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  z-index: 15;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: 2px solid var(--brand-red);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--brand-red);
+  box-shadow: var(--shadow-card-hover);
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(12px) scale(0.9);
+  transition: opacity 200ms ease, transform 200ms ease, visibility 0s linear 200ms, background 150ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.back-to-top.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition: opacity 200ms ease, transform 200ms ease, visibility 0s, background 150ms ease;
+}
+
+.back-to-top:hover,
+.back-to-top:focus-visible {
+  background: #fbe3e3;
+}
+
+.back-to-top:focus-visible {
+  outline: 2px solid var(--brand-red);
+  outline-offset: 3px;
+}
+
+.back-to-top svg {
+  width: 22px;
+  height: 22px;
+}
+
+html.nav-mobile .back-to-top {
+  right: 16px;
+  bottom: calc(16px + 56px + 12px + env(safe-area-inset-bottom));
+}
+
+/* Wide enough for it beside the pill (centred, 260px): 12px gap + 46px
+   button + 8px to the screen edge on that side → (392 − 260) / 2 = 66px.
+   There, right next to the pill, centred on its height — and above
+   .site-nav (z-index 20): the fixed nav spans the screen's whole width at
+   the pill's height, so under it the button would never get the tap. Its
+   open menu opens upward above the pill, clear of the button. */
+@media (min-width: 392px) {
+  html.nav-mobile .back-to-top {
+    right: auto;
+    left: calc(50% + 130px + 12px);
+    bottom: calc(16px + 5px + env(safe-area-inset-bottom));
+    z-index: 21;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .back-to-top,
+  .back-to-top.is-visible {
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Redrawn on every keystroke of a search box: no entrance replay. */
+.history-panel.no-entrance-anim {
+  animation: none;
+}
+
+/* As tall as its content, never scrolling (the Comandanti / Giocatori
+   pages' lists). */
+.history-panel.no-scroll .history-scroll {
+  max-height: none;
+  overflow: visible;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+/* "Tu" (js/me-highlight.js): the signed-in account's own player's card,
+   tinted like its table rows. */
+.history-item.is-me-row {
+  background: rgba(220, 24, 28, 0.08);
+}
+
+.history-item.is-me-row:hover {
+  background: rgba(220, 24, 28, 0.12);
+}
+
 /* One sub-card per event, its rounds as rows. On top: event + deck on the
    left, the final position's chip on the right (filled red for 1st). */
 .history-match-head {
@@ -9429,6 +9578,14 @@ html.nav-mobile .chart-carousel-arrow {
 
 :root[data-theme="dark"] .history-item:hover {
   background: rgba(255, 110, 110, 0.06);
+}
+
+:root[data-theme="dark"] .history-item.is-me-row {
+  background: rgba(255, 110, 110, 0.12);
+}
+
+:root[data-theme="dark"] .history-item.is-me-row:hover {
+  background: rgba(255, 110, 110, 0.17);
 }
 
 :root[data-theme="dark"] .history-pos,

@@ -33,7 +33,8 @@ function markLinks(root, playerId) {
     if (link.classList.contains("is-me") || link.closest(SKIP)) continue;
     link.classList.add("is-me");
     if (!link.matches(NO_PILL)) link.insertAdjacentHTML("afterend", ' <span class="me-pill">Tu</span>');
-    link.closest("tr")?.classList.add("is-me-row");
+    // A table row, or a ranked list's sub-card (Giocatori, js/history-list.js).
+    link.closest("tr, .history-ranked")?.classList.add("is-me-row");
   }
 }
 
