@@ -1,5 +1,5 @@
 import { Events, EventEntries, Matches } from "./db.js";
-import { computeEventLeaderboard, isBye, isDrop } from "./leaderboard.js";
+import { computeEventLeaderboard, matchRoundOutcome, isBye, isDrop } from "./leaderboard.js";
 import {
   escapeHtml,
   formatDate,
@@ -12,6 +12,7 @@ import {
 import { hidePageLoading } from "./page-loading.js";
 import { resultsLink } from "./results-link.js";
 import { initTitleFit } from "./page-title-fit.js";
+import { historyPanelHtml, historyStatsHtml, historyPosHtml } from "./history-list.js";
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
@@ -19,6 +20,37 @@ function getId() {
 
 function matchResultScore(m) {
   return `${m.player1_wins}-${m.player2_wins}-${m.draws}`;
+}
+
+const NO_LINK = { link: false };
+
+// A player sub-card's title: the name, unlinked (the whole card links to the
+// player's page); .history-name is where js/me-highlight.js puts "Tu".
+function playerTitleHtml(player) {
+  return `<span class="history-title"><span class="history-name">${playerLabel(player, NO_LINK)}</span></span>`;
+}
+
+// A sub-card linking to the player's page (a plain one without a player).
+function playerCard(player, className, innerHtml) {
+  return player?.id
+    ? `<a class="history-item ${className}" href="player.html?id=${player.id}">${innerHtml}</a>`
+    : `<article class="history-item ${className}">${innerHtml}</article>`;
+}
+
+// Partite: per round, a grid of small match cards — Giocatore 1 · score ·
+// Giocatore 2, the winner in bold. Not links themselves (a match has two
+// players): the names are, each to its player.
+function matchCardHtml(m) {
+  const special = isBye(m) ? "Bye" : isDrop(m) ? "Drop" : null;
+  const outcome = special ? null : matchRoundOutcome(m);
+  const side = (player, wins) =>
+    `<span class="event-match-player${wins ? " is-winner" : ""}">${playerLabel(player)}</span>`;
+  return `
+          <article class="history-item event-match">
+            ${side(m.player1, special === "Bye" || outcome === "player1")}
+            <span class="event-match-score${special ? " is-special" : ""}">${special ?? matchResultScore(m)}</span>
+            ${special ? '<span class="event-match-player history-muted">—</span>' : side(m.player2, outcome === "player2")}
+          </article>`;
 }
 
 function renderMatchesByRound(matches) {
@@ -36,22 +68,7 @@ function renderMatchesByRound(matches) {
     .map(
       (round) => `
       <h3 style="margin:18px 0 10px;font-size:1.05rem;">Turno ${round}</h3>
-      <div class="data-table-wrap"><table class="data-table">
-        <thead><tr><th>Giocatore 1</th><th>Giocatore 2</th><th>Risultato</th></tr></thead>
-        <tbody>
-          ${byRound
-            .get(round)
-            .map(
-              (m) => `
-            <tr>
-              <td>${playerLabel(m.player1)}</td>
-              <td>${isBye(m) ? "Bye" : isDrop(m) ? "Drop" : playerLabel(m.player2)}</td>
-              <td>${isBye(m) ? "Bye" : isDrop(m) ? "Drop" : matchResultScore(m)}</td>
-            </tr>`
-            )
-            .join("")}
-        </tbody>
-      </table></div>`
+      ${historyPanelHtml(byRound.get(round).map(matchCardHtml).join(""), { scroll: false, className: "event-match-grid" })}`
     )
     .join("");
 }
@@ -93,51 +110,58 @@ async function init() {
     // Nothing with no entries: the empty message below already says so.
     entriesCountEl.textContent =
       entries.length === 0 ? "" : `${entries.length} ${entries.length === 1 ? "partecipante" : "partecipanti"}`;
+    // Giocatori: one sub-card per entry, linking to the player — the name,
+    // the deck below, the archetype on the right. Alphabetical by player
+    // name (a sorted copy — `entries` itself also feeds the standings below).
     entriesEl.innerHTML =
       entries.length === 0
         ? '<p class="page-empty">Nessun iscritto registrato.</p>'
-        : `<div class="data-table-wrap"><table class="data-table">
-            <thead><tr><th>Giocatore</th><th>Commander</th><th>Archetipo</th></tr></thead>
-            <tbody>
-              ${[...entries]
-                // Alphabetical by player name (a sorted copy — `entries`
-                // itself also feeds the standings below).
-                .sort((a, b) => (a.player?.name ?? "").localeCompare(b.player?.name ?? "", "it"))
-                .map(
-                  (e) => `
-                <tr>
-                  <td>${playerLabel(e.player)}</td>
-                  <td>${commanderPairWithColors(e.commander, e.partner_commander)}</td>
-                  <td>${archetypeBadge(e.archetype)}</td>
-                </tr>`
+        : historyPanelHtml(
+            [...entries]
+              .sort((a, b) => (a.player?.name ?? "").localeCompare(b.player?.name ?? "", "it"))
+              .map((e) =>
+                playerCard(
+                  e.player,
+                  "history-split",
+                  `<div class="history-main">
+                    ${playerTitleHtml(e.player)}
+                    <span class="history-deck">${commanderPairWithColors(e.commander, e.partner_commander, NO_LINK)}</span>
+                  </div>
+                  ${archetypeBadge(e.archetype)}`
                 )
-                .join("")}
-            </tbody>
-          </table></div>`;
+              )
+              .join(""),
+            { scroll: false }
+          );
 
     matchesEl.innerHTML = renderMatchesByRound(matches);
 
     const standings = computeEventLeaderboard(matches, entries);
+    // Classifica: one sub-card per player, linking to them — position chip
+    // and name, then Punti / V-S-P / Winrate.
     leaderboardEl.innerHTML =
       standings.length === 0
         ? '<p class="page-empty">Nessun dato per la classifica.</p>'
-        : `<div class="data-table-wrap"><table class="data-table">
-            <thead><tr><th>#</th><th>Giocatore</th><th>Punti</th><th>V-S-P</th><th>Winrate</th></tr></thead>
-            <tbody>
-              ${standings
-                .map(
-                  (s, i) => `
-                <tr>
-                  <td class="rank-cell"><span class="rank-chip">${i + 1}</span></td>
-                  <td>${playerLabel(s.player)}</td>
-                  <td><strong>${s.points}</strong></td>
-                  <td>${s.wins}-${s.losses}-${s.draws}</td>
-                  <td>${s.winRate === null ? "—" : `${s.winRate.toFixed(1)}%`}</td>
-                </tr>`
+        : historyPanelHtml(
+            standings
+              .map((s, i) =>
+                playerCard(
+                  s.player,
+                  "history-ranked",
+                  `<div class="history-lead">
+                    ${historyPosHtml(i + 1)}
+                    <div class="history-main">${playerTitleHtml(s.player)}</div>
+                  </div>
+                  ${historyStatsHtml([
+                    { label: "Punti", value: s.points, main: true },
+                    { label: "V-S-P", value: `${s.wins}-${s.losses}-${s.draws}` },
+                    { label: "Winrate", value: s.winRate === null ? "—" : `${s.winRate.toFixed(1)}%` },
+                  ])}`
                 )
-                .join("")}
-            </tbody>
-          </table></div>`;
+              )
+              .join(""),
+            { scroll: false }
+          );
   } catch (err) {
     showError(document.getElementById("event-content"), err);
   } finally {

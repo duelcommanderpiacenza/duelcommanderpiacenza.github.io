@@ -91,12 +91,24 @@
   <div class="page-loading-region">
     <div id="page-loading-overlay" class="page-loading-overlay"><p>Caricamento...</p></div>
 
-    <h2>Giocatori <span class="heading-count" id="event-entries-count"></span></h2>
-    <div id="event-entries" class="page-loading">Caricamento...</div>
-
-    <h2 style="margin-top:28px;">Classifica</h2>
-    <p class="page-subtitle">3 punti per vittoria, 1 per pareggio, 0 per sconfitta.</p>
-    <div id="event-leaderboard" class="page-loading">Caricamento...</div>
+    <!-- Desktop: Giocatori and Classifica side by side, each a list of
+         sub-cards linking to the player (js/event-detail.js, styles.css
+         .history-*); phones: stacked. -->
+    <div class="history-grid event-lists">
+      <section class="history-col">
+        <div class="history-col-head">
+          <h2>Giocatori <span class="heading-count" id="event-entries-count"></span></h2>
+        </div>
+        <div id="event-entries" class="page-loading">Caricamento...</div>
+      </section>
+      <section class="history-col">
+        <div class="history-col-head">
+          <h2>Classifica</h2>
+          <p class="page-subtitle">3 punti per vittoria, 1 per pareggio, 0 per sconfitta.</p>
+        </div>
+        <div id="event-leaderboard" class="page-loading">Caricamento...</div>
+      </section>
+    </div>
 
     <h2 style="margin-top:28px;">Partite</h2>
     <div id="event-matches" class="page-loading">Caricamento...</div>

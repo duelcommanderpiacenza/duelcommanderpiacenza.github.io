@@ -14,6 +14,7 @@ import {
 } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initTitleFit } from "./page-title-fit.js";
+import { historyPanelHtml, historyStatsHtml, historyPosHtml } from "./history-list.js";
 
 // How many leaderboard rows get the "top 8" highlight (styles.css .is-top8).
 const LEAGUE_TOP_HIGHLIGHT = 8;
@@ -181,8 +182,8 @@ async function init() {
       .map(
         (ev) => `
       <a class="entity-card" href="event.html?id=${ev.id}">
-        ${ev.name ? `<div class="entity-card-meta">${formatDate(ev.event_date)}</div>` : ""}
         <div class="entity-card-title">${escapeHtml(eventTitle(ev))}</div>
+        ${ev.name ? `<div class="entity-card-meta">${formatDate(ev.event_date)}</div>` : ""}
       </a>`
       )
       .join("")}</div>`;
@@ -222,26 +223,37 @@ async function init() {
     if (league.is_topdeck) return;
 
     const badgesFor = await badgesPromise;
+    // One sub-card per player (js/history-list.js), the whole card a link to
+    // the player's page: position chip, name + badges, then Punti / V-S-P /
+    // Winrate / Eventi. The top LEAGUE_TOP_HIGHLIGHT get a red edge and tint
+    // (styles.css .history-item.is-top8).
     leaderboardEl.innerHTML =
       standings.length === 0
         ? '<p class="page-empty">Nessun dato per la classifica.</p>'
-        : `<div class="data-table-wrap"><table class="data-table">
-            <thead><tr><th>#</th><th>Giocatore</th><th>Punti</th><th>V-S-P</th><th>Winrate</th><th>Eventi giocati</th></tr></thead>
-            <tbody>
-              ${standings
-                .map(
-                  (s, i) => `
-                <tr${i < LEAGUE_TOP_HIGHLIGHT ? ' class="is-top8"' : ""}>
-                  <td class="rank-cell"><span class="rank-chip">${i + 1}</span></td>
-                  <td>${playerLabel(s.player)}${badgesFor(s.player)}</td>
-                  <td><strong>${s.points}</strong></td>
-                  <td>${s.wins}-${s.losses}-${s.draws}</td>
-                  <td>${s.winRate === null ? "—" : `${s.winRate.toFixed(1)}%`}</td>
-                  <td>${s.eventsPlayed}</td>                </tr>`
-                )
-                .join("")}
-            </tbody>
-          </table></div>`;
+        : historyPanelHtml(
+            standings
+              .map((s, i) => {
+                const inner = `
+                <div class="history-lead">
+                  ${historyPosHtml(i + 1)}
+                  <div class="history-main">
+                    <span class="history-title"><span class="history-name">${playerLabel(s.player, { link: false })}</span>${badgesFor(s.player)}</span>
+                  </div>
+                </div>
+                ${historyStatsHtml([
+                  { label: "Punti", value: s.points, main: true },
+                  { label: "V-S-P", value: `${s.wins}-${s.losses}-${s.draws}` },
+                  { label: "Winrate", value: s.winRate === null ? "—" : `${s.winRate.toFixed(1)}%` },
+                  { label: "Eventi", value: s.eventsPlayed },
+                ])}`;
+                const cls = `history-item history-ranked${i < LEAGUE_TOP_HIGHLIGHT ? " is-top8" : ""}`;
+                return s.player?.id
+                  ? `<a class="${cls}" href="player.html?id=${s.player.id}">${inner}</a>`
+                  : `<article class="${cls}">${inner}</article>`;
+              })
+              .join(""),
+            { scroll: false }
+          );
   } catch (err) {
     showError(document.getElementById("league-content"), err);
   } finally {

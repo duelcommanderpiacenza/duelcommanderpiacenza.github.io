@@ -6,6 +6,7 @@ import { initChartCarousel } from "./chart-carousel.js";
 import { archetypeBadge, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
+import { historyPanelHtml, historyStatsHtml } from "./history-list.js";
 
 // Entries + matches of every event in scope, batched (js/db.js) rather than
 // two requests per event — "Tutte le leghe" spans the whole history.
@@ -103,23 +104,25 @@ async function init() {
         </div>`;
       initChartCarousel(chartEl);
 
-      tableEl.innerHTML = `
-        <div class="data-table-wrap"><table class="data-table">
-          <thead><tr><th>Archetipo</th><th>Metashare</th><th>V-S-P</th><th>Winrate</th></tr></thead>
-          <tbody>
-            ${rows
-              .map(
-                (r) => `
-              <tr>
-                <td>${archetypeBadge(r.archetype)}</td>
-                <td>${r.share.toFixed(1)}%</td>
-                <td>${r.wins}-${r.losses}-${r.draws}</td>
-                <td>${r.winRate === null ? "—" : `${r.winRate.toFixed(1)}%`}</td>
-              </tr>`
-              )
-              .join("")}
-          </tbody>
-        </table></div>`;
+      // One sub-card per archetype, like the Comandanti list
+      // (js/history-list.js) — not a link (no archetype page): the badge,
+      // then Metashare / V-S-P / Winrate.
+      tableEl.innerHTML = historyPanelHtml(
+        rows
+          .map(
+            (r) => `
+          <article class="history-item history-ranked">
+            <div class="history-main">${archetypeBadge(r.archetype)}</div>
+            ${historyStatsHtml([
+              { label: "Metashare", value: `${r.share.toFixed(1)}%` },
+              { label: "V-S-P", value: `${r.wins}-${r.losses}-${r.draws}` },
+              { label: "Winrate", value: r.winRate === null ? "—" : `${r.winRate.toFixed(1)}%`, main: true },
+            ])}
+          </article>`
+          )
+          .join(""),
+        { scroll: false }
+      );
     } catch (err) {
       showError(chartEl, err);
     } finally {

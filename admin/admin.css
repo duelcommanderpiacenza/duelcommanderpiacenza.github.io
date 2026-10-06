@@ -477,15 +477,6 @@ html.nav-mobile .admin-tab.is-active .admin-tab-count {
   gap: 10px 16px;
 }
 
-.admin-card:hover {
-  background: rgba(220, 24, 28, 0.025);
-  border-color: var(--table-row-line);
-}
-
-:root[data-theme="dark"] .admin-card:hover {
-  background: rgba(255, 255, 255, 0.03);
-}
-
 .admin-card-body {
   display: grid;
   grid-template-columns: minmax(120px, 1.6fr) repeat(var(--admin-fields), minmax(0, 1fr));

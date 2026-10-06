@@ -3923,8 +3923,11 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
     grid-row: 1;
   }
 
+  /* Across both columns: in the first alone, a subtitle longer than the
+     title (event.html's "date · Lega: …") widened that column and pushed
+     the pill (results links, "In corso") away from the title's end. */
   .page-heading-text > .page-subtitle {
-    grid-column: 1;
+    grid-column: 1 / -1;
     grid-row: 2;
   }
 
@@ -4983,7 +4986,8 @@ a.btn-secondary:hover {
   align-self: start;
 }
 
-.history-col > div {
+/* The list (not a header wrapper, .history-col-head on event.html). */
+.history-col > div:not(.history-col-head) {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -5078,7 +5082,7 @@ a.btn-secondary:hover {
   transition: background 150ms ease, border-color 150ms ease;
 }
 
-.history-item:hover {
+a.history-item:hover {
   background: rgba(220, 24, 28, 0.05);
   border-color: var(--hairline);
 }
@@ -5295,6 +5299,148 @@ html.nav-mobile .back-to-top {
   }
 }
 
+/* event.html (js/event-detail.js). Giocatori and Classifica side by side
+   (.history-grid, here at the top of the content: no margin of its own). */
+.history-grid.event-lists {
+  margin-top: 0;
+}
+
+.history-col-head > h2 {
+  margin-top: 0;
+}
+
+/* Desktop: the two columns share the grid's two rows (subgrid) — headers,
+   then lists — so both lists start on the same line however tall either
+   header is (Giocatori's count line vs Classifica's points line). */
+@media (min-width: 880px) {
+  .history-grid.event-lists {
+    grid-template-rows: auto auto;
+    row-gap: 0;
+  }
+
+  .event-lists .history-col {
+    display: grid;
+    grid-row: span 2;
+    grid-template-rows: subgrid;
+    align-self: stretch;
+  }
+
+  /* Every card of both lists the same height: one line per text (a long
+     name or deck cut with "…" rather than wrapping taller), a shared
+     minimum height (Giocatori's two lines; Classifica's chip + numbers fit
+     in it), the numbers' columns a little narrower to leave names room. */
+  .event-lists .history-item {
+    box-sizing: border-box;
+    min-height: 72px;
+  }
+
+  .event-lists .history-title,
+  .event-lists .history-deck {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .event-lists .history-lead .history-main {
+    flex: 1;
+  }
+
+  .event-lists .history-stats {
+    grid-template-columns: repeat(var(--stat-count), 72px);
+  }
+}
+
+/* An archetype badge as a card's title (Archetipi): its own size, not
+   stretched across .history-main's column like a text line. */
+.history-main > .badge-archetype {
+  align-self: flex-start;
+}
+
+/* Two parts on one line at every width: the name (+ deck) | the archetype. */
+.history-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+/* The position chip, then the name (Classifica). */
+.history-lead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* Partite: each round's matches as a grid of small cards (two side by side
+   on desktop) — Giocatore 1 · score · Giocatore 2, the winner in bold. */
+.event-match-grid .history-scroll {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.event-match {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.event-match-player {
+  color: var(--text-muted-2);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.event-match-player:last-child {
+  text-align: right;
+}
+
+.event-match-player.is-winner {
+  color: var(--text-title);
+  font-weight: 800;
+}
+
+.event-match-player a:hover {
+  color: var(--brand-red-deep);
+  text-decoration: none;
+}
+
+.event-match-score {
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(220, 24, 28, 0.1);
+  color: var(--brand-red-deep);
+  font-size: 0.85rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.event-match-score.is-special {
+  background: rgba(111, 90, 94, 0.12);
+  color: var(--text-muted-2);
+}
+
+:root[data-theme="dark"] .event-match-score {
+  background: rgba(255, 110, 110, 0.14);
+}
+
+:root[data-theme="dark"] .event-match-score.is-special {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* league.html's Classifica: the top 8 (js/league-detail.js
+   LEAGUE_TOP_HIGHLIGHT) with a brand-red edge on the left and a faint tint,
+   like the old table's top-8 rows ("Tu", below, still wins the tint). */
+.history-item.is-top8 {
+  background: rgba(220, 24, 28, 0.05);
+  box-shadow: inset 3px 0 0 var(--brand-red);
+}
+
+a.history-item.is-top8:hover {
+  background: rgba(220, 24, 28, 0.08);
+}
+
 /* Redrawn on every keystroke of a search box: no entrance replay. */
 .history-panel.no-entrance-anim {
   animation: none;
@@ -5315,7 +5461,7 @@ html.nav-mobile .back-to-top {
   background: rgba(220, 24, 28, 0.08);
 }
 
-.history-item.is-me-row:hover {
+a.history-item.is-me-row:hover {
   background: rgba(220, 24, 28, 0.12);
 }
 
@@ -9635,15 +9781,23 @@ html.nav-mobile .chart-carousel-arrow {
   background: rgba(255, 255, 255, 0.03);
 }
 
-:root[data-theme="dark"] .history-item:hover {
+:root[data-theme="dark"] a.history-item:hover {
   background: rgba(255, 110, 110, 0.06);
+}
+
+:root[data-theme="dark"] .history-item.is-top8 {
+  background: rgba(255, 110, 110, 0.06);
+}
+
+:root[data-theme="dark"] a.history-item.is-top8:hover {
+  background: rgba(255, 110, 110, 0.1);
 }
 
 :root[data-theme="dark"] .history-item.is-me-row {
   background: rgba(255, 110, 110, 0.12);
 }
 
-:root[data-theme="dark"] .history-item.is-me-row:hover {
+:root[data-theme="dark"] a.history-item.is-me-row:hover {
   background: rgba(255, 110, 110, 0.17);
 }
 

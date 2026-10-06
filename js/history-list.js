@@ -11,9 +11,12 @@ import { escapeHtml, eventTitle, playerLabel, commanderPairLabel } from "./ui.js
 // The list's frame; `itemsHtml` its sub-cards. `animate: false` for a list
 // redrawn on every keystroke (a search box), so its entrance doesn't replay;
 // `scroll: false` for one as tall as its content, never scrolling (the
-// Comandanti and Giocatori pages' lists).
-export function historyPanelHtml(itemsHtml, { animate = true, scroll = true } = {}) {
-  const classes = ["history-panel", animate ? "" : "no-entrance-anim", scroll ? "" : "no-scroll"].filter(Boolean).join(" ");
+// Comandanti and Giocatori pages' lists); `className` for a layout of its
+// own (event.html's match grid).
+export function historyPanelHtml(itemsHtml, { animate = true, scroll = true, className = "" } = {}) {
+  const classes = ["history-panel", animate ? "" : "no-entrance-anim", scroll ? "" : "no-scroll", className]
+    .filter(Boolean)
+    .join(" ");
   return `<div class="${classes}"><div class="history-scroll">${itemsHtml}</div></div>`;
 }
 
@@ -111,8 +114,9 @@ function historyEventHeadHtml(event) {
   }`;
 }
 
-// The final position in an event, as a round red chip ("—" when unknown).
-function historyPosHtml(position) {
+// The final position in an event, as a round red chip ("—" when unknown,
+// filled red for the 1st) — also event.html's standings.
+export function historyPosHtml(position) {
   return `<span class="history-pos${position === 1 ? " is-first" : ""}" title="Posizione finale">${
     position == null ? "—" : `${position}°`
   }</span>`;
