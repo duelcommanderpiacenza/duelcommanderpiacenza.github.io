@@ -105,7 +105,7 @@ export const ALBUM_EFFECTS = {
   rim: {
     title: "Eventi giocati",
     text: "Il bordo della carta, per gli eventi giocati con quel comandante",
-    thresholds: [10, 25, 50, 75],
+    thresholds: [5, 10, 25, 50],
     count: (n) => `${n} eventi`,
     tiers: ["Argento", "Foil", "Oro", "Mitica"],
   },
