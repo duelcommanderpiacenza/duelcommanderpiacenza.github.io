@@ -51,6 +51,49 @@ async function fetchCardImages(names) {
   return images;
 }
 
+// One album item per "deck": the exact commander + partner pair (so "X / Y"
+// and "X / Z" are two cards) — the key the records map (setRecords) uses
+// too. Shared by player.html and account.html.
+export function commanderPairKey(commander, partner) {
+  return `${commander.id}_${partner?.id ?? ""}`;
+}
+
+// A player's entries (js/db.js EventEntries.listByPlayer: commander, partner
+// and event embeds) → the album's items: a plain, de-duplicated list, not
+// split by event. timesPlayed counts the entries (events) with that pair;
+// firstPlayed / lastPlayed the earliest / latest event_date across them,
+// whatever order the entries come in. Most played first, then most recently
+// played, then by name.
+export function albumItems(entries) {
+  const byPair = new Map();
+  for (const e of entries) {
+    if (!e.commander) continue;
+    const key = commanderPairKey(e.commander, e.partner_commander);
+    const eventDate = e.event?.event_date ?? null;
+    const existing = byPair.get(key);
+    if (!existing) {
+      byPair.set(key, {
+        key,
+        commander: e.commander,
+        partner: e.partner_commander ?? null,
+        timesPlayed: 1,
+        firstPlayed: eventDate,
+        lastPlayed: eventDate,
+      });
+    } else {
+      existing.timesPlayed += 1;
+      if (eventDate && (!existing.lastPlayed || eventDate > existing.lastPlayed)) existing.lastPlayed = eventDate;
+      if (eventDate && (!existing.firstPlayed || eventDate < existing.firstPlayed)) existing.firstPlayed = eventDate;
+    }
+  }
+  return [...byPair.values()].sort(
+    (a, b) =>
+      b.timesPlayed - a.timesPlayed ||
+      (b.lastPlayed ?? "").localeCompare(a.lastPlayed ?? "") ||
+      a.commander.name.localeCompare(b.commander.name)
+  );
+}
+
 // Special effects on the album's cards, the same looks as the player card's
 // (js/card-cosmetics.js, styles.css .album-card): a frame for how many events
 // the player has played that commander in (its "Volte giocato") and a foil

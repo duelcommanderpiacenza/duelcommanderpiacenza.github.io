@@ -15,16 +15,11 @@ import {
 import { hidePageLoading } from "./page-loading.js";
 import { initTitleFit, fitTitleToOneLine, alignBackButtonToTitle } from "./page-title-fit.js";
 import { initFilterToggle } from "./filter-toggle.js";
-import { renderCommanderCarousel } from "./commander-carousel.js";
+import { renderCommanderCarousel, albumItems, commanderPairKey } from "./commander-carousel.js";
 import { matchGroupsHtml, initScrollFade, setHistoryCount } from "./history-list.js";
 import { renderPublicPlayerCard } from "./player-card.js";
 import { cardFrameWidth } from "./card-cosmetics.js";
 import { initFollowButton } from "./follow-button.js";
-
-// Album comandanti's grouping: one "deck" = the exact commander + partner pair.
-function commanderPairKey(commander, partner) {
-  return `${commander.id}_${partner?.id ?? ""}`;
-}
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
@@ -243,40 +238,9 @@ async function init() {
       window.addEventListener("resize", syncPlayerCardLayout);
     }
 
-    // Album comandanti: a plain, de-duplicated list — not split by event.
-    // Keyed by the commander+partner pair, so "X / Y" and "X / Z" both show.
-    // timesPlayed counts the entries (events) with that pair; firstPlayed /
-    // lastPlayed track the earliest / latest event_date across them,
-    // regardless of the order entries happen to be iterated in.
-    const uniqueCommanders = new Map();
-    for (const e of entries) {
-      if (!e.commander) continue;
-      const key = commanderPairKey(e.commander, e.partner_commander);
-      const eventDate = e.event?.event_date ?? null;
-      const existing = uniqueCommanders.get(key);
-      if (!existing) {
-        uniqueCommanders.set(key, {
-          key,
-          commander: e.commander,
-          partner: e.partner_commander ?? null,
-          timesPlayed: 1,
-          firstPlayed: eventDate,
-          lastPlayed: eventDate,
-        });
-      } else {
-        existing.timesPlayed += 1;
-        if (eventDate && (!existing.lastPlayed || eventDate > existing.lastPlayed)) existing.lastPlayed = eventDate;
-        if (eventDate && (!existing.firstPlayed || eventDate < existing.firstPlayed)) existing.firstPlayed = eventDate;
-      }
-    }
-    // Shown as a card carousel (js/commander-carousel.js), most played
-    // first, then most recently played, then by name.
-    const commanderList = Array.from(uniqueCommanders.values()).sort(
-      (a, b) =>
-        b.timesPlayed - a.timesPlayed ||
-        (b.lastPlayed ?? "").localeCompare(a.lastPlayed ?? "") ||
-        a.commander.name.localeCompare(b.commander.name)
-    );
+    // Album comandanti: one card per commander + partner pair, most played
+    // first (js/commander-carousel.js albumItems).
+    const commanderList = albumItems(entries);
     const carousel = renderCommanderCarousel(commandersEl, commanderList);
 
     // The player's final position in each event they entered (Storico

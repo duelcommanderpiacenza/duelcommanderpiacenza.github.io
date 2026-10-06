@@ -172,9 +172,10 @@ export function openCardEffectsInfo() {
   const leagues = (n) => Array.from({ length: n }, (_, i) => `Lega ${i + 1}`);
   const dialog = openInfoDialog({
     id: "card-effects-dialog",
-    title: "Effetti della carta",
+    title: "Carta giocatore",
     bodyHtml: `
-      <p>La tua carta si arricchisce giocando</p>
+      <p>La carta giocatore è il tuo biglietto da visita su Duel Commander Piacenza: l&rsquo;illustrazione del tuo comandante preferito, il tuo archetipo e i tuoi colori, una breve descrizione e i link ai tuoi profili. Se vuoi, puoi mostrarla nella tua pagina giocatore pubblica.</p>
+      <p>Poi si arricchisce giocando: ogni effetto qui sotto si sblocca con i tuoi risultati.</p>
       ${families}
       <section class="card-effects-family">
         <h4>Campione</h4>

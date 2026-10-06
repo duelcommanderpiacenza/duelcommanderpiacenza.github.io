@@ -57,8 +57,9 @@ import {
   PlayerProgress,
 } from "./db.js";
 import { matchRoundOutcome, isDrop, isBye, computeLeaguePoints } from "./leaderboard.js";
-import { tallyOutcome, renderWinrateTiles } from "./winrate.js";
-import { applyCardCosmetics, cardFrameWidth, openCardEffectsInfo } from "./card-cosmetics.js";
+import { tallyOutcome, winRatePct } from "./winrate.js";
+import { applyCardCosmetics, openCardEffectsInfo } from "./card-cosmetics.js";
+import { renderCommanderCarousel, albumItems, commanderPairKey } from "./commander-carousel.js";
 import { escapeHtml, colorIdentityPips, uniqueBadges, eventTitle, formatDate } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { fetchPlayerBadgesRenderer } from "./player-badges.js";
@@ -76,8 +77,9 @@ import {
 
 const ACCOUNT_URL = new URL("account.html", window.location.href).href;
 const COLOR_ORDER = ["W", "U", "B", "R", "G"];
-// Also enforced by the database (supabase/migrations/006).
-const DESCRIPTION_MAX = 140;
+// One line, at most this many characters — also enforced by the database
+// (supabase/migrations/012).
+const DESCRIPTION_MAX = 50;
 
 const views = Array.from(document.querySelectorAll("[data-view]"));
 const viewOf = (name) => views.find((v) => v.dataset.view === name);
@@ -89,6 +91,10 @@ const artEl = document.getElementById("pc-art");
 const avatarImg = document.getElementById("profile-avatar");
 const initialEl = document.getElementById("profile-initial");
 const nameEl = document.getElementById("profile-name");
+// The same name, big, in the hero beside the card; "Dal …" under it; the
+// favourite commander's art blurred behind it all (styles.css .profile-hero).
+const heroNameEl = document.getElementById("profile-hero-name");
+const heroSinceEl = document.getElementById("profile-hero-since");
 const archetypeEl = document.getElementById("pc-archetype");
 const colorsEl = document.getElementById("pc-colors");
 const bioEl = document.getElementById("profile-bio");
@@ -98,6 +104,8 @@ const linksEl = document.getElementById("pc-links");
 const editToggleBtn = document.getElementById("profile-edit-toggle");
 const editCancelBtn = document.getElementById("profile-edit-cancel");
 const emailEl = document.getElementById("account-email");
+// The same email in the Account section's header (shown while it's closed).
+const emailSummaryEl = document.getElementById("account-email-summary");
 
 // The card's edit mode: each value's editable twin, in its place.
 const profileForm = document.getElementById("profile-form");
@@ -119,6 +127,8 @@ const pendingPlayerEl = document.getElementById("account-pending-player");
 
 // "Le tue statistiche" (once linked)
 const statsCard = document.getElementById("profile-stats");
+const albumCard = document.getElementById("profile-album");
+const albumEl = document.getElementById("profile-album-carousel");
 const statsLink = document.getElementById("profile-stats-link");
 const statsTilesEl = document.getElementById("profile-stats-tiles");
 const publicWrapEl = document.getElementById("profile-public-wrap");
@@ -164,6 +174,7 @@ function playerLabel(player) {
 
 // The commander art behind the card (js/player-card.js: Scryfall's art crop).
 const paintArt = createArtPainter(artEl);
+const paintHeroArt = createArtPainter(document.getElementById("profile-hero-art"));
 
 // --- Player card ------------------------------------------------------------------
 
@@ -197,7 +208,9 @@ function renderCard(values) {
   // The linked player's own name once there is one, the Google name before.
   const displayName = claim.linked ? playerLabel(claim.linked) : meta.full_name || meta.name || user.email;
   nameEl.textContent = displayName;
+  heroNameEl.textContent = displayName;
   emailEl.textContent = user.email;
+  emailSummaryEl.textContent = user.email;
 
   // The Google picture. Hidden by the owner: outside edit mode no avatar
   // circle at all, leaving the commander art in view (.hides-avatar); in
@@ -225,6 +238,7 @@ function renderCard(values) {
 
   // The player's (not the account's) first event and badges, once linked.
   sinceEl.textContent = claim.linked && firstYear ? `Dal ${firstYear}` : "";
+  heroSinceEl.textContent = sinceEl.textContent;
   badgesEl.innerHTML = claim.linked ? cardBadgesHtml(playerBadges) : "";
 
   // After "Dal …" above (the stars go after it); taken off and put back on
@@ -232,6 +246,7 @@ function renderCard(values) {
   applyCardCosmetics(cardEl, claim.linked ? cardProgress : null);
 
   paintArt(values.commander?.name ?? null);
+  paintHeroArt(values.commander?.name ?? null);
 }
 
 // --- Edit mode (on the card itself, same layout) -----------------------------------
@@ -410,77 +425,71 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && isEditing() && !switching && !cardEl.querySelector(".cs-wrap.is-open")) setEditing(false);
 });
 
-// --- Card height = the cards beside it (desktop) ------------------------------------
+// --- The sections, one at a time behind tabs -------------------------------------
 
-// From 821px the card column (the card, then the switch under it once
-// linked) stands beside "Le tue statistiche" + "Account": the card's width
-// is set so that, at Magic-card proportions, the column is exactly as tall
-// as those cards together (within MIN/MAX_CARD_WIDTH). When they're shorter
-// than the smallest card, the last of them is padded down to the column's
-// bottom edge instead (styles.css --pc-side-stretch). Phones: one column,
-// nothing to line up. Edit mode can make the card taller for a while; it's
-// measured against its own proportions, not its current height.
-const layoutEl = document.querySelector(".profile-layout");
-const cardColEl = document.querySelector(".profile-card-col");
-const sideEl = document.querySelector(".profile-side");
-const sideBySide = window.matchMedia("(min-width: 821px)");
-const CARD_RATIO = 680 / 488;
-const MIN_CARD_WIDTH = 240;
-// Kept small on desktop: with the stats, the decklist, Seguiti and Account
-// beside it the column is usually taller than this card — it then just stays
-// at this width, the cards beside it getting the room.
-const MAX_CARD_WIDTH = 280;
+// Album comandanti, Seguiti, Decklist, Account: a tab each, only for a
+// section that's shown (styles.css hides the others' tabs) — a pill bar on
+// desktop, a full-width segmented control on phones. Until the user picks
+// one, the first section shown is the open one (the album once linked);
+// when the open one goes (e.g. no decklist to send any more), the first
+// still shown takes over.
+const tabButtons = [...document.querySelectorAll(".profile-tab")];
+const tabPanels = tabButtons.map((b) => document.getElementById(b.dataset.tab));
+let currentTab = null;
+let tabChosen = false;
 
-// The widths just tried: the card's width changes the side cards' width,
-// and so possibly their height (tiles wrapping differently) — a width that
-// comes back means two widths would keep swapping, so the current one stays.
-let recentWidths = [];
-let recentReset = null;
-
-function alignCardToSide() {
-  if (!sideBySide.matches || !sideEl.getClientRects().length) {
-    layoutEl.style.removeProperty("--pc-width");
-    sideEl.style.removeProperty("--pc-side-stretch");
-    return;
+function selectTab(id) {
+  currentTab = id;
+  for (const b of tabButtons) {
+    const on = b.dataset.tab === id;
+    b.classList.toggle("is-active", on);
+    b.setAttribute("aria-selected", String(on));
   }
-  const stretch = parseFloat(sideEl.style.getPropertyValue("--pc-side-stretch")) || 0;
-  const sideHeight = sideEl.offsetHeight - stretch;
-  // The card is sized without "Invia la tua decklist"'s open part: opening
-  // it (animated) mustn't resize the card — the column just grows below.
-  const decklistOpenPart = document.getElementById("decklist-body")?.offsetHeight ?? 0;
-  // What's under the card in its column (the switch, a message).
-  const below = cardColEl.offsetHeight - cardEl.offsetHeight;
-  // The frame round the surface (none, or the Presenze cosmetic's): the
-  // surface keeps Magic-card proportions, the frame adds to both sides.
-  const frame = 2 * cardFrameWidth(cardEl);
-  const fitting = (sideHeight - decklistOpenPart - below - frame) / CARD_RATIO + frame;
-  let width = Math.round(Math.min(MAX_CARD_WIDTH, Math.max(MIN_CARD_WIDTH, fitting)));
-  const current = parseFloat(layoutEl.style.getPropertyValue("--pc-width"));
-  if (width !== current) {
-    if (recentWidths.includes(width)) {
-      width = current;
-    } else {
-      recentWidths.push(width);
-      clearTimeout(recentReset);
-      recentReset = setTimeout(() => (recentWidths = []), 500);
-      layoutEl.style.setProperty("--pc-width", `${width}px`);
-    }
-  }
-  const cardHeight = (width - frame) * CARD_RATIO + frame;
-  sideEl.style.setProperty("--pc-side-stretch", `${Math.max(0, Math.round(cardHeight + below - sideHeight))}px`);
+  for (const panel of tabPanels) panel.classList.toggle("is-current", panel.id === id);
 }
 
-// A frame later: resizing the observed side cards from inside their own
-// ResizeObserver callback is the "ResizeObserver loop" error.
-// Both columns: the switch under the card can change height too (its hint).
-const alignObserver = new ResizeObserver(() => requestAnimationFrame(alignCardToSide));
-alignObserver.observe(sideEl);
-alignObserver.observe(cardColEl);
-sideBySide.addEventListener("change", alignCardToSide);
+function syncTabs() {
+  const shown = tabPanels.filter((p) => !p.hidden).map((p) => p.id);
+  if (!tabChosen || !shown.includes(currentTab)) selectTab(shown[0] ?? null);
+}
+
+for (const b of tabButtons) {
+  b.addEventListener("click", () => {
+    tabChosen = true;
+    selectTab(b.dataset.tab);
+  });
+}
+const tabsObserver = new MutationObserver(syncTabs);
+for (const panel of tabPanels) tabsObserver.observe(panel, { attributes: true, attributeFilter: ["hidden"] });
+syncTabs();
+
+// "Invia la tua decklist" in the hero: its tab, brought into view.
+document.getElementById("profile-action-decklist").addEventListener("click", () => {
+  tabChosen = true;
+  selectTab("profile-decklist");
+  document.querySelector(".profile-tabs").scrollIntoView({
+    behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+    block: "start",
+  });
+});
 
 // Live preview: every change in edit mode redraws the card from the form.
 profileForm.addEventListener("change", () => renderCard(formValues()));
-descriptionEl.addEventListener("input", updateCounter);
+
+// The description stays on one line: Enter adds no line break, and a pasted
+// text's breaks become spaces (the database refuses them too). The
+// textarea's own maxlength keeps it to DESCRIPTION_MAX.
+descriptionEl.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") e.preventDefault();
+});
+descriptionEl.addEventListener("input", () => {
+  if (/[\r\n]/.test(descriptionEl.value)) {
+    const caret = descriptionEl.selectionStart;
+    descriptionEl.value = descriptionEl.value.replace(/\s*[\r\n]+\s*/g, " ").slice(0, DESCRIPTION_MAX);
+    descriptionEl.setSelectionRange(caret, caret);
+  }
+  updateCounter();
+});
 
 profileForm.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -578,6 +587,7 @@ async function loadClaim() {
   claim = { linked, pending };
   claimCard.hidden = Boolean(linked);
   statsCard.hidden = !linked;
+  albumCard.hidden = !linked;
   // Shown by loadDecklistCard once linked.
   if (!linked) decklistCard.hidden = true;
   if (linked) return;
@@ -651,24 +661,41 @@ async function loadStats(player) {
   const bucket = { wins: 0, draws: 0, losses: 0 };
   for (const m of asP1) if (!isDrop(m)) tallyOutcome(bucket, matchOutcome(m, true));
   for (const m of asP2) if (!isDrop(m)) tallyOutcome(bucket, matchOutcome(m, false));
-  renderWinrateTiles(statsTilesEl, bucket, { events: entries.length });
 
-  // "Leghe" as one more tile, same look as the others, right before
-  // "Eventi": the leagues (open or closed) the player has played at least
-  // one closed event of. Only when the tiles are there (no matches yet: just
-  // the "not enough data" line).
-  const eventsTile = [...statsTilesEl.querySelectorAll(".stat-tile")].find(
-    (tile) => tile.querySelector(".stat-tile-label")?.textContent === "Eventi"
+  // The hero's numbers: Winrate, Leghe (the leagues, open or closed, with at
+  // least one closed event played), Eventi — the player page's tiles' look
+  // (styles.css .profile-hero .stat-tile), not its whole set (no wins /
+  // draws / losses here). No match played yet: just a line.
+  const played = bucket.wins + bucket.draws + bucket.losses;
+  const rate = winRatePct(bucket.wins, played);
+  const leagueIds = new Set(
+    entries.filter((e) => e.event && !e.event.is_open && e.event.league).map((e) => e.event.league.id)
   );
-  if (eventsTile) {
-    const leagueIds = new Set(
-      entries.filter((e) => e.event && !e.event.is_open && e.event.league).map((e) => e.event.league.id)
-    );
-    eventsTile.insertAdjacentHTML(
-      "beforebegin",
-      `<div class="stat-tile"><div class="stat-tile-label">Leghe</div><div class="stat-tile-value">${leagueIds.size}</div></div>`
-    );
-  }
+  const tile = (label, value) =>
+    `<div class="stat-tile"><div class="stat-tile-label">${label}</div><div class="stat-tile-value">${value}</div></div>`;
+  statsTilesEl.innerHTML =
+    rate === null
+      ? '<p class="page-empty">Non ci sono ancora dati sufficienti.</p>'
+      : tile("Winrate", `${rate}%`) + tile("Leghe", leagueIds.size) + tile("Eventi", entries.length);
+
+  // Album comandanti: player.html's carousel, from the same entries and
+  // matches — the frame of each card from its events, its foil from the
+  // matches won with it, counted like player.html (a drop skipped, a bye a
+  // win).
+  const carousel = renderCommanderCarousel(albumEl, albumItems(entries));
+  const pairByEvent = new Map(
+    entries.filter((e) => e.commander).map((e) => [e.event_id, commanderPairKey(e.commander, e.partner_commander)])
+  );
+  const records = new Map();
+  const tallyPair = (m, isPlayer1) => {
+    const key = pairByEvent.get(m.event_id);
+    if (!key || isDrop(m)) return;
+    if (!records.has(key)) records.set(key, { wins: 0, draws: 0, losses: 0 });
+    tallyOutcome(records.get(key), matchOutcome(m, isPlayer1));
+  };
+  for (const m of asP1) tallyPair(m, true);
+  for (const m of asP2) tallyPair(m, false);
+  carousel.setRecords(records);
 
   // The player card's "Dal …": the year of the player's first event.
   const firstDate = entries.reduce((min, e) => {
@@ -743,32 +770,20 @@ const decklistActions = document.getElementById("decklist-actions");
 const decklistMessageEl = document.getElementById("decklist-message");
 const decklistSentBox = document.getElementById("decklist-sent");
 const decklistSentList = document.getElementById("decklist-sent-list");
-const decklistToggle = document.getElementById("decklist-toggle");
 const decklistBody = document.getElementById("decklist-body");
 const decklistBodyClip = document.getElementById("decklist-body-clip");
 
-// The header opens / closes the rest — closed at first. Same grid-rows
-// collapse as Leghe & Eventi's cards; once fully open the clip lifts, so the
-// event list's dropdown isn't cut off at the card's edge (CLAUDE.md gotcha
-// #13), and drops again before closing, so the content still clips away.
-function setDecklistOpen(open) {
-  decklistCard.classList.toggle("is-collapsed", !open);
-  decklistToggle.setAttribute("aria-expanded", String(open));
-  decklistBody.inert = !open;
-  if (!open) {
-    decklistBodyClip.classList.remove("is-open");
-  } else if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    // No transition plays, so its transitionend below never fires.
-    decklistBodyClip.classList.add("is-open");
-  }
+// "Invia la tua decklist" and Account, each in its own tab, are always
+// open: their old collapsible header is hidden (styles.css .profile-panel),
+// the body lets go of its inert and its clip — so the event list's dropdown
+// isn't cut off at the card's edge (CLAUDE.md gotcha #13).
+for (const [body, clip] of [
+  [decklistBody, decklistBodyClip],
+  [document.getElementById("account-body"), document.getElementById("account-body-clip")],
+]) {
+  body.inert = false;
+  clip.classList.add("is-open");
 }
-
-decklistToggle.addEventListener("click", () => setDecklistOpen(decklistCard.classList.contains("is-collapsed")));
-decklistBody.addEventListener("transitionend", (e) => {
-  if (e.target === decklistBody && e.propertyName === "grid-template-rows" && !decklistCard.classList.contains("is-collapsed")) {
-    decklistBodyClip.classList.add("is-open");
-  }
-});
 
 // The send-decklist function's error codes.
 const DECKLIST_ERROR_TEXT = {
@@ -833,7 +848,6 @@ function recordDecklistSend(ev, count) {
 
 async function loadDecklistCard(player, entries) {
   decklistCard.hidden = false;
-  setDecklistOpen(false);
   closeDecklistConfirm();
   setMessage(decklistMessageEl, "");
   let upcoming;
@@ -1284,6 +1298,7 @@ async function loadSignedIn(sessionUser) {
   setEditing(false, { animate: false });
   accountDangerEl.hidden = true;
   decklistCard.hidden = true;
+  albumCard.hidden = true;
   followsCard.hidden = true;
   setMessage(accountMessageEl, "");
   try {

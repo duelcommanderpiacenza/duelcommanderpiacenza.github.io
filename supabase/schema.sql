@@ -662,8 +662,9 @@ grant execute on function admin_delete_user(uuid) to authenticated;
 
 create table profiles (
   user_id uuid primary key references auth.users(id) on delete cascade,
-  -- 140 since supabase/migrations/006_short_description_delete_account.sql.
-  description text check (char_length(description) <= 140),
+  -- One line, at most 50 characters, since supabase/migrations/012_description_one_line.sql
+  -- (140 since 006, 500 before).
+  description text check (char_length(description) <= 50 and description !~ '[\r\n]'),
   -- Favourite colors as a WUBRG-ordered string ('' = none, 'UB', 'WUBRG'…);
   -- the check allows only that order, each color at most once.
   fav_colors text not null default '' check (fav_colors ~ '^W?U?B?R?G?$'),

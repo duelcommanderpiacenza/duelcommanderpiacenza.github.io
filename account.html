@@ -74,7 +74,8 @@
 </nav>
 
 <main class="page-main">
-  <div class="page-heading"><h1>Profilo</h1></div>
+  <!-- No visible title (the hero is the header); kept for screen readers. -->
+  <h1 class="visually-hidden">Profilo</h1>
 
   <div class="page-loading-region">
     <div id="page-loading-overlay" class="page-loading-overlay"><p>Caricamento...</p></div>
@@ -105,10 +106,172 @@
       <p class="form-message" data-message></p>
     </section>
 
-    <!-- Connesso: "Il tuo giocatore" (until linked) on top, then the player
-         card | stats + account -->
 
+    <!-- Connesso: a hero on top — the player card (+ its switch) on the
+         blurred art of the favourite commander, the name, "Dal …", the
+         numbers once linked, quick actions — then "Il tuo giocatore" (until
+         linked), then the sections one at a time behind tabs: Album
+         comandanti, Seguiti, Decklist, Account (a pill bar on desktop, a
+         full-width segmented control on phones). js/account-page.js. -->
     <div class="profile" data-view="signed-in" hidden>
+      <section class="profile-hero" id="profile-hero">
+        <div class="profile-hero-art" id="profile-hero-art" aria-hidden="true"></div>
+        <div class="profile-hero-inner">
+          <div class="profile-card-col">
+            <article class="player-card" id="player-card">
+              <div class="pc-frame">
+                <div class="pc-surface">
+                  <div class="pc-art" id="pc-art" aria-hidden="true"></div>
+                  <!-- The linked player's badges, top-left (js/player-card.js). -->
+                  <div class="pc-badges" id="pc-badges"></div>
+                  <!-- Edit mode keeps this exact layout: each value's
+                       .pc-edit-only twin takes its place (a list, toggles, a
+                       text area), the ✎ outside the card becomes ✓. -->
+                  <form class="pc-content" id="profile-form">
+                    <!-- The upper part of the card is left to the commander art. -->
+                    <div class="pc-art-space" aria-hidden="true"></div>
+
+                    <!-- Nameplate: avatar (the Google picture, unless hidden)
+                         and name, on the art just above the panel. -->
+                    <div class="pc-nameplate">
+                      <div class="pc-avatar">
+                        <img id="profile-avatar" alt="" referrerpolicy="no-referrer" hidden>
+                        <span id="profile-initial" aria-hidden="true"></span>
+                      </div>
+                      <div class="pc-nameplate-text">
+                        <h2 class="pc-name" id="profile-name"></h2>
+                        <label class="pc-avatar-toggle pc-edit-only" id="profile-show-avatar-wrap">
+                          <input type="checkbox" id="profile-show-avatar">
+                          Mostra foto
+                        </label>
+                      </div>
+                    </div>
+
+                    <div class="pc-panel">
+
+                      <!-- Edit mode only: the favourite commander shows as the
+                           card's background art, this picks it. -->
+                      <div class="pc-field pc-edit-only">
+                        <p class="pc-label">Commander preferito (sfondo)</p>
+                        <div class="pc-select">
+                          <select id="profile-commander" data-searchable aria-label="Commander preferito"></select>
+                        </div>
+                      </div>
+
+                      <div class="pc-field-row">
+                        <div class="pc-field">
+                          <p class="pc-label">Archetipo preferito</p>
+                          <p class="pc-value pc-view-only" id="pc-archetype"></p>
+                          <div class="pc-select pc-edit-only">
+                            <select id="profile-archetype" aria-label="Archetipo preferito">
+                              <option value="">&mdash; nessuno &mdash;</option>
+                              <option value="aggro">Aggro</option>
+                              <option value="control">Control</option>
+                              <option value="combo">Combo</option>
+                              <option value="tempo">Tempo</option>
+                              <option value="midrange">Midrange</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div class="pc-field">
+                          <p class="pc-label">Colori preferiti</p>
+                          <p class="pc-value pc-view-only" id="pc-colors"></p>
+                          <div class="pc-colors-edit pc-edit-only" role="group" aria-label="Colori preferiti">
+                            <label class="pc-mana color-pip-W" title="Bianco"><input type="checkbox" name="profile-color" value="W" aria-label="Bianco"></label>
+                            <label class="pc-mana color-pip-U" title="Blu"><input type="checkbox" name="profile-color" value="U" aria-label="Blu"></label>
+                            <label class="pc-mana color-pip-B" title="Nero"><input type="checkbox" name="profile-color" value="B" aria-label="Nero"></label>
+                            <label class="pc-mana color-pip-R" title="Rosso"><input type="checkbox" name="profile-color" value="R" aria-label="Rosso"></label>
+                            <label class="pc-mana color-pip-G" title="Verde"><input type="checkbox" name="profile-color" value="G" aria-label="Verde"></label>
+                          </div>
+                        </div>
+                      </div>
+
+                      <p class="pc-description pc-view-only" id="profile-bio"></p>
+                      <div class="pc-description-edit pc-edit-only">
+                        <textarea id="profile-description" rows="2" maxlength="50" aria-label="Descrizione" placeholder="Raccontaci qualcosa di te come giocatore&hellip;"></textarea>
+                        <span class="pc-counter" id="profile-counter">0/50</span>
+                      </div>
+
+                      <!-- The owner's profiles elsewhere (js/player-card.js): icons
+                           when set; in edit mode a username or that site's own
+                           profile link each. -->
+                      <div class="pc-links pc-view-only" id="pc-links"></div>
+                      <div class="pc-links-edit pc-edit-only">
+                        <p class="pc-label">Link</p>
+                        <label class="pc-link-field">
+                          <span class="pc-link pc-link-instagram" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="0.6" fill="currentColor"></circle></svg></span>
+                          <input type="text" id="profile-instagram" maxlength="200" autocomplete="off" spellcheck="false" aria-label="Instagram" placeholder="Instagram: nome utente o link">
+                        </label>
+                        <label class="pc-link-field">
+                          <span class="pc-link pc-link-moxfield" aria-hidden="true"><img src="moxfield.png" alt=""></span>
+                          <input type="text" id="profile-moxfield" maxlength="200" autocomplete="off" spellcheck="false" aria-label="Moxfield" placeholder="Moxfield: nome utente o link">
+                        </label>
+                        <label class="pc-link-field">
+                          <span class="pc-link pc-link-archidekt" aria-hidden="true"><span class="pc-link-letter">A</span></span>
+                          <input type="text" id="profile-archidekt" maxlength="200" autocomplete="off" spellcheck="false" aria-label="Archidekt" placeholder="Archidekt: nome utente o link">
+                        </label>
+                      </div>
+
+                      <!-- In edit mode, at the bottom of the panel, once linked:
+                           whether the card shows on the player page too (saved
+                           right away, apart from ✓). Available once the card
+                           has been saved at least once. -->
+                      <label class="profile-switch pc-public-switch pc-edit-only" id="profile-public-wrap" hidden>
+                        <span class="profile-switch-text">
+                          <span class="profile-switch-label" id="profile-public-label">Mostra nella pagina giocatore</span>
+                          <span class="profile-switch-hint" id="profile-public-hint"></span>
+                        </span>
+                        <input type="checkbox" role="switch" id="profile-public">
+                        <span class="profile-switch-track" aria-hidden="true"></span>
+                      </label>
+                    </div>
+
+                    <div class="pc-foot">
+                      <span class="pc-since" id="pc-since"></span>
+                      <img src="dc_pc.png" alt="" class="pc-logo">
+                    </div>
+                  </form>
+                </div>
+              </div>
+              <!-- "?" on the top-left corner: how the card's effects are earned
+                   (js/card-cosmetics.js openCardEffectsInfo) — once linked. -->
+              <button type="button" class="pc-help-btn profile-action-linked" id="card-effects-help" aria-haspopup="dialog" aria-label="La carta giocatore e i suoi effetti" title="Carta giocatore">?</button>
+              <!-- ✎ enters edit mode; in edit mode it's ✓ (save), with ✕ (cancel) beside it. -->
+              <button type="button" class="pc-cancel-btn" id="profile-edit-cancel" aria-label="Annulla le modifiche" title="Annulla" hidden>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="M6 6l12 12"></path></svg>
+              </button>
+              <button type="button" class="pc-edit-btn" id="profile-edit-toggle" aria-label="Modifica la tua carta" title="Modifica la tua carta">
+                <svg class="pc-icon-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                <svg class="pc-icon-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+              </button>
+            </article>
+            <p class="form-message" data-message></p>
+
+          </div>
+
+          <div class="profile-hero-text">
+            <!-- Above the card on narrow screens (styles.css). -->
+            <div class="profile-hero-heading">
+              <p class="profile-hero-kicker">Il tuo profilo</p>
+              <h2 class="profile-hero-name" id="profile-hero-name"></h2>
+              <p class="profile-hero-since" id="profile-hero-since"></p>
+            </div>
+
+            <!-- The numbers: once linked (js/account-page.js loadStats). -->
+            <div class="profile-hero-stats" id="profile-stats" hidden>
+              <div class="profile-stats-tiles" id="profile-stats-tiles"></div>
+            </div>
+
+            <!-- Quick actions; each only when it applies (styles.css): the
+                 decklist one with its section, the player ones once linked. -->
+            <div class="profile-hero-actions">
+              <button type="button" class="btn-primary" id="profile-action-decklist">Invia la tua decklist</button>
+              <a class="btn-secondary profile-action-linked" id="profile-stats-link" href="players.html">Pagina giocatore</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Il tuo giocatore: at the top, inviting the account to claim its
            player — only until it's linked (then "Le tue statistiche" shows
            the player). One [data-claim] block at a time. -->
@@ -136,257 +299,148 @@
         <p class="form-message" data-claim-message></p>
       </section>
 
-      <div class="profile-layout">
-        <!-- The player card: Magic-card proportions, the favourite commander's
-             art as background, a glowing border in the favourite colours.
-             ✎ edits it in place (the .pc-edit-only parts). -->
-        <div class="profile-card-col">
-          <article class="player-card" id="player-card">
-            <div class="pc-frame">
-              <div class="pc-surface">
-                <div class="pc-art" id="pc-art" aria-hidden="true"></div>
-                <!-- The linked player's badges, top-left (js/player-card.js). -->
-                <div class="pc-badges" id="pc-badges"></div>
-                <!-- Edit mode keeps this exact layout: each value's
-                     .pc-edit-only twin takes its place (a list, toggles, a
-                     text area), the ✎ outside the card becomes ✓. -->
-                <form class="pc-content" id="profile-form">
-                  <!-- The upper part of the card is left to the commander art. -->
-                  <div class="pc-art-space" aria-hidden="true"></div>
+      <!-- One section at a time; a tab only for a section that's shown. -->
+      <nav class="profile-tabs" role="tablist" aria-label="Sezioni del profilo">
+        <button type="button" class="profile-tab" role="tab" data-tab="profile-album"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="11" height="16" rx="2"></rect><path d="M17 6.5l3 .8a1.5 1.5 0 0 1 1 1.8l-2.9 10.7a1.5 1.5 0 0 1-1.8 1"></path></svg><span>Album</span></button>
+        <button type="button" class="profile-tab" role="tab" data-tab="profile-follows"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7Z"></path></svg><span>Seguiti</span></button>
+        <button type="button" class="profile-tab" role="tab" data-tab="profile-decklist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="3" width="13" height="17" rx="2"></rect><path d="M4 7v12a2 2 0 0 0 2 2h9"></path><path d="M11 8h5M11 12h5M11 16h3"></path></svg><span>Decklist</span></button>
+        <button type="button" class="profile-tab" role="tab" data-tab="profile-account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"></path></svg><span>Account</span></button>
+      </nav>
 
-                  <!-- Nameplate: avatar (the Google picture, unless hidden)
-                       and name, on the art just above the panel. -->
-                  <div class="pc-nameplate">
-                    <div class="pc-avatar">
-                      <img id="profile-avatar" alt="" referrerpolicy="no-referrer" hidden>
-                      <span id="profile-initial" aria-hidden="true"></span>
-                    </div>
-                    <div class="pc-nameplate-text">
-                      <h2 class="pc-name" id="profile-name"></h2>
-                      <label class="pc-avatar-toggle pc-edit-only" id="profile-show-avatar-wrap">
-                        <input type="checkbox" id="profile-show-avatar">
-                        Mostra foto
-                      </label>
+      <div class="profile-panels">
+        <!-- Album comandanti: the linked player's commanders as player.html's
+             card carousel (js/commander-carousel.js), with the same special
+             effects and "?" — full width, the commander's stats beside it on
+             desktop. Only once linked. -->
+        <section class="card profile-card profile-album profile-panel" id="profile-album" hidden>
+          <h3>Album comandanti</h3>
+          <div id="profile-album-carousel"></div>
+        </section>
+
+        <!-- Seguiti: the players and commanders this account follows (the ★
+             button on their pages), one sub-card each with its numbers, ★ to
+             unfollow. Any signed-in account. js/account-page.js. -->
+        <section class="card profile-card profile-follows profile-panel" id="profile-follows" hidden>
+          <h3>Seguiti</h3>
+          <p class="page-empty follows-empty" id="follows-empty" hidden>Non segui ancora nessuno: usa &#9734; Segui nelle pagine dei giocatori e dei comandanti.</p>
+          <ul class="follows-list" id="follows-list"></ul>
+        </section>
+
+        <!-- Invia la tua decklist: once linked — for an
+             upcoming event or a closed one the player is
+             in, emailed to the organisers by the send-decklist Edge
+             Function, never stored (only *that* it was sent: one per
+             event). js/account-page.js. -->
+        <section class="card profile-card profile-decklist profile-panel" id="profile-decklist" hidden>
+          <h3 class="profile-panel-title">Invia la tua decklist</h3>
+          <p class="profile-panel-subtitle">Per i prossimi 2 eventi o gli ultimi 2 che hai giocato</p>
+          <!-- In its tab the section is always open: this header (the
+               collapsible one it had) is hidden, the title above shows. -->
+          <button type="button" class="decklist-toggle" id="decklist-toggle" aria-expanded="false" aria-controls="decklist-body">
+            <span class="decklist-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="3" width="13" height="17" rx="2"></rect><path d="M4 7v12a2 2 0 0 0 2 2h9"></path><path d="M11 8h5M11 12h5M11 16h3"></path></svg>
+            </span>
+            <span class="decklist-toggle-text">
+              <span class="decklist-title">Invia la tua decklist</span>
+              <span class="decklist-subtitle">Per i prossimi 2 eventi o gli ultimi 2 che hai giocato</span>
+            </span>
+            <span class="league-group-toggle-icon" aria-hidden="true"></span>
+          </button>
+
+          <div class="decklist-body" id="decklist-body" inert>
+            <div class="decklist-body-clip" id="decklist-body-clip">
+              <div class="decklist-body-inner">
+                <p class="account-hint decklist-hint">La lista arriva agli organizzatori via email e non viene salvata sul sito. Puoi inviarne al massimo due per evento: la seconda sostituisce la prima.</p>
+                <p class="page-empty decklist-none" id="decklist-none" hidden></p>
+
+                <form class="decklist-form" id="decklist-form" novalidate hidden>
+                  <div class="field">
+                    <label for="decklist-event">Evento</label>
+                    <select id="decklist-event" data-searchable></select>
+                  </div>
+                  <div class="field">
+                    <label for="decklist-text">Decklist</label>
+                    <div class="decklist-text-wrap">
+                      <textarea id="decklist-text" rows="9" maxlength="10000" spellcheck="false" autocomplete="off" placeholder="Incolla la lista oppure un link (Moxfield, Archidekt, …)"></textarea>
+                      <span class="decklist-meter" id="decklist-meter" aria-live="polite"></span>
                     </div>
                   </div>
 
-                  <div class="pc-panel">
-
-                    <!-- Edit mode only: the favourite commander shows as the
-                         card's background art, this picks it. -->
-                    <div class="pc-field pc-edit-only">
-                      <p class="pc-label">Commander preferito (sfondo)</p>
-                      <div class="pc-select">
-                        <select id="profile-commander" data-searchable aria-label="Commander preferito"></select>
-                      </div>
-                    </div>
-
-                    <div class="pc-field-row">
-                      <div class="pc-field">
-                        <p class="pc-label">Archetipo preferito</p>
-                        <p class="pc-value pc-view-only" id="pc-archetype"></p>
-                        <div class="pc-select pc-edit-only">
-                          <select id="profile-archetype" aria-label="Archetipo preferito">
-                            <option value="">&mdash; nessuno &mdash;</option>
-                            <option value="aggro">Aggro</option>
-                            <option value="control">Control</option>
-                            <option value="combo">Combo</option>
-                            <option value="tempo">Tempo</option>
-                            <option value="midrange">Midrange</option>
-                          </select>
+                  <!-- The warning before sending: slides open in place of the button. -->
+                  <div class="decklist-confirm" id="decklist-confirm" inert>
+                    <div class="decklist-confirm-clip">
+                      <div class="decklist-confirm-box">
+                        <p id="decklist-confirm-text"></p>
+                        <div class="form-actions">
+                          <button type="button" class="btn-secondary" id="decklist-confirm-cancel">Annulla</button>
+                          <button type="button" class="btn-primary" id="decklist-confirm-send">Conferma e invia</button>
                         </div>
                       </div>
-                      <div class="pc-field">
-                        <p class="pc-label">Colori preferiti</p>
-                        <p class="pc-value pc-view-only" id="pc-colors"></p>
-                        <div class="pc-colors-edit pc-edit-only" role="group" aria-label="Colori preferiti">
-                          <label class="pc-mana color-pip-W" title="Bianco"><input type="checkbox" name="profile-color" value="W" aria-label="Bianco"></label>
-                          <label class="pc-mana color-pip-U" title="Blu"><input type="checkbox" name="profile-color" value="U" aria-label="Blu"></label>
-                          <label class="pc-mana color-pip-B" title="Nero"><input type="checkbox" name="profile-color" value="B" aria-label="Nero"></label>
-                          <label class="pc-mana color-pip-R" title="Rosso"><input type="checkbox" name="profile-color" value="R" aria-label="Rosso"></label>
-                          <label class="pc-mana color-pip-G" title="Verde"><input type="checkbox" name="profile-color" value="G" aria-label="Verde"></label>
-                        </div>
-                      </div>
-                    </div>
-
-                    <p class="pc-description pc-view-only" id="profile-bio"></p>
-                    <div class="pc-description-edit pc-edit-only">
-                      <textarea id="profile-description" rows="3" maxlength="140" aria-label="Descrizione" placeholder="Raccontaci qualcosa di te come giocatore&hellip;"></textarea>
-                      <span class="pc-counter" id="profile-counter">0/140</span>
-                    </div>
-
-                    <!-- The owner's profiles elsewhere (js/player-card.js): icons
-                         when set; in edit mode a username or that site's own
-                         profile link each. -->
-                    <div class="pc-links pc-view-only" id="pc-links"></div>
-                    <div class="pc-links-edit pc-edit-only">
-                      <p class="pc-label">Link</p>
-                      <label class="pc-link-field">
-                        <span class="pc-link pc-link-instagram" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="0.6" fill="currentColor"></circle></svg></span>
-                        <input type="text" id="profile-instagram" maxlength="200" autocomplete="off" spellcheck="false" aria-label="Instagram" placeholder="Instagram: nome utente o link">
-                      </label>
-                      <label class="pc-link-field">
-                        <span class="pc-link pc-link-moxfield" aria-hidden="true"><img src="moxfield.png" alt=""></span>
-                        <input type="text" id="profile-moxfield" maxlength="200" autocomplete="off" spellcheck="false" aria-label="Moxfield" placeholder="Moxfield: nome utente o link">
-                      </label>
-                      <label class="pc-link-field">
-                        <span class="pc-link pc-link-archidekt" aria-hidden="true"><span class="pc-link-letter">A</span></span>
-                        <input type="text" id="profile-archidekt" maxlength="200" autocomplete="off" spellcheck="false" aria-label="Archidekt" placeholder="Archidekt: nome utente o link">
-                      </label>
                     </div>
                   </div>
 
-                  <div class="pc-foot">
-                    <span class="pc-since" id="pc-since"></span>
-                    <img src="dc_pc.png" alt="" class="pc-logo">
+                  <div class="form-actions decklist-actions" id="decklist-actions">
+                    <button type="submit" class="btn-primary decklist-submit" id="decklist-submit">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"></path><path d="M22 2 15 22l-4-9-9-4Z"></path></svg>
+                      Invia decklist
+                    </button>
                   </div>
                 </form>
-              </div>
-            </div>
-            <!-- ✎ enters edit mode; in edit mode it's ✓ (save), with ✕ (cancel) beside it. -->
-            <button type="button" class="pc-cancel-btn" id="profile-edit-cancel" aria-label="Annulla le modifiche" title="Annulla" hidden>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="M6 6l12 12"></path></svg>
-            </button>
-            <button type="button" class="pc-edit-btn" id="profile-edit-toggle" aria-label="Modifica la tua carta" title="Modifica la tua carta">
-              <svg class="pc-icon-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
-              <svg class="pc-icon-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
-            </button>
-          </article>
-          <p class="form-message" data-message></p>
+                <p class="form-message" id="decklist-message"></p>
 
-          <!-- Under the card, once linked: whether it shows on the player
-               page too (saved right away). Available once the card has been
-               saved at least once. -->
-          <label class="card profile-switch" id="profile-public-wrap" hidden>
-            <span class="profile-switch-text">
-              <span class="profile-switch-label" id="profile-public-label">Mostra nella pagina giocatore</span>
-              <span class="profile-switch-hint" id="profile-public-hint"></span>
-            </span>
-            <input type="checkbox" role="switch" id="profile-public">
-            <span class="profile-switch-track" aria-hidden="true"></span>
-          </label>
-        </div>
-
-        <!-- Right of the card on desktop, under it on phones -->
-        <div class="profile-side">
-          <!-- Le tue statistiche: only once the account is linked to a player -->
-          <section class="card profile-card" id="profile-stats" hidden>
-            <div class="profile-card-heading">
-              <!-- The "?": how the card's effects are earned from these
-                   numbers (js/account-page.js, the shared pop-up). -->
-              <div class="profile-card-title-group">
-                <h3>Le tue statistiche</h3>
-                <button type="button" class="help-toggle-btn" id="card-effects-help" aria-haspopup="dialog" aria-label="Come si ottengono gli effetti della carta">?</button>
-              </div>
-              <a class="btn-secondary" id="profile-stats-link" href="players.html">Pagina giocatore &rarr;</a>
-            </div>
-            <div class="stat-grid profile-stats-tiles" id="profile-stats-tiles"></div>
-          </section>
-
-          <!-- Invia la tua decklist: once linked, between the stats and
-               Account — for an upcoming event or a closed one the player is
-               in, emailed to the organisers by the send-decklist Edge
-               Function, never stored (only *that* it was sent: one per
-               event). js/account-page.js. -->
-          <section class="card profile-card profile-decklist is-collapsed" id="profile-decklist" hidden>
-            <!-- The header opens / closes the rest (closed at first). -->
-            <button type="button" class="decklist-toggle" id="decklist-toggle" aria-expanded="false" aria-controls="decklist-body">
-              <span class="decklist-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="3" width="13" height="17" rx="2"></rect><path d="M4 7v12a2 2 0 0 0 2 2h9"></path><path d="M11 8h5M11 12h5M11 16h3"></path></svg>
-              </span>
-              <span class="decklist-toggle-text">
-                <span class="decklist-title">Invia la tua decklist</span>
-                <span class="decklist-subtitle">Per i prossimi 2 eventi o gli ultimi 2 che hai giocato</span>
-              </span>
-              <span class="league-group-toggle-icon" aria-hidden="true"></span>
-            </button>
-
-            <div class="decklist-body" id="decklist-body" inert>
-              <div class="decklist-body-clip" id="decklist-body-clip">
-                <div class="decklist-body-inner">
-                  <p class="account-hint decklist-hint">La lista arriva agli organizzatori via email e non viene salvata sul sito. Puoi inviarne al massimo due per evento: la seconda sostituisce la prima.</p>
-                  <p class="page-empty decklist-none" id="decklist-none" hidden></p>
-
-                  <form class="decklist-form" id="decklist-form" novalidate hidden>
-                    <div class="field">
-                      <label for="decklist-event">Evento</label>
-                      <select id="decklist-event" data-searchable></select>
-                    </div>
-                    <div class="field">
-                      <label for="decklist-text">Decklist</label>
-                      <div class="decklist-text-wrap">
-                        <textarea id="decklist-text" rows="9" maxlength="10000" spellcheck="false" autocomplete="off" placeholder="Incolla la lista oppure un link (Moxfield, Archidekt, …)"></textarea>
-                        <span class="decklist-meter" id="decklist-meter" aria-live="polite"></span>
-                      </div>
-                    </div>
-
-                    <!-- The warning before sending: slides open in place of the button. -->
-                    <div class="decklist-confirm" id="decklist-confirm" inert>
-                      <div class="decklist-confirm-clip">
-                        <div class="decklist-confirm-box">
-                          <p id="decklist-confirm-text"></p>
-                          <div class="form-actions">
-                            <button type="button" class="btn-secondary" id="decklist-confirm-cancel">Annulla</button>
-                            <button type="button" class="btn-primary" id="decklist-confirm-send">Conferma e invia</button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="form-actions decklist-actions" id="decklist-actions">
-                      <button type="submit" class="btn-primary decklist-submit" id="decklist-submit">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"></path><path d="M22 2 15 22l-4-9-9-4Z"></path></svg>
-                        Invia decklist
-                      </button>
-                    </div>
-                  </form>
-                  <p class="form-message" id="decklist-message"></p>
-
-                  <!-- The last 3 events this player sent a list for. -->
-                  <div class="decklist-sent" id="decklist-sent" hidden>
-                    <p class="decklist-sent-title">Ultime inviate</p>
-                    <ul class="decklist-sent-list" id="decklist-sent-list"></ul>
-                  </div>
+                <!-- The last 3 events this player sent a list for. -->
+                <div class="decklist-sent" id="decklist-sent" hidden>
+                  <p class="decklist-sent-title">Ultime inviate</p>
+                  <ul class="decklist-sent-list" id="decklist-sent-list"></ul>
                 </div>
               </div>
             </div>
-          </section>
+          </div>
+        </section>
 
-          <!-- Seguiti: the players and commanders this account follows (the ★
-               button on their pages) with each one's latest result, and ✕ to
-               unfollow. Any signed-in account. js/account-page.js. -->
-          <section class="card profile-card profile-follows" id="profile-follows" hidden>
-            <h3>Seguiti</h3>
-            <p class="page-empty follows-empty" id="follows-empty" hidden>Non segui ancora nessuno: usa &#9734; Segui nelle pagine dei giocatori e dei comandanti.</p>
-            <ul class="follows-list" id="follows-list"></ul>
-          </section>
+        <!-- Account: the Google login and signing out, deleting the
+             account (not offered to admin accounts). Its old collapsible
+             header is hidden in the tab (always open there). -->
+        <section class="card profile-card profile-account profile-panel" id="profile-account">
+          <h3 class="profile-panel-title">Account</h3>
+          <button type="button" class="decklist-toggle" id="account-toggle" aria-expanded="false" aria-controls="account-body">
+            <span class="decklist-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"></path></svg>
+            </span>
+            <span class="decklist-toggle-text">
+              <span class="decklist-title">Account</span>
+              <span class="decklist-subtitle" id="account-email-summary"></span>
+            </span>
+            <span class="league-group-toggle-icon" aria-hidden="true"></span>
+          </button>
 
-          <!-- Account: the Google login, signing out, and deleting the
-               account (not offered to admin accounts). -->
-          <section class="card profile-card profile-account" id="profile-account">
-            <h3>Account</h3>
-            <div class="account-login-row">
-              <span class="account-provider" aria-hidden="true">
-                <svg viewBox="0 0 48 48"><path fill="#ffc107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#ff3d00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4caf50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.5-4.5 2.4-7.2 2.4-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976d2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
-              </span>
-              <div class="account-login-text">
-                <span class="account-login-label">Connesso con Google</span>
-                <strong id="account-email"></strong>
+          <div class="decklist-body" id="account-body" inert>
+            <div class="decklist-body-clip" id="account-body-clip">
+              <div class="decklist-body-inner">
+                <div class="account-login-row">
+                  <span class="account-provider" aria-hidden="true">
+                    <svg viewBox="0 0 48 48"><path fill="#ffc107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#ff3d00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4caf50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.5-4.5 2.4-7.2 2.4-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976d2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
+                  </span>
+                  <div class="account-login-text">
+                    <span class="account-login-label">Connesso con Google</span>
+                    <strong id="account-email"></strong>
+                  </div>
+                  <button type="button" class="btn-secondary" id="account-logout">Esci</button>
+                </div>
+
+                <div class="account-danger" id="account-danger" hidden>
+                  <div class="account-danger-text">
+                    <p class="account-danger-title">Elimina account</p>
+                    <p>Cancella il tuo account e la tua carta. Il tuo giocatore e i suoi risultati restano; potrai sempre accedere di nuovo con Google.</p>
+                  </div>
+                  <button type="button" class="btn-danger" id="account-delete">Elimina account</button>
+                </div>
+
+                <p class="form-message" id="account-message"></p>
               </div>
-              <button type="button" class="btn-secondary" id="account-logout">Esci</button>
             </div>
-
-            <div class="account-danger" id="account-danger" hidden>
-              <div class="account-danger-text">
-                <p class="account-danger-title">Elimina account</p>
-                <p>Cancella il tuo account e la tua carta. Il tuo giocatore e i suoi risultati restano; potrai sempre accedere di nuovo con Google.</p>
-              </div>
-              <button type="button" class="btn-danger" id="account-delete">Elimina account</button>
-            </div>
-
-            <p class="form-message" id="account-message"></p>
-          </section>
-        </div>
+          </div>
+        </section>
       </div>
     </div>
   </div>
