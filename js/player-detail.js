@@ -68,7 +68,8 @@ function matchGroupsByEvent(rows, positionByEvent) {
     if (!groups.has(key)) {
       groups.set(key, {
         event: r.event,
-        subline: r.myCommander ? commanderPairLabel(r.myCommander, r.myPartner) : "",
+        // Unlinked: the whole sub-card links to the event.
+        subline: r.myCommander ? commanderPairLabel(r.myCommander, r.myPartner, { link: false }) : "",
         position: positionByEvent.get(r.event?.id),
         rounds: [],
       });

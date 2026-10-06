@@ -60,33 +60,38 @@ export function isHttpUrl(url) {
   return typeof url === "string" && /^https?:\/\//i.test(url);
 }
 
-export function playerLabel(player) {
+// These name helpers link to the player's / commander's page; `{ link:
+// false }` gives the same text unlinked — inside a list sub-card that is a
+// link itself (js/history-list.js), where a link can't hold another.
+export function playerLabel(player, { link = true } = {}) {
   if (!player) return "—";
   const name = escapeHtml(player.name);
-  const linked = player.id ? `<a href="player.html?id=${player.id}">${name}</a>` : name;
+  const linked = link && player.id ? `<a href="player.html?id=${player.id}">${name}</a>` : name;
   return player.handle ? `${linked} <span class="player-handle">(${escapeHtml(player.handle)})</span>` : linked;
 }
 
-export function commanderLabel(commander) {
+export function commanderLabel(commander, { link = true } = {}) {
   if (!commander) return "—";
   const name = escapeHtml(commander.name);
-  return commander.id ? `<a href="commander.html?id=${commander.id}">${name}</a>` : name;
+  return link && commander.id ? `<a href="commander.html?id=${commander.id}">${name}</a>` : name;
 }
 
 // An entry's commander, shown as "Commander / Partner" when a partner
 // (background) commander was recorded alongside the primary one.
-export function commanderPairLabel(commander, partner) {
+export function commanderPairLabel(commander, partner, options) {
   if (!commander) return "—";
-  return partner ? `${commanderLabel(commander)} / ${commanderLabel(partner)}` : commanderLabel(commander);
+  return partner
+    ? `${commanderLabel(commander, options)} / ${commanderLabel(partner, options)}`
+    : commanderLabel(commander, options);
 }
 
 // commanderPairLabel followed by the deck's color identity pips (commander's
 // + partner's merged) — for table cells, in place of a separate "Identità
 // di colore" column.
-export function commanderPairWithColors(commander, partner) {
+export function commanderPairWithColors(commander, partner, options) {
   if (!commander) return "—";
   const colors = `${commander.color_identity ?? ""}${partner?.color_identity ?? ""}`;
-  return `${commanderPairLabel(commander, partner)}<span class="color-identity-inline">${colorIdentityPips(colors)}</span>`;
+  return `${commanderPairLabel(commander, partner, options)}<span class="color-identity-inline">${colorIdentityPips(colors)}</span>`;
 }
 
 // A player's badges without repeats (and without empty slots): an automatic

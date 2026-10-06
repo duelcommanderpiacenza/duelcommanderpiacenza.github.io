@@ -8,20 +8,20 @@ import { initFilterToggle } from "./filter-toggle.js";
 import { historyPanelHtml, historyStatsHtml } from "./history-list.js";
 import { initBackToTop } from "./back-to-top.js";
 
-// One sub-card per player (js/history-list.js): name + badges, the numbers
-// on the right.
+// One sub-card per player (js/history-list.js), the whole card a link to
+// the player's page: name + badges, the numbers on the right.
 function renderRow(r) {
   return `
-    <article class="history-item history-ranked">
+    <a class="history-item history-ranked" href="player.html?id=${r.id}">
       <div class="history-main">
-        <span class="history-title"><a href="player.html?id=${r.id}">${r.nameHtml}</a>${r.badgesHtml}</span>
+        <span class="history-title"><span class="history-name">${r.nameHtml}</span>${r.badgesHtml}</span>
       </div>
       ${historyStatsHtml([
         { label: "Eventi", value: r.eventsPlayed },
         { label: "V-S-P", value: `${r.wins}-${r.losses}-${r.draws}` },
         { label: "Winrate", value: r.rate, main: true },
       ])}
-    </article>`;
+    </a>`;
 }
 
 // Entries + matches of every event in scope, batched (js/db.js) rather than

@@ -370,23 +370,23 @@ async function init() {
       const current = lastPlayedByPlayer.get(r.self.id);
       if (!current || r.event.event_date > current) lastPlayedByPlayer.set(r.self.id, r.event.event_date);
     }
-    // Giocatori: one sub-card per pilot — name and last match, events played
-    // on the right.
+    // Giocatori: one sub-card per pilot, the whole card a link to the
+    // player's page — name and last match, events played on the right.
     playersEl.innerHTML = playerList.length
       ? historyPanelHtml(
           playerList
             .map(
               (p) => `
-      <article class="history-item history-player">
+      <a class="history-item history-player" href="player.html?id=${p.id}">
         <div class="history-main">
-          <span class="history-title">${playerLabel(p)}</span>
+          <span class="history-title"><span class="history-name">${playerLabel(p, { link: false })}</span></span>
           <span class="history-meta">Ultima partita: ${formatDate(lastPlayedByPlayer.get(p.id))}</span>
         </div>
         <div class="history-stat">
           <span class="history-stat-value">${timesPlayedByPlayer.get(p.id) ?? 0}</span>
           <span class="history-stat-label">Volte giocato</span>
         </div>
-      </article>`
+      </a>`
             )
             .join("")
         )
@@ -428,7 +428,8 @@ async function init() {
       if (!matchGroups.has(key)) {
         matchGroups.set(key, {
           event: r.event,
-          subline: playerLabel(r.self),
+          // Unlinked: the whole sub-card links to the event.
+          subline: playerLabel(r.self, { link: false }),
           position: positionByEventPlayer.get(key),
           rounds: [],
         });

@@ -137,17 +137,20 @@ async function init() {
     if (filtered.length === 0) {
       return `<p class="page-empty">${anyFilterActive ? "Nessun comandante corrisponde ai filtri." : "Nessun comandante ha ancora dati registrati."}</p>`;
     }
-    // One sub-card per deck (js/history-list.js): name with its colours, the
-    // numbers on the right.
+    // One sub-card per deck (js/history-list.js), the whole card a link to
+    // the (primary) commander's page: name with its colours, the numbers on
+    // the right.
     const sorter = SORTERS[sortSelect.value] ?? SORTERS.played;
     const rows = [...filtered].sort((a, b) => sorter(a, b) || a.name.localeCompare(b.name));
     return historyPanelHtml(
       rows
         .map(
           (r) => `
-      <article class="history-item history-ranked">
+      <a class="history-item history-ranked" href="commander.html?id=${r.commander.id}">
         <div class="history-main">
-          <span class="history-title">${commanderPairWithColors(r.commander, r.partner)}${r.isBanned ? bannedBadge() : ""}</span>
+          <span class="history-title">${commanderPairWithColors(r.commander, r.partner, { link: false })}${
+            r.isBanned ? bannedBadge() : ""
+          }</span>
         </div>
         ${historyStatsHtml([
           { label: "Giocato", value: r.entries },
@@ -155,7 +158,7 @@ async function init() {
           { label: "V-S-P", value: `${r.wins}-${r.losses}-${r.draws}` },
           { label: "Winrate", value: r.winRate === null ? "—" : `${r.winRate.toFixed(1)}%`, main: true },
         ])}
-      </article>`
+      </a>`
         )
         .join(""),
       { animate, scroll: false }

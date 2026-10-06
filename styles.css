@@ -5096,12 +5096,31 @@ a.btn-secondary:hover {
   transition: color 150ms ease;
 }
 
-a.history-title:hover,
-.history-title a:hover,
-.history-item .history-deck a:hover,
-.history-opp-name a:hover {
-  color: var(--brand-red-deep);
+/* A sub-card that is a link as a whole (to the event / player / commander
+   page; the names inside it are plain text, js/ui.js `{ link: false }`):
+   no underline, its title turning red on hover, a focus ring drawn inside
+   (the scrolling list would clip one outside). No font-weight change for
+   "Tu" (a.is-me): only the pill and the tint. */
+a.history-item {
+  color: inherit;
   text-decoration: none;
+}
+
+a.history-item:hover {
+  text-decoration: none;
+}
+
+a.history-item:hover .history-title {
+  color: var(--brand-red-deep);
+}
+
+a.history-item:focus-visible {
+  outline: 2px solid var(--brand-red);
+  outline-offset: -2px;
+}
+
+a.history-item.is-me {
+  font-weight: inherit;
 }
 
 .history-meta {
@@ -7315,8 +7334,9 @@ html.nav-mobile .pc-cancel-btn svg {
 }
 
 /* One sub-card per followed player / commander (.history-item, like the
-   Comandanti / Giocatori pages' lists): name + the last event's line |
-   the numbers (js/history-list.js historyStatsHtml, filled in after) | ★.
+   Comandanti / Giocatori pages' lists), the whole card a link to its page:
+   name + the last event's line | the numbers (js/history-list.js
+   historyStatsHtml, filled in after); the ★ (unfollow) over its right edge.
    The card is a size container: narrower than 560px (phones, or a narrow
    side column) the numbers go on their own row below, sharing its width. */
 .profile-follows {
@@ -7353,15 +7373,23 @@ html.nav-mobile .pc-cancel-btn svg {
   letter-spacing: 0;
 }
 
+/* The list item holds the card (the link) and, over its right edge, the ★
+   button — beside the link in the markup, a link can't hold a button. The
+   card keeps that edge clear for it (padding-right). */
 .follow-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  grid-template-areas: "main stats remove";
-  align-items: center;
-  gap: 8px 14px;
+  position: relative;
 }
 
-.follow-row > .history-main {
+.follow-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "main stats";
+  align-items: center;
+  gap: 8px 14px;
+  padding-right: calc(14px + 40px + 14px);
+}
+
+.follow-card > .history-main {
   grid-area: main;
 }
 
@@ -7369,20 +7397,16 @@ html.nav-mobile .pc-cancel-btn svg {
   grid-area: stats;
 }
 
-.follow-remove {
-  grid-area: remove;
-}
-
 .follow-meta:empty {
   display: none;
 }
 
 @container (max-width: 560px) {
-  .follow-row {
-    grid-template-columns: minmax(0, 1fr) auto;
+  .follow-card {
+    grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
-      "main remove"
-      "stats stats";
+      "main"
+      "stats";
   }
 
   .follow-stats:not(:empty) {
@@ -7392,6 +7416,13 @@ html.nav-mobile .pc-cancel-btn svg {
 
   .follow-stats .history-stats {
     grid-template-columns: repeat(var(--stat-count), minmax(0, 1fr));
+  }
+
+  /* Beside the name, on the card's first row. Two classes: the base
+     .follow-remove rule comes later in this file. */
+  .follow-row .follow-remove {
+    top: 10px;
+    margin-top: 0;
   }
 }
 
@@ -7406,7 +7437,7 @@ html.nav-mobile .pc-cancel-btn svg {
   white-space: nowrap;
 }
 
-.follow-name:hover {
+a.history-item:hover .follow-name {
   color: var(--brand-red-deep);
 }
 
@@ -7433,30 +7464,48 @@ html.nav-mobile .pc-cancel-btn svg {
 }
 
 /* Unfollow: the filled red star (following), hollow on hover — the same
-   star as the button on their pages. */
+   star as the button on their pages — in a white circle with a red ring, a
+   finger-sized target over the card's right edge, vertically centred (on
+   the first row when the numbers wrap below). */
 .follow-remove {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  margin-top: -20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  width: 34px;
-  height: 34px;
-  border: 0;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 2px solid rgba(220, 24, 28, 0.55);
   border-radius: 50%;
-  background: transparent;
+  background: #fff;
   color: var(--brand-red);
   cursor: pointer;
-  transition: background 150ms ease, transform 150ms ease;
+  transition: background 150ms ease, border-color 150ms ease, transform 150ms ease;
 }
 
 .follow-remove:hover {
-  background: rgba(220, 24, 28, 0.08);
-  transform: scale(1.08);
+  background: #fbe3e3;
+  border-color: var(--brand-red);
+  transform: scale(1.06);
 }
 
 .follow-remove:focus-visible {
   outline: 3px solid rgba(220, 24, 28, 0.45);
   outline-offset: 1px;
+}
+
+:root[data-theme="dark"] .follow-remove {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 110, 110, 0.55);
+  color: #ff6a6e;
+}
+
+:root[data-theme="dark"] .follow-remove:hover {
+  background: rgba(255, 110, 110, 0.16);
+  border-color: #ff6a6e;
 }
 
 .follow-remove-star::before {

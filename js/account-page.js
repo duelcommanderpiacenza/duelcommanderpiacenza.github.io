@@ -1025,11 +1025,14 @@ decklistConfirmSend.addEventListener("click", async () => {
 // The players and commanders this account follows (★ on their pages,
 // js/follow-button.js), newest follow first, in two groups (each only when
 // it has someone, with its count). One sub-card each, like the Comandanti /
-// Giocatori pages' lists (js/history-list.js): the name linked to its page
-// (a player's badges after it), a small line with the last event, the
-// numbers on the right (below on phones), and a filled ★ to unfollow
-// (hollow on hover — the same star as on their pages). Any signed-in
-// account — following needs no linked player.
+// Giocatori pages' lists (js/history-list.js), the whole card a link to the
+// player's / commander's page: the name (a player's badges after it), a
+// small line with the last event, the numbers on the right (below on
+// phones). The only part that doesn't lead there: a filled ★ in a circle to
+// unfollow (hollow on hover — the same star as on their pages), beside the
+// link rather than inside it (a link can't hold a button), placed over the
+// card's right edge. Any signed-in account — following needs no linked
+// player.
 const followsCard = document.getElementById("profile-follows");
 const followsListEl = document.getElementById("follows-list");
 const followsEmptyEl = document.getElementById("follows-empty");
@@ -1037,14 +1040,16 @@ const followsEmptyEl = document.getElementById("follows-empty");
 function followRowHtml(kind, target) {
   const href = kind === "player" ? `player.html?id=${target.id}` : `commander.html?id=${target.id}`;
   const name = kind === "player" ? playerLabel(target) : target.name;
-  return `<li class="history-item follow-row" data-kind="${kind}" data-id="${target.id}">
-    <div class="history-main">
-      <span class="follow-title">
-        <a class="follow-name" href="${href}">${escapeHtml(name)}</a>${kind === "player" ? '<span class="follow-badges"></span>' : ""}
-      </span>
-      <span class="history-deck follow-meta"></span>
-    </div>
-    <div class="follow-stats"></div>
+  return `<li class="follow-row" data-kind="${kind}" data-id="${target.id}">
+    <a class="history-item follow-card" href="${href}">
+      <div class="history-main">
+        <span class="follow-title">
+          <span class="follow-name">${escapeHtml(name)}</span>${kind === "player" ? '<span class="follow-badges"></span>' : ""}
+        </span>
+        <span class="history-deck follow-meta"></span>
+      </div>
+      <div class="follow-stats"></div>
+    </a>
     <button type="button" class="follow-remove" aria-label="Non seguire più ${escapeHtml(name)}" title="Non seguire più">
       <span class="follow-remove-star" aria-hidden="true"></span>
     </button>

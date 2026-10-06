@@ -102,11 +102,11 @@ export function setHistoryCount(id, count) {
   document.getElementById(id).textContent = count ? String(count) : "";
 }
 
-// An event's linked title and, on a small muted line below, its league (no
-// date: the list's order already says when; an unnamed event's title is its
-// date anyway).
+// An event's title and, on a small muted line below, its league (no date:
+// the list's order already says when; an unnamed event's title is its date
+// anyway). Plain text: the whole sub-card is the link to the event.
 function historyEventHeadHtml(event) {
-  return `<a class="history-title" href="event.html?id=${event.id}">${escapeHtml(eventTitle(event))}</a>${
+  return `<span class="history-title">${escapeHtml(eventTitle(event))}</span>${
     event.league ? `<span class="history-meta">${escapeHtml(event.league.name)}</span>` : ""
   }`;
 }
@@ -119,11 +119,13 @@ function historyPosHtml(position) {
 }
 
 const OUTCOME_LABEL = { win: "Vittoria", loss: "Sconfitta", draw: "Pareggio" };
+const NO_LINK = { link: false };
 
 // One row per round: opponent (+ their deck), then the game score coloured
 // by the outcome (a bye: "Bye" as a win; a drop: "Drop", neutral). `r`:
 // { round, opponent, oppCommander, oppPartner, isBye, isDrop, outcome
-// ("win"|"loss"|"draw"), scoreLabel }.
+// ("win"|"loss"|"draw"), scoreLabel }. Names unlinked, like the rest of the
+// sub-card.
 function matchRoundHtml(r) {
   const [cls, score, label] = r.isBye
     ? ["is-win", "Bye", "Bye"]
@@ -134,8 +136,8 @@ function matchRoundHtml(r) {
     ? '<span class="history-muted">Nessun avversario</span>'
     : r.isDrop
       ? '<span class="history-muted">Ritirato</span>'
-      : `<span class="history-opp-name">${playerLabel(r.opponent)}</span>${
-          r.oppCommander ? `<span class="history-deck">${commanderPairLabel(r.oppCommander, r.oppPartner)}</span>` : ""
+      : `<span class="history-opp-name">${playerLabel(r.opponent, NO_LINK)}</span>${
+          r.oppCommander ? `<span class="history-deck">${commanderPairLabel(r.oppCommander, r.oppPartner, NO_LINK)}</span>` : ""
         }`;
   return `
         <li class="history-round">
@@ -145,18 +147,22 @@ function matchRoundHtml(r) {
         </li>`;
 }
 
-// The matches as one sub-card per group, in the order given: on top the
-// event, a second line (`subline`: markup — the deck played, or the pilot)
-// and the final position; the rounds in order below. `groups`: [{ event,
-// subline, position, rounds }].
+// The matches as one sub-card per group, in the order given — each one link
+// to its event's page (styles.css a.history-item): on top the event, a
+// second line (`subline`: markup without links — the deck played, or the
+// pilot) and the final position; the rounds in order below. `groups`:
+// [{ event, subline, position, rounds }].
 export function matchGroupsHtml(groups) {
   if (!groups.length) return '<p class="page-empty">Nessuna partita registrata.</p>';
   return historyPanelHtml(
     groups
       .map((g) => {
         const rounds = [...g.rounds].sort((a, b) => (a.round ?? 0) - (b.round ?? 0));
+        const [open, close] = g.event
+          ? [`<a class="history-item history-match-event" href="event.html?id=${g.event.id}">`, "</a>"]
+          : ['<article class="history-item history-match-event">', "</article>"];
         return `
-      <article class="history-item history-match-event">
+      ${open}
         <div class="history-match-head">
           <div class="history-main">
             ${g.event ? historyEventHeadHtml(g.event) : '<span class="history-title">—</span>'}
@@ -165,7 +171,7 @@ export function matchGroupsHtml(groups) {
           ${historyPosHtml(g.position)}
         </div>
         <ol class="history-rounds">${rounds.map(matchRoundHtml).join("")}</ol>
-      </article>`;
+      ${close}`;
       })
       .join("")
   );

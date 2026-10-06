@@ -32,9 +32,15 @@ function markLinks(root, playerId) {
   for (const link of root.querySelectorAll(`a[href="player.html?id=${playerId}"]`)) {
     if (link.classList.contains("is-me") || link.closest(SKIP)) continue;
     link.classList.add("is-me");
+    // A list sub-card that is itself the link (js/history-list.js): the pill
+    // inside it, after the name, and the whole card tinted.
+    if (link.matches(".history-item")) {
+      link.querySelector(".history-name")?.insertAdjacentHTML("afterend", ' <span class="me-pill">Tu</span>');
+      link.classList.add("is-me-row");
+      continue;
+    }
     if (!link.matches(NO_PILL)) link.insertAdjacentHTML("afterend", ' <span class="me-pill">Tu</span>');
-    // A table row, or a ranked list's sub-card (Giocatori, js/history-list.js).
-    link.closest("tr, .history-ranked")?.classList.add("is-me-row");
+    link.closest("tr")?.classList.add("is-me-row");
   }
 }
 
