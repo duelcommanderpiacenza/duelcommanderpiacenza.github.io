@@ -168,17 +168,15 @@ export function cardLinksHtml(links) {
 // outside edit mode. `card` is db.js's PlayerCards.get() row, `name` the
 // player's name, `since` the year of their first event (or null), `badges`
 // the player's badges (cardBadgesHtml). The
-// avatar: the Google picture when shown; hidden by the owner → no circle at
-// all; no Google picture → the initial. No description → no description
-// line (account.html's "premi ✎" invitation is for the owner only).
+// avatar: the Google picture when shown; otherwise (hidden by the owner, or
+// no Google picture) no circle at all, leaving the name the room. No
+// description → no description line (account.html's "premi ✎" invitation
+// is for the owner only).
 // Returns the card element.
 export function renderPublicPlayerCard(containerEl, card, { name, since, badges = [] }) {
-  let avatar = "";
-  if (card.avatar_url) {
-    avatar = `<div class="pc-avatar"><img src="${escapeHtml(card.avatar_url)}" alt="" referrerpolicy="no-referrer"></div>`;
-  } else if (!card.has_picture) {
-    avatar = `<div class="pc-avatar"><span aria-hidden="true">${escapeHtml((name.trim()[0] ?? "?").toUpperCase())}</span></div>`;
-  }
+  const avatar = card.avatar_url
+    ? `<div class="pc-avatar"><img src="${escapeHtml(card.avatar_url)}" alt="" referrerpolicy="no-referrer"></div>`
+    : "";
   const description = card.description?.trim();
   containerEl.innerHTML = `<article class="player-card" aria-label="La carta di ${escapeHtml(name)}">
     <div class="pc-frame">

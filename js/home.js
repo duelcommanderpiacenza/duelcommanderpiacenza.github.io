@@ -54,31 +54,37 @@ async function loadLeagueCard(league) {
 // LEAGUE_PREVIEW_COUNT, points only); a Topdeck series has neither.
 function renderLeagueCard({ league, summary, standings }, badgesFor) {
   const href = `league.html?id=${league.id}`;
-  // A compact ranked list in the dashboard's own row style (red separators,
-  // like the event rows) rather than a cut-down copy of league.html's table.
+  // Compact sub-cards like league.html's Classifica (js/history-list.js's
+  // look), each a link to the player: position chip, name + badges, points.
+  // The name is plain text inside (a link can't hold another);
+  // .history-name is where js/me-highlight.js puts "Tu".
   const ranking = !standings
     ? ""
     : standings.length === 0
       ? '<p class="page-empty">Nessun dato per la classifica.</p>'
-      : `<div class="dashboard-standings">
-          <div class="dashboard-standings-head" aria-hidden="true">
-            <span>#</span><span>Giocatore</span><span>Punti</span>
-          </div>
-          <ol class="dashboard-standings-list">
+      : `<ol class="dashboard-standings">
             ${standings
-              .map(
-                (s, i) => `
-            <li class="dashboard-standings-row">
-              <span class="dashboard-standings-rank">${i + 1}</span>
-              <span class="dashboard-standings-name">
-                <span class="dashboard-standings-name-text">${playerLabel(s.player)}</span><span class="dashboard-standings-badges">${badgesFor(s.player)}</span>
-              </span>
-              <span class="dashboard-standings-points">${s.points}</span>
-            </li>`
-              )
+              .map((s, i) => {
+                const inner = `
+                <div class="history-lead">
+                  <span class="history-pos${i === 0 ? " is-first" : ""}">${i + 1}°</span>
+                  <span class="dashboard-standings-name">
+                    <span class="dashboard-standings-name-text history-name">${playerLabel(s.player, { link: false })}</span><span class="dashboard-standings-badges">${badgesFor(s.player)}</span>
+                  </span>
+                </div>
+                <div class="dashboard-standings-points">
+                  <span class="history-stat-value">${s.points}</span>
+                  <span class="history-stat-label">Punti</span>
+                </div>`;
+                return `
+            <li>${
+              s.player?.id
+                ? `<a class="history-item history-split dashboard-standing" href="player.html?id=${s.player.id}">${inner}</a>`
+                : `<div class="history-item history-split dashboard-standing">${inner}</div>`
+            }</li>`;
+              })
               .join("")}
-          </ol>
-        </div>`;
+          </ol>`;
   return `
     <div class="dashboard-league-card">
       <div class="dashboard-league-card-head">

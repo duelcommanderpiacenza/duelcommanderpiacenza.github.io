@@ -1690,37 +1690,79 @@ html.nav-mobile .upcoming-row > .results-links {
   margin-left: 0;
 }
 
-/* "Leghe in corso" inside the accent card: the per-league blocks drop their
-   own bordered box and read as rows, split by the same red separators as
-   the upcoming/latest event rows. */
+/* "Leghe in corso" inside the accent card: one sub-card per league / Topdeck
+   series, like the entries of the site's lists (.history-item's look) —
+   its name, counts, "Lista completa" and its top-8 preview, whose own
+   player cards sit lighter inside it. A click anywhere on it opens
+   league.html: it can't be one <a> (it holds links), so the name's link is
+   stretched over the whole card (::after, inset 0) and the player cards and
+   the button are lifted above that layer, keeping their own links. */
 .dashboard-card-leagues .dashboard-league-list {
-  gap: 0;
+  gap: 10px;
 }
 
 .dashboard-card-leagues .dashboard-league-card {
-  border: none;
-  border-radius: 0;
-  background: none;
-  padding: 12px 0;
-}
-
-/* Between leagues: a stronger, spaced-out rule than the standings rows'
-   own hairline separators, so a second league reads as a new block rather
-   than more rows of the first one's ranking. */
-.dashboard-card-leagues .dashboard-league-card + .dashboard-league-card {
-  margin-top: 10px;
-  padding-top: 22px;
-  border-top: 2px solid rgba(220, 24, 28, 0.3);
+  position: relative;
+  border: 1px solid var(--table-row-line);
+  border-radius: 14px;
+  background: rgba(220, 24, 28, 0.025);
+  padding: 14px;
+  transition: background 150ms ease, border-color 150ms ease;
 }
 
 .dashboard-card-leagues .dashboard-league-card-name {
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   line-height: 1.25;
+  transition: color 150ms ease;
 }
 
+.dashboard-card-leagues .dashboard-league-card-name::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+/* Its link covers the whole card: no underline whenever the card is hovered. */
+.dashboard-card-leagues .dashboard-league-card-name:hover {
+  text-decoration: none;
+}
+
+.dashboard-card-leagues .dashboard-league-card-name:focus-visible {
+  outline: none;
+}
+
+.dashboard-card-leagues .dashboard-league-card:has(.dashboard-league-card-name:focus-visible) {
+  outline: 2px solid var(--brand-red);
+  outline-offset: -2px;
+}
+
+.dashboard-card-leagues .dashboard-standing,
+.dashboard-card-leagues .dashboard-league-card-head > .btn-secondary {
+  position: relative;
+  z-index: 1;
+}
+
+/* Hovering the card itself (not a player card or the button in it): the
+   list entries' hover look, and the name turns red. */
 .dashboard-card-leagues .dashboard-league-card:hover {
   transform: none;
   box-shadow: none;
+  border-color: var(--table-row-line);
+}
+
+.dashboard-card-leagues .dashboard-league-card:hover:not(:has(.dashboard-standing:hover, .btn-secondary:hover)) {
+  background: rgba(220, 24, 28, 0.05);
+  border-color: var(--hairline);
+}
+
+.dashboard-card-leagues .dashboard-league-card:hover:not(:has(.dashboard-standing:hover, .btn-secondary:hover)) .dashboard-league-card-name {
+  color: var(--brand-red-deep);
+  text-decoration: none;
+}
+
+.dashboard-card-leagues .dashboard-standing {
+  background: rgba(255, 255, 255, 0.75);
 }
 
 /* "Lista completa" (js/home.js): the negative block margins keep the 40px
@@ -1732,66 +1774,32 @@ html.nav-mobile .upcoming-row > .results-links {
   margin-block: -8px;
 }
 
-/* The open league's standings preview (js/home.js): a ranked list in the
-   dashboard's own row style. Header and rows share one fixed column
-   template so the numbers line up; the name column truncates first. */
+/* The open league's standings preview (js/home.js): the top 8 as compact
+   sub-cards like league.html's Classifica (.history-item, each a link to
+   the player) — position chip, name + badges, points on the right. */
 .dashboard-standings {
-  margin-top: 12px;
-}
-
-.dashboard-standings-head,
-.dashboard-standings-row {
-  display: grid;
-  grid-template-columns: 28px minmax(0, 1fr) 56px;
-  align-items: center;
-  gap: 12px;
-}
-
-.dashboard-standings-head {
-  padding-bottom: 6px;
-  border-bottom: 1px solid rgba(220, 24, 28, 0.14);
-  color: var(--text-muted);
-  font-size: 0.7rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.dashboard-standings-head > span:first-child {
-  text-align: center;
-}
-
-.dashboard-standings-head > span:nth-child(3),
-.dashboard-standings-points {
-  text-align: right;
-}
-
-.dashboard-standings-list {
-  list-style: none;
-  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 12px 0 0;
   padding: 0;
+  list-style: none;
 }
 
-.dashboard-standings-row {
-  padding: 8px 0;
+/* Two classes: .history-item's own padding comes later in this file. */
+.dashboard-standings .dashboard-standing {
+  padding: 8px 12px;
+  gap: 10px;
 }
 
-.dashboard-standings-row + .dashboard-standings-row {
-  border-top: 1px solid rgba(220, 24, 28, 0.14);
+.dashboard-standing .history-lead {
+  gap: 10px;
 }
 
-/* Round position badge, the same red tint for every position. */
-.dashboard-standings-rank {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: rgba(220, 24, 28, 0.18);
-  color: var(--brand-red-deep);
-  font-size: 0.82rem;
-  font-weight: 800;
+.dashboard-standing .history-pos {
+  min-width: 30px;
+  height: 30px;
+  font-size: 0.8rem;
 }
 
 /* The name (+ handle) comes first: always shown whole — cut with an
@@ -1802,9 +1810,11 @@ html.nav-mobile .upcoming-row > .results-links {
    half cut off. */
 .dashboard-standings-name {
   display: flex;
+  flex: 1 1 auto;
   align-items: center;
   min-width: 0;
-  font-weight: 700;
+  color: var(--text-title);
+  font-weight: 800;
 }
 
 .dashboard-standings-name-text {
@@ -1813,6 +1823,11 @@ html.nav-mobile .upcoming-row > .results-links {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  transition: color 150ms ease;
+}
+
+a.dashboard-standing:hover .dashboard-standings-name-text {
+  color: var(--brand-red-deep);
 }
 
 .dashboard-standings-badges {
@@ -1826,19 +1841,15 @@ html.nav-mobile .upcoming-row > .results-links {
   overflow: hidden;
 }
 
-.dashboard-standings-name a {
-  color: var(--text-title);
-  text-decoration: none;
-}
-
-.dashboard-standings-name a:hover {
-  text-decoration: underline;
-}
-
 .dashboard-standings-points {
-  color: var(--text-title);
-  font-size: 1.05rem;
-  font-weight: 800;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.15;
+}
+
+.dashboard-standings-points .history-stat-value {
+  color: var(--brand-red-deep);
 }
 
 .dashboard-card-subtitle {
@@ -4602,7 +4613,7 @@ table.data-table td a:hover {
   color: var(--brand-red);
 }
 
-/* Same look as the Bacheca standings preview's .dashboard-standings-rank,
+/* Round red position chip (the old Bacheca standings preview's look),
    one color for every position; min-width + padding only so a 3-digit
    rank would stretch it into a pill instead of overflowing. */
 .rank-chip {
@@ -9711,10 +9722,22 @@ html.nav-mobile .chart-carousel-arrow {
   border-color: rgba(255, 255, 255, 0.06);
 }
 
-/* Same trap: "Leghe in corso"'s league rows are meant to have no box of
-   their own inside the accent card. */
+/* Same trap: "Leghe in corso"'s league sub-cards keep their own faint
+   surface inside the accent card, the player cards in them a step lighter. */
 :root[data-theme="dark"] .dashboard-card-leagues .dashboard-league-card {
-  background: none;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+:root[data-theme="dark"] .dashboard-card-leagues .dashboard-league-card:hover:not(:has(.dashboard-standing:hover, .btn-secondary:hover)) {
+  background: rgba(255, 110, 110, 0.06);
+}
+
+:root[data-theme="dark"] .dashboard-card-leagues .dashboard-standing {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+:root[data-theme="dark"] .dashboard-card-leagues a.dashboard-standing:hover {
+  background: rgba(255, 110, 110, 0.1);
 }
 
 /* badges.html: same faint light-on-dark surface as the other cards, and
@@ -9735,10 +9758,6 @@ html.nav-mobile .chart-carousel-arrow {
 }
 
 :root[data-theme="dark"] .badge-holder:hover {
-  background: rgba(255, 110, 110, 0.2);
-}
-
-:root[data-theme="dark"] .dashboard-standings-rank {
   background: rgba(255, 110, 110, 0.2);
 }
 
