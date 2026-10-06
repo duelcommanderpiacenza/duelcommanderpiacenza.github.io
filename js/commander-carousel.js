@@ -62,16 +62,14 @@ export const ALBUM_EFFECTS = {
   rim: {
     title: "Eventi giocati",
     text: "Il bordo della carta, per gli eventi giocati con quel comandante",
-    // ⚠️ TEMPORARY — LOWERED FOR TESTING, DO NOT COMMIT: real [10, 25, 50, 75].
-    thresholds: [1, 2, 3, 4],
+    thresholds: [10, 25, 50, 75],
     count: (n) => `${n} eventi`,
     tiers: ["Argento", "Foil", "Oro", "Mitica"],
   },
   art: {
     title: "Vittorie",
     text: "Effetti foil, per le partite vinte con quel comandante",
-    // ⚠️ TEMPORARY — LOWERED FOR TESTING, DO NOT COMMIT: real [10, 25, 50, 75].
-    thresholds: [1, 3, 5, 8],
+    thresholds: [10, 25, 50, 75],
     count: (n) => `${n} vittorie`,
     tiers: ["Foil", "Foil inciso", "Olografica", "Olografica con scintille"],
   },
