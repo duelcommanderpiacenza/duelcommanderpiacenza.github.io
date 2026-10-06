@@ -59,7 +59,7 @@ import {
 import { matchRoundOutcome, isDrop, isBye, computeLeaguePoints } from "./leaderboard.js";
 import { tallyOutcome, winRatePct } from "./winrate.js";
 import { applyCardCosmetics, openCardEffectsInfo } from "./card-cosmetics.js";
-import { renderCommanderCarousel, albumItems, commanderPairKey } from "./commander-carousel.js";
+import { renderCommanderCarousel, albumItems, commanderPairKey, openAlbumEffectsInfo } from "./commander-carousel.js";
 import { escapeHtml, colorIdentityPips, uniqueBadges, eventTitle, formatDate } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { fetchPlayerBadgesRenderer } from "./player-badges.js";
@@ -129,6 +129,7 @@ const pendingPlayerEl = document.getElementById("account-pending-player");
 const statsCard = document.getElementById("profile-stats");
 const albumCard = document.getElementById("profile-album");
 const albumEl = document.getElementById("profile-album-carousel");
+document.getElementById("album-help").addEventListener("click", openAlbumEffectsInfo);
 const statsLink = document.getElementById("profile-stats-link");
 const statsTilesEl = document.getElementById("profile-stats-tiles");
 const publicWrapEl = document.getElementById("profile-public-wrap");

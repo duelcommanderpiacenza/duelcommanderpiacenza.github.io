@@ -146,10 +146,11 @@ function applyAlbumFoil(cardEl, wins) {
   );
 }
 
-// The "?" next to "Volte giocato" opens this (js/info-dialog.js's shared
-// pop-up): per family its line and one small live preview per tier (a blank
-// album card dressed by the same code) with what it takes.
-function openFinishInfo() {
+// The "?" beside the "Album comandanti" heading (player.html, account.html,
+// wired by each page) opens this (js/info-dialog.js's shared pop-up): per
+// family its line and one small live preview per tier (a blank album card
+// dressed by the same code) with what it takes.
+export function openAlbumEffectsInfo() {
   const dialog = openInfoDialog({
     id: "card-finish-dialog",
     title: "Carte speciali",
@@ -224,10 +225,7 @@ export function renderCommanderCarousel(el, items) {
       <div class="cmd-carousel-name"></div>
       <div class="cmd-carousel-tiles">
         <div class="stat-tile">
-          <div class="stat-tile-label cmd-carousel-label-help">
-            Volte giocato
-            <button type="button" class="help-toggle-btn cmd-carousel-help-btn" aria-haspopup="dialog" aria-label="Come si ottiene una carta speciale">?</button>
-          </div>
+          <div class="stat-tile-label">Volte giocato</div>
           <div class="stat-tile-value cmd-carousel-stat-value" data-stat="times"></div>
         </div>
         <div class="stat-tile">
@@ -508,7 +506,6 @@ export function renderCommanderCarousel(el, items) {
       return lefts[i] - lefts[0];
     },
   });
-  el.querySelector(".cmd-carousel-help-btn").addEventListener("click", openFinishInfo);
   prevBtn.addEventListener("click", () => go(active - 1));
   nextBtn.addEventListener("click", () => go(active + 1));
   measure();

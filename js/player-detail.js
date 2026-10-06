@@ -15,7 +15,7 @@ import {
 import { hidePageLoading } from "./page-loading.js";
 import { initTitleFit, fitTitleToOneLine, alignBackButtonToTitle } from "./page-title-fit.js";
 import { initFilterToggle } from "./filter-toggle.js";
-import { renderCommanderCarousel, albumItems, commanderPairKey } from "./commander-carousel.js";
+import { renderCommanderCarousel, albumItems, commanderPairKey, openAlbumEffectsInfo } from "./commander-carousel.js";
 import { matchGroupsHtml, initScrollFade, setHistoryCount } from "./history-list.js";
 import { renderPublicPlayerCard } from "./player-card.js";
 import { cardFrameWidth } from "./card-cosmetics.js";
@@ -139,6 +139,7 @@ async function init() {
   const id = getId();
   const titleEl = document.getElementById("player-title");
   const commandersEl = document.getElementById("player-commanders");
+  document.getElementById("album-help").addEventListener("click", openAlbumEffectsInfo);
   const overallEl = document.getElementById("player-winrate-overall");
   const leagueFilter = document.getElementById("player-league-filter");
   const eventFilter = document.getElementById("player-event-filter");

@@ -1711,8 +1711,12 @@ html.nav-mobile .upcoming-row > .results-links {
    league.html: it can't be one <a> (it holds links), so the name's link is
    stretched over the whole card (::after, inset 0) and the player cards and
    the button are lifted above that layer, keeping their own links. */
+/* The league cards reach out past the section's 22px padding to 10px from
+   its border (the "Leghe in corso" title keeps its place), leaving more
+   width to the standings inside them. */
 .dashboard-card-leagues .dashboard-league-list {
   gap: 10px;
+  margin-inline: -12px;
 }
 
 .dashboard-card-leagues .dashboard-league-card {
@@ -1790,19 +1794,22 @@ html.nav-mobile .upcoming-row > .results-links {
 
 /* The open league's standings preview (js/home.js): the top 8 as compact
    sub-cards like league.html's Classifica (.history-item, each a link to
-   the player) — position chip, name + badges, points on the right. */
+   the player) — position chip, name + badges, points on the right. They
+   reach out past the league card's padding to 5px from its border — the
+   name and stats above keep the full 14px — so three nested boxes (section,
+   league, player) don't eat the row's width. */
 .dashboard-standings {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin: 12px 0 0;
+  margin: 12px -9px 0;
   padding: 0;
   list-style: none;
 }
 
 /* Two classes: .history-item's own padding comes later in this file. */
 .dashboard-standings .dashboard-standing {
-  padding: 8px 12px;
+  padding: 8px 10px;
   gap: 10px;
 }
 
@@ -3087,25 +3094,12 @@ body.is-loading .filter-panel.detail-filter-panel {
   min-width: 0;
 }
 
-/* "Volte giocato" + its "?" (opens the foil explanation). A smaller take
-   on the Matchups title's .help-toggle-btn. */
-.cmd-carousel-label-help {
+/* A section heading with its "?" (.help-toggle-btn) right after the text —
+   "Album comandanti" on player.html and account.html. */
+.heading-help {
   display: flex;
   align-items: center;
-  gap: 6px;
-}
-
-.help-toggle-btn.cmd-carousel-help-btn {
-  width: 16px;
-  height: 16px;
-  font-size: 0.62rem;
-  letter-spacing: 0;
-}
-
-html.nav-mobile .help-toggle-btn.cmd-carousel-help-btn {
-  width: 20px;
-  height: 20px;
-  font-size: 0.72rem;
+  gap: 10px;
 }
 
 /* Small explanation pop-up (a <dialog> sharing .ecal-dialog's box). */
