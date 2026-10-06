@@ -3460,15 +3460,23 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   container-type: inline-size;
 }
 
+/* A faint outer edge (an outline drawn over the frame's outer pixel, which
+   follows the corners): on the white page a light frame's near-white parts
+   would otherwise vanish, leaving only its grey ones — which read as a
+   shadow cut off at the corners. */
 .album-card.fx-rim {
   border: var(--rim) solid transparent;
+  outline: 1px solid rgba(40, 44, 50, 0.22);
+  outline-offset: -1px;
 }
 
+/* The player card's silver, here evened out: grey-to-light in short bands
+   all the way round, no side left near-white (see the edge above). */
 .album-card.fx-rim-1 {
   --rim: 4px;
   background:
     linear-gradient(#1d1315, #1d1315) padding-box,
-    linear-gradient(135deg, #f4f6f8, #9aa3ab 35%, #e9edf0 55%, #8a939b 80%, #f4f6f8) border-box;
+    linear-gradient(135deg, #c9d0d6, #8a939b 20%, #eef1f3 40%, #9aa3ab 60%, #e3e7ea 80%, #8a939b) border-box;
 }
 
 .album-card.fx-rim-2 {
