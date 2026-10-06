@@ -3384,9 +3384,11 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   will-change: transform, opacity;
 }
 
+/* Sized to fit the track's padding (14px above, 26px below), which the
+   scroller clips at: 10px above, 26px below. */
 .cmd-carousel-slide.is-active {
   cursor: default;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22);
 }
 
 .cmd-carousel-track:focus-visible .cmd-carousel-slide.is-active {
@@ -3609,25 +3611,31 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
     max-width: calc(var(--cmd-card-w) * 1.7);
   }
 
-  /* Desktop: the current card snapped to the track's left edge — lined up
-     with the page's left margin — the right padding letting the last card
-     reach it too. The mask only fades the right side, from the current
-     card's right edge; a card leaving on the left gets its own moving fade
-     from js (applyDepth). */
+  /* Desktop: the current card snapped to the left — lined up with the
+     page's left margin — the right padding letting the last card reach it
+     too. The track reaches 20px further left than that (negative margin,
+     same padding, snapped past it: scroll-padding), room for the card's
+     shadow, which the scroller clips at its edges like everything in it.
+     The mask only fades the right side, from the current card's right
+     edge; a card leaving on the left gets its own moving fade from js
+     (applyDepth), transparent from the card's slot on — so nothing of it
+     shows in that room. */
   .cmd-carousel-track {
-    -webkit-mask-image: linear-gradient(to right, #000 var(--cmd-card-w), transparent 100%);
-    mask-image: linear-gradient(to right, #000 var(--cmd-card-w), transparent 100%);
-    padding: 14px calc(100% - var(--cmd-card-w)) 26px 0;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(var(--cmd-card-w) + 20px), transparent 100%);
+    mask-image: linear-gradient(to right, #000 calc(var(--cmd-card-w) + 20px), transparent 100%);
+    margin-left: -20px;
+    padding: 14px calc(100% - var(--cmd-card-w)) 26px 20px;
+    scroll-padding-left: 20px;
   }
 
   .cmd-carousel-slide {
     scroll-snap-align: start;
   }
 
-  /* Cast down-right: the card sits flush with the track's left edge,
-     which would clip a shadow spreading left. */
+  /* Cast down-right, sized to fit the track's room: 13px to the left
+     (of 20), 10px above (of 14), 26px below (of 26). */
   .cmd-carousel-slide.is-active {
-    box-shadow: 5px 10px 20px rgba(0, 0, 0, 0.22);
+    box-shadow: 5px 8px 18px rgba(0, 0, 0, 0.22);
   }
 
   /* Drawn inside the card: outside, its left side would be clipped. */
