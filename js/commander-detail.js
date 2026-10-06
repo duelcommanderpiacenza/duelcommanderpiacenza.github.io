@@ -1,20 +1,25 @@
 import { Commanders, EventEntries, Matches } from "./db.js";
-import { matchRoundOutcome, isBye, isDrop } from "./leaderboard.js";
+import { matchRoundOutcome, isBye, isDrop, computeEventLeaderboard } from "./leaderboard.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { tallyOutcome, renderWinrateTiles } from "./winrate.js";
 import { renderLineChart } from "./line-chart.js";
 import {
   escapeHtml,
   playerLabel,
-  commanderPairLabel,
   bannedBadge,
-  eventCellLabel,
   formatDate,
   showError,
-  renderPaginated,
   isoDateYearsAgo,
   DEFAULT_DATE_FROM_YEARS,
 } from "./ui.js";
+import {
+  historyPanelHtml,
+  matchGroupsHtml,
+  initScrollFade,
+  capScrollToItems,
+  capScrollToHeightOf,
+  setHistoryCount,
+} from "./history-list.js";
 import { hidePageLoading } from "./page-loading.js";
 import { fitTitleToOneLine, alignBackButtonToTitle } from "./page-title-fit.js";
 import { initFilterToggle } from "./filter-toggle.js";
@@ -365,22 +370,29 @@ async function init() {
       const current = lastPlayedByPlayer.get(r.self.id);
       if (!current || r.event.event_date > current) lastPlayedByPlayer.set(r.self.id, r.event.event_date);
     }
-    renderPaginated(
-      playersEl,
-      playerList,
-      (visible) =>
-        visible.length === 0
-          ? '<p class="page-empty">Nessun giocatore ha ancora usato questo commander.</p>'
-          : `<div class="data-table-wrap"><table class="data-table">
-      <thead><tr><th>Giocatore</th><th>Volte giocato</th><th>Ultima partita</th></tr></thead>
-      <tbody>${visible
-        .map(
-          (p) =>
-            `<tr><td>${playerLabel(p)}</td><td>${timesPlayedByPlayer.get(p.id) ?? 0}</td><td>${formatDate(lastPlayedByPlayer.get(p.id))}</td></tr>`
+    // Giocatori: one sub-card per pilot — name and last match, events played
+    // on the right.
+    playersEl.innerHTML = playerList.length
+      ? historyPanelHtml(
+          playerList
+            .map(
+              (p) => `
+      <article class="history-item history-player">
+        <div class="history-main">
+          <span class="history-title">${playerLabel(p)}</span>
+          <span class="history-meta">Ultima partita: ${formatDate(lastPlayedByPlayer.get(p.id))}</span>
+        </div>
+        <div class="history-stat">
+          <span class="history-stat-value">${timesPlayedByPlayer.get(p.id) ?? 0}</span>
+          <span class="history-stat-label">Volte giocato</span>
+        </div>
+      </article>`
+            )
+            .join("")
         )
-        .join("")}</tbody>
-    </table></div>`
-    );
+      : '<p class="page-empty">Nessun giocatore ha ancora usato questo commander.</p>';
+    initScrollFade(playersEl);
+    setHistoryCount("commander-players-count", playerList.length);
 
     // A bye has no real opponent/commander matchup to show — computeWinrate
     // below still counts it (via the full, unfiltered `rows`), only the
@@ -398,30 +410,38 @@ async function init() {
         if (nameCompare !== 0) return nameCompare;
         return (a.round ?? 0) - (b.round ?? 0);
       });
-    renderPaginated(
-      matchesEl,
-      matchRows,
-      (visible) =>
-        visible.length === 0
-          ? '<p class="page-empty">Nessuna partita registrata.</p>'
-          : `<div class="data-table-wrap"><table class="data-table">
-            <thead><tr><th>Evento</th><th>Giocatore</th><th>Avversario</th><th>Commander avversario</th><th>Risultato</th></tr></thead>
-            <tbody>
-              ${visible
-                .map(
-                  (r) => `
-                <tr>
-                  <td>${eventCellLabel(r.event)}</td>
-                  <td>${playerLabel(r.self)}</td>
-                  <td>${r.isDrop ? "Drop" : playerLabel(r.opponent)}</td>
-                  <td>${r.isDrop ? "—" : commanderPairLabel(r.oppCommander, r.oppPartner)}</td>
-                  <td>${r.scoreLabel}</td>
-                </tr>`
-                )
-                .join("")}
-            </tbody>
-          </table></div>`
-    );
+    // Storico partite: one sub-card per event + pilot (matchRows' order), with
+    // the pilot and their final position in that event — computed from the
+    // event's entries + matches already loaded above.
+    const positionByEventPlayer = new Map(); // `${event id}_${player id}` -> position
+    for (const eventId of eventIds) {
+      computeEventLeaderboard(
+        matches.filter((m) => m.event_id === eventId),
+        allEntries.filter((e) => e.event_id === eventId)
+      ).forEach((s, i) => {
+        if (s.player) positionByEventPlayer.set(`${eventId}_${s.player.id}`, i + 1);
+      });
+    }
+    const matchGroups = new Map();
+    for (const r of matchRows) {
+      const key = `${r.event?.id ?? ""}_${r.self?.id ?? ""}`;
+      if (!matchGroups.has(key)) {
+        matchGroups.set(key, {
+          event: r.event,
+          subline: playerLabel(r.self),
+          position: positionByEventPlayer.get(key),
+          rounds: [],
+        });
+      }
+      matchGroups.get(key).rounds.push(r);
+    }
+    matchesEl.innerHTML = matchGroupsHtml([...matchGroups.values()]);
+    initScrollFade(matchesEl);
+    // Past 8 matches it scrolls; the Giocatori list beside it keeps its own
+    // height, never taller than this one (scrolling past that).
+    capScrollToItems(matchesEl, ".history-round", 8);
+    capScrollToHeightOf(playersEl, matchesEl);
+    setHistoryCount("commander-matches-count", matchRows.length);
 
     // The league/event scope (initScopeFilter below) and the "Dal" date
     // combine: the date only narrows whatever the scope last reported, so a

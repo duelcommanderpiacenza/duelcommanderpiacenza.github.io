@@ -1429,6 +1429,7 @@ main {
 @media (prefers-reduced-motion: reduce) {
   .card,
   .data-table-wrap,
+  .history-panel,
   .admin-form-card,
   .entity-card,
   .dashboard-league-card,
@@ -3034,9 +3035,8 @@ body.is-loading .filter-panel.detail-filter-panel {
    desktop (from 880px) — the current card lined up with the page's left
    margin, the next ones peeking on the right (turned more steeply), a card
    leaving on the left fading out through a gradient at that edge rather
-   than sliding past it, the carousel at a fixed width on the left and the
-   stats to its right. The per-card looks are js applyDepth, switched at
-   the same width. */
+   than sliding past it. The stats below the cards at every width. The
+   per-card looks are js applyDepth, switched at the same width. */
 .cmd-carousel {
   /* Phones: same size as commander.html's card on mobile
      (.commander-card-face). The tighter gap below keeps a sliver of the
@@ -3525,15 +3525,14 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
        from the title to the stat tiles, so it has no fixed size to copy. */
     --cmd-card-w: 260px;
     --cmd-card-gap: 16px;
-    flex-direction: row;
-    align-items: center;
-    gap: 28px;
   }
 
   /* The current card plus room for the next one's steeply turned peek
-     (js applyDepth) — so the stats sit close to the cards. */
+     (js applyDepth); the stats below it, in the column's whole width
+     (player.html's album sits in half the page, beside Storico partite). */
   .cmd-carousel-main {
-    flex: 0 0 calc(var(--cmd-card-w) * 1.7);
+    width: 100%;
+    max-width: calc(var(--cmd-card-w) * 1.7);
   }
 
   /* Desktop: the current card snapped to the track's left edge — lined up
@@ -3571,13 +3570,6 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
     width: var(--cmd-card-w);
   }
 
-  .cmd-carousel-stats {
-    flex: 1;
-  }
-
-  .cmd-carousel-tiles {
-    max-width: 440px;
-  }
 }
 
 :root[data-theme="dark"] .cmd-carousel-slide.is-loading {
@@ -4955,11 +4947,300 @@ a.btn-secondary:hover {
   border-color: rgba(179, 38, 30, 0.42);
 }
 
-/* "Mostra altri risultati" — sits below a paginated .data-table-wrap
-   (js/ui.js's renderPaginated), not inside its own bordered card. */
-.table-load-more {
-  margin-top: 14px;
-  text-align: center;
+/* Two half-width cards side by side from 880px (the album's own
+   breakpoint), stacked on phones (js/history-list.js): player.html's
+   "Album comandanti" + "Storico partite", commander.html's "Giocatori" +
+   "Storico partite". A list is a card (.history-panel, the .data-table-wrap
+   look) holding sub-cards that scroll inside — no pagination — its
+   top/bottom edge fading while there's more that way
+   (.can-scroll-up/-down); 70vh at most, or capped by js
+   (capScrollToItems: commander.html's matches, at 8 rounds;
+   capScrollToHeightOf: its players, never taller than the matches). A
+   column is as tall as its own list (align-self: start), except on desktop
+   a `.fills-row` one: no height of its own (`contain: size`), so the other
+   column alone sets the row's height and this one stretches to it,
+   scrolling inside — player.html's matches, following the album. */
+.history-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 28px 22px;
+  margin-top: 28px;
+}
+
+.history-col,
+.album-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.history-col > h2,
+.album-col > h2 {
+  margin-top: 0;
+}
+
+.history-col:not(.fills-row) {
+  align-self: start;
+}
+
+.history-col > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+@media (min-width: 880px) {
+  .history-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* A floor for when the album is short (no commanders recorded). */
+  .history-col.fills-row {
+    contain: size;
+    min-height: 320px;
+  }
+
+  .history-col.fills-row .history-panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .history-col.fills-row .history-scroll {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+  }
+}
+
+.history-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 7px;
+  box-sizing: border-box;
+  margin-left: 4px;
+  border-radius: var(--radius-pill);
+  background: rgba(220, 24, 28, 0.12);
+  color: var(--brand-red-deep);
+  font-size: 0.78rem;
+  font-weight: 800;
+  vertical-align: 0.2em;
+}
+
+.history-count:empty {
+  display: none;
+}
+
+.history-panel {
+  flex: 1;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card-sm);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow-card);
+  padding: 8px;
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.history-scroll {
+  --fade-top: 0px;
+  --fade-bottom: 0px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(220, 24, 28, 0.3) transparent;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-top), #000 calc(100% - var(--fade-bottom)), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-top), #000 calc(100% - var(--fade-bottom)), transparent 100%);
+}
+
+.history-scroll.can-scroll-up {
+  --fade-top: 28px;
+}
+
+.history-scroll.can-scroll-down {
+  --fade-bottom: 28px;
+}
+
+.history-item {
+  flex-shrink: 0;
+  border: 1px solid var(--table-row-line);
+  border-radius: 14px;
+  background: rgba(220, 24, 28, 0.025);
+  padding: 12px 14px;
+  font-variant-numeric: tabular-nums;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.history-item:hover {
+  background: rgba(220, 24, 28, 0.05);
+  border-color: var(--hairline);
+}
+
+.history-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.history-title {
+  font-weight: 800;
+  color: var(--text-title);
+  transition: color 150ms ease;
+}
+
+a.history-title:hover,
+.history-title a:hover,
+.history-item .history-deck a:hover,
+.history-opp-name a:hover {
+  color: var(--brand-red-deep);
+  text-decoration: none;
+}
+
+.history-meta {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.history-deck {
+  color: var(--text-muted-2);
+  font-size: 0.88rem;
+}
+
+.history-muted {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* commander.html's Giocatori: name + last match | events played. */
+.history-player {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.history-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.2;
+}
+
+.history-stat-value {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--brand-red-deep);
+}
+
+.history-stat-label {
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* One sub-card per event, its rounds as rows. On top: event + deck on the
+   left, the final position's chip on the right (filled red for 1st). */
+.history-match-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--table-row-line);
+}
+
+.history-pos {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 6px;
+  box-sizing: border-box;
+  border-radius: var(--radius-pill);
+  background: rgba(220, 24, 28, 0.14);
+  color: var(--brand-red-deep);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.history-pos.is-first {
+  background: var(--brand-red);
+  color: #fff;
+}
+
+.history-match-head .history-deck {
+  margin-top: 4px;
+}
+
+.history-rounds {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.history-round {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+}
+
+.history-round + .history-round {
+  border-top: 1px solid var(--table-row-line);
+}
+
+.history-round:last-child {
+  padding-bottom: 0;
+}
+
+.history-round-no {
+  min-width: 22px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.history-opp-name {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.history-round .history-deck {
+  font-size: 0.82rem;
+}
+
+/* The round's score, coloured by its outcome (no separate result icon). */
+.history-score {
+  font-weight: 800;
+  color: var(--text-value);
+}
+
+.history-score.is-win {
+  color: var(--accent-green-2);
+}
+
+.history-score.is-loss {
+  color: var(--brand-red-deep);
+}
+
+.history-score.is-draw,
+.history-score.is-drop {
+  color: var(--text-muted);
 }
 
 /* Compact round Modifica/Elimina buttons for admin list rows — an SVG icon
@@ -9049,6 +9330,7 @@ html.nav-mobile .chart-carousel-arrow {
 :root[data-theme="dark"] .entity-card,
 :root[data-theme="dark"] .league-group,
 :root[data-theme="dark"] .data-table-wrap,
+:root[data-theme="dark"] .history-panel,
 :root[data-theme="dark"] .pie-chart-wrap,
 :root[data-theme="dark"] .deck,
 :root[data-theme="dark"] .video-card,
@@ -9137,6 +9419,33 @@ html.nav-mobile .chart-carousel-arrow {
 
 :root[data-theme="dark"] .rank-chip {
   background: rgba(255, 110, 110, 0.2);
+}
+
+/* player.html's history sub-cards: a faint light-on-dark surface inside the
+   panel's own, the tints brightened like the site's other dark-mode reds. */
+:root[data-theme="dark"] .history-item {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+:root[data-theme="dark"] .history-item:hover {
+  background: rgba(255, 110, 110, 0.06);
+}
+
+:root[data-theme="dark"] .history-pos,
+:root[data-theme="dark"] .history-count {
+  background: rgba(255, 110, 110, 0.2);
+}
+
+:root[data-theme="dark"] .history-pos.is-first {
+  background: var(--brand-red);
+}
+
+:root[data-theme="dark"] .history-score.is-win {
+  color: #5fd394;
+}
+
+:root[data-theme="dark"] .history-scroll {
+  scrollbar-color: rgba(255, 110, 110, 0.3) transparent;
 }
 :root[data-theme="dark"] .rank-cell,
 :root[data-theme="dark"] .stat-tile-value,

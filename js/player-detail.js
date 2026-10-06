@@ -6,12 +6,9 @@ import {
   badgeDiscHtml,
   badgeTooltipAttrs,
   uniqueBadges,
-  playerLabel,
   commanderPairLabel,
-  eventCellLabel,
   eventTitle,
   showError,
-  renderPaginated,
   isoDateYearsAgo,
   DEFAULT_DATE_FROM_YEARS,
 } from "./ui.js";
@@ -19,6 +16,7 @@ import { hidePageLoading } from "./page-loading.js";
 import { initTitleFit, fitTitleToOneLine, alignBackButtonToTitle } from "./page-title-fit.js";
 import { initFilterToggle } from "./filter-toggle.js";
 import { renderCommanderCarousel } from "./commander-carousel.js";
+import { matchGroupsHtml, initScrollFade, setHistoryCount } from "./history-list.js";
 import { renderPublicPlayerCard } from "./player-card.js";
 import { initFollowButton } from "./follow-button.js";
 
@@ -58,6 +56,26 @@ function playerBadgesHtml(badges) {
   return `<span class="badge-group">${badges
     .map((b) => `<span class="icon-badge" ${badgeTooltipAttrs(b)} tabindex="0">${badgeDiscHtml(b)}</span>`)
     .join("")}</span>`;
+}
+
+// Storico partite (js/history-list.js): the matches grouped by event (newest
+// first, as `rows` already are), with the deck played and the final position
+// (`positionByEvent`: event id -> position).
+function matchGroupsByEvent(rows, positionByEvent) {
+  const groups = new Map(); // event id -> group
+  for (const r of rows) {
+    const key = r.event?.id ?? "";
+    if (!groups.has(key)) {
+      groups.set(key, {
+        event: r.event,
+        subline: r.myCommander ? commanderPairLabel(r.myCommander, r.myPartner) : "",
+        position: positionByEvent.get(r.event?.id),
+        rounds: [],
+      });
+    }
+    groups.get(key).rounds.push(r);
+  }
+  return [...groups.values()];
 }
 
 // --- The player's card ---------------------------------------------------------------
@@ -122,7 +140,6 @@ async function init() {
   const id = getId();
   const titleEl = document.getElementById("player-title");
   const commandersEl = document.getElementById("player-commanders");
-  const eventHistoryEl = document.getElementById("player-event-history");
   const overallEl = document.getElementById("player-winrate-overall");
   const leagueFilter = document.getElementById("player-league-filter");
   const eventFilter = document.getElementById("player-event-filter");
@@ -251,8 +268,8 @@ async function init() {
     );
     const carousel = renderCommanderCarousel(commandersEl, commanderList);
 
-    // One row per event this player entered, with their final position in
-    // each. Read from the cached standings (EventStandings, rebuilt by the
+    // The player's final position in each event they entered (Storico
+    // partite's per-event chip). Read from the cached standings (EventStandings, rebuilt by the
     // admin on every event change) — just this player's own few rows.
     // Any event not in the cache yet (table not created on this DB, not
     // yet rebuilt since the event closed, or an open event only a logged-in
@@ -282,46 +299,6 @@ async function init() {
         standingByEvent.set(eventId, { position: index + 1, wins: s.wins, draws: s.draws, losses: s.losses });
       }
     }
-    const eventHistoryRows = entries
-      .filter((e) => e.event)
-      .map((e) => {
-        const standing = standingByEvent.get(e.event_id);
-        return {
-          event: e.event,
-          commander: e.commander,
-          partner: e.partner_commander,
-          position: standing ? standing.position : null,
-          wins: standing?.wins ?? 0,
-          losses: standing?.losses ?? 0,
-          draws: standing?.draws ?? 0,
-        };
-      })
-      .sort((a, b) => (b.event?.event_date ?? "").localeCompare(a.event?.event_date ?? ""));
-
-    renderPaginated(
-      eventHistoryEl,
-      eventHistoryRows,
-      (visible) =>
-        visible.length === 0
-          ? '<p class="page-empty">Nessun evento registrato per questo giocatore.</p>'
-          : `<div class="data-table-wrap"><table class="data-table">
-            <thead><tr><th>Evento</th><th>Commander</th><th>V-S-P</th><th>Posizione</th></tr></thead>
-            <tbody>
-              ${visible
-                .map(
-                  (r) => `
-                <tr>
-                  <td>${eventCellLabel(r.event)}</td>
-                  <td>${commanderPairLabel(r.commander, r.partner)}</td>
-                  <td>${r.wins}-${r.losses}-${r.draws}</td>
-                  <td>${r.position === null ? "—" : `#${r.position}`}</td>
-                </tr>`
-                )
-                .join("")}
-            </tbody>
-          </table></div>`
-    );
-
     const entryByEvent = new Map(entries.map((e) => [e.event_id, e]));
 
     const { asP1, asP2 } = await Matches.listByPlayer(id);
@@ -343,6 +320,7 @@ async function init() {
       const oppEntry = entryByEventPlayer.get(`${m.event_id}_${opponentId}`);
       return {
         event: m.event,
+        round: m.round,
         opponent,
         isBye: isBye(m),
         isDrop: isDrop(m),
@@ -445,30 +423,11 @@ async function init() {
     dateFromFilter.addEventListener("change", applyFilters);
     applyFilters();
 
-    renderPaginated(
-      matchesEl,
-      rows,
-      (visible) =>
-        visible.length === 0
-          ? '<p class="page-empty">Nessuna partita registrata.</p>'
-          : `<div class="data-table-wrap"><table class="data-table">
-            <thead><tr><th>Evento</th><th>Commander</th><th>Avversario</th><th>Commander avversario</th><th>Risultato</th></tr></thead>
-            <tbody>
-              ${visible
-                .map(
-                  (r) => `
-                <tr>
-                  <td>${eventCellLabel(r.event)}</td>
-                  <td>${commanderPairLabel(r.myCommander, r.myPartner)}</td>
-                  <td>${r.isBye ? "Bye" : r.isDrop ? "Drop" : playerLabel(r.opponent)}</td>
-                  <td>${r.isBye || r.isDrop ? "—" : commanderPairLabel(r.oppCommander, r.oppPartner)}</td>
-                  <td>${r.scoreLabel}</td>
-                </tr>`
-                )
-                .join("")}
-            </tbody>
-          </table></div>`
+    matchesEl.innerHTML = matchGroupsHtml(
+      matchGroupsByEvent(rows, new Map([...standingByEvent].map(([eventId, s]) => [eventId, s.position])))
     );
+    initScrollFade(matchesEl);
+    setHistoryCount("player-matches-count", rows.length);
   } catch (err) {
     showError(document.getElementById("player-content"), err);
   } finally {

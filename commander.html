@@ -138,11 +138,20 @@
 
     <div id="commander-decks-chart" class="page-loading" style="margin-top:20px;">Caricamento...</div>
 
-    <h2 style="margin-top:28px;">Giocatori</h2>
-    <div id="commander-players" class="page-loading">Caricamento...</div>
-
-    <h2 style="margin-top:28px;">Storico partite</h2>
-    <div id="commander-matches" class="page-loading">Caricamento...</div>
+    <!-- Desktop: Giocatori left, Storico partite right, each as tall as its
+         list — the matches scrolling past 8 rounds, the players never
+         taller than the matches (scrolling past that); phones: stacked
+         (js/history-list.js, styles.css .history-grid). -->
+    <div class="history-grid">
+      <section class="history-col">
+        <h2>Giocatori <span class="history-count" id="commander-players-count"></span></h2>
+        <div id="commander-players" class="page-loading">Caricamento...</div>
+      </section>
+      <section class="history-col">
+        <h2>Storico partite <span class="history-count" id="commander-matches-count"></span></h2>
+        <div id="commander-matches" class="page-loading">Caricamento...</div>
+      </section>
+    </div>
   </div>
 </main>
 
