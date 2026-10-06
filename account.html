@@ -109,11 +109,39 @@
 
     <!-- Connesso: a hero on top — the player card (+ its switch) on the
          blurred art of the favourite commander, the name, "Dal …", the
-         numbers once linked, quick actions — then "Il tuo giocatore" (until
-         linked), then the sections one at a time behind tabs: Album
+         numbers once linked, quick actions — under "Il tuo giocatore" (on
+         top until linked), then the sections one at a time behind tabs: Album
          comandanti, Seguiti, Decklist, Account (a pill bar on desktop, a
          full-width segmented control on phones). js/account-page.js. -->
     <div class="profile" data-view="signed-in" hidden>
+      <!-- Il tuo giocatore: first on the page, above the hero, inviting the
+           account to claim its player — only until it's linked (then the
+           hero shows the player's numbers). One [data-claim] block at a
+           time. -->
+      <section class="card profile-card profile-claim" id="profile-claim" hidden>
+        <h3>Il tuo giocatore</h3>
+
+        <div data-claim="pending" hidden>
+          <p>Hai chiesto di collegare il tuo account a <strong id="account-pending-player"></strong>: in attesa dell'approvazione di un amministratore.</p>
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" id="account-claim-cancel">Annulla richiesta</button>
+          </div>
+        </div>
+
+        <form id="account-claim-form" data-claim="none" hidden>
+          <p class="account-hint">Sei già nelle classifiche? Scegli il tuo nome: dopo l'approvazione di un amministratore il tuo account sarà collegato al tuo giocatore e ai suoi risultati.</p>
+          <div class="field">
+            <label for="account-claim-player">Giocatore</label>
+            <select id="account-claim-player" data-searchable></select>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Invia richiesta</button>
+          </div>
+        </form>
+
+        <p class="form-message" data-claim-message></p>
+      </section>
+
       <section class="profile-hero" id="profile-hero">
         <div class="profile-hero-art" id="profile-hero-art" aria-hidden="true"></div>
         <div class="profile-hero-inner">
@@ -270,33 +298,6 @@
             </div>
           </div>
         </div>
-      </section>
-
-      <!-- Il tuo giocatore: at the top, inviting the account to claim its
-           player — only until it's linked (then "Le tue statistiche" shows
-           the player). One [data-claim] block at a time. -->
-      <section class="card profile-card profile-claim" id="profile-claim" hidden>
-        <h3>Il tuo giocatore</h3>
-
-        <div data-claim="pending" hidden>
-          <p>Hai chiesto di collegare il tuo account a <strong id="account-pending-player"></strong>: in attesa dell'approvazione di un amministratore.</p>
-          <div class="form-actions">
-            <button type="button" class="btn-secondary" id="account-claim-cancel">Annulla richiesta</button>
-          </div>
-        </div>
-
-        <form id="account-claim-form" data-claim="none" hidden>
-          <p class="account-hint">Sei già nelle classifiche? Scegli il tuo nome: dopo l'approvazione di un amministratore il tuo account sarà collegato al tuo giocatore e ai suoi risultati.</p>
-          <div class="field">
-            <label for="account-claim-player">Giocatore</label>
-            <select id="account-claim-player" data-searchable></select>
-          </div>
-          <div class="form-actions">
-            <button type="submit" class="btn-primary">Invia richiesta</button>
-          </div>
-        </form>
-
-        <p class="form-message" data-claim-message></p>
       </section>
 
       <!-- One section at a time; a tab only for a section that's shown. -->
