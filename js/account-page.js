@@ -60,6 +60,7 @@ import { tallyOutcome, renderWinrateTiles } from "./winrate.js";
 import { escapeHtml, colorIdentityPips, uniqueBadges, eventTitle, formatDate } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { fetchPlayerBadgesRenderer } from "./player-badges.js";
+import { historyStatsHtml } from "./history-list.js";
 import {
   applyCardAccents,
   archetypeLabel,
@@ -1023,9 +1024,12 @@ decklistConfirmSend.addEventListener("click", async () => {
 
 // The players and commanders this account follows (★ on their pages,
 // js/follow-button.js), newest follow first, in two groups (each only when
-// it has someone): just the names, linked to their pages, and a filled ★ to
-// unfollow (hollow on hover — the same star as on their pages). Any
-// signed-in account — following needs no linked player.
+// it has someone, with its count). One sub-card each, like the Comandanti /
+// Giocatori pages' lists (js/history-list.js): the name linked to its page
+// (a player's badges after it), a small line with the last event, the
+// numbers on the right (below on phones), and a filled ★ to unfollow
+// (hollow on hover — the same star as on their pages). Any signed-in
+// account — following needs no linked player.
 const followsCard = document.getElementById("profile-follows");
 const followsListEl = document.getElementById("follows-list");
 const followsEmptyEl = document.getElementById("follows-empty");
@@ -1033,13 +1037,14 @@ const followsEmptyEl = document.getElementById("follows-empty");
 function followRowHtml(kind, target) {
   const href = kind === "player" ? `player.html?id=${target.id}` : `commander.html?id=${target.id}`;
   const name = kind === "player" ? playerLabel(target) : target.name;
-  return `<li class="follow-row" data-kind="${kind}" data-id="${target.id}">
-    <div class="follow-main">
+  return `<li class="history-item follow-row" data-kind="${kind}" data-id="${target.id}">
+    <div class="history-main">
       <span class="follow-title">
         <a class="follow-name" href="${href}">${escapeHtml(name)}</a>${kind === "player" ? '<span class="follow-badges"></span>' : ""}
       </span>
-      <span class="follow-stats"></span>
+      <span class="history-deck follow-meta"></span>
     </div>
+    <div class="follow-stats"></div>
     <button type="button" class="follow-remove" aria-label="Non seguire più ${escapeHtml(name)}" title="Non seguire più">
       <span class="follow-remove-star" aria-hidden="true"></span>
     </button>
@@ -1049,15 +1054,17 @@ function followRowHtml(kind, target) {
 function followGroupHtml(title, kind, targets) {
   if (!targets.length) return "";
   return `<li class="follow-group">
-    <p class="follow-group-title">${title}</p>
+    <p class="follow-group-title">${title} <span class="history-count">${targets.length}</span></p>
     <ul class="follow-group-list">${targets.map((t) => followRowHtml(kind, t)).join("")}</ul>
   </li>`;
 }
 
 function updateFollowsEmpty() {
-  // A group whose last row went goes too.
+  // A group whose last row went goes too; the others recount.
   for (const group of followsListEl.querySelectorAll(".follow-group")) {
-    if (!group.querySelector(".follow-row")) group.remove();
+    const rows = group.querySelectorAll(".follow-row").length;
+    if (!rows) group.remove();
+    else group.querySelector(".history-count").textContent = String(rows);
   }
   followsEmptyEl.hidden = followsListEl.querySelector(".follow-row") !== null;
 }
@@ -1081,31 +1088,32 @@ async function loadFollows() {
   fillFollowStats(follows).catch((err) => console.error(err));
 }
 
-// --- Seguiti: the numbers next to each name ---
+// --- Seguiti: the numbers of each sub-card ---
 
-// Small chips beside a name, the full text on hover:
+// Filled in after the list shows (labelled numbers, js/history-list.js
+// historyStatsHtml — the full text on hover — and the small line below the
+// name):
 //  - a player: its badges right after the name (the same icons as in the
-//    lists, js/player-badges.js), then winrate (its cached standings —
-//    closed events, counted like the player page's), latest placement with
-//    the event, and its position in the open league's standings (a real
-//    league, not a Topdeck series; computed like the Bacheca's, js/home.js);
-//  - a commander: winrate counted like commander.html's (a bye or a drop
-//    isn't a match it played), how many events it was played in, the
-//    latest of them.
+//    lists, js/player-badges.js); Winrate (its cached standings — closed
+//    events, counted like the player page's), its placement in the last
+//    event (the event on the line below), and — while a league is open — its
+//    position in that league's standings (a real league, not a Topdeck
+//    series; computed like the Bacheca's, js/home.js), "—" when not in them;
+//  - a commander: Winrate counted like commander.html's (a bye or a drop
+//    isn't a match it played) and how many events it was played in; the
+//    latest of them, and who played it, on the line below.
 const winrate = ({ wins, draws, losses }) => {
   const played = wins + draws + losses;
   return played ? `${Math.round((wins / played) * 100)}%` : null;
 };
 
-function chip(text, title, extraClass = "") {
-  return `<span class="follow-chip${extraClass}" title="${escapeHtml(title)}">${escapeHtml(text)}</span>`;
-}
-
-function setFollowStats(kind, id, html) {
-  const slot = followsListEl.querySelector(`.follow-row[data-kind="${kind}"][data-id="${id}"] .follow-stats`);
-  if (!slot || !html) return;
-  slot.innerHTML = html;
+function setFollowStats(kind, id, { stats, meta }) {
+  const row = followsListEl.querySelector(`.follow-row[data-kind="${kind}"][data-id="${id}"]`);
+  if (!row) return;
+  const slot = row.querySelector(".follow-stats");
+  slot.innerHTML = historyStatsHtml(stats);
   slot.classList.add("is-ready");
+  if (meta) row.querySelector(".follow-meta").textContent = meta;
 }
 
 const latestEvent = (rows) =>
@@ -1137,18 +1145,27 @@ async function fillPlayerStats(playerIds) {
       (t, r) => ({ wins: t.wins + r.wins, draws: t.draws + r.draws, losses: t.losses + r.losses }),
       { wins: 0, draws: 0, losses: 0 }
     );
-    const chips = [];
-    const rate = winrate(totals);
-    if (rate) chips.push(chip(`WR ${rate}`, "Winrate su tutti gli eventi", " is-strong"));
     const latest = latestEvent(rows);
-    if (latest) {
-      chips.push(
-        chip(`#${latest.position} · ${eventTitle(latest.event)}`, `Ultimo evento: ${eventTitle(latest.event)}, ${formatDate(latest.event.event_date)}`)
-      );
+    const stats = [
+      { label: "Winrate", value: winrate(totals) ?? "—", main: true, title: "Winrate su tutti gli eventi" },
+      {
+        label: "Ultimo",
+        value: latest ? `${latest.position}°` : "—",
+        title: latest ? `Ultimo evento: ${eventTitle(latest.event)}, ${formatDate(latest.event.event_date)}` : "",
+      },
+    ];
+    if (open) {
+      const index = open.standings.findIndex((row) => row.player?.id === id);
+      stats.push({
+        label: "Lega",
+        value: index >= 0 ? `${index + 1}°` : "—",
+        title: index >= 0 ? `${open.league.name}: ${index + 1}° in classifica` : `Non in classifica in ${open.league.name}`,
+      });
     }
-    const index = open ? open.standings.findIndex((row) => row.player?.id === id) : -1;
-    if (index >= 0) chips.push(chip(`#${index + 1} · ${open.league.name}`, `${open.league.name}: ${index + 1}° in classifica`));
-    setFollowStats("player", id, chips.join(""));
+    setFollowStats("player", id, {
+      stats,
+      meta: latest ? `Ultimo evento: ${eventTitle(latest.event)}` : "",
+    });
   }
 }
 
@@ -1176,18 +1193,14 @@ async function fillCommanderStats(commanderIds) {
         }
       }
     }
-    const chips = [];
-    const rate = winrate(bucket);
-    if (rate) chips.push(chip(`WR ${rate}`, "Winrate su tutti gli eventi", " is-strong"));
-    chips.push(chip(`${mine.length} ${mine.length === 1 ? "evento" : "eventi"}`, `Giocato in ${mine.length} ${mine.length === 1 ? "evento" : "eventi"}`));
     const latest = latestEvent(mine);
-    chips.push(
-      chip(
-        `Ultimo: ${eventTitle(latest.event)}`,
-        `${eventTitle(latest.event)}, ${formatDate(latest.event.event_date)} — giocato da ${latest.player?.name ?? "—"}`
-      )
-    );
-    setFollowStats("commander", id, chips.join(""));
+    setFollowStats("commander", id, {
+      stats: [
+        { label: "Winrate", value: winrate(bucket) ?? "—", main: true, title: "Winrate su tutti gli eventi" },
+        { label: "Eventi", value: mine.length, title: `Giocato in ${mine.length} ${mine.length === 1 ? "evento" : "eventi"}` },
+      ],
+      meta: `Ultimo evento: ${eventTitle(latest.event)}${latest.player?.name ? ` · ${latest.player.name}` : ""}`,
+    });
   }
 }
 

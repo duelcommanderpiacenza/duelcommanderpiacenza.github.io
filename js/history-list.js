@@ -1,6 +1,7 @@
 // The site's lists of sub-cards — player.html's and commander.html's
-// "Storico partite", commander.html's "Giocatori", and the Comandanti and
-// Giocatori pages' ranked lists: a card (.history-panel) holding sub-cards
+// "Storico partite", commander.html's "Giocatori", the Comandanti and
+// Giocatori pages' lists, and account.html's "Seguiti" (its numbers only,
+// historyStatsHtml): a card (.history-panel) holding sub-cards
 // (.history-item) that scrolls inside instead of paginating, its top/bottom
 // edge fading while there's more that way. Matches are grouped one sub-card
 // per event (per event + pilot on commander.html), its rounds as rows. Looks:
@@ -45,12 +46,12 @@ export function initScrollFade(el) {
 
 // The numbers on the right of a ranked list's sub-card (Comandanti,
 // Giocatori): one labelled value each, in fixed-width columns so they line up
-// down the list like a table's. `stats`: [{ label, value, main }] — `main`
-// (the winrate) in brand red.
+// down the list like a table's. `stats`: [{ label, value, main, title }] —
+// `main` (the winrate) in brand red, `title` an optional hover text.
 export function historyStatsHtml(stats) {
   return `<div class="history-stats" style="--stat-count:${stats.length}">${stats
     .map(
-      (s) => `<div class="history-stat${s.main ? " is-main" : ""}">
+      (s) => `<div class="history-stat${s.main ? " is-main" : ""}"${s.title ? ` title="${escapeHtml(s.title)}"` : ""}>
           <span class="history-stat-value">${s.value}</span>
           <span class="history-stat-label">${s.label}</span>
         </div>`

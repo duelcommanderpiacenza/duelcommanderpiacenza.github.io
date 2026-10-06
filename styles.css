@@ -7314,6 +7314,15 @@ html.nav-mobile .pc-cancel-btn svg {
   display: none;
 }
 
+/* One sub-card per followed player / commander (.history-item, like the
+   Comandanti / Giocatori pages' lists): name + the last event's line |
+   the numbers (js/history-list.js historyStatsHtml, filled in after) | ★.
+   The card is a size container: narrower than 560px (phones, or a narrow
+   side column) the numbers go on their own row below, sharing its width. */
+.profile-follows {
+  container-type: inline-size;
+}
+
 .follows-list,
 .follow-group-list {
   margin: 0;
@@ -7321,12 +7330,18 @@ html.nav-mobile .pc-cancel-btn svg {
   list-style: none;
 }
 
+.follow-group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .follow-group + .follow-group {
-  margin-top: 14px;
+  margin-top: 18px;
 }
 
 .follow-group-title {
-  margin: 0 0 4px;
+  margin: 0 0 8px;
   color: var(--text-muted);
   font-size: 0.8rem;
   font-weight: 800;
@@ -7334,26 +7349,50 @@ html.nav-mobile .pc-cancel-btn svg {
   text-transform: uppercase;
 }
 
+.follow-group-title .history-count {
+  letter-spacing: 0;
+}
+
 .follow-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas: "main stats remove";
   align-items: center;
-  gap: 12px;
-  padding: 6px 0;
-  border-bottom: 1px solid var(--hairline);
+  gap: 8px 14px;
 }
 
-.follow-row:last-child {
-  border-bottom: 0;
+.follow-row > .history-main {
+  grid-area: main;
 }
 
-/* The name, then its chips beside it (wrapping below it when narrow). */
-.follow-main {
-  display: flex;
-  flex: 1;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 10px;
-  min-width: 0;
+.follow-stats {
+  grid-area: stats;
+}
+
+.follow-remove {
+  grid-area: remove;
+}
+
+.follow-meta:empty {
+  display: none;
+}
+
+@container (max-width: 560px) {
+  .follow-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "main remove"
+      "stats stats";
+  }
+
+  .follow-stats:not(:empty) {
+    padding-top: 10px;
+    border-top: 1px solid var(--table-row-line);
+  }
+
+  .follow-stats .history-stats {
+    grid-template-columns: repeat(var(--stat-count), minmax(0, 1fr));
+  }
 }
 
 .follow-name {
@@ -7389,37 +7428,8 @@ html.nav-mobile .pc-cancel-btn svg {
   display: none;
 }
 
-.follow-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  min-width: 0;
-}
-
-.follow-stats.is-ready .follow-chip {
+.follow-stats.is-ready .history-stats {
   animation: entrance-fade-up 300ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
-}
-
-.follow-chip {
-  max-width: 100%;
-  overflow: hidden;
-  padding: 2px 9px;
-  border-radius: var(--radius-pill);
-  background: rgba(220, 24, 28, 0.07);
-  color: var(--text-body);
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.follow-chip.is-strong {
-  color: var(--brand-red);
-  font-weight: 800;
-}
-
-:root[data-theme="dark"] .follow-chip {
-  background: rgba(255, 110, 110, 0.1);
 }
 
 /* Unfollow: the filled red star (following), hollow on hover — the same
@@ -7478,7 +7488,7 @@ html.nav-mobile .pc-cancel-btn svg {
   }
 
   .follow-btn.is-following .follow-btn-star,
-  .follow-stats.is-ready .follow-chip {
+  .follow-stats.is-ready .history-stats {
     animation: none;
   }
 }
