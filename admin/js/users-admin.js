@@ -2,6 +2,7 @@ import { AdminUsers, Players } from "../../js/db.js";
 import { escapeHtml, formatDate } from "../../js/ui.js";
 import { renderTable, setMessage, fillSelect } from "./crud-ui.js";
 import { on } from "./bus.js";
+import { setTabCount } from "./tab-counts.js";
 
 /**
  * "Utenti": the login accounts (players sign in with Google on
@@ -51,6 +52,8 @@ export function initUsersAdmin() {
   function renderRequests() {
     const pending = users.filter((u) => u.claim_player_id);
     requestsCountEl.textContent = pending.length ? `(${pending.length})` : "";
+    // The same number on the "Utenti" tab (and, on touch screens, the nav pill).
+    setTabCount("users", pending.length);
     if (pending.length === 0) {
       requestsEl.innerHTML = '<p class="page-empty">Nessuna richiesta in attesa.</p>';
       return;

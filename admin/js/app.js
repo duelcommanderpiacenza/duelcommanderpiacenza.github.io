@@ -17,6 +17,7 @@ import { initUsersAdmin } from "./users-admin.js";
 import { initEntriesAdmin } from "./entries-admin.js";
 import { initMatchesAdmin } from "./matches-admin.js";
 import { initAdminNavDropdown } from "./admin-nav-dropdown.js";
+import { tabLabel } from "./tab-counts.js";
 import { syncAutoBadges } from "./badges-sync.js";
 
 const loginView = document.getElementById("login-view");
@@ -132,8 +133,8 @@ function initTabs() {
     panels.forEach((p) => p.classList.remove("is-active"));
     tab.classList.add("is-active");
     document.getElementById(`panel-${tab.dataset.tab}`).classList.add("is-active");
-    pageTitle.textContent = tab.textContent;
-    document.title = `${tab.textContent} - Duel Commander Piacenza Admin`;
+    pageTitle.textContent = tabLabel(tab);
+    document.title = `${tabLabel(tab)} - Duel Commander Piacenza Admin`;
   }
 
   tabs.forEach((tab) => {

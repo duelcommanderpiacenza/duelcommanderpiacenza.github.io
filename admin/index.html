@@ -42,7 +42,7 @@
      of where you currently are; toggled in sync with #admin-view by
      js/app.js. -->
 <div id="admin-tabs-bar" class="admin-tabs" hidden>
-  <button type="button" class="admin-nav-trigger" aria-haspopup="true" aria-expanded="false"><span class="admin-nav-label">Giocatori</span><span class="admin-nav-caret" aria-hidden="true"></span></button>
+  <button type="button" class="admin-nav-trigger" aria-haspopup="true" aria-expanded="false"><span class="admin-nav-label">Giocatori</span><span class="admin-nav-caret" aria-hidden="true"></span><span class="admin-nav-count" hidden></span></button>
   <div class="admin-tabs-inner">
     <button type="button" class="admin-tab" data-tab="players">Giocatori</button>
     <button type="button" class="admin-tab" data-tab="commanders">Comandanti</button>
@@ -50,7 +50,8 @@
     <button type="button" class="admin-tab" data-tab="leagues">Leghe</button>
     <button type="button" class="admin-tab" data-tab="standalone-events">Eventi standalone</button>
     <button type="button" class="admin-tab" data-tab="announcements">Annunci</button>
-    <button type="button" class="admin-tab" data-tab="users">Utenti</button>
+    <!-- The count of pending link requests (js/tab-counts.js). -->
+    <button type="button" class="admin-tab" data-tab="users"><span class="admin-tab-label">Utenti</span><span class="admin-tab-count" hidden></span></button>
   </div>
 </div>
 

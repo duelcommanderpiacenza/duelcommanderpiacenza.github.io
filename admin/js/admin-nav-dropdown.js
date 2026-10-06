@@ -6,6 +6,8 @@
 // the dropdown on tab click — neither of which the public version needs,
 // since there a click just navigates away on its own.
 
+import { tabLabel } from "./tab-counts.js";
+
 function isMobileNav() {
   return navigator.maxTouchPoints > 0;
 }
@@ -46,7 +48,7 @@ export function initAdminNavDropdown() {
 
   bar.querySelectorAll(".admin-tab").forEach((tab) => {
     tab.addEventListener("click", () => {
-      label.textContent = tab.textContent;
+      label.textContent = tabLabel(tab);
       closeDropdown(bar);
     });
   });

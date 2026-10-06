@@ -175,6 +175,48 @@ html {
   border-color: var(--brand-red);
 }
 
+/* A tab's count (js/tab-counts.js — "Utenti": pending link requests): a
+   small brand-red circle after its label; white with a red number on the
+   active (red) tab. .admin-nav-count is the pill's total on touch screens,
+   placed in its corner further down. */
+.admin-tab-count,
+.admin-nav-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  box-sizing: border-box;
+  border-radius: var(--radius-pill);
+  background: var(--brand-red);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.admin-tab-count {
+  margin-left: 7px;
+}
+
+.admin-tab-count[hidden],
+.admin-nav-count[hidden] {
+  display: none;
+}
+
+.admin-tab.is-active .admin-tab-count {
+  background: #fff;
+  color: var(--brand-red);
+}
+
+/* Touch screens: the active row of the pill's list is black — the red
+   circle reads fine there. */
+html.nav-mobile .admin-tab.is-active .admin-tab-count {
+  background: var(--brand-red);
+  color: #fff;
+}
+
 /* Public-site nav's own pill (js/nav-dropdown.js, styles.css) recolored
    black instead of brand red — a plain visual cue that this is the admin
    area, not the public site, at a glance even before reading anything.
@@ -293,6 +335,22 @@ html {
 
   html.nav-mobile .admin-nav-trigger:hover {
     background: #000;
+  }
+
+  /* The pending-requests total (js/tab-counts.js) in the pill's top-right
+     corner, whichever tab is open. */
+  html.nav-mobile .admin-nav-trigger {
+    position: relative;
+  }
+
+  html.nav-mobile .admin-nav-count {
+    position: absolute;
+    top: -6px;
+    right: -4px;
+    min-width: 26px;
+    height: 26px;
+    border: 2px solid #fff;
+    font-size: 0.8rem;
   }
 
   html.nav-mobile .admin-nav-caret {
