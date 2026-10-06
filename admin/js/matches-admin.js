@@ -1,7 +1,7 @@
 import { EventEntries, Matches, Events } from "../../js/db.js";
 import { isBye, isDrop, computeEventLeaderboard } from "../../js/leaderboard.js";
 import { escapeHtml } from "../../js/ui.js";
-import { setMessage, fillSelect } from "./crud-ui.js";
+import { renderTable, setMessage, fillSelect } from "./crud-ui.js";
 import { on } from "./bus.js";
 
 /**
@@ -205,34 +205,48 @@ export function initMatchesAdmin() {
     }
     const showBonus = bonusApplies();
     const locked = !currentEvent?.is_open;
-    eventLeaderboardEl.innerHTML = `<div class="data-table-wrap"><table class="data-table">
-      <thead><tr><th>#</th><th>Giocatore</th><th>Punti</th><th>V-S-P</th>${showBonus ? "<th>Bonus lega</th>" : ""}<th></th></tr></thead>
-      <tbody>
-        ${standings
-          .map((s, i) => {
+    // One card per player (crud-ui.js): position chip + name as its title,
+    // Punti / V-S-P (/ the Bonus lega field) beside it, the ↑↓ reorder
+    // buttons on the right — no Modifica/Elimina here.
+    const rows = standings.map((s, i) => ({ ...s, id: i, index: i }));
+    renderTable(
+      eventLeaderboardEl,
+      rows,
+      [
+        {
+          key: "player",
+          label: "Giocatore",
+          render: (s) => `<span class="rank-chip">${s.index + 1}</span> ${escapeHtml(s.player?.name ?? "")}`,
+        },
+        { key: "points", label: "Punti", render: (s) => `<strong>${s.points}</strong>` },
+        { key: "record", label: "V-S-P", render: (s) => `${s.wins}-${s.losses}-${s.draws}` },
+        ...(showBonus
+          ? [
+              {
+                key: "bonus",
+                label: "Bonus lega",
+                render: (s) =>
+                  s.entryId
+                    ? `<input type="number" class="standings-bonus-input" step="1" value="${s.bonusPoints}" data-entry-id="${s.entryId}" aria-label="Punti bonus di lega per ${escapeHtml(s.player?.name ?? "")}" ${locked ? "disabled" : ""}>`
+                    : "—",
+              },
+            ]
+          : []),
+        {
+          key: "move",
+          label: "",
+          render: (s) => {
+            const i = s.index;
             const tiedWithPrev = i > 0 && standings[i - 1].points === s.points;
             const tiedWithNext = i < standings.length - 1 && standings[i + 1].points === s.points;
-            const bonusCell = !showBonus
-              ? ""
-              : s.entryId
-                ? `<td><input type="number" class="standings-bonus-input" step="1" value="${s.bonusPoints}" data-entry-id="${s.entryId}" aria-label="Punti bonus di lega per ${escapeHtml(s.player?.name ?? "")}" ${locked ? "disabled" : ""}></td>`
-                : "<td>—</td>";
             return `
-          <tr>
-            <td class="rank-cell"><span class="rank-chip">${i + 1}</span></td>
-            <td>${escapeHtml(s.player?.name ?? "")}</td>
-            <td><strong>${s.points}</strong></td>
-            <td>${s.wins}-${s.losses}-${s.draws}</td>
-            ${bonusCell}
-            <td class="row-actions">
-              <button type="button" class="btn-secondary" data-move="up" data-index="${i}" ${tiedWithPrev && currentEvent?.is_open ? "" : "disabled"}>&uarr;</button>
-              <button type="button" class="btn-secondary" data-move="down" data-index="${i}" ${tiedWithNext && currentEvent?.is_open ? "" : "disabled"}>&darr;</button>
-            </td>
-          </tr>`;
-          })
-          .join("")}
-      </tbody>
-    </table></div>`;
+              <button type="button" class="btn-secondary" data-move="up" data-index="${i}" aria-label="Sposta su" ${tiedWithPrev && currentEvent?.is_open ? "" : "disabled"}>&uarr;</button>
+              <button type="button" class="btn-secondary" data-move="down" data-index="${i}" aria-label="Sposta giù" ${tiedWithNext && currentEvent?.is_open ? "" : "disabled"}>&darr;</button>`;
+          },
+        },
+      ],
+      {}
+    );
 
     eventLeaderboardEl.querySelectorAll("[data-move]").forEach((btn) => {
       btn.addEventListener("click", () =>
@@ -308,31 +322,24 @@ export function initMatchesAdmin() {
       listEl.innerHTML = '<p class="page-empty">Nessuna partita in questo turno.</p>';
       return;
     }
-    listEl.innerHTML = `<div class="data-table-wrap"><table class="data-table">
-      <thead><tr><th>Giocatore 1</th><th>Giocatore 2</th><th>Punteggio</th><th></th></tr></thead>
-      <tbody>
-        ${matches
-          .map(
-            (m) => `
-          <tr data-id="${m.id}">
-            <td>${escapeHtml(m.player1?.name ?? "")}</td>
-            <td>${isBye(m) ? "Bye" : isDrop(m) ? "Drop" : escapeHtml(m.player2?.name ?? "")}</td>
-            <td>${isDrop(m) ? "—" : scoreLabel(m)}</td>
-            <td class="row-actions">
-              <button type="button" class="btn-secondary" data-action="edit">Modifica</button>
-              <button type="button" class="btn-danger" data-action="delete">Elimina</button>
-            </td>
-          </tr>`
-          )
-          .join("")}
-      </tbody>
-    </table></div>`;
-
-    listEl.querySelectorAll("tr[data-id]").forEach((tr) => {
-      const match = matches.find((m) => m.id === tr.dataset.id);
-      tr.querySelector('[data-action="edit"]').addEventListener("click", () => onEdit(match));
-      tr.querySelector('[data-action="delete"]').addEventListener("click", () => onDelete(match));
-    });
+    // One card per match (crud-ui.js): "Giocatore 1 vs Giocatore 2" (or Bye /
+    // Drop) as its title, the score beside it, Modifica/Elimina on the right.
+    renderTable(
+      listEl,
+      matches,
+      [
+        {
+          key: "players",
+          label: "Partita",
+          render: (m) =>
+            `${escapeHtml(m.player1?.name ?? "")} <span class="admin-card-muted">${
+              isBye(m) || isDrop(m) ? "—" : "vs"
+            }</span> ${isBye(m) ? "Bye" : isDrop(m) ? "Drop" : escapeHtml(m.player2?.name ?? "")}`,
+        },
+        { key: "score", label: "Punteggio", render: (m) => (isDrop(m) ? "—" : scoreLabel(m)) },
+      ],
+      { onEdit, onDelete }
+    );
   }
 
   async function refresh() {

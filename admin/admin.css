@@ -10,12 +10,23 @@ html {
   scrollbar-gutter: stable;
 }
 
+/* Wider than the public site's 1100px: beside each panel's fixed 300px form
+   column, the list cards (js/crud-ui.js) need the room for their fields and
+   buttons. Header, tab bar and content share it, so their edges line up. */
+:root {
+  --admin-max-width: 1400px;
+}
+
 /* Recolored black (instead of the public site's red) purely so the admin
    area reads as visually distinct at a glance — same gradient technique as
    .site-header, just in near-black tones. */
 .site-header--admin {
   background: linear-gradient(135deg, #050505, #1c1c1c), #000;
   box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+}
+
+.site-header--admin .site-header-inner {
+  max-width: var(--admin-max-width);
 }
 
 /* body is already the shared display:flex/flex-direction:column from
@@ -29,7 +40,7 @@ html {
 }
 
 .admin-shell {
-  max-width: 1100px;
+  max-width: var(--admin-max-width);
   margin: 0 auto;
   padding: 28px 20px 48px;
 }
@@ -100,8 +111,8 @@ html {
    structure: #admin-tabs-bar is a direct sibling of <header> (not nested
    inside .admin-shell), so it's naturally full viewport width with no
    breakout trick needed, sticky right below the header. .admin-tabs-inner
-   re-centers the actual buttons to the same 1100px content width as
-   everything else. */
+   re-centers the actual buttons to the same content width as everything
+   else (--admin-max-width). */
 .admin-tabs {
   position: sticky;
   top: 0;
@@ -115,7 +126,7 @@ html {
 /* Padding/gap match .site-nav-inner exactly (same 10px 16px, not the old
    10px 20px 14px) so the bar comes out the same total height. */
 .admin-tabs-inner {
-  max-width: 1100px;
+  max-width: var(--admin-max-width);
   margin: 0 auto;
   padding: 10px 16px;
   display: flex;
@@ -329,9 +340,13 @@ html {
    handful of short fields — the shared fixed 300px column (fine for every
    other panel's compact forms) left it too narrow to read comfortably
    while typing. Scoped to just this panel so the other panels keep their
-   own consistent, unaffected 300px split. */
-#panel-announcements .admin-panel-layout {
-  grid-template-columns: 1fr 1fr;
+   own consistent, unaffected 300px split. Above 800px only, like the split
+   itself: the id makes this outrank the plain stacking rule below, which
+   would otherwise never apply here (form and list side by side on phones). */
+@media (min-width: 801px) {
+  #panel-announcements .admin-panel-layout {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 /* A grid item's default min-width is `auto`, which lets a wide table (with
@@ -387,6 +402,108 @@ html {
 .row-actions {
   display: flex;
   gap: 8px;
+}
+
+/* The admin lists (js/crud-ui.js renderTable): the public site's sub-card
+   look (.history-panel / .history-item, ../../styles.css), one card per row
+   — not clickable, so no hover change; only its buttons react. Title on the
+   left, then the labelled fields in equal columns (the same in every card,
+   so they line up like a table's), the buttons on the right — always on
+   one line on desktop, the columns narrowing (their text wrapping inside
+   them) when the list is narrow. Only on phones (640px and under) do the
+   fields wrap below the title and the buttons go below them. */
+.admin-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px 16px;
+}
+
+.admin-card:hover {
+  background: rgba(220, 24, 28, 0.025);
+  border-color: var(--table-row-line);
+}
+
+:root[data-theme="dark"] .admin-card:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-card-body {
+  display: grid;
+  grid-template-columns: minmax(120px, 1.6fr) repeat(var(--admin-fields), minmax(0, 1fr));
+  align-items: center;
+  gap: 8px 14px;
+  min-width: 0;
+}
+
+.admin-card-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  min-width: 0;
+  color: var(--text-title);
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.admin-card-field {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 0;
+}
+
+.admin-card-label {
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.admin-card-value {
+  max-width: 100%;
+  font-size: 0.92rem;
+  overflow-wrap: anywhere;
+}
+
+.admin-card-muted {
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.admin-card-actions {
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* An unlabelled column's own .row-actions (Gestisci): its buttons join the
+   card's row of buttons. */
+.admin-card-actions .row-actions {
+  display: contents;
+}
+
+@media (max-width: 640px) {
+  .admin-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-card-body {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+
+  .admin-card-title {
+    grid-column: 1 / -1;
+  }
+
+  .admin-card-actions {
+    justify-content: flex-start;
+    padding-top: 10px;
+    border-top: 1px solid var(--table-row-line);
+  }
 }
 
 /* Badge form's keyboard-style emoji picker (js/emoji-picker.js): a compact
@@ -634,7 +751,7 @@ html {
 /* The event's Aperto/Chiuso pill, right after its name on the Iscritti/Partite
    title bars (.page-heading-title-group):
    .badge-status-toggle's font: inherit would take the heading's size here,
-   so it's pinned to the list tables' own (table.data-table) to look the same. */
+   so it's pinned to the size it has in the list cards (.admin-card-value). */
 .page-heading .badge-status-toggle {
   font-size: 0.95rem;
 }
@@ -829,7 +946,8 @@ html {
 /* The event views animate as a whole (entering the flow, or a switch), and
    only once their data is loaded — tables replaying their own fade-up on
    top of that (or on every save) read as the page reloading. */
-#admin-event-flow .data-table-wrap {
+#admin-event-flow .data-table-wrap,
+#admin-event-flow .history-panel {
   animation: none;
 }
 

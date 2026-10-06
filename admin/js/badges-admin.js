@@ -1,5 +1,5 @@
 import { Badges, BadgeIcons } from "../../js/db.js";
-import { badgeDiscHtml } from "../../js/ui.js";
+import { badgeDiscHtml, escapeHtml } from "../../js/ui.js";
 import { renderTable, setMessage, fillSelect } from "./crud-ui.js";
 import { emit } from "./bus.js";
 import { syncAutoBadges } from "./badges-sync.js";
@@ -171,8 +171,8 @@ export function initBadgesAdmin() {
       listEl,
       visible,
       [
-        { key: "icon", label: "Icona", render: iconCellHtml },
-        { key: "name", label: "Nome" },
+        // The card's title: the icon, then the name.
+        { key: "name", label: "Nome", render: (r) => `${iconCellHtml(r)} ${escapeHtml(r.name)}` },
         { key: "auto_rule", label: "Regola automatica", render: ruleLabel },
         { key: "priority", label: "Priorità", render: priorityLabel },
       ],

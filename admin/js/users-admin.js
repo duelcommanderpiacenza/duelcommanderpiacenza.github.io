@@ -55,25 +55,29 @@ export function initUsersAdmin() {
       requestsEl.innerHTML = '<p class="page-empty">Nessuna richiesta in attesa.</p>';
       return;
     }
-    requestsEl.innerHTML = `<div class="data-table-wrap"><table class="data-table">
-      <thead><tr><th>Account</th><th>Giocatore richiesto</th><th>Richiesta del</th><th></th></tr></thead>
-      <tbody>
-        ${pending
-          .map(
-            (u) => `
-          <tr>
-            <td>${escapeHtml(u.email)}</td>
-            <td>${escapeHtml(playerLabel(u.claim_player_name, u.claim_player_handle))}</td>
-            <td>${formatDate(u.claim_created_at)}</td>
-            <td class="row-actions">
+    // One card per request (crud-ui.js): the account, the player asked for
+    // and when, Approva / Rifiuta on the right.
+    renderTable(
+      requestsEl,
+      pending.map((u) => ({ ...u, id: u.user_id })),
+      [
+        { key: "email", label: "Account", render: (u) => escapeHtml(u.email) },
+        {
+          key: "claim",
+          label: "Giocatore richiesto",
+          render: (u) => escapeHtml(playerLabel(u.claim_player_name, u.claim_player_handle)),
+        },
+        { key: "claim_created_at", label: "Richiesta del", render: (u) => formatDate(u.claim_created_at) },
+        {
+          key: "actions",
+          label: "",
+          render: (u) => `
               <button type="button" class="btn-primary" data-approve="${u.user_id}">Approva</button>
-              <button type="button" class="btn-secondary" data-reject="${u.user_id}">Rifiuta</button>
-            </td>
-          </tr>`
-          )
-          .join("")}
-      </tbody>
-    </table></div>`;
+              <button type="button" class="btn-secondary" data-reject="${u.user_id}">Rifiuta</button>`,
+        },
+      ],
+      {}
+    );
 
     requestsEl.querySelectorAll("[data-approve]").forEach((btn) =>
       btn.addEventListener("click", () => act(() => AdminUsers.approveClaim(btn.dataset.approve), "Richiesta approvata."))

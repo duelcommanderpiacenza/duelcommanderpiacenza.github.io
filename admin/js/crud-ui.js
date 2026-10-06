@@ -16,52 +16,73 @@ const DELETE_ICON_SVG = `<svg width="21" height="21" viewBox="0 0 24 24" fill="n
 </svg>`;
 
 /**
- * Renders a simple admin list table with per-row Edit/Delete buttons.
+ * Renders an admin list — the public site's sub-card look (.history-panel /
+ * .history-item, ../../styles.css), not a table: one card per row, which
+ * isn't itself clickable — only the buttons in it are. Per card: the
+ * primary column (the first, or the one marked `primary`) as its bold title
+ * on the left; the other labelled columns as small label-over-value fields
+ * (the same width in every card, so they line up like a table's columns);
+ * on the right the unlabelled columns' content (their own buttons — Gestisci,
+ * ↑↓, Approva…) then Modifica/Elimina when given. One line on desktop
+ * (narrower columns when the list is narrow); only on phones (≤640px,
+ * admin.css .admin-card) do the fields wrap below the title.
  * @param {HTMLElement} container
- * @param {Array} rows
- * @param {Array<{key:string,label:string,render?:(row)=>string}>} columns
- * @param {{onEdit?: (row)=>void, onDelete: (row)=>void}} actions
- * @param {{animate?: boolean}} [options] - animate defaults to true; live
- *   search callers pass false so re-filtering on every keystroke doesn't
- *   replay .data-table-wrap's entrance animation each time.
+ * @param {Array} rows - each with a unique `id`
+ * @param {Array<{key:string,label:string,render?:(row)=>string,primary?:boolean}>} columns
+ * @param {{onEdit?: (row)=>void, onDelete?: (row)=>void}} actions
+ * @param {{animate?: boolean, empty?: string}} [options] - animate defaults
+ *   to true; live search callers pass false so re-filtering on every
+ *   keystroke doesn't replay the list's entrance animation each time.
  */
-export function renderTable(container, rows, columns, actions, { animate = true } = {}) {
+export function renderTable(container, rows, columns, actions, { animate = true, empty = "Nessun elemento." } = {}) {
   if (rows.length === 0) {
-    container.innerHTML = '<p class="page-empty">Nessun elemento.</p>';
+    container.innerHTML = `<p class="page-empty">${empty}</p>`;
     return;
   }
 
-  container.innerHTML = `<div class="data-table-wrap${animate ? "" : " no-entrance-anim"}"><table class="data-table">
-    <thead><tr>${columns.map((c) => `<th>${c.label}</th>`).join("")}<th></th></tr></thead>
-    <tbody>
+  const cell = (c, row) => (c.render ? c.render(row) : escapeHtml(row[c.key] ?? ""));
+  const primary = columns.find((c) => c.primary) ?? columns[0];
+  const fields = columns.filter((c) => c !== primary && c.label);
+  const extras = columns.filter((c) => c !== primary && !c.label);
+
+  container.innerHTML = `<div class="history-panel no-scroll admin-card-list${animate ? "" : " no-entrance-anim"}"><div class="history-scroll">
       ${rows
         .map(
           (row) => `
-        <tr data-id="${row.id}">
-          ${columns
-            .map((c) => `<td>${c.render ? c.render(row) : escapeHtml(row[c.key] ?? "")}</td>`)
-            .join("")}
-          <td>
-            <div class="row-actions">
-              ${
-                actions.onEdit
-                  ? `<button type="button" class="icon-btn icon-btn-edit" data-action="edit" aria-label="Modifica" title="Modifica">${EDIT_ICON_SVG}</button>`
-                  : ""
-              }
-              <button type="button" class="icon-btn icon-btn-delete" data-action="delete" aria-label="Elimina" title="Elimina">${DELETE_ICON_SVG}</button>
-            </div>
-          </td>
-        </tr>`
+        <div class="history-item admin-card" data-id="${row.id}" style="--admin-fields:${fields.length}">
+          <div class="admin-card-body">
+            <div class="admin-card-title">${cell(primary, row)}</div>
+            ${fields
+              .map(
+                (c) => `<div class="admin-card-field">
+              <span class="admin-card-label">${c.label}</span>
+              <span class="admin-card-value">${cell(c, row)}</span>
+            </div>`
+              )
+              .join("")}
+          </div>
+          <div class="row-actions admin-card-actions">
+            ${extras.map((c) => cell(c, row)).join("")}
+            ${
+              actions.onEdit
+                ? `<button type="button" class="icon-btn icon-btn-edit" data-action="edit" aria-label="Modifica" title="Modifica">${EDIT_ICON_SVG}</button>`
+                : ""
+            }
+            ${
+              actions.onDelete
+                ? `<button type="button" class="icon-btn icon-btn-delete" data-action="delete" aria-label="Elimina" title="Elimina">${DELETE_ICON_SVG}</button>`
+                : ""
+            }
+          </div>
+        </div>`
         )
         .join("")}
-    </tbody>
-  </table></div>`;
+    </div></div>`;
 
-  container.querySelectorAll("tr[data-id]").forEach((tr) => {
-    const row = rows.find((r) => String(r.id) === tr.dataset.id);
-    const editBtn = tr.querySelector('[data-action="edit"]');
-    if (editBtn) editBtn.addEventListener("click", () => actions.onEdit(row));
-    tr.querySelector('[data-action="delete"]').addEventListener("click", () => actions.onDelete(row));
+  container.querySelectorAll(".admin-card[data-id]").forEach((card) => {
+    const row = rows.find((r) => String(r.id) === card.dataset.id);
+    card.querySelector('[data-action="edit"]')?.addEventListener("click", () => actions.onEdit(row));
+    card.querySelector('[data-action="delete"]')?.addEventListener("click", () => actions.onDelete(row));
   });
 }
 
