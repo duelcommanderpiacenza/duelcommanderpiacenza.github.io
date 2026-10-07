@@ -92,7 +92,6 @@ const nameEl = document.getElementById("profile-name");
 // The same name, big, in the hero beside the card; "Dal …" under it; the
 // favourite commander's art blurred behind it all (styles.css .profile-hero).
 const heroNameEl = document.getElementById("profile-hero-name");
-const heroSinceEl = document.getElementById("profile-hero-since");
 const bioEl = document.getElementById("profile-bio");
 const sinceEl = document.getElementById("pc-since");
 const badgesEl = document.getElementById("pc-badges");
@@ -229,7 +228,6 @@ function renderCard(values) {
 
   // The player's (not the account's) first event and badges, once linked.
   sinceEl.textContent = claim.linked && firstYear ? `Dal ${firstYear}` : "";
-  heroSinceEl.textContent = sinceEl.textContent;
   badgesEl.innerHTML = claim.linked ? cardBadgesHtml(playerBadges) : "";
 
   // After "Dal …" above (the stars go after it); taken off and put back on
