@@ -9961,11 +9961,46 @@ html.nav-mobile .help-toggle-btn {
   background: rgba(220, 24, 28, 0.25);
 }
 
-/* padding: 0 undoes .data-table-wrap's inset — the sticky row-name column
-   sticks inside the padding, so cells would scroll visibly through the gap
-   to its left. */
+/* The matrix in the site's list look (.history-panel's panel, .history-item's
+   tiles): a white panel, every cell a small rounded tile with gaps between
+   (no ruled lines), the row names tiles like the lists' sub-cards. What
+   scrolls sideways when it doesn't fit is the box inside the panel's
+   padding (.matchups-matrix-scroll), not the panel: the scrollbar stays
+   inside its rounded edges. --mx-bg is the panel's own solid colour:
+   the sticky row names paint it round themselves (box-shadow), so cells
+   scrolling under them don't show through the gaps. The colours: the
+   site's win / loss ones (.history-score: green, red; even neutral). */
 .matchups-matrix-wrap {
-  padding: 0;
+  --mx-bg: #fff;
+  --mx-win: #1fa45a;
+  --mx-loss: #e0262b;
+  --mx-mid: #f5b300;
+  --mx-win-text: #0e6e37;
+  --mx-loss-text: #a50f14;
+  --mx-mid-text: #7d5300;
+  --mx-tile: rgba(220, 24, 28, 0.055);
+  --mx-tile-line: rgba(154, 28, 32, 0.14);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card-sm);
+  background: var(--mx-bg);
+  box-shadow: var(--shadow-card);
+  padding: 6px;
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+:root[data-theme="dark"] .matchups-matrix-wrap {
+  --mx-bg: #1e1719;
+  --mx-win: #4fdc8c;
+  --mx-loss: #ff5a5f;
+  --mx-mid: #ffcc33;
+  --mx-win-text: #7cf0ae;
+  --mx-loss-text: #ff9a9d;
+  --mx-mid-text: #ffe07a;
+  --mx-tile: rgba(255, 255, 255, 0.06);
+  --mx-tile-line: rgba(255, 255, 255, 0.1);
+}
+
+.matchups-matrix-scroll {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
@@ -9979,6 +10014,69 @@ html.nav-mobile .help-toggle-btn {
   }
 }
 
+/* Phones: one result column at a time, read top to bottom — each column as
+   wide as the room beside the pinned names, but a peek of the next
+   (--mx-col-w, measured by js/matchups-page.js fitColumns, which also sets
+   the panel's scroll-padding to where a column starts), and a swipe snaps
+   to the next column, never past it (scroll-snap-stop). The numbers a size
+   up, with the room. */
+@media (max-width: 640px) {
+  .matchups-matrix-scroll {
+    scroll-snap-type: x mandatory;
+  }
+
+  .matchups-table .matchups-col-header {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  .matchups-table :is(.matchups-col-header, .matchups-cell) {
+    width: var(--mx-col-w, auto);
+    min-width: var(--mx-col-w, 58px);
+    box-sizing: border-box;
+  }
+
+  /* The names column as wide as a result column (--mx-head-w), and the
+     names — row and column — on up to two lines before they're cut, now
+     that there's room (scoped under .matchups-table to outrank the
+     desktop rules' widths and nowrap, later in this file). */
+  /* min-width too: a table wider than its box (it is, here) shrinks a
+     column with only a width down to its narrowest content. */
+  .matchups-table .matchups-row-header {
+    width: var(--mx-head-w, auto);
+    min-width: var(--mx-head-w, 0);
+    max-width: var(--mx-head-w, 84px);
+    box-sizing: border-box;
+  }
+
+  .matchups-table :is(.matchups-row-header, .matchups-col-header) {
+    white-space: normal;
+  }
+
+  .matchups-table :is(.matchups-row-header-text, .matchups-col-header-text) {
+    display: -webkit-box;
+    max-width: none;
+    overflow-wrap: anywhere;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+
+  /* A mouse drag (a narrow desktop window) moves freely; it snaps on
+     release. */
+  .matchups-matrix-scroll.is-dragging {
+    scroll-snap-type: none;
+  }
+
+  .matchups-cell-pct {
+    font-size: 1.15rem;
+  }
+
+  .matchups-cell-count {
+    font-size: 0.78rem;
+  }
+}
+
 /* Deliberately its own class, not table.data-table — that shared rule's
    selector specificity (element+class+element) would otherwise win over
    this one for shared properties like padding/text-align, since a plain
@@ -9986,13 +10084,12 @@ html.nav-mobile .help-toggle-btn {
 .matchups-table {
   width: 100%;
   border-collapse: separate;
-  border-spacing: 0;
+  border-spacing: 4px;
   font-size: 0.85rem;
 }
 
 .matchups-table th,
 .matchups-table td {
-  border-bottom: 1px solid var(--hairline);
   padding: 8px 10px;
   text-align: center;
   white-space: nowrap;
@@ -10009,7 +10106,18 @@ html.nav-mobile .help-toggle-btn {
   text-align: left;
   color: var(--text-title);
   font-weight: 800;
-  background: #fff;
+  border: 1px solid var(--mx-tile-line);
+  border-radius: 10px;
+  /* The sub-card tint over the panel's solid colour (opaque: cells scroll
+     under it). Painted round it in the panel's colour too (box-shadow): the
+     gaps between it and its neighbours, and — the second one, pushed 40px
+     left — the whole strip between it and the panel's left edge (the
+     panel's padding + the table's spacing), where scrolled cells showed
+     through; its far end, rounded, lies past the edge, clipped. */
+  background: linear-gradient(var(--mx-tile), var(--mx-tile)), var(--mx-bg);
+  box-shadow:
+    0 0 0 4px var(--mx-bg),
+    -40px 0 0 4px var(--mx-bg);
   cursor: default;
 }
 
@@ -10017,14 +10125,21 @@ html.nav-mobile .help-toggle-btn {
   position: sticky;
   left: 0;
   z-index: 2;
-  background: #fff;
+  background: var(--mx-bg);
+  box-shadow:
+    0 0 0 4px var(--mx-bg),
+    -40px 0 0 4px var(--mx-bg);
 }
 
+/* The column names: plain small labels over their column, like the lists'
+   stat labels. */
 .matchups-col-header {
   position: relative;
+  padding-bottom: 4px;
   color: var(--text-title);
   font-weight: 800;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
+  vertical-align: bottom;
   cursor: default;
 }
 
@@ -10054,7 +10169,7 @@ html.nav-mobile .help-toggle-btn {
    Same red-pill visual language as .icon-badge's own tooltip, but a real
    element positioned by js/floating-tooltip.js and appended to <body>
    rather than a CSS ::after anchored to the label — both live inside a
-   horizontally-scrolling wrapper (.matchups-matrix-wrap, .chart-grid),
+   horizontally-scrolling wrapper (.matchups-matrix-scroll, .chart-grid),
    which per the CSS overflow spec forces overflow-y to clip too, so
    anything anchored *inside* it gets cut off at its edge instead of
    escaping over the rest of the page. */
@@ -10095,21 +10210,92 @@ html.nav-mobile .help-toggle-btn {
   border-top: 5px solid var(--brand-red);
 }
 
+/* Dragged sideways with the mouse when it doesn't fit (js/drag-scroll.js
+   enableDragScroll, the classes too): a grab cursor everywhere on it, no
+   text selection starting in a drag's first few px. */
+.matchups-matrix-scroll.is-scrollable,
+.matchups-matrix-scroll.is-scrollable :is(th, td) {
+  cursor: grab;
+  user-select: none;
+}
+
+.matchups-matrix-scroll.is-dragging,
+.matchups-matrix-scroll.is-dragging :is(th, td) {
+  cursor: grabbing;
+}
+
+/* A result tile: the percentage over its V-S-P record (a list's number
+   over its label). Its colour runs red → yellow → green: yellow at 50%,
+   turning into the side's colour as it leans that way (fully by 30 points
+   off even: --mix), the tint stronger the more one-sided (--heat,
+   js/matchups-page.js: 0 at 50%, 1 at 0% or 100%). */
 .matchups-cell {
-  font-weight: 700;
+  --mix: calc(min(1, var(--heat, 0) * 1.67) * 100%);
+  min-width: 58px;
+  border: 1px solid var(--mx-tile-line);
+  border-radius: 10px;
+  background: var(--mx-tile);
   color: var(--text-title);
+  line-height: 1.15;
   cursor: default;
 }
 
+.matchups-cell-pct {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.matchups-cell-count {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.matchups-cell.is-win {
+  --mx-hue: color-mix(in srgb, var(--mx-win) var(--mix), var(--mx-mid));
+  --mx-hue-text: color-mix(in srgb, var(--mx-win-text) var(--mix), var(--mx-mid-text));
+}
+
+.matchups-cell.is-loss {
+  --mx-hue: color-mix(in srgb, var(--mx-loss) var(--mix), var(--mx-mid));
+  --mx-hue-text: color-mix(in srgb, var(--mx-loss-text) var(--mix), var(--mx-mid-text));
+}
+
+.matchups-cell.is-even {
+  --mx-hue: var(--mx-mid);
+  --mx-hue-text: var(--mx-mid-text);
+}
+
+.matchups-cell:is(.is-win, .is-loss, .is-even) {
+  border-color: color-mix(in srgb, var(--mx-hue) calc(45% + var(--heat) * 35%), transparent);
+  background: color-mix(in srgb, var(--mx-hue) calc(24% + var(--heat) * 34%), transparent);
+}
+
+.matchups-cell:is(.is-win, .is-loss, .is-even) .matchups-cell-pct {
+  color: var(--mx-hue-text);
+}
+
+/* The record in the body colour on a coloured tile (grey faded into it). */
+.matchups-cell:is(.is-win, .is-loss, .is-even) .matchups-cell-count {
+  color: var(--text-body);
+}
+
+/* No match between the two: an empty dashed slot. */
 .matchups-cell-empty {
+  border-style: dashed;
+  background: none;
   color: var(--text-muted);
   font-weight: 400;
 }
 
-.matchups-cell-count {
-  font-weight: 400;
-  font-size: 0.75em;
-  opacity: 0.75;
+/* A deck against itself: a faint striped tile. */
+.matchups-cell-mirror {
+  border-color: transparent;
+  background: repeating-linear-gradient(135deg, var(--mx-tile) 0 6px, transparent 6px 12px);
 }
 
 /* Metagame share chart (ring + side legend), js/metagame-chart.js. A single
@@ -10875,11 +11061,6 @@ html[data-theme="dark"]:not(.nav-mobile) .site-search-results {
 
 /* Solid, not translucent — this sticky column needs to fully mask
    whatever's scrolled underneath it, same reasoning as .cs-menu above. */
-:root[data-theme="dark"] .matchups-row-header,
-:root[data-theme="dark"] .matchups-corner-header {
-  background: #241a1d;
-}
-
 :root[data-theme="dark"] .cs-option:hover,
 :root[data-theme="dark"] .cs-option:focus,
 :root[data-theme="dark"] .cd-day:hover,

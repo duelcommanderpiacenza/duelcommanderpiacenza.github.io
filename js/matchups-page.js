@@ -1,4 +1,4 @@
-// Win% heatmap matrix between up to MAX_SELECTED "decks" — a commander on
+// Win% matrix between up to MAX_SELECTED "decks" — a commander on
 // its own, or a commander+partner pairing, picked from every combination
 // actually played. A commander used with two different partners (or both
 // solo and partnered) is genuinely a different deck, not the same row, same
@@ -15,30 +15,62 @@ import { attachHoverTooltips, fullTextIfTruncated } from "./floating-tooltip.js"
 import { initScopeFilter } from "./scope-filter.js";
 import { initFilterToggle } from "./filter-toggle.js";
 import { openInfoDialog } from "./info-dialog.js";
+import { enableDragScroll, enableSnapDrag } from "./drag-scroll.js";
 
 const MAX_SELECTED = 10;
 const TOP_PLAYED_COUNT = 10;
 
-// Diverging red -> yellow -> green, anchored on the site's own brand red
-// and accent green rather than an arbitrary scale, same reasoning as the
-// hardcoded per-commander/per-archetype chart colors elsewhere (js/
-// commanders-page.js, js/archetypes-page.js) — a heatmap fill needs the
-// literal hex to interpolate, a CSS var can't be math'd in JS. The 50%
-// midpoint is yellow rather than a neutral white/gray, so an even matchup
-// still reads as a deliberate color on the scale instead of looking like a
-// missing-data cell.
-const RED = [220, 24, 28];
-const MID = [255, 204, 51];
-const GREEN = [39, 174, 96];
-
-function heatColor(winPct) {
-  const t = winPct <= 50 ? winPct / 50 : (winPct - 50) / 50;
-  const [from, to] = winPct <= 50 ? [RED, MID] : [MID, GREEN];
-  const mix = from.map((c, i) => Math.round(c + (to[i] - c) * t));
-  return `rgb(${mix.join(",")})`;
+// A cell's colour, in the site's own win/loss language (js/history-list.js's
+// results: green for a win, red for a loss) with yellow for even, rather
+// than a heatmap palette of its own: the side (.is-win / .is-loss /
+// .is-even) and how far from 50% it is (--heat, 0 at 50% to 1 at 0% or
+// 100%), which styles.css turns into the tile's tint — yellow near 50%,
+// turning green / red as it leans, stronger the more one-sided.
+function heatAttrs(winPct) {
+  const side = winPct > 50 ? "is-win" : winPct < 50 ? "is-loss" : "is-even";
+  return { side, heat: (Math.abs(winPct - 50) / 50).toFixed(2) };
 }
 
 const MAX_DROPDOWN_RESULTS = 8;
+
+// Phones: one result column at a time — the pinned names and the column
+// sharing the room about equally (--mx-head-w, --mx-col-w on the panel),
+// a peek of the next column left at the edge (a hint there's more), and a
+// swipe snaps to the next column (styles.css: scroll-snap on the column
+// headers). Where a column starts (just past the pinned names, measured
+// once they're sized) is the panel's scroll-padding, so a snapped column
+// lines up there rather than under them. All on the scroller
+// (.matchups-matrix-scroll), measured from its own edges.
+const columnModeQuery = window.matchMedia("(max-width: 640px)");
+const MX_SPACING = 4; // .matchups-table's border-spacing
+const COLUMN_PEEK = 22;
+
+function fitColumns(wrap) {
+  if (!wrap) return;
+  const head = wrap.querySelector(".matchups-row-header");
+  if (!columnModeQuery.matches || !head) {
+    wrap.style.removeProperty("--mx-col-w");
+    wrap.style.removeProperty("--mx-head-w");
+    wrap.style.scrollPaddingLeft = "";
+    return;
+  }
+  const room = wrap.clientWidth - 3 * MX_SPACING - COLUMN_PEEK;
+  wrap.style.setProperty("--mx-head-w", `${Math.floor(room / 2)}px`);
+  const start = head.getBoundingClientRect().right - wrap.getBoundingClientRect().left - wrap.clientLeft + MX_SPACING;
+  const width = Math.max(90, Math.floor(wrap.clientWidth - start - MX_SPACING - COLUMN_PEEK));
+  wrap.style.setProperty("--mx-col-w", `${width}px`);
+  wrap.style.scrollPaddingLeft = `${Math.round(start)}px`;
+}
+
+// The scrollLeft at which each column sits snapped (just past the names).
+function columnStops(wrap) {
+  const start = parseFloat(wrap.style.scrollPaddingLeft) || 0;
+  const wrapLeft = wrap.getBoundingClientRect().left + wrap.clientLeft;
+  const max = wrap.scrollWidth - wrap.clientWidth;
+  return [...wrap.querySelectorAll(".matchups-col-header")].map((th) =>
+    Math.min(max, Math.max(0, th.getBoundingClientRect().left - wrapLeft + wrap.scrollLeft - start))
+  );
+}
 
 // The round "?" beside the title opens how to read the matrix, in the
 // site's shared explanation pop-up (js/info-dialog.js, same as player.html's
@@ -68,6 +100,14 @@ async function init() {
   // since the matrix sits inside a horizontally-scrolling wrapper that would clip
   // a CSS ::after tooltip anchored inside it. Only for names actually cut off by
   // their inner *-text span's ellipsis — one that fits needs no tooltip.
+  // The phone column widths follow the screen (rotating it, resizing);
+  // switching in or out of the one-column mode redraws it (its drag differs).
+  const refit = () => fitColumns(matrixEl.querySelector(".matchups-matrix-scroll"));
+  new ResizeObserver(refit).observe(matrixEl);
+  columnModeQuery.addEventListener("change", () => {
+    if (matrixEl.querySelector(".matchups-matrix-wrap")) renderMatrix();
+  });
+
   attachHoverTooltips(matrixEl, ".matchups-row-header, .matchups-col-header", (cell) => {
     const text = cell.querySelector(".matchups-row-header-text, .matchups-col-header-text");
     return text && fullTextIfTruncated(text) ? cell.dataset.tooltip : null;
@@ -182,7 +222,12 @@ async function init() {
 
     const rows = selected.map((id) => allDecks.find((d) => d.id === id)).filter(Boolean);
 
-    matrixEl.innerHTML = `<div class="data-table-wrap matchups-matrix-wrap"><table class="matchups-table">
+    // The site's list look (a .history-panel-like panel, js/history-list.js):
+    // every cell a small rounded tile, the row names tiles like the list's
+    // sub-cards. The panel (.matchups-matrix-wrap) and what scrolls inside
+    // its padding (.matchups-matrix-scroll) are two boxes, so the scrollbar
+    // stays inside the panel's rounded edges.
+    matrixEl.innerHTML = `<div class="matchups-matrix-wrap"><div class="matchups-matrix-scroll"><table class="matchups-table">
       <thead>
         <tr>
           <th class="matchups-corner-header"></th>
@@ -197,29 +242,51 @@ async function init() {
             <th class="matchups-row-header" data-tooltip="${escapeHtml(rowCmd.name)}"><span class="matchups-row-header-text">${escapeHtml(rowCmd.name)}</span></th>
             ${rows
               .map((colCmd) => {
+                // The diagonal (a deck against itself): left out.
                 if (rowCmd.id === colCmd.id) {
-                  return '<td class="matchups-cell matchups-cell-empty">&mdash;</td>';
+                  return '<td class="matchups-cell matchups-cell-mirror" aria-label="Stesso comandante"></td>';
                 }
                 const cell = computeCell(rowCmd.id, colCmd.id);
                 if (!cell || cell.total === 0) {
                   return '<td class="matchups-cell matchups-cell-empty">&mdash;</td>';
                 }
                 const pct = (cell.wins / cell.total) * 100;
+                const { side, heat } = heatAttrs(pct);
                 // Match-basis V-S-P, same order/format as the rest of the
                 // site's own V-S-P columns.
                 const title = `${cell.wins}-${cell.losses}-${cell.draws} (${cell.total} match totali)`;
                 // The record in V-S-P order (same as every other table), not
                 // just the match count — a draw is a match played but a win
                 // for neither side, so without it two mirror cells (e.g. 50%
-                // vs 0%) looked contradictory.
-                return `<td class="matchups-cell" style="background:${heatColor(pct)};" title="${escapeHtml(title)}">${pct.toFixed(0)}% <span class="matchups-cell-count">(${cell.wins}-${cell.losses}-${cell.draws})</span></td>`;
+                // vs 0%) looked contradictory. Under the percentage, like a
+                // list's number over its label.
+                return `<td class="matchups-cell ${side}" style="--heat:${heat};" title="${escapeHtml(title)}"><span class="matchups-cell-pct">${pct.toFixed(0)}%</span><span class="matchups-cell-count">${cell.wins}-${cell.losses}-${cell.draws}</span></td>`;
               })
               .join("")}
           </tr>`
           )
           .join("")}
       </tbody>
-    </table></div>`;
+    </table></div></div>`;
+    const wrap = matrixEl.querySelector(".matchups-matrix-scroll");
+    fitColumns(wrap);
+    // Mouse users drag it sideways like a finger swipes it (js/drag-scroll.js).
+    // Phones' one-column mode: released, it glides to the next / previous
+    // column, like the carousels; otherwise it scrolls freely (only when it
+    // doesn't fit — .is-scrollable / .is-dragging set there).
+    if (columnModeQuery.matches) {
+      enableSnapDrag(wrap, {
+        canDrag: () => wrap.scrollWidth > wrap.clientWidth + 1,
+        targetLeft: (forward) => {
+          const stops = columnStops(wrap);
+          const now = wrap.scrollLeft;
+          const next = forward ? stops.find((x) => x > now + 1) : [...stops].reverse().find((x) => x < now - 1);
+          return next ?? (forward ? stops[stops.length - 1] : stops[0]) ?? now;
+        },
+      });
+    } else {
+      enableDragScroll(wrap);
+    }
   }
 
   function updateCount() {

@@ -3,7 +3,7 @@
 // "mouse" is handled here). Two flavours:
 //
 // - enableDragScroll: a free-scrolling row (badges.html's "Attualmente"
-//   holders). Also keeps a few classes on the row in sync, for its CSS:
+//   holders, matchups.html's matrix). Also keeps a few classes on the row in sync, for its CSS:
 //   is-scrollable (content wider than the row: grab cursor), fade-left /
 //   fade-right (more content that way: edge fade).
 // - enableSnapDrag: a scroll-snap carousel (js/chart-carousel.js's chart
