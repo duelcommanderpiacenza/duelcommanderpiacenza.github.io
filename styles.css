@@ -7388,18 +7388,21 @@ html.nav-mobile .player-card.is-editing .pc-art-space {
 }
 
 /* Footer: since when the player plays (first event's year), the logo. */
+/* Its own strip under the panel, with room around it: "Dal …" (+ the
+   Campione star), the seal in the middle, the logo on the right. */
 .pc-foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 3cqw;
-  min-height: 6cqw;
-  margin-top: -1cqw;
+  min-height: 9cqw;
+  margin-top: 1cqw;
+  padding-inline: 1cqw;
 }
 
 .pc-since {
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 3cqw;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 3.8cqw;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -7407,8 +7410,8 @@ html.nav-mobile .player-card.is-editing .pc-art-space {
 
 .pc-logo {
   flex-shrink: 0;
-  width: 6cqw;
-  height: 6cqw;
+  width: 8.5cqw;
+  height: 8.5cqw;
   object-fit: contain;
   filter: brightness(0) invert(1);
   opacity: 0.7;
@@ -7700,8 +7703,8 @@ html.nav-mobile .player-card.is-editing .pc-art-space {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 10cqw;
-  height: 5.4cqw;
+  width: 14cqw;
+  height: 7.6cqw;
   overflow: hidden;
   border-radius: 50%;
   box-shadow: inset 0 0 0 0.4cqw rgba(0, 0, 0, 0.25), 0 1px 3px rgba(0, 0, 0, 0.5);
@@ -7747,14 +7750,14 @@ html.nav-mobile .player-card.is-editing .pc-art-space {
 .pc-fx-stars {
   display: inline-flex;
   gap: 0.8cqw;
-  margin-left: 1.6cqw;
+  margin-left: 2cqw;
   vertical-align: middle;
   pointer-events: auto;
 }
 
 .pc-fx-star {
   color: #ffd34f;
-  font-size: 4cqw;
+  font-size: 5.4cqw;
   line-height: 1;
   letter-spacing: 0;
   text-shadow: 0 0 1.5cqw rgba(255, 200, 60, 0.9);
@@ -7762,8 +7765,8 @@ html.nav-mobile .player-card.is-editing .pc-art-space {
 }
 
 .pc-fx-star-count {
-  margin-left: 0.6cqw;
-  font-size: 3.2cqw;
+  margin-left: 0.8cqw;
+  font-size: 4.2cqw;
   font-weight: 800;
   vertical-align: 0.3cqw;
 }
