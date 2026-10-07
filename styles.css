@@ -6928,6 +6928,20 @@ img.cs-option-icon {
     line-height: 1.2;
   }
 
+  /* The hero edge to edge, right under the red header: it cancels the
+     page's phone padding (.page-main: 20px top, 16px sides) — no rounded
+     corners or shadow there. Under "Il tuo giocatore" (not linked yet, the
+     banner on top) it isn't pulled up — still edge to edge. */
+  .profile-hero {
+    margin: -20px -16px 22px;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .profile-claim:not([hidden]) + .profile-hero {
+    margin-top: 0;
+  }
+
   /* The card and the switch under it nearly as wide as the hero: its whole
      inner width, the hero's side padding trimmed. */
   .profile-hero-inner {
@@ -6993,8 +7007,8 @@ html.nav-mobile .profile-tab svg {
    first favourite colour as its glow (--pc-glow, set from JS: the avatar's
    ring), and the cosmetics earned by playing (js/card-cosmetics.js, the
    .fx-* rules at the end of this section). The upper part is the art alone; then avatar and
-   name straight on it; then a frosted-glass panel with archetype, colours
-   and description; "Dal <year>" and the logo at the foot. Always dark — it reads as an object, the same in both
+   name straight on it; then a frosted-glass panel, tinted in the favourite
+   colours, with the links and the description; "Dal <year>" and the logo at the foot. Always dark — it reads as an object, the same in both
    themes. Everything inside sizes in cqw (% of the card's width), so the
    card scales as one piece on any screen.
    --------------------------------------------------------------------------- */
@@ -7103,20 +7117,30 @@ html.nav-mobile .profile-tab svg {
   opacity: 0;
 }
 
-/* Darkens towards the bottom, so the panel's text reads on any art. */
+/* Depth over the art, top layer first: a soft warm light from the top-left,
+   a vignette darkening the edges and corners, then the darkening towards
+   the bottom, so the panel's text reads on any art. */
 .pc-art::after {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(
-    180deg,
-    rgba(12, 7, 8, 0.35) 0%,
-    rgba(12, 7, 8, 0) 22%,
-    rgba(12, 7, 8, 0.12) 45%,
-    rgba(12, 7, 8, 0.82) 70%,
-    rgba(12, 7, 8, 0.96) 100%
-  );
+  background:
+    radial-gradient(circle at 22% 12%, rgba(255, 236, 214, 0.16), transparent 42%),
+    radial-gradient(ellipse 125% 95% at 50% 32%, transparent 52%, rgba(12, 7, 8, 0.6) 100%),
+    linear-gradient(
+      180deg,
+      rgba(12, 7, 8, 0.35) 0%,
+      rgba(12, 7, 8, 0) 22%,
+      rgba(12, 7, 8, 0.12) 45%,
+      rgba(12, 7, 8, 0.82) 70%,
+      rgba(12, 7, 8, 0.96) 100%
+    );
+}
+
+/* The art itself a touch punchier: more contrast and colour. */
+.pc-art.is-loaded {
+  filter: contrast(1.1) saturate(1.15);
 }
 
 .pc-art.is-loaded {
@@ -7248,14 +7272,21 @@ html.nav-mobile .player-card.is-editing .pc-art-space {
   width: 15cqw;
   height: 15cqw;
   overflow: hidden;
-  border: 0.8cqw solid rgba(255, 255, 255, 0.92);
+  /* The ring in the favourite colours (--pc-avatar-ring, js/player-card.js
+     applyCardAccents: one solid, several blended round; white without),
+     painted on the border box under the red fill (the initial's, when
+     there's no picture) — the picture sits inside it. A soft glow in the
+     first colour around it. */
+  border: 1cqw solid transparent;
   border-radius: 50%;
-  background: var(--brand-red);
+  background:
+    linear-gradient(var(--brand-red), var(--brand-red)) padding-box,
+    var(--pc-avatar-ring, linear-gradient(rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.92))) border-box;
   color: #fff;
   font-size: 6.5cqw;
   font-weight: 800;
   box-shadow:
-    0 0 0 0.8cqw color-mix(in srgb, var(--pc-glow, #8d959c) 55%, transparent),
+    0 0 2.4cqw color-mix(in srgb, var(--pc-glow, #8d959c) 60%, transparent),
     0 4px 12px rgba(0, 0, 0, 0.45);
 }
 
@@ -7287,8 +7318,10 @@ html.nav-mobile .player-card.is-editing .pc-art-space {
   overflow-wrap: anywhere;
 }
 
-/* Bottom: the frosted-glass panel — (edit mode only) the commander list,
-   archetype | colours, then the description. */
+/* Bottom: the frosted-glass panel — (edit mode only) the commander list and
+   the colour toggles, then the links, then the description. Faintly tinted
+   in the favourite colours (--pc-panel-tint, js/player-card.js
+   applyCardAccents: a gradient across them; none without). */
 .pc-panel {
   display: flex;
   flex-direction: column;
@@ -7296,19 +7329,16 @@ html.nav-mobile .player-card.is-editing .pc-art-space {
   padding: 4cqw;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 4.5cqw;
-  background: rgba(14, 9, 10, 0.58);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  background: var(--pc-panel-tint, none), rgba(14, 9, 10, 0.58);
+  /* The art behind it well hidden: heavily blurred, darkened and muted, so
+     only its broad colours come through — the text and the tint read on
+     any art. */
+  -webkit-backdrop-filter: blur(18px) brightness(0.72) saturate(0.7);
+  backdrop-filter: blur(18px) brightness(0.72) saturate(0.7);
 }
 
 .pc-field {
   min-width: 0;
-}
-
-.pc-field-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 3cqw;
 }
 
 .pc-label {
@@ -7320,42 +7350,13 @@ html.nav-mobile .player-card.is-editing .pc-art-space {
   text-transform: uppercase;
 }
 
-.pc-value {
-  min-height: 5.6cqw;
-  margin: 1cqw 0 0;
-  color: #fff;
-  font-size: 4.4cqw;
-  font-weight: 800;
-  line-height: 1.25;
-  overflow-wrap: anywhere;
-}
-
-.pc-value a {
-  color: #fff;
-}
-
-.pc-value .profile-empty {
-  color: rgba(255, 255, 255, 0.55);
-}
-
-.pc-value .color-identity {
-  gap: 1.4cqw;
-  vertical-align: middle;
-}
-
-.pc-value .color-pip {
-  width: 4.6cqw;
-  height: 4.6cqw;
-}
-
 /* Up to five lines on the card (it keeps its proportions); the whole text
-   is in edit mode. */
+   is in edit mode. Under the links, a hairline between them — only when
+   there are links (an empty .pc-links isn't shown). */
 .pc-description {
   display: -webkit-box;
   margin: 0;
-  padding-top: 3cqw;
   overflow: hidden;
-  border-top: 1px solid rgba(255, 255, 255, 0.14);
   color: rgba(255, 255, 255, 0.9);
   font-size: 3.7cqw;
   font-style: italic;
@@ -7369,6 +7370,21 @@ html.nav-mobile .player-card.is-editing .pc-art-space {
 
 .pc-description.is-empty {
   color: rgba(255, 255, 255, 0.55);
+}
+
+/* The owner's own words, in italics between quotes (not the placeholder
+   inviting them to write some). */
+.pc-description:not(.is-empty)::before {
+  content: "\201C";
+}
+
+.pc-description:not(.is-empty)::after {
+  content: "\201D";
+}
+
+.pc-links:not(:empty) ~ .pc-description {
+  padding-top: 3cqw;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 /* Footer: since when the player plays (first event's year), the logo. */
@@ -8075,8 +8091,8 @@ html.nav-mobile .pc-link-field .pc-link {
 /* Brand red, like the site's other small floating controls; ✎ outside edit
    mode, ✓ in it. */
 /* account.html: "?" on the card's top-left corner (the effects' explanation,
-   js/card-cosmetics.js) — the site's round black help button, a white ring
-   so it reads on the dark hero. Only in edit mode (with ✓ and ✕ on the
+   js/card-cosmetics.js) — the site's red foil help button (its colours with
+   .help-toggle-btn's), a white ring so it reads on the dark hero. Only in edit mode (with ✓ and ✕ on the
    other corner), and only once linked. */
 .pc-help-btn {
   position: absolute;
@@ -8090,7 +8106,6 @@ html.nav-mobile .pc-link-field .pc-link {
   padding: 0;
   border: 2px solid rgba(255, 255, 255, 0.9);
   border-radius: 50%;
-  background: #111;
   color: #fff;
   font: inherit;
   font-size: 0.95rem;
@@ -8098,7 +8113,6 @@ html.nav-mobile .pc-link-field .pc-link {
   line-height: 1;
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
   cursor: pointer;
-  transition: transform 150ms ease;
 }
 
 .pc-help-btn:hover {
@@ -8217,15 +8231,9 @@ html.nav-mobile .pc-link-field .pc-link {
    out finger-unfriendly (colour toggles ~16px, the "Mostra foto" checkbox
    ~10px, ~22px-tall lists). On touch, edit mode switches them to fixed,
    finger-sized px instead — taps of 36-44px, text fields at 16px so iOS
-   doesn't zoom the page in when they're focused — and archetype / colours
-   stack, so the five colour toggles get the panel's whole width. The card
-   just grows taller while editing (its proportions are a minimum, see
-   .pc-surface); view mode is untouched. */
-html.nav-mobile .player-card.is-editing .pc-field-row {
-  grid-template-columns: minmax(0, 1fr);
-  gap: 14px;
-}
-
+   doesn't zoom the page in when they're focused. The card just grows
+   taller while editing (its proportions are a minimum, see .pc-surface);
+   view mode is untouched. */
 html.nav-mobile .player-card.is-editing .pc-label {
   font-size: 11px;
 }
@@ -9506,9 +9514,9 @@ body.is-loading .filter-toggle-btn {
   min-width: 0;
 }
 
-/* Round black "?" that opens a page's explanation pop-up (js/info-dialog.js,
-   .info-dialog) — black by request rather than brand red; a thin light ring
-   in dark mode keeps it from vanishing into the dark background. */
+/* Round "?" that opens a page's explanation pop-up (js/info-dialog.js,
+   .info-dialog) — red foil (.help-toggle-btn, .pc-help-btn: below), a thin
+   light ring in dark mode keeping it off the dark background. */
 .help-toggle-btn {
   flex-shrink: 0;
   display: inline-flex;
@@ -9519,7 +9527,6 @@ body.is-loading .filter-toggle-btn {
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: #111;
   color: #fff;
   font: inherit;
   font-size: 0.78rem;
@@ -9527,11 +9534,46 @@ body.is-loading .filter-toggle-btn {
   line-height: 1;
   cursor: pointer;
   box-shadow: var(--shadow-card);
-  transition: background 150ms ease;
 }
 
-.help-toggle-btn:hover {
-  background: #333;
+/* Every "?" (.help-toggle-btn, the player card's .pc-help-btn): brand red
+   with a faint rainbow foil tint, a bright glare sweeping across it now and
+   then (only the glare layer moves: no-repeat, so it never wraps back in),
+   then a pause. Brighter on hover. */
+.help-toggle-btn,
+.pc-help-btn {
+  background:
+    linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.7) 50%, transparent 65%) no-repeat,
+    linear-gradient(135deg, rgba(255, 120, 200, 0.35), rgba(255, 210, 90, 0.3) 35%, rgba(120, 220, 255, 0.3) 70%, rgba(255, 120, 200, 0.35)),
+    linear-gradient(135deg, #ff5257, #dc181c 50%, #9f141b);
+  background-size: 300% 100%, 100% 100%, 100% 100%;
+  background-position: 120% 0, 0 0, 0 0;
+  text-shadow: 0 1px 2px rgba(80, 0, 0, 0.45);
+  animation: help-foil 3.6s ease-in-out infinite;
+  transition: filter 150ms ease, transform 150ms ease;
+}
+
+.help-toggle-btn:hover,
+.pc-help-btn:hover {
+  filter: brightness(1.12);
+}
+
+/* The glare crosses in the first 45%, then waits off the button. */
+@keyframes help-foil {
+  0% {
+    background-position: 120% 0, 0 0, 0 0;
+  }
+  45%,
+  100% {
+    background-position: -20% 0, 0 0, 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .help-toggle-btn,
+  .pc-help-btn {
+    animation: none;
+  }
 }
 
 /* Phones keep a bigger, easier-to-tap target. */

@@ -3,26 +3,40 @@
 // (js/player-detail.js): the border/glow colours, the commander art
 // (Scryfall), and the public card's markup. Its look is styles.css's
 // .player-card / .pc-* rules.
-import { escapeHtml, colorIdentityPips, badgeTooltipAttrs } from "./ui.js";
+import { escapeHtml, badgeTooltipAttrs } from "./ui.js";
 import { applyCardCosmetics } from "./card-cosmetics.js";
 
-// The card's glow colour (the avatar's ring, the glow behind the logo while
-// there's no art), from the first favourite colour — brighter than the
-// color-pip fills, since it glows on a dark card. No colours: silver. (The
-// card no longer has a border in the favourite colours: its frame is the
+// The favourite colours on the card — never as text: the avatar's ring in
+// all of them, a glow (around the avatar, behind the logo while there's no
+// art) from the first one, and a faint tint of the glass panel across all
+// of them, left to right — brighter than the color-pip fills, since they
+// glow on a dark card. No colours: a white ring, a silver glow, an
+// untinted panel. (The card's frame is the
 // Presenze cosmetic's, js/card-cosmetics.js.)
 const ACCENT = { W: "#e3d58a", U: "#3b8ae0", B: "#8f8288", R: "#e8492f", G: "#33a866" };
 const NO_ACCENT = "#d6dbe0";
+const PANEL_TINT_PCT = 38;
 
-// The glow from the colours (a WUBRG-ordered string).
+// From the colours (a WUBRG-ordered string): --pc-glow, --pc-avatar-ring
+// (styles.css .pc-avatar: one colour solid, several blended round the
+// circle; none: white) and --pc-panel-tint (.pc-panel).
 export function applyCardAccents(cardEl, colors) {
   cardEl.style.setProperty("--pc-glow", colors ? ACCENT[colors[0]] : NO_ACCENT);
+  if (!colors) {
+    cardEl.style.removeProperty("--pc-panel-tint");
+    cardEl.style.removeProperty("--pc-avatar-ring");
+    return;
+  }
+  const ring = [...colors].map((c) => ACCENT[c]);
+  cardEl.style.setProperty(
+    "--pc-avatar-ring",
+    ring.length === 1 ? `linear-gradient(${ring[0]}, ${ring[0]})` : `conic-gradient(${[...ring, ring[0]].join(", ")})`
+  );
+  const stops = [...colors].map((c) => `color-mix(in srgb, ${ACCENT[c]} ${PANEL_TINT_PCT}%, transparent)`);
+  // One colour: from it to a fainter version of itself.
+  if (stops.length === 1) stops.push(`color-mix(in srgb, ${ACCENT[colors[0]]} ${PANEL_TINT_PCT / 3}%, transparent)`);
+  cardEl.style.setProperty("--pc-panel-tint", `linear-gradient(120deg, ${stops.join(", ")})`);
 }
-
-export const archetypeLabel = (archetype) => archetype.charAt(0).toUpperCase() + archetype.slice(1);
-
-// Displayed as a placeholder wherever a fact isn't set.
-export const EMPTY_VALUE = '<span class="profile-empty">—</span>';
 
 // Scryfall's art-only crop of the commander's front face. null when there's
 // no match or Scryfall can't be reached — the card just keeps its colour
@@ -163,7 +177,8 @@ export function cardLinksHtml(links) {
 }
 
 // player.html's card, view only: the same layout as account.html's card
-// outside edit mode. `card` is db.js's PlayerCards.get() row, `name` the
+// outside edit mode — the links, then the description, on the panel tinted
+// in the favourite colours. `card` is db.js's PlayerCards.get() row, `name` the
 // player's name, `since` the year of their first event (or null), `badges`
 // the player's badges (cardBadgesHtml), `progress` the player's
 // player_progress row for the cosmetics (js/card-cosmetics.js; null: none). The
@@ -177,6 +192,15 @@ export function renderPublicPlayerCard(containerEl, card, { name, since, badges 
     ? `<div class="pc-avatar"><img src="${escapeHtml(card.avatar_url)}" alt="" referrerpolicy="no-referrer"></div>`
     : "";
   const description = card.description?.trim();
+  const links = cardLinksHtml(card);
+  // Neither: no empty glass box.
+  const panel =
+    links || description
+      ? `<div class="pc-panel">
+            <div class="pc-links">${links}</div>
+            ${description ? `<p class="pc-description">${escapeHtml(description)}</p>` : ""}
+          </div>`
+      : "";
   containerEl.innerHTML = `<article class="player-card" aria-label="La carta di ${escapeHtml(name)}">
     <div class="pc-frame">
       <div class="pc-surface">
@@ -188,20 +212,7 @@ export function renderPublicPlayerCard(containerEl, card, { name, since, badges 
             ${avatar}
             <div class="pc-nameplate-text"><p class="pc-name">${escapeHtml(name)}</p></div>
           </div>
-          <div class="pc-panel">
-            <div class="pc-field-row">
-              <div class="pc-field">
-                <p class="pc-label">Archetipo preferito</p>
-                <p class="pc-value">${card.fav_archetype ? escapeHtml(archetypeLabel(card.fav_archetype)) : EMPTY_VALUE}</p>
-              </div>
-              <div class="pc-field">
-                <p class="pc-label">Colori preferiti</p>
-                <p class="pc-value">${card.fav_colors ? colorIdentityPips(card.fav_colors) : EMPTY_VALUE}</p>
-              </div>
-            </div>
-            ${description ? `<p class="pc-description">${escapeHtml(description)}</p>` : ""}
-            <div class="pc-links">${cardLinksHtml(card)}</div>
-          </div>
+          ${panel}
           <div class="pc-foot">
             <span class="pc-since">${since ? `Dal ${escapeHtml(since)}` : ""}</span>
             <img src="dc_pc.png" alt="" class="pc-logo">

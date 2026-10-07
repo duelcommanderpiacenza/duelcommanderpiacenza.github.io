@@ -10,8 +10,8 @@
 //    in the favourite colours; the upper part left to the art; a nameplate
 //    straight on the art — avatar (the Google picture — hidden by the
 //    owner, no circle at all outside edit mode) and name — then, on a glass
-//    panel at the bottom, archetype and colours, then the description (140
-//    characters at most); "Dal <year>" of the linked player's first event at
+//    panel at the bottom (faintly tinted in the favourite colours), the
+//    links, then the description (50 characters at most); "Dal <year>" of the linked player's first event at
 //    the bottom. The favourite commander is shown only as the art; ✎ edits
 //    the card without changing its layout (each value turns into its own
 //    list / toggles / text, plus the commander list and "Mostra foto", live
@@ -60,14 +60,12 @@ import { matchRoundOutcome, isDrop, isBye, computeLeaguePoints } from "./leaderb
 import { tallyOutcome, winRatePct } from "./winrate.js";
 import { applyCardCosmetics, openCardEffectsInfo } from "./card-cosmetics.js";
 import { renderCommanderCarousel, albumItems, commanderPairKey, openAlbumEffectsInfo } from "./commander-carousel.js";
-import { escapeHtml, colorIdentityPips, uniqueBadges, eventTitle, formatDate } from "./ui.js";
+import { escapeHtml, uniqueBadges, eventTitle, formatDate } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { fetchPlayerBadgesRenderer } from "./player-badges.js";
 import { historyStatsHtml } from "./history-list.js";
 import {
   applyCardAccents,
-  archetypeLabel,
-  EMPTY_VALUE,
   createArtPainter,
   cardBadgesHtml,
   cardLinksHtml,
@@ -95,8 +93,6 @@ const nameEl = document.getElementById("profile-name");
 // favourite commander's art blurred behind it all (styles.css .profile-hero).
 const heroNameEl = document.getElementById("profile-hero-name");
 const heroSinceEl = document.getElementById("profile-hero-since");
-const archetypeEl = document.getElementById("pc-archetype");
-const colorsEl = document.getElementById("pc-colors");
 const bioEl = document.getElementById("profile-bio");
 const sinceEl = document.getElementById("pc-since");
 const badgesEl = document.getElementById("pc-badges");
@@ -111,7 +107,6 @@ const emailSummaryEl = document.getElementById("account-email-summary");
 const profileForm = document.getElementById("profile-form");
 const showAvatarInput = document.getElementById("profile-show-avatar");
 const commanderSelect = document.getElementById("profile-commander");
-const archetypeSelect = document.getElementById("profile-archetype");
 const colorInputs = Array.from(profileForm.querySelectorAll('input[name="profile-color"]'));
 const descriptionEl = document.getElementById("profile-description");
 const counterEl = document.getElementById("profile-counter");
@@ -185,7 +180,6 @@ function savedValues() {
   return {
     colors: profile?.fav_colors ?? "",
     commander: profile?.fav_commander ?? null,
-    archetype: profile?.fav_archetype ?? null,
     description: profile?.description ?? "",
     showAvatar: profile?.show_avatar ?? true,
     instagram: profile?.instagram ?? null,
@@ -198,7 +192,6 @@ function formValues() {
   return {
     colors: COLOR_ORDER.filter((c) => colorInputs.some((i) => i.value === c && i.checked)).join(""),
     commander: commandersById.get(commanderSelect.value) ?? null,
-    archetype: archetypeSelect.value || null,
     description: descriptionEl.value,
     showAvatar: showAvatarInput.checked,
   };
@@ -226,9 +219,6 @@ function renderCard(values) {
   document.getElementById("profile-show-avatar-wrap").classList.toggle("is-unavailable", !hasPicture);
 
   applyCardAccents(cardEl, values.colors);
-
-  archetypeEl.innerHTML = values.archetype ? escapeHtml(archetypeLabel(values.archetype)) : EMPTY_VALUE;
-  colorsEl.innerHTML = values.colors ? colorIdentityPips(values.colors) : EMPTY_VALUE;
 
   const description = values.description.trim();
   bioEl.textContent = description || "Nessuna descrizione: premi ✎ per raccontare qualcosa di te.";
@@ -261,7 +251,6 @@ function fillForm() {
   const saved = savedValues();
   showAvatarInput.checked = saved.showAvatar;
   commanderSelect.value = profile?.fav_commander_id ?? "";
-  archetypeSelect.value = saved.archetype ?? "";
   for (const input of colorInputs) input.checked = saved.colors.includes(input.value);
   descriptionEl.value = saved.description;
   for (const [key, input] of Object.entries(linkInputs)) input.value = saved[key] ?? "";
@@ -512,7 +501,6 @@ profileForm.addEventListener("submit", async (e) => {
     description: values.description.trim() || null,
     fav_colors: values.colors,
     fav_commander_id: values.commander?.id ?? null,
-    fav_archetype: values.archetype,
     show_avatar: values.showAvatar,
   };
   editToggleBtn.disabled = true;

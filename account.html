@@ -87,7 +87,7 @@
       <!-- What an account is for. -->
       <ul class="account-perks">
         <li>Collegati al tuo giocatore e ritrova le tue statistiche</li>
-        <li>Crea la tua carta giocatore personalizzata, con il tuo commander, i tuoi colori e il tuo archetipo preferiti</li>
+        <li>Crea la tua carta giocatore personalizzata, con il tuo commander e i tuoi colori preferiti</li>
         <li>Mostra la tua carta nella tua pagina giocatore</li>
       </ul>
       <div class="form-actions">
@@ -186,38 +186,17 @@
                         </div>
                       </div>
 
-                      <div class="pc-field-row">
-                        <div class="pc-field">
-                          <p class="pc-label">Archetipo preferito</p>
-                          <p class="pc-value pc-view-only" id="pc-archetype"></p>
-                          <div class="pc-select pc-edit-only">
-                            <select id="profile-archetype" aria-label="Archetipo preferito">
-                              <option value="">&mdash; nessuno &mdash;</option>
-                              <option value="aggro">Aggro</option>
-                              <option value="control">Control</option>
-                              <option value="combo">Combo</option>
-                              <option value="tempo">Tempo</option>
-                              <option value="midrange">Midrange</option>
-                            </select>
-                          </div>
+                      <!-- Edit mode only: the favourite colours, shown on the
+                           card as a faint tint of its panel (js/player-card.js). -->
+                      <div class="pc-field pc-edit-only">
+                        <p class="pc-label">Colori preferiti</p>
+                        <div class="pc-colors-edit pc-edit-only" role="group" aria-label="Colori preferiti">
+                          <label class="pc-mana color-pip-W" title="Bianco"><input type="checkbox" name="profile-color" value="W" aria-label="Bianco"></label>
+                          <label class="pc-mana color-pip-U" title="Blu"><input type="checkbox" name="profile-color" value="U" aria-label="Blu"></label>
+                          <label class="pc-mana color-pip-B" title="Nero"><input type="checkbox" name="profile-color" value="B" aria-label="Nero"></label>
+                          <label class="pc-mana color-pip-R" title="Rosso"><input type="checkbox" name="profile-color" value="R" aria-label="Rosso"></label>
+                          <label class="pc-mana color-pip-G" title="Verde"><input type="checkbox" name="profile-color" value="G" aria-label="Verde"></label>
                         </div>
-                        <div class="pc-field">
-                          <p class="pc-label">Colori preferiti</p>
-                          <p class="pc-value pc-view-only" id="pc-colors"></p>
-                          <div class="pc-colors-edit pc-edit-only" role="group" aria-label="Colori preferiti">
-                            <label class="pc-mana color-pip-W" title="Bianco"><input type="checkbox" name="profile-color" value="W" aria-label="Bianco"></label>
-                            <label class="pc-mana color-pip-U" title="Blu"><input type="checkbox" name="profile-color" value="U" aria-label="Blu"></label>
-                            <label class="pc-mana color-pip-B" title="Nero"><input type="checkbox" name="profile-color" value="B" aria-label="Nero"></label>
-                            <label class="pc-mana color-pip-R" title="Rosso"><input type="checkbox" name="profile-color" value="R" aria-label="Rosso"></label>
-                            <label class="pc-mana color-pip-G" title="Verde"><input type="checkbox" name="profile-color" value="G" aria-label="Verde"></label>
-                          </div>
-                        </div>
-                      </div>
-
-                      <p class="pc-description pc-view-only" id="profile-bio"></p>
-                      <div class="pc-description-edit pc-edit-only">
-                        <textarea id="profile-description" rows="2" maxlength="50" aria-label="Descrizione" placeholder="Raccontaci qualcosa di te come giocatore&hellip;"></textarea>
-                        <span class="pc-counter" id="profile-counter">0/50</span>
                       </div>
 
                       <!-- The owner's profiles elsewhere (js/player-card.js): icons
@@ -238,6 +217,12 @@
                           <span class="pc-link pc-link-archidekt" aria-hidden="true"><span class="pc-link-letter">A</span></span>
                           <input type="text" id="profile-archidekt" maxlength="200" autocomplete="off" spellcheck="false" aria-label="Archidekt" placeholder="Archidekt: nome utente o link">
                         </label>
+                      </div>
+
+                      <p class="pc-description pc-view-only" id="profile-bio"></p>
+                      <div class="pc-description-edit pc-edit-only">
+                        <textarea id="profile-description" rows="2" maxlength="50" aria-label="Descrizione" placeholder="Raccontaci qualcosa di te come giocatore&hellip;"></textarea>
+                        <span class="pc-counter" id="profile-counter">0/50</span>
                       </div>
 
                       <!-- In edit mode, at the bottom of the panel, once linked:
