@@ -32,27 +32,63 @@ async function fetchLeagueEventsData(leagueId) {
   // The league's total event count (open ones included, even those hidden
   // from visitors) is returned too, for computeLeaguePoints's best-results cap.
   const allEvents = await Events.listByLeague(leagueId);
+  const closed = allEvents.filter((ev) => !ev.is_open);
   const [eventsData, scheduledEvents] = await Promise.all([
-    fetchEventsResults(allEvents.filter((ev) => !ev.is_open).map((ev) => ev.id)),
+    fetchEventsResults(closed.map((ev) => ev.id)),
     Leagues.eventCount(leagueId, allEvents.length),
   ]);
-  return { eventsData, scheduledEvents };
+  return { eventsData, scheduledEvents, played: closed.length };
 }
 
 async function loadLeagueCard(league) {
-  const { eventsData, scheduledEvents } = await fetchLeagueEventsData(league.id);
+  const { eventsData, scheduledEvents, played } = await fetchLeagueEventsData(league.id);
   const summary = computeLeagueSummary(eventsData);
   // A Topdeck series has no points leaderboard (same as league.html).
-  const standings = league.is_topdeck
-    ? null
-    : computeLeaguePoints(eventsData, { scheduledEvents }).slice(0, LEAGUE_PREVIEW_COUNT);
-  return { league, summary, standings };
+  const standings = league.is_topdeck ? null : computeLeaguePoints(eventsData, { scheduledEvents });
+  return { league, summary, standings, played, scheduled: Math.max(scheduledEvents, played) };
+}
+
+// The open league and Topdeck series with their data.
+let activeLeaguesPromise = null;
+function loadActiveLeagues() {
+  activeLeaguesPromise ??= Promise.all([Leagues.getOpen(), Leagues.getOpenTopdeck()]).then(
+    async ([openLeague, openTopdeck]) => {
+      const active = [openLeague, openTopdeck].filter(Boolean);
+      return { openLeague, active, cards: await Promise.all(active.map(loadLeagueCard)) };
+    }
+  );
+  return activeLeaguesPromise;
+}
+
+// A real league's progress: one segment per event of the league (open and
+// future ones included), filled for those already played. Past
+// SEGMENTS_MAX events, one continuous bar instead.
+const SEGMENTS_MAX = 16;
+
+function leagueProgressHtml(played, scheduled) {
+  if (!scheduled) return "";
+  const pct = Math.round((played / scheduled) * 100);
+  const bar =
+    scheduled <= SEGMENTS_MAX
+      ? Array.from(
+          { length: scheduled },
+          (_, i) => `<span class="league-progress-seg${i < played ? " is-done" : ""}${i === played ? " is-next" : ""}"></span>`
+        ).join("")
+      : `<span class="league-progress-fill" style="width:${pct}%"></span>`;
+  return `
+      <div class="league-progress" role="progressbar" aria-label="Eventi giocati" aria-valuemin="0" aria-valuemax="${scheduled}" aria-valuenow="${played}">
+        <div class="league-progress-head">
+          <span class="league-progress-label">${played} di ${scheduled} eventi giocati</span>
+        </div>
+        <div class="league-progress-track${scheduled <= SEGMENTS_MAX ? " is-segmented" : ""}">${bar}</div>
+      </div>`;
 }
 
 // Name (a link to league.html) + event/player counts. A real league also
 // gets "Lista completa" and a glimpse of its current standings (top
 // LEAGUE_PREVIEW_COUNT, points only); a Topdeck series has neither.
-function renderLeagueCard({ league, summary, standings }, badgesFor) {
+function renderLeagueCard({ league, summary, standings: allStandings, played, scheduled }, badgesFor) {
+  const standings = allStandings?.slice(0, LEAGUE_PREVIEW_COUNT) ?? null;
   const href = `league.html?id=${league.id}`;
   // Compact sub-cards like league.html's Classifica (js/history-list.js's
   // look), each a link to the player: position chip, name + badges, points.
@@ -92,6 +128,7 @@ function renderLeagueCard({ league, summary, standings }, badgesFor) {
         ${standings ? `<a class="btn-secondary" href="${href}">Lista completa</a>` : ""}
       </div>
       <div class="dashboard-league-card-stats">${summary.events} ${summary.events === 1 ? "evento" : "eventi"} &middot; ${summary.uniquePlayers} giocatori</div>
+      ${league.is_topdeck ? "" : leagueProgressHtml(played, scheduled)}
       ${ranking}
     </div>`;
 }
@@ -175,8 +212,7 @@ function upcomingDateParts(value) {
 
 async function renderLeaguesSection(el) {
   try {
-    const [openLeague, openTopdeck] = await Promise.all([Leagues.getOpen(), Leagues.getOpenTopdeck()]);
-    const active = [openLeague, openTopdeck].filter(Boolean);
+    const { openLeague, active, cards } = await loadActiveLeagues();
 
     if (active.length === 0) {
       const leagues = await Leagues.list();
@@ -194,10 +230,7 @@ async function renderLeaguesSection(el) {
     }
 
     // Player badges only matter for a real league's standings preview.
-    const [cards, badgesFor] = await Promise.all([
-      Promise.all(active.map(loadLeagueCard)),
-      openLeague ? fetchPlayerBadgesRenderer() : () => "",
-    ]);
+    const badgesFor = openLeague ? await fetchPlayerBadgesRenderer() : () => "";
     el.innerHTML = `<div class="dashboard-league-list">${cards.map((c) => renderLeagueCard(c, badgesFor)).join("")}</div>`;
   } catch (err) {
     showError(el, err);
@@ -311,7 +344,7 @@ async function renderCommandersSection(el) {
   }
 }
 
-// Five independent widgets — the page isn't "ready" until all of them have
+// Independent widgets — the page isn't "ready" until all of them have
 // settled (success or already-shown error), not just the first one.
 Promise.allSettled([
   renderAnnouncementsSection(

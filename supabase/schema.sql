@@ -669,7 +669,8 @@ create table profiles (
   -- the check allows only that order, each color at most once.
   fav_colors text not null default '' check (fav_colors ~ '^W?U?B?R?G?$'),
   fav_commander_id uuid references commanders(id) on delete set null,
-  fav_archetype deck_archetype,
+  -- (fav_archetype, the favourite archetype, dropped by
+  -- supabase/migrations/013_drop_fav_archetype.sql.)
   -- Whether the player card shows the Google picture (false: the initial).
   -- Added by supabase/migrations/005_profile_show_avatar.sql.
   show_avatar boolean not null default true,
@@ -703,12 +704,11 @@ create policy "profiles_update_own" on profiles for update
 -- shown on the card; has_picture tells "hidden by the owner" (no circle)
 -- from "no Google picture" (the initial). Added by
 -- supabase/migrations/007_public_player_card.sql; the card's links since
--- 010.
+-- 010; no archetype since 013.
 create or replace function public_player_card(p_player_id uuid)
 returns table (
   description text,
   fav_colors text,
-  fav_archetype deck_archetype,
   show_avatar boolean,
   has_picture boolean,
   avatar_url text,
@@ -721,7 +721,6 @@ language sql stable security definer set search_path = public as $$
   select
     pr.description,
     pr.fav_colors,
-    pr.fav_archetype,
     pr.show_avatar,
     (u.raw_user_meta_data ->> 'avatar_url') is not null,
     case when pr.show_avatar then u.raw_user_meta_data ->> 'avatar_url' end,

@@ -1917,13 +1917,16 @@ a.dashboard-standing:hover .dashboard-standings-name-text {
 
 /* The "Più giocati" card and its carousel controls (placed right after the
    card, outside the white box — js/home.js) share one grid column. */
+/* "Ultimi eventi", then the charts card with its ‹ • › controls under it
+   (14px from it: the column's gap pulled back). */
 .dashboard-right-col {
   display: flex;
   flex-direction: column;
+  gap: 22px;
 }
 
 .dashboard-right-col > .chart-carousel-nav {
-  margin: 14px 0 0;
+  margin: -8px 0 0;
 }
 
 /* A card header's button ("Calendario", "Tutti gli eventi") never gets
@@ -1989,6 +1992,78 @@ a.dashboard-standing:hover .dashboard-standings-name-text {
   color: var(--text-muted);
   font-size: 0.85rem;
   font-weight: 700;
+}
+
+/* A real league's progress (js/home.js leagueProgressHtml): "3 di 8 eventi
+   giocati" over one segment per event — played ones
+   brand red, the next one outlined — or a continuous bar for a long
+   league. */
+.league-progress {
+  margin-top: 10px;
+}
+
+.league-progress-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.league-progress-label {
+  color: var(--text-title);
+}
+
+.league-progress-track {
+  position: relative;
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: rgba(220, 24, 28, 0.1);
+}
+
+.league-progress-track.is-segmented {
+  display: flex;
+  gap: 4px;
+  overflow: visible;
+  background: none;
+}
+
+.league-progress-seg {
+  flex: 1;
+  border-radius: var(--radius-pill);
+  background: rgba(220, 24, 28, 0.12);
+}
+
+.league-progress-seg.is-done {
+  background: linear-gradient(90deg, var(--brand-red), var(--brand-red-deep));
+}
+
+.league-progress-seg.is-next {
+  box-shadow: inset 0 0 0 1.5px var(--brand-red);
+}
+
+.league-progress-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--brand-red), var(--brand-red-deep));
+}
+
+:root[data-theme="dark"] .league-progress-track:not(.is-segmented),
+:root[data-theme="dark"] .league-progress-seg {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme="dark"] .league-progress-seg.is-done,
+:root[data-theme="dark"] .league-progress-fill {
+  background: linear-gradient(90deg, #ff6a6e, var(--brand-red));
+}
+
+:root[data-theme="dark"] .league-progress-seg.is-next {
+  box-shadow: inset 0 0 0 1.5px #ff6a6e;
 }
 
 .dashboard-league-chip-list {

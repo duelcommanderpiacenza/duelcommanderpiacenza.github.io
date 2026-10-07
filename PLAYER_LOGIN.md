@@ -231,7 +231,7 @@ favourite commander, favourite archetype.
   there before any claim is approved, and follows the person if the admin
   moves the player link). `description` ≤ 500 chars, `fav_colors` a
   WUBRG-ordered string ('' = none, checked by the database),
-  `fav_commander_id`, `fav_archetype`. Plain RLS: only the owner inserts /
+  `fav_commander_id`, `fav_archetype` (later dropped, migration 013). Plain RLS: only the owner inserts /
   updates, the owner and the admin read. Not public yet.
 - [x] `js/db.js`'s `Profiles` (`mine`, `save` = upsert).
 - [x] `account.html` + `js/account-page.js` rewritten:
