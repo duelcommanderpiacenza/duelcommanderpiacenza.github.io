@@ -10000,9 +10000,13 @@ html.nav-mobile .help-toggle-btn {
   --mx-tile-line: rgba(255, 255, 255, 0.1);
 }
 
+/* Its own solid background (the panel's colour, so it doesn't show): a
+   scroller without one isn't scrolled by the GPU in Chrome — it repaints
+   the whole table on every scroll step instead, which lagged. */
 .matchups-matrix-scroll {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  background: var(--mx-bg);
 }
 
 @media (max-width: 480px) {
