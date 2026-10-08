@@ -6678,20 +6678,23 @@ img.cs-option-icon {
   overflow: hidden;
   margin-bottom: 22px;
   border-radius: 28px;
-  background: linear-gradient(135deg, #2a1518, #120c0d);
+  /* Lighter than the (always dark) player card in it, so the card stands
+     out against it — under the art, and alone while there's none. */
+  background: linear-gradient(135deg, #7a3a40, #3b1e22);
   color: #fff;
   box-shadow: var(--shadow-soft);
 }
 
 /* The art (js/player-card.js createArtPainter: .is-loaded once loaded),
-   blurred, darkened, a little larger than the hero so the blur's soft edge
-   stays outside; a dark gradient over it for the text. */
+   blurred, only lightly darkened (the card reads against it), a little
+   larger than the hero so the blur's soft edge stays outside; a gradient
+   over it darkening only the text's side. */
 .profile-hero-art {
   position: absolute;
   inset: -40px;
   background-position: center 30%;
   background-size: cover;
-  filter: blur(24px) saturate(1.2) brightness(0.45);
+  filter: blur(24px) saturate(1.25) brightness(0.78);
   opacity: 0;
   transition: opacity 600ms ease;
 }
@@ -6700,12 +6703,19 @@ img.cs-option-icon {
   opacity: 1;
 }
 
+/* Desktop: the card on the left stays on the light art, the text on the
+   right gets a darker ground (phones: see the 820px block). */
 .profile-hero::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(18, 12, 13, 0.1), rgba(18, 12, 13, 0.4));
+  background: linear-gradient(90deg, rgba(18, 12, 13, 0) 0%, rgba(18, 12, 13, 0.12) 35%, rgba(18, 12, 13, 0.5) 100%);
   pointer-events: none;
+}
+
+/* A soft shadow under the hero's text, for a bright art behind it. */
+.profile-hero-text {
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.35);
 }
 
 .profile-hero-inner {
@@ -6898,6 +6908,12 @@ img.cs-option-icon {
 
 /* Narrower: the hero in one column, centred — the card first. */
 @media (max-width: 820px) {
+  /* Text above and below the card: an even, gentle darkening instead of
+     the desktop's left-to-right one. */
+  .profile-hero::after {
+    background: linear-gradient(180deg, rgba(18, 12, 13, 0.2), rgba(18, 12, 13, 0.32));
+  }
+
   .profile-hero-inner {
     grid-template-columns: minmax(0, 1fr);
     gap: 22px;
