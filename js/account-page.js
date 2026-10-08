@@ -6,15 +6,16 @@
 //    pending request (with "Annulla richiesta") — linking itself is the
 //    admin's (PLAYER_LOGIN.md);
 //  - the player card (left on desktop): Magic-card proportions, the
-//    favourite commander's art (Scryfall) as its background, a glowing border
-//    in the favourite colours; the upper part left to the art; a nameplate
+//    art of a card of the owner's choice (any Magic card, picked from
+//    Scryfall's autocomplete — profiles.fav_card, migration 014) as its
+//    background, a glow in the favourite colours; the upper part left to the art; a nameplate
 //    straight on the art — avatar (the Google picture — hidden by the
 //    owner, no circle at all outside edit mode) and name — then, on a glass
 //    panel at the bottom (faintly tinted in the favourite colours), the
 //    links, then the description (50 characters at most); "Dal <year>" of the linked player's first event at
-//    the bottom. The favourite commander is shown only as the art; ✎ edits
+//    the bottom. The background card is shown only as the art; ✎ edits
 //    the card without changing its layout (each value turns into its own
-//    list / toggles / text, plus the commander list and "Mostra foto", live
+//    field / toggles / text, plus the background card search and "Mostra foto", live
 //    preview) and becomes ✓ to save, with ✕ (or Esc) to cancel — saved to
 //    the account's own row in `profiles` (supabase/migrations/004-006);
 //    under it, once linked, the switch showing it on the player page too
@@ -41,7 +42,6 @@
 // crops are shown — see PLAYER_LOGIN.md, step 4.
 import { sb } from "./supabase-client.js";
 import {
-  Commanders,
   PlayerClaims,
   Profiles,
   MyAccount,
@@ -67,6 +67,7 @@ import { historyStatsHtml } from "./history-list.js";
 import {
   applyCardAccents,
   createArtPainter,
+  cardArtUrl,
   cardBadgesHtml,
   cardLinksHtml,
   parseCardLink,
@@ -89,8 +90,8 @@ const artEl = document.getElementById("pc-art");
 const avatarImg = document.getElementById("profile-avatar");
 const initialEl = document.getElementById("profile-initial");
 const nameEl = document.getElementById("profile-name");
-// The same name, big, in the hero beside the card; "Dal …" under it; the
-// favourite commander's art blurred behind it all (styles.css .profile-hero).
+// The same name, big, in the hero beside the card; the background card's
+// art blurred behind it all (styles.css .profile-hero).
 const heroNameEl = document.getElementById("profile-hero-name");
 const bioEl = document.getElementById("profile-bio");
 const sinceEl = document.getElementById("pc-since");
@@ -105,7 +106,11 @@ const emailSummaryEl = document.getElementById("account-email-summary");
 // The card's edit mode: each value's editable twin, in its place.
 const profileForm = document.getElementById("profile-form");
 const showAvatarInput = document.getElementById("profile-show-avatar");
-const commanderSelect = document.getElementById("profile-commander");
+const cardInput = document.getElementById("profile-card");
+const cardClearBtn = document.getElementById("profile-card-clear");
+const cardListEl = document.getElementById("profile-card-list");
+const artPickerEl = document.getElementById("profile-art-picker");
+const artStripEl = document.getElementById("profile-art-strip");
 const colorInputs = Array.from(profileForm.querySelectorAll('input[name="profile-color"]'));
 const descriptionEl = document.getElementById("profile-description");
 const counterEl = document.getElementById("profile-counter");
@@ -145,7 +150,12 @@ let loginNotice = null;
 let user = null;
 let profile = null;
 let claim = { linked: null, pending: null };
-let commandersById = new Map();
+// The background card picked in edit mode (a card name, null for none) —
+// only ever a name chosen from Scryfall's list (or the saved one).
+let pickedCard = null;
+// …and its printing (a Scryfall card id — the "Versione" picked), null for
+// Scryfall's default printing of that card.
+let pickedPrint = null;
 let firstYear = null;
 // The linked player's progress row (player_progress): the card's cosmetics
 // (js/card-cosmetics.js). null: none (not linked, no results, no table).
@@ -178,7 +188,10 @@ const paintHeroArt = createArtPainter(document.getElementById("profile-hero-art"
 function savedValues() {
   return {
     colors: profile?.fav_colors ?? "",
-    commander: profile?.fav_commander ?? null,
+    // A card saved before the background could be any card: its favourite
+    // commander's (supabase/migrations/014_fav_card.sql).
+    card: profile?.fav_card ?? profile?.fav_commander?.name ?? null,
+    print: (profile?.fav_card && profile?.fav_card_print) || null,
     description: profile?.description ?? "",
     showAvatar: profile?.show_avatar ?? true,
     instagram: profile?.instagram ?? null,
@@ -190,7 +203,8 @@ function savedValues() {
 function formValues() {
   return {
     colors: COLOR_ORDER.filter((c) => colorInputs.some((i) => i.value === c && i.checked)).join(""),
-    commander: commandersById.get(commanderSelect.value) ?? null,
+    card: pickedCard,
+    print: pickedPrint,
     description: descriptionEl.value,
     showAvatar: showAvatarInput.checked,
   };
@@ -234,8 +248,8 @@ function renderCard(values) {
   // every redraw.
   applyCardCosmetics(cardEl, claim.linked ? cardProgress : null);
 
-  paintArt(values.commander?.name ?? null);
-  paintHeroArt(values.commander?.name ?? null);
+  paintArt(values.card, values.print);
+  paintHeroArt(values.card, values.print);
 }
 
 // --- Edit mode (on the card itself, same layout) -----------------------------------
@@ -248,7 +262,12 @@ function updateCounter() {
 function fillForm() {
   const saved = savedValues();
   showAvatarInput.checked = saved.showAvatar;
-  commanderSelect.value = profile?.fav_commander_id ?? "";
+  pickedCard = saved.card;
+  pickedPrint = saved.print;
+  cardInput.value = saved.card ?? "";
+  cardClearBtn.hidden = !saved.card;
+  closeCardList();
+  loadArtPicker();
   for (const input of colorInputs) input.checked = saved.colors.includes(input.value);
   descriptionEl.value = saved.description;
   for (const [key, input] of Object.entries(linkInputs)) input.value = saved[key] ?? "";
@@ -410,7 +429,9 @@ editCancelBtn.addEventListener("click", () => {
 });
 document.addEventListener("keydown", (e) => {
   // Not while a dropdown is open: Escape closes that first.
-  if (e.key === "Escape" && isEditing() && !switching && !cardEl.querySelector(".cs-wrap.is-open")) setEditing(false);
+  if (e.key === "Escape" && isEditing() && !switching && !cardEl.querySelector(".cs-wrap.is-open") && cardListEl.hidden) {
+    setEditing(false);
+  }
 });
 
 // --- The sections, one at a time behind tabs -------------------------------------
@@ -461,6 +482,181 @@ document.getElementById("profile-action-decklist").addEventListener("click", () 
   });
 });
 
+// --- The background card: any Magic card, searched on Scryfall ----------------
+
+// Scryfall's autocomplete (card names, up to 20) as the user types; a name
+// is only taken when picked from the list (click, or ↑↓ + Enter) — typed
+// text alone is put back to the picked card when the field is left. Picking
+// redraws the card (its art) right away; × clears it.
+const CARD_SEARCH_MIN = 2;
+const CARD_SEARCH_DELAY_MS = 200;
+let cardSearchTimer = 0;
+let cardSearchToken = 0;
+let cardOptions = [];
+let cardHighlight = -1;
+
+function closeCardList() {
+  cardListEl.hidden = true;
+  cardListEl.innerHTML = "";
+  cardInput.setAttribute("aria-expanded", "false");
+  cardOptions = [];
+  cardHighlight = -1;
+}
+
+function renderCardList() {
+  cardListEl.innerHTML = cardOptions.length
+    ? cardOptions
+        .map(
+          (name, i) =>
+            `<button type="button" class="pc-card-option${i === cardHighlight ? " is-highlighted" : ""}" role="option" data-i="${i}" tabindex="-1">${escapeHtml(name)}</button>`
+        )
+        .join("")
+    : '<p class="pc-card-empty">Nessuna carta trovata.</p>';
+  cardListEl.hidden = false;
+  cardInput.setAttribute("aria-expanded", "true");
+}
+
+function pickCard(name) {
+  // A new card starts on its default art.
+  if (name !== pickedCard) pickedPrint = null;
+  pickedCard = name;
+  cardInput.value = name ?? "";
+  cardClearBtn.hidden = !name;
+  closeCardList();
+  renderCard(formValues());
+  loadArtPicker();
+}
+
+// "Versione": the picked card's different illustrations (Scryfall's search,
+// one result per illustration, oldest first), as a strip of small art
+// crops — only when there's more than one. The one in use is marked: the
+// picked printing's, else the one of Scryfall's default printing (that
+// name's own lookup). Picking one redraws the card with it.
+const ART_PICKER_MAX = 60;
+const artPrintsCache = new Map();
+let artPickerToken = 0;
+
+function fetchArtPrints(name) {
+  if (!artPrintsCache.has(name)) {
+    const q = encodeURIComponent(`!"${name}"`);
+    artPrintsCache.set(
+      name,
+      Promise.all([
+        fetch(`https://api.scryfall.com/cards/search?q=${q}&unique=art&order=released&dir=asc`)
+          .then((res) => (res.ok ? res.json() : { data: [] }))
+          .then((json) => (json.data ?? []).filter(cardArtUrl).slice(0, ART_PICKER_MAX)),
+        fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}`)
+          .then((res) => (res.ok ? res.json() : null))
+          .then((card) => card?.illustration_id ?? card?.card_faces?.[0]?.illustration_id ?? null),
+      ]).catch(() => [[], null])
+    );
+  }
+  return artPrintsCache.get(name);
+}
+
+function markArtInUse() {
+  for (const option of artStripEl.children) {
+    const on = pickedPrint ? option.dataset.id === pickedPrint : option.dataset.default === "true";
+    option.classList.toggle("is-selected", on);
+    option.setAttribute("aria-selected", String(on));
+  }
+}
+
+async function loadArtPicker() {
+  const token = ++artPickerToken;
+  const name = pickedCard;
+  if (!name) {
+    artPickerEl.hidden = true;
+    artStripEl.innerHTML = "";
+    return;
+  }
+  const [prints, defaultIllustration] = await fetchArtPrints(name);
+  if (token !== artPickerToken) return;
+  artPickerEl.hidden = prints.length < 2;
+  artStripEl.innerHTML = prints
+    .map((card) => {
+      const illustration = card.illustration_id ?? card.card_faces?.[0]?.illustration_id;
+      const label = `${card.set_name} (${(card.released_at ?? "").slice(0, 4)})`;
+      return `<button type="button" class="pc-art-option" role="option" data-id="${escapeHtml(card.id)}" data-default="${
+        illustration && illustration === defaultIllustration
+      }" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}"><img src="${escapeHtml(cardArtUrl(card))}" alt="" loading="lazy" draggable="false"></button>`;
+    })
+    .join("");
+  markArtInUse();
+  artStripEl.querySelector(".is-selected")?.scrollIntoView({ block: "nearest", inline: "center" });
+}
+
+artStripEl.addEventListener("click", (e) => {
+  const option = e.target.closest(".pc-art-option");
+  if (!option) return;
+  pickedPrint = option.dataset.id;
+  markArtInUse();
+  renderCard(formValues());
+});
+
+cardInput.addEventListener("input", () => {
+  clearTimeout(cardSearchTimer);
+  const q = cardInput.value.trim();
+  if (q.length < CARD_SEARCH_MIN) {
+    closeCardList();
+    return;
+  }
+  cardSearchTimer = setTimeout(async () => {
+    const token = ++cardSearchToken;
+    let names = [];
+    try {
+      const res = await fetch(`https://api.scryfall.com/cards/autocomplete?q=${encodeURIComponent(q)}`);
+      names = res.ok ? ((await res.json()).data ?? []) : [];
+    } catch (err) {
+      console.error(err);
+    }
+    // A slower earlier answer doesn't replace a newer one.
+    if (token !== cardSearchToken || document.activeElement !== cardInput) return;
+    cardOptions = names;
+    cardHighlight = names.length ? 0 : -1;
+    renderCardList();
+  }, CARD_SEARCH_DELAY_MS);
+});
+
+cardInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    // Never submits the card from here.
+    e.preventDefault();
+    if (cardHighlight >= 0) pickCard(cardOptions[cardHighlight]);
+    return;
+  }
+  if (e.key === "Escape" && !cardListEl.hidden) {
+    closeCardList();
+    return;
+  }
+  if ((e.key === "ArrowDown" || e.key === "ArrowUp") && cardOptions.length) {
+    e.preventDefault();
+    const n = cardOptions.length;
+    cardHighlight = (cardHighlight + (e.key === "ArrowDown" ? 1 : -1) + n) % n;
+    renderCardList();
+    cardListEl.querySelector(".is-highlighted")?.scrollIntoView({ block: "nearest" });
+  }
+});
+
+// mousedown, not click: picked before the field loses focus (its blur
+// puts the text back).
+cardListEl.addEventListener("mousedown", (e) => {
+  const option = e.target.closest(".pc-card-option");
+  if (!option) return;
+  e.preventDefault();
+  pickCard(cardOptions[Number(option.dataset.i)]);
+});
+
+cardInput.addEventListener("blur", () => {
+  closeCardList();
+  cardInput.value = pickedCard ?? "";
+});
+
+cardClearBtn.addEventListener("click", () => {
+  pickCard(null);
+  cardInput.focus();
+});
+
 // Live preview: every change in edit mode redraws the card from the form.
 profileForm.addEventListener("change", () => renderCard(formValues()));
 
@@ -498,7 +694,10 @@ profileForm.addEventListener("submit", async (e) => {
     ...links,
     description: values.description.trim() || null,
     fav_colors: values.colors,
-    fav_commander_id: values.commander?.id ?? null,
+    fav_card: values.card,
+    fav_card_print: values.card ? values.print : null,
+    // The older favourite commander: replaced by fav_card (migration 014).
+    fav_commander_id: null,
     show_avatar: values.showAvatar,
   };
   editToggleBtn.disabled = true;
@@ -1268,14 +1467,6 @@ followsListEl.addEventListener("click", async (e) => {
 
 // Also kept by id, for the card's live preview of a commander picked in
 // edit mode (its name → Scryfall art).
-async function loadCommanders() {
-  const commanders = await Commanders.list();
-  commandersById = new Map(commanders.map((c) => [c.id, c]));
-  commanderSelect.innerHTML =
-    '<option value="">&mdash; nessuno &mdash;</option>' +
-    commanders.map((c) => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
-}
-
 async function loadSignedIn(sessionUser) {
   user = sessionUser;
   profile = null;
@@ -1290,7 +1481,7 @@ async function loadSignedIn(sessionUser) {
   setMessage(accountMessageEl, "");
   try {
     let isAdmin;
-    [profile, , , isAdmin] = await Promise.all([Profiles.mine(user.id), loadClaim(), loadCommanders(), MyAccount.isAdmin()]);
+    [profile, , isAdmin] = await Promise.all([Profiles.mine(user.id), loadClaim(), MyAccount.isAdmin()]);
     // Admins can't delete their own account from here (nor in the database).
     accountDangerEl.hidden = isAdmin;
     if (claim.linked) await loadStats(claim.linked);

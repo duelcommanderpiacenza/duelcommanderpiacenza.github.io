@@ -87,7 +87,7 @@
       <!-- What an account is for. -->
       <ul class="account-perks">
         <li>Collegati al tuo giocatore e ritrova le tue statistiche</li>
-        <li>Crea la tua carta giocatore personalizzata, con il tuo commander e i tuoi colori preferiti</li>
+        <li>Crea la tua carta giocatore personalizzata, con la carta che preferisci come sfondo e i tuoi colori preferiti</li>
         <li>Mostra la tua carta nella tua pagina giocatore</li>
       </ul>
       <div class="form-actions">
@@ -108,7 +108,7 @@
 
 
     <!-- Connesso: a hero on top — the player card (+ its switch) on the
-         blurred art of the favourite commander, the name, the numbers once
+         blurred art of the background card, the name, the numbers once
          linked, quick actions — under "Il tuo giocatore" (on
          top until linked), then the sections one at a time behind tabs: Album
          comandanti, Seguiti, Decklist, Account (a pill bar on desktop, a
@@ -177,12 +177,21 @@
 
                     <div class="pc-panel">
 
-                      <!-- Edit mode only: the favourite commander shows as the
-                           card's background art, this picks it. -->
+                      <!-- Edit mode only: the card whose art is the card's
+                           background — any Magic card, searched on Scryfall
+                           (js/account-page.js), × for none. -->
                       <div class="pc-field pc-edit-only">
-                        <p class="pc-label">Commander preferito (sfondo)</p>
-                        <div class="pc-select">
-                          <select id="profile-commander" data-searchable aria-label="Commander preferito"></select>
+                        <p class="pc-label">Carta di sfondo</p>
+                        <div class="pc-card-search">
+                          <input type="text" id="profile-card" maxlength="200" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="profile-card-list" aria-label="Carta di sfondo" placeholder="Cerca una carta&hellip;">
+                          <button type="button" class="pc-card-clear" id="profile-card-clear" aria-label="Nessuna carta di sfondo" hidden>&times;</button>
+                          <div class="pc-card-list" id="profile-card-list" role="listbox" hidden></div>
+                        </div>
+                        <!-- Its versions (one per different illustration), when
+                             it has more than one: the art to use. -->
+                        <div class="pc-art-picker" id="profile-art-picker" hidden>
+                          <p class="pc-label">Versione</p>
+                          <div class="pc-art-strip" id="profile-art-strip" role="listbox" aria-label="Versione dell'illustrazione"></div>
                         </div>
                       </div>
 

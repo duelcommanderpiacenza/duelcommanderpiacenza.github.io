@@ -7938,9 +7938,10 @@ html.nav-mobile .player-card.is-editing .pc-art-space {
   accent-color: var(--brand-red);
 }
 
-/* The commander / archetype lists in place of their names: same size,
-   translucent on the glass instead of the site's white field. Specific
-   enough to outrank the dark-mode .cs-trigger rule too. */
+/* A list on the card in edit mode (.pc-select): translucent on the glass
+   instead of the site's white field. Specific enough to outrank the
+   dark-mode .cs-trigger rule too. (None at the moment — the background
+   card is a search field, .pc-card-search.) */
 .player-card .pc-select .cs-wrap {
   margin-top: 1cqw;
 }
@@ -7958,6 +7959,183 @@ html.nav-mobile .player-card.is-editing .pc-art-space {
 .player-card .pc-panel .pc-select .cs-trigger:hover,
 .player-card .pc-panel .pc-select .cs-trigger:focus-visible {
   border-color: rgba(255, 255, 255, 0.6);
+}
+
+/* The background card's search (js/account-page.js): a field like the
+   links' on the glass, × to clear it, and Scryfall's names in a list
+   opening under it — over the card (the card is lifted above what's
+   around it while the list is open). */
+.pc-card-search {
+  position: relative;
+  margin-top: 1cqw;
+}
+
+.pc-card-search input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 1.4cqw 7cqw 1.4cqw 2.4cqw;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 2.4cqw;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font: inherit;
+  font-size: 3.8cqw;
+  font-weight: 800;
+}
+
+.pc-card-search input:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.65);
+}
+
+.pc-card-search input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 600;
+}
+
+.pc-card-clear {
+  position: absolute;
+  top: 50%;
+  right: 1.2cqw;
+  display: grid;
+  place-items: center;
+  width: 5cqw;
+  height: 5cqw;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font: inherit;
+  font-size: 3.6cqw;
+  line-height: 1;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.pc-card-clear:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.pc-card-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 40;
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 4px;
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: var(--shadow-card-hover);
+  animation: cs-menu-in 140ms ease both;
+}
+
+.player-card:has(.pc-card-list:not([hidden])) {
+  z-index: 30;
+}
+
+.pc-card-option {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-body);
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pc-card-option.is-highlighted,
+.pc-card-option:hover {
+  background: var(--hairline-hover);
+  color: var(--text-title);
+}
+
+.pc-card-empty {
+  margin: 0;
+  padding: 8px 10px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+:root[data-theme="dark"] .pc-card-list {
+  background: #241a1d;
+}
+
+/* "Versione": the background card's illustrations as a strip of small
+   art crops, scrolling sideways; the one in use outlined in white. */
+.pc-art-picker {
+  margin-top: 2.4cqw;
+}
+
+.pc-art-strip {
+  display: flex;
+  gap: 1.6cqw;
+  margin-top: 1.2cqw;
+  padding: 0.6cqw 0.2cqw 1.6cqw;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+.pc-art-option {
+  flex: 0 0 20cqw;
+  aspect-ratio: 626 / 457;
+  padding: 0;
+  overflow: hidden;
+  border: 0.6cqw solid transparent;
+  border-radius: 1.8cqw;
+  background: rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 150ms ease, border-color 150ms ease;
+}
+
+.pc-art-option img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pc-art-option:hover {
+  opacity: 1;
+}
+
+.pc-art-option.is-selected {
+  border-color: #fff;
+  opacity: 1;
+}
+
+html.nav-mobile .pc-art-option {
+  flex-basis: 76px;
+  border-width: 2px;
+  border-radius: 8px;
+}
+
+/* Touch screens: finger-sized, 16px so iOS doesn't zoom. */
+html.nav-mobile .pc-card-search input {
+  min-height: 44px;
+  padding: 8px 44px 8px 12px;
+  border-radius: 10px;
+  font-size: 16px;
+}
+
+html.nav-mobile .pc-card-clear {
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  font-size: 18px;
+}
+
+html.nav-mobile .pc-card-option {
+  min-height: 44px;
 }
 
 /* The colour pips as toggles — faded until picked. */

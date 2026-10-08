@@ -669,6 +669,15 @@ create table profiles (
   -- the check allows only that order, each color at most once.
   fav_colors text not null default '' check (fav_colors ~ '^W?U?B?R?G?$'),
   fav_commander_id uuid references commanders(id) on delete set null,
+  -- The card whose art is the card's background (any Magic card, by name —
+  -- looked up on Scryfall), since supabase/migrations/014_fav_card.sql;
+  -- fav_commander_id above is the older favourite commander, no longer
+  -- written (cleared on save), only a fallback for cards saved before 014.
+  fav_card text check (char_length(fav_card) between 1 and 200),
+  -- Which printing's art (a Scryfall card id), picked on account.html's
+  -- "Versione"; null = Scryfall's default printing of fav_card. Added by
+  -- supabase/migrations/015_fav_card_print.sql.
+  fav_card_print uuid,
   -- (fav_archetype, the favourite archetype, dropped by
   -- supabase/migrations/013_drop_fav_archetype.sql.)
   -- Whether the player card shows the Google picture (false: the initial).
@@ -704,7 +713,9 @@ create policy "profiles_update_own" on profiles for update
 -- shown on the card; has_picture tells "hidden by the owner" (no circle)
 -- from "no Google picture" (the initial). Added by
 -- supabase/migrations/007_public_player_card.sql; the card's links since
--- 010; no archetype since 013.
+-- 010; no archetype since 013; commander_name is the background card's
+-- name since 014 (fav_card, else the old favourite commander's), with its
+-- printing (card_print) since 015.
 create or replace function public_player_card(p_player_id uuid)
 returns table (
   description text,
@@ -713,6 +724,7 @@ returns table (
   has_picture boolean,
   avatar_url text,
   commander_name text,
+  card_print uuid,
   instagram text,
   moxfield text,
   archidekt text
@@ -724,7 +736,9 @@ language sql stable security definer set search_path = public as $$
     pr.show_avatar,
     (u.raw_user_meta_data ->> 'avatar_url') is not null,
     case when pr.show_avatar then u.raw_user_meta_data ->> 'avatar_url' end,
-    c.name,
+    coalesce(pr.fav_card, c.name),
+    -- Only with the card it belongs to (not with an old favourite commander).
+    case when pr.fav_card is not null then pr.fav_card_print end,
     pr.instagram,
     pr.moxfield,
     pr.archidekt

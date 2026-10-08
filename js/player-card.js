@@ -38,34 +38,43 @@ export function applyCardAccents(cardEl, colors) {
   cardEl.style.setProperty("--pc-panel-tint", `linear-gradient(120deg, ${stops.join(", ")})`);
 }
 
-// Scryfall's art-only crop of the commander's front face. null when there's
-// no match or Scryfall can't be reached — the card just keeps its colour
-// glow. Cached per commander, so switching back and forth in edit mode
-// doesn't ask again.
+// Scryfall's art-only crop of a card's front face: a given printing's
+// (printId, a Scryfall card id — the "Versione" picked on account.html),
+// else Scryfall's default printing of that name. null when there's no
+// match or Scryfall can't be reached — the card just keeps its colour
+// glow. Cached per name + printing, so switching back and forth in edit
+// mode doesn't ask again.
 const artCache = new Map();
 
-function fetchCardArt(name) {
-  if (!artCache.has(name)) {
+export const cardArtUrl = (card) => (card?.image_uris ?? card?.card_faces?.[0]?.image_uris)?.art_crop ?? null;
+
+function fetchCardArt(name, printId = null) {
+  const key = `${name}|${printId ?? ""}`;
+  if (!artCache.has(key)) {
+    const url = printId
+      ? `https://api.scryfall.com/cards/${encodeURIComponent(printId)}`
+      : `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}`;
     artCache.set(
-      name,
-      fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}`)
+      key,
+      fetch(url)
         .then((res) => (res.ok ? res.json() : null))
-        .then((card) => (card?.image_uris ?? card?.card_faces?.[0]?.image_uris)?.art_crop ?? null)
+        .then(cardArtUrl)
         .catch(() => null)
     );
   }
-  return artCache.get(name);
+  return artCache.get(key);
 }
 
-// Returns a function painting a commander's art (by name, or null for none)
-// on a card's .pc-art. The newest call wins: picking several commanders
-// quickly in edit mode never ends with an older one's art. Loaded first,
-// then shown, so it fades in whole (.is-loaded) instead of painting in.
+// Returns a function painting a card's art (by name — and printing, when
+// one was picked — or null for none) on a card's .pc-art. The newest call
+// wins: picking several cards quickly in edit mode never ends with an older
+// one's art. Loaded first, then shown, so it fades in whole (.is-loaded)
+// instead of painting in.
 export function createArtPainter(artEl) {
   let latest = 0;
-  return async function paintArt(commanderName) {
+  return async function paintArt(cardName, printId = null) {
     const request = ++latest;
-    const url = commanderName ? await fetchCardArt(commanderName) : null;
+    const url = cardName ? await fetchCardArt(cardName, printId) : null;
     if (request !== latest) return;
     if (!url) {
       artEl.style.backgroundImage = "";
@@ -224,6 +233,6 @@ export function renderPublicPlayerCard(containerEl, card, { name, since, badges 
   const cardEl = containerEl.firstElementChild;
   applyCardAccents(cardEl, card.fav_colors);
   applyCardCosmetics(cardEl, progress);
-  createArtPainter(cardEl.querySelector(".pc-art"))(card.commander_name);
+  createArtPainter(cardEl.querySelector(".pc-art"))(card.commander_name, card.card_print ?? null);
   return cardEl;
 }
