@@ -1945,8 +1945,10 @@ a.dashboard-standing:hover .dashboard-standings-name-text {
   margin-top: auto;
 }
 
-/* Room between a slide's legend and its "Vedi tutti" below. */
-.dashboard-card-commanders .pie-chart-body {
+/* Room between a slide's legend and its "Vedi tutti" below (the donut's
+   legend is in .pie-chart-body, the bubbles' right under the chart). */
+.dashboard-card-commanders .pie-chart-body,
+.dashboard-card-commanders .bubble-legend {
   margin-bottom: 18px;
 }
 
@@ -10569,6 +10571,264 @@ html.nav-mobile .help-toggle-btn {
 .matchups-cell-mirror {
   border-color: transparent;
   background: repeating-linear-gradient(135deg, var(--mx-tile) 0 6px, transparent 6px 12px);
+}
+
+/* The Bacheca's "Più giocati" card (its two bubble slides): a dark stage,
+   the same in both themes — deep red-black with a soft red glow behind the
+   bubbles and a faint dot grid; the slides' titles, legends and links in
+   light colours. */
+.card.dashboard-card-commanders,
+:root[data-theme="dark"] .card.dashboard-card-commanders {
+  border-color: rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(ellipse at 50% 30%, rgba(220, 24, 28, 0.26), transparent 62%),
+    radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1.6px) 0 0 / 16px 16px,
+    linear-gradient(160deg, #2c1418, #110a0c);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  color: #fff;
+}
+
+.bubble-chart-wrap .pie-chart-title {
+  color: #fff;
+}
+
+.bubble-chart-wrap .pie-chart-subtitle {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.bubble-chart-wrap .pie-legend-item {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.bubble-chart-wrap .pie-legend-pct {
+  color: #fff;
+}
+
+.bubble-chart-wrap .section-link,
+:root[data-theme="dark"] .bubble-chart-wrap .section-link {
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.bubble-chart-wrap .section-link:hover,
+:root[data-theme="dark"] .bubble-chart-wrap .section-link:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* The Bacheca's "Commander più giocati" as bubbles (js/metagame-chart.js
+   renderBubbleChart): each placed and sized by js in % of the box, which
+   keeps the group's own proportions. A bubble: the commander's art (faded
+   in, js hydrateBubbleArt) over its chart colour, darkened at the bottom
+   for its % and — when it's big enough (a container query on it) — its
+   name; it grows a little on hover. "Altri": a grey disc. */
+.bubble-chart {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  margin: 10px auto 4px;
+}
+
+.bubble {
+  position: absolute;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 50%;
+  /* A neutral placeholder until the art fades in over it (not the chart
+     colour, which flashed as a coloured disc while loading). On the dark
+     stage: a deep shadow and a thin light rim (js BUBBLE_SHADOW is the same,
+     for its pulse). */
+  background: rgba(255, 255, 255, 0.08);
+  /* Always a ring in its colour — the same as its row's bar in the legend,
+     so a bubble and its row match at a glance; thicker when pointed at. */
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5), inset 0 0 0 2px rgba(255, 255, 255, 0.35), 0 0 0 3px var(--bubble-color);
+  color: #fff;
+  text-decoration: none;
+  container-type: inline-size;
+  /* Each motion on its own property, so they add up instead of replacing
+     each other: the drift moves (translate) and turns (rotate) it, the
+     entrance, hover, press and pulse (js, a Web Animation) size it
+     (scale) — all of them composited, nothing repainted per frame: its own
+     layer (will-change), so its drifting doesn't repaint the card around
+     it (whose blurred backdrop is costly). */
+  will-change: transform;
+  transition: scale 320ms cubic-bezier(0.2, 0.9, 0.3, 1.3), box-shadow 320ms ease;
+  animation:
+    bubble-in 800ms cubic-bezier(0.2, 0.9, 0.3, 1.25) var(--enter-delay, 0ms) backwards,
+    bubble-float var(--float-time, 6s) ease-in-out var(--float-delay, 0s) infinite alternate;
+}
+
+/* Drifting: a few px in its own direction and back, turning a little. */
+@keyframes bubble-float {
+  from {
+    translate: 0 0;
+    rotate: 0deg;
+  }
+  to {
+    translate: var(--float-x, 0) var(--float-y, 0);
+    rotate: var(--float-turn, 0deg);
+  }
+}
+
+a.bubble:hover {
+  z-index: 2;
+  scale: 1.08;
+  text-decoration: none;
+}
+
+/* Under the mouse, or its legend row is (.is-highlighted, js): a ring in
+   its colour, a little bigger (js pulses it on the way in). */
+.bubble.is-highlighted {
+  scale: 1.08;
+}
+
+.bubble:hover,
+.bubble.is-highlighted {
+  z-index: 2;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5), inset 0 0 0 2px rgba(255, 255, 255, 0.35), 0 0 0 5px var(--bubble-color);
+}
+
+/* Pressed (a tap on a touch screen, a click): in for a moment. */
+a.bubble:active {
+  scale: 0.93;
+  transition-duration: 90ms;
+}
+
+/* The legend rows lead to their bubble: a pointer cursor. */
+.bubble-legend-item {
+  cursor: pointer;
+}
+
+/* No art (an archetype): its colour fills it, the % in the middle. */
+.bubble.is-solid {
+  align-items: center;
+  background: var(--bubble-color, #9a9a94);
+}
+
+.bubble.is-solid .bubble-label {
+  padding-bottom: 0;
+}
+
+.bubble-art {
+  position: absolute;
+  inset: 0;
+  background-position: center 30%;
+  background-size: cover;
+  opacity: 0;
+  transition: opacity 400ms ease;
+}
+
+.bubble-art.is-loaded {
+  opacity: 1;
+}
+
+/* Each bubble a little sphere over its art: a soft highlight top-left,
+   shading towards the rim, and the bottom darker for its %. */
+.bubble::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.3), transparent 34%),
+    radial-gradient(circle at 50% 45%, transparent 52%, rgba(8, 4, 5, 0.55) 100%),
+    linear-gradient(180deg, transparent 45%, rgba(12, 7, 8, 0.7) 100%);
+  pointer-events: none;
+}
+
+/* A solid bubble (an archetype): flat, just its colour — no sphere light
+   or shading, no darker bottom (its label is in the middle). */
+.bubble.is-solid::after {
+  background: none;
+}
+
+/* Just the % (the name is on hover — the bubble's title — and in the
+   legend). */
+.bubble-label {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 78%;
+  padding-bottom: 14cqw;
+  line-height: 1.05;
+  text-align: center;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+.bubble-label strong {
+  font-size: max(11px, 22cqw);
+  font-weight: 800;
+}
+
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    scale: 0.4;
+  }
+}
+
+/* Below the bubbles, the donut's own legend (.pie-legend); each swatch a
+   small round crop of the commander's art (js hydrateBubbleArt) over its
+   colour. */
+.bubble-legend {
+  margin-top: 12px;
+}
+
+/* Swatch | name | % on the first line, the share bar under name and %.
+   Two classes: .pie-legend-item's own display comes later in this file. */
+.pie-legend-item.bubble-legend-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  column-gap: 8px;
+  row-gap: 4px;
+}
+
+.bubble-legend-item .pie-legend-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bubble-legend-bar {
+  grid-column: 2 / 4;
+  position: relative;
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.bubble-legend-bar > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+}
+
+
+.bubble-legend-swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-position: center 30%;
+  background-size: cover;
+  /* A neutral placeholder until its art arrives (the bar keeps the
+     colour). */
+  background-color: rgba(255, 255, 255, 0.1);
+  /* Its bubble's ring, in the same colour. */
+  box-shadow: 0 0 0 2px var(--bubble-color, rgba(255, 255, 255, 0.25));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bubble {
+    animation: none;
+    transition: none;
+  }
 }
 
 /* Metagame share chart (ring + side legend), js/metagame-chart.js. A single

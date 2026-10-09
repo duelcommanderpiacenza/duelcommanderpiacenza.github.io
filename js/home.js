@@ -5,7 +5,7 @@
 import { Announcements, Leagues, Events, EventEntries, fetchEventsResults } from "./db.js";
 import { computeLeagueSummary } from "./stats.js";
 import { computeLeaguePoints } from "./leaderboard.js";
-import { renderPieChart, ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
+import { renderBubbleChart, initBubbleChart, ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
 import { initChartCarousel } from "./chart-carousel.js";
 import { escapeHtml, formatTime, playerLabel, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
@@ -295,7 +295,7 @@ async function renderCommandersSection(el) {
       if (!e.commander) continue;
       total += 1;
       const key = e.commander.id;
-      if (!counts.has(key)) counts.set(key, { name: e.commander.name, count: 0 });
+      if (!counts.has(key)) counts.set(key, { id: key, name: e.commander.name, count: 0 });
       counts.get(key).count += 1;
       if (archetypeCounts.has(e.archetype)) archetypeCounts.set(e.archetype, archetypeCounts.get(e.archetype) + 1);
     }
@@ -309,8 +309,15 @@ async function renderCommandersSection(el) {
     const top = ranked.slice(0, TOP_COMMANDERS_COUNT);
     const otherCount = ranked.slice(TOP_COMMANDERS_COUNT).reduce((sum, r) => sum + r.count, 0);
 
-    const chartRows = top.map((r, i) => ({ label: r.name, share: (r.count / total) * 100, color: CHART_COLORS[i] }));
-    if (otherCount > 0) chartRows.push({ label: "Altri", share: (otherCount / total) * 100, color: OTHER_COLOR });
+    // The commanders as bubbles with their art, each a link to its page.
+    const chartRows = top.map((r, i) => ({
+      label: r.name,
+      share: (r.count / total) * 100,
+      color: CHART_COLORS[i],
+      href: `commander.html?id=${r.id}`,
+      card: r.name,
+    }));
+    if (otherCount > 0) chartRows.push({ label: "Altri", share: (otherCount / total) * 100, color: OTHER_COLOR, bubble: false });
 
     const archetypeRows = ARCHETYPES.map((a) => ({
       label: a,
@@ -329,15 +336,16 @@ async function renderCommandersSection(el) {
     const seeAll = (href) => `<a class="section-link" href="${href}">Vedi tutti</a>`;
     el.innerHTML = `
       <div class="chart-grid">
-        ${renderPieChart(chartRows, "Nessun dato per il grafico.", "Commander più giocati", {
+        ${renderBubbleChart(chartRows, "Nessun dato per il grafico.", "Commander più giocati", {
           subtitle: periodLabel,
           footer: seeAll("commanders.html"),
         })}
-        ${renderPieChart(archetypeRows, "Nessun dato per il grafico.", "Archetipi più giocati", {
+        ${renderBubbleChart(archetypeRows, "Nessun dato per il grafico.", "Archetipi più giocati", {
           subtitle: periodLabel,
           footer: seeAll("archetypes.html"),
         })}
       </div>`;
+    initBubbleChart(el);
     initChartCarousel(el, { navAfter: document.getElementById("dashboard-charts-card") });
   } catch (err) {
     showError(el, err);
