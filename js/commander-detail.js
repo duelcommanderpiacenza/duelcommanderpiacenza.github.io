@@ -1,6 +1,5 @@
-import { Commanders, EventEntries, Matches } from "./db.js";
+import { Commanders, EventEntries, Matches, Events } from "./db.js";
 import { matchRoundOutcome, isBye, isDrop, computeEventLeaderboard } from "./leaderboard.js";
-import { initScopeFilter } from "./scope-filter.js";
 import { tallyOutcome, renderWinrateTiles } from "./winrate.js";
 import { renderLineChart } from "./line-chart.js";
 import {
@@ -9,8 +8,6 @@ import {
   bannedBadge,
   formatDate,
   showError,
-  isoDateYearsAgo,
-  DEFAULT_DATE_FROM_YEARS,
 } from "./ui.js";
 import {
   historyPanelHtml,
@@ -21,9 +18,9 @@ import {
   setHistoryCount,
 } from "./history-list.js";
 import { hidePageLoading } from "./page-loading.js";
-import { fitTitleToOneLine, alignBackButtonToTitle } from "./page-title-fit.js";
-import { initFilterToggle } from "./filter-toggle.js";
+import { initTitleFit } from "./page-title-fit.js";
 import { initFollowButton } from "./follow-button.js";
+import { createArtPainter } from "./player-card.js";
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
@@ -58,76 +55,6 @@ function scryfallCardImages(card) {
   return card.image_uris ? [card.image_uris.normal] : [];
 }
 
-// The card's top is already pinned to the title's own top for free, via
-// position: absolute + top: 0 on .commander-card-figure (see the CSS) —
-// this sets its height, in px, so the bottom lands exactly at the stat
-// tiles' own bottom edge (#commander-winrate, not its .commander-top-row-main
-// wrapper — measuring the wrapper instead of the tiles themselves left a
-// few px of slack whenever they didn't happen to be the same). Spanning
-// two separate elements (.page-heading and the stat tiles) like that isn't
-// something CSS alone can do. Then, now that the image has a real
-// rendered width (derived from that height via its own aspect ratio, see
-// the CSS), reads it back and sets it as .commander-top-row-main's own
-// padding-right — so the stat tiles grow to fill the space right up to
-// the card's actual edge, rather than stopping short at a fixed guess
-// that doesn't match the image's real (height-dependent) width. Below
-// 640px the card drops below the title instead of floating beside it (see
-// the CSS), so there's no column layout to match there at all — both
-// inline overrides are cleared and the CSS fallbacks take over.
-//
-// The card-shaped loading placeholder (#commander-card-skeleton, same spot
-// and same Scryfall image proportions as the card) gets the very same
-// height, and while it's the one showing, *its* width drives the padding —
-// so the stats are already laid out for the card's final size, and swapping
-// the placeholder for the real image moves nothing. Once neither is showing
-// (no image for this commander), the padding shrinks to just the gap.
-// Document-relative top of an element's *layout* box — offsetTop ignores
-// CSS transforms, unlike getBoundingClientRect, which matters here: with
-// the filters collapsed, the stat tiles are only visually slid up (see
-// .detail-filter-panel in styles.css), their layout spot is unchanged.
-function layoutTop(el) {
-  let y = 0;
-  for (let n = el; n; n = n.offsetParent) y += n.offsetTop;
-  return y;
-}
-
-// Filters collapsed: the stat tiles slide up by exactly the filter row's
-// height into its (now invisible) space, via --detail-filters-shift,
-// while the layout itself — card size, everything below — stays put.
-function syncFiltersShift() {
-  const mainColEl = document.querySelector(".commander-top-row-main");
-  const panelEl = document.getElementById("commander-filter-panel");
-  const winrateBoxesEl = document.getElementById("commander-winrate");
-  if (!mainColEl || !panelEl || !winrateBoxesEl) return;
-  mainColEl.style.setProperty("--detail-filters-shift", `${layoutTop(winrateBoxesEl) - layoutTop(panelEl)}px`);
-}
-
-function syncCardImageLayout(cardImageEl) {
-  syncFiltersShift();
-  const mainColEl = document.querySelector(".commander-top-row-main");
-  const skeletonEl = document.getElementById("commander-card-skeleton");
-  if (window.innerWidth <= 640) {
-    cardImageEl.style.height = "";
-    if (skeletonEl) skeletonEl.style.height = "";
-    if (mainColEl) mainColEl.style.paddingRight = "";
-    return;
-  }
-  const headingEl = document.querySelector(".page-heading");
-  const winrateBoxesEl = document.getElementById("commander-winrate");
-  if (!headingEl || !mainColEl || !winrateBoxesEl) return;
-  // Layout positions (not on-screen ones): the card spans title to the
-  // tiles' *expanded-filters* spot whether the filters are open or not, so
-  // collapsing them never resizes it.
-  const top = layoutTop(headingEl);
-  const bottom = layoutTop(winrateBoxesEl) + winrateBoxesEl.offsetHeight;
-  const height = `${Math.round(bottom - top)}px`;
-  cardImageEl.style.height = height;
-  if (skeletonEl) skeletonEl.style.height = height;
-  const showing = skeletonEl && !skeletonEl.hidden ? skeletonEl : cardImageEl;
-  const width = showing.getBoundingClientRect().width;
-  mainColEl.style.paddingRight = `${Math.round(width) + 24}px`;
-}
-
 function outcomeFor(m, selfIsP1) {
   const outcome = matchRoundOutcome(m);
   if (outcome === "draw") return "draw";
@@ -149,17 +76,7 @@ async function init() {
   const cardImageBackEl = document.getElementById("commander-card-image-back");
   const cardFlipBtnEl = document.getElementById("commander-card-flip-btn");
   const winrateEl = document.getElementById("commander-winrate");
-  const leagueFilter = document.getElementById("commander-league-filter");
-  const eventFilter = document.getElementById("commander-event-filter");
-  const dateFromFilter = document.getElementById("commander-date-from");
-  // Same round button + active-filter dot as the list pages; this page's
-  // panel fades instead of collapsing (styles.css .detail-filter-panel).
-  // Same default "Dal" as the list pages too: the last
-  // DEFAULT_DATE_FROM_YEARS years (js/ui.js) — set before the stats first
-  // render, which read it.
-  dateFromFilter.value = isoDateYearsAgo(DEFAULT_DATE_FROM_YEARS);
-  // Open from the start on desktop, closed on phones.
-  initFilterToggle("commander-filter-toggle", "commander-filter-panel", { openOnDesktop: true });
+  const heroEl = document.getElementById("commander-hero");
   const playersEl = document.getElementById("commander-players");
   const matchesEl = document.getElementById("commander-matches");
   const decksChartEl = document.getElementById("commander-decks-chart");
@@ -175,31 +92,19 @@ async function init() {
     return;
   }
 
-  // Scryfall's image and the Winrate stats below (Supabase) load
-  // independently, in whichever order actually finishes first — revealing
-  // the card as soon as *it* is ready, on its own, meant syncCardImageLayout
-  // sometimes measured against the stat tiles' still-showing "Caricamento..."
-  // placeholder rather than the real tiles, since those hadn't rendered yet:
-  // a visibly smaller card that then jumped to full size once the real
-  // stats did land a moment later. Both readiness flags below have to be
-  // true before the card is revealed at all, so it only ever appears
-  // already at its final, correct size.
-  let cardImageReady = false;
-  let statsReady = false;
+  // The card (Scryfall) in the hero's left column: a card-shaped
+  // placeholder until its image has loaded, then the card; no image for this
+  // commander (not found, or failed): no column, the text takes the whole
+  // width (.is-no-card).
   const cardSkeletonEl = document.getElementById("commander-card-skeleton");
-  function revealCardIfReady() {
-    if (!cardImageReady || !statsReady || !cardFigureEl.hidden) return;
-    // Same size and spot as the placeholder it replaces — nothing moves.
+  function revealCard() {
     if (cardSkeletonEl) cardSkeletonEl.hidden = true;
     cardFigureEl.hidden = false;
-    syncCardImageLayout(cardImageFrontEl);
   }
-  // No card image for this commander after all (Scryfall found nothing, or
-  // the image failed): drop the placeholder and give the stats that space.
-  function dropCardPlaceholder() {
-    if (!cardSkeletonEl || cardSkeletonEl.hidden) return;
-    cardSkeletonEl.hidden = true;
-    syncCardImageLayout(cardImageFrontEl);
+  function dropCard() {
+    if (cardSkeletonEl) cardSkeletonEl.hidden = true;
+    cardFigureEl.hidden = true;
+    heroEl.classList.add("is-no-card");
   }
 
   try {
@@ -209,40 +114,23 @@ async function init() {
     titleEl.innerHTML = `${escapeHtml(commander.name)}${
       commander.is_banned ? bannedBadge() : ""
     }`;
-    fitTitleToOneLine(titleEl);
-    alignBackButtonToTitle(titleEl);
+    // On phones: a long name shrunk to one line.
+    initTitleFit(titleEl);
+    // The hero's backdrop: the commander's own art.
+    createArtPainter(document.getElementById("commander-hero-art"))(commander.name);
 
     // Loaded independently of everything else below (not awaited here) — a
     // slow/unreachable Scryfall never blocks the actual page data, and a
     // failed/mismatched lookup just leaves the figure hidden rather than
     // showing a broken image icon.
     cardImageFrontEl.alt = commander.name;
-    cardImageFrontEl.addEventListener(
-      "load",
-      () => {
-        cardImageReady = true;
-        revealCardIfReady();
-      },
-      { once: true }
-    );
-    cardImageFrontEl.addEventListener(
-      "error",
-      () => {
-        cardFigureEl.hidden = true;
-        dropCardPlaceholder();
-      },
-      { once: true }
-    );
-    window.addEventListener("resize", () => {
-      syncCardImageLayout(cardImageFrontEl);
-      fitTitleToOneLine(titleEl);
-      alignBackButtonToTitle(titleEl);
-    });
+    cardImageFrontEl.addEventListener("load", revealCard, { once: true });
+    cardImageFrontEl.addEventListener("error", dropCard, { once: true });
 
     fetchScryfallCard(commander.name).then((card) => {
-      if (!card) return dropCardPlaceholder();
+      if (!card) return dropCard();
       const images = scryfallCardImages(card);
-      if (images.length === 0) return dropCardPlaceholder();
+      if (images.length === 0) return dropCard();
       cardImageFrontEl.src = images[0];
       if (images.length < 2) return;
 
@@ -270,21 +158,18 @@ async function init() {
       playersEl.innerHTML = '<p class="page-empty">Nessun giocatore ha ancora usato questo commander.</p>';
       matchesEl.innerHTML = '<p class="page-empty">Nessuna partita registrata.</p>';
       decksChartEl.innerHTML = renderLineChart([], "Non ci sono ancora dati sufficienti.", "Utilizzo");
-      // This path skips computeWinrate entirely, which is the only other
-      // place statsReady gets set — without this, a commander with no
-      // recorded data at all would leave the card permanently hidden even
-      // once its image finishes loading.
-      statsReady = true;
-      revealCardIfReady();
       return;
     }
 
     const playedEntryByKey = new Map(playedEntries.map((e) => [`${e.event_id}_${e.player_id}`, e]));
     const eventIds = [...new Set(playedEntries.map((e) => e.event_id))];
 
-    const [allEntries, matches] = await Promise.all([
+    // Every event too (for the usage chart's zeros) — not fatal: without
+    // them the chart just shows the dates it was played.
+    const [allEntries, matches, allEvents] = await Promise.all([
       EventEntries.listByEvents(eventIds),
       Matches.listByEvents(eventIds),
+      Events.list().catch((err) => (console.error(err), [])),
     ]);
     const entryByKey = new Map(allEntries.map((e) => [`${e.event_id}_${e.player_id}`, e]));
 
@@ -308,19 +193,26 @@ async function init() {
     }
     const playerList = Array.from(playersMap.values()).sort((a, b) => a.name.localeCompare(b.name));
 
-    // One data point per event date this commander appeared in at least one
-    // entry — decks played, not matches, so this counts playedEntries
-    // (one per pilot per event) rather than `rows` (per match-side, which
-    // would inflate the count by however many rounds that event had).
+    // Decks played per event date — playedEntries (one per pilot per event),
+    // not `rows` (per match-side, which would inflate the count by however
+    // many rounds that event had). Every event played from its first
+    // appearance up to the latest one is a point, 0 where nobody played it,
+    // so the line drops when it stops being played (events on the same date
+    // added together).
     const deckCountByDate = new Map();
     for (const e of playedEntries) {
       const date = e.event?.event_date;
       if (!date) continue;
       deckCountByDate.set(date, (deckCountByDate.get(date) ?? 0) + 1);
     }
-    const deckChartPoints = [...deckCountByDate.entries()]
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([date, value]) => ({ date, value }));
+    const firstDate = [...deckCountByDate.keys()].sort()[0];
+    const chartDates = new Set(deckCountByDate.keys());
+    for (const ev of allEvents) {
+      if (!ev.is_open && ev.event_date && firstDate && ev.event_date >= firstDate) chartDates.add(ev.event_date);
+    }
+    const deckChartPoints = [...chartDates]
+      .sort()
+      .map((date) => ({ date, value: deckCountByDate.get(date) ?? 0 }));
     decksChartEl.innerHTML = renderLineChart(deckChartPoints, "Non ci sono ancora dati sufficienti.", "Utilizzo");
 
     // One row per (match, side) where that side piloted this commander — a
@@ -394,9 +286,8 @@ async function init() {
     initScrollFade(playersEl);
     setHistoryCount("commander-players-count", playerList.length);
 
-    // A bye has no real opponent/commander matchup to show — computeWinrate
-    // below still counts it (via the full, unfiltered `rows`), only the
-    // table listing itself drops it.
+    // A bye has no real opponent/commander matchup to show — the hero's
+    // numbers below skip it too, only for its own reason.
     // Event date (newest first) as the primary sort, then alphabetically by
     // the player who piloted this commander (groups a date's rows by player
     // instead of interleaving them round-by-round), then by round ascending
@@ -444,36 +335,16 @@ async function init() {
     capScrollToHeightOf(playersEl, matchesEl);
     setHistoryCount("commander-matches-count", matchRows.length);
 
-    // The league/event scope (initScopeFilter below) and the "Dal" date
-    // combine: the date only narrows whatever the scope last reported, so a
-    // date change re-runs with that same scope.
-    let lastScopedEventIds = [];
-    function computeWinrate(scopedEventIds) {
-      lastScopedEventIds = scopedEventIds;
-      const scoped = new Set(scopedEventIds);
-      const from = dateFromFilter.value;
-      const bucket = { wins: 0, draws: 0, losses: 0 };
-      for (const r of rows) {
-        if (r.event && !scoped.has(r.event.id)) continue;
-        if (from && (r.event?.event_date ?? "") < from) continue;
-        // A bye is a free win for the player, not a "victory" for the
-        // commander — it never actually beat anything. A drop isn't a
-        // "victory" either, and isn't a match played at all.
-        if (r.isBye || r.isDrop) continue;
-        tallyOutcome(bucket, r.outcome);
-      }
-      renderWinrateTiles(winrateEl, bucket);
-      statsReady = true;
-      revealCardIfReady();
-      // The stat tiles just replaced their own "Caricamento..." placeholder
-      // (or a filter change re-rendered them) — either can change their own
-      // height, so the card needs re-measuring. A no-op if the card isn't
-      // visible yet (revealCardIfReady above handles that first reveal).
-      syncCardImageLayout(cardImageFrontEl);
+    // The hero's numbers, over the commander's whole history. A bye is a
+    // free win for the player, not a "victory" for the commander — it never
+    // actually beat anything. A drop isn't a "victory" either, and isn't a
+    // match played at all.
+    const bucket = { wins: 0, draws: 0, losses: 0 };
+    for (const r of rows) {
+      if (r.isBye || r.isDrop) continue;
+      tallyOutcome(bucket, r.outcome);
     }
-
-    dateFromFilter.addEventListener("change", () => computeWinrate(lastScopedEventIds));
-    await initScopeFilter({ leagueSelect: leagueFilter, eventSelect: eventFilter, onChange: computeWinrate });
+    renderWinrateTiles(winrateEl, bucket);
   } catch (err) {
     showError(document.getElementById("commander-content"), err);
   } finally {

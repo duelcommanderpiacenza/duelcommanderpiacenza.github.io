@@ -141,6 +141,14 @@ body.is-loading .page-loading-region > *:not(.page-loading-overlay) {
   pointer-events: none;
 }
 
+/* Loading too long, or failed (js/page-loading.js watchPageLoading): the
+   message with a "Ricarica la pagina" button under it. */
+.page-loading-overlay.is-stuck {
+  flex-direction: column;
+  gap: 14px;
+  text-align: center;
+}
+
 /* Content gets built (and its entrance animations technically start
    playing) behind the splash while data is still loading, well before the
    splash itself fades out — without this, everything would already be
@@ -1042,7 +1050,9 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
     left: 0;
     right: 0;
     bottom: 0;
-    height: 90px;
+    /* Low: under the pill's lower half (the pill floats 16px up, plus the
+       home-bar space on notched phones). */
+    height: calc(36px + env(safe-area-inset-bottom));
     background: linear-gradient(to top, rgba(220, 24, 28, 0.35), transparent);
     pointer-events: none;
     z-index: -1;
@@ -6757,6 +6767,9 @@ img.cs-option-icon {
   margin-top: 24px;
 }
 
+/* Bare: no tile box at all — background, border, shadow, and the tiles'
+   own backdrop blur (which, over the hero's art, showed as a faint
+   rectangle behind some numbers). */
 .profile-hero .stat-tile,
 :root[data-theme="dark"] .profile-hero .stat-tile {
   display: flex;
@@ -6766,6 +6779,8 @@ img.cs-option-icon {
   border: 0;
   background: none;
   box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .profile-hero .stat-tile-label {
@@ -6780,9 +6795,24 @@ img.cs-option-icon {
   line-height: 1;
 }
 
+/* The winrate: white on a solid brand-red pill — readable on any art
+   behind it, light or red — in every hero: account, player, commander.
+   Every other number gets the pill's same vertical padding (no box), so
+   all the numbers, and the labels under them, stay on one line. */
+.profile-hero .stat-tile-value,
+:root[data-theme="dark"] .profile-hero .stat-tile-value {
+  padding: 0.12em 0;
+}
+
 .profile-hero .stat-tile:first-child .stat-tile-value,
 :root[data-theme="dark"] .profile-hero .stat-tile:first-child .stat-tile-value {
-  color: #ff8a8d;
+  align-self: flex-start;
+  padding: 0.12em 0.32em;
+  border-radius: 0.28em;
+  background: var(--brand-red);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  color: #fff;
+  text-shadow: none;
 }
 
 .profile-hero .page-empty {
@@ -6905,6 +6935,223 @@ img.cs-option-icon {
   .profile-album .cmd-carousel-stats {
     flex: 1;
     min-width: 0;
+  }
+}
+
+/* player.html / commander.html: the same hero (.detail-hero on top of
+   .profile-hero — js/player-detail.js, js/commander-detail.js). No card
+   (none to show, or no image): the text alone, the whole width. */
+.detail-hero.is-no-card .profile-hero-inner {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.detail-hero.is-no-card .detail-hero-card {
+  display: none;
+}
+
+/* Back to the list ("‹ Giocatori" / "‹ Comandanti"): a dark pill, readable
+   on any art (dark ground, light border), beside the hero rather than in it
+   (.detail-hero-wrap; the hero clips what's inside it). Desktop: on the
+   hero's top edge — half on it, half on the page — centred over the card's
+   column (its 32px padding + half its 280px), at the left padding without a
+   card. Up to 820px (one centred column): inside the hero's top-left
+   corner, the hero's content moved down to make room. */
+.detail-hero-wrap {
+  position: relative;
+}
+
+.detail-hero-back {
+  position: absolute;
+  top: 0;
+  left: 172px;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  min-height: 40px;
+  box-sizing: border-box;
+  padding: 6px 16px 6px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: var(--radius-pill);
+  background: rgba(12, 7, 8, 0.62);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 800;
+  text-decoration: none;
+  text-shadow: none;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.detail-hero-back:hover {
+  border-color: rgba(255, 255, 255, 0.8);
+  background: rgba(12, 7, 8, 0.82);
+  color: #fff;
+  text-decoration: none;
+}
+
+.detail-hero-back svg {
+  width: 20px;
+  height: 20px;
+}
+
+.detail-hero-wrap:has(.is-no-card) .detail-hero-back {
+  left: 32px;
+  transform: translateY(-50%);
+}
+
+/* Solid (no transparency), in the hero's own reds (its base gradient,
+   .profile-hero) so it reads as part of it — on every screen. */
+.detail-hero-back {
+  border-color: #d9a2a7;
+  background: linear-gradient(135deg, #a3505a, #6a3036);
+}
+
+.detail-hero-back:hover {
+  border-color: #f0cdd0;
+  background: linear-gradient(135deg, #8c434c, #55262b);
+}
+
+/* Desktop: left of the card column's centre. */
+@media (min-width: 821px) {
+  .detail-hero-back {
+    left: 96px;
+  }
+}
+
+@media (max-width: 820px) {
+  .detail-hero-back,
+  .detail-hero-wrap:has(.is-no-card) .detail-hero-back {
+    top: 14px;
+    left: 14px;
+    transform: none;
+  }
+
+  .detail-hero .profile-hero-inner {
+    padding-top: 68px;
+  }
+}
+
+/* Phones: the hero runs edge to edge (pulled out by the page's 16px side
+   padding — the wrap isn't, so 0 here is 16px in from the hero's edge). Its
+   pull up under the header (-20px) does move the wrap too (the margin
+   collapses through it), so the top stays 14px. */
+@media (max-width: 640px) {
+  .detail-hero-back,
+  .detail-hero-wrap:has(.is-no-card) .detail-hero-back {
+    top: 14px;
+    left: 0;
+  }
+}
+
+/* The commander's card in the hero's column (not pinned beside the title
+   any more): in flow, the column's width, Scryfall's proportions; the
+   placeholder the same, a light shimmer on the dark hero. */
+.detail-hero .commander-card-figure,
+.detail-hero .commander-card-skeleton {
+  position: relative;
+  top: auto;
+  right: auto;
+  left: auto;
+  width: 100%;
+  height: auto;
+  margin: 0;
+}
+
+.detail-hero .commander-card-skeleton {
+  aspect-ratio: 488 / 680;
+  background-image: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.05) 30%,
+    rgba(255, 255, 255, 0.16) 50%,
+    rgba(255, 255, 255, 0.05) 70%
+  );
+}
+
+.detail-hero .commander-card-face {
+  width: 100%;
+  height: auto;
+  max-width: none;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
+}
+
+.detail-hero .commander-card-flip-btn {
+  right: -12px;
+}
+
+/* The player card in the hero's column: its own entrance, played with the
+   page. */
+.detail-hero .player-card {
+  animation: commander-card-in 450ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* The follow button under the name, light on the dark hero (filled with
+   the brand red once following, as elsewhere); centred with the name in the
+   one-column hero (≤820px). */
+.detail-hero .follow-btn-row {
+  margin-top: 4px;
+}
+
+.detail-hero .follow-btn:not(.is-following) {
+  border-color: rgba(255, 255, 255, 0.6);
+  color: #fff;
+}
+
+.detail-hero .follow-btn:not(.is-following):hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.detail-hero .follow-btn.is-following {
+  border-color: var(--brand-red);
+}
+
+@media (max-width: 820px) {
+  .detail-hero .follow-btn-row {
+    justify-content: center;
+  }
+}
+
+/* Phones: the detail heroes' numbers (4-5 of them) on one row — equal
+   columns, value over label, both a size down, a label too long for its
+   column cut with an ellipsis. Three classes / :root: to outrank the
+   phone rules further down (the hero's 1.6rem values, the profile tiles'
+   two-column grid). */
+@media (max-width: 640px) {
+  .profile-hero.detail-hero .profile-stats-tiles {
+    display: grid;
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: 6px;
+    width: 100%;
+  }
+
+  .profile-hero.detail-hero .stat-tile {
+    align-items: center;
+    min-width: 0;
+    text-align: center;
+  }
+
+  .profile-hero.detail-hero .stat-tile:first-child .stat-tile-value,
+  :root[data-theme="dark"] .profile-hero.detail-hero .stat-tile:first-child .stat-tile-value {
+    align-self: center;
+  }
+
+
+  .profile-hero.detail-hero .stat-tile-value,
+  :root[data-theme="dark"] .profile-hero.detail-hero .stat-tile-value {
+    font-size: 1.25rem;
+  }
+
+  .profile-hero.detail-hero .stat-tile-label {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 0.6rem;
+    letter-spacing: 0.02em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 

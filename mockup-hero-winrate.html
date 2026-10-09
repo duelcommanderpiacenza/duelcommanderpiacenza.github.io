@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (t !== "light" && t !== "dark") {
+          t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+        document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    })();
+  </script>
+  <title>MOCKUP — Winrate nell'hero - Duel Commander Piacenza</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="dc_pc.png">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .mk-note { margin: 0 0 20px; color: var(--text-muted); }
+    .mk-variant { margin-bottom: 34px; }
+    .mk-variant h2 { margin: 0 0 4px; }
+    .mk-variant > p { margin: 0 0 12px; color: var(--text-muted); }
+    .mk-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    @media (max-width: 860px) { .mk-pair { grid-template-columns: minmax(0, 1fr); } }
+    .mk-pair .profile-hero { margin: 0; }
+    .mk-pair .profile-hero-inner { padding: 22px 26px; }
+    .mk-pair .profile-hero-name { font-size: 1.7rem; }
+
+    /* Reset the site's current winrate look (the red pill) in the mockup,
+       so each variant starts from a plain white number. */
+    .mk-pair .profile-hero .stat-tile:first-child .stat-tile-value,
+    :root[data-theme="dark"] .mk-pair .profile-hero .stat-tile:first-child .stat-tile-value {
+      align-self: auto;
+      padding: 0;
+      border-radius: 0;
+      background: none;
+      box-shadow: none;
+      color: #fff;
+      text-shadow: inherit;
+    }
+
+    /* A: white number, a short red bar under it. */
+    .v-a .profile-hero .stat-tile:first-child .stat-tile-value,
+    :root[data-theme="dark"] .v-a .profile-hero .stat-tile:first-child .stat-tile-value {
+      padding-bottom: 6px;
+      background: linear-gradient(var(--brand-red), var(--brand-red)) left bottom / 70% 4px no-repeat;
+    }
+
+    /* B: white number, red neon glow. */
+    .v-b .profile-hero .stat-tile:first-child .stat-tile-value,
+    :root[data-theme="dark"] .v-b .profile-hero .stat-tile:first-child .stat-tile-value {
+      text-shadow: 0 0 2px #ff2a30, 0 0 10px #ff2a30, 0 0 22px rgba(255, 42, 48, 0.85);
+    }
+
+    /* C: red label, white number. */
+    .v-c .profile-hero .stat-tile:first-child .stat-tile-label {
+      color: #ff5257;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+    }
+
+    /* D: red number, a soft dark band behind the whole stats row. */
+    .v-d .profile-hero .profile-stats-tiles {
+      padding: 12px 16px;
+      margin-left: -16px;
+      border-radius: 14px;
+      background: linear-gradient(90deg, rgba(12, 7, 8, 0.55), rgba(12, 7, 8, 0.25) 80%, transparent);
+    }
+    .v-d .profile-hero .stat-tile:first-child .stat-tile-value,
+    :root[data-theme="dark"] .v-d .profile-hero .stat-tile:first-child .stat-tile-value {
+      color: #ff4a50;
+    }
+
+    /* E: red number with a thin white outline. */
+    .v-e .profile-hero .stat-tile:first-child .stat-tile-value,
+    :root[data-theme="dark"] .v-e .profile-hero .stat-tile:first-child .stat-tile-value {
+      color: #e8141b;
+      -webkit-text-stroke: 1.5px #fff;
+      paint-order: stroke fill;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+    }
+  </style>
+</head>
+<body>
+<main class="page-main">
+  <div class="page-heading"><h1>Winrate nell&rsquo;hero &mdash; prove</h1></div>
+  <p class="mk-note">Mockup: lo stesso hero del sito, ogni proposta su un&rsquo;arte chiara (a sinistra) e una rossa (a destra) &mdash; i casi difficili.</p>
+  <div id="mk"></div>
+</main>
+<script>
+  // MOCKUP (never commit).
+  var ARTS = ["Swords to Plowshares", "Lightning Bolt"];
+  var VARIANTS = [
+    ["v-a", "A · Barra rossa sotto", "Numero bianco, una barretta rossa sotto."],
+    ["v-b", "B · Bagliore rosso", "Numero bianco con un alone rosso, tipo neon."],
+    ["v-c", "C · Etichetta rossa", "Numero bianco, la scritta WINRATE in rosso."],
+    ["v-d", "D · Fascia scura", "Numero rosso su una fascia scura sfumata dietro tutte le statistiche."],
+    ["v-e", "E · Contorno bianco", "Numero rosso con un sottile contorno bianco."],
+  ];
+  var tiles =
+    '<div class="profile-stats-tiles">' +
+    '<div class="stat-tile"><div class="stat-tile-label">Winrate</div><div class="stat-tile-value">26.7%</div></div>' +
+    '<div class="stat-tile"><div class="stat-tile-label">Vittorie</div><div class="stat-tile-value">4</div></div>' +
+    '<div class="stat-tile"><div class="stat-tile-label">Pareggi</div><div class="stat-tile-value">1</div></div>' +
+    '<div class="stat-tile"><div class="stat-tile-label">Sconfitte</div><div class="stat-tile-value">10</div></div>' +
+    "</div>";
+  function hero(art) {
+    var url = "https://api.scryfall.com/cards/named?exact=" + encodeURIComponent(art) + "&format=image&version=art_crop";
+    return (
+      '<section class="profile-hero detail-hero is-no-card">' +
+      '<div class="profile-hero-art is-loaded" style="background-image:url(\'' + url + '\')"></div>' +
+      '<div class="profile-hero-inner"><div class="profile-hero-text">' +
+      '<div class="profile-hero-heading"><h1 class="profile-hero-name">Marco Bianchi</h1></div>' +
+      '<div class="profile-hero-stats">' + tiles + "</div>" +
+      "</div></div></section>"
+    );
+  }
+  document.getElementById("mk").innerHTML = VARIANTS.map(function (v) {
+    return (
+      '<section class="mk-variant ' + v[0] + '"><h2>' + v[1] + "</h2><p>" + v[2] + '</p><div class="mk-pair">' +
+      ARTS.map(hero).join("") +
+      "</div></section>"
+    );
+  }).join("");
+</script>
+</body>
+</html>

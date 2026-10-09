@@ -7,18 +7,13 @@ import {
   badgeTooltipAttrs,
   uniqueBadges,
   commanderPairLabel,
-  eventTitle,
   showError,
-  isoDateYearsAgo,
-  DEFAULT_DATE_FROM_YEARS,
 } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
-import { initTitleFit, fitTitleToOneLine, alignBackButtonToTitle } from "./page-title-fit.js";
-import { initFilterToggle } from "./filter-toggle.js";
+import { initTitleFit } from "./page-title-fit.js";
 import { renderCommanderCarousel, albumItems, commanderPairKey, openAlbumEffectsInfo } from "./commander-carousel.js";
 import { matchGroupsHtml, initScrollFade, setHistoryCount } from "./history-list.js";
-import { renderPublicPlayerCard } from "./player-card.js";
-import { cardFrameWidth } from "./card-cosmetics.js";
+import { renderPublicPlayerCard, createArtPainter } from "./player-card.js";
 import { initFollowButton } from "./follow-button.js";
 
 function getId() {
@@ -75,83 +70,16 @@ function matchGroupsByEvent(rows, positionByEvent) {
   return [...groups.values()];
 }
 
-// --- The player's card ---------------------------------------------------------------
-
-// Document-relative top of an element's *layout* box (offsetTop ignores
-// transforms): with the filters collapsed beside the card, the stat tiles
-// are only visually slid up, their layout spot is unchanged — same as
-// js/commander-detail.js.
-function layoutTop(el) {
-  let y = 0;
-  for (let n = el; n; n = n.offsetParent) y += n.offsetTop;
-  return y;
-}
-
-const CARD_RATIO = 680 / 488;
-const MAX_CARD_WIDTH = 320; // same ceiling as commander.html's card
-
-// Like commander.html's card (js/commander-detail.js syncCardImageLayout):
-// on desktop, from the title's top down to the stat tiles' bottom — their
-// expanded-filters spot, so collapsing the filters never resizes it — with
-// the width that height gives at Magic-card proportions, and the title and
-// the stats kept clear of it. Run twice: the card's width narrows the
-// tiles, which can wrap onto one more row and so make the card taller.
-// Phones (≤640px): stacked below the title at its CSS size, nothing to fit.
-function syncPlayerCardLayout() {
-  const cardWrapEl = document.getElementById("player-page-card");
-  if (cardWrapEl.hidden) return;
-  const headingEl = cardWrapEl.closest(".page-heading");
-  const titleEl = document.getElementById("player-title");
-  const statsColEl = document.getElementById("player-stats-col");
-  const panelEl = document.getElementById("player-filter-panel");
-  const tilesEl = document.getElementById("player-winrate-overall");
-  // Filters collapsed: the tiles slide up by exactly the filter row's height
-  // (styles.css .detail-filter-panel).
-  statsColEl.style.setProperty("--detail-filters-shift", `${layoutTop(tilesEl) - layoutTop(panelEl)}px`);
-  if (window.innerWidth <= 640) {
-    cardWrapEl.style.width = "";
-    statsColEl.style.paddingRight = "";
-    if (headingEl.style.paddingRight) {
-      // Coming from desktop: the title was fitted with the room kept for
-      // the card still taken off — fitted again on its full width.
-      headingEl.style.paddingRight = "";
-      fitTitleToOneLine(titleEl);
-      alignBackButtonToTitle(titleEl);
-    }
-    return;
-  }
-  // The frame round the surface (none, or the Presenze cosmetic's): the
-  // surface keeps Magic-card proportions, the frame adds to both sides.
-  const frame = 2 * cardFrameWidth(cardWrapEl);
-  for (let pass = 0; pass < 2; pass++) {
-    const height = layoutTop(tilesEl) + tilesEl.offsetHeight - layoutTop(headingEl);
-    const width = Math.min(MAX_CARD_WIDTH, Math.round((height - frame) / CARD_RATIO + frame));
-    cardWrapEl.style.width = `${width}px`;
-    // On the heading, not the title: the follow button sits right after the
-    // name, and both stay clear of the card (still at the heading's right
-    // edge — absolute, against the padding box).
-    headingEl.style.paddingRight = `${width + 24}px`;
-    statsColEl.style.paddingRight = `${width + 24}px`;
-  }
-}
-
 async function init() {
   const id = getId();
   const titleEl = document.getElementById("player-title");
   const commandersEl = document.getElementById("player-commanders");
   document.getElementById("album-help").addEventListener("click", openAlbumEffectsInfo);
   const overallEl = document.getElementById("player-winrate-overall");
-  const leagueFilter = document.getElementById("player-league-filter");
-  const eventFilter = document.getElementById("player-event-filter");
-  const dateFromFilter = document.getElementById("player-date-from");
-  // Same round button, box and active-filter dot as the list pages: a plain
-  // collapsing panel, the rest of the page moving with it. Same default
-  // "Dal" too: the last DEFAULT_DATE_FROM_YEARS years (js/ui.js) — set
-  // before the stats first render, which read it.
-  dateFromFilter.value = isoDateYearsAgo(DEFAULT_DATE_FROM_YEARS);
-  // Open from the start on desktop, closed on phones.
-  initFilterToggle("player-filter-toggle", "player-filter-panel", { openOnDesktop: true });
   const matchesEl = document.getElementById("player-matches");
+  // The hero's backdrop (styles.css .profile-hero-art): the card's
+  // background art, else the player's most played commander's.
+  const paintHeroArt = createArtPainter(document.getElementById("player-hero-art"));
 
   // "☆ Segui" right below the name, for signed-in accounts (not awaited: it
   // never holds up the page).
@@ -216,9 +144,8 @@ async function init() {
     const entries = await entriesRequest;
 
     // The card, once the year of the player's first event ("Dal …") is
-    // known: shown with the rest of the page, sized once the stat tiles are
-    // there (applyFilters below). The filters beside it fade instead of
-    // collapsing, like commander.html's, so collapsing them never moves it.
+    // known: in the hero's left column (without one, the text takes the
+    // whole width — .is-no-card).
     if (card) {
       const firstDate = entries.reduce((min, e) => {
         const d = e.event?.event_date;
@@ -233,15 +160,13 @@ async function init() {
         progress: await progressRequest,
       });
       cardWrapEl.hidden = false;
-      document.getElementById("player-filter-panel").classList.add("detail-filter-panel");
-      // The stat tiles on one row beside it (styles.css .player-stats-col.has-card).
-      document.getElementById("player-stats-col").classList.add("has-card");
-      window.addEventListener("resize", syncPlayerCardLayout);
+      document.getElementById("player-hero").classList.remove("is-no-card");
     }
 
     // Album comandanti: one card per commander + partner pair, most played
     // first (js/commander-carousel.js albumItems).
     const commanderList = albumItems(entries);
+    paintHeroArt(card?.commander_name ?? commanderList[0]?.commander.name ?? null, card?.card_print ?? null);
     const carousel = renderCommanderCarousel(commandersEl, commanderList);
 
     // The player's final position in each event they entered (Storico
@@ -310,9 +235,8 @@ async function init() {
     });
 
     // Album comandanti's Winrate tile: each pair's match record over the
-    // player's whole history (not the filters below, same as the rest of
-    // the carousel), counted like the overall tiles — a drop is skipped, a
-    // bye counts as a win.
+    // player's whole history, counted like the hero's tiles — a drop is
+    // skipped, a bye counts as a win.
     const recordsByPair = new Map();
     for (const r of rows) {
       if (!r.myCommander || r.isDrop) continue;
@@ -322,82 +246,13 @@ async function init() {
     }
     carousel.setRecords(recordsByPair);
 
-    // Filters (Lega, Evento, Dal): narrow the same rows already loaded
-    // above, updating the winrate tiles in place instead of separate
-    // breakdown tables. Only this player's own leagues and events are
-    // offered (unlike js/scope-filter.js's site-wide lists, which the
-    // commander page uses) — picking a league narrows Evento to that
-    // league's events, the same pairing as there.
-    const leagueOptions = new Map();
-    const playedEvents = new Map(); // event id -> event (with its league embed)
-    for (const e of entries) {
-      if (!e.event) continue;
-      playedEvents.set(e.event.id, e.event);
-      if (e.event.league) leagueOptions.set(e.event.league.id, e.event.league.name);
-    }
-    leagueFilter.innerHTML =
-      '<option value="">Tutte</option>' +
-      Array.from(leagueOptions.entries())
-        .sort((a, b) => a[1].localeCompare(b[1]))
-        .map(([lid, name]) => `<option value="${lid}">${escapeHtml(name)}</option>`)
-        .join("");
-
-    // Newest first. data-label/data-sublabel: js/custom-select.js's popup
-    // shows the event name with its league on a smaller line below (same
-    // as js/scope-filter.js); the option text stays the plain combined
-    // string for the native <select>.
-    function populateEvents() {
-      const leagueId = leagueFilter.value;
-      const scoped = [...playedEvents.values()]
-        .filter((ev) => !leagueId || ev.league?.id === leagueId)
-        .sort((a, b) => (b.event_date ?? "").localeCompare(a.event_date ?? ""));
-      eventFilter.innerHTML =
-        '<option value="">Tutti</option>' +
-        scoped
-          .map((ev) => {
-            const name = eventTitle(ev);
-            return `<option value="${ev.id}" data-label="${escapeHtml(name)}"${
-              ev.league ? ` data-sublabel="${escapeHtml(ev.league.name)}"` : ""
-            }>${escapeHtml(name)}${ev.league ? ` — ${escapeHtml(ev.league.name)}` : ""}</option>`;
-          })
-          .join("");
-    }
-    populateEvents();
-
-    // "Dal": only events on/after that date (ISO dates compare as strings).
-    function inScope(event, leagueId, eventId, from) {
-      if (eventId && event?.id !== eventId) return false;
-      if (leagueId && event?.league?.id !== leagueId) return false;
-      if (from && (event?.event_date ?? "") < from) return false;
-      return true;
-    }
-    function applyFilters() {
-      const leagueId = leagueFilter.value;
-      const eventId = eventFilter.value;
-      const from = dateFromFilter.value;
-      const bucket = { wins: 0, draws: 0, losses: 0 };
-      for (const r of rows) {
-        if (!inScope(r.event, leagueId, eventId, from)) continue;
-        // A drop isn't a win, a loss, or a match played — skipped entirely.
-        // A bye counts as a played match won, same as any other match win.
-        if (r.isDrop) continue;
-        tallyOutcome(bucket, r.outcome);
-      }
-      // Events entered within the same filters (an entry, not a match, so an
-      // event is counted even if the player dropped before playing a round).
-      const events = entries.filter((e) => inScope(e.event, leagueId, eventId, from)).length;
-      renderWinrateTiles(overallEl, bucket, { events });
-      // The tiles just (re)rendered: the card spans down to them.
-      syncPlayerCardLayout();
-    }
-    leagueFilter.addEventListener("change", () => {
-      // A new league: Evento lists just its events, back to "Tutti".
-      populateEvents();
-      applyFilters();
-    });
-    eventFilter.addEventListener("change", applyFilters);
-    dateFromFilter.addEventListener("change", applyFilters);
-    applyFilters();
+    // The hero's numbers, over the player's whole history: a drop isn't a
+    // win, a loss, or a match played — skipped entirely; a bye counts as a
+    // played match won, same as any other match win. Events: entries (an
+    // event counts even if the player dropped before playing a round).
+    const bucket = { wins: 0, draws: 0, losses: 0 };
+    for (const r of rows) if (!r.isDrop) tallyOutcome(bucket, r.outcome);
+    renderWinrateTiles(overallEl, bucket, { events: entries.length });
 
     matchesEl.innerHTML = matchGroupsHtml(
       matchGroupsByEvent(rows, new Map([...standingByEvent].map(([eventId, s]) => [eventId, s.position])))

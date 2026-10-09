@@ -74,66 +74,52 @@
 </nav>
 
 <main class="page-main" id="commander-content">
-  <div class="page-heading-row">
-    <a class="breadcrumb-link" href="commanders.html" aria-label="Tutti i comandanti" title="Tutti i comandanti">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
-    </a>
-
-    <div class="page-heading">
-      <h1 id="commander-title">Caricamento...</h1>
-      <div class="commander-card-skeleton" id="commander-card-skeleton" aria-hidden="true"></div>
-      <figure class="commander-card-figure" id="commander-card-figure" hidden>
-      <div class="commander-card-perspective">
-        <div class="commander-card-flipper" id="commander-card-flipper">
-          <img id="commander-card-image-front" class="commander-card-face commander-card-face-front" alt="">
-          <img id="commander-card-image-back" class="commander-card-face commander-card-face-back" alt="">
-        </div>
-      </div>
-      <button type="button" class="commander-card-flip-btn" id="commander-card-flip-btn" hidden aria-label="Mostra l'altro lato della carta">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <polyline points="17 1 21 5 17 9"></polyline>
-          <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
-          <polyline points="7 23 3 19 7 15"></polyline>
-          <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
-        </svg>
-      </button>
-    </figure>
-    </div>
-  </div>
-
   <div class="page-loading-region">
     <div id="page-loading-overlay" class="page-loading-overlay"><p>Caricamento...</p></div>
 
-    <div class="commander-top-row">
-      <div class="commander-top-row-main">
-        <div class="stats-heading">
-          <h2>Statistiche</h2>
-          <button type="button" class="filter-toggle-btn" id="commander-filter-toggle" aria-expanded="false" aria-controls="commander-filter-panel" aria-label="Filtri">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
-          </button>
-        </div>
-        <div class="filter-panel is-collapsed detail-filter-panel" id="commander-filter-panel">
-          <div class="filter-panel-clip">
-            <div class="filter-panel-body">
-              <div class="filter-bar">
-                <div class="field">
-                  <label for="commander-league-filter">Lega</label>
-                  <select id="commander-league-filter"><option value="">Tutte le leghe</option></select>
-                </div>
-                <div class="field">
-                  <label for="commander-event-filter">Evento</label>
-                  <select id="commander-event-filter"><option value="">Tutti gli eventi</option></select>
-                </div>
-                <div class="field">
-                  <label for="commander-date-from">Dal</label>
-                  <input type="date" id="commander-date-from" placeholder="Dal" data-open-on-today>
+    <!-- The hero, like account.html's profile one (styles.css .profile-hero):
+         the commander's card (Scryfall; the flip for a double-faced one) on
+         the left — a card-shaped placeholder until it loads, the text the
+         whole width without one — on the blurred art of the commander; the
+         name and the numbers on the right (js/commander-detail.js). -->
+    <!-- The hero, and "‹ back to the list" on its top edge (desktop:
+         half on the hero, half on the page, over the card's column; phones:
+         inside it at the top left) — outside the hero, which clips what's
+         inside it. -->
+    <div class="detail-hero-wrap">
+      <a class="detail-hero-back" href="commanders.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>Comandanti</a>
+      <section class="profile-hero detail-hero" id="commander-hero">
+        <div class="profile-hero-art" id="commander-hero-art" aria-hidden="true"></div>
+        <div class="profile-hero-inner">
+          <div class="profile-card-col detail-hero-card" id="commander-card-col">
+            <div class="commander-card-skeleton" id="commander-card-skeleton" aria-hidden="true"></div>
+            <figure class="commander-card-figure" id="commander-card-figure" hidden>
+              <div class="commander-card-perspective">
+                <div class="commander-card-flipper" id="commander-card-flipper">
+                  <img id="commander-card-image-front" class="commander-card-face commander-card-face-front" alt="">
+                  <img id="commander-card-image-back" class="commander-card-face commander-card-face-back" alt="">
                 </div>
               </div>
+              <button type="button" class="commander-card-flip-btn" id="commander-card-flip-btn" hidden aria-label="Mostra l'altro lato della carta">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="17 1 21 5 17 9"></polyline>
+                  <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                  <polyline points="7 23 3 19 7 15"></polyline>
+                  <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                </svg>
+              </button>
+            </figure>
+          </div>
+          <div class="profile-hero-text">
+            <div class="profile-hero-heading">
+              <h1 class="profile-hero-name" id="commander-title">Caricamento...</h1>
+            </div>
+            <div class="profile-hero-stats">
+              <div class="profile-stats-tiles" id="commander-winrate"></div>
             </div>
           </div>
         </div>
-        <div id="commander-winrate" class="stat-grid page-loading">Caricamento...</div>
-      </div>
+      </section>
     </div>
 
     <div id="commander-decks-chart" class="page-loading" style="margin-top:20px;">Caricamento...</div>

@@ -185,13 +185,7 @@ export function renderLineChart(rawPoints, emptyMessage, title) {
     })
     .join("");
 
-  const dots = coords
-    .map(
-      ([x, y], i) =>
-        `<circle class="line-chart-dot" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="4"><title>${escapeHtml(formatDate(points[i].date))}: ${points[i].value}</title></circle>`
-    )
-    .join("");
-
+  // No dots on the line: just the curve and its area.
   return `
     <div class="pie-chart-wrap line-chart-wrap">
       ${titleHtml}
@@ -199,7 +193,6 @@ export function renderLineChart(rawPoints, emptyMessage, title) {
         ${gridLines}
         <path class="line-chart-area" d="${areaPath}"></path>
         <path class="line-chart-line" d="${linePath}"></path>
-        ${dots}
         ${xLabels}
       </svg>
     </div>

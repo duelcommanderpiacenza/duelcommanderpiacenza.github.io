@@ -20,7 +20,11 @@ import "./site-search.js";
 import "./header-account.js";
 import { initMeHighlight } from "./me-highlight.js";
 import { attachHoverTooltips } from "./floating-tooltip.js";
+import { watchPageLoading } from "./page-loading.js";
 
+// Never stuck on "Caricamento...": a reload offered when loading takes too
+// long or fails (js/page-loading.js).
+watchPageLoading();
 setupThemeToggle();
 enhanceSelects();
 enhanceDateInputs();

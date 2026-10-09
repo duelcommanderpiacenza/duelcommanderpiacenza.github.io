@@ -74,52 +74,35 @@
 </nav>
 
 <main class="page-main" id="player-content">
-  <div class="page-heading-row">
-    <a class="breadcrumb-link" href="players.html" aria-label="Tutti i giocatori" title="Tutti i giocatori">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
-    </a>
-
-    <div class="page-heading">
-      <h1 id="player-title">Caricamento...</h1>
-      <!-- The player card of the account linked to this player (js/player-card.js),
-           only when its owner saved one and shows it: placed and sized like
-           commander.html's card, beside the title down to the stat tiles. -->
-      <div class="player-page-card" id="player-page-card" hidden></div>
-    </div>
-  </div>
-
   <div class="page-loading-region">
     <div id="page-loading-overlay" class="page-loading-overlay"><p>Caricamento...</p></div>
 
-    <!-- Kept clear of the player card beside it (js/player-detail.js). -->
-    <div class="player-stats-col" id="player-stats-col">
-    <div class="stats-heading">
-      <h2>Statistiche</h2>
-      <button type="button" class="filter-toggle-btn" id="player-filter-toggle" aria-expanded="false" aria-controls="player-filter-panel" aria-label="Filtri">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
-      </button>
-    </div>
-    <div class="filter-panel is-collapsed" id="player-filter-panel">
-      <div class="filter-panel-clip">
-        <div class="filter-panel-body">
-          <div class="filter-bar">
-            <div class="field">
-              <label for="player-league-filter">Lega</label>
-              <select id="player-league-filter"><option value="">Tutte</option></select>
+    <!-- The hero, like account.html's profile one (styles.css .profile-hero):
+         the player card on the left when its owner shows one
+         (js/player-card.js; else the text takes the whole width), on the
+         blurred art of the card's background — or of the player's most played
+         commander; the name and the numbers on the right
+         (js/player-detail.js). -->
+    <!-- The hero, and "‹ back to the list" on its top edge (desktop:
+         half on the hero, half on the page, over the card's column; phones:
+         inside it at the top left) — outside the hero, which clips what's
+         inside it. -->
+    <div class="detail-hero-wrap">
+      <a class="detail-hero-back" href="players.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>Giocatori</a>
+      <section class="profile-hero detail-hero is-no-card" id="player-hero">
+        <div class="profile-hero-art" id="player-hero-art" aria-hidden="true"></div>
+        <div class="profile-hero-inner">
+          <div class="profile-card-col detail-hero-card" id="player-page-card" hidden></div>
+          <div class="profile-hero-text">
+            <div class="profile-hero-heading">
+              <h1 class="profile-hero-name" id="player-title">Caricamento...</h1>
             </div>
-            <div class="field">
-              <label for="player-event-filter">Evento</label>
-              <select id="player-event-filter"><option value="">Tutti</option></select>
-            </div>
-            <div class="field">
-              <label for="player-date-from">Dal</label>
-              <input type="date" id="player-date-from" placeholder="Dal" data-open-on-today>
+            <div class="profile-hero-stats">
+              <div class="profile-stats-tiles" id="player-winrate-overall"></div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-    <div id="player-winrate-overall" class="stat-grid page-loading">Caricamento...</div>
+      </section>
     </div>
 
     <!-- Desktop: Album comandanti left, Storico partite (a scrolling list of
