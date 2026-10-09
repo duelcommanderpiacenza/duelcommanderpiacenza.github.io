@@ -4892,9 +4892,9 @@ table.data-table tbody tr.is-me-row:hover {
   vertical-align: 0.2em;
 }
 
-/* Same reasoning for the badges after the name in player.html's title:
-   scaled with the title (the disc ≈ 36px next to the 1.9rem name, instead
-   of the lists' ≈ 26px), em so it follows the mobile title shrink too. */
+/* Same reasoning for the badges after the name in player.html's title
+   (the hero's big name): scaled with it — em so they follow the mobile
+   title shrink too. */
 #player-title .icon-badge {
   font-size: 0.75em;
   margin-left: 12px;
@@ -4906,6 +4906,19 @@ table.data-table tbody tr.is-me-row:hover {
 
 #player-title .badge-disc {
   border-width: 3px;
+}
+
+/* Desktop only (wider than 820px, the name up to 3rem): smaller — half
+   the name's size, a disc ≈ 38px — with the thinner ring. */
+@media (min-width: 821px) {
+  #player-title .icon-badge {
+    font-size: 0.5em;
+    margin-left: 10px;
+  }
+
+  #player-title .badge-disc {
+    border-width: 2px;
+  }
 }
 
 /* A badge's icon in a disc (js/ui.js's badgeDiscHtml) — the one
@@ -5209,6 +5222,22 @@ a.btn-secondary:hover {
   animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
+/* "Storico partite" on player.html and commander.html: no box round it —
+   just the event cards, scrolling in their column (the scroll and its
+   top / bottom fades kept, now fading into the page). Scoped with :root in
+   dark mode too, to outrank the panels' dark background. */
+#player-matches > .history-panel,
+#commander-matches > .history-panel,
+:root[data-theme="dark"] #player-matches > .history-panel,
+:root[data-theme="dark"] #commander-matches > .history-panel {
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
 .history-scroll {
   --fade-top: 0px;
   --fade-bottom: 0px;
@@ -5230,6 +5259,26 @@ a.btn-secondary:hover {
 
 .history-scroll.can-scroll-down {
   --fade-bottom: 28px;
+}
+
+/* On phones / touch screens no visible scrollbar: the list scrolls with
+   the finger and the top/bottom fades show there's more. */
+@media (max-width: 640px) {
+  .history-scroll {
+    scrollbar-width: none;
+  }
+
+  .history-scroll::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+html.nav-mobile .history-scroll {
+  scrollbar-width: none;
+}
+
+html.nav-mobile .history-scroll::-webkit-scrollbar {
+  display: none;
 }
 
 .history-item {
