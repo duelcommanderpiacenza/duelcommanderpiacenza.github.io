@@ -121,10 +121,26 @@ function smoothPath(points) {
   return d;
 }
 
+// renderLineChart's own geometry (commander.html's "Utilizzo"): the plot
+// spans the card edge to edge (styles.css .line-chart-wrap.is-edge) and is
+// stretched to it (preserveAspectRatio="none" — the strokes keep their width
+// with vector-effect: non-scaling-stroke, and there are no round shapes in
+// the SVG to turn into ellipses: the hover dot is HTML). EDGE_HEIGHT is the
+// plot's CSS height in px, so y units are pixels: the HTML overlays (y
+// labels, hover dots) sit at the same px. Above EDGE_TOP: the title and the
+// numbers, overlaid; below the zero line: the months' band, the area
+// filling it down to the card's edge.
+const EDGE_WIDTH = 1000;
+const EDGE_HEIGHT = 240;
+const EDGE_TOP = 84;
+const EDGE_BOTTOM = 30;
+
+const decksLabel = (n) => `${n} ${n === 1 ? "mazzo" : "mazzi"}`;
+
 /**
  * @param {Array<{date: string, value: number}>} points - ISO dates, ascending, value >= 0 (integer counts).
  * @param {string} emptyMessage
- * @param {string} [title] - shown inside the box itself, above the chart.
+ * @param {string} [title] - shown inside the box itself, over the chart.
  */
 export function renderLineChart(rawPoints, emptyMessage, title) {
   const titleHtml = title ? `<h2 class="pie-chart-title">${escapeHtml(title)}</h2>` : "";
@@ -133,68 +149,111 @@ export function renderLineChart(rawPoints, emptyMessage, title) {
     return `<div class="pie-chart-wrap line-chart-wrap">${titleHtml}<p class="page-empty">${emptyMessage}</p></div>`;
   }
 
-  const innerWidth = WIDTH - PAD_LEFT - PAD_RIGHT;
-  const innerHeight = HEIGHT - PAD_TOP - PAD_BOTTOM;
-
   // Deck counts are small whole numbers — rounding the axis ceiling up to
   // the next integer (rather than the raw max) keeps the top gridline
   // label from ever reading as a non-whole number of decks.
-  const yMax = Math.max(Math.ceil(Math.max(...points.map((p) => p.value))), 1);
+  const values = points.map((p) => p.value);
+  const peak = Math.max(...values);
+  const yMax = Math.max(Math.ceil(peak), 1);
+  const yZero = EDGE_HEIGHT - EDGE_BOTTOM;
+  const yAt = (value) => yZero - (value / yMax) * (yZero - EDGE_TOP);
 
   const times = points.map((p) => new Date(p.date).getTime());
   const minTime = times[0];
   const maxTime = times[times.length - 1];
   const timeSpan = maxTime - minTime || 1;
+  const xAt = (time) => ((time - minTime) / timeSpan) * EDGE_WIDTH;
+  const pct = (x) => `${((x / EDGE_WIDTH) * 100).toFixed(3)}%`;
 
-  const coords = points.map((p, i) => {
-    // A single point (or every point sharing one date) has no span to
-    // place along — center it instead of dividing by zero.
-    const x = points.length === 1 ? PAD_LEFT + innerWidth / 2 : PAD_LEFT + ((times[i] - minTime) / timeSpan) * innerWidth;
-    const y = PAD_TOP + innerHeight - (p.value / yMax) * innerHeight;
-    return [x, y];
-  });
+  // A single point (or every point sharing one date) has no span to place
+  // along — centred instead of dividing by zero.
+  const coords = points.map((p, i) => [points.length === 1 ? EDGE_WIDTH / 2 : xAt(times[i]), yAt(p.value)]);
 
   const linePath = smoothPath(coords);
-  const areaPath = `${linePath} L${coords[coords.length - 1][0].toFixed(2)},${PAD_TOP + innerHeight} L${coords[0][0].toFixed(2)},${PAD_TOP + innerHeight} Z`;
+  const areaPath = `${linePath} L${coords[coords.length - 1][0].toFixed(2)},${EDGE_HEIGHT} L${coords[0][0].toFixed(2)},${EDGE_HEIGHT} Z`;
 
   // Capped to yMax itself (not a flat 4) — yMax is a small whole number
   // (a deck-count axis rarely exceeds single digits), so 4 evenly-spaced
   // steps rounded to whole numbers could land on the same integer twice
   // (e.g. yMax=2 rounds to 0, 1, 1, 2, 2). Capping the step count keeps
   // the raw step size at 1 or more, so every rounded label is distinct.
+  // The lines the whole width; their values small, on the left just above
+  // each line (none for the zero line).
   const GRID_STEPS = Math.min(4, yMax);
-  const gridLines = Array.from({ length: GRID_STEPS + 1 }, (_, i) => {
-    const y = PAD_TOP + innerHeight - (i / GRID_STEPS) * innerHeight;
+  const grid = Array.from({ length: GRID_STEPS + 1 }, (_, i) => {
     const value = Math.round((i / GRID_STEPS) * yMax);
-    return `<line class="line-chart-grid" x1="${PAD_LEFT}" y1="${y}" x2="${WIDTH - PAD_RIGHT}" y2="${y}"></line>
-      <text class="line-chart-axis-label" x="${PAD_LEFT - 8}" y="${y}" text-anchor="end" dominant-baseline="middle">${value}</text>`;
-  }).join("");
+    return { y: yAt(value), value };
+  });
+  const gridLines = grid
+    .map(
+      ({ y, value }) =>
+        `<line class="line-chart-grid${value === 0 ? " is-zero" : ""}" x1="0" y1="${y}" x2="${EDGE_WIDTH}" y2="${y}" vector-effect="non-scaling-stroke"></line>`
+    )
+    .join("");
+  const yLabels = grid
+    .filter(({ value }) => value > 0)
+    .map(({ y, value }) => `<span class="line-chart-y" style="top:${y}px">${value}</span>`)
+    .join("");
 
   // Generic calendar ticks (see monthTicks above) rather than the exact
-  // dates data happens to fall on, positioned by their own real time value
-  // along the same axis the data points use.
-  const ticks = monthTicks(minTime, maxTime);
-  const xLabels = ticks
-    .map((tick, i) => {
-      const x = PAD_LEFT + ((tick.getTime() - minTime) / timeSpan) * innerWidth;
-      // Inward-anchored at the two ends (a centered label there would
-      // extend half its own width past the viewBox edge and get clipped),
-      // centered everywhere in between.
-      const anchor = i === 0 ? "start" : i === ticks.length - 1 ? "end" : "middle";
-      return `<text class="line-chart-axis-label" x="${x.toFixed(2)}" y="${HEIGHT - PAD_BOTTOM + 20}" text-anchor="${anchor}">${formatMonthTick(tick)}</text>`;
+  // dates data happens to fall on, in the band under the zero line; one too
+  // close to either edge is anchored inward rather than cut off.
+  const xLabels = monthTicks(minTime, maxTime)
+    .map((tick) => {
+      const x = xAt(tick.getTime());
+      const edge = x < 60 ? " is-start" : x > EDGE_WIDTH - 60 ? " is-end" : "";
+      return `<span class="line-chart-x${edge}" style="left:${pct(x)}">${formatMonthTick(tick)}</span>`;
     })
     .join("");
 
-  // No dots on the line: just the curve and its area.
+  // Hover (or tap): each point owns the strip from halfway to the previous
+  // point to halfway to the next — a guide line, a dot on the curve and the
+  // date with its count over it. Pure CSS (:hover), no script.
+  const hits = coords
+    .map(([x, y], i) => {
+      const left = i === 0 ? 0 : (coords[i - 1][0] + x) / 2;
+      const right = i === coords.length - 1 ? EDGE_WIDTH : (x + coords[i + 1][0]) / 2;
+      const width = right - left || EDGE_WIDTH;
+      const inner = `${(((x - left) / width) * 100).toFixed(3)}%`;
+      const side = x < 150 ? " is-start" : x > EDGE_WIDTH - 150 ? " is-end" : "";
+      return `<span class="line-chart-hit" style="left:${pct(left)};width:${pct(width)}">
+        <span class="line-chart-guide" style="left:${inner}"></span>
+        <span class="line-chart-dot-html" style="left:${inner};top:${y}px"></span>
+        <span class="line-chart-tip${side}" style="left:${inner};top:${y}px">${escapeHtml(formatDate(points[i].date))} · <strong>${decksLabel(points[i].value)}</strong></span>
+      </span>`;
+    })
+    .join("");
+
+  // The numbers beside the title: the latest event's decks, the peak, and
+  // the total over the whole history (not just the 2 years drawn).
+  const total = rawPoints.reduce((sum, p) => sum + p.value, 0);
+  const stats = [
+    ["Ultimo", values[values.length - 1]],
+    ["Picco", peak],
+    ["Totale", total],
+  ]
+    .map(
+      ([label, value]) =>
+        `<div class="line-chart-stat"><span class="line-chart-stat-value">${value}</span><span class="line-chart-stat-label">${label}</span></div>`
+    )
+    .join("");
+
   return `
-    <div class="pie-chart-wrap line-chart-wrap">
-      ${titleHtml}
-      <svg class="line-chart" viewBox="0 0 ${WIDTH} ${HEIGHT}" role="img" aria-label="${escapeHtml(title ?? "Grafico")}">
-        ${gridLines}
-        <path class="line-chart-area" d="${areaPath}"></path>
-        <path class="line-chart-line" d="${linePath}"></path>
+    <div class="pie-chart-wrap line-chart-wrap is-edge">
+      <div class="line-chart-head">
+        ${titleHtml}
+        <div class="line-chart-stats">${stats}</div>
+      </div>
+      <div class="line-chart-plot">
+        <svg class="line-chart" viewBox="0 0 ${EDGE_WIDTH} ${EDGE_HEIGHT}" preserveAspectRatio="none" role="img" aria-label="${escapeHtml(title ?? "Grafico")}">
+          ${gridLines}
+          <path class="line-chart-area" d="${areaPath}"></path>
+          <path class="line-chart-line" d="${linePath}" vector-effect="non-scaling-stroke"></path>
+        </svg>
+        ${yLabels}
         ${xLabels}
-      </svg>
+        ${hits}
+      </div>
     </div>
   `;
 }

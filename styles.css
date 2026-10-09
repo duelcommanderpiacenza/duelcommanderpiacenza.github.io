@@ -11646,6 +11646,238 @@ html.nav-mobile .chart-carousel-arrow {
   fill: var(--brand-red);
 }
 
+/* commander.html's "Utilizzo" (js/line-chart.js renderLineChart): the plot
+   edge to edge in its card (no padding — the card's corners clip it), the
+   title and the numbers (Ultimo / Picco / Totale) laid over its top, the
+   gridlines' values small on the left just above each line, the months in
+   the band under the zero line, the area filling it down to the card's
+   bottom edge. The plot 240px tall (= the SVG's viewBox height, so its y
+   units are px — the HTML overlays line up with it), stretched across. */
+.line-chart-wrap.is-edge {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+}
+
+.line-chart-head {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px 0;
+  pointer-events: none;
+}
+
+.line-chart-head .pie-chart-title {
+  margin: 0;
+}
+
+.line-chart-stats {
+  display: flex;
+  gap: 18px;
+}
+
+.line-chart-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.line-chart-stat-value {
+  color: var(--text-title);
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1.05;
+}
+
+.line-chart-stat:first-child .line-chart-stat-value {
+  color: var(--brand-red);
+}
+
+.line-chart-stat-label {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.line-chart-plot {
+  position: relative;
+  height: 240px;
+}
+
+.line-chart-plot .line-chart {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  overflow: visible;
+  animation: line-chart-reveal 900ms cubic-bezier(0.2, 0.8, 0.2, 1) 120ms both;
+}
+
+/* The curve drawn in from the left (paused with the rest while the page
+   loads, body.is-loading). */
+@keyframes line-chart-reveal {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.line-chart-plot .line-chart-grid {
+  stroke-dasharray: 3 5;
+}
+
+.line-chart-plot .line-chart-grid.is-zero {
+  stroke-dasharray: none;
+}
+
+.line-chart-plot .line-chart-area {
+  fill: rgba(220, 24, 28, 0.14);
+}
+
+.line-chart-plot .line-chart-line {
+  stroke-width: 3;
+}
+
+.line-chart-y,
+.line-chart-x {
+  position: absolute;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.line-chart-y {
+  left: 14px;
+  transform: translateY(calc(-100% - 3px));
+}
+
+.line-chart-x {
+  bottom: 9px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.line-chart-x.is-start {
+  transform: translateX(14px);
+}
+
+.line-chart-x.is-end {
+  transform: translateX(calc(-100% - 14px));
+}
+
+/* Hover / tap: the point's strip shows its guide, dot and tip. */
+.line-chart-hit {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 2;
+}
+
+.line-chart-guide,
+.line-chart-dot-html,
+.line-chart-tip {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+}
+
+.line-chart-guide {
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 1px dashed rgba(220, 24, 28, 0.45);
+}
+
+.line-chart-dot-html {
+  width: 12px;
+  height: 12px;
+  box-sizing: border-box;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--brand-red);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transform: translate(-50%, -50%);
+}
+
+.line-chart-tip {
+  padding: 5px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(12, 7, 8, 0.88);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transform: translate(-50%, calc(-100% - 12px));
+}
+
+.line-chart-tip.is-start {
+  transform: translate(-12px, calc(-100% - 12px));
+}
+
+.line-chart-tip.is-end {
+  transform: translate(calc(-100% + 12px), calc(-100% - 12px));
+}
+
+.line-chart-hit:hover > * {
+  opacity: 1;
+}
+
+@media (max-width: 640px) {
+  .line-chart-head {
+    padding: 14px 14px 0;
+  }
+
+  .line-chart-stats {
+    gap: 12px;
+  }
+
+  .line-chart-stat-value {
+    font-size: 1.15rem;
+  }
+
+  .line-chart-stat-label {
+    font-size: 0.6rem;
+  }
+
+  .line-chart-y,
+  .line-chart-x {
+    font-size: 0.66rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .line-chart-plot .line-chart {
+    animation: none;
+  }
+}
+
+:root[data-theme="dark"] .line-chart-plot .line-chart-area {
+  fill: rgba(255, 106, 110, 0.14);
+}
+
+:root[data-theme="dark"] .line-chart-stat:first-child .line-chart-stat-value {
+  color: #ff6a6e;
+}
+
+:root[data-theme="dark"] .line-chart-guide {
+  border-left-color: rgba(255, 106, 110, 0.5);
+}
+
 /* Archetipi page's multi-series chart (js/line-chart.js's
    renderMultiLineChart) — each <path>/<circle> sets its own stroke/fill
    inline (per-archetype color), so unlike the single-series chart there's
