@@ -7087,30 +7087,74 @@ img.cs-option-icon {
   animation: commander-card-in 450ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-/* The follow button under the name, light on the dark hero (filled with
-   the brand red once following, as elsewhere); centred with the name in the
-   one-column hero (≤820px). */
-.detail-hero .follow-btn-row {
-  margin-top: 4px;
-}
-
-.detail-hero .follow-btn:not(.is-following) {
-  border-color: rgba(255, 255, 255, 0.6);
-  color: #fff;
-}
-
-.detail-hero .follow-btn:not(.is-following):hover {
-  background: rgba(255, 255, 255, 0.14);
-}
-
-.detail-hero .follow-btn.is-following {
-  border-color: var(--brand-red);
+/* The follow button in the detail heroes: the star alone (its name in
+   aria-label, js/follow-button.js), round, 40px like the back pill — not
+   following: a hollow star in the hero's reds, like the back pill;
+   following: a white filled star on brand red. Beside the hero in its wrap
+   (js puts it there), placed like the back pill but on the right: desktop
+   on the hero's top edge (48px in from the right); up to 820px in
+   the hero's top-right corner. */
+/* top: -20px — half its 40px — rather than a translate: the row's own
+   entrance animation (entrance-fade-up) ends on transform: none and holds
+   it. */
+.detail-hero-wrap > .follow-btn-row {
+  position: absolute;
+  top: -20px;
+  right: 48px;
+  z-index: 2;
+  margin: 0;
 }
 
 @media (max-width: 820px) {
-  .detail-hero .follow-btn-row {
-    justify-content: center;
+  .detail-hero-wrap > .follow-btn-row {
+    top: 14px;
+    right: 14px;
   }
+}
+
+/* Phones: like the back pill — 0 is 16px in from the edge-to-edge hero. */
+@media (max-width: 640px) {
+  .detail-hero-wrap > .follow-btn-row {
+    right: 0;
+  }
+}
+
+.detail-hero-wrap .follow-btn {
+  justify-content: center;
+  box-sizing: border-box;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid #d9a2a7;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #a3505a, #6a3036);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  color: #fff;
+  font-size: 1.25rem;
+  text-shadow: none;
+}
+
+.detail-hero-wrap .follow-btn:hover {
+  border-color: #f0cdd0;
+  background: linear-gradient(135deg, #8c434c, #55262b);
+}
+
+/* Following: a gradient too (a brighter red), not a flat colour — the
+   button's background transition can't fade a gradient into a colour: it
+   dropped the gradient at once and faded the red in from transparent, the
+   button blinking out and back in. Gradient to gradient just swaps. */
+.detail-hero-wrap .follow-btn.is-following {
+  border-color: #fff;
+  background: linear-gradient(135deg, #ec2a30, #b5141a);
+  color: #fff;
+}
+
+.detail-hero-wrap .follow-btn.is-following:hover {
+  background: linear-gradient(135deg, #c81d23, #8f1015);
+}
+
+.detail-hero-wrap .follow-btn-text {
+  display: none;
 }
 
 /* Phones: the detail heroes' numbers (4-5 of them) on one row — equal
@@ -8882,28 +8926,24 @@ html.nav-mobile .pc-cancel-btn svg {
   outline-offset: 2px;
 }
 
-.follow-btn:disabled {
-  opacity: 0.6;
+/* Its request running (js/follow-button.js): the same look, a "working"
+   cursor. */
+.follow-btn[aria-busy="true"] {
   cursor: progress;
 }
 
+/* On its own layer for good (will-change): an animation ending would
+   otherwise hand it back to be redrawn as plain text, a visible snap. */
 .follow-btn-star {
+  display: inline-block;
   font-size: 1.05em;
   line-height: 1;
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
-.follow-btn.is-following .follow-btn-star {
-  animation: follow-star-pop 420ms cubic-bezier(0.2, 1.4, 0.4, 1);
-}
-
-@keyframes follow-star-pop {
-  from {
-    transform: scale(0.3) rotate(-60deg);
-  }
-  to {
-    transform: none;
-  }
-}
+/* A click spins the star (js/follow-button.js spinTo, a Web Animation) —
+   the new state drawn halfway round, where the swap doesn't show. */
 
 .follows-empty {
   margin: 0;
@@ -9116,7 +9156,6 @@ a.history-item:hover .follow-name {
     transition: none;
   }
 
-  .follow-btn.is-following .follow-btn-star,
   .follow-stats.is-ready .history-stats {
     animation: none;
   }
