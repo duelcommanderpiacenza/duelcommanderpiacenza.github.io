@@ -2050,7 +2050,7 @@ a.dashboard-standing:hover .dashboard-standings-name-text {
 }
 
 .league-progress-seg.is-done {
-  background: linear-gradient(90deg, var(--brand-red), var(--brand-red-deep));
+  background: var(--brand-red);
 }
 
 .league-progress-seg.is-next {
@@ -2061,7 +2061,7 @@ a.dashboard-standing:hover .dashboard-standings-name-text {
   position: absolute;
   inset: 0 auto 0 0;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--brand-red), var(--brand-red-deep));
+  background: var(--brand-red);
 }
 
 :root[data-theme="dark"] .league-progress-track:not(.is-segmented),
@@ -2071,7 +2071,7 @@ a.dashboard-standing:hover .dashboard-standings-name-text {
 
 :root[data-theme="dark"] .league-progress-seg.is-done,
 :root[data-theme="dark"] .league-progress-fill {
-  background: linear-gradient(90deg, #ff6a6e, var(--brand-red));
+  background: #ff6a6e;
 }
 
 :root[data-theme="dark"] .league-progress-seg.is-next {
@@ -4217,7 +4217,7 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
 }
 
 /* "In corso" / "Conclusa": the colours of the hero's followed ★
-   (.detail-hero-wrap .follow-btn.is-following) — bright red gradient, white
+   (.detail-hero-wrap .follow-btn.is-following) — flat brand red, white
    border, soft shadow — as a pill the back pill's size and type, whichever
    the status. */
 .league-hero-meta .badge-status {
@@ -4226,7 +4226,7 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   margin-left: 0;
   padding: 6px 16px;
   border: 1px solid #fff;
-  background: linear-gradient(135deg, #ec2a30, #b5141a);
+  background: var(--brand-red);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
   font-size: 0.95rem;
   letter-spacing: normal;
@@ -6936,10 +6936,10 @@ img.cs-option-icon {
   padding: 0.12em 0.32em;
   border-radius: 0.28em;
   /* The followed ★'s colours (.detail-hero-wrap .follow-btn.is-following),
-     like the back pill: bright red gradient, a white edge — drawn as an
-     inset shadow, not a border, so the box stays the size the other
-     numbers line up with. */
-  background: linear-gradient(135deg, #ec2a30, #b5141a);
+     like the back pill: flat brand red, a white edge — drawn as an inset
+     shadow, not a border, so the box stays the size the other numbers
+     line up with. */
+  background: var(--brand-red);
   box-shadow: inset 0 0 0 1px #fff, 0 2px 8px rgba(0, 0, 0, 0.25);
   color: #fff;
   text-shadow: none;
@@ -7133,16 +7133,16 @@ img.cs-option-icon {
 }
 
 /* Solid (no transparency), in the followed ★'s colours
-   (.detail-hero-wrap .follow-btn.is-following): bright red gradient, white
+   (.detail-hero-wrap .follow-btn.is-following): flat brand red, white
    border — on every screen; a deeper red on hover. */
 .detail-hero-back {
   border-color: #fff;
-  background: linear-gradient(135deg, #ec2a30, #b5141a);
+  background: var(--brand-red);
 }
 
 .detail-hero-back:hover {
   border-color: #fff;
-  background: linear-gradient(135deg, #c81d23, #8f1015);
+  background: var(--brand-red-deep-2);
 }
 
 /* Desktop: left of the card column's centre. */
@@ -7258,7 +7258,7 @@ img.cs-option-icon {
   padding: 0;
   border: 1px solid #d9a2a7;
   border-radius: 50%;
-  background: linear-gradient(135deg, #a3505a, #6a3036);
+  background: #87434a;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
   color: #fff;
   font-size: 1.25rem;
@@ -7267,21 +7267,21 @@ img.cs-option-icon {
 
 .detail-hero-wrap .follow-btn:hover {
   border-color: #f0cdd0;
-  background: linear-gradient(135deg, #8c434c, #55262b);
+  background: #71353c;
 }
 
-/* Following: a gradient too (a brighter red), not a flat colour — the
+/* Following: flat brand red. Both states flat colours (no gradients) — the
    button's background transition can't fade a gradient into a colour: it
-   dropped the gradient at once and faded the red in from transparent, the
-   button blinking out and back in. Gradient to gradient just swaps. */
+   drops the gradient at once and fades in from transparent, the button
+   blinking out and back in. Colour to colour fades smoothly. */
 .detail-hero-wrap .follow-btn.is-following {
   border-color: #fff;
-  background: linear-gradient(135deg, #ec2a30, #b5141a);
+  background: var(--brand-red);
   color: #fff;
 }
 
 .detail-hero-wrap .follow-btn.is-following:hover {
-  background: linear-gradient(135deg, #c81d23, #8f1015);
+  background: var(--brand-red-deep-2);
 }
 
 .detail-hero-wrap .follow-btn-text {
