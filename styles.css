@@ -4216,11 +4216,20 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   font-weight: 700;
 }
 
+/* "In corso" / "Conclusa": the colours of the hero's followed ★
+   (.detail-hero-wrap .follow-btn.is-following) — bright red gradient, white
+   border, soft shadow — as a pill the back pill's size and type, whichever
+   the status. */
 .league-hero-meta .badge-status {
-  min-height: 30px;
+  min-height: 40px;
+  box-sizing: border-box;
   margin-left: 0;
-  padding: 0 14px;
-  font-size: 0.85rem;
+  padding: 6px 16px;
+  border: 1px solid #fff;
+  background: linear-gradient(135deg, #ec2a30, #b5141a);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  font-size: 0.95rem;
+  letter-spacing: normal;
   text-shadow: none;
 }
 
