@@ -98,6 +98,10 @@ export async function initFollowButton(titleEl, kind, id) {
       if (following) await Follows.unfollow(userId, kind, id);
       else await Follows.follow(userId, kind, id);
       following = !following;
+      // No hover colour on the new state until the pointer leaves (styles.css
+      // .is-fresh): it showed at once in its darker hover shade.
+      btn.classList.add("is-fresh");
+      btn.addEventListener("pointerleave", () => btn.classList.remove("is-fresh"), { once: true });
       await spinTo();
     } catch (err) {
       console.error(err);

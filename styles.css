@@ -7265,9 +7265,14 @@ img.cs-option-icon {
   text-shadow: none;
 }
 
-.detail-hero-wrap .follow-btn:hover {
-  border-color: #f0cdd0;
-  background: #71353c;
+/* Hover only with a real pointer (a tap would leave it stuck on), and not
+   right after a click until the pointer leaves (.is-fresh, js/follow-button.js)
+   — else the new state showed in its darker hover colour at once. */
+@media (hover: hover) {
+  .detail-hero-wrap .follow-btn:not(.is-fresh):hover {
+    border-color: #f0cdd0;
+    background: #71353c;
+  }
 }
 
 /* Following: flat brand red. Both states flat colours (no gradients) — the
@@ -7280,8 +7285,10 @@ img.cs-option-icon {
   color: #fff;
 }
 
-.detail-hero-wrap .follow-btn.is-following:hover {
-  background: var(--brand-red-deep-2);
+@media (hover: hover) {
+  .detail-hero-wrap .follow-btn.is-following:not(.is-fresh):hover {
+    background: var(--brand-red-deep-2);
+  }
 }
 
 .detail-hero-wrap .follow-btn-text {
@@ -9039,8 +9046,12 @@ html.nav-mobile .pc-cancel-btn svg {
   transition: background 160ms ease, color 160ms ease;
 }
 
-.follow-btn:hover {
-  background: rgba(220, 24, 28, 0.08);
+/* Hover: see .detail-hero-wrap .follow-btn's (real pointers only, not
+   right after a click). */
+@media (hover: hover) {
+  .follow-btn:not(.is-fresh):hover {
+    background: rgba(220, 24, 28, 0.08);
+  }
 }
 
 .follow-btn.is-following {
@@ -9048,8 +9059,10 @@ html.nav-mobile .pc-cancel-btn svg {
   color: #fff;
 }
 
-.follow-btn.is-following:hover {
-  background: var(--brand-red-deep-2);
+@media (hover: hover) {
+  .follow-btn.is-following:not(.is-fresh):hover {
+    background: var(--brand-red-deep-2);
+  }
 }
 
 .follow-btn:focus-visible {
