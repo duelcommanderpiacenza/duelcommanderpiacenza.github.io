@@ -6935,8 +6935,12 @@ img.cs-option-icon {
   align-self: flex-start;
   padding: 0.12em 0.32em;
   border-radius: 0.28em;
-  background: var(--brand-red);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  /* The followed ★'s colours (.detail-hero-wrap .follow-btn.is-following),
+     like the back pill: bright red gradient, a white edge — drawn as an
+     inset shadow, not a border, so the box stays the size the other
+     numbers line up with. */
+  background: linear-gradient(135deg, #ec2a30, #b5141a);
+  box-shadow: inset 0 0 0 1px #fff, 0 2px 8px rgba(0, 0, 0, 0.25);
   color: #fff;
   text-shadow: none;
 }
@@ -7128,16 +7132,17 @@ img.cs-option-icon {
   transform: translateY(-50%);
 }
 
-/* Solid (no transparency), in the hero's own reds (its base gradient,
-   .profile-hero) so it reads as part of it — on every screen. */
+/* Solid (no transparency), in the followed ★'s colours
+   (.detail-hero-wrap .follow-btn.is-following): bright red gradient, white
+   border — on every screen; a deeper red on hover. */
 .detail-hero-back {
-  border-color: #d9a2a7;
-  background: linear-gradient(135deg, #a3505a, #6a3036);
+  border-color: #fff;
+  background: linear-gradient(135deg, #ec2a30, #b5141a);
 }
 
 .detail-hero-back:hover {
-  border-color: #f0cdd0;
-  background: linear-gradient(135deg, #8c434c, #55262b);
+  border-color: #fff;
+  background: linear-gradient(135deg, #c81d23, #8f1015);
 }
 
 /* Desktop: left of the card column's centre. */
