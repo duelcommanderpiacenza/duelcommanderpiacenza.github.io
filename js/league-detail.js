@@ -15,6 +15,8 @@ import {
 import { hidePageLoading } from "./page-loading.js";
 import { initTitleFit } from "./page-title-fit.js";
 import { historyPanelHtml, historyStatsHtml, historyPosHtml } from "./history-list.js";
+import { createArtPainter } from "./player-card.js";
+import { initFollowButton } from "./follow-button.js";
 
 // How many leaderboard rows get the "top 8" highlight (styles.css .is-top8).
 const LEAGUE_TOP_HIGHLIGHT = 8;
@@ -133,11 +135,14 @@ async function init() {
   const statusEl = document.getElementById("league-status");
   const datesEl = document.getElementById("league-dates");
   const statsEl = document.getElementById("league-stats");
-  const wrappedSectionEl = document.getElementById("league-wrapped-section");
   const wrappedEl = document.getElementById("league-wrapped");
   const eventsEl = document.getElementById("league-events");
   const leaderboardSectionEl = document.getElementById("league-leaderboard-section");
   const leaderboardEl = document.getElementById("league-leaderboard");
+
+  // The ★ on the hero's edge, for signed-in accounts (not awaited: it never
+  // holds up the page).
+  if (id) initFollowButton(titleEl, "league", id);
 
   if (!id) {
     titleEl.textContent = "Lega non trovata";
@@ -171,8 +176,6 @@ async function init() {
     datesEl.hidden = !dateRange;
 
     if (events.length === 0) {
-      statsEl.innerHTML = "";
-      wrappedSectionEl.hidden = true;
       eventsEl.innerHTML = '<p class="page-empty">Nessun evento associato a questa lega.</p>';
       leaderboardEl.innerHTML = '<p class="page-empty">Nessun dato per la classifica.</p>';
       return;
@@ -215,10 +218,14 @@ async function init() {
       leagueClosed: !league.is_open,
       scheduledEvents,
     });
-    wrappedEl.innerHTML = renderWrapped(league, standings, computeLeagueWrapped(eventsData, standings), events.length);
-    // Too few events means no highlight tiles at all — hide the empty grid
-    // rather than leave a gap below the summary tiles.
+    const wrapped = computeLeagueWrapped(eventsData, standings);
+    wrappedEl.innerHTML = renderWrapped(league, standings, wrapped, events.length);
+    // Too few events means no highlight tiles at all — the grid stays hidden
+    // rather than leave a gap below the numbers.
     wrappedEl.hidden = wrappedEl.innerHTML === "";
+    // The hero's backdrop (styles.css .profile-hero-art): the league's most
+    // played commander's art (the hero's own reds alone without one).
+    createArtPainter(document.getElementById("league-hero-art"))(wrapped.topCommanders[0]?.commander?.name ?? null);
 
     if (league.is_topdeck) return;
 

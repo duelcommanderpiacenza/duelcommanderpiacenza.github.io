@@ -1,12 +1,13 @@
-// The "☆ Segui" / "★ Seguito" button on player.html and commander.html, on its
-// own line right below the name: a signed-in account follows that player or commander
-// (js/db.js's Follows, supabase/migrations/010) — they then show in its
+// The "☆ Segui" / "★ Seguito" button on player.html, commander.html and
+// league.html, on its own line right below the name: a signed-in account
+// follows that player, commander or league (js/db.js's Follows,
+// supabase/migrations/010, leagues 018) — they then show in its
 // "Seguiti" card on account.html. Nothing at all when signed out; nothing if
 // the follows can't be read (e.g. migration 010 not run yet).
 import { sb } from "./supabase-client.js";
 import { Follows } from "./db.js";
 
-// kind: "player" or "commander"; the button goes on a line of its own right
+// kind: "player", "commander" or "league"; the button goes on a line of its own right
 // after titleEl (the page's <h1>, inside .page-heading).
 export async function initFollowButton(titleEl, kind, id) {
   if (!titleEl || !id) return;
@@ -32,7 +33,11 @@ export async function initFollowButton(titleEl, kind, id) {
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = "follow-btn";
-  const followLabel = kind === "player" ? "Segui questo giocatore" : "Segui questo comandante";
+  const followLabel = {
+    player: "Segui questo giocatore",
+    commander: "Segui questo comandante",
+    league: "Segui questa lega",
+  }[kind];
   // The star and the text are built once and only updated: the star is
   // never removed and put back (a new one, starting its animation from
   // nothing, read as the star blinking out and in).

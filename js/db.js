@@ -197,17 +197,20 @@ export const Decklists = {
   },
 };
 
-// The players and commanders an account follows (supabase/migrations/010's
-// follows — private, each account reads and writes only its own): the ★
-// button on player.html / commander.html (js/follow-button.js) and
-// account.html's "Seguiti" card. kind: "player" or "commander".
-const followColumn = (kind) => (kind === "player" ? "player_id" : "commander_id");
+// The players, commanders and leagues an account follows (supabase/
+// migrations/010's follows, leagues since 018 — private, each account reads
+// and writes only its own): the ★ button on player.html / commander.html /
+// league.html (js/follow-button.js) and account.html's "Seguiti" card. kind:
+// "player", "commander" or "league".
+const followColumn = (kind) => `${kind}_id`;
 
 export const Follows = {
   mine: (userId) =>
     sb
       .from("follows")
-      .select("player_id, commander_id, created_at, player:players(id,name,handle), commander:commanders(id,name,color_identity)")
+      .select(
+        "player_id, commander_id, league_id, created_at, player:players(id,name,handle), commander:commanders(id,name,color_identity), league:leagues(id,name,is_open)"
+      )
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .then(assertOk),

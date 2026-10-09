@@ -74,28 +74,35 @@
 </nav>
 
 <main class="page-main" id="league-content">
-  <div class="page-heading-row">
-    <a class="breadcrumb-link" href="events.html" aria-label="Leghe &amp; Eventi" title="Leghe &amp; Eventi">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
-    </a>
-
-    <div class="page-heading-text">
-      <div class="page-heading">
-        <h1 id="league-title">Caricamento...</h1>
-      </div>
-      <div class="page-heading-pill" id="league-status" hidden></div>
-      <p class="page-subtitle" id="league-dates" hidden></p>
-    </div>
-  </div>
-
   <div class="page-loading-region">
     <div id="page-loading-overlay" class="page-loading-overlay"><p>Caricamento...</p></div>
 
-    <section id="league-wrapped-section">
-      <h2>Wrapped</h2>
-      <div id="league-stats" class="stat-grid page-loading">Caricamento...</div>
-      <div id="league-wrapped" class="stat-grid wrapped-grid page-loading">Caricamento...</div>
-    </section>
+    <!-- The league's Wrapped as a hero, like player.html's (styles.css
+         .profile-hero, .league-hero): on the blurred art of the league's most
+         played commander, the name, its status and dates, the numbers, then
+         the highlights (js/league-detail.js); "‹ Leghe & Eventi" on its top
+         edge (.detail-hero-wrap). -->
+    <div class="detail-hero-wrap">
+      <a class="detail-hero-back" href="events.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>Leghe <span class="amp">&amp;</span> Eventi</a>
+      <section class="profile-hero detail-hero league-hero is-no-card" id="league-hero">
+        <div class="profile-hero-art" id="league-hero-art" aria-hidden="true"></div>
+        <div class="profile-hero-inner">
+          <div class="profile-hero-text">
+            <div class="profile-hero-heading">
+              <h1 class="profile-hero-name" id="league-title">Caricamento...</h1>
+              <div class="league-hero-meta">
+                <span id="league-status" hidden></span>
+                <span id="league-dates" hidden></span>
+              </div>
+            </div>
+            <div class="profile-hero-stats">
+              <div class="profile-stats-tiles" id="league-stats"></div>
+              <div class="wrapped-grid" id="league-wrapped" hidden></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
 
     <h2>Eventi della lega</h2>
     <div id="league-events" class="page-loading">Caricamento...</div>

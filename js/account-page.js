@@ -1242,11 +1242,11 @@ decklistConfirmSend.addEventListener("click", async () => {
 
 // --- Seguiti -----------------------------------------------------------------------------
 
-// The players and commanders this account follows (★ on their pages,
-// js/follow-button.js), newest follow first, in two groups (each only when
-// it has someone, with its count). One sub-card each, like the Comandanti /
-// Giocatori pages' lists (js/history-list.js), the whole card a link to the
-// player's / commander's page: the name (a player's badges after it), a
+// The players, commanders and leagues this account follows (★ on their
+// pages, js/follow-button.js), newest follow first, in three groups (each
+// only when it has someone, with its count). One sub-card each, like the
+// Comandanti / Giocatori pages' lists (js/history-list.js), the whole card a
+// link to the player's / commander's / league's page: the name (a player's badges after it), a
 // small line with the last event, the numbers on the right (below on
 // phones). The only part that doesn't lead there: a filled ★ in a circle to
 // unfollow (hollow on hover — the same star as on their pages), beside the
@@ -1258,7 +1258,7 @@ const followsListEl = document.getElementById("follows-list");
 const followsEmptyEl = document.getElementById("follows-empty");
 
 function followRowHtml(kind, target) {
-  const href = kind === "player" ? `player.html?id=${target.id}` : `commander.html?id=${target.id}`;
+  const href = `${kind}.html?id=${target.id}`;
   const name = kind === "player" ? playerLabel(target) : target.name;
   return `<li class="follow-row" data-kind="${kind}" data-id="${target.id}">
     <a class="history-item follow-card" href="${href}">
@@ -1306,7 +1306,8 @@ async function loadFollows() {
   }
   followsListEl.innerHTML =
     followGroupHtml("Giocatori", "player", follows.map((f) => f.player).filter(Boolean)) +
-    followGroupHtml("Comandanti", "commander", follows.map((f) => f.commander).filter(Boolean));
+    followGroupHtml("Comandanti", "commander", follows.map((f) => f.commander).filter(Boolean)) +
+    followGroupHtml("Leghe", "league", follows.map((f) => f.league).filter(Boolean));
   updateFollowsEmpty();
   followsCard.hidden = false;
   // The numbers next to each name come after, without holding up the page.
@@ -1326,7 +1327,9 @@ async function loadFollows() {
 //    series; computed like the Bacheca's, js/home.js), "—" when not in them;
 //  - a commander: Winrate counted like commander.html's (a bye or a drop
 //    isn't a match it played) and how many events it was played in; the
-//    latest of them, and who played it, on the line below.
+//    latest of them, and who played it, on the line below;
+//  - a league: how many of its events were played (closed ones, as on
+//    league.html); "In corso" / "Conclusa" and the latest event below.
 const winrate = ({ wins, draws, losses }) => {
   const played = wins + draws + losses;
   return played ? `${Math.round((wins / played) * 100)}%` : null;
@@ -1429,12 +1432,37 @@ async function fillCommanderStats(commanderIds) {
   }
 }
 
+async function fillLeagueStats(leagues) {
+  await Promise.all(
+    leagues.map(async (league) => {
+      const played = (await Events.listByLeague(league.id)).filter((ev) => !ev.is_open);
+      const latest = played.reduce(
+        (best, ev) => (!best || (ev.event_date ?? "") > (best.event_date ?? "") ? ev : best),
+        null
+      );
+      setFollowStats("league", league.id, {
+        stats: [
+          {
+            label: "Eventi",
+            value: played.length,
+            main: true,
+            title: `${played.length} ${played.length === 1 ? "evento giocato" : "eventi giocati"}`,
+          },
+        ],
+        meta: `${league.is_open ? "In corso" : "Conclusa"}${latest ? ` · Ultimo evento: ${eventTitle(latest)}` : ""}`,
+      });
+    })
+  );
+}
+
 async function fillFollowStats(follows) {
   const playerIds = follows.filter((f) => f.player).map((f) => f.player.id);
   const commanderIds = follows.filter((f) => f.commander).map((f) => f.commander.id);
+  const leagues = follows.map((f) => f.league).filter(Boolean);
   await Promise.all([
     playerIds.length ? fillPlayerStats(playerIds) : null,
     commanderIds.length ? fillCommanderStats(commanderIds) : null,
+    leagues.length ? fillLeagueStats(leagues) : null,
   ]);
 }
 

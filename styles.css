@@ -4200,51 +4200,119 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   margin-top: 4px;
 }
 
-/* League "Wrapped" highlights (league.html) — built on .stat-tile, so the
-   entrance animation, stagger, dark-mode surface and reduced-motion rules
-   all apply as-is; only the value area differs, since it holds names/badges
-   rather than a single big number. */
-
-.wrapped-grid {
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+/* League "Wrapped" (league.html): a hero like player.html's
+   (.profile-hero.detail-hero.league-hero, js/league-detail.js) — the name,
+   "In corso" / "Conclusa" and the dates under it, the numbers, then the
+   highlights as frosted dark tiles on the art. The highlights are built on
+   .stat-tile (its entrance animation and stagger); #league-wrapped's id
+   outranks the hero's bare-tile rules (and their dark / phone variants). */
+.league-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin-top: 12px;
+  color: rgba(255, 255, 255, 0.82);
+  font-weight: 700;
 }
 
-/* .stat-grid's display: grid would otherwise override the hidden attribute. */
+.league-hero-meta .badge-status {
+  min-height: 30px;
+  margin-left: 0;
+  padding: 0 14px;
+  font-size: 0.85rem;
+  text-shadow: none;
+}
+
+/* Up to 820px the hero is one centred column. */
+@media (max-width: 820px) {
+  .league-hero-meta {
+    justify-content: center;
+  }
+}
+
+/* The numbers all white: no winrate among them, so no red pill on the
+   first one. */
+#league-stats .stat-tile:first-child .stat-tile-value,
+:root[data-theme="dark"] #league-stats .stat-tile:first-child .stat-tile-value {
+  align-self: auto;
+  padding: 0.12em 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  text-shadow: inherit;
+}
+
+.wrapped-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+  margin-top: 28px;
+}
+
+/* display: grid above would otherwise override the hidden attribute. */
 .wrapped-grid[hidden] {
   display: none;
 }
 
-/* The numeric summary tiles sit right above the highlights in the same
-   section — same spacing between the two grids as between tiles. */
-.stat-grid:has(+ .wrapped-grid:not([hidden])) {
-  margin-bottom: 16px;
+#league-wrapped .stat-tile,
+:root[data-theme="dark"] #league-wrapped .stat-tile {
+  display: block;
+  padding: 16px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius-card-sm);
+  background: rgba(12, 7, 8, 0.4);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+  text-align: left;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+#league-wrapped .stat-tile-label {
+  max-width: none;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  white-space: normal;
 }
 
 .wrapped-tile-value {
-  color: var(--text-title);
+  margin-top: 8px;
+  color: #fff;
   font-size: 1.15rem;
   font-weight: 800;
   line-height: 1.35;
-  margin-top: 8px;
   overflow-wrap: anywhere;
+}
+
+#league-wrapped a,
+:root[data-theme="dark"] #league-wrapped a {
+  color: #fff;
+}
+
+#league-wrapped .player-handle {
+  color: rgba(255, 255, 255, 0.65);
 }
 
 .wrapped-tile-value .badge-archetype {
   font-size: 0.95rem;
+  text-shadow: none;
 }
 
+/* The figures (points, V-S-P, winrate, count) in light red, readable on the
+   dark tile. */
 .wrapped-tile-detail {
-  color: var(--brand-red);
+  margin-top: 6px;
+  color: #ff9a9d;
   font-size: 0.9rem;
   font-weight: 700;
-  margin-top: 6px;
 }
 
 .wrapped-tile-empty {
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.6);
 }
 
-/* Name on the left, its figure (winrate, count) in red on the right. */
+/* Name on the left, its figure (winrate, count) on the right. */
 .wrapped-rank-list {
   list-style: none;
   margin: 0;
@@ -4266,7 +4334,7 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
 }
 
 .wrapped-rank-value {
-  color: var(--brand-red);
+  color: #ff9a9d;
   font-size: 0.9rem;
   white-space: nowrap;
 }
@@ -11825,8 +11893,6 @@ html.nav-mobile .chart-carousel-arrow {
 }
 :root[data-theme="dark"] .rank-cell,
 :root[data-theme="dark"] .stat-tile-value,
-:root[data-theme="dark"] .wrapped-tile-detail,
-:root[data-theme="dark"] .wrapped-rank-value,
 :root[data-theme="dark"] .cd-day.is-today {
   color: #ff6a6e;
 }
