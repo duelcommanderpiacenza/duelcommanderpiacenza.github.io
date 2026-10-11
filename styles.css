@@ -13995,10 +13995,9 @@ html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([
     padding-inline: var(--hero-bleed);
   }
 
-  html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .page-main .profile-hero:first-child,
-  html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .page-main .detail-hero-wrap:first-child .profile-hero,
-  html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .page-loading-region > .detail-hero-wrap:nth-child(2) .profile-hero,
-  html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .page-loading-region > .profile-hero {
+  /* Every hero, as phones' .profile-hero rule does — account's comes after
+     the (hidden) "Il tuo giocatore" card, not first. */
+  html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .page-main .profile-hero {
     margin-top: -28px;
   }
 
