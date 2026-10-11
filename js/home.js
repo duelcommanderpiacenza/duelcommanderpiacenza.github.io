@@ -262,11 +262,13 @@ async function renderEventsSection(el) {
                 return `
               <a class="upcoming-row" href="event.html?id=${ev.id}">
                 <div class="upcoming-date-badge">${badge}</div>
-                <div class="upcoming-row-text">
-                  <span class="upcoming-row-title">${escapeHtml(title)}</span>
-                  ${ev.league ? `<span class="upcoming-row-league">${escapeHtml(ev.league.name)}</span>` : ""}
+                <div class="upcoming-row-main">
+                  <div class="upcoming-row-text">
+                    <span class="upcoming-row-title">${escapeHtml(title)}</span>
+                    ${ev.league ? `<span class="upcoming-row-league">${escapeHtml(ev.league.name)}</span>` : ""}
+                  </div>
+                  ${nestedResultsLink(ev.results_url, ev.decklists_url)}
                 </div>
-                ${nestedResultsLink(ev.results_url, ev.decklists_url)}
               </a>`;
               })
               .join("")}
