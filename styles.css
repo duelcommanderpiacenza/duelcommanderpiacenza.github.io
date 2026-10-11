@@ -7923,7 +7923,7 @@ img.cs-option-icon {
 .profile-hero .page-empty {
   color: rgba(255, 255, 255, 0.7);
 }
-/* player.html / account.html: the hero art's colour as the page's accent
+/* player.html / account.html / commander.html: the hero art's colour as the page's accent
    (js/player-card.js applyHeroTone, once the art is read): the site's red
    variables redefined on <main> — its buttons, chips, active tabs, carousel
    arrows and dots, red text and links follow it; the header and the nav,
@@ -7970,8 +7970,8 @@ main.has-hero-accent .pc-help-btn {
 
 /* The edges of its cards and tiles (the Album's stat tiles…: the shared
    --hairline colours) and Storico partite's match cards — border, hover
-   edge and tint — in it too. (#player-matches: to outrank the boxless
-   lists' own id-scoped rules.) */
+   edge and tint — in it too, and commander.html's Giocatori / Storico
+   partite. (The ids: to outrank the boxless lists' own id-scoped rules.) */
 main.has-hero-accent {
   --hairline: color-mix(in srgb, var(--hero-accent) 20%, transparent);
   --hairline-hover: color-mix(in srgb, var(--hero-accent) 34%, transparent);
@@ -7984,20 +7984,20 @@ main.has-hero-accent {
   --hairline-hover-strong: color-mix(in srgb, var(--hero-accent-light) 42%, transparent);
 }
 
-main.has-hero-accent #player-matches .history-item {
+main.has-hero-accent :is(#player-matches, #commander-matches, #commander-players) .history-item {
   border-color: color-mix(in srgb, var(--hero-accent) 22%, transparent);
 }
 
-main.has-hero-accent #player-matches a.history-item:hover {
+main.has-hero-accent :is(#player-matches, #commander-matches, #commander-players) a.history-item:hover {
   border-color: color-mix(in srgb, var(--hero-accent) 38%, transparent);
   background: color-mix(in srgb, var(--hero-accent) 5%, #fff);
 }
 
-:root[data-theme="dark"] main.has-hero-accent #player-matches .history-item {
+:root[data-theme="dark"] main.has-hero-accent :is(#player-matches, #commander-matches, #commander-players) .history-item {
   border-color: rgba(255, 255, 255, 0.14);
 }
 
-:root[data-theme="dark"] main.has-hero-accent #player-matches a.history-item:hover {
+:root[data-theme="dark"] main.has-hero-accent :is(#player-matches, #commander-matches, #commander-players) a.history-item:hover {
   border-color: color-mix(in srgb, var(--hero-accent-light) 32%, transparent);
   background: color-mix(in srgb, var(--hero-accent-light) 10%, transparent);
 }
@@ -8046,6 +8046,80 @@ main.has-hero-accent .follow-remove:focus-visible {
 :root[data-theme="dark"] main.has-hero-accent .follow-remove:hover {
   border-color: var(--hero-accent-light);
   background: color-mix(in srgb, var(--hero-accent-light) 16%, transparent);
+}
+
+/* commander.html's Utilizzo chart: its area and hover guide (fixed red
+   tints) in it too — the line, the dot and the first number already follow
+   the red variables. */
+main.has-hero-accent .line-chart-plot .line-chart-area {
+  fill: color-mix(in srgb, var(--hero-accent) 16%, transparent);
+}
+
+main.has-hero-accent .line-chart-guide {
+  border-left-color: color-mix(in srgb, var(--hero-accent) 50%, transparent);
+}
+
+:root[data-theme="dark"] main.has-hero-accent .line-chart-plot .line-chart-area {
+  fill: color-mix(in srgb, var(--hero-accent-light) 16%, transparent);
+}
+
+:root[data-theme="dark"] main.has-hero-accent .line-chart-guide {
+  border-left-color: color-mix(in srgb, var(--hero-accent-light) 50%, transparent);
+}
+
+:root[data-theme="dark"] main.has-hero-accent .line-chart-stat:first-child .line-chart-stat-value {
+  color: var(--hero-accent-light);
+}
+
+/* Dark mode: what the site paints in a fixed light red there follows the
+   colour's light shade instead — the Album's dots and loading shimmer, the
+   commander card's placeholder, the stat tiles' numbers, the lists' hover
+   tint and "Tu" rows (the boxless lists' id-scoped ones too), the decklist
+   confirmation box. */
+:root[data-theme="dark"] main.has-hero-accent .cmd-carousel-dots .chart-carousel-dot {
+  background: color-mix(in srgb, var(--hero-accent-light) 35%, transparent);
+}
+
+:root[data-theme="dark"] main.has-hero-accent .cmd-carousel-dots .chart-carousel-dot.is-active {
+  background: var(--hero-accent-light);
+}
+
+:root[data-theme="dark"] main.has-hero-accent .commander-card-skeleton,
+:root[data-theme="dark"] main.has-hero-accent .cmd-carousel-slide.is-loading:not(.fx-rim) {
+  background-image: linear-gradient(100deg, rgba(255, 255, 255, 0.04) 30%, color-mix(in srgb, var(--hero-accent-light) 14%, transparent) 50%, rgba(255, 255, 255, 0.04) 70%);
+}
+
+/* (The Album's stat numbers only — the hero's own stay white.) */
+:root[data-theme="dark"] main.has-hero-accent .cmd-carousel-stats .stat-tile-value {
+  color: var(--hero-accent-light);
+}
+
+:root[data-theme="dark"] main.has-hero-accent a.history-item:hover {
+  background: color-mix(in srgb, var(--hero-accent-light) 10%, transparent);
+}
+
+:root[data-theme="dark"] main.has-hero-accent .history-item.is-me-row,
+:root[data-theme="dark"] main.has-hero-accent :is(#player-matches, #commander-matches, #commander-players) .history-item.is-me-row {
+  border-color: color-mix(in srgb, var(--hero-accent-light) 30%, transparent);
+  background: color-mix(in srgb, var(--hero-accent-light) 17%, transparent);
+}
+
+:root[data-theme="dark"] main.has-hero-accent a.history-item.is-me-row:hover,
+:root[data-theme="dark"] main.has-hero-accent :is(#player-matches, #commander-matches, #commander-players) a.history-item.is-me-row:hover {
+  border-color: color-mix(in srgb, var(--hero-accent-light) 36%, transparent);
+  background: color-mix(in srgb, var(--hero-accent-light) 21%, transparent);
+}
+
+:root[data-theme="dark"] main.has-hero-accent .decklist-confirm-box {
+  background: color-mix(in srgb, var(--hero-accent-light) 10%, transparent);
+}
+
+/* Dark mode: those lists' cards and the Album's stat tiles tinted with the
+   colour's light shade (not the default reddish surface). */
+:root[data-theme="dark"] main.has-hero-accent :is(#player-matches, #commander-matches, #commander-players) .history-item,
+:root[data-theme="dark"] main.has-hero-accent .cmd-carousel-stats .stat-tile {
+  border-color: color-mix(in srgb, var(--hero-accent-light) 20%, transparent);
+  background: color-mix(in srgb, var(--hero-accent-light) 7%, rgba(255, 255, 255, 0.04));
 }
 
 /* The scrolling lists' scrollbar (Storico partite) in it too. */
