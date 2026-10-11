@@ -13,6 +13,7 @@ import { hidePageLoading } from "./page-loading.js";
 import { resultsLink } from "./results-link.js";
 import { initTitleFit } from "./page-title-fit.js";
 import { historyPanelHtml, historyStatsHtml, historyPosHtml } from "./history-list.js";
+import { createArtPainter } from "./player-card.js";
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
@@ -82,6 +83,7 @@ async function init() {
   const entriesCountEl = document.getElementById("event-entries-count");
   const matchesEl = document.getElementById("event-matches");
   const leaderboardEl = document.getElementById("event-leaderboard");
+  const statsEl = document.getElementById("event-stats");
 
   if (!id) {
     titleEl.textContent = "Evento non trovato";
@@ -103,7 +105,7 @@ async function init() {
     initTitleFit(titleEl);
     metaEl.innerHTML = `${formatDate(event.event_date)}${
       event.league
-        ? ` &middot; Lega: <a href="league.html?id=${event.league.id}">${escapeHtml(event.league.name)}</a>`
+        ? ` &middot; <a href="league.html?id=${event.league.id}">${escapeHtml(event.league.name)}</a>`
         : ""
     }`;
 
@@ -137,6 +139,30 @@ async function init() {
     matchesEl.innerHTML = renderMatchesByRound(matches);
 
     const standings = computeEventLeaderboard(matches, entries);
+
+    // The hero: the numbers, and the winner's (first in the standings)
+    // commander as the backdrop — else the most played one (none: the
+    // hero's own reds).
+    const winner = standings[0]?.player ?? null;
+    const winnerEntry = winner ? entries.find((e) => e.player_id === winner.id) : null;
+    const realMatches = matches.filter((m) => !isBye(m) && !isDrop(m));
+    const rounds = new Set(matches.map((m) => m.round ?? 1)).size;
+    const decks = new Set(entries.filter((e) => e.commander_id).map((e) => `${e.commander_id}_${e.partner_commander_id ?? ""}`));
+    statsEl.innerHTML = [
+      ["Giocatori", entries.length],
+      ["Turni", rounds],
+      ["Partite", realMatches.length],
+      ["Comandanti", decks.size],
+    ]
+      .map(
+        ([label, value]) =>
+          `<div class="stat-tile"><div class="stat-tile-label">${label}</div><div class="stat-tile-value">${value}</div></div>`
+      )
+      .join("");
+    const usage = new Map();
+    for (const e of entries) if (e.commander?.name) usage.set(e.commander.name, (usage.get(e.commander.name) ?? 0) + 1);
+    const mostPlayed = [...usage].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+    createArtPainter(document.getElementById("event-hero-art"))(winnerEntry?.commander?.name ?? mostPlayed);
     // Classifica: one sub-card per player, linking to them — position chip
     // and name, then Punti / V-S-P / Winrate.
     leaderboardEl.innerHTML =

@@ -74,22 +74,37 @@
 </nav>
 
 <main class="page-main" id="event-content">
-  <div class="page-heading-row">
-    <a class="breadcrumb-link" href="events.html" aria-label="Tutti gli eventi" title="Tutti gli eventi">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
-    </a>
-
-    <div class="page-heading-text">
-      <div class="page-heading">
-        <h1 id="event-title">Caricamento...</h1>
-      </div>
-      <div class="page-heading-pill" id="event-results" hidden></div>
-      <p class="page-subtitle" id="event-meta"></p>
-    </div>
-  </div>
-
   <div class="page-loading-region">
     <div id="page-loading-overlay" class="page-loading-overlay"><p>Caricamento...</p></div>
+
+    <!-- The event as a hero, like league.html's (styles.css .profile-hero,
+         .event-hero): on the blurred art of the winner's commander, the
+         name, the date / league / results links, then the numbers (js/event-detail.js); "‹ Leghe & Eventi" on its top edge
+         (.detail-hero-wrap). -->
+    <div class="detail-hero-wrap">
+      <a class="detail-hero-back" href="events.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>Leghe <span class="amp">&amp;</span> Eventi</a>
+      <section class="profile-hero detail-hero event-hero is-no-card" id="event-hero">
+        <div class="profile-hero-art" id="event-hero-art" aria-hidden="true"></div>
+        <div class="profile-hero-inner">
+          <div class="profile-hero-text">
+            <div class="profile-hero-heading">
+              <!-- The results / decklist links right after the name, on the
+                   next line when there's no room beside it. -->
+              <div class="event-hero-title-row">
+                <h1 class="profile-hero-name" id="event-title">Caricamento...</h1>
+                <span id="event-results" hidden></span>
+              </div>
+              <div class="league-hero-meta event-hero-meta">
+                <span id="event-meta"></span>
+              </div>
+            </div>
+            <div class="profile-hero-stats">
+              <div class="profile-stats-tiles" id="event-stats"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
 
     <!-- Desktop: Giocatori and Classifica side by side, each a list of
          sub-cards linking to the player (js/event-detail.js, styles.css
