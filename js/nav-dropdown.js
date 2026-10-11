@@ -22,7 +22,24 @@ function isMobileNav() {
 // (nav-dropdown-panel-out) takes, playing it, before finally letting it
 // disappear — mirroring js/page-loading.js's own transitionend-then-remove
 // pattern for the same "animate something on its way OUT" problem.
+// The panel opens upward from the pill: capped to the room between the
+// pill and the red header's bottom edge (or the screen's top, once the
+// header has scrolled away), PANEL_GAP clear of it — scrolling inside
+// (styles.css) when the list is taller than that.
+const PANEL_GAP = 12;
+
+function fitPanel(nav, trigger) {
+  const inner = nav.querySelector(".site-nav-inner");
+  if (!inner) return;
+  const headerBottom = document.querySelector(".site-header")?.getBoundingClientRect().bottom ?? 0;
+  const top = Math.max(headerBottom, 0) + PANEL_GAP;
+  // The panel's own bottom sits 8px above the pill (styles.css).
+  const bottom = trigger.getBoundingClientRect().top - 8;
+  inner.style.maxHeight = `${Math.max(bottom - top, 120)}px`;
+}
+
 function openDropdown(nav, trigger) {
+  fitPanel(nav, trigger);
   nav.classList.remove("is-closing");
   nav.classList.add("is-open");
   trigger.setAttribute("aria-expanded", "true");
@@ -62,6 +79,12 @@ function init() {
     else openDropdown(nav, trigger);
   });
 
+  // Rotating the phone (or the browser's bars showing/hiding) changes the
+  // room: refitted while open.
+  window.addEventListener("resize", () => {
+    if (nav.classList.contains("is-open")) fitPanel(nav, trigger);
+  });
+
   document.addEventListener("click", (e) => {
     if (!nav.contains(e.target)) closeDropdown(nav, trigger);
   });
@@ -72,6 +95,33 @@ function init() {
       trigger.focus();
     }
   });
+
+  // Touch screens: the pill slides away while the page scrolls down and
+  // comes back as soon as it scrolls up (styles.css .is-scrolled-away) —
+  // always shown near the top, and never hidden while its panel is open.
+  // Moves under SCROLL_SLACK px are ignored (a finger's jitter), checked
+  // once per frame.
+  const SCROLL_SLACK = 8;
+  const SHOW_NEAR_TOP = 80;
+  let lastY = window.scrollY;
+  let queued = false;
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(() => {
+        queued = false;
+        if (!document.documentElement.classList.contains("nav-mobile")) return;
+        const y = window.scrollY;
+        if (Math.abs(y - lastY) < SCROLL_SLACK) return;
+        const away = y > lastY && y > SHOW_NEAR_TOP && !nav.classList.contains("is-open");
+        nav.classList.toggle("is-scrolled-away", away);
+        lastY = y;
+      });
+    },
+    { passive: true }
+  );
 }
 
 init();

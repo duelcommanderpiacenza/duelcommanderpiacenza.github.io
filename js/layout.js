@@ -19,7 +19,7 @@ import "./nav-dropdown.js";
 import "./site-search.js";
 import "./header-account.js";
 import { initMeHighlight } from "./me-highlight.js";
-import { attachHoverTooltips } from "./floating-tooltip.js";
+import { attachHoverTooltips, showFloatingTooltip } from "./floating-tooltip.js";
 import { watchPageLoading } from "./page-loading.js";
 
 // Never stuck on "Caricamento...": a reload offered when loading takes too
@@ -40,4 +40,21 @@ attachHoverTooltips(
   document.body,
   ".icon-badge[data-tooltip], .results-link[data-tooltip]",
   (el) => el.dataset.tooltip
+);
+
+// Touch: a badge inside a link (a list's sub-card — Giocatori, the Bacheca's
+// standings, a league's Classifica…) is tapped to read it, not to follow the
+// card: the tap only shows its tooltip. Captured before the link sees it. A
+// mouse click still follows the link (its tooltip shows on hover anyway).
+document.addEventListener(
+  "click",
+  (e) => {
+    const badge = e.target.closest?.(".icon-badge[data-tooltip]");
+    if (!badge || !badge.closest("a")) return;
+    const touch = e.pointerType ? e.pointerType !== "mouse" : window.matchMedia("(hover: none)").matches;
+    if (!touch) return;
+    e.preventDefault();
+    showFloatingTooltip(badge, badge.dataset.tooltip);
+  },
+  true
 );

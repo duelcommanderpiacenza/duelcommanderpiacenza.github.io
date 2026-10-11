@@ -65,6 +65,78 @@ function fetchCardArt(name, printId = null) {
   return artCache.get(key);
 }
 
+// A hero's buttons (back pill, follow star, account's quick actions) take
+// their colour from the hero's art (styles.css --hero-btn / --hero-btn-hover,
+// brand red by default): the art shrunk to 24×24, each pixel weighted by how
+// saturated it is (so the art's colour wins over its greys and blacks),
+// averaged, then held to a dark, fairly saturated tone white text reads on.
+// null when the image can't be read (no CORS: a tainted canvas) — the
+// buttons just stay brand red.
+const TONE_SIZE = 24;
+
+function heroTone(img) {
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = TONE_SIZE;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    ctx.drawImage(img, 0, 0, TONE_SIZE, TONE_SIZE);
+    const data = ctx.getImageData(0, 0, TONE_SIZE, TONE_SIZE).data;
+    let r = 0;
+    let g = 0;
+    let b = 0;
+    let total = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      const max = Math.max(data[i], data[i + 1], data[i + 2]);
+      const min = Math.min(data[i], data[i + 1], data[i + 2]);
+      const sat = max ? (max - min) / max : 0;
+      const weight = 0.05 + sat * sat;
+      r += data[i] * weight;
+      g += data[i + 1] * weight;
+      b += data[i + 2] * weight;
+      total += weight;
+    }
+    return rgbToHue(r / total, g / total, b / total);
+  } catch {
+    return null;
+  }
+}
+
+// { h (degrees), s (0–1) } of an RGB colour.
+function rgbToHue(r, g, b) {
+  r /= 255;
+  g /= 255;
+  b /= 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const d = max - min;
+  const l = (max + min) / 2;
+  const s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+  let h = 0;
+  if (d) {
+    if (max === r) h = ((g - b) / d) % 6;
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+  }
+  return { h: Math.round((h * 60 + 360) % 360), s };
+}
+
+// The tone on the element holding the hero's buttons: .detail-hero-wrap
+// (player / commander / league: the back pill and the star sit beside the
+// hero, in its wrap), else the hero itself (account.html).
+function applyHeroTone(artEl, img) {
+  const host = artEl.closest(".detail-hero-wrap") ?? artEl.closest(".profile-hero");
+  if (!host) return;
+  const tone = img ? heroTone(img) : null;
+  if (!tone) {
+    host.style.removeProperty("--hero-btn");
+    host.style.removeProperty("--hero-btn-hover");
+    return;
+  }
+  const sat = Math.round(Math.min(Math.max(tone.s, 0.3), 0.7) * 100);
+  host.style.setProperty("--hero-btn", `hsl(${tone.h} ${sat}% 36%)`);
+  host.style.setProperty("--hero-btn-hover", `hsl(${tone.h} ${sat}% 28%)`);
+}
+
 // Returns a function painting a card's art (by name — and printing, when
 // one was picked — or null for none) on a card's .pc-art. The newest call
 // wins: picking several cards quickly in edit mode never ends with an older
@@ -76,13 +148,18 @@ export function createArtPainter(artEl) {
     const request = ++latest;
     const url = cardName ? await fetchCardArt(cardName, printId) : null;
     if (request !== latest) return;
+    const isHero = artEl.classList.contains("profile-hero-art");
     if (!url) {
       artEl.style.backgroundImage = "";
       artEl.classList.remove("is-loaded");
+      if (isHero) applyHeroTone(artEl, null);
       return;
     }
     if (artEl.dataset.url === url && artEl.classList.contains("is-loaded")) return;
     const img = new Image();
+    // A hero's art is read for its buttons' colour (heroTone) — fetched with
+    // CORS so the canvas may read it (Scryfall's images allow it).
+    if (isHero) img.crossOrigin = "anonymous";
     img.src = url;
     try {
       await img.decode();
@@ -90,6 +167,7 @@ export function createArtPainter(artEl) {
       // Shown anyway: the browser just paints it as it arrives.
     }
     if (request !== latest) return;
+    if (isHero) applyHeroTone(artEl, img);
     artEl.dataset.url = url;
     artEl.style.backgroundImage = `url("${url}")`;
     artEl.classList.remove("is-loaded");

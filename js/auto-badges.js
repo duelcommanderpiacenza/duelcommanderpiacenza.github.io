@@ -28,8 +28,12 @@ export const MAX_AUTO_BADGES_PER_PLAYER = 3;
 // shouldn't out-rank nobody-else-qualifies for "most played" either.
 // "Più match giocati": only players with at least this many matches played.
 export const MIN_MATCHES_FOR_MOST_MATCHES_BADGE = 20;
-// "Winrate più alto": only players who've played at least this many events.
+// "Winrate più alto": only players who've played at least this many events,
+// and are still active — at least one event in the last
+// WINRATE_BADGE_ACTIVE_MONTHS months. The winrate itself is always the
+// overall one (every event they ever played).
 export const MIN_EVENTS_FOR_WINRATE_BADGE = 5;
+export const WINRATE_BADGE_ACTIVE_MONTHS = 3;
 export const MIN_COMMANDERS_FOR_DIVERSITY_BADGE = 5;
 export const COMPLETIST_EVENT_COUNT = 10;
 // "Più bye": the most byes received, among players with at least this many.
@@ -87,6 +91,14 @@ async function leagueRankPlayerId(leagues, rule) {
   return results[LEAGUE_RANK_POSITION[rule] - 1]?.player?.id ?? null;
 }
 
+// The date `months` months before today, as YYYY-MM-DD (local time) —
+// directly comparable with an event_date string.
+function monthsAgoIso(months) {
+  const d = new Date();
+  d.setMonth(d.getMonth() - months);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 // Every player who top-8'd in each of their last 3 attended events (any
 // league/standalone), provided all 3 fall within the last 3 months and each
 // of those 3 events had at least TOP8_STREAK_MIN_ENTRANTS entrants.
@@ -117,9 +129,7 @@ async function top8StreakPlayerIds(closedIds) {
     eventsByPlayer.get(e.player_id).push(ev);
   }
 
-  const cutoff = new Date();
-  cutoff.setMonth(cutoff.getMonth() - TOP8_STREAK_WINDOW_MONTHS);
-  const cutoffIso = `${cutoff.getFullYear()}-${String(cutoff.getMonth() + 1).padStart(2, "0")}-${String(cutoff.getDate()).padStart(2, "0")}`;
+  const cutoffIso = monthsAgoIso(TOP8_STREAK_WINDOW_MONTHS);
 
   const standingsCache = new Map(); // event id -> computeEventLeaderboard result
   function standingsFor(eventId) {
@@ -201,10 +211,20 @@ function playersWithMaxValue(entries, valueFn, minSample, sampleFn) {
   return winners;
 }
 
-async function highestWinratePlayerIds(closedIds) {
+// The overall winrate (every closed event), among players with at least
+// MIN_EVENTS_FOR_WINRATE_BADGE events who also played at least one in the
+// last WINRATE_BADGE_ACTIVE_MONTHS months — someone who stopped coming
+// doesn't keep it. Badges are recomputed when an event closes, so it moves
+// on at the next published event.
+async function highestWinratePlayerIds(closedIds, events) {
   const stats = await playerMatchStats(closedIds);
+  const cutoffIso = monthsAgoIso(WINRATE_BADGE_ACTIVE_MONTHS);
+  const recentIds = new Set(
+    events.filter((ev) => closedIds.has(ev.id) && ev.event_date && ev.event_date >= cutoffIso).map((ev) => ev.id)
+  );
+  const active = [...stats].filter(([, s]) => [...s.events].some((id) => recentIds.has(id)));
   return playersWithMaxValue(
-    stats,
+    active,
     (s) => (s.played > 0 ? s.wins / s.played : -1),
     MIN_EVENTS_FOR_WINRATE_BADGE,
     (s) => s.events.size
@@ -364,7 +384,7 @@ export async function computeAutoBadgeAssignments() {
     } else if (badge.auto_rule === "top8_streak") {
       for (const playerId of await top8StreakPlayerIds(closedIds)) grant(playerId, badge);
     } else if (badge.auto_rule === "highest_winrate") {
-      for (const playerId of await highestWinratePlayerIds(closedIds)) grant(playerId, badge);
+      for (const playerId of await highestWinratePlayerIds(closedIds, events)) grant(playerId, badge);
     } else if (badge.auto_rule === "most_matches_played") {
       for (const playerId of await mostMatchesPlayedPlayerIds(closedIds)) grant(playerId, badge);
     } else if (badge.auto_rule === "most_commanders_played") {

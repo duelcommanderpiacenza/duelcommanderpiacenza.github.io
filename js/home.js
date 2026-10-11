@@ -3,7 +3,6 @@
 // and renders on its own, so one failing doesn't block the others.
 
 import { Announcements, Leagues, Events, EventEntries, fetchEventsResults } from "./db.js";
-import { computeLeagueSummary } from "./stats.js";
 import { computeLeaguePoints } from "./leaderboard.js";
 import { renderBubbleChart, initBubbleChart, ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
 import { initChartCarousel } from "./chart-carousel.js";
@@ -26,8 +25,8 @@ const OTHER_COLOR = "#9a9a94";
 async function fetchLeagueEventsData(leagueId) {
   // A still-open event (including a future one, now visible ahead of time
   // for "Prossimi eventi") has no entries/matches yet regardless — but
-  // counting it here would still inflate this league's own "eventi" stat,
-  // so it's excluded up front rather than relying on its (empty) data to
+  // counting it here would still inflate this league's played count, so
+  // it's excluded up front rather than relying on its (empty) data to
   // just wash out on its own.
   // The league's total event count (open ones included, even those hidden
   // from visitors) is returned too, for computeLeaguePoints's best-results cap.
@@ -42,10 +41,9 @@ async function fetchLeagueEventsData(leagueId) {
 
 async function loadLeagueCard(league) {
   const { eventsData, scheduledEvents, played } = await fetchLeagueEventsData(league.id);
-  const summary = computeLeagueSummary(eventsData);
   // A Topdeck series has no points leaderboard (same as league.html).
   const standings = league.is_topdeck ? null : computeLeaguePoints(eventsData, { scheduledEvents });
-  return { league, summary, standings, played, scheduled: Math.max(scheduledEvents, played) };
+  return { league, standings, played, scheduled: Math.max(scheduledEvents, played) };
 }
 
 // The open league and Topdeck series with their data.
@@ -84,10 +82,10 @@ function leagueProgressHtml(played, scheduled) {
       </div>`;
 }
 
-// Name (a link to league.html) + event/player counts. A real league also
-// gets "Lista completa" and a glimpse of its current standings (top
-// LEAGUE_PREVIEW_COUNT, points only); a Topdeck series has neither.
-function renderLeagueCard({ league, summary, standings: allStandings, played, scheduled }, badgesFor) {
+// Name (a link to league.html). A real league also gets "Lista completa",
+// its progress and a glimpse of its current standings (top
+// LEAGUE_PREVIEW_COUNT, points only); a Topdeck series has none of them.
+function renderLeagueCard({ league, standings: allStandings, played, scheduled }, badgesFor) {
   const standings = allStandings?.slice(0, LEAGUE_PREVIEW_COUNT) ?? null;
   const href = `league.html?id=${league.id}`;
   // Compact sub-cards like league.html's Classifica (js/history-list.js's
@@ -127,7 +125,6 @@ function renderLeagueCard({ league, summary, standings: allStandings, played, sc
         <a class="dashboard-league-card-name" href="${href}">${escapeHtml(league.name)}</a>
         ${standings ? `<a class="btn-secondary" href="${href}">Lista completa</a>` : ""}
       </div>
-      <div class="dashboard-league-card-stats">${summary.events} ${summary.events === 1 ? "evento" : "eventi"} &middot; ${summary.uniquePlayers} giocatori</div>
       ${league.is_topdeck ? "" : leagueProgressHtml(played, scheduled)}
       ${ranking}
     </div>`;

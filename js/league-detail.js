@@ -1,5 +1,5 @@
 import { Leagues, Events, fetchEventsResults } from "./db.js";
-import { compareLeagueStandings, computeLeaguePoints } from "./leaderboard.js";
+import { computeLeaguePoints } from "./leaderboard.js";
 import { fetchPlayerBadgesRenderer } from "./player-badges.js";
 import { computeLeagueSummary, computeLeagueWrapped } from "./stats.js";
 import {
@@ -8,8 +8,6 @@ import {
   eventTitle,
   leagueStatusBadge,
   playerLabel,
-  commanderPairLabel,
-  archetypeBadge,
   showError,
 } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
@@ -46,96 +44,12 @@ function leagueDateRange(league, events) {
   return start === end ? start : `${start} – ${end}`;
 }
 
-function wrappedTile(label, valueHtml, detail = "") {
-  return `<div class="stat-tile wrapped-tile">
-    <div class="stat-tile-label">${label}</div>
-    <div class="wrapped-tile-value">${valueHtml}</div>
-    ${detail ? `<div class="wrapped-tile-detail">${detail}</div>` : ""}
-  </div>`;
-}
-
-const EMPTY_VALUE = '<span class="wrapped-tile-empty">—</span>';
-
-// Highlights from a single event just repeat that event's own results —
-// only worth showing across several.
-const WRAPPED_MIN_EVENTS = 2;
-
-function renderWrapped(league, standings, wrapped, eventCount) {
-  if (eventCount < WRAPPED_MIN_EVENTS) return "";
-
-  const tiles = [];
-
-  // A Topdeck series has no points leaderboard, so no winner either.
-  if (!league.is_topdeck) {
-    if (league.is_open) {
-      tiles.push(wrappedTile("Vincitore", '<span class="wrapped-tile-empty">Lega in corso</span>'));
-    } else if (standings.length === 0) {
-      tiles.push(wrappedTile("Vincitore", EMPTY_VALUE));
-    } else {
-      // A tie that survives every tiebreaker is shown as a shared win
-      // rather than settled alphabetically.
-      const topPoints = standings[0].points;
-      const winners = standings.filter((s) => compareLeagueStandings(s, standings[0]) === 0);
-      tiles.push(
-        wrappedTile("Vincitore", winners.map((s) => playerLabel(s.player)).join("<br>"), `${topPoints} punti`)
-      );
-    }
-  }
-
-  // One row per (tied) player, the winrate beside each name; the V-S-P only
-  // for a single winner (tied players can share a winrate with different
-  // records — see js/stats.js's computeLeagueWrapped).
-  const bw = wrapped.bestWinrate;
-  tiles.push(
-    bw
-      ? wrappedTile(
-          "Miglior winrate",
-          `<ul class="wrapped-rank-list">${bw.players
-            .map(
-              (p) => `<li>
-                <span class="wrapped-rank-name">${playerLabel(p)}</span>
-                <span class="wrapped-rank-value">${bw.winRate.toFixed(1)}%</span>
-              </li>`
-            )
-            .join("")}</ul>`,
-          bw.players.length === 1 ? `${bw.wins}-${bw.losses}-${bw.draws}` : ""
-        )
-      : wrappedTile("Miglior winrate", EMPTY_VALUE)
-  );
-
-  const ta = wrapped.topArchetype;
-  tiles.push(
-    ta
-      ? wrappedTile("Archetipo più giocato", archetypeBadge(ta.archetype))
-      : wrappedTile("Archetipo più giocato", EMPTY_VALUE)
-  );
-
-  tiles.push(
-    wrapped.topCommanders.length > 0
-      ? wrappedTile(
-          "Comandanti più giocati",
-          `<ul class="wrapped-rank-list">${wrapped.topCommanders
-            .map(
-              (c) => `<li>
-                <span class="wrapped-rank-name">${commanderPairLabel(c.commander, c.partner)}</span>
-                <span class="wrapped-rank-value">${c.entries}</span>
-              </li>`
-            )
-            .join("")}</ul>`
-        )
-      : wrappedTile("Comandanti più giocati", EMPTY_VALUE)
-  );
-
-  return tiles.join("");
-}
-
 async function init() {
   const id = getId();
   const titleEl = document.getElementById("league-title");
   const statusEl = document.getElementById("league-status");
   const datesEl = document.getElementById("league-dates");
   const statsEl = document.getElementById("league-stats");
-  const wrappedEl = document.getElementById("league-wrapped");
   const eventsEl = document.getElementById("league-events");
   const leaderboardSectionEl = document.getElementById("league-leaderboard-section");
   const leaderboardEl = document.getElementById("league-leaderboard");
@@ -209,8 +123,8 @@ async function init() {
       )
       .join("");
 
-    // Computed for Topdeck series too (no leaderboard shown for those) —
-    // Wrapped's best-winrate tile reads its per-player records.
+    // Computed for Topdeck series too (no leaderboard shown for those) — the
+    // hero's art comes from computeLeagueWrapped's most played commanders.
     // Full-attendance bonus only once the league is closed; the best-results
     // cap counts every event the league has, open ones included, even those
     // hidden from visitors (computeLeaguePoints, Leagues.eventCount).
@@ -219,10 +133,6 @@ async function init() {
       scheduledEvents,
     });
     const wrapped = computeLeagueWrapped(eventsData, standings);
-    wrappedEl.innerHTML = renderWrapped(league, standings, wrapped, events.length);
-    // Too few events means no highlight tiles at all — the grid stays hidden
-    // rather than leave a gap below the numbers.
-    wrappedEl.hidden = wrappedEl.innerHTML === "";
     // The hero's backdrop (styles.css .profile-hero-art): the league's most
     // played commander's art (the hero's own reds alone without one).
     createArtPainter(document.getElementById("league-hero-art"))(wrapped.topCommanders[0]?.commander?.name ?? null);
