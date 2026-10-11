@@ -4209,21 +4209,31 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   font-weight: 700;
 }
 
-/* "In corso" / "Conclusa": the colours of the hero's followed ★
-   (.detail-hero-wrap .follow-btn.is-following) — flat brand red, white
-   border, soft shadow — as a pill the back pill's size and type, whichever
-   the status. */
-.league-hero-meta .badge-status {
-  min-height: 40px;
-  box-sizing: border-box;
-  margin-left: 0;
-  padding: 6px 16px;
-  border: 1px solid #fff;
-  background: var(--brand-red);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-  font-size: 0.95rem;
-  letter-spacing: normal;
+/* "In corso" / "Conclusa" in the hero: the site's status chip
+   (.status-chip, below with .badge-status) as see-through glass on the art
+   — white text and edge, a slight blur; the dot keeps its colours. */
+.league-hero-meta .badge-status.status-chip,
+:root[data-theme="dark"] .league-hero-meta .badge-status.status-chip {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
   text-shadow: none;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.league-hero-meta .badge-status-closed.status-chip::before,
+:root[data-theme="dark"] .league-hero-meta .badge-status-closed.status-chip::before {
+  background: rgba(255, 255, 255, 0.55);
+}
+
+/* The dates holding the chip ("12 set 2026 – ● In corso"): on one line,
+   centred on each other. */
+#league-dates:not([hidden]) {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
 }
 
 /* Up to 820px the hero is one centred column. */
@@ -4981,6 +4991,87 @@ img.badge-disc-glyph {
 
 .badge-status-open { background: var(--brand-red); }
 .badge-status-closed { background: var(--text-muted); }
+
+/* A league's status (js/ui.js leagueStatusBadge: "In corso" / "Conclusa"),
+   wherever it shows — the Leghe & Eventi list, league.html's hero: a
+   status, not a button — a small tinted chip, no shadow, small uppercase
+   letters, a dot before them: "In corso" green with a soft pulse (live),
+   "Conclusa" grey and still. (The admin's open/close toggles keep the
+   solid .badge-status look: those are buttons.) */
+.badge-status.status-chip {
+  gap: 7px;
+  min-height: 26px;
+  box-sizing: border-box;
+  margin-left: 0;
+  padding: 0 11px;
+  border: 1px solid transparent;
+  box-shadow: none;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.badge-status.status-chip::before {
+  content: "";
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.badge-status-open.status-chip {
+  border-color: rgba(22, 163, 74, 0.32);
+  background: rgba(22, 163, 74, 0.1);
+  color: #15803d;
+}
+
+.badge-status-open.status-chip::before {
+  background: #22c55e;
+  animation: status-live 2s ease-out infinite;
+}
+
+.badge-status-closed.status-chip {
+  border-color: rgba(110, 100, 102, 0.28);
+  background: rgba(110, 100, 102, 0.08);
+  color: var(--text-muted);
+}
+
+.badge-status-closed.status-chip::before {
+  opacity: 0.7;
+}
+
+@keyframes status-live {
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6);
+  }
+
+  70%,
+  100% {
+    box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badge-status-open.status-chip::before {
+    animation: none;
+  }
+}
+
+:root[data-theme="dark"] .badge-status-open.status-chip {
+  border-color: rgba(74, 222, 128, 0.35);
+  background: rgba(74, 222, 128, 0.12);
+  color: #4ade80;
+}
+
+:root[data-theme="dark"] .badge-status-open.status-chip::before {
+  background: #4ade80;
+}
+
+:root[data-theme="dark"] .badge-status-closed.status-chip {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+}
 
 /* The admin's clickable variant (see statusToggleButton in
    admin/js/crud-ui.js) — same pill look as the read-only badge above, just

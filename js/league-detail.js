@@ -29,19 +29,20 @@ function todayIso() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-// "12 set 2026 – 30 nov 2026": first event's date to the last one's once the
-// league is closed; "– oggi" while it's still running (the title's own
-// "In corso" badge already says it's open, so this doesn't repeat it);
-// "Inizia il 12 set 2026" when even the first event hasn't happened yet. ""
-// when no event has a date yet — the subtitle is then hidden entirely.
+// The hero's dates, as HTML: "12 set 2026 – 30 nov 2026", first event's date
+// to the last one's, once the league is closed; while it's running, the
+// "In corso" chip in place of the end ("12 set 2026 – ● In corso" — the chip
+// then isn't shown on its own too: withStatus); "Inizia il 12 set 2026" when
+// even the first event hasn't happened yet. "" when no event has a date yet
+// — the dates are then hidden entirely.
 function leagueDateRange(league, events) {
   const dates = events.map((ev) => ev.event_date).filter(Boolean).sort();
-  if (dates.length === 0) return "";
-  const start = formatDate(dates[0]);
-  if (dates[0] > todayIso()) return `Inizia il ${start}`;
-  if (league.is_open) return `${start} – oggi`;
-  const end = formatDate(dates[dates.length - 1]);
-  return start === end ? start : `${start} – ${end}`;
+  if (dates.length === 0) return { html: "", withStatus: false };
+  const start = escapeHtml(formatDate(dates[0]));
+  if (dates[0] > todayIso()) return { html: `Inizia il ${start}`, withStatus: false };
+  if (league.is_open) return { html: `${start} – ${leagueStatusBadge(true)}`, withStatus: true };
+  const end = escapeHtml(formatDate(dates[dates.length - 1]));
+  return { html: start === end ? start : `${start} – ${end}`, withStatus: false };
 }
 
 async function init() {
@@ -67,8 +68,6 @@ async function init() {
   try {
     const league = await Leagues.get(id);
     titleEl.textContent = league.name;
-    statusEl.innerHTML = leagueStatusBadge(league.is_open);
-    statusEl.hidden = false;
     initTitleFit(titleEl);
 
     // A Topdeck series is just a bucket of events, with no points leaderboard.
@@ -85,9 +84,12 @@ async function init() {
 
     // Date range under the title — from every event the league has, open
     // ones included (unlike everything else on this page).
+    // The status chip on its own, unless the dates already end with it.
     const dateRange = leagueDateRange(league, allEvents);
-    datesEl.textContent = dateRange;
-    datesEl.hidden = !dateRange;
+    datesEl.innerHTML = dateRange.html;
+    datesEl.hidden = !dateRange.html;
+    statusEl.innerHTML = leagueStatusBadge(league.is_open);
+    statusEl.hidden = dateRange.withStatus;
 
     if (events.length === 0) {
       eventsEl.innerHTML = '<p class="page-empty">Nessun evento associato a questa lega.</p>';

@@ -155,8 +155,8 @@ export function colorIdentityPips(colorIdentity) {
 
 export function leagueStatusBadge(isOpen) {
   return isOpen
-    ? '<span class="badge-status badge-status-open">In corso</span>'
-    : '<span class="badge-status badge-status-closed">Conclusa</span>';
+    ? '<span class="badge-status badge-status-open status-chip">In corso</span>'
+    : '<span class="badge-status badge-status-closed status-chip">Conclusa</span>';
 }
 
 export function showError(el, err) {
