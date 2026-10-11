@@ -4593,72 +4593,6 @@ html.nav-mobile .results-links {
   letter-spacing: 0.06em;
 }
 
-/* league.html's next event among its played ones (js/league-detail.js):
-   not a link — a dashed red edge, a faint red tint, no hover lift; a
-   "Prossimo evento" label with a pulsing red dot over its name. */
-.entity-card.entity-card-next,
-.entity-card.entity-card-next:hover {
-  border: 1.5px dashed rgba(220, 24, 28, 0.55);
-  background: rgba(220, 24, 28, 0.05);
-  box-shadow: none;
-  cursor: default;
-  transform: none;
-}
-
-/* Every league event card's small label over its name (js/league-detail.js:
-   "Evento 3", "Prossimo evento"), muted; the next one's in red. */
-.entity-card-label {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  margin-bottom: 8px;
-  color: var(--text-muted);
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.entity-card-next .entity-card-label {
-  color: var(--brand-red-deep);
-}
-
-.entity-card-next-dot {
-  flex-shrink: 0;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--brand-red);
-  animation: entity-next-pulse 2s ease-out infinite;
-}
-
-@keyframes entity-next-pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(220, 24, 28, 0.55);
-  }
-
-  70%,
-  100% {
-    box-shadow: 0 0 0 6px rgba(220, 24, 28, 0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .entity-card-next-dot {
-    animation: none;
-  }
-}
-
-:root[data-theme="dark"] .entity-card.entity-card-next,
-:root[data-theme="dark"] .entity-card.entity-card-next:hover {
-  border-color: rgba(255, 110, 110, 0.55);
-  background: rgba(255, 110, 110, 0.08);
-}
-
-:root[data-theme="dark"] .entity-card-next .entity-card-label {
-  color: #ff9a9d;
-}
-
 /* A player's handle shown inline next to their name (leaderboards, match
    lists) — same muted tone as .entity-card-meta, but kept in whatever
    case it was actually entered in admin, not forced uppercase. */
@@ -6005,6 +5939,312 @@ html.app-header :is(.commander-lists, .league-lists) .history-scroll {
 /* No tabs (a Topdeck series): its one section keeps its title. */
 html.app-header .league-tabs[hidden] + .league-lists > section > h2 {
   display: block;
+}
+
+/* league.html on a computer: Classifica under the events when narrow, the
+   two side by side from 880px (the events alone, the whole width, for a
+   Topdeck series — no Classifica). */
+.league-lists > section + section > h2 {
+  margin-top: 28px;
+}
+
+@media (min-width: 880px) {
+  html:not(.app-header) .league-lists {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 28px;
+    align-items: start;
+  }
+
+  html:not(.app-header) .league-lists:has(> #league-leaderboard-section[hidden]) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  html:not(.app-header) .league-lists > section > h2 {
+    margin-top: 0;
+  }
+
+  /* Half the row: Classifica's cards as on phones — the name (and badges)
+     on its line, the numbers on their own row below sharing its width. */
+  html:not(.app-header) .league-lists #league-leaderboard .history-ranked {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  html:not(.app-header) .league-lists #league-leaderboard .history-ranked .history-stats {
+    grid-template-columns: repeat(var(--stat-count), minmax(0, 1fr));
+    padding-top: 10px;
+    border-top: 1px solid var(--table-row-line);
+  }
+}
+
+/* league.html's events as a timeline (js/league-detail.js timelineHtml):
+   a vertical line, one round node per event (its day and month), its card
+   beside it — the stretch already played red, the next event solid red
+   with a halo, the later ones hollow; one awaiting its results dashed red
+   (no date: "?").
+   Laid out by the list's own width (a size container — half the row beside
+   Classifica, the whole of it alone): from 620px the full date on the
+   left of the line, the card's extra (players / time) on its right. */
+#league-events {
+  container-type: inline-size;
+}
+
+.league-timeline {
+  --tl-node: 52px;
+  --tl-gap: 14px;
+  --tl-line: rgba(154, 28, 32, 0.2);
+  --tl-node-bg: #fff9f7;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+:root[data-theme="dark"] .league-timeline {
+  --tl-line: rgba(255, 255, 255, 0.14);
+  --tl-node-bg: #1b1315;
+}
+
+.league-tl-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--tl-node) minmax(0, 1fr);
+  gap: var(--tl-gap);
+  padding-bottom: 12px;
+}
+
+/* The line: through every node, from the first one's centre to the last
+   one's; red up to the next event's node (half red, half grey there). */
+.league-tl-item::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--tl-node) / 2 - 1px);
+  width: 2px;
+  background: var(--tl-line);
+}
+
+.league-tl-item:first-child::before {
+  top: calc(var(--tl-node) / 2);
+}
+
+.league-tl-item:last-child::before {
+  bottom: auto;
+  height: calc(var(--tl-node) / 2);
+}
+
+.league-tl-item:only-child::before {
+  display: none;
+}
+
+.league-tl-item:is(.is-played, .is-pending)::before {
+  background: var(--brand-red);
+}
+
+.league-tl-item.is-next::before {
+  background: linear-gradient(var(--brand-red) 50%, var(--tl-line) 50%);
+}
+
+.league-tl-date {
+  display: none;
+}
+
+.league-tl-node {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-content: center;
+  width: var(--tl-node);
+  height: var(--tl-node);
+  box-sizing: border-box;
+  border: 2px solid var(--tl-line);
+  border-radius: 50%;
+  background: var(--tl-node-bg);
+  line-height: 1;
+  text-align: center;
+}
+
+.league-tl-node b {
+  color: var(--text-title);
+  font-size: 1.05rem;
+}
+
+.league-tl-node span {
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.is-played > .league-tl-node {
+  border-color: var(--brand-red);
+}
+
+.is-next > .league-tl-node {
+  border-color: var(--brand-red);
+  background: var(--brand-red);
+  box-shadow: 0 0 0 6px rgba(220, 24, 28, 0.2);
+}
+
+.is-next > .league-tl-node b,
+.is-next > .league-tl-node span {
+  color: #fff;
+}
+
+.is-pending > .league-tl-node {
+  border-style: dashed;
+  border-color: var(--brand-red);
+}
+
+.league-tl-card {
+  display: grid;
+  gap: 4px;
+  align-content: center;
+  min-height: var(--tl-node);
+  box-sizing: border-box;
+  padding: 10px 16px;
+  border: 1px solid rgba(154, 28, 32, 0.16);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: var(--shadow-card);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 150ms ease, transform 150ms ease;
+}
+
+:root[data-theme="dark"] .league-tl-card {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+a.league-tl-card:hover {
+  border-color: var(--hairline-hover);
+  color: inherit;
+  text-decoration: none;
+}
+
+.league-tl-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.league-tl-k {
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.league-tl-t {
+  overflow: hidden;
+  color: var(--text-title);
+  font-size: 1.02rem;
+  font-style: italic;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.league-tl-side {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.league-tl-side svg {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+}
+
+.is-next > .league-tl-card,
+:root[data-theme="dark"] .is-next > .league-tl-card {
+  border-color: transparent;
+  background: var(--brand-red);
+}
+
+.is-next > .league-tl-card :is(.league-tl-k, .league-tl-t, .league-tl-side) {
+  color: #fff;
+}
+
+:is(.is-future, .is-pending) > .league-tl-card,
+:root[data-theme="dark"] :is(.is-future, .is-pending) > .league-tl-card {
+  background: transparent;
+  box-shadow: none;
+}
+
+.is-pending > .league-tl-card {
+  border-style: dashed;
+}
+
+:is(.is-future, .is-pending) .league-tl-t {
+  color: var(--text-muted);
+}
+
+.league-tl-pulse {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  vertical-align: 1px;
+  animation: league-tl-pulse 1.6s ease-out infinite;
+}
+
+@keyframes league-tl-pulse {
+  from {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+  }
+
+  to {
+    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .league-tl-pulse {
+    animation: none;
+  }
+}
+
+@container (min-width: 620px) {
+  .league-tl-item {
+    grid-template-columns: 110px var(--tl-node) minmax(0, 1fr);
+  }
+
+  .league-tl-item::before {
+    left: calc(110px + var(--tl-gap) + var(--tl-node) / 2 - 1px);
+  }
+
+  .league-tl-date {
+    display: block;
+    align-self: center;
+    color: var(--text-title);
+    font-size: 0.95rem;
+    font-weight: 800;
+    text-align: right;
+  }
+
+  .league-tl-date small {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+
+  .league-tl-card {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+  }
 }
 
 .history-count {

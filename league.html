@@ -104,10 +104,11 @@
       </section>
     </div>
 
-    <!-- Eventi della lega, then Classifica; on phones and touch screens
-         (html.app-header) one at a time behind tabs, like commander.html's
-         (styles.css .league-lists; no tabs for a Topdeck series — no
-         Classifica, js/league-detail.js). -->
+    <!-- Eventi della lega (a timeline) and Classifica: side by side on a
+         computer, one under the other when narrow; on phones and touch
+         screens (html.app-header) one at a time behind tabs, like
+         commander.html's (styles.css .league-lists; no tabs for a Topdeck
+         series — no Classifica, js/league-detail.js). -->
     <nav class="profile-tabs league-tabs" role="tablist" aria-label="Sezioni della lega">
       <button type="button" class="profile-tab" role="tab" id="league-tab-events" data-tab="league-events-section" aria-controls="league-events-section"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M3 10h18"></path></svg><span>Eventi</span></button>
       <button type="button" class="profile-tab" role="tab" id="league-tab-leaderboard" data-tab="league-leaderboard-section" aria-controls="league-leaderboard-section"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4"></path><path d="M7 4h10v5a5 5 0 0 1-10 0Z"></path><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"></path></svg><span>Classifica</span></button>
@@ -119,7 +120,7 @@
       </section>
 
       <section id="league-leaderboard-section" role="tabpanel" aria-labelledby="league-tab-leaderboard">
-        <h2 style="margin-top:28px;">Classifica</h2>
+        <h2>Classifica</h2>
         <div id="league-leaderboard" class="page-loading">Caricamento...</div>
       </section>
     </div>

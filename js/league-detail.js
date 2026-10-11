@@ -47,13 +47,23 @@ function leagueDateRange(league, events) {
   return { html: start === end ? start : `${start} – ${end}`, withStatus: false };
 }
 
-// "Eventi della lega": every card the same three lines — a small label,
-// the name (an unnamed event by its weekday, the date being on the line
-// under it), the date. A played event's label is its number in the season
-// ("Evento 3"), the card a link to it; the next one comes first, not a link
-// (its page fills in once it's played) — a dashed red card, "Prossimo
-// evento" with a pulsing dot, the time after the date (styles.css
-// .entity-card-next).
+// "Eventi della lega" as a timeline (styles.css .league-timeline): oldest
+// first, one node on a vertical line per event — its day and month in the
+// circle (wide: the full date left of the line) — and its card beside it.
+//  - played (closed): its number in the season ("Evento 3"), its name, its
+//    players; the card a link to it; the line up to it red;
+//  - the next one (the soonest still open, today or later): solid red, a
+//    pulsing dot, its time and how far off it is; not a link (its page fills
+//    in once it's played);
+//  - later open ones: "In calendario", hollow;
+//  - an open one whose day has passed (played, results not in yet):
+//    "Risultati in arrivo", right after the played ones. Visitors can't
+//    see those at all (events_public_read: closed, or dated today or
+//    later), so they're counted instead — all the league's events
+//    (league_event_count) minus those shown — and drawn without their date
+//    ("?"). (An open event with no date is hidden the same way and would
+//    show here too.)
+// The name: an unnamed event by its weekday.
 const cardName = (ev) => {
   if (ev.name) return escapeHtml(ev.name);
   const d = new Date(`${ev.event_date}T00:00:00`);
@@ -62,23 +72,75 @@ const cardName = (ev) => {
   return day.charAt(0).toUpperCase() + day.slice(1);
 };
 
-function nextEventCardHtml(ev) {
-  const when = [formatDate(ev.event_date), ev.start_time ? `ore ${formatTime(ev.start_time)}` : ""].filter(Boolean).join(" · ");
-  return `
-      <div class="entity-card entity-card-next">
-        <div class="entity-card-label"><span class="entity-card-next-dot" aria-hidden="true"></span>Prossimo evento</div>
-        <div class="entity-card-title">${cardName(ev)}</div>
-        <div class="entity-card-meta">${when}</div>
-      </div>`;
+const TL_ICON = (body) =>
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
+const TL_USERS = TL_ICON(
+  '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>'
+);
+const TL_CLOCK = TL_ICON('<circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path>');
+
+const byDate = (a, b) => (a.event_date ?? "9999").localeCompare(b.event_date ?? "9999");
+
+function daysFrom(today, iso) {
+  return Math.round((new Date(`${iso}T00:00:00`) - new Date(`${today}T00:00:00`)) / 86400000);
 }
 
-function playedEventCardHtml(ev, number) {
+function timelineItemHtml({ ev, state, players }, number, today) {
+  const date = ev?.event_date ? new Date(`${ev.event_date}T00:00:00`) : null;
+  const node = date
+    ? `<b>${String(date.getDate()).padStart(2, "0")}</b><span>${date.toLocaleDateString("it-IT", { month: "short" }).replace(".", "")}</span>`
+    : "<b>?</b>";
+  const fullDate = date
+    ? `${date.toLocaleDateString("it-IT", { day: "numeric", month: "long" })}<small>${date
+        .toLocaleDateString("it-IT", { weekday: "long" })
+        .replace(".", "")}</small>`
+    : "—";
+  const kicker = {
+    played: `Evento ${number}`,
+    next: '<span class="league-tl-pulse" aria-hidden="true"></span>Prossimo evento',
+    future: "In calendario",
+    pending: "Risultati in arrivo",
+  }[state];
+  let side = "";
+  if (state === "played") side = `${TL_USERS}${players}`;
+  else if (state === "next") {
+    const days = daysFrom(today, ev.event_date);
+    const when = days <= 0 ? "oggi" : days === 1 ? "domani" : `tra ${days} giorni`;
+    side = `${TL_CLOCK}${[ev.start_time ? `ore ${formatTime(ev.start_time)}` : "", when].filter(Boolean).join(" · ")}`;
+  } else if (state === "future" && ev.start_time) side = `ore ${formatTime(ev.start_time)}`;
+  const body = `
+          <span class="league-tl-text">
+            <span class="league-tl-k">${kicker}</span>
+            <span class="league-tl-t">${ev ? cardName(ev) : `Evento ${number}`}</span>
+          </span>
+          ${side ? `<span class="league-tl-side">${side}</span>` : ""}`;
+  const card =
+    state === "played"
+      ? `<a class="league-tl-card" href="event.html?id=${ev.id}">${body}</a>`
+      : `<div class="league-tl-card">${body}</div>`;
   return `
-      <a class="entity-card" href="event.html?id=${ev.id}">
-        <div class="entity-card-label">Evento ${number}</div>
-        <div class="entity-card-title">${cardName(ev)}</div>
-        <div class="entity-card-meta">${formatDate(ev.event_date)}</div>
-      </a>`;
+      <li class="league-tl-item is-${state}">
+        <span class="league-tl-date">${fullDate}</span>
+        <span class="league-tl-node">${node}</span>
+        ${card}
+      </li>`;
+}
+
+// The closed events, then those awaiting results (hidden — counted), then
+// the open ones the visitor can see, by date; "" with none at all.
+// `playersById`: each closed event's number of players. (An admin sees the
+// awaiting ones themselves: by date among the open ones.)
+function timelineHtml(allEvents, playersById, scheduled, today) {
+  const closed = allEvents.filter((ev) => !ev.is_open).sort(byDate);
+  const open = allEvents.filter((ev) => ev.is_open).sort(byDate);
+  const nextId = open.find((ev) => ev.event_date && ev.event_date >= today)?.id;
+  const items = closed.map((ev) => ({ ev, state: "played", players: playersById.get(ev.id) ?? 0 }));
+  for (let i = allEvents.length; i < scheduled; i += 1) items.push({ state: "pending" });
+  for (const ev of open) {
+    items.push({ ev, state: ev.id === nextId ? "next" : ev.event_date && ev.event_date < today ? "pending" : "future" });
+  }
+  if (!items.length) return "";
+  return `<ol class="league-timeline">${items.map((item, i) => timelineItemHtml(item, i + 1, today)).join("")}</ol>`;
 }
 
 // In-app page (js/router.js): mounted by the router on this page's <main>
@@ -143,31 +205,22 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     statusEl.innerHTML = leagueStatusBadge(league.is_open);
     statusEl.hidden = dateRange.withStatus;
 
-    // The league's next event (the soonest still open, today or later —
-    // readable from its own date on), shown first among its events.
     const today = todayIso();
-    const nextEvent = allEvents
-      .filter((ev) => ev.is_open && ev.event_date && ev.event_date >= today)
-      .sort((a, b) => a.event_date.localeCompare(b.event_date))[0];
-    const nextHtml = nextEvent ? nextEventCardHtml(nextEvent) : "";
-
-    if (events.length === 0) {
-      eventsEl.innerHTML = nextHtml
-        ? `<div class="entity-grid">${nextHtml}</div>`
-        : '<p class="page-empty">Nessun evento associato a questa lega.</p>';
-      leaderboardEl.innerHTML = '<p class="page-empty">Nessun dato per la classifica.</p>';
-      return;
-    }
-
-    // Newest first; numbered from the season's first (Evento 1).
-    eventsEl.innerHTML = `<div class="entity-grid">${nextHtml}${events
-      .map((ev, i) => playedEventCardHtml(ev, events.length - i))
-      .join("")}</div>`;
-
     const [eventsData, scheduledEvents] = await Promise.all([
       fetchEventsResults(events.map((ev) => ev.id)),
       Leagues.eventCount(id, allEvents.length),
     ]);
+    if (signal.aborted) return;
+
+    const playersById = new Map(events.map((ev, i) => [ev.id, eventsData[i].entries.length]));
+    eventsEl.innerHTML =
+      timelineHtml(allEvents, playersById, scheduledEvents, today) ||
+      '<p class="page-empty">Nessun evento associato a questa lega.</p>';
+
+    if (events.length === 0) {
+      leaderboardEl.innerHTML = '<p class="page-empty">Nessun dato per la classifica.</p>';
+      return;
+    }
 
     const summary = computeLeagueSummary(eventsData);
     statsEl.innerHTML = [
