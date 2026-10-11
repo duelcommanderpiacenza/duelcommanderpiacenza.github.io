@@ -4458,6 +4458,27 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   background: rgba(255, 255, 255, 0.55);
 }
 
+/* A running league's "In corso" after its start date (js/league-detail.js
+   leagueDateRange: "26 set 2026 – In corso"): plain text, like the date —
+   no chip, no dot. (:root and the id: over the chip's own rules, dark mode
+   included.) The "Conclusa" chip standing alone keeps its look. */
+:root .league-hero-meta #league-dates .badge-status.status-chip {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:root .league-hero-meta #league-dates .badge-status.status-chip::before {
+  display: none;
+}
+
 /* The dates holding the chip ("12 set 2026 – ● In corso"): on one line,
    centred on each other. */
 #league-dates:not([hidden]) {
@@ -6530,6 +6551,41 @@ a.history-item.is-me {
 
 .history-stats .history-stat.is-main .history-stat-value {
   color: var(--brand-red-deep);
+}
+
+/* Classifica (league.html, event.html): Punti — what the order is by —
+   stands out from the other numbers: a size up, on a soft pill in the
+   accent (the page's hero colour, or the brand red). */
+:is(#league-leaderboard, #event-leaderboard) .history-stats .history-stat.is-main {
+  align-items: center;
+  justify-self: center;
+  padding: 4px 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--brand-red) 11%, transparent);
+}
+
+:root[data-theme="dark"] :is(#league-leaderboard, #event-leaderboard) .history-stats .history-stat.is-main {
+  background: color-mix(in srgb, var(--brand-red) 22%, transparent);
+}
+
+:is(#league-leaderboard, #event-leaderboard) .history-stats .history-stat.is-main .history-stat-value {
+  font-size: 1.3rem;
+  line-height: 1.1;
+}
+
+:is(#league-leaderboard, #event-leaderboard) .history-stats .history-stat.is-main .history-stat-label {
+  color: var(--brand-red-deep);
+}
+
+/* The rest of the row lined up with it: every number given the pill's
+   vertical padding and the row aligned to its bottom, so all the labels
+   sit on one line (Punti's bigger number rising above its own). */
+:is(#league-leaderboard, #event-leaderboard) .history-stats {
+  align-items: end;
+}
+
+:is(#league-leaderboard, #event-leaderboard) .history-stats .history-stat {
+  padding-block: 4px;
 }
 
 @media (max-width: 640px) {
@@ -8999,6 +9055,12 @@ main.has-hero-accent .profile-tab:not(.is-active):hover {
 
   .profile-hero .profile-card-col {
     max-width: none;
+  }
+
+  /* player.html / commander.html: their card smaller than account's — the
+     whole width made it taller than the screen. */
+  .detail-hero .detail-hero-card {
+    max-width: 240px;
   }
 }
 
