@@ -133,7 +133,9 @@ export function initUsersAdmin() {
       [
         { key: "email", label: "Account", render: (u) => escapeHtml(u.email) },
         { key: "created_at", label: "Registrato", render: (u) => formatDate(u.created_at) },
-        { key: "last_sign_in_at", label: "Ultimo accesso", render: (u) => formatDate(u.last_sign_in_at) },
+        // The last visit to the site (migration 020), else — before it,
+        // or for an account not seen since — the last login.
+        { key: "last_seen_at", label: "Ultimo accesso", render: (u) => formatDate(u.last_seen_at ?? u.last_sign_in_at) },
         { key: "player", label: "Giocatore", render: playerCell },
         { key: "status", label: "Stato", render: statusCell },
       ],

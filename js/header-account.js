@@ -26,4 +26,27 @@ function render(session) {
   link.appendChild(img);
 }
 
-sb.auth.onAuthStateChange((_event, session) => render(session));
+sb.auth.onAuthStateChange((_event, session) => {
+  render(session);
+  if (session) setTimeout(() => touchLastSeen(session.user.id), 0);
+});
+
+// Signed in: the account's last visit, for the admin's "Ultimo accesso"
+// (supabase/migrations/020 touch_last_seen) — at most every
+// LAST_SEEN_EVERY_MS per browser, not on every page. Deferred out of the
+// auth callback (a Supabase call inside it can stall the client); never
+// fatal (e.g. migration 020 not run yet).
+const LAST_SEEN_EVERY_MS = 10 * 60 * 1000;
+
+function touchLastSeen(userId) {
+  const key = `lastSeen:${userId}`;
+  try {
+    if (Date.now() - Number(localStorage.getItem(key) || 0) < LAST_SEEN_EVERY_MS) return;
+    localStorage.setItem(key, String(Date.now()));
+  } catch {
+    // No storage: still sent, just not throttled.
+  }
+  sb.rpc("touch_last_seen").then(({ error }) => {
+    if (error) console.error(error);
+  });
+}

@@ -495,8 +495,33 @@ grant execute on function cancel_player_claim() to authenticated;
 -- supabase/migrations/003_admin_users.sql.
 -- ---------------------------------------------------------------------------
 
--- Every account: sign-in method(s), dates, admin/blocked, linked player,
--- pending request. Newest accounts first.
+-- Each signed-in account's last visit to the site (admin_list_users()'s
+-- last_seen_at, the Utenti tab's "Ultimo accesso"). Added by
+-- supabase/migrations/020_last_seen.sql.
+create table user_activity (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  last_seen_at timestamptz not null default now()
+);
+
+-- No policies: nobody reads or writes it directly — touch_last_seen() below
+-- writes the caller's own row, admin_list_users() reads it for the admin.
+alter table user_activity enable row level security;
+
+-- The signed-in caller was just on the site: their row's time set to now.
+create or replace function touch_last_seen() returns void
+language sql volatile security definer set search_path = public as $$
+  insert into user_activity (user_id, last_seen_at)
+  select auth.uid(), now()
+  where auth.uid() is not null
+  on conflict (user_id) do update set last_seen_at = excluded.last_seen_at;
+$$;
+
+revoke execute on function touch_last_seen() from public, anon;
+grant execute on function touch_last_seen() to authenticated;
+
+-- Every account: sign-in method(s), dates (and the last visit,
+-- user_activity), admin/blocked, linked player, pending request. Newest
+-- accounts first.
 create or replace function admin_list_users()
 returns table (
   user_id uuid,
@@ -504,6 +529,7 @@ returns table (
   providers text,
   created_at timestamptz,
   last_sign_in_at timestamptz,
+  last_seen_at timestamptz,
   is_admin boolean,
   is_blocked boolean,
   player_id uuid,
@@ -529,6 +555,7 @@ begin
       coalesce((select string_agg(p, ', ') from jsonb_array_elements_text(u.raw_app_meta_data -> 'providers') p), ''),
       u.created_at,
       u.last_sign_in_at,
+      act.last_seen_at,
       exists (select 1 from admins a where a.user_id = u.id),
       coalesce(u.banned_until > now(), false),
       lp.id,
@@ -539,6 +566,7 @@ begin
       cp.handle,
       c.created_at
     from auth.users u
+    left join user_activity act on act.user_id = u.id
     left join players lp on lp.user_id = u.id
     left join player_claims c on c.user_id = u.id
     left join players cp on cp.id = c.player_id
