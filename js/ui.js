@@ -133,9 +133,17 @@ export function bannedBadge() {
   return '<span class="icon-badge icon-badge-banned" data-tooltip="Bannato" aria-label="Bannato" tabindex="0">&#9888;&#65039;</span>';
 }
 
-export function archetypeBadge(archetype) {
+// An archetype's coloured badge — on the public site a way to its page
+// (archetype.html): `data-archetype`, focusable, and js/layout.js opens the
+// page on a click / Enter, even inside a sub-card that links elsewhere (a
+// badge can't be a nested <a>). `{ link: false }` for a plain one (the
+// admin, which doesn't load layout.js).
+export function archetypeBadge(archetype, { link = true } = {}) {
   if (!archetype) return "";
-  return `<span class="badge-archetype badge-archetype-${escapeHtml(archetype)}">${escapeHtml(archetype)}</span>`;
+  const name = escapeHtml(archetype);
+  return link
+    ? `<span class="badge-archetype badge-archetype-${name}" data-archetype="${name}" role="link" tabindex="0" title="Vai all'archetipo">${name}</span>`
+    : `<span class="badge-archetype badge-archetype-${name}">${name}</span>`;
 }
 
 const COLOR_ORDER = ["W", "U", "B", "R", "G"];

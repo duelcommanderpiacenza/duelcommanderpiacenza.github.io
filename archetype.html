@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (t !== "light" && t !== "dark") {
+          t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+        document.documentElement.dataset.theme = t;
+        if (navigator.maxTouchPoints > 0) document.documentElement.classList.add("nav-mobile");
+      } catch (e) {}
+    })();
+  </script>
+  <title>Archetipo - Duel Commander Piacenza</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="view-transition" content="same-origin">
+  <link rel="icon" type="image/png" href="dc_pc.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#dc181c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-active-nav="archetypes" class="is-loading">
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="site-header-brand" href="index.html">
+      <img src="dc_pc.png" alt="" class="site-logo-sm">
+      <span>Duel Commander Piacenza</span>
+    </a>
+
+    <div class="site-search">
+      <button type="button" class="site-search-trigger" id="site-search-trigger" aria-label="Cerca" aria-haspopup="true" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      </button>
+
+      <div class="site-search-box" id="site-search-box">
+        <div class="site-search-bar">
+          <div class="site-search-field">
+            <svg class="site-search-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="search" id="site-search-input" class="site-search-input" placeholder="Cerca giocatori, eventi, &hellip;" aria-label="Cerca nel sito" autocomplete="off">
+          </div>
+          <button type="button" class="site-search-close" id="site-search-close" aria-label="Chiudi ricerca">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="6" y1="18" x2="18" y2="6"></line></svg>
+          </button>
+        </div>
+        <div class="site-search-results" id="site-search-results"></div>
+      </div>
+    </div>
+
+    <a class="site-account" id="site-account" href="account.html" aria-label="Accedi" title="Accedi">
+      <svg class="site-account-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"></path></svg>
+    </a>
+  </div>
+</header>
+
+<nav class="site-nav" aria-label="Navigazione principale">
+  <button type="button" class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false"><span class="nav-dropdown-label">Archetipi</span><span class="nav-dropdown-caret" aria-hidden="true"></span></button>
+  <div class="site-nav-inner">
+    <a class="nav-link" data-nav="current" href="index.html">Bacheca</a>
+    <a class="nav-link" data-nav="events" href="events.html">Leghe <span class="amp">&amp;</span> Eventi</a>
+    <a class="nav-link" data-nav="commanders" href="commanders.html">Comandanti</a>
+    <a class="nav-link" data-nav="matchups" href="matchups.html">Matchups</a>
+    <a class="nav-link" data-nav="archetypes" href="archetypes.html">Archetipi</a>
+    <a class="nav-link" data-nav="players" href="players.html">Giocatori</a>
+    <a class="nav-link nav-link-mobile-only" data-nav="account" href="account.html">Profilo</a>
+    <a class="nav-link" data-nav="social" href="social.html">Social</a>
+  </div>
+</nav>
+
+<main class="page-main" id="archetype-content">
+  <div class="page-loading-region">
+    <div id="page-loading-overlay" class="page-loading-overlay"><p>Caricamento...</p></div>
+
+    <!-- The archetype as a hero, like the other detail pages' (styles.css
+         .profile-hero, .archetype-hero): on the blurred art of its most
+         played commander, its name and its numbers over the whole history
+         (js/archetype-detail.js); "‹ Archetipi" on its top edge
+         (.detail-hero-wrap). -->
+    <div class="detail-hero-wrap">
+      <a class="detail-hero-back" href="archetypes.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>Archetipi</a>
+      <section class="profile-hero detail-hero archetype-hero is-no-card" id="archetype-hero">
+        <div class="profile-hero-art" id="archetype-hero-art" aria-hidden="true"></div>
+        <div class="profile-hero-inner">
+          <div class="profile-hero-text">
+            <div class="profile-hero-heading">
+              <p class="profile-hero-kicker">Archetipo</p>
+              <h1 class="profile-hero-name" id="archetype-title">Caricamento...</h1>
+            </div>
+            <div class="profile-hero-stats">
+              <div class="profile-stats-tiles" id="archetype-stats"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Two chart cards on one row (js/chart-carousel.js, like Comandanti's):
+         "Utilizzo" over 2/3 of it, "Contro gli altri archetipi" (a diverging
+         bar chart around 50%) over 1/3; narrower: one per view, swiped. -->
+    <div id="archetype-charts" class="page-loading" style="margin-top:20px;">Caricamento...</div>
+
+    <section>
+      <h2>Comandanti <span class="history-count" id="archetype-commanders-count"></span></h2>
+      <div id="archetype-commanders" class="page-loading">Caricamento...</div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="footer-spacer" aria-hidden="true"></div>
+  <div class="footer-center">
+    <div>&copy; 2026 Duel Commander Piacenza</div>
+    <div class="footer-credit">
+      Created by Michele Ferri
+      <a href="https://www.instagram.com/michele__f/" target="_blank" rel="noopener noreferrer" aria-label="Instagram di Michele Ferri">
+        <img src="instagram.png" alt="Instagram" width="16" height="16">
+      </a>
+    </div>
+  </div>
+  <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="false" aria-label="Cambia tema"></button>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script type="module" src="js/layout.js"></script>
+<script type="module" src="js/archetype-detail.js"></script>
+
+</body>
+</html>

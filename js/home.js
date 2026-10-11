@@ -318,10 +318,12 @@ async function renderCommandersSection(el) {
     }));
     if (otherCount > 0) chartRows.push({ label: "Altri", share: (otherCount / total) * 100, color: OTHER_COLOR, bubble: false });
 
+    // The archetypes as flat bubbles, each a link to its page.
     const archetypeRows = ARCHETYPES.map((a) => ({
       label: a,
       share: (archetypeCounts.get(a) / total) * 100,
       color: ARCHETYPE_COLORS[a],
+      href: `archetype.html?id=${a}`,
     })).sort((a, b) => b.share - a.share);
 
     // The same whole-block carousel as the Comandanti/Archetipi charts

@@ -78,7 +78,7 @@ export function initEntriesAdmin() {
             label: "Commander",
             render: (r) => (r.partner_commander ? `${r.commander?.name} / ${r.partner_commander.name}` : r.commander?.name ?? ""),
           },
-          { key: "archetype", label: "Archetipo", render: (r) => archetypeBadge(r.archetype) },
+          { key: "archetype", label: "Archetipo", render: (r) => archetypeBadge(r.archetype, { link: false }) },
         ],
         { onEdit, onDelete }
       );

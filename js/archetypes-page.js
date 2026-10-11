@@ -105,20 +105,20 @@ async function init() {
       initChartCarousel(chartEl);
 
       // One sub-card per archetype, like the Comandanti list
-      // (js/history-list.js) — not a link (no archetype page): the badge,
-      // then Metashare / V-S-P / Winrate.
+      // (js/history-list.js), the whole card a link to its page
+      // (archetype.html): the badge, then Metashare / V-S-P / Winrate.
       tableEl.innerHTML = historyPanelHtml(
         rows
           .map(
             (r) => `
-          <article class="history-item history-ranked">
+          <a class="history-item history-ranked" href="archetype.html?id=${r.archetype}">
             <div class="history-main">${archetypeBadge(r.archetype)}</div>
             ${historyStatsHtml([
               { label: "Metashare", value: `${r.share.toFixed(1)}%` },
               { label: "V-S-P", value: `${r.wins}-${r.losses}-${r.draws}` },
               { label: "Winrate", value: r.winRate === null ? "—" : `${r.winRate.toFixed(1)}%`, main: true },
             ])}
-          </article>`
+          </a>`
           )
           .join(""),
         { scroll: false }

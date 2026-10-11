@@ -137,12 +137,24 @@ const EDGE_BOTTOM = 30;
 
 const decksLabel = (n) => `${n} ${n === 1 ? "mazzo" : "mazzi"}`;
 
+// The percentage axis's top: the peak rounded up to a whole step (10 up to
+// 40%, 20 above), never past 100 — so its gridlines land on round values.
+function percentScale(peak) {
+  const step = peak <= 40 ? 10 : 20;
+  const yMax = Math.min(100, Math.max(step, Math.ceil(peak / step) * step));
+  return { yMax, steps: Math.round(yMax / step) };
+}
+
 /**
- * @param {Array<{date: string, value: number}>} points - ISO dates, ascending, value >= 0 (integer counts).
+ * @param {Array<{date: string, value: number, detail?: string}>} points - ISO dates, ascending, value >= 0:
+ *   integer deck counts, or (`percent`) a share 0–100; `detail` an optional
+ *   note for the point's hover tip (e.g. "3 di 12 mazzi").
  * @param {string} emptyMessage
  * @param {string} [title] - shown inside the box itself, over the chart.
+ * @param {{percent?: boolean}} [options] - `percent`: the values are shares —
+ *   a % axis, "25%" tips, and Ultimo / Picco / Media (not Totale).
  */
-export function renderLineChart(rawPoints, emptyMessage, title) {
+export function renderLineChart(rawPoints, emptyMessage, title, { percent = false } = {}) {
   const titleHtml = title ? `<h2 class="pie-chart-title">${escapeHtml(title)}</h2>` : "";
   const points = windowToMaxSpan(rawPoints);
   if (points.length === 0) {
@@ -154,7 +166,9 @@ export function renderLineChart(rawPoints, emptyMessage, title) {
   // label from ever reading as a non-whole number of decks.
   const values = points.map((p) => p.value);
   const peak = Math.max(...values);
-  const yMax = Math.max(Math.ceil(peak), 1);
+  const scale = percent ? percentScale(peak) : null;
+  const yMax = percent ? scale.yMax : Math.max(Math.ceil(peak), 1);
+  const show = (v) => (percent ? `${Math.round(v)}%` : String(v));
   const yZero = EDGE_HEIGHT - EDGE_BOTTOM;
   const yAt = (value) => yZero - (value / yMax) * (yZero - EDGE_TOP);
 
@@ -179,7 +193,7 @@ export function renderLineChart(rawPoints, emptyMessage, title) {
   // the raw step size at 1 or more, so every rounded label is distinct.
   // The lines the whole width; their values small, on the left just above
   // each line (none for the zero line).
-  const GRID_STEPS = Math.min(4, yMax);
+  const GRID_STEPS = percent ? scale.steps : Math.min(4, yMax);
   const grid = Array.from({ length: GRID_STEPS + 1 }, (_, i) => {
     const value = Math.round((i / GRID_STEPS) * yMax);
     return { y: yAt(value), value };
@@ -192,7 +206,7 @@ export function renderLineChart(rawPoints, emptyMessage, title) {
     .join("");
   const yLabels = grid
     .filter(({ value }) => value > 0)
-    .map(({ y, value }) => `<span class="line-chart-y" style="top:${y}px">${value}</span>`)
+    .map(({ y, value }) => `<span class="line-chart-y" style="top:${y}px">${show(value)}</span>`)
     .join("");
 
   // Generic calendar ticks (see monthTicks above) rather than the exact
@@ -219,18 +233,21 @@ export function renderLineChart(rawPoints, emptyMessage, title) {
       return `<span class="line-chart-hit" style="left:${pct(left)};width:${pct(width)}">
         <span class="line-chart-guide" style="left:${inner}"></span>
         <span class="line-chart-dot-html" style="left:${inner};top:${y}px"></span>
-        <span class="line-chart-tip${side}" style="left:${inner};top:${y}px">${escapeHtml(formatDate(points[i].date))} · <strong>${decksLabel(points[i].value)}</strong></span>
+        <span class="line-chart-tip${side}" style="left:${inner};top:${y}px">${escapeHtml(formatDate(points[i].date))} · <strong>${
+          percent ? show(points[i].value) : decksLabel(points[i].value)
+        }</strong>${points[i].detail ? ` (${escapeHtml(points[i].detail)})` : ""}</span>
       </span>`;
     })
     .join("");
 
-  // The numbers beside the title: the latest event's decks, the peak, and
-  // the total over the whole history (not just the 2 years drawn).
+  // The numbers beside the title: the latest event's value, the peak, and
+  // the total over the whole history (not just the 2 years drawn) — for
+  // shares, their average over it instead.
   const total = rawPoints.reduce((sum, p) => sum + p.value, 0);
   const stats = [
-    ["Ultimo", values[values.length - 1]],
-    ["Picco", peak],
-    ["Totale", total],
+    ["Ultimo", show(values[values.length - 1])],
+    ["Picco", show(peak)],
+    percent ? ["Media", show(total / rawPoints.length)] : ["Totale", total],
   ]
     .map(
       ([label, value]) =>

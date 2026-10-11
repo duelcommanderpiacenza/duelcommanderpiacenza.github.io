@@ -42,6 +42,20 @@ attachHoverTooltips(
   (el) => el.dataset.tooltip
 );
 
+// An archetype badge (js/ui.js archetypeBadge) opens its archetype's page —
+// on a click or Enter, also when it sits inside a sub-card linking
+// elsewhere (event.html's entries): captured before that link sees it.
+function openArchetype(e) {
+  const badge = e.target.closest?.(".badge-archetype[data-archetype]");
+  if (!badge) return;
+  if (e.type === "keydown" && e.key !== "Enter") return;
+  e.preventDefault();
+  e.stopPropagation();
+  window.location.href = `archetype.html?id=${encodeURIComponent(badge.dataset.archetype)}`;
+}
+document.addEventListener("click", openArchetype, true);
+document.addEventListener("keydown", openArchetype, true);
+
 // Touch: a badge inside a link (a list's sub-card — Giocatori, the Bacheca's
 // standings, a league's Classifica…) is tapped to read it, not to follow the
 // card: the tap only shows its tooltip. Captured before the link sees it. A
