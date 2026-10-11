@@ -12,7 +12,7 @@
 // A tile with nothing to show is left out; the rest close up.
 
 import { Leagues, Events, EventEntries, Matches } from "./db.js";
-import { escapeHtml, formatDate, formatTime, eventTitle, showError } from "./ui.js";
+import { escapeHtml, formatDate, eventTitle, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { openInfoDialog } from "./info-dialog.js";
 
@@ -21,7 +21,6 @@ const svg = (body, cls = "ev-ico") =>
 const USERS = svg(
   '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>'
 );
-const CLOCK = svg('<circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path>');
 
 const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 const toDate = (iso) => new Date(`${iso}T00:00:00`);
@@ -32,11 +31,6 @@ const dayMonth = (iso) => {
 };
 const weekday = (iso) => capitalize(toDate(iso).toLocaleDateString("it-IT", { weekday: "long" }));
 const year = (iso) => toDate(iso).getFullYear();
-const daysUntil = (iso) => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return Math.round((toDate(iso) - today) / 86400000);
-};
 const fmtAvg = (n) => n.toLocaleString("it-IT", { maximumFractionDigits: 1 });
 const stat = (value, label) => `<div class="ev-stat"><b>${value}</b><span>${label}</span></div>`;
 
@@ -99,23 +93,18 @@ function ringHtml(played, total, share, ring) {
 // league's). A link to its league when it has one
 // (the event's own page fills in once it's played).
 function nextTile(ev) {
-  const days = daysUntil(ev.event_date);
-  const when = days <= 0 ? "oggi" : days === 1 ? "domani" : `tra ${days} giorni`;
-  const parts = [ev.start_time ? `ore ${formatTime(ev.start_time)}` : "", when].filter(Boolean);
   const inner = `
       <span class="ev-tile-k"><span class="ev-pulse"></span>Prossimo evento</span>
       <div>
         <div class="ev-date">${dayMonth(ev.event_date)}</div>
         <div class="ev-event-name">${escapeHtml(ev.name || ev.league?.name || "Evento")}</div>
-        <div class="ev-tile-s">${CLOCK}${marquee(parts.join(" · "))}</div>
       </div>`;
   return ev.league
     ? `<a class="ev-tile ev-next" href="league.html?id=${ev.league.id}">${inner}</a>`
     : `<div class="ev-tile ev-next">${inner}</div>`;
 }
 
-// The latest event: its date, its name (an unnamed one by its league's),
-// its players.
+// The latest event: its date, its name (an unnamed one by its league's).
 // A league in progress with no next event scheduled yet: the same tile,
 // "Prossimamente" in place of the date. A link to the league.
 function soonTile(league) {
@@ -124,19 +113,17 @@ function soonTile(league) {
       <span class="ev-tile-k"><span class="ev-pulse"></span>Prossimo evento</span>
       <div>
         <div class="ev-date">Prossimamente</div>
-        <div class="ev-tile-s">${CLOCK}${marquee("Data da definire")}</div>
       </div>
     </a>`;
 }
 
-function latestTile(ev, players, leagueName) {
+function latestTile(ev, leagueName) {
   return `
     <a class="ev-tile" href="event.html?id=${ev.id}">
       <span class="ev-tile-k">Ultimo evento</span>
       <div>
         <div class="ev-date">${dayMonth(ev.event_date)}</div>
         <div class="ev-event-name">${escapeHtml(ev.name || leagueName || weekday(ev.event_date))}</div>
-        <div class="ev-tile-s">${USERS}${players}</div>
       </div>
     </a>`;
 }
@@ -196,23 +183,6 @@ function openStandaloneList(events, counter) {
       )
       .join("")}</div>`,
   });
-}
-
-// A next event's time line ("ore 21:00 · tra 5 giorni"): on one line; where
-// it's wider than its tile (phones, the tile half the screen) it slides
-// slowly back and forth to show the rest (fitMarquees, styles.css
-// .ev-marquee).
-const marquee = (text) => `<span class="ev-marquee"><span class="ev-marquee-text">${escapeHtml(text)}</span></span>`;
-
-function fitMarquees(root) {
-  for (const box of root.querySelectorAll(".ev-marquee")) {
-    const text = box.firstElementChild;
-    box.classList.remove("is-scrolling");
-    const overflow = text.scrollWidth - box.clientWidth;
-    if (overflow <= 1) continue;
-    box.style.setProperty("--marquee-dist", `${Math.ceil(overflow)}px`);
-    box.classList.add("is-scrolling");
-  }
 }
 
 // A league in progress's name on one line, as big as its room allows: from
@@ -290,22 +260,18 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       if (!secondary) {
         const next = upcoming.find((ev) => ev.league?.id === league.id);
         side.push(next ? nextTile(next) : soonTile(league));
-        if (league.events[0]) side.push(latestTile(league.events[0], counter.ofEvent(league.events[0].id), league.name));
+        if (league.events[0]) side.push(latestTile(league.events[0], league.name));
       }
       groups.push(groupHtml(big, side, secondary));
     }
     boardEl.innerHTML = groups.join("");
     fitBigNames(boardEl);
-    fitMarquees(boardEl);
     let fitTimer;
     window.addEventListener(
       "resize",
       () => {
         clearTimeout(fitTimer);
-        fitTimer = setTimeout(() => {
-          fitBigNames(boardEl);
-          fitMarquees(boardEl);
-        }, 120);
+        fitTimer = setTimeout(() => fitBigNames(boardEl), 120);
       },
       { signal }
     );

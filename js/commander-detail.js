@@ -21,6 +21,8 @@ import { hidePageLoading } from "./page-loading.js";
 import { initTitleFit } from "./page-title-fit.js";
 import { initFollowButton } from "./follow-button.js";
 import { createArtPainter } from "./player-card.js";
+import { initTabs } from "./tabs.js";
+import { initBackToTop } from "./back-to-top.js";
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
@@ -83,6 +85,12 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   const playersEl = document.getElementById("commander-players");
   const matchesEl = document.getElementById("commander-matches");
   const decksChartEl = document.getElementById("commander-decks-chart");
+
+  // Giocatori / Storico partite: tabs on phones and touch screens (the CSS
+  // hides them on a computer, the two side by side), each list whole there —
+  // a long page, hence the back-to-top button.
+  initTabs(document.querySelector(".commander-tabs"));
+  initBackToTop({ signal });
 
   // "☆ Segui" right below the name, for signed-in accounts (not awaited: it
   // never holds up the page).

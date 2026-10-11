@@ -14,6 +14,7 @@ import { resultsLink } from "./results-link.js";
 import { initTitleFit } from "./page-title-fit.js";
 import { historyPanelHtml, historyStatsHtml, historyPosHtml } from "./history-list.js";
 import { createArtPainter } from "./player-card.js";
+import { initTabs } from "./tabs.js";
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
@@ -87,19 +88,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   const leaderboardEl = document.getElementById("event-leaderboard");
   const statsEl = document.getElementById("event-stats");
 
-  // Giocatori / Classifica / Partite: one panel at a time (event.html's
-  // tabs, account.html's look), Giocatori first.
-  const tabButtons = [...document.querySelectorAll(".event-tabs .profile-tab")];
-  const selectTab = (panelId) => {
-    for (const b of tabButtons) {
-      const on = b.dataset.tab === panelId;
-      b.classList.toggle("is-active", on);
-      b.setAttribute("aria-selected", String(on));
-      document.getElementById(b.dataset.tab)?.classList.toggle("is-current", on);
-    }
-  };
-  for (const b of tabButtons) b.addEventListener("click", () => selectTab(b.dataset.tab));
-  if (tabButtons.length) selectTab(tabButtons[0].dataset.tab);
+  // Giocatori / Classifica / Partite: one panel at a time, Giocatori first.
+  initTabs(document.querySelector(".event-tabs"));
 
   if (!id) {
     titleEl.textContent = "Evento non trovato";

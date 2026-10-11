@@ -15,6 +15,8 @@ import { initTitleFit } from "./page-title-fit.js";
 import { historyPanelHtml, historyStatsHtml, historyPosHtml } from "./history-list.js";
 import { createArtPainter } from "./player-card.js";
 import { initFollowButton } from "./follow-button.js";
+import { initTabs } from "./tabs.js";
+import { initBackToTop } from "./back-to-top.js";
 
 // How many leaderboard rows get the "top 8" highlight (styles.css .is-top8).
 const LEAGUE_TOP_HIGHLIGHT = 8;
@@ -91,6 +93,13 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   const eventsEl = document.getElementById("league-events");
   const leaderboardSectionEl = document.getElementById("league-leaderboard-section");
   const leaderboardEl = document.getElementById("league-leaderboard");
+  const tabsEl = document.querySelector(".league-tabs");
+
+  // Eventi / Classifica: tabs on phones and touch screens (the CSS hides
+  // them on a computer, one section under the other), each list whole there
+  // — a long page, hence the back-to-top button.
+  initTabs(tabsEl);
+  initBackToTop({ signal });
 
   // The ★ on the hero's edge, for signed-in accounts (not awaited: it never
   // holds up the page).
@@ -108,8 +117,12 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     titleEl.textContent = league.name;
     initTitleFit(titleEl, { signal });
 
-    // A Topdeck series is just a bucket of events, with no points leaderboard.
-    if (league.is_topdeck) leaderboardSectionEl.hidden = true;
+    // A Topdeck series is just a bucket of events, with no points leaderboard
+    // (so no tabs either: Eventi alone).
+    if (league.is_topdeck) {
+      leaderboardSectionEl.hidden = true;
+      tabsEl.hidden = true;
+    }
     // Started now, awaited only right before the leaderboard renders, so it
     // loads alongside the league's events rather than after them.
     const badgesPromise = league.is_topdeck ? null : fetchPlayerBadgesRenderer();

@@ -4806,64 +4806,6 @@ button.ev-tile {
   height: 14px;
 }
 
-/* A line that may not fit its tile (js/events-page.js fitMarquees): kept on
-   one line; when it overflows (.is-scrolling) it waits a couple of seconds,
-   slides quickly to its end (by exactly the hidden width, --marquee-dist),
-   holds there a moment, fades out and comes back from the start — again
-   and again. Reduced motion: no sliding — cut with "…". */
-.ev-marquee {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.ev-marquee-text {
-  display: inline-block;
-  white-space: nowrap;
-}
-
-.ev-marquee.is-scrolling .ev-marquee-text {
-  animation: ev-marquee 6s ease-in-out infinite;
-}
-
-@keyframes ev-marquee {
-  0%,
-  40% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-
-  58%,
-  86% {
-    opacity: 1;
-    transform: translateX(calc(-1 * var(--marquee-dist, 0px)));
-  }
-
-  92% {
-    opacity: 0;
-    transform: translateX(calc(-1 * var(--marquee-dist, 0px)));
-  }
-
-  93% {
-    opacity: 0;
-    transform: translateX(0);
-  }
-
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ev-marquee.is-scrolling .ev-marquee-text {
-    display: block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    animation: none;
-  }
-}
-
 .ev-date {
   font-size: 2rem;
   font-weight: 800;
@@ -5118,8 +5060,7 @@ button.ev-tile {
   color: #fff;
 }
 
-.ev-next .ev-tile-k,
-.ev-next .ev-tile-s {
+.ev-next .ev-tile-k {
   color: rgba(255, 255, 255, 0.85);
 }
 
@@ -6026,6 +5967,44 @@ a.btn-secondary:hover {
     min-height: 0;
     max-height: none;
   }
+}
+
+/* commander.html's Giocatori / Storico partite (side by side on a computer)
+   and league.html's Eventi / Classifica (one under the other): on phones
+   and touch screens (html.app-header) one at a time behind tabs
+   (account.html's .profile-tabs, js/tabs.js — hidden on a computer) — no
+   titles (the tab names it), each list whole rather than capped and
+   scrolling inside (the caps are inline styles from js/history-list.js,
+   hence !important). A Topdeck series has no Classifica: no tabs at all
+   ([hidden], over .profile-tabs' own display on touch screens). */
+html:not(.app-header) :is(.commander-tabs, .league-tabs),
+html.app-header .league-tabs[hidden] {
+  display: none;
+}
+
+html.app-header .commander-tabs {
+  margin-top: 28px;
+}
+
+html.app-header .commander-lists {
+  grid-template-columns: minmax(0, 1fr);
+  margin-top: 0;
+}
+
+html.app-header .commander-lists > .history-col:not(.is-current),
+html.app-header .commander-lists > .history-col > h2,
+html.app-header .league-lists > section:not(.is-current),
+html.app-header .league-lists > section > h2 {
+  display: none;
+}
+
+html.app-header :is(.commander-lists, .league-lists) .history-scroll {
+  max-height: none !important;
+}
+
+/* No tabs (a Topdeck series): its one section keeps its title. */
+html.app-header .league-tabs[hidden] + .league-lists > section > h2 {
+  display: block;
 }
 
 .history-count {
@@ -8213,12 +8192,14 @@ main.has-hero-accent .commander-card-flip-btn {
   box-sizing: border-box;
   border: 1px solid var(--hairline);
   border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.9);
+  /* Solid: sticky on touch screens, the lists scroll under it — nothing
+     showing through. */
+  background: #fff;
   box-shadow: var(--shadow-card);
 }
 
 :root[data-theme="dark"] .profile-tabs {
-  background: rgba(30, 21, 23, 0.92);
+  background: #1e1517;
 }
 
 .profile-tab {
@@ -8256,6 +8237,17 @@ main.has-hero-accent .commander-card-flip-btn {
 .profile-tab.is-active:hover {
   background: var(--brand-red);
   color: #fff;
+}
+
+/* A page coloured by its hero (main.has-hero-accent — js/player-card.js
+   applyHeroTone: account, commander): the open tab in that colour. */
+main.has-hero-accent .profile-tab.is-active,
+main.has-hero-accent .profile-tab.is-active:hover {
+  background: var(--hero-accent-deep);
+}
+
+main.has-hero-accent .profile-tab:focus-visible {
+  outline-color: var(--hero-accent-deep);
 }
 
 .profile:has(#profile-album[hidden]) [data-tab="profile-album"],

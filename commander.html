@@ -127,14 +127,20 @@
 
     <!-- Desktop: Giocatori left, Storico partite right, each as tall as its
          list — the matches scrolling past 8 rounds, the players never
-         taller than the matches (scrolling past that); phones: stacked
-         (js/history-list.js, styles.css .history-grid). -->
-    <div class="history-grid">
-      <section class="history-col">
+         taller than the matches (scrolling past that) (js/history-list.js,
+         styles.css .history-grid). Phones and touch screens
+         (html.app-header): one at a time behind tabs, like event.html's,
+         each list whole (styles.css .commander-lists). -->
+    <nav class="profile-tabs commander-tabs" role="tablist" aria-label="Sezioni del comandante">
+      <button type="button" class="profile-tab" role="tab" id="commander-tab-players" data-tab="commander-col-players" aria-controls="commander-col-players"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg><span>Giocatori</span></button>
+      <button type="button" class="profile-tab" role="tab" id="commander-tab-matches" data-tab="commander-col-matches" aria-controls="commander-col-matches"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 17.5 3 6V3h3l11.5 11.5"></path><path d="m13 19 6-6M16 16l4 4M19 21l2-2"></path><path d="M14.5 6.5 18 3h3v3l-3.5 3.5"></path><path d="m5 14 4 4M7 17l-3 3M3 19l2 2"></path></svg><span>Storico partite</span></button>
+    </nav>
+    <div class="history-grid commander-lists">
+      <section class="history-col" id="commander-col-players" role="tabpanel" aria-labelledby="commander-tab-players">
         <h2>Giocatori <span class="history-count" id="commander-players-count"></span></h2>
         <div id="commander-players" class="page-loading">Caricamento...</div>
       </section>
-      <section class="history-col">
+      <section class="history-col" id="commander-col-matches" role="tabpanel" aria-labelledby="commander-tab-matches">
         <h2>Storico partite <span class="history-count" id="commander-matches-count"></span></h2>
         <div id="commander-matches" class="page-loading">Caricamento...</div>
       </section>
