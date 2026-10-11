@@ -82,9 +82,11 @@ function leagueProgressHtml(played, scheduled) {
       </div>`;
 }
 
-// Name (a link to league.html). A real league also gets "Lista completa",
-// its progress and a glimpse of its current standings (top
-// LEAGUE_PREVIEW_COUNT, points only); a Topdeck series has none of them.
+// Name (a link to league.html). A real league also gets its progress, a
+// glimpse of its current standings (top LEAGUE_PREVIEW_COUNT, points only)
+// and, under them, "Classifica completa" (a list icon before it) to
+// league.html; a Topdeck series
+// has none of them.
 function renderLeagueCard({ league, standings: allStandings, played, scheduled }, badgesFor) {
   const standings = allStandings?.slice(0, LEAGUE_PREVIEW_COUNT) ?? null;
   const href = `league.html?id=${league.id}`;
@@ -123,10 +125,10 @@ function renderLeagueCard({ league, standings: allStandings, played, scheduled }
     <div class="dashboard-league-card">
       <div class="dashboard-league-card-head">
         <a class="dashboard-league-card-name" href="${href}">${escapeHtml(league.name)}</a>
-        ${standings ? `<a class="btn-secondary" href="${href}">Lista completa</a>` : ""}
       </div>
       ${league.is_topdeck ? "" : leagueProgressHtml(played, scheduled)}
       ${ranking}
+      ${standings?.length ? `<a class="section-link dashboard-league-more" href="${href}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="9" y1="6" x2="20" y2="6"></line><line x1="9" y1="12" x2="20" y2="12"></line><line x1="9" y1="18" x2="20" y2="18"></line><circle cx="4.5" cy="6" r="1"></circle><circle cx="4.5" cy="12" r="1"></circle><circle cx="4.5" cy="18" r="1"></circle></svg>Classifica completa</a>` : ""}
     </div>`;
 }
 
