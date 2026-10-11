@@ -242,9 +242,10 @@ async function init() {
             <th class="matchups-row-header" data-tooltip="${escapeHtml(rowCmd.name)}"><span class="matchups-row-header-text">${escapeHtml(rowCmd.name)}</span></th>
             ${rows
               .map((colCmd) => {
-                // The diagonal (a deck against itself): left out.
+                // The diagonal (a deck against itself): an even tile, 50% —
+                // by definition — with no record under it.
                 if (rowCmd.id === colCmd.id) {
-                  return '<td class="matchups-cell matchups-cell-mirror" aria-label="Stesso comandante"></td>';
+                  return '<td class="matchups-cell is-even matchups-cell-mirror" style="--heat:0;" title="Stesso comandante" aria-label="Stesso comandante: 50%"><span class="matchups-cell-pct">50%</span></td>';
                 }
                 const cell = computeCell(rowCmd.id, colCmd.id);
                 if (!cell || cell.total === 0) {

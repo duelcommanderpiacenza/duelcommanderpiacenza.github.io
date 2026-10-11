@@ -10790,15 +10790,15 @@ html.nav-mobile .help-toggle-btn {
   background: rgba(220, 24, 28, 0.25);
 }
 
-/* The matrix in the site's list look (.history-panel's panel, .history-item's
-   tiles): a white panel, every cell a small rounded tile with gaps between
-   (no ruled lines), the row names tiles like the lists' sub-cards. What
-   scrolls sideways when it doesn't fit is the box inside the panel's
-   padding (.matchups-matrix-scroll), not the panel: the scrollbar stays
-   inside its rounded edges. --mx-bg is the panel's own solid colour:
-   the sticky row names paint it round themselves (box-shadow), so cells
-   scrolling under them don't show through the gaps. The colours: the
-   site's win / loss ones (.history-score: green, red; even neutral). */
+/* The matrix in the site's list look (.history-item's tiles), with no
+   panel round it (like the boxless lists): every cell a small rounded tile
+   with gaps between (no ruled lines), the row names tiles like the lists'
+   sub-cards, straight on the page. --mx-bg is the page's own colour where
+   the matrix sits (body's cream-2 — white; dark: its near-black): the
+   scroller is painted with it (opaque, see below) and the sticky row names
+   paint it round themselves (box-shadow), so cells scrolling under them
+   don't show through the gaps — invisible against the page. The colours:
+   the site's win / loss ones (.history-score: green, red; even neutral). */
 .matchups-matrix-wrap {
   --mx-bg: #fff;
   --mx-win: #1fa45a;
@@ -10809,16 +10809,17 @@ html.nav-mobile .help-toggle-btn {
   --mx-mid-text: #7d5300;
   --mx-tile: rgba(220, 24, 28, 0.055);
   --mx-tile-line: rgba(154, 28, 32, 0.14);
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius-card-sm);
-  background: var(--mx-bg);
-  box-shadow: var(--shadow-card);
-  padding: 6px;
+  /* The commanders' names (row and column): a stronger tint and edge than
+     the result tiles, so they stand apart from them. */
+  --mx-head: rgba(220, 24, 28, 0.12);
+  --mx-head-line: rgba(154, 28, 32, 0.32);
+  /* The empty slots' dashes. */
+  --mx-empty-line: rgba(154, 28, 32, 0.34);
   animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 :root[data-theme="dark"] .matchups-matrix-wrap {
-  --mx-bg: #1e1719;
+  --mx-bg: #140e10;
   --mx-win: #4fdc8c;
   --mx-loss: #ff5a5f;
   --mx-mid: #ffcc33;
@@ -10827,9 +10828,12 @@ html.nav-mobile .help-toggle-btn {
   --mx-mid-text: #ffe07a;
   --mx-tile: rgba(255, 255, 255, 0.06);
   --mx-tile-line: rgba(255, 255, 255, 0.1);
+  --mx-head: rgba(255, 110, 110, 0.16);
+  --mx-head-line: rgba(255, 110, 110, 0.34);
+  --mx-empty-line: rgba(255, 255, 255, 0.3);
 }
 
-/* Its own solid background (the panel's colour, so it doesn't show): a
+/* Its own solid background (the page's colour, so it doesn't show): a
    scroller without one isn't scrolled by the GPU in Chrome — it repaints
    the whole table on every scroll step instead, which lagged. */
 .matchups-matrix-scroll {
@@ -10939,7 +10943,7 @@ html.nav-mobile .help-toggle-btn {
   text-align: left;
   color: var(--text-title);
   font-weight: 800;
-  border: 1px solid var(--mx-tile-line);
+  border: 1px solid var(--mx-head-line);
   border-radius: 10px;
   /* The sub-card tint over the panel's solid colour (opaque: cells scroll
      under it). Painted round it in the panel's colour too (box-shadow): the
@@ -10947,7 +10951,7 @@ html.nav-mobile .help-toggle-btn {
      left — the whole strip between it and the panel's left edge (the
      panel's padding + the table's spacing), where scrolled cells showed
      through; its far end, rounded, lies past the edge, clipped. */
-  background: linear-gradient(var(--mx-tile), var(--mx-tile)), var(--mx-bg);
+  background: linear-gradient(var(--mx-head), var(--mx-head)), var(--mx-bg);
   box-shadow:
     0 0 0 4px var(--mx-bg),
     -40px 0 0 4px var(--mx-bg);
@@ -10964,15 +10968,17 @@ html.nav-mobile .help-toggle-btn {
     -40px 0 0 4px var(--mx-bg);
 }
 
-/* The column names: plain small labels over their column, like the lists'
-   stat labels. */
+/* The column names: small tiles over their column, in the row names'
+   stronger tint, so both stand apart from the results. */
 .matchups-col-header {
   position: relative;
-  padding-bottom: 4px;
+  border: 1px solid var(--mx-head-line);
+  border-radius: 10px;
+  background: var(--mx-head);
   color: var(--text-title);
   font-weight: 800;
   font-size: 0.8rem;
-  vertical-align: bottom;
+  vertical-align: middle;
   cursor: default;
 }
 
@@ -11117,19 +11123,18 @@ html.nav-mobile .help-toggle-btn {
   color: var(--text-body);
 }
 
-/* No match between the two: an empty dashed slot. */
+/* No match between the two: an empty dashed slot — its dashes and the dash
+   inside it firm enough to read on the page. */
 .matchups-cell-empty {
   border-style: dashed;
+  border-color: var(--mx-empty-line);
   background: none;
   color: var(--text-muted);
   font-weight: 400;
 }
 
-/* A deck against itself: a faint striped tile. */
-.matchups-cell-mirror {
-  border-color: transparent;
-  background: repeating-linear-gradient(135deg, var(--mx-tile) 0 6px, transparent 6px 12px);
-}
+/* A deck against itself: the even (50%) tile, just "50%" — no record under
+   it (js/matchups-page.js renders it .is-even). */
 
 /* The Bacheca's "Più giocati" card (its two bubble slides): a dark stage,
    the same in both themes — deep red-black with a soft red glow behind the
