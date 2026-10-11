@@ -1164,8 +1164,10 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
   }
 
   /* The pill gives a little under the finger. */
+  /* The background, edge and glow fade (700ms) — so the pill eases into a
+     hero's colour when it's picked (js/player-card.js applyHeroTone). */
   html.nav-mobile .nav-dropdown-trigger {
-    transition: transform 140ms ease, background 150ms ease;
+    transition: transform 140ms ease, background 700ms ease, border-color 700ms ease, box-shadow 700ms ease;
   }
 
   html.nav-mobile .nav-dropdown-trigger:active {
@@ -1276,13 +1278,13 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 14px;
-    width: 260px;
+    gap: 12px;
+    width: 220px;
     margin: 0 auto;
-    min-height: 56px;
+    min-height: 48px;
     font: inherit;
-    font-size: 1.15rem;
-    padding: 16px 22px;
+    font-size: 1.02rem;
+    padding: 11px 18px;
     border-radius: var(--radius-pill);
     border: none;
     background: var(--brand-red);
@@ -1342,13 +1344,12 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
     bottom: calc(78px + env(safe-area-inset-bottom));
   }
 
-  /* Reserves space so the footer (copyright, theme toggle) never ends up
-     sitting directly behind the now-fixed pill once scrolled to the very
-     bottom of a page — added to the footer's own bottom padding rather
-     than body's, so that reserved strip is filled with the footer's own
-     grey background instead of the page's plain (much lighter) one. */
+  /* No room reserved for the pill any more: it slides away while
+     scrolling down (js/nav-dropdown.js .is-scrolled-away), so at the
+     page's bottom the footer is clear — just the home-bar space on notched
+     phones. */
   html.nav-mobile footer {
-    padding-bottom: calc(18px + 78px + env(safe-area-inset-bottom));
+    padding-bottom: calc(18px + env(safe-area-inset-bottom));
   }
 
 @media (max-width: 480px) {
@@ -6358,20 +6359,20 @@ a.history-item.is-me {
 
 html.nav-mobile .back-to-top {
   right: 16px;
-  bottom: calc(16px + 56px + 12px + env(safe-area-inset-bottom));
+  bottom: calc(16px + 48px + 12px + env(safe-area-inset-bottom));
 }
 
-/* Wide enough for it beside the pill (centred, 260px): 12px gap + 46px
-   button + 8px to the screen edge on that side → (392 − 260) / 2 = 66px.
+/* Wide enough for it beside the pill (centred, 220px): 12px gap + 46px
+   button + 8px to the screen edge on that side → (352 − 220) / 2 = 66px.
    There, right next to the pill, centred on its height — and above
    .site-nav (z-index 20): the fixed nav spans the screen's whole width at
    the pill's height, so under it the button would never get the tap. Its
    open menu opens upward above the pill, clear of the button. */
-@media (min-width: 392px) {
+@media (min-width: 352px) {
   html.nav-mobile .back-to-top {
     right: auto;
-    left: calc(50% + 130px + 12px);
-    bottom: calc(16px + 5px + env(safe-area-inset-bottom));
+    left: calc(50% + 110px + 12px);
+    bottom: calc(16px + 1px + env(safe-area-inset-bottom));
     z-index: 21;
   }
 }
@@ -8120,6 +8121,38 @@ main.has-hero-accent .line-chart-guide {
 :root[data-theme="dark"] main.has-hero-accent .cmd-carousel-stats .stat-tile {
   border-color: color-mix(in srgb, var(--hero-accent-light) 20%, transparent);
   background: color-mix(in srgb, var(--hero-accent-light) 7%, rgba(255, 255, 255, 0.04));
+}
+
+/* The site's warm (pinkish) greys — muted labels, values, body text —
+   tinted toward the colour instead, so no text reads red-ish; the match
+   results keep their fixed meaning: a loss red, a win green. */
+main.has-hero-accent {
+  --text-muted: color-mix(in srgb, var(--hero-accent) 22%, #7a7a7a);
+  --text-muted-2: color-mix(in srgb, var(--hero-accent) 18%, #5f5f5f);
+  --text-value: color-mix(in srgb, var(--hero-accent) 14%, #444);
+  --text-body: color-mix(in srgb, var(--hero-accent) 6%, #1d1d1d);
+  --text-title: color-mix(in srgb, var(--hero-accent) 6%, #1a1a1a);
+}
+
+:root[data-theme="dark"] main.has-hero-accent {
+  --text-muted: color-mix(in srgb, var(--hero-accent-light) 25%, #9a9a9a);
+  --text-muted-2: color-mix(in srgb, var(--hero-accent-light) 20%, #888);
+  --text-value: color-mix(in srgb, var(--hero-accent-light) 14%, #d6d6d6);
+  --text-body: color-mix(in srgb, var(--hero-accent-light) 6%, #e6e6e6);
+  --text-title: color-mix(in srgb, var(--hero-accent-light) 5%, #f4f4f4);
+}
+
+main.has-hero-accent .history-score.is-loss {
+  color: #8d1d22;
+}
+
+:root[data-theme="dark"] main.has-hero-accent .history-score.is-loss {
+  color: #ff7a7e;
+}
+
+/* The commander card's flip button in it too. */
+main.has-hero-accent .commander-card-flip-btn {
+  background: color-mix(in srgb, var(--hero-accent) 80%, transparent);
 }
 
 /* The scrolling lists' scrollbar (Storico partite) in it too. */
@@ -13856,3 +13889,226 @@ html[data-theme="dark"]:not(.nav-mobile) .site-search-results {
 :root[data-theme="dark"] .pwa-install-dismiss:hover {
   background: rgba(255, 255, 255, 0.1);
 }
+
+/* Phones with a hero on the page (player / commander / league / event /
+   archetype / account): the red header transparent, laid over the page
+   (absolute — out of the flow), and the hero running up to the very top
+   behind it: its content pushed down by the header's height
+   (--hero-header-h), the back pill and follow star too; a dark shade at
+   the hero's top keeps the header's logo, title and buttons readable on
+   any art. Not while account.html's "Il tuo giocatore" banner sits above
+   its hero (the header would lie over the banner). */
+@media (max-width: 640px) {
+  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) {
+    --hero-header-h: calc(80px + env(safe-area-inset-top));
+  }
+
+  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .site-header {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    border-bottom: 0;
+    background: transparent;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .page-main .profile-hero:first-child,
+  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .page-main .detail-hero-wrap:first-child .profile-hero,
+  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .page-loading-region > .detail-hero-wrap:nth-child(2) .profile-hero,
+  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .page-loading-region > .profile-hero {
+    margin-top: -20px;
+  }
+
+  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .profile-hero-inner {
+    padding-top: calc(var(--hero-header-h) + 24px);
+  }
+
+  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .detail-hero .profile-hero-inner {
+    padding-top: calc(var(--hero-header-h) + 68px);
+  }
+
+  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .detail-hero-back,
+  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .detail-hero-wrap:has(.is-no-card) .detail-hero-back,
+  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .detail-hero-wrap > .follow-btn-row {
+    top: calc(var(--hero-header-h) + 14px);
+  }
+
+  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .profile-hero::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 1;
+    height: calc(var(--hero-header-h) + 40px);
+    background: linear-gradient(rgba(10, 5, 6, 0.55), rgba(10, 5, 6, 0));
+    pointer-events: none;
+  }
+}
+
+/* Phones: the red header always transparent — over a hero (above) its white
+   logo, title and buttons sit on the hero's art; on every other page (or
+   above account's "Il tuo giocatore" banner) it lies on the page itself,
+   so its title turns dark and the account button white with a red icon
+   (like the search one beside it), both lifted by a soft shadow. */
+@media (max-width: 640px) {
+  .site-header {
+    border-bottom: 0;
+    background: transparent;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  :is(body:not(:has(.page-main .profile-hero)), body:has(.profile-claim:not([hidden]))) .site-header-brand {
+    color: var(--text-title);
+  }
+
+
+
+  :is(body:not(:has(.page-main .profile-hero)), body:has(.profile-claim:not([hidden]))) .site-account {
+    border-color: rgba(154, 28, 32, 0.22);
+    background: #fff;
+    color: var(--brand-red);
+    box-shadow: 0 2px 8px rgba(80, 10, 14, 0.1);
+  }
+
+  :is(body:not(:has(.page-main .profile-hero)), body:has(.profile-claim:not([hidden]))) .site-search-trigger {
+    border: 1px solid rgba(154, 28, 32, 0.22);
+    box-shadow: 0 2px 8px rgba(80, 10, 14, 0.1);
+  }
+
+  :root[data-theme="dark"] :is(body:not(:has(.page-main .profile-hero)), body:has(.profile-claim:not([hidden]))) .site-account {
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+  }
+}
+
+/* Phones, every page: the logo in brand red — the PNG as a mask over a red
+   fill, its own pixels pushed out of view (object-fit: none, or the image
+   would just fill the box and stay put); the signed-in picture ringed in
+   red. Over a hero: a deeper shade at the top, a soft shadow under the
+   title and the round buttons, so the header reads on any art. */
+@media (max-width: 640px) {
+  .site-header .site-logo-sm {
+    /* Off: the desktop's filter (brightness(0) invert(1), the logo white on
+       the red header) would turn the red fill white too. */
+    filter: none;
+    background: var(--brand-red);
+    object-fit: none;
+    object-position: -9999px 0;
+    -webkit-mask: url("dc_pc.png") center / contain no-repeat;
+    mask: url("dc_pc.png") center / contain no-repeat;
+  }
+
+  /* The signed-in picture: no white edge or fill of its own, just a red
+     ring a little apart from it (an outline with a gap). */
+  html body .site-header .site-account.is-signed-in,
+  :root[data-theme] body .site-header .site-account.is-signed-in.is-signed-in {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+    outline: 3px solid var(--brand-red);
+    outline-offset: 2px;
+  }
+
+  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .profile-hero::before {
+    height: calc(var(--hero-header-h) + 56px);
+    background: linear-gradient(rgba(10, 5, 6, 0.72), rgba(10, 5, 6, 0.35) 60%, rgba(10, 5, 6, 0));
+  }
+
+  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .site-header-brand {
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
+  }
+
+  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) :is(.site-search-trigger, .site-account) {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  }
+
+  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .site-account.is-signed-in {
+    box-shadow: none;
+  }
+}
+
+/* Phones: the header a bit taller, its logo, title and round buttons a size
+   up (the hero pages' --hero-header-h, above, follows its 80px). */
+@media (max-width: 640px) {
+  .site-header,
+  html.nav-mobile .site-header {
+    padding-top: calc(16px + env(safe-area-inset-top));
+    padding-bottom: 16px;
+  }
+
+  .site-header .site-logo-sm {
+    width: 44px;
+    height: 44px;
+  }
+
+  .site-header-brand {
+    gap: 10px;
+    font-size: clamp(0.95rem, 4.3vw, 1.22rem);
+  }
+
+  .site-search-trigger,
+  html.nav-mobile .site-search-trigger,
+  .site-account {
+    width: 46px;
+    height: 46px;
+  }
+
+  .site-search-trigger svg,
+  .site-account-icon {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+/* Phones: just the logo in the header — the site's name hidden from view
+   but kept for screen readers (the logo link's only text). */
+@media (max-width: 640px) {
+  .site-header-brand > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+/* Phones, a page with a hero (js/player-card.js applyHeroTone marks the
+   header .has-hero-accent once the art's colour is known): the logo and the
+   signed-in picture's ring — over the hero's dark top — in the colour's
+   light shade, the search icon (on its white circle) in its deep shade;
+   each fading over from red as the hero loads. */
+@media (max-width: 640px) {
+  .site-header .site-logo-sm {
+    transition: background-color 700ms ease;
+  }
+
+  .site-header .site-account {
+    transition: outline-color 700ms ease, background 150ms ease, border-color 150ms ease;
+  }
+
+  .site-header .site-search-trigger {
+    transition: color 700ms ease, background 150ms ease;
+  }
+
+  .site-header.has-hero-accent .site-logo-sm {
+    background-color: var(--hero-accent-light);
+  }
+
+  html body .site-header.has-hero-accent .site-account.is-signed-in,
+  :root[data-theme] body .site-header.has-hero-accent .site-account.is-signed-in.is-signed-in {
+    outline-color: var(--hero-accent-light);
+  }
+
+  .site-header.has-hero-accent .site-search-trigger {
+    color: var(--hero-accent-deep);
+  }
+}
+

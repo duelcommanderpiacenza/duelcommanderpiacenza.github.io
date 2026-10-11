@@ -136,9 +136,16 @@ function applyHeroTone(artEl, img) {
   if (!host) return;
   const main = artEl.closest("main[data-accent-from-hero]");
   const tone = img ? heroTone(img) : null;
+  // Any page with a hero: the header (styles.css: on phones its logo, the
+  // signed-in picture's ring and the search icon fade to the colour).
+  const header = document.querySelector(".site-header");
   if (!tone) {
     host.style.removeProperty("--hero-btn");
     host.style.removeProperty("--hero-btn-hover");
+    if (header) {
+      ACCENT_VARS.forEach((v) => header.style.removeProperty(v));
+      header.classList.remove("has-hero-accent");
+    }
     if (main) {
       for (const el of [main, document.querySelector(".site-nav")].filter(Boolean)) {
         ACCENT_VARS.forEach((v) => el.style.removeProperty(v));
@@ -150,6 +157,13 @@ function applyHeroTone(artEl, img) {
   const sat = Math.round(Math.min(Math.max(tone.s, 0.3), 0.7) * 100);
   host.style.setProperty("--hero-btn", `hsl(${tone.h} ${sat}% 36%)`);
   host.style.setProperty("--hero-btn-hover", `hsl(${tone.h} ${sat}% 28%)`);
+  if (header) {
+    header.style.setProperty("--hero-accent", `hsl(${tone.h} ${sat}% 44%)`);
+    header.style.setProperty("--hero-accent-deep", `hsl(${tone.h} ${sat}% 33%)`);
+    header.style.setProperty("--hero-accent-deep-2", `hsl(${tone.h} ${sat}% 28%)`);
+    header.style.setProperty("--hero-accent-light", `hsl(${tone.h} ${Math.max(sat, 55)}% 72%)`);
+    header.classList.add("has-hero-accent");
+  }
   if (main) {
     // The page's content, and the nav (styles.css: its touch pill only —
     // the desktop tabs stay red).
