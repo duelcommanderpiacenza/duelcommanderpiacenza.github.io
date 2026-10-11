@@ -5495,7 +5495,10 @@ a.history-item.is-me {
 .back-to-top {
   position: fixed;
   right: 24px;
-  bottom: calc(24px + env(safe-area-inset-bottom));
+  /* Lifted above the footer once it's in view (js/back-to-top.js), clear of
+     its theme switch in the same corner — desktop; the touch rules below
+     set their own bottom. */
+  bottom: calc(24px + env(safe-area-inset-bottom) + var(--back-to-top-lift, 0px));
   z-index: 15;
   display: inline-flex;
   align-items: center;

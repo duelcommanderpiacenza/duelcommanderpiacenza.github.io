@@ -23,19 +23,26 @@ export function initBackToTop() {
     button.blur();
   });
 
+  // Once the footer scrolls into view, the button rides up with it (styles.css
+  // --back-to-top-lift) instead of sitting on the footer's theme switch in
+  // the same corner. Desktop only: on touch screens it sits beside the nav
+  // pill, clear of the switch.
+  const footer = document.querySelector("footer");
+
   // At most one check per frame, however many scroll events arrive. While
   // hidden it's also out of the tab order (styles.css visibility).
   let frame = 0;
   const update = () => {
     frame = 0;
     button.classList.toggle("is-visible", window.scrollY > SHOW_AFTER);
+    const footerTop = footer?.getBoundingClientRect().top ?? Infinity;
+    const lift = Math.max(0, window.innerHeight - footerTop);
+    button.style.setProperty("--back-to-top-lift", `${Math.round(lift)}px`);
   };
-  window.addEventListener(
-    "scroll",
-    () => {
-      if (!frame) frame = requestAnimationFrame(update);
-    },
-    { passive: true }
-  );
+  const queue = () => {
+    if (!frame) frame = requestAnimationFrame(update);
+  };
+  window.addEventListener("scroll", queue, { passive: true });
+  window.addEventListener("resize", queue);
   update();
 }
