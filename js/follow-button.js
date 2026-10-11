@@ -115,11 +115,18 @@ export async function initFollowButton(titleEl, kind, id, { signal } = {}) {
   const row = document.createElement("div");
   row.className = "follow-btn-row";
   row.appendChild(btn);
-  // The detail pages' hero (player, commander, league): before the name,
-  // always on its line — the two in .detail-hero-title-row (styles.css), the
-  // name shrinking to fit beside it (js/page-title-fit.js, re-run by the
-  // resize below); else right after the title.
-  if (titleEl.closest(".detail-hero-wrap")) {
+  // The detail pages' hero (player, commander, league): on a computer in
+  // the hero's wrap, on its top edge on the right, mirroring the back pill
+  // (styles.css .detail-hero-wrap > .follow-btn-row — the hero clips what's
+  // inside it); on touch screens (html.app-header, set once per device),
+  // the back pill being up in the header's row there, before the name,
+  // always on its line — the two in .detail-hero-title-row, the name
+  // shrinking to fit beside it (js/page-title-fit.js, re-run by the resize
+  // below); else right after the title.
+  const heroWrap = titleEl.closest(".detail-hero-wrap");
+  if (heroWrap && !document.documentElement.classList.contains("app-header")) {
+    heroWrap.append(row);
+  } else if (heroWrap) {
     let line = titleEl.parentElement;
     if (!line.classList.contains("detail-hero-title-row")) {
       line = document.createElement("div");

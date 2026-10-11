@@ -2,7 +2,6 @@ import { Players, EventEntries, Matches, PlayerAutoBadges, EventStandings, Playe
 import { matchRoundOutcome, isBye, isDrop, computeEventLeaderboard } from "./leaderboard.js";
 import { tallyOutcome, renderWinrateTiles } from "./winrate.js";
 import {
-  escapeHtml,
   badgeDiscHtml,
   badgeTooltipAttrs,
   uniqueBadges,
@@ -143,7 +142,11 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       console.error(err);
     }
     const playerBadges = uniqueBadges([player.badge1, player.badge2, ...autoBadges]);
-    titleEl.innerHTML = `${escapeHtml(nameLabel)} ${card ? "" : playerBadgesHtml(playerBadges)}`;
+    // The badges beside the name, not in it (#player-title-badges): the
+    // name alone is fitted to its line with the follow star, the badges
+    // going to the next line together when they don't fit beside it.
+    titleEl.textContent = nameLabel;
+    document.getElementById("player-title-badges").innerHTML = card ? "" : playerBadgesHtml(playerBadges);
     // Same as the other detail pages: on phones, fits the name to one line
     // and keeps the back button vertically centered on it.
     initTitleFit(titleEl, { signal });
