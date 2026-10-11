@@ -5993,7 +5993,7 @@ html.app-header .league-tabs[hidden] + .league-lists > section > h2 {
 .league-timeline {
   --tl-node: 52px;
   --tl-gap: 14px;
-  --tl-line: rgba(154, 28, 32, 0.2);
+  --tl-line: var(--hairline-hover);
   --tl-node-bg: #fff9f7;
   margin: 0;
   padding: 0;
@@ -6085,7 +6085,7 @@ html.app-header .league-tabs[hidden] + .league-lists > section > h2 {
 .is-next > .league-tl-node {
   border-color: var(--brand-red);
   background: var(--brand-red);
-  box-shadow: 0 0 0 6px rgba(220, 24, 28, 0.2);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--brand-red) 20%, transparent);
 }
 
 .is-next > .league-tl-node b,
@@ -6105,7 +6105,7 @@ html.app-header .league-tabs[hidden] + .league-lists > section > h2 {
   min-height: var(--tl-node);
   box-sizing: border-box;
   padding: 10px 16px;
-  border: 1px solid rgba(154, 28, 32, 0.16);
+  border: 1px solid var(--hairline);
   border-radius: 16px;
   background: #fff;
   box-shadow: var(--shadow-card);
@@ -6897,6 +6897,16 @@ html.nav-mobile .back-to-top {
 
 :root[data-theme="dark"] .event-match-score.is-special {
   background: rgba(255, 255, 255, 0.08);
+}
+
+/* A hero-coloured event page (main.has-hero-accent): the score chips' tint
+   in its colour (the text already is — --brand-red-deep). */
+main.has-hero-accent .event-match-score:not(.is-special) {
+  background: color-mix(in srgb, var(--hero-accent) 12%, transparent);
+}
+
+:root[data-theme="dark"] main.has-hero-accent .event-match-score:not(.is-special) {
+  background: color-mix(in srgb, var(--hero-accent-light) 16%, transparent);
 }
 
 /* league.html's Classifica: the top 8 (js/league-detail.js
@@ -8195,6 +8205,58 @@ main.has-hero-accent {
   --hairline-hover-strong: color-mix(in srgb, var(--hero-accent-light) 42%, transparent);
 }
 
+/* The lists' sub-cards (their fixed reds — edges, hover, the top-8 and
+   "Tu" tints: "Their sub-cards, straight on the page") in it too:
+   league.html's Classifica, event.html's lists, and the rest. */
+main.has-hero-accent :is(#players-list, #commanders-table, #event-entries, #event-matches, #event-leaderboard, #player-matches, #commander-matches, #commander-players, #archetypes-table, #league-leaderboard, #archetype-commanders) .history-item {
+  border-color: color-mix(in srgb, var(--hero-accent) 20%, transparent);
+}
+
+main.has-hero-accent :is(#players-list, #commanders-table, #event-entries, #event-matches, #event-leaderboard, #player-matches, #commander-matches, #commander-players, #archetypes-table, #league-leaderboard, #archetype-commanders) a.history-item:hover {
+  border-color: color-mix(in srgb, var(--hero-accent) 34%, transparent);
+  background: color-mix(in srgb, var(--hero-accent) 4%, #fff);
+}
+
+main.has-hero-accent :is(#players-list, #commanders-table, #event-entries, #event-matches, #event-leaderboard, #player-matches, #commander-matches, #commander-players, #archetypes-table, #league-leaderboard, #archetype-commanders) .history-item.is-top8 {
+  background: color-mix(in srgb, var(--hero-accent) 8.5%, #fff);
+}
+
+main.has-hero-accent :is(#players-list, #commanders-table, #event-entries, #event-matches, #event-leaderboard, #player-matches, #commander-matches, #commander-players, #archetypes-table, #league-leaderboard, #archetype-commanders) a.history-item.is-top8:hover {
+  background: color-mix(in srgb, var(--hero-accent) 12%, #fff);
+}
+
+main.has-hero-accent :is(#players-list, #commanders-table, #event-entries, #event-matches, #event-leaderboard, #player-matches, #commander-matches, #commander-players, #archetypes-table, #league-leaderboard, #archetype-commanders) .history-item.is-me-row {
+  border-color: color-mix(in srgb, var(--hero-accent) 30%, transparent);
+  background: color-mix(in srgb, var(--hero-accent) 12%, #fff);
+}
+
+main.has-hero-accent :is(#players-list, #commanders-table, #event-entries, #event-matches, #event-leaderboard, #player-matches, #commander-matches, #commander-players, #archetypes-table, #league-leaderboard, #archetype-commanders) a.history-item.is-me-row:hover {
+  border-color: color-mix(in srgb, var(--hero-accent) 38%, transparent);
+  background: color-mix(in srgb, var(--hero-accent) 16%, #fff);
+}
+
+:root[data-theme="dark"] main.has-hero-accent :is(#players-list, #commanders-table, #event-entries, #event-matches, #event-leaderboard, #player-matches, #commander-matches, #commander-players, #archetypes-table, #league-leaderboard, #archetype-commanders) a.history-item:hover {
+  background: color-mix(in srgb, var(--hero-accent-light) 12%, transparent);
+}
+
+:root[data-theme="dark"] main.has-hero-accent :is(#players-list, #commanders-table, #event-entries, #event-matches, #event-leaderboard, #player-matches, #commander-matches, #commander-players, #archetypes-table, #league-leaderboard, #archetype-commanders) .history-item.is-top8 {
+  background: color-mix(in srgb, var(--hero-accent-light) 11%, transparent);
+}
+
+:root[data-theme="dark"] main.has-hero-accent :is(#players-list, #commanders-table, #event-entries, #event-matches, #event-leaderboard, #player-matches, #commander-matches, #commander-players, #archetypes-table, #league-leaderboard, #archetype-commanders) a.history-item.is-top8:hover {
+  background: color-mix(in srgb, var(--hero-accent-light) 15%, transparent);
+}
+
+:root[data-theme="dark"] main.has-hero-accent :is(#players-list, #commanders-table, #event-entries, #event-matches, #event-leaderboard, #player-matches, #commander-matches, #commander-players, #archetypes-table, #league-leaderboard, #archetype-commanders) .history-item.is-me-row {
+  border-color: color-mix(in srgb, var(--hero-accent-light) 30%, transparent);
+  background: color-mix(in srgb, var(--hero-accent-light) 17%, transparent);
+}
+
+:root[data-theme="dark"] main.has-hero-accent :is(#players-list, #commanders-table, #event-entries, #event-matches, #event-leaderboard, #player-matches, #commander-matches, #commander-players, #archetypes-table, #league-leaderboard, #archetype-commanders) a.history-item.is-me-row:hover {
+  border-color: color-mix(in srgb, var(--hero-accent-light) 36%, transparent);
+  background: color-mix(in srgb, var(--hero-accent-light) 21%, transparent);
+}
+
 main.has-hero-accent :is(#player-matches, #commander-matches, #commander-players) .history-item {
   border-color: color-mix(in srgb, var(--hero-accent) 22%, transparent);
 }
@@ -8488,6 +8550,15 @@ main.has-hero-accent .profile-tab.is-active:hover {
 
 main.has-hero-accent .profile-tab:focus-visible {
   outline-color: var(--hero-accent-deep);
+}
+
+/* …and a tab under the mouse tinted with it, not the fixed red. */
+main.has-hero-accent .profile-tab:not(.is-active):hover {
+  background: color-mix(in srgb, var(--hero-accent) 12%, transparent);
+}
+
+:root[data-theme="dark"] main.has-hero-accent .profile-tab:not(.is-active):hover {
+  background: color-mix(in srgb, var(--hero-accent-light) 14%, transparent);
 }
 
 .profile:has(#profile-album[hidden]) [data-tab="profile-album"],
