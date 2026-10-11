@@ -123,18 +123,44 @@ function rgbToHue(r, g, b) {
 // The tone on the element holding the hero's buttons: .detail-hero-wrap
 // (player / commander / league: the back pill and the star sit beside the
 // hero, in its wrap), else the hero itself (account.html).
+// On a page whose <main> asks for it (data-accent-from-hero: player.html,
+// account.html), the same tone becomes the page's accent too — the site's
+// red variables redefined on <main> (styles.css main[data-accent-from-hero]),
+// so its buttons, chips, tabs, links… follow the hero; the header and the
+// nav, outside <main>, stay red. In dark mode red text uses a light shade
+// of it (--hero-accent-light).
+const ACCENT_VARS = ["--hero-accent", "--hero-accent-deep", "--hero-accent-deep-2", "--hero-accent-light"];
+
 function applyHeroTone(artEl, img) {
   const host = artEl.closest(".detail-hero-wrap") ?? artEl.closest(".profile-hero");
   if (!host) return;
+  const main = artEl.closest("main[data-accent-from-hero]");
   const tone = img ? heroTone(img) : null;
   if (!tone) {
     host.style.removeProperty("--hero-btn");
     host.style.removeProperty("--hero-btn-hover");
+    if (main) {
+      for (const el of [main, document.querySelector(".site-nav")].filter(Boolean)) {
+        ACCENT_VARS.forEach((v) => el.style.removeProperty(v));
+        el.classList.remove("has-hero-accent");
+      }
+    }
     return;
   }
   const sat = Math.round(Math.min(Math.max(tone.s, 0.3), 0.7) * 100);
   host.style.setProperty("--hero-btn", `hsl(${tone.h} ${sat}% 36%)`);
   host.style.setProperty("--hero-btn-hover", `hsl(${tone.h} ${sat}% 28%)`);
+  if (main) {
+    // The page's content, and the nav (styles.css: its touch pill only —
+    // the desktop tabs stay red).
+    for (const el of [main, document.querySelector(".site-nav")].filter(Boolean)) {
+      el.style.setProperty("--hero-accent", `hsl(${tone.h} ${sat}% 44%)`);
+      el.style.setProperty("--hero-accent-deep", `hsl(${tone.h} ${sat}% 33%)`);
+      el.style.setProperty("--hero-accent-deep-2", `hsl(${tone.h} ${sat}% 28%)`);
+      el.style.setProperty("--hero-accent-light", `hsl(${tone.h} ${Math.max(sat, 55)}% 72%)`);
+      el.classList.add("has-hero-accent");
+    }
+  }
 }
 
 // Returns a function painting a card's art (by name — and printing, when

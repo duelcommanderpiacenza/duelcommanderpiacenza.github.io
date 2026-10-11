@@ -1295,8 +1295,12 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4), 0 14px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(0, 0, 0, 0.12);
   }
 
-  html.nav-mobile .nav-dropdown-trigger:hover {
-    background: var(--brand-red-deep-2);
+  /* Hover only with a real pointer: on a touch screen the tapped pill would
+     keep the darker colour (sticky hover) until something else is tapped. */
+  @media (hover: hover) {
+    html.nav-mobile .nav-dropdown-trigger:hover {
+      background: var(--brand-red-deep-2);
+    }
   }
 
   /* The pill shows whatever page is currently active (its own label text,
@@ -1307,8 +1311,10 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
     background: var(--social-blue);
   }
 
-  html.nav-mobile body[data-active-nav="social"] .nav-dropdown-trigger:hover {
-    background: #1f47b8;
+  @media (hover: hover) {
+    html.nav-mobile body[data-active-nav="social"] .nav-dropdown-trigger:hover {
+      background: #1f47b8;
+    }
   }
 
   /* Points up at rest — the panel it opens always appears above the pill,
@@ -7917,6 +7923,140 @@ img.cs-option-icon {
 .profile-hero .page-empty {
   color: rgba(255, 255, 255, 0.7);
 }
+/* player.html / account.html: the hero art's colour as the page's accent
+   (js/player-card.js applyHeroTone, once the art is read): the site's red
+   variables redefined on <main> — its buttons, chips, active tabs, carousel
+   arrows and dots, red text and links follow it; the header and the nav,
+   outside <main>, keep the brand red, and so do the few fixed red tints. In
+   dark mode red text takes a light shade of it. */
+main.has-hero-accent {
+  --brand-red: var(--hero-accent);
+  --brand-red-deep: var(--hero-accent-deep);
+  --brand-red-deep-2: var(--hero-accent-deep-2);
+  --brand-red-darker: var(--hero-accent-deep);
+}
+
+:root[data-theme="dark"] main.has-hero-accent {
+  --brand-red-deep: var(--hero-accent-light);
+  --brand-red-darker: var(--hero-accent-light);
+}
+
+/* …and the bits tinted with a fixed red: the "?" help buttons (their foil
+   over a base in the accent's shades), the position chips and the count
+   badges (a faint tint of it; :root to outrank the dark-mode ones). */
+main.has-hero-accent .help-toggle-btn,
+main.has-hero-accent .pc-help-btn {
+  background:
+    linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.7) 50%, transparent 65%) no-repeat,
+    linear-gradient(135deg, rgba(255, 120, 200, 0.35), rgba(255, 210, 90, 0.3) 35%, rgba(120, 220, 255, 0.3) 70%, rgba(255, 120, 200, 0.35)),
+    linear-gradient(135deg, color-mix(in srgb, var(--hero-accent) 70%, #fff), var(--hero-accent) 50%, var(--hero-accent-deep-2));
+  background-size: 300% 100%, 100% 100%, 100% 100%;
+  background-position: 120% 0, 0 0, 0 0;
+}
+
+:root main.has-hero-accent .history-pos,
+:root main.has-hero-accent .history-count {
+  background: color-mix(in srgb, var(--hero-accent) 15%, transparent);
+}
+
+:root main.has-hero-accent .history-pos.is-first {
+  background: var(--hero-accent);
+}
+
+:root[data-theme="dark"] main.has-hero-accent .history-pos,
+:root[data-theme="dark"] main.has-hero-accent .history-count {
+  background: color-mix(in srgb, var(--hero-accent-light) 22%, transparent);
+}
+
+/* The edges of its cards and tiles (the Album's stat tiles…: the shared
+   --hairline colours) and Storico partite's match cards — border, hover
+   edge and tint — in it too. (#player-matches: to outrank the boxless
+   lists' own id-scoped rules.) */
+main.has-hero-accent {
+  --hairline: color-mix(in srgb, var(--hero-accent) 20%, transparent);
+  --hairline-hover: color-mix(in srgb, var(--hero-accent) 34%, transparent);
+  --hairline-hover-strong: color-mix(in srgb, var(--hero-accent) 40%, transparent);
+}
+
+:root[data-theme="dark"] main.has-hero-accent {
+  --hairline: rgba(255, 255, 255, 0.1);
+  --hairline-hover: color-mix(in srgb, var(--hero-accent-light) 32%, transparent);
+  --hairline-hover-strong: color-mix(in srgb, var(--hero-accent-light) 42%, transparent);
+}
+
+main.has-hero-accent #player-matches .history-item {
+  border-color: color-mix(in srgb, var(--hero-accent) 22%, transparent);
+}
+
+main.has-hero-accent #player-matches a.history-item:hover {
+  border-color: color-mix(in srgb, var(--hero-accent) 38%, transparent);
+  background: color-mix(in srgb, var(--hero-accent) 5%, #fff);
+}
+
+:root[data-theme="dark"] main.has-hero-accent #player-matches .history-item {
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+:root[data-theme="dark"] main.has-hero-accent #player-matches a.history-item:hover {
+  border-color: color-mix(in srgb, var(--hero-accent-light) 32%, transparent);
+  background: color-mix(in srgb, var(--hero-accent-light) 10%, transparent);
+}
+
+/* Seguiti (account.html): its rows' tint, edge and hover, and the ★ to
+   unfollow (ring, star, hover) in it too. */
+main.has-hero-accent #follows-list .history-item {
+  border-color: color-mix(in srgb, var(--hero-accent) 16%, transparent);
+  background: color-mix(in srgb, var(--hero-accent) 6%, transparent);
+}
+
+main.has-hero-accent #follows-list a.history-item:hover {
+  border-color: color-mix(in srgb, var(--hero-accent) 30%, transparent);
+  background: color-mix(in srgb, var(--hero-accent) 10%, transparent);
+}
+
+main.has-hero-accent .follow-remove {
+  border-color: color-mix(in srgb, var(--hero-accent) 55%, transparent);
+  color: var(--hero-accent);
+}
+
+main.has-hero-accent .follow-remove:hover {
+  border-color: var(--hero-accent);
+  background: color-mix(in srgb, var(--hero-accent) 12%, #fff);
+}
+
+main.has-hero-accent .follow-remove:focus-visible {
+  outline-color: color-mix(in srgb, var(--hero-accent) 45%, transparent);
+}
+
+:root[data-theme="dark"] main.has-hero-accent #follows-list .history-item {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+:root[data-theme="dark"] main.has-hero-accent #follows-list a.history-item:hover {
+  border-color: color-mix(in srgb, var(--hero-accent-light) 30%, transparent);
+  background: color-mix(in srgb, var(--hero-accent-light) 10%, transparent);
+}
+
+:root[data-theme="dark"] main.has-hero-accent .follow-remove {
+  border-color: color-mix(in srgb, var(--hero-accent-light) 55%, transparent);
+  color: var(--hero-accent-light);
+}
+
+:root[data-theme="dark"] main.has-hero-accent .follow-remove:hover {
+  border-color: var(--hero-accent-light);
+  background: color-mix(in srgb, var(--hero-accent-light) 16%, transparent);
+}
+
+/* The scrolling lists' scrollbar (Storico partite) in it too. */
+:root main.has-hero-accent .history-scroll {
+  scrollbar-color: color-mix(in srgb, var(--hero-accent) 40%, transparent) transparent;
+}
+
+:root[data-theme="dark"] main.has-hero-accent .history-scroll {
+  scrollbar-color: color-mix(in srgb, var(--hero-accent-light) 40%, transparent) transparent;
+}
+
 /* The heroes' buttons — the back pill, the follow star, account's quick
    actions — in a colour taken from the hero's art (js/player-card.js
    heroTone, set inline on .detail-hero-wrap / account's .profile-hero);
@@ -13261,8 +13401,10 @@ html[data-theme="dark"].nav-mobile .nav-dropdown-trigger {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5), 0 14px 40px rgba(0, 0, 0, 0.6), 0 0 0 4px rgba(255, 90, 95, 0.1);
 }
 
-html[data-theme="dark"].nav-mobile .nav-dropdown-trigger:hover {
-  background: #5a2026;
+@media (hover: hover) {
+  html[data-theme="dark"].nav-mobile .nav-dropdown-trigger:hover {
+    background: #5a2026;
+  }
 }
 
 html[data-theme="dark"].nav-mobile body[data-active-nav="social"] .nav-dropdown-trigger {
@@ -13270,8 +13412,57 @@ html[data-theme="dark"].nav-mobile body[data-active-nav="social"] .nav-dropdown-
   background: var(--social-blue);
 }
 
-html[data-theme="dark"].nav-mobile body[data-active-nav="social"] .nav-dropdown-trigger:hover {
-  background: #1f47b8;
+@media (hover: hover) {
+  html[data-theme="dark"].nav-mobile body[data-active-nav="social"] .nav-dropdown-trigger:hover {
+    background: #1f47b8;
+  }
+}
+
+/* player.html / account.html with a hero colour (js/player-card.js): the
+   touch nav — its pill and the current page's link in its panel — in that
+   colour too (the site's red variables redefined on the nav, touch only);
+   in dark mode the pill a deep shade of it with a light-shade edge. */
+html.nav-mobile .site-nav.has-hero-accent {
+  --brand-red: var(--hero-accent);
+  --brand-red-deep: var(--hero-accent-deep);
+  --brand-red-deep-2: var(--hero-accent-deep-2);
+  --brand-red-darker: var(--hero-accent-deep);
+}
+
+/* Its panel too: a pale tint of the colour (dark: a deep shade of it),
+   with the same scroll shadows as the plain panel, in its own colour. */
+html.nav-mobile .site-nav.has-hero-accent .site-nav-inner {
+  --nav-panel: color-mix(in srgb, var(--hero-accent) 10%, #fff);
+  border-color: color-mix(in srgb, var(--hero-accent) 20%, transparent);
+  background:
+    linear-gradient(var(--nav-panel) 40%, transparent) center top / 100% 36px no-repeat local,
+    linear-gradient(transparent, var(--nav-panel) 60%) center bottom / 100% 36px no-repeat local,
+    radial-gradient(farthest-side at 50% 0, color-mix(in srgb, var(--hero-accent-deep) 22%, transparent), transparent) center top / 100% 14px no-repeat,
+    radial-gradient(farthest-side at 50% 100%, color-mix(in srgb, var(--hero-accent-deep) 22%, transparent), transparent) center bottom / 100% 14px no-repeat,
+    var(--nav-panel);
+}
+
+html[data-theme="dark"].nav-mobile .site-nav.has-hero-accent .site-nav-inner {
+  --nav-panel: color-mix(in srgb, var(--hero-accent) 22%, #1c1214);
+  border-color: color-mix(in srgb, var(--hero-accent-light) 22%, transparent);
+  background:
+    linear-gradient(var(--nav-panel) 40%, transparent) center top / 100% 36px no-repeat local,
+    linear-gradient(transparent, var(--nav-panel) 60%) center bottom / 100% 36px no-repeat local,
+    radial-gradient(farthest-side at 50% 0, rgba(0, 0, 0, 0.55), transparent) center top / 100% 14px no-repeat,
+    radial-gradient(farthest-side at 50% 100%, rgba(0, 0, 0, 0.55), transparent) center bottom / 100% 14px no-repeat,
+    var(--nav-panel);
+}
+
+html[data-theme="dark"].nav-mobile .site-nav.has-hero-accent .nav-dropdown-trigger {
+  border-color: color-mix(in srgb, var(--hero-accent-light) 75%, transparent);
+  background: color-mix(in srgb, var(--hero-accent) 42%, #1c0f11);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5), 0 14px 40px rgba(0, 0, 0, 0.6), 0 0 0 4px color-mix(in srgb, var(--hero-accent-light) 12%, transparent);
+}
+
+@media (hover: hover) {
+  html[data-theme="dark"].nav-mobile .site-nav.has-hero-accent .nav-dropdown-trigger:hover {
+    background: color-mix(in srgb, var(--hero-accent) 55%, #1c0f11);
+  }
 }
 
 html[data-theme="dark"].nav-mobile .site-nav-inner {
