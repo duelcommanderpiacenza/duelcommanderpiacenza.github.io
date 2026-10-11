@@ -5974,6 +5974,15 @@ html.app-header :is(.commander-lists, .league-lists) .history-scroll {
   max-height: none !important;
 }
 
+/* player.html's Storico partite, the same on phones and touch screens while
+   it's under the album (below 880px): the whole list, no scrolling inside.
+   From 880px it's beside the album and scrolls in its height (.fills-row). */
+@media (max-width: 879px) {
+  html.app-header #player-matches .history-scroll {
+    max-height: none;
+  }
+}
+
 /* No tabs (a Topdeck series): its one section keeps its title. */
 html.app-header .league-tabs[hidden] + .league-lists > section > h2 {
   display: block;
@@ -6682,6 +6691,30 @@ a.history-item.is-me {
 :root[data-theme="dark"] .back-to-top:hover,
 :root[data-theme="dark"] .back-to-top:focus-visible {
   background: #5a2026;
+}
+
+/* A page coloured by its hero (js/player-card.js applyHeroTone,
+   js/back-to-top.js): the button in that colour — ring and arrow, a pale
+   tint of it on hover; dark mode like the touch nav pill beside it (a deep
+   shade of the colour, a light-shade ring, a pale arrow). */
+.back-to-top.has-hero-accent {
+  --brand-red: var(--hero-accent);
+}
+
+.back-to-top.has-hero-accent:hover,
+.back-to-top.has-hero-accent:focus-visible {
+  background: color-mix(in srgb, var(--hero-accent) 13%, #fff);
+}
+
+:root[data-theme="dark"] .back-to-top.has-hero-accent {
+  border-color: color-mix(in srgb, var(--hero-accent-light) 75%, transparent);
+  background: color-mix(in srgb, var(--hero-accent) 42%, #1c0f11);
+  color: color-mix(in srgb, var(--hero-accent-light) 45%, #fff);
+}
+
+:root[data-theme="dark"] .back-to-top.has-hero-accent:hover,
+:root[data-theme="dark"] .back-to-top.has-hero-accent:focus-visible {
+  background: color-mix(in srgb, var(--hero-accent) 55%, #1c0f11);
 }
 
 .back-to-top svg {

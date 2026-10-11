@@ -19,6 +19,17 @@ export function initBackToTop({ signal } = {}) {
   button.innerHTML = ARROW_UP;
   document.body.appendChild(button);
 
+  // A page coloured by its hero, the colour already known: the button in it
+  // too (js/player-card.js applyHeroTone paints it when the colour comes
+  // later).
+  const accentMain = document.querySelector("main.has-hero-accent");
+  if (accentMain) {
+    for (const v of ["--hero-accent", "--hero-accent-deep", "--hero-accent-deep-2", "--hero-accent-light"]) {
+      button.style.setProperty(v, accentMain.style.getPropertyValue(v));
+    }
+    button.classList.add("has-hero-accent");
+  }
+
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   button.addEventListener("click", () => {
     window.scrollTo({ top: 0, behavior: reduceMotion.matches ? "auto" : "smooth" });

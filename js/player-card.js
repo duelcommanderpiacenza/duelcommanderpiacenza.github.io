@@ -141,6 +141,13 @@ export function clearHeroTone({ header = true, nav = true } = {}) {
   }
 }
 
+// What takes the page's hero colour: <main>, and outside it the nav and the
+// "Torna all'inizio" button (js/back-to-top.js, which also copies the
+// colour from <main> when it's created after it's set).
+function accentTargets(main) {
+  return [main, document.querySelector(".site-nav"), ...document.querySelectorAll(".back-to-top")].filter(Boolean);
+}
+
 function applyHeroTone(artEl, img) {
   // Its page already left (in-app navigation): the colour isn't this
   // page's any more.
@@ -160,7 +167,7 @@ function applyHeroTone(artEl, img) {
       header.classList.remove("has-hero-accent");
     }
     if (main) {
-      for (const el of [main, document.querySelector(".site-nav")].filter(Boolean)) {
+      for (const el of accentTargets(main)) {
         ACCENT_VARS.forEach((v) => el.style.removeProperty(v));
         el.classList.remove("has-hero-accent");
       }
@@ -180,9 +187,9 @@ function applyHeroTone(artEl, img) {
     header.classList.add("has-hero-accent");
   }
   if (main) {
-    // The page's content, and the nav (styles.css: its touch pill only —
-    // the desktop tabs stay red).
-    for (const el of [main, document.querySelector(".site-nav")].filter(Boolean)) {
+    // The page's content, the nav (styles.css: its touch pill only — the
+    // desktop tabs stay red) and the "Torna all'inizio" button.
+    for (const el of accentTargets(main)) {
       el.style.setProperty("--hero-accent", `hsl(${tone.h} ${sat}% 44%)`);
       el.style.setProperty("--hero-accent-deep", `hsl(${tone.h} ${sat}% 33%)`);
       el.style.setProperty("--hero-accent-deep-2", `hsl(${tone.h} ${sat}% 28%)`);

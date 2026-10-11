@@ -15,6 +15,7 @@ import { renderCommanderCarousel, albumItems, commanderPairKey, openAlbumEffects
 import { matchGroupsHtml, initScrollFade, setHistoryCount } from "./history-list.js";
 import { renderPublicPlayerCard, createArtPainter } from "./player-card.js";
 import { initFollowButton } from "./follow-button.js";
+import { initBackToTop } from "./back-to-top.js";
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
@@ -87,6 +88,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   // "☆ Segui" right below the name, for signed-in accounts (not awaited: it
   // never holds up the page).
   if (id) initFollowButton(titleEl, "player", id, { signal });
+  // Storico partite is the whole list on phones (no scrolling inside).
+  initBackToTop({ signal });
 
   if (!id) {
     titleEl.textContent = "Giocatore non trovato";
