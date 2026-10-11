@@ -12760,10 +12760,12 @@ html:not(.nav-mobile) .chart-grid.is-draggable.is-dragging {
    its badge (a size down), the track, the winrate — with tight columns and spacing, so the track keeps
    most of the width; the rows spread over the card's height (as tall as
    Utilizzo). The axis under the tracks lined up with them. */
+/* (The value column as wide as the widest value, "100.0%" — narrower, it
+   ran into the track.) */
 .chart-grid > .vs-chart {
   --vs-label-w: 78px;
-  --vs-value-w: 40px;
-  --vs-gap: 10px;
+  --vs-value-w: 60px;
+  --vs-gap: 12px;
   --vs-row-pad: 4px;
 }
 
@@ -13174,14 +13176,8 @@ html.nav-mobile .chart-carousel-arrow {
   font-weight: 700;
   white-space: nowrap;
   transform: translate(-50%, calc(-100% - 12px));
-}
-
-.line-chart-tip.is-start {
-  transform: translate(-12px, calc(-100% - 12px));
-}
-
-.line-chart-tip.is-end {
-  transform: translate(calc(-100% + 12px), calc(-100% - 12px));
+  /* (Moved back inside the card near its edges by js/line-chart.js fitTip,
+     through `translate`.) */
 }
 
 .line-chart-hit:hover > * {

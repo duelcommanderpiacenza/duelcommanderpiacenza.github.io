@@ -17,6 +17,38 @@ const PAD_RIGHT = 16;
 const PAD_TOP = 16;
 const PAD_BOTTOM = 32;
 
+// A point's tip (centred over it, above it — styles.css .line-chart-tip)
+// kept whole inside its card, which clips it (rounded corners): measured as
+// it's about to show (hover, or a tap — pointerover fires for both) and
+// moved (the CSS `translate`, on top of its own transform) in from a side
+// it would pass, below the point when there's no room above. Its text, and
+// so its width, is the point's own: measured each time.
+const TIP_MARGIN = 8;
+const TIP_GAP = 12;
+
+function fitTip(hit) {
+  const tip = hit.querySelector(".line-chart-tip");
+  const card = hit.closest(".line-chart-wrap");
+  if (!tip || !card) return;
+  tip.style.translate = "";
+  const box = card.getBoundingClientRect();
+  const r = tip.getBoundingClientRect();
+  let dx = 0;
+  if (r.left < box.left + TIP_MARGIN) dx = box.left + TIP_MARGIN - r.left;
+  else if (r.right > box.right - TIP_MARGIN) dx = box.right - TIP_MARGIN - r.right;
+  const dy = r.top < box.top + TIP_MARGIN ? r.height + 2 * TIP_GAP : 0;
+  if (dx || dy) tip.style.translate = `${Math.round(dx)}px ${Math.round(dy)}px`;
+}
+
+document.addEventListener(
+  "pointerover",
+  (e) => {
+    const hit = e.target.closest?.(".line-chart-hit");
+    if (hit) fitTip(hit);
+  },
+  { passive: true }
+);
+
 // Caps the chart to whatever most recent 2-year window the data has —
 // a commander with years of history would otherwise squash the x axis down
 // to the point that recent, more relevant activity is hard to read. Anchored
@@ -222,18 +254,18 @@ export function renderLineChart(rawPoints, emptyMessage, title, { percent = fals
 
   // Hover (or tap): each point owns the strip from halfway to the previous
   // point to halfway to the next — a guide line, a dot on the curve and the
-  // date with its count over it. Pure CSS (:hover), no script.
+  // date with its count over it. Shown by CSS (:hover); the tip kept inside
+  // the card by fitTip below.
   const hits = coords
     .map(([x, y], i) => {
       const left = i === 0 ? 0 : (coords[i - 1][0] + x) / 2;
       const right = i === coords.length - 1 ? EDGE_WIDTH : (x + coords[i + 1][0]) / 2;
       const width = right - left || EDGE_WIDTH;
       const inner = `${(((x - left) / width) * 100).toFixed(3)}%`;
-      const side = x < 150 ? " is-start" : x > EDGE_WIDTH - 150 ? " is-end" : "";
       return `<span class="line-chart-hit" style="left:${pct(left)};width:${pct(width)}">
         <span class="line-chart-guide" style="left:${inner}"></span>
         <span class="line-chart-dot-html" style="left:${inner};top:${y}px"></span>
-        <span class="line-chart-tip${side}" style="left:${inner};top:${y}px">${escapeHtml(formatDate(points[i].date))} · <strong>${
+        <span class="line-chart-tip" style="left:${inner};top:${y}px">${escapeHtml(formatDate(points[i].date))} · <strong>${
           percent ? show(points[i].value) : decksLabel(points[i].value)
         }</strong>${points[i].detail ? ` (${escapeHtml(points[i].detail)})` : ""}</span>
       </span>`;
