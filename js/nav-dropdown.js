@@ -56,7 +56,14 @@ function closeDropdown(nav, trigger) {
   const inner = nav.querySelector(".site-nav-inner");
   if (!inner) return;
   nav.classList.add("is-closing");
-  inner.addEventListener("animationend", () => nav.classList.remove("is-closing"), { once: true });
+  // The panel's own animation only — its links' (still running if it's
+  // closed mid-opening) bubble up here too.
+  const done = (e) => {
+    if (e.target !== inner) return;
+    inner.removeEventListener("animationend", done);
+    nav.classList.remove("is-closing");
+  };
+  inner.addEventListener("animationend", done);
 }
 
 function init() {

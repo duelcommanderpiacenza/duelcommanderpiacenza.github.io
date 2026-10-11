@@ -1118,45 +1118,85 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
     display: none;
   }
 
+  /* Opening, material-like (no fades): the panel grows straight up out of
+     the pill as one solid surface — revealed from its bottom edge upward
+     (clip-path, from a pill-shaped strip at the bottom to the whole panel),
+     on Material's emphasized easing; its links slide up into place behind
+     the reveal. The clip only while it runs (fill backwards: none after,
+     so the panel's shadow shows again). Not the shared cs-menu-in keyframe
+     — its `transform: none` would wipe out the translateX(-50%) centering. */
   html.nav-mobile .site-nav.is-open .site-nav-inner {
     display: flex;
-    /* Not the shared cs-menu-in keyframe — its `transform: none` end state
-       would wipe out the translateX(-50%) centering above once the
-       animation finishes, leaving the panel's left edge (not its center)
-       sitting at the pill's own horizontal center. */
-    animation: nav-dropdown-panel-in 140ms ease both;
+    animation: nav-dropdown-panel-in 380ms cubic-bezier(0.2, 0, 0, 1) backwards;
   }
 
   @keyframes nav-dropdown-panel-in {
     from {
-      opacity: 0;
-      transform: translateX(-50%) translateY(4px);
+      clip-path: inset(calc(100% - 52px) 0 0 0 round 28px);
+      transform: translateX(-50%) translateY(10px);
     }
     to {
-      opacity: 1;
+      clip-path: inset(0 0 0 0 round 32px);
       transform: translateX(-50%);
     }
   }
 
-  /* Closing used to be an instant display: none the moment .is-open came
-     off — display can't be transitioned/animated on its own. js/nav-
-     dropdown.js instead adds .is-closing (keeping this rendered, reversing
-     the entrance animation) for exactly as long as nav-dropdown-panel-out
-     takes, then removes it once that animation ends, letting the earlier
-     display: none rule (no matching .is-open/.is-closing) take back over. */
+  html.nav-mobile .site-nav.is-open .site-nav-inner > * {
+    animation: nav-dropdown-item-in 380ms cubic-bezier(0.2, 0, 0, 1) backwards;
+  }
+
+  html.nav-mobile .site-nav.is-open .site-nav-inner > :nth-last-child(1) { animation-delay: 0ms; }
+  html.nav-mobile .site-nav.is-open .site-nav-inner > :nth-last-child(2) { animation-delay: 15ms; }
+  html.nav-mobile .site-nav.is-open .site-nav-inner > :nth-last-child(3) { animation-delay: 30ms; }
+  html.nav-mobile .site-nav.is-open .site-nav-inner > :nth-last-child(4) { animation-delay: 45ms; }
+  html.nav-mobile .site-nav.is-open .site-nav-inner > :nth-last-child(5) { animation-delay: 60ms; }
+  html.nav-mobile .site-nav.is-open .site-nav-inner > :nth-last-child(6) { animation-delay: 75ms; }
+  html.nav-mobile .site-nav.is-open .site-nav-inner > :nth-last-child(7) { animation-delay: 90ms; }
+  html.nav-mobile .site-nav.is-open .site-nav-inner > :nth-last-child(n + 8) { animation-delay: 105ms; }
+
+  @keyframes nav-dropdown-item-in {
+    from {
+      transform: translateY(24px);
+    }
+    to {
+      transform: none;
+    }
+  }
+
+  /* The pill gives a little under the finger. */
+  html.nav-mobile .nav-dropdown-trigger {
+    transition: transform 140ms ease, background 150ms ease;
+  }
+
+  html.nav-mobile .nav-dropdown-trigger:active {
+    transform: scale(0.96);
+  }
+
+  /* Closing: js/nav-dropdown.js keeps the panel rendered (.is-closing) for
+     exactly as long as nav-dropdown-panel-out takes — the surface retracts
+     back down into the pill (Material's emphasized-accelerate easing,
+     quicker than the opening) — then lets the display: none above take
+     back over. */
   html.nav-mobile .site-nav.is-closing .site-nav-inner {
     display: flex;
-    animation: nav-dropdown-panel-out 140ms ease both;
+    animation: nav-dropdown-panel-out 220ms cubic-bezier(0.3, 0, 0.8, 0.15) both;
   }
 
   @keyframes nav-dropdown-panel-out {
     from {
-      opacity: 1;
+      clip-path: inset(0 0 0 0 round 32px);
       transform: translateX(-50%);
     }
     to {
-      opacity: 0;
-      transform: translateX(-50%) translateY(4px);
+      clip-path: inset(calc(100% - 52px) 0 0 0 round 28px);
+      transform: translateX(-50%) translateY(10px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html.nav-mobile .site-nav.is-open .site-nav-inner,
+    html.nav-mobile .site-nav.is-open .site-nav-inner > * {
+      animation: none;
     }
   }
 
