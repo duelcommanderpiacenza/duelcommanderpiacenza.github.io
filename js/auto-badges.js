@@ -13,7 +13,6 @@ import { Badges, Leagues, Events, EventEntries, Matches, fetchEventsResults } fr
 import { computeEventLeaderboard, computeLeaguePoints, isBye, isDrop, matchRoundOutcome } from "./leaderboard.js";
 
 export const TOP8_STREAK_COUNT = 3;
-export const TOP8_STREAK_WINDOW_MONTHS = 3;
 // A top-8 in a tiny event isn't the same achievement as a top-8 in a full
 // one — only events with at least this many entrants count toward the
 // streak at all.
@@ -100,8 +99,8 @@ function monthsAgoIso(months) {
 }
 
 // Every player who top-8'd in each of their last 3 attended events (any
-// league/standalone), provided all 3 fall within the last 3 months and each
-// of those 3 events had at least TOP8_STREAK_MIN_ENTRANTS entrants.
+// league/standalone, however long ago — no time limit), provided each of
+// those 3 events had at least TOP8_STREAK_MIN_ENTRANTS entrants.
 async function top8StreakPlayerIds(closedIds) {
   const [events, allEntries, allMatches] = await Promise.all([
     Events.list(),
@@ -129,8 +128,6 @@ async function top8StreakPlayerIds(closedIds) {
     eventsByPlayer.get(e.player_id).push(ev);
   }
 
-  const cutoffIso = monthsAgoIso(TOP8_STREAK_WINDOW_MONTHS);
-
   const standingsCache = new Map(); // event id -> computeEventLeaderboard result
   function standingsFor(eventId) {
     if (!standingsCache.has(eventId)) {
@@ -143,7 +140,6 @@ async function top8StreakPlayerIds(closedIds) {
   for (const [playerId, playerEvents] of eventsByPlayer) {
     const latest = [...playerEvents].sort((a, b) => (a.event_date < b.event_date ? 1 : -1)).slice(0, TOP8_STREAK_COUNT);
     if (latest.length < TOP8_STREAK_COUNT) continue;
-    if (latest.some((ev) => ev.event_date < cutoffIso)) continue;
     const allTop8 = latest.every((ev) => {
       if ((entriesByEvent.get(ev.id)?.length ?? 0) < TOP8_STREAK_MIN_ENTRANTS) return false;
       return standingsFor(ev.id).find((row) => row.player?.id === playerId)?.isTop8;
