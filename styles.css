@@ -8738,8 +8738,24 @@ main.has-hero-accent .profile-tab:not(.is-active):hover {
 }
 
 .detail-hero-back svg {
+  flex-shrink: 0;
   width: 20px;
   height: 20px;
+}
+
+/* The page the visitor came from (js/router.js syncBackButton): a player's
+   or an event's name can be long — cut with an ellipsis. Desktop: centred at
+   96px, so at most 176px keeps it inside the hero's left edge; up to 820px
+   (in the top-left corner) clear of the follow star on the right. */
+.detail-hero-back {
+  max-width: 176px;
+}
+
+.detail-hero-back-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .detail-hero-wrap:has(.is-no-card) .detail-hero-back {
@@ -8772,6 +8788,7 @@ main.has-hero-accent .profile-tab:not(.is-active):hover {
   .detail-hero-wrap:has(.is-no-card) .detail-hero-back {
     top: 14px;
     left: 14px;
+    max-width: calc(100% - 96px);
     transform: none;
   }
 
@@ -14585,14 +14602,16 @@ html.is-page-transition:not(.app-header) .site-account {
 }
 
 /* The screen itself, on every in-app navigation (between nav sections,
-   list ↔ detail, back and forth): Material's fade through — the old screen
-   out quickly, then the new one in while it grows from 92% to its size. */
+   list ↔ detail, back and forth): a fade through — the old screen out
+   quickly, then the new one in. Opacity only: the snapshot is the whole
+   screen, so any scale / slide moved its edges in view — an edge-to-edge
+   hero's corners shrinking over the page background. */
 ::view-transition-old(root) {
   animation: page-fade-out 90ms cubic-bezier(0.4, 0, 1, 1) both;
 }
 
 ::view-transition-new(root) {
-  animation: page-fade-through-in 210ms cubic-bezier(0, 0, 0.2, 1) 90ms both;
+  animation: page-fade-through-in 250ms cubic-bezier(0, 0, 0.2, 1) 90ms both;
 }
 
 @keyframes page-fade-out {
@@ -14604,7 +14623,6 @@ html.is-page-transition:not(.app-header) .site-account {
 @keyframes page-fade-through-in {
   from {
     opacity: 0;
-    transform: scale(0.92);
   }
 }
 

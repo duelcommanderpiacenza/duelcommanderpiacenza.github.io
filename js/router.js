@@ -93,6 +93,40 @@ async function mountCurrent(page, url) {
 }
 
 
+// A short name for the page on screen, for the next page's back pill: a
+// detail page's hero name (its own text — not the badges / banned icon in
+// it; not while still "Caricamento..."), else the document title without
+// the site's name ("Bacheca", "Leghe & Eventi", "Giocatori", …).
+const TITLE_SUFFIX = " - Duel Commander Piacenza";
+function currentPageLabel() {
+  const nameEl = document.querySelector("main .profile-hero-name");
+  const name = nameEl
+    ? [...nameEl.childNodes].filter((n) => n.nodeType === Node.TEXT_NODE).map((n) => n.textContent).join("").trim()
+    : "";
+  if (name && !name.startsWith("Caricamento")) return name;
+  return document.title.replace(TITLE_SUFFIX, "").trim();
+}
+
+// The heroes' back pill ("‹ Giocatori", …) leads to the page the visitor
+// actually came from when they got here in the app (history.state.back,
+// set by go() on the pushed entry — kept across reloads): its name on the
+// pill, history.back() on click (the click listener below), so that page
+// comes back with its scroll position. Landed here directly (a shared link,
+// a new tab): the pill's own list page, as written in the HTML.
+function syncBackButton() {
+  const back = history.state?.back;
+  const btn = document.querySelector("main .detail-hero-back");
+  if (!btn || !back?.href || !back.label) return;
+  btn.href = back.href;
+  btn.dataset.historyBack = "";
+  btn.setAttribute("aria-label", `Torna a ${back.label}`);
+  const svg = btn.querySelector("svg");
+  const label = document.createElement("span");
+  label.className = "detail-hero-back-label";
+  label.textContent = back.label;
+  btn.replaceChildren(...(svg ? [svg] : []), label);
+}
+
 // Leaves the current page for `url` (already a supported page). `restoreY`
 // comes from a history back/forward.
 async function go(url, { push = true, restoreY = null } = {}) {
@@ -117,9 +151,10 @@ async function go(url, { push = true, restoreY = null } = {}) {
   current?.controller.abort();
 
   if (push) {
+    const back = { href: location.href, label: currentPageLabel() };
     history.replaceState({ ...history.state, idx: historyIdx, scrollY: window.scrollY }, "");
     historyIdx += 1;
-    history.pushState({ idx: historyIdx, scrollY: 0 }, "", url.href);
+    history.pushState({ idx: historyIdx, scrollY: 0, back }, "", url.href);
   }
 
   const toNav = doc.body.dataset.activeNav;
@@ -157,6 +192,7 @@ async function go(url, { push = true, restoreY = null } = {}) {
     });
     enhanceSelects(newMain);
     enhanceDateInputs(newMain);
+    syncBackButton();
     refreshSystemBars();
     window.scrollTo(0, 0);
   };
@@ -216,10 +252,19 @@ function start() {
   const page = pageOf(url);
   if (page && document.querySelector(`main[data-page="${page.name}"]`)) mountCurrent(page, url);
   else current = null;
+  syncBackButton();
 
   document.addEventListener(
     "click",
     (e) => {
+      // The back pill, when it leads to the page before: the browser's own
+      // back (popstate below), not a new entry on top.
+      const backBtn = e.target.closest?.(".detail-hero-back[data-history-back]");
+      if (backBtn && !e.defaultPrevented && e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+        e.preventDefault();
+        history.back();
+        return;
+      }
       const target = routableLink(e);
       if (!target) return;
       e.preventDefault();
