@@ -842,3 +842,28 @@ create policy "follows_insert_own" on follows for insert
 
 create policy "follows_delete_own" on follows for delete
   using (user_id = auth.uid());
+
+-- ---------------------------------------------------------------------------
+-- Settings remembered per account — for now the site's theme ('light',
+-- 'dark' or 'system'), picked from the footer's theme button (js/theme.js).
+-- Private: each account its own row. Not a profiles column: a profiles row
+-- means "saved a player card". Added by supabase/migrations/019_user_settings.sql.
+-- ---------------------------------------------------------------------------
+
+create table user_settings (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  theme text not null default 'system' check (theme in ('light', 'dark', 'system')),
+  updated_at timestamptz not null default now()
+);
+
+alter table user_settings enable row level security;
+
+create policy "user_settings_read_own" on user_settings for select
+  using (user_id = auth.uid());
+
+create policy "user_settings_insert_own" on user_settings for insert
+  with check (user_id = auth.uid());
+
+create policy "user_settings_update_own" on user_settings for update
+  using (user_id = auth.uid())
+  with check (user_id = auth.uid());

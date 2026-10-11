@@ -158,6 +158,25 @@ export const Profiles = {
       .then(assertOk),
 };
 
+// The signed-in account's own settings (supabase/migrations/019's
+// user_settings — private, its own row only): the theme picked from the
+// footer's button (js/theme.js), remembered across devices.
+export const UserSettings = {
+  theme: (userId) =>
+    sb
+      .from("user_settings")
+      .select("theme")
+      .eq("user_id", userId)
+      .maybeSingle()
+      .then(assertOk)
+      .then((row) => row?.theme ?? null),
+  saveTheme: (userId, theme) =>
+    sb
+      .from("user_settings")
+      .upsert({ user_id: userId, theme, updated_at: new Date().toISOString() })
+      .then(assertOk),
+};
+
 // A player's card on their public page (player.html): the linked account's
 // profile, through supabase/migrations/007's public_player_card() — null
 // when there's none to show (not linked, never saved, hidden by its owner,

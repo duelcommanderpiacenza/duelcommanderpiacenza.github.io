@@ -2874,7 +2874,7 @@ footer {
    the center block visually centered instead of drifting left once the
    toggle occupies the right edge. */
 .footer-spacer {
-  width: 36px;
+  width: 44px;
   flex-shrink: 0;
 }
 
@@ -12776,8 +12776,8 @@ html[data-theme="dark"]:not(.nav-mobile) .site-search-results {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   flex-shrink: 0;
   border-radius: 50%;
   border: 1px solid var(--hairline);
@@ -12788,6 +12788,101 @@ html[data-theme="dark"]:not(.nav-mobile) .site-search-results {
   padding: 0;
   cursor: pointer;
   transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
+}
+
+/* Its icon (js/theme.js): the current choice as a line icon — sun, moon,
+   or a screen (following the device). */
+.theme-toggle svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* Signed in, the button opens this menu above it (js/theme.js): Chiaro /
+   Scuro / Segui il sistema, each with its icon, the current one in red
+   with a check. */
+.theme-menu {
+  position: fixed;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 220px;
+  padding: 6px;
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: var(--shadow-card-hover);
+  animation: theme-menu-in 140ms ease both;
+}
+
+@keyframes theme-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.theme-menu-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--text-title);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.theme-menu-option:hover,
+.theme-menu-option:focus-visible {
+  outline: none;
+  background: rgba(220, 24, 28, 0.07);
+}
+
+.theme-menu-option svg {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+.theme-menu-option.is-current {
+  color: var(--brand-red-deep);
+}
+
+.theme-menu-check {
+  display: inline-flex;
+  margin-left: auto;
+  visibility: hidden;
+}
+
+.theme-menu-option.is-current .theme-menu-check {
+  visibility: visible;
+}
+
+:root[data-theme="dark"] .theme-menu {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: #2c1719;
+}
+
+:root[data-theme="dark"] .theme-menu-option:hover,
+:root[data-theme="dark"] .theme-menu-option:focus-visible {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+:root[data-theme="dark"] .theme-menu-option.is-current {
+  color: #ff8a8d;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-menu {
+    animation: none;
+  }
 }
 
 .theme-toggle:hover {
