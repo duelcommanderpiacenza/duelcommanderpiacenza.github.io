@@ -3846,9 +3846,10 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
 }
 
 /* 3-dot window (js renderDots): current card red, its neighbours a
-   lighter red. */
+   lighter red — both from --brand-red, so on the hero-accent pages (player,
+   account) they take the hero's colour. */
 .cmd-carousel-dots .chart-carousel-dot {
-  background: rgba(220, 24, 28, 0.3);
+  background: color-mix(in srgb, var(--brand-red) 30%, transparent);
 }
 
 .cmd-carousel-dots .chart-carousel-dot.is-active {
