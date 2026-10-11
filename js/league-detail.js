@@ -79,7 +79,10 @@ function playedEventCardHtml(ev, number) {
       </a>`;
 }
 
-async function init() {
+// In-app page (js/router.js): mounted by the router on this page's <main>
+// (data-page), on first load and after each in-app navigation; `signal`
+// aborts when the page is left.
+export async function mount({ signal = new AbortController().signal } = {}) {
   const id = getId();
   const titleEl = document.getElementById("league-title");
   const statusEl = document.getElementById("league-status");
@@ -91,18 +94,19 @@ async function init() {
 
   // The ★ on the hero's edge, for signed-in accounts (not awaited: it never
   // holds up the page).
-  if (id) initFollowButton(titleEl, "league", id);
+  if (id) initFollowButton(titleEl, "league", id, { signal });
 
   if (!id) {
     titleEl.textContent = "Lega non trovata";
-    hidePageLoading();
+    hidePageLoading(signal);
     return;
   }
 
   try {
     const league = await Leagues.get(id);
+    if (signal.aborted) return;
     titleEl.textContent = league.name;
-    initTitleFit(titleEl);
+    initTitleFit(titleEl, { signal });
 
     // A Topdeck series is just a bucket of events, with no points leaderboard.
     if (league.is_topdeck) leaderboardSectionEl.hidden = true;
@@ -114,6 +118,7 @@ async function init() {
     // entries/matches for RLS to even hand back, and would otherwise inflate
     // this league's own event count/grid before anything's actually happened.
     const allEvents = await Events.listByLeague(id);
+    if (signal.aborted) return;
     const events = allEvents.filter((ev) => !ev.is_open);
 
     // Date range under the title — from every event the league has, open
@@ -181,6 +186,7 @@ async function init() {
     if (league.is_topdeck) return;
 
     const badgesFor = await badgesPromise;
+    if (signal.aborted) return;
     // One sub-card per player (js/history-list.js), the whole card a link to
     // the player's page: position chip, name + badges, then Punti / V-S-P /
     // Winrate / Eventi. The top LEAGUE_TOP_HIGHLIGHT get a red edge and tint
@@ -215,8 +221,6 @@ async function init() {
   } catch (err) {
     showError(document.getElementById("league-content"), err);
   } finally {
-    hidePageLoading();
+    hidePageLoading(signal);
   }
 }
-
-init();

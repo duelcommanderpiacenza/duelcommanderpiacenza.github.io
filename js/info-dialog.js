@@ -56,6 +56,12 @@ export function openInfoDialog({ id, title, bodyHtml }) {
       closeAnimated();
     });
     document.body.append(dialog);
+  } else {
+    // Built once per id, reopened after: its title and content refreshed
+    // (with in-app navigation the same dialog can be opened from another
+    // visit of the page, with other data).
+    dialog.querySelector(`#${CSS.escape(id)}-title`).textContent = title;
+    dialog.querySelector(".info-dialog-body").innerHTML = bodyHtml;
   }
   dialog.showModal();
   return dialog;

@@ -10,6 +10,7 @@ import { escapeHtml, formatTime, playerLabel, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { nestedResultsLink } from "./results-link.js";
 import { fetchPlayerBadgesRenderer } from "./player-badges.js";
+import { mountCalendar } from "./events-calendar.js";
 
 const LATEST_EVENTS_COUNT = 5;
 const UPCOMING_EVENTS_COUNT = 3;
@@ -353,18 +354,26 @@ async function renderCommandersSection(el) {
   }
 }
 
-// Independent widgets — the page isn't "ready" until all of them have
-// settled (success or already-shown error), not just the first one.
-Promise.allSettled([
-  renderAnnouncementsSection(
-    document.getElementById("dashboard-announcements"),
-    document.getElementById("dashboard-announcements-content")
-  ),
-  renderLeaguesSection(document.getElementById("dashboard-leagues-content")),
-  renderUpcomingSection(
-    document.getElementById("dashboard-upcoming"),
-    document.getElementById("dashboard-upcoming-content")
-  ),
-  renderEventsSection(document.getElementById("dashboard-events-content")),
-  renderCommandersSection(document.getElementById("dashboard-commanders-content")),
-]).then(hidePageLoading);
+// In-app page (js/router.js): mounted by the router on this page's <main>
+// (data-page), on first load and after each in-app navigation; `signal`
+// aborts when the page is left. Independent widgets — the page isn't
+// "ready" until all of them have settled (success or already-shown error),
+// not just the first one. The calendar's button and dialog wired too
+// (js/events-calendar.js); the active leagues read again on each visit.
+export function mount({ signal = new AbortController().signal } = {}) {
+  activeLeaguesPromise = null;
+  mountCalendar();
+  return Promise.allSettled([
+    renderAnnouncementsSection(
+      document.getElementById("dashboard-announcements"),
+      document.getElementById("dashboard-announcements-content")
+    ),
+    renderLeaguesSection(document.getElementById("dashboard-leagues-content")),
+    renderUpcomingSection(
+      document.getElementById("dashboard-upcoming"),
+      document.getElementById("dashboard-upcoming-content")
+    ),
+    renderEventsSection(document.getElementById("dashboard-events-content")),
+    renderCommandersSection(document.getElementById("dashboard-commanders-content")),
+  ]).then(() => hidePageLoading(signal));
+}

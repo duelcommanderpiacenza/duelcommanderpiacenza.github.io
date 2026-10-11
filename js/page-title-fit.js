@@ -60,11 +60,12 @@ export function alignBackButtonToTitle(titleEl) {
 }
 
 // Fits the title now and again on every resize/rotation.
-export function initTitleFit(titleEl) {
+// `signal` (js/router.js mount): stops with the page.
+export function initTitleFit(titleEl, { signal } = {}) {
   const fit = () => {
     fitTitleToOneLine(titleEl);
     alignBackButtonToTitle(titleEl);
   };
   fit();
-  window.addEventListener("resize", fit);
+  window.addEventListener("resize", fit, { signal });
 }

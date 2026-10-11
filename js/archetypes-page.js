@@ -14,7 +14,10 @@ function fetchEventsData(eventIds) {
   return fetchEventsResults(eventIds);
 }
 
-async function init() {
+// In-app page (js/router.js): mounted by the router on this page's <main>
+// (data-page), on first load and after each in-app navigation; `signal`
+// aborts when the page is left.
+export async function mount({ signal = new AbortController().signal } = {}) {
   const chartEl = document.getElementById("archetypes-chart");
   const tableEl = document.getElementById("archetypes-table");
   const leagueSelect = document.getElementById("archetypes-league-filter");
@@ -25,10 +28,11 @@ async function init() {
   let lastScopeEventIds = [];
   try {
     const events = await Events.list();
+    if (signal.aborted) return;
     eventDateById = new Map(events.map((e) => [e.id, e.event_date]));
   } catch (err) {
     showError(chartEl, err);
-    hidePageLoading();
+    hidePageLoading(signal);
     return;
   }
 
@@ -48,6 +52,7 @@ async function init() {
     tableEl.innerHTML = "";
     try {
       const eventsData = await fetchEventsData(eventIds);
+      if (signal.aborted) return;
       const stats = computeGroupedStats(
         eventsData,
         (e) => e.archetype,
@@ -126,7 +131,7 @@ async function init() {
     } catch (err) {
       showError(chartEl, err);
     } finally {
-      hidePageLoading();
+      hidePageLoading(signal);
     }
   }
 
@@ -146,5 +151,3 @@ async function init() {
     },
   });
 }
-
-init();

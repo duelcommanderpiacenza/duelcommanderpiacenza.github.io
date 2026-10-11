@@ -8,7 +8,9 @@ const SHOW_AFTER = 400;
 const ARROW_UP =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg>';
 
-export function initBackToTop() {
+// `signal` (js/router.js mount): the button and its listeners go with the
+// page that asked for them.
+export function initBackToTop({ signal } = {}) {
   const button = document.createElement("button");
   button.type = "button";
   button.className = "back-to-top";
@@ -42,7 +44,8 @@ export function initBackToTop() {
   const queue = () => {
     if (!frame) frame = requestAnimationFrame(update);
   };
-  window.addEventListener("scroll", queue, { passive: true });
-  window.addEventListener("resize", queue);
+  window.addEventListener("scroll", queue, { passive: true, signal });
+  window.addEventListener("resize", queue, { signal });
+  signal?.addEventListener("abort", () => button.remove(), { once: true });
   update();
 }

@@ -98,6 +98,9 @@ export function setupThemeToggle() {
     if (!menu?.contains(e.target) && !toggle.contains(e.target)) closeMenu();
   }
 
+  // In-app navigation (js/router.js): the menu closes.
+  document.addEventListener("app:navigate", () => closeMenu());
+
   function onKey(e) {
     if (e.key !== "Escape") return;
     closeMenu();

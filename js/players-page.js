@@ -38,7 +38,10 @@ const SORTERS = {
   wins: (a, b) => b.wins - a.wins,
 };
 
-async function init() {
+// In-app page (js/router.js): mounted by the router on this page's <main>
+// (data-page), on first load and after each in-app navigation; `signal`
+// aborts when the page is left.
+export async function mount({ signal = new AbortController().signal } = {}) {
   const listEl = document.getElementById("players-list");
   const searchInput = document.getElementById("players-search");
   const leagueSelect = document.getElementById("players-league-filter");
@@ -47,7 +50,7 @@ async function init() {
   const sortSelect = document.getElementById("players-sort");
   const countEl = document.getElementById("players-count");
   // A long list: a round button back to the top once scrolled down.
-  initBackToTop();
+  initBackToTop({ signal });
 
   let allPlayers = [];
   let eventDateById = new Map();
@@ -62,14 +65,14 @@ async function init() {
     const [players, events] = await Promise.all([Players.list(), Events.list()]);
     if (players.length === 0) {
       listEl.innerHTML = '<p class="page-empty">Nessun giocatore inserito ancora.</p>';
-      hidePageLoading();
+      hidePageLoading(signal);
       return;
     }
     allPlayers = players;
     eventDateById = new Map(events.map((e) => [e.id, e.event_date]));
   } catch (err) {
     showError(listEl, err);
-    hidePageLoading();
+    hidePageLoading(signal);
     return;
   }
 
@@ -182,7 +185,7 @@ async function init() {
     } catch (err) {
       showError(listEl, err);
     } finally {
-      hidePageLoading();
+      hidePageLoading(signal);
     }
   }
 
@@ -204,5 +207,3 @@ async function init() {
     },
   });
 }
-
-init();

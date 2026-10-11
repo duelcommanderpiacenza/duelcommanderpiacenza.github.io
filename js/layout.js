@@ -21,6 +21,8 @@ import "./header-account.js";
 import { initMeHighlight } from "./me-highlight.js";
 import { attachHoverTooltips, showFloatingTooltip } from "./floating-tooltip.js";
 import { watchPageLoading } from "./page-loading.js";
+import { navigate } from "./router.js";
+import "./system-bars.js";
 
 // Never stuck on "Caricamento...": a reload offered when loading takes too
 // long or fails (js/page-loading.js).
@@ -51,7 +53,7 @@ function openArchetype(e) {
   if (e.type === "keydown" && e.key !== "Enter") return;
   e.preventDefault();
   e.stopPropagation();
-  window.location.href = `archetype.html?id=${encodeURIComponent(badge.dataset.archetype)}`;
+  navigate(`archetype.html?id=${encodeURIComponent(badge.dataset.archetype)}`);
 }
 document.addEventListener("click", openArchetype, true);
 document.addEventListener("keydown", openArchetype, true);

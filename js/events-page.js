@@ -235,7 +235,10 @@ function fitBigNames(root) {
   }
 }
 
-async function init() {
+// In-app page (js/router.js): mounted by the router on this page's <main>
+// (data-page), on first load and after each in-app navigation; `signal`
+// aborts when the page is left.
+export async function mount({ signal = new AbortController().signal } = {}) {
   const boardEl = document.getElementById("events-board");
   const archiveSectionEl = document.getElementById("events-archive-section");
   const archiveEl = document.getElementById("events-archive");
@@ -295,13 +298,17 @@ async function init() {
     fitBigNames(boardEl);
     fitMarquees(boardEl);
     let fitTimer;
-    window.addEventListener("resize", () => {
-      clearTimeout(fitTimer);
-      fitTimer = setTimeout(() => {
-        fitBigNames(boardEl);
-        fitMarquees(boardEl);
-      }, 120);
-    });
+    window.addEventListener(
+      "resize",
+      () => {
+        clearTimeout(fitTimer);
+        fitTimer = setTimeout(() => {
+          fitBigNames(boardEl);
+          fitMarquees(boardEl);
+        }, 120);
+      },
+      { signal }
+    );
     if (!groups.length && !played.length) {
       boardEl.innerHTML = '<p class="page-empty">Nessuna lega o evento inserito ancora.</p>';
     }
@@ -323,8 +330,6 @@ async function init() {
   } catch (err) {
     showError(boardEl, err);
   } finally {
-    hidePageLoading();
+    hidePageLoading(signal);
   }
 }
-
-init();

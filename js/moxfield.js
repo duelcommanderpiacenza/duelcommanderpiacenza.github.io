@@ -1,3 +1,7 @@
+// social.html: the latest videos and Moxfield decks, from decks.json /
+// videos.json (repo files refreshed daily by a GitHub Actions cron).
+import { hidePageLoading } from "./page-loading.js";
+
 function buildDeckBadge(deck) {
   if (deck.name.startsWith("[PRIMER]")) {
     return "Primer";
@@ -404,29 +408,31 @@ async function loadVideos() {
   }
 }
 
-if (window.location.protocol === "file:") {
-  const decksContainer = document.getElementById("decks");
-  const videosContainer = document.getElementById("videos");
+// In-app page (js/router.js): social.html's <main> (data-page="social") is
+// mounted by the router, on first load and after each in-app navigation;
+// `signal` aborts when the page is left. Opened straight from a file://
+// path, the two JSON files can't be fetched: a note instead.
+export function mount({ signal = new AbortController().signal } = {}) {
+  if (window.location.protocol === "file:") {
+    const decksContainer = document.getElementById("decks");
+    const videosContainer = document.getElementById("videos");
 
-  if (decksContainer) {
-    decksContainer.innerHTML = `
-      Local preview cannot load <code>decks.json</code> from <code>file://</code>.
-      Open this site through a small local web server instead.
-    `;
+    if (decksContainer) {
+      decksContainer.innerHTML = `
+        Local preview cannot load <code>decks.json</code> from <code>file://</code>.
+        Open this site through a small local web server instead.
+      `;
+    }
+
+    if (videosContainer) {
+      videosContainer.innerHTML = `
+        Local preview cannot load <code>videos.json</code> from <code>file://</code>.
+        Open this site through a small local web server instead.
+      `;
+    }
+
+    hidePageLoading(signal);
+    return;
   }
-
-  if (videosContainer) {
-    videosContainer.innerHTML = `
-      Local preview cannot load <code>videos.json</code> from <code>file://</code>.
-      Open this site through a small local web server instead.
-    `;
-  }
-
-  // js/layout.js (a deferred module) hasn't necessarily run yet at this
-  // point in a plain classic script's synchronous execution — push to the
-  // next tick so window.hidePageLoading is reliably defined by the time
-  // this runs.
-  setTimeout(() => window.hidePageLoading?.(), 0);
-} else {
-  Promise.allSettled([loadDecks(), loadVideos()]).then(() => window.hidePageLoading?.());
+  return Promise.allSettled([loadDecks(), loadVideos()]).then(() => hidePageLoading(signal));
 }

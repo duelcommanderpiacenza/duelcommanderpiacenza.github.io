@@ -67,7 +67,10 @@ function selfScoreLabel(m, selfIsP1) {
   return selfIsP1 ? `${m.player1_wins}-${m.player2_wins}-${m.draws}` : `${m.player2_wins}-${m.player1_wins}-${m.draws}`;
 }
 
-async function init() {
+// In-app page (js/router.js): mounted by the router on this page's <main>
+// (data-page), on first load and after each in-app navigation; `signal`
+// aborts when the page is left.
+export async function mount({ signal = new AbortController().signal } = {}) {
   const id = getId();
   const titleEl = document.getElementById("commander-title");
   const cardFigureEl = document.getElementById("commander-card-figure");
@@ -83,12 +86,12 @@ async function init() {
 
   // "☆ Segui" right below the name, for signed-in accounts (not awaited: it
   // never holds up the page).
-  if (id) initFollowButton(titleEl, "commander", id);
+  if (id) initFollowButton(titleEl, "commander", id, { signal });
 
   if (!id) {
     titleEl.textContent = "Commander non trovato";
     document.getElementById("commander-card-skeleton")?.setAttribute("hidden", "");
-    hidePageLoading();
+    hidePageLoading(signal);
     return;
   }
 
@@ -109,13 +112,14 @@ async function init() {
 
   try {
     const commander = await Commanders.get(id);
+    if (signal.aborted) return;
     // The name (and the ⚠️ if banned) — no colour pips: the card image beside
     // it already shows the commander's colours.
     titleEl.innerHTML = `${escapeHtml(commander.name)}${
       commander.is_banned ? bannedBadge() : ""
     }`;
     // On phones: a long name shrunk to one line.
-    initTitleFit(titleEl);
+    initTitleFit(titleEl, { signal });
     // The hero's backdrop: the commander's own art.
     createArtPainter(document.getElementById("commander-hero-art"))(commander.name);
 
@@ -152,6 +156,7 @@ async function init() {
 
     // Every (event, player) pair that piloted this commander.
     const playedEntries = await EventEntries.listByCommander(id);
+    if (signal.aborted) return;
 
     if (playedEntries.length === 0) {
       winrateEl.innerHTML = '<p class="page-empty">Non ci sono ancora dati sufficienti.</p>';
@@ -171,6 +176,7 @@ async function init() {
       Matches.listByEvents(eventIds),
       Events.list().catch((err) => (console.error(err), [])),
     ]);
+    if (signal.aborted) return;
     const entryByKey = new Map(allEntries.map((e) => [`${e.event_id}_${e.player_id}`, e]));
 
     // Storico partite: newest first — the rows built from `matches` below
@@ -348,8 +354,6 @@ async function init() {
   } catch (err) {
     showError(document.getElementById("commander-content"), err);
   } finally {
-    hidePageLoading();
+    hidePageLoading(signal);
   }
 }
-
-init();

@@ -76,7 +76,7 @@ export function hideFloatingTooltip() {
  * @param {string} selector
  * @param {(el: HTMLElement) => string|null} textFor - null/"" = no tooltip for this one.
  */
-export function attachHoverTooltips(containerEl, selector, textFor) {
+export function attachHoverTooltips(containerEl, selector, textFor, { signal } = {}) {
   containerEl.addEventListener(
     "mouseenter",
     (e) => {
@@ -107,8 +107,12 @@ export function attachHoverTooltips(containerEl, selector, textFor) {
     if (el && el === anchorEl) hideFloatingTooltip();
   });
   containerEl.addEventListener("scroll", hideFloatingTooltip, true);
-  window.addEventListener("scroll", hideFloatingTooltip, true);
+  // `signal` (js/router.js mount): a page's own call stops with it.
+  window.addEventListener("scroll", hideFloatingTooltip, { capture: true, signal });
 }
+
+// In-app navigation (js/router.js): no tooltip left over the next page.
+document.addEventListener("app:navigate", () => hideFloatingTooltip());
 
 // textFor for a label cut off with an ellipsis: its full text only when it
 // actually is cut off (a name that fits needs no tooltip).

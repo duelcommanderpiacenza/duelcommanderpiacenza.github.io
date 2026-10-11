@@ -70,7 +70,10 @@ function matchGroupsByEvent(rows, positionByEvent) {
   return [...groups.values()];
 }
 
-async function init() {
+// In-app page (js/router.js): mounted by the router on this page's <main>
+// (data-page), on first load and after each in-app navigation; `signal`
+// aborts when the page is left.
+export async function mount({ signal = new AbortController().signal } = {}) {
   const id = getId();
   const titleEl = document.getElementById("player-title");
   const commandersEl = document.getElementById("player-commanders");
@@ -83,11 +86,11 @@ async function init() {
 
   // "☆ Segui" right below the name, for signed-in accounts (not awaited: it
   // never holds up the page).
-  if (id) initFollowButton(titleEl, "player", id);
+  if (id) initFollowButton(titleEl, "player", id, { signal });
 
   if (!id) {
     titleEl.textContent = "Giocatore non trovato";
-    hidePageLoading();
+    hidePageLoading(signal);
     return;
   }
 
@@ -117,6 +120,7 @@ async function init() {
     entriesRequest.catch(() => {});
 
     const player = await playerRequest;
+    if (signal.aborted) return;
     // Known before the title is drawn (started alongside, so barely a wait):
     // with a card shown, the badges are on the card, not after the name.
     const card = await cardRequest;
@@ -139,9 +143,10 @@ async function init() {
     titleEl.innerHTML = `${escapeHtml(nameLabel)} ${card ? "" : playerBadgesHtml(playerBadges)}`;
     // Same as the other detail pages: on phones, fits the name to one line
     // and keeps the back button vertically centered on it.
-    initTitleFit(titleEl);
+    initTitleFit(titleEl, { signal });
 
     const entries = await entriesRequest;
+    if (signal.aborted) return;
 
     // The card, once the year of the player's first event ("Dal …") is
     // known: in the hero's left column (without one, the text takes the
@@ -203,6 +208,7 @@ async function init() {
     const entryByEvent = new Map(entries.map((e) => [e.event_id, e]));
 
     const { asP1, asP2 } = await Matches.listByPlayer(id);
+    if (signal.aborted) return;
     const rawMatches = [...asP1.map((m) => ({ m, viewerIsP1: true })), ...asP2.map((m) => ({ m, viewerIsP1: false }))];
     // Storico partite: newest first.
     rawMatches.sort((a, b) => {
@@ -262,8 +268,6 @@ async function init() {
   } catch (err) {
     showError(document.getElementById("player-content"), err);
   } finally {
-    hidePageLoading();
+    hidePageLoading(signal);
   }
 }
-
-init();

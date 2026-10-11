@@ -77,11 +77,14 @@ function gridHtml(badges, holdersByBadge) {
   return `<div class="badges-grid">${badges.map((b) => cardHtml(b, holdersByBadge.get(b.id) ?? [])).join("")}</div>`;
 }
 
-async function init() {
+// In-app page (js/router.js): mounted by the router on this page's <main>
+// (data-page), on first load and after each in-app navigation; `signal`
+// aborts when the page is left.
+export async function mount({ signal = new AbortController().signal } = {}) {
   const contentEl = document.getElementById("badges-content");
   // Same as the other pages with a back button: on phones, keeps it
   // vertically centered on the title (js/page-title-fit.js).
-  initTitleFit(document.getElementById("badges-title"));
+  initTitleFit(document.getElementById("badges-title"), { signal });
   try {
     const [badges, players, autoRows] = await Promise.all([Badges.list(), Players.list(), PlayerAutoBadges.list()]);
 
@@ -127,8 +130,6 @@ async function init() {
   } catch (err) {
     showError(contentEl, err);
   } finally {
-    hidePageLoading();
+    hidePageLoading(signal);
   }
 }
-
-init();

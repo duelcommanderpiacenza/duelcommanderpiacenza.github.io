@@ -45,10 +45,16 @@ function openDropdown(nav, trigger) {
   trigger.setAttribute("aria-expanded", "true");
 }
 
-function closeDropdown(nav, trigger) {
+// `instant`: an in-app navigation — no animation of its own; the page change
+// fades the open panel out with the old page (js/router.js dispatches
+// app:navigate inside the swap, after the old screen's snapshot; styles.css
+// "Page transitions"), a retract would run over it.
+function closeDropdown(nav, trigger, { instant = false } = {}) {
+  if (instant) nav.classList.remove("is-closing");
   if (!nav.classList.contains("is-open")) return;
   nav.classList.remove("is-open");
   trigger.setAttribute("aria-expanded", "false");
+  if (instant) return;
   // Reduced motion: nothing to reverse out of, and animationend would
   // never fire to clear .is-closing again — skip straight to the (already
   // instant) closed state instead of hanging the panel open.
@@ -65,6 +71,9 @@ function closeDropdown(nav, trigger) {
   };
   inner.addEventListener("animationend", done);
 }
+
+// The pill's last scroll position (its scroll-away logic in init).
+let lastY = window.scrollY;
 
 function init() {
   // Self-healing fallback for the inline head script's own check — normally
@@ -103,6 +112,13 @@ function init() {
     }
   });
 
+  // In-app navigation (js/router.js): the panel closes, the pill shows.
+  document.addEventListener("app:navigate", () => {
+    closeDropdown(nav, trigger, { instant: true });
+    nav.classList.remove("is-scrolled-away");
+    lastY = 0;
+  });
+
   // Touch screens: the pill slides away while the page scrolls down and
   // comes back as soon as it scrolls up (styles.css .is-scrolled-away) —
   // always shown near the top, and never hidden while its panel is open.
@@ -110,7 +126,6 @@ function init() {
   // once per frame.
   const SCROLL_SLACK = 8;
   const SHOW_NEAR_TOP = 80;
-  let lastY = window.scrollY;
   let queued = false;
   window.addEventListener(
     "scroll",

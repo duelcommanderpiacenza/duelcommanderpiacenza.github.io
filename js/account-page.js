@@ -80,1627 +80,1646 @@ const COLOR_ORDER = ["W", "U", "B", "R", "G"];
 // (supabase/migrations/012).
 const DESCRIPTION_MAX = 50;
 
-const views = Array.from(document.querySelectorAll("[data-view]"));
-const viewOf = (name) => views.find((v) => v.dataset.view === name);
-const pageMessageEl = () => viewOf("signed-in").querySelector("[data-message]");
-
-// Player card
-const cardEl = document.getElementById("player-card");
-const artEl = document.getElementById("pc-art");
-const avatarImg = document.getElementById("profile-avatar");
-const initialEl = document.getElementById("profile-initial");
-const nameEl = document.getElementById("profile-name");
-// The same name, big, in the hero beside the card; the background card's
-// art blurred behind it all (styles.css .profile-hero).
-const heroNameEl = document.getElementById("profile-hero-name");
-const bioEl = document.getElementById("profile-bio");
-const sinceEl = document.getElementById("pc-since");
-const badgesEl = document.getElementById("pc-badges");
-const linksEl = document.getElementById("pc-links");
-const editToggleBtn = document.getElementById("profile-edit-toggle");
-const editCancelBtn = document.getElementById("profile-edit-cancel");
-const emailEl = document.getElementById("account-email");
-// The same email in the Account section's header (shown while it's closed).
-const emailSummaryEl = document.getElementById("account-email-summary");
-
-// The card's edit mode: each value's editable twin, in its place.
-const profileForm = document.getElementById("profile-form");
-const showAvatarInput = document.getElementById("profile-show-avatar");
-const cardInput = document.getElementById("profile-card");
-const cardClearBtn = document.getElementById("profile-card-clear");
-const cardListEl = document.getElementById("profile-card-list");
-const artPickerEl = document.getElementById("profile-art-picker");
-const artStripEl = document.getElementById("profile-art-strip");
-const colorInputs = Array.from(profileForm.querySelectorAll('input[name="profile-color"]'));
-const descriptionEl = document.getElementById("profile-description");
-const counterEl = document.getElementById("profile-counter");
-// One field per site (CARD_LINK_SITES: instagram, moxfield, archidekt).
-const linkInputs = Object.fromEntries(Object.keys(CARD_LINK_SITES).map((key) => [key, document.getElementById(`profile-${key}`)]));
-
-// "Il tuo giocatore" (top, until linked)
-const claimCard = document.getElementById("profile-claim");
-const claimBlocks = Array.from(document.querySelectorAll("[data-claim]"));
-const claimMessageEl = document.querySelector("[data-claim-message]");
-const claimSelect = document.getElementById("account-claim-player");
-const pendingPlayerEl = document.getElementById("account-pending-player");
-
-// "Le tue statistiche" (once linked)
-const statsCard = document.getElementById("profile-stats");
-const albumCard = document.getElementById("profile-album");
-const albumEl = document.getElementById("profile-album-carousel");
-document.getElementById("album-help").addEventListener("click", openAlbumEffectsInfo);
-const statsLink = document.getElementById("profile-stats-link");
-const statsTilesEl = document.getElementById("profile-stats-tiles");
-const publicWrapEl = document.getElementById("profile-public-wrap");
-const publicInput = document.getElementById("profile-public");
-const publicLabelEl = document.getElementById("profile-public-label");
-const publicHintEl = document.getElementById("profile-public-hint");
-
-// "Account"
-const accountMessageEl = document.getElementById("account-message");
-const accountDangerEl = document.getElementById("account-danger");
-const accountDeleteBtn = document.getElementById("account-delete");
-
-// Shown on the sign-in card right after the account is deleted (the
-// SIGNED_OUT that follows switches to it).
-let loginNotice = null;
-
-// What's on screen: the account, its saved profile, its player link/request,
-// and the linked player's first event year (the card's "Dal …") and badges.
-let user = null;
-let profile = null;
-let claim = { linked: null, pending: null };
-// The background card picked in edit mode (a card name, null for none) —
-// only ever a name chosen from Scryfall's list (or the saved one).
-let pickedCard = null;
-// …and its printing (a Scryfall card id — the "Versione" picked), null for
-// Scryfall's default printing of that card.
-let pickedPrint = null;
-let firstYear = null;
-// The linked player's progress row (player_progress): the card's cosmetics
-// (js/card-cosmetics.js). null: none (not linked, no results, no table).
-let cardProgress = null;
-let playerBadges = [];
-
-// --- Helpers ------------------------------------------------------------------
-
-function setMessage(el, text, kind = "error") {
-  el.textContent = text;
-  el.className = "form-message" + (text ? ` is-${kind}` : "");
-}
-
-function show(view) {
-  for (const v of views) v.hidden = v.dataset.view !== view;
-}
-
-function playerLabel(player) {
-  return player.handle ? `${player.name} (${player.handle})` : player.name;
-}
-
-// The commander art behind the card (js/player-card.js: Scryfall's art crop).
-const paintArt = createArtPainter(artEl);
-const paintHeroArt = createArtPainter(document.getElementById("profile-hero-art"));
-
-// --- Player card ------------------------------------------------------------------
-
-// What the card shows: the saved profile, or — in edit mode — the form's
-// current values (the live preview).
-function savedValues() {
-  return {
-    colors: profile?.fav_colors ?? "",
-    // A card saved before the background could be any card: its favourite
-    // commander's (supabase/migrations/014_fav_card.sql).
-    card: profile?.fav_card ?? profile?.fav_commander?.name ?? null,
-    print: (profile?.fav_card && profile?.fav_card_print) || null,
-    description: profile?.description ?? "",
-    showAvatar: profile?.show_avatar ?? true,
-    instagram: profile?.instagram ?? null,
-    moxfield: profile?.moxfield ?? null,
-    archidekt: profile?.archidekt ?? null,
-  };
-}
-
-function formValues() {
-  return {
-    colors: COLOR_ORDER.filter((c) => colorInputs.some((i) => i.value === c && i.checked)).join(""),
-    card: pickedCard,
-    print: pickedPrint,
-    description: descriptionEl.value,
-    showAvatar: showAvatarInput.checked,
-  };
-}
-
-function renderCard(values) {
-  const meta = user.user_metadata ?? {};
-  // The linked player's own name once there is one, the Google name before.
-  const displayName = claim.linked ? playerLabel(claim.linked) : meta.full_name || meta.name || user.email;
-  nameEl.textContent = displayName;
-  heroNameEl.textContent = displayName;
-  emailEl.textContent = user.email;
-  emailSummaryEl.textContent = user.email;
-
-  // The Google picture. Hidden by the owner: outside edit mode no avatar
-  // circle at all, leaving the commander art in view (.hides-avatar); in
-  // edit mode the circle stays, with the initial, next to its "Mostra foto"
-  // switch. No Google picture at all: the initial on red, no switch.
-  initialEl.textContent = (displayName.trim()[0] ?? "?").toUpperCase();
-  const hasPicture = Boolean(meta.avatar_url);
-  const showPicture = hasPicture && values.showAvatar;
-  if (showPicture) avatarImg.src = meta.avatar_url;
-  avatarImg.hidden = !showPicture;
-  cardEl.classList.toggle("hides-avatar", hasPicture && !values.showAvatar);
-  document.getElementById("profile-show-avatar-wrap").classList.toggle("is-unavailable", !hasPicture);
-
-  applyCardAccents(cardEl, values.colors);
-
-  const description = values.description.trim();
-  bioEl.textContent = description || "Nessuna descrizione: premi ✎ per raccontare qualcosa di te.";
-  bioEl.classList.toggle("is-empty", !description);
-
-  // The links: what's saved (the edit fields are only read on save).
-  linksEl.innerHTML = cardLinksHtml(savedValues());
-
-  // The player's (not the account's) first event and badges, once linked.
-  sinceEl.textContent = claim.linked && firstYear ? `Dal ${firstYear}` : "";
-  badgesEl.innerHTML = claim.linked ? cardBadgesHtml(playerBadges) : "";
-
-  // After "Dal …" above (the stars go after it); taken off and put back on
-  // every redraw.
-  applyCardCosmetics(cardEl, claim.linked ? cardProgress : null);
-
-  paintArt(values.card, values.print);
-  paintHeroArt(values.card, values.print);
-}
-
-// --- Edit mode (on the card itself, same layout) -----------------------------------
-
-function updateCounter() {
-  counterEl.textContent = `${descriptionEl.value.length}/${DESCRIPTION_MAX}`;
-}
-
-// Puts the saved profile into the form (also how "Annulla" discards edits).
-function fillForm() {
-  const saved = savedValues();
-  showAvatarInput.checked = saved.showAvatar;
-  pickedCard = saved.card;
-  pickedPrint = saved.print;
-  cardInput.value = saved.card ?? "";
-  cardClearBtn.hidden = !saved.card;
-  closeCardList();
-  loadArtPicker();
-  for (const input of colorInputs) input.checked = saved.colors.includes(input.value);
-  descriptionEl.value = saved.description;
-  for (const [key, input] of Object.entries(linkInputs)) input.value = saved[key] ?? "";
-  updateCounter();
-}
-
-const isEditing = () => cardEl.classList.contains("is-editing");
-
-// The animated switch between the two modes (animateSwitch) — one motion,
-// not each piece moving on its own: the glass panel's contents fade out;
-// the panel then grows/shrinks to its new height, the nameplate riding on
-// top of it (the name sliding over when the avatar comes or goes, the
-// avatar and "Mostra foto" growing/fading in or out with it); and the
-// contents fade back in, already in their new places, as it settles.
-const NAMEPLATE_PIECES = ".pc-avatar, .pc-name, .pc-avatar-toggle";
-const SWITCH_MS = 320;
-const FADE_OUT_MS = 120;
-const FADE_IN_DELAY_MS = 140;
-const FADE_IN_MS = 220;
-const EASE = "cubic-bezier(0.2, 0.8, 0.2, 1)";
-const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-
-// True while a switch animates: ✎/✓, ✕ and Esc wait for it to end.
-let switching = false;
-
-const finished = (animation) => animation.finished.catch(() => {});
-
-// ✕ slides out from under ✓ when editing starts, and back under it after.
-function showCancelButton(open, animate) {
-  const tucked = { opacity: 0, transform: "translateX(40px) scale(0.6)" };
-  const out = { opacity: 1, transform: "none" };
-  if (!animate) {
-    editCancelBtn.hidden = !open;
-  } else if (open) {
-    editCancelBtn.hidden = false;
-    editCancelBtn.animate([tucked, out], { duration: SWITCH_MS, easing: EASE });
-  } else {
-    finished(editCancelBtn.animate([out, tucked], { duration: 200, easing: "ease-in" })).then(() => {
-      if (!isEditing()) editCancelBtn.hidden = true;
-    });
-  }
-}
-
-async function animateSwitch(open) {
-  const panel = cardEl.querySelector(".pc-panel");
-  const pieces = Array.from(cardEl.querySelectorAll(NAMEPLATE_PIECES));
-  const visible = (els) => els.filter((el) => el.getClientRects().length);
-
-  // Which nameplate pieces each mode shows: the other mode tried for a
-  // moment, within this same frame, so it never paints.
-  const before = new Set(visible(pieces));
-  cardEl.classList.toggle("is-editing", open);
-  const after = new Set(visible(pieces));
-  cardEl.classList.toggle("is-editing", !open);
-  const leaving = pieces.filter((el) => before.has(el) && !after.has(el));
-  const entering = pieces.filter((el) => after.has(el) && !before.has(el));
-  const staying = pieces.filter((el) => before.has(el) && after.has(el));
-
-  const fadeOuts = [...visible(Array.from(panel.children)), ...leaving].map((el) =>
-    el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: FADE_OUT_MS, easing: "ease-in", fill: "forwards" })
-  );
-  await Promise.all(fadeOuts.map(finished));
-
-  // Where the name is now, and the panel's top edge: the nameplate sits
-  // right on the panel, so the name's move is measured against it — the
-  // panel's own animated height carries the nameplate the rest of the way.
-  const panelBefore = panel.getBoundingClientRect();
-  const rectsBefore = new Map(staying.map((el) => [el, el.getBoundingClientRect()]));
-  cardEl.classList.toggle("is-editing", open);
-  const panelAfter = panel.getBoundingClientRect();
-
-  const animations = [];
-  // The new contents start hidden (fill: backwards) in this same frame the
-  // old ones' faded-out state is dropped, so nothing flashes in between.
-  for (const el of visible(Array.from(panel.children))) {
-    animations.push(
-      el.animate([{ opacity: 0 }, { opacity: 1 }], {
-        duration: FADE_IN_MS,
-        delay: FADE_IN_DELAY_MS,
-        easing: "ease-out",
-        fill: "backwards",
-      })
-    );
-  }
-  for (const animation of fadeOuts) animation.cancel();
-
-  panel.style.boxSizing = "border-box";
-  panel.style.overflow = "hidden";
-  animations.push(
-    panel.animate([{ height: `${panelBefore.height}px` }, { height: `${panelAfter.height}px` }], {
-      duration: SWITCH_MS,
-      easing: EASE,
-    })
-  );
-  for (const el of staying) {
-    const was = rectsBefore.get(el);
-    const is = el.getBoundingClientRect();
-    const dx = was.left - is.left;
-    const dy = was.top - panelBefore.top - (is.top - panelAfter.top);
-    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) continue;
-    animations.push(
-      el.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: "none" }], {
-        duration: SWITCH_MS,
-        easing: EASE,
-      })
-    );
-  }
-  for (const el of entering) {
-    const from = el.classList.contains("pc-avatar") ? "scale(0.5)" : "translateY(4px)";
-    animations.push(
-      el.animate([{ opacity: 0, transform: from }, { opacity: 1, transform: "none" }], {
-        duration: SWITCH_MS,
-        easing: EASE,
-      })
-    );
-  }
-  await Promise.all(animations.map(finished));
-  panel.style.boxSizing = "";
-  panel.style.overflow = "";
-}
-
-async function setEditing(open, { animate = true } = {}) {
-  if (open === isEditing()) return;
-  const label = open ? "Salva le modifiche" : "Modifica la tua carta";
-  editToggleBtn.setAttribute("aria-label", label);
-  editToggleBtn.title = label;
-  editToggleBtn.classList.toggle("is-save", open);
-  // The values first (hidden ones included), so both modes are measured
-  // with what they'll show.
-  if (open) {
-    fillForm();
-    renderCard(formValues());
-  } else {
-    renderCard(savedValues());
-  }
-  const animated = animate && !reducedMotion.matches && cardEl.getClientRects().length > 0;
-  showCancelButton(open, animated);
-  if (!animated) {
-    cardEl.classList.toggle("is-editing", open);
-    return;
-  }
-  switching = true;
-  try {
-    await animateSwitch(open);
-  } finally {
-    switching = false;
-  }
-}
-
-// ✎ enters edit mode; there, the same button is ✓ and saves.
-editToggleBtn.addEventListener("click", () => {
-  if (switching) return;
-  setMessage(pageMessageEl(), "");
-  if (isEditing()) profileForm.requestSubmit();
-  else setEditing(true);
-});
-editCancelBtn.addEventListener("click", () => {
-  if (!switching) setEditing(false);
-});
-document.addEventListener("keydown", (e) => {
-  // Not while a dropdown is open: Escape closes that first.
-  if (e.key === "Escape" && isEditing() && !switching && !cardEl.querySelector(".cs-wrap.is-open") && cardListEl.hidden) {
-    setEditing(false);
-  }
-});
-
-// --- The sections, one at a time behind tabs -------------------------------------
-
-// Album comandanti, Seguiti, Decklist, Account: a tab each, only for a
-// section that's shown (styles.css hides the others' tabs) — a pill bar on
-// desktop, a full-width segmented control on phones. Until the user picks
-// one, the first section shown is the open one (the album once linked);
-// when the open one goes (e.g. no decklist to send any more), the first
-// still shown takes over.
-const tabButtons = [...document.querySelectorAll(".profile-tab")];
-const tabPanels = tabButtons.map((b) => document.getElementById(b.dataset.tab));
-let currentTab = null;
-let tabChosen = false;
-
-function selectTab(id) {
-  currentTab = id;
-  for (const b of tabButtons) {
-    const on = b.dataset.tab === id;
-    b.classList.toggle("is-active", on);
-    b.setAttribute("aria-selected", String(on));
-  }
-  for (const panel of tabPanels) panel.classList.toggle("is-current", panel.id === id);
-}
-
-function syncTabs() {
-  const shown = tabPanels.filter((p) => !p.hidden).map((p) => p.id);
-  if (!tabChosen || !shown.includes(currentTab)) selectTab(shown[0] ?? null);
-}
-
-for (const b of tabButtons) {
-  b.addEventListener("click", () => {
-    tabChosen = true;
-    selectTab(b.dataset.tab);
-  });
-}
-const tabsObserver = new MutationObserver(syncTabs);
-for (const panel of tabPanels) tabsObserver.observe(panel, { attributes: true, attributeFilter: ["hidden"] });
-syncTabs();
-
-// "Invia la tua decklist" in the hero: its tab, brought into view.
-document.getElementById("profile-action-decklist").addEventListener("click", () => {
-  tabChosen = true;
-  selectTab("profile-decklist");
-  document.querySelector(".profile-tabs").scrollIntoView({
-    behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-    block: "start",
-  });
-});
-
-// --- The background card: any Magic card, searched on Scryfall ----------------
-
-// Scryfall's autocomplete (card names, up to 20) as the user types; a name
-// is only taken when picked from the list (click, or ↑↓ + Enter) — typed
-// text alone is put back to the picked card when the field is left. Picking
-// redraws the card (its art) right away; × clears it.
-const CARD_SEARCH_MIN = 2;
-const CARD_SEARCH_DELAY_MS = 200;
-let cardSearchTimer = 0;
-let cardSearchToken = 0;
-let cardOptions = [];
-let cardHighlight = -1;
-
-function closeCardList() {
-  cardListEl.hidden = true;
-  cardListEl.innerHTML = "";
-  cardInput.setAttribute("aria-expanded", "false");
-  cardOptions = [];
-  cardHighlight = -1;
-}
-
-function renderCardList() {
-  cardListEl.innerHTML = cardOptions.length
-    ? cardOptions
-        .map(
-          (name, i) =>
-            `<button type="button" class="pc-card-option${i === cardHighlight ? " is-highlighted" : ""}" role="option" data-i="${i}" tabindex="-1">${escapeHtml(name)}</button>`
-        )
-        .join("")
-    : '<p class="pc-card-empty">Nessuna carta trovata.</p>';
-  cardListEl.hidden = false;
-  cardInput.setAttribute("aria-expanded", "true");
-}
-
-function pickCard(name) {
-  // A new card starts on its default art.
-  if (name !== pickedCard) pickedPrint = null;
-  pickedCard = name;
-  cardInput.value = name ?? "";
-  cardClearBtn.hidden = !name;
-  closeCardList();
-  renderCard(formValues());
-  loadArtPicker();
-}
-
-// "Versione": the picked card's different illustrations (Scryfall's search,
-// one result per illustration, oldest first), as a strip of small art
-// crops — only when there's more than one. The one in use is marked: the
-// picked printing's, else the one of Scryfall's default printing (that
-// name's own lookup). Picking one redraws the card with it.
-const ART_PICKER_MAX = 60;
-const artPrintsCache = new Map();
-let artPickerToken = 0;
-
-function fetchArtPrints(name) {
-  if (!artPrintsCache.has(name)) {
-    const q = encodeURIComponent(`!"${name}"`);
-    artPrintsCache.set(
-      name,
-      Promise.all([
-        fetch(`https://api.scryfall.com/cards/search?q=${q}&unique=art&order=released&dir=asc`)
-          .then((res) => (res.ok ? res.json() : { data: [] }))
-          .then((json) => (json.data ?? []).filter(cardArtUrl).slice(0, ART_PICKER_MAX)),
-        fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}`)
-          .then((res) => (res.ok ? res.json() : null))
-          .then((card) => card?.illustration_id ?? card?.card_faces?.[0]?.illustration_id ?? null),
-      ]).catch(() => [[], null])
-    );
-  }
-  return artPrintsCache.get(name);
-}
-
-function markArtInUse() {
-  for (const option of artStripEl.children) {
-    const on = pickedPrint ? option.dataset.id === pickedPrint : option.dataset.default === "true";
-    option.classList.toggle("is-selected", on);
-    option.setAttribute("aria-selected", String(on));
-  }
-}
-
-async function loadArtPicker() {
-  const token = ++artPickerToken;
-  const name = pickedCard;
-  if (!name) {
-    artPickerEl.hidden = true;
-    artStripEl.innerHTML = "";
-    return;
-  }
-  const [prints, defaultIllustration] = await fetchArtPrints(name);
-  if (token !== artPickerToken) return;
-  artPickerEl.hidden = prints.length < 2;
-  artStripEl.innerHTML = prints
-    .map((card) => {
-      const illustration = card.illustration_id ?? card.card_faces?.[0]?.illustration_id;
-      const label = `${card.set_name} (${(card.released_at ?? "").slice(0, 4)})`;
-      return `<button type="button" class="pc-art-option" role="option" data-id="${escapeHtml(card.id)}" data-default="${
-        illustration && illustration === defaultIllustration
-      }" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}"><img src="${escapeHtml(cardArtUrl(card))}" alt="" loading="lazy" draggable="false"></button>`;
-    })
-    .join("");
-  markArtInUse();
-  artStripEl.querySelector(".is-selected")?.scrollIntoView({ block: "nearest", inline: "center" });
-}
-
-artStripEl.addEventListener("click", (e) => {
-  const option = e.target.closest(".pc-art-option");
-  if (!option) return;
-  pickedPrint = option.dataset.id;
-  markArtInUse();
-  renderCard(formValues());
-});
-
-cardInput.addEventListener("input", () => {
-  clearTimeout(cardSearchTimer);
-  const q = cardInput.value.trim();
-  if (q.length < CARD_SEARCH_MIN) {
-    closeCardList();
-    return;
-  }
-  cardSearchTimer = setTimeout(async () => {
-    const token = ++cardSearchToken;
-    let names = [];
-    try {
-      const res = await fetch(`https://api.scryfall.com/cards/autocomplete?q=${encodeURIComponent(q)}`);
-      names = res.ok ? ((await res.json()).data ?? []) : [];
-    } catch (err) {
-      console.error(err);
-    }
-    // A slower earlier answer doesn't replace a newer one.
-    if (token !== cardSearchToken || document.activeElement !== cardInput) return;
-    cardOptions = names;
-    cardHighlight = names.length ? 0 : -1;
-    renderCardList();
-  }, CARD_SEARCH_DELAY_MS);
-});
-
-cardInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    // Never submits the card from here.
-    e.preventDefault();
-    if (cardHighlight >= 0) pickCard(cardOptions[cardHighlight]);
-    return;
-  }
-  if (e.key === "Escape" && !cardListEl.hidden) {
-    closeCardList();
-    return;
-  }
-  if ((e.key === "ArrowDown" || e.key === "ArrowUp") && cardOptions.length) {
-    e.preventDefault();
-    const n = cardOptions.length;
-    cardHighlight = (cardHighlight + (e.key === "ArrowDown" ? 1 : -1) + n) % n;
-    renderCardList();
-    cardListEl.querySelector(".is-highlighted")?.scrollIntoView({ block: "nearest" });
-  }
-});
-
-// mousedown, not click: picked before the field loses focus (its blur
-// puts the text back).
-cardListEl.addEventListener("mousedown", (e) => {
-  const option = e.target.closest(".pc-card-option");
-  if (!option) return;
-  e.preventDefault();
-  pickCard(cardOptions[Number(option.dataset.i)]);
-});
-
-cardInput.addEventListener("blur", () => {
-  closeCardList();
-  cardInput.value = pickedCard ?? "";
-});
-
-cardClearBtn.addEventListener("click", () => {
-  pickCard(null);
-  cardInput.focus();
-});
-
-// Live preview: every change in edit mode redraws the card from the form.
-profileForm.addEventListener("change", () => renderCard(formValues()));
-
-// The description stays on one line: Enter adds no line break, and a pasted
-// text's breaks become spaces (the database refuses them too). The
-// textarea's own maxlength keeps it to DESCRIPTION_MAX.
-descriptionEl.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") e.preventDefault();
-});
-descriptionEl.addEventListener("input", () => {
-  if (/[\r\n]/.test(descriptionEl.value)) {
-    const caret = descriptionEl.selectionStart;
-    descriptionEl.value = descriptionEl.value.replace(/\s*[\r\n]+\s*/g, " ").slice(0, DESCRIPTION_MAX);
-    descriptionEl.setSelectionRange(caret, caret);
-  }
-  updateCounter();
-});
-
-profileForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const values = formValues();
-  // The links: a username, or that site's own profile link — anything else
-  // is refused here (the database only takes a plain username anyway).
-  const links = {};
-  for (const [key, input] of Object.entries(linkInputs)) {
-    const parsed = parseCardLink(key, input.value);
-    if (parsed.error) {
-      setMessage(pageMessageEl(), parsed.error);
-      input.focus();
-      return;
-    }
-    links[key] = parsed.username;
-  }
-  const fields = {
-    ...links,
-    description: values.description.trim() || null,
-    fav_colors: values.colors,
-    fav_card: values.card,
-    fav_card_print: values.card ? values.print : null,
-    // The older favourite commander: replaced by fav_card (migration 014).
-    fav_commander_id: null,
-    show_avatar: values.showAvatar,
-  };
-  editToggleBtn.disabled = true;
-  try {
-    profile = await Profiles.save(user.id, fields);
-  } catch (err) {
-    console.error(err);
-    setMessage(pageMessageEl(), "Salvataggio non riuscito, riprova.");
-    return;
-  } finally {
-    editToggleBtn.disabled = false;
-  }
-  // Back to the card itself is the confirmation — no message.
-  setEditing(false);
-  // The first save makes the card showable on the player page.
-  renderPublicSwitch();
-});
-
-// --- The card on the player page ----------------------------------------------------
-
-// The switch under the card: whether player.html shows this card too
-// (profiles.show_on_player_page, read there through
-// supabase/migrations/007's public_player_card()). Only while linked to a
-// player (no player page otherwise), and usable only once the card has
-// been saved at least once — before that there's no profile at all, and
-// nothing to show; on by default from the first save. Saved right away.
-function renderPublicSwitch(errorText = "") {
-  publicWrapEl.hidden = !claim.linked;
-  const saved = Boolean(profile);
-  publicInput.disabled = !saved;
-  publicInput.checked = saved && (profile.show_on_player_page ?? true);
-  // Not saved yet: what to do first takes the label's place.
-  publicLabelEl.textContent = saved ? "Mostra nella pagina giocatore" : "Salva prima la tua carta almeno una volta.";
-  publicHintEl.textContent = errorText;
-  publicHintEl.classList.toggle("is-error", Boolean(errorText));
-}
-
-publicInput.addEventListener("change", async () => {
-  const show = publicInput.checked;
-  publicInput.disabled = true;
-  try {
-    profile = await Profiles.save(user.id, { show_on_player_page: show });
-  } catch (err) {
-    console.error(err);
-    // Back to what's saved.
-    renderPublicSwitch("Salvataggio non riuscito, riprova.");
-    return;
-  }
-  renderPublicSwitch();
-});
-
-// --- Il tuo giocatore -------------------------------------------------------------
-
-// request_player_claim()'s error codes (supabase/migrations/002_player_claims.sql).
-const CLAIM_ERROR_TEXT = {
-  not_signed_in: "Sessione scaduta: accedi di nuovo e riprova.",
-  already_linked: "Il tuo account è già collegato a un giocatore.",
-  request_pending: "Hai già una richiesta in attesa.",
-  player_not_found: "Giocatore non trovato: ricarica la pagina.",
-  player_taken: "Questo giocatore è già collegato a un altro account.",
-  player_requested: "Qualcun altro ha già chiesto questo giocatore. Se sei tu, contatta un amministratore.",
-};
-
-function showClaim(state) {
-  for (const block of claimBlocks) block.hidden = block.dataset.claim !== state;
-}
-
-// Linked: no claim card, the stats card instead (loaded by loadStats). Not
-// linked (no request, or one waiting): the claim card at the top.
-async function loadClaim() {
-  const linked = await PlayerClaims.linkedPlayer(user.id);
-  const pending = linked ? null : await PlayerClaims.mine(user.id);
-  claim = { linked, pending };
-  claimCard.hidden = Boolean(linked);
-  statsCard.hidden = !linked;
-  albumCard.hidden = !linked;
-  // Shown by loadDecklistCard once linked.
-  if (!linked) decklistCard.hidden = true;
-  if (linked) return;
-  if (pending) {
-    pendingPlayerEl.textContent = playerLabel(pending.player);
-    showClaim("pending");
-  } else {
-    const players = await PlayerClaims.unlinkedPlayers();
-    claimSelect.innerHTML =
-      '<option value="">Scegli il tuo nome&hellip;</option>' +
-      players.map((p) => `<option value="${p.id}">${escapeHtml(playerLabel(p))}</option>`).join("");
-    showClaim("none");
-  }
-}
-
-async function reloadClaim(okText) {
-  try {
-    await loadClaim();
-    // Approved by the admin in the meantime: the stats take its place.
-    if (claim.linked) await loadStats(claim.linked);
-  } catch (err) {
-    console.error(err);
-    setMessage(claimMessageEl, "Impossibile caricare il tuo giocatore, ricarica la pagina.");
-    return;
-  }
-  // The card's name follows the link (the player's name once approved), and
-  // the switch under it comes with it.
-  renderCard(cardEl.classList.contains("is-editing") ? formValues() : savedValues());
-  renderPublicSwitch();
-  setMessage(claimMessageEl, okText, "ok");
-}
-
-// --- Le tue statistiche --------------------------------------------------------------
-
-// Same figures as the player page's own tiles (js/player-detail.js), over the
-// player's whole history: match-basis winrate, a bye counts as a win, a drop
-// isn't a match at all; "Eventi" counts entries (an event counts even if the
-// player dropped before playing).
-function matchOutcome(m, isPlayer1) {
-  const outcome = matchRoundOutcome(m);
-  if (outcome === "draw") return "draw";
-  return (outcome === "player1") === isPlayer1 ? "win" : "loss";
-}
-
-async function loadStats(player) {
-  statsLink.href = `player.html?id=${player.id}`;
-  const [entries, { asP1, asP2 }, badgeSlots, autoBadgeRows] = await Promise.all([
-    EventEntries.listByPlayer(player.id),
-    Matches.listByPlayer(player.id),
-    // The card's badges, same as next to the name on the player page: the
-    // two manual slots (Players' badge embed), then the automatic ones by
-    // priority. Not fatal: the card just shows none.
-    Players.get(player.id).catch((err) => {
-      console.error(err);
-      return {};
-    }),
-    PlayerAutoBadges.listByPlayer(player.id).catch((err) => {
-      console.error(err);
-      return [];
-    }),
-  ]);
-  playerBadges = uniqueBadges([
-    badgeSlots.badge1,
-    badgeSlots.badge2,
-    ...autoBadgeRows
-      .map((r) => r.badge)
-      .filter(Boolean)
-      .sort((a, b) => b.priority - a.priority),
-  ]);
-
-  const bucket = { wins: 0, draws: 0, losses: 0 };
-  for (const m of asP1) if (!isDrop(m)) tallyOutcome(bucket, matchOutcome(m, true));
-  for (const m of asP2) if (!isDrop(m)) tallyOutcome(bucket, matchOutcome(m, false));
-
-  // The hero's numbers: Winrate, Leghe (the leagues, open or closed, with at
-  // least one closed event played), Eventi — the player page's tiles' look
-  // (styles.css .profile-hero .stat-tile), not its whole set (no wins /
-  // draws / losses here). No match played yet: just a line.
-  const played = bucket.wins + bucket.draws + bucket.losses;
-  const rate = winRatePct(bucket.wins, played);
-  const leagueIds = new Set(
-    entries.filter((e) => e.event && !e.event.is_open && e.event.league).map((e) => e.event.league.id)
-  );
-  const tile = (label, value) =>
-    `<div class="stat-tile"><div class="stat-tile-label">${label}</div><div class="stat-tile-value">${value}</div></div>`;
-  statsTilesEl.innerHTML =
-    rate === null
-      ? '<p class="page-empty">Non ci sono ancora dati sufficienti.</p>'
-      : tile("Winrate", `${rate}%`) + tile("Leghe", leagueIds.size) + tile("Eventi", entries.length);
-
-  // Album comandanti: player.html's carousel, from the same entries and
-  // matches — the frame of each card from its events, its foil from the
-  // matches won with it, counted like player.html (a drop skipped, a bye a
-  // win).
-  const carousel = renderCommanderCarousel(albumEl, albumItems(entries));
-  const pairByEvent = new Map(
-    entries.filter((e) => e.commander).map((e) => [e.event_id, commanderPairKey(e.commander, e.partner_commander)])
-  );
-  const records = new Map();
-  const tallyPair = (m, isPlayer1) => {
-    const key = pairByEvent.get(m.event_id);
-    if (!key || isDrop(m)) return;
-    if (!records.has(key)) records.set(key, { wins: 0, draws: 0, losses: 0 });
-    tallyOutcome(records.get(key), matchOutcome(m, isPlayer1));
-  };
-  for (const m of asP1) tallyPair(m, true);
-  for (const m of asP2) tallyPair(m, false);
-  carousel.setRecords(records);
-
-  // The player card's "Dal …": the year of the player's first event.
-  const firstDate = entries.reduce((min, e) => {
-    const d = e.event?.event_date;
-    return d && (!min || d < min) ? d : min;
-  }, null);
-  firstYear = firstDate ? firstDate.slice(0, 4) : null;
-
-  // The card's cosmetics: never fatal (a card without them).
-  cardProgress = await PlayerProgress.get(player.id).catch((err) => {
-    console.error(err);
-    return null;
-  });
-
-  // "Invia la tua decklist" needs the same entries (the closed events played).
-  await loadDecklistCard(player, entries);
-}
-
-// "?" next to "Le tue statistiche": how the card's effects are earned.
-document.getElementById("card-effects-help").addEventListener("click", openCardEffectsInfo);
-
-document.getElementById("account-claim-form").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  setMessage(claimMessageEl, "");
-  // Checked here, not with `required`: the native <select> is hidden behind
-  // js/custom-select.js's skin, where the browser can't show its warning.
-  if (!claimSelect.value) {
-    setMessage(claimMessageEl, "Scegli il tuo nome dalla lista.");
-    return;
-  }
-  try {
-    await PlayerClaims.request(claimSelect.value);
-  } catch (err) {
-    console.error(err);
-    setMessage(claimMessageEl, CLAIM_ERROR_TEXT[err?.message] ?? "Richiesta non riuscita, riprova.");
-    return;
-  }
-  await reloadClaim("Richiesta inviata.");
-});
-
-document.getElementById("account-claim-cancel").addEventListener("click", async () => {
-  setMessage(claimMessageEl, "");
-  try {
-    await PlayerClaims.cancel();
-  } catch (err) {
-    console.error(err);
-    setMessage(claimMessageEl, "Annullamento non riuscito, riprova.");
-    return;
-  }
-  await reloadClaim("Richiesta annullata.");
-});
-
-// --- Invia la tua decklist ------------------------------------------------------------
-
-// For an upcoming event (open, today or later) or a closed one the player
-// is in, emailed to the organisers by the send-decklist Edge Function
-// (js/db.js's Decklists) — never stored, only *that* it was sent: two per
-// player and event (supabase/migrations/008-009). The function checks it
-// all again; this only offers the events that qualify, shows the ones
-// already sent, and asks for confirmation before each send.
-const decklistCard = document.getElementById("profile-decklist");
-const decklistNoneEl = document.getElementById("decklist-none");
-const decklistForm = document.getElementById("decklist-form");
-const decklistEventSelect = document.getElementById("decklist-event");
-const decklistText = document.getElementById("decklist-text");
-const decklistMeter = document.getElementById("decklist-meter");
-const decklistConfirm = document.getElementById("decklist-confirm");
-const decklistConfirmText = document.getElementById("decklist-confirm-text");
-const decklistConfirmSend = document.getElementById("decklist-confirm-send");
-const decklistConfirmCancel = document.getElementById("decklist-confirm-cancel");
-const decklistActions = document.getElementById("decklist-actions");
-const decklistMessageEl = document.getElementById("decklist-message");
-const decklistSentBox = document.getElementById("decklist-sent");
-const decklistSentList = document.getElementById("decklist-sent-list");
-const decklistBody = document.getElementById("decklist-body");
-const decklistBodyClip = document.getElementById("decklist-body-clip");
-
-// "Invia la tua decklist" and Account, each in its own tab, are always
-// open: their old collapsible header is hidden (styles.css .profile-panel),
-// the body lets go of its inert and its clip — so the event list's dropdown
-// isn't cut off at the card's edge (CLAUDE.md gotcha #13).
-for (const [body, clip] of [
-  [decklistBody, decklistBodyClip],
-  [document.getElementById("account-body"), document.getElementById("account-body-clip")],
-]) {
-  body.inert = false;
-  clip.classList.add("is-open");
-}
-
-// The send-decklist function's error codes.
-const DECKLIST_ERROR_TEXT = {
-  not_signed_in: "Sessione scaduta: accedi di nuovo e riprova.",
-  blocked: "Il tuo account è bloccato.",
-  empty: "Scegli l'evento e incolla la decklist.",
-  too_long: "La decklist è troppo lunga.",
-  not_linked: "Il tuo account non è collegato a un giocatore.",
-  event_not_found: "Evento non trovato: ricarica la pagina.",
-  event_not_allowed: "Per questo evento non puoi inviare la decklist.",
-  already_sent: "Hai già inviato due decklist per questo evento.",
-};
-
-// When the send itself fails (Resend refusing or over its limits, the
-// function unreachable, the network), the user is pointed to sending it by
-// hand to the same address — a mail link already filled in like the
-// function's own email (subject, and the list as the body when it fits a
-// mail link: those get cut past ~2000 characters in some mail apps). Public
-// here, unlike DECKLIST_TO (the function's secret).
-const DECKLIST_FALLBACK_TO = "lamialistadeck@gmail.com";
-const DECKLIST_MAILTO_MAX = 1800;
-
-function decklistFallbackHtml(ev, text) {
-  // The same subject as supabase/functions/send-decklist's.
-  const eventName = ev.name || ev.league?.name || "Evento";
-  const date = (ev.event_date ?? "").split("-").reverse().join("/");
-  const subject = `${eventName} - ${date} - ${playerLabel(claim.linked)}`;
-  const base = `mailto:${DECKLIST_FALLBACK_TO}?subject=${encodeURIComponent(subject)}`;
-  const withBody = `${base}&body=${encodeURIComponent(text.trim())}`;
-  const fits = withBody.length <= DECKLIST_MAILTO_MAX;
-  return `Invio non riuscito. Puoi mandare la lista via email a <a href="${
-    fits ? withBody : base
-  }">${DECKLIST_FALLBACK_TO}</a>, con oggetto «${escapeHtml(subject)}»${
-    fits ? "" : ": incolla la lista nel testo dell'email"
-  }.`;
-}
-
-// The events that can still get a list (id → event: upcoming first, soonest
-// first, then the ones played, newest first) and the ones already sent
-// ({ event, sentAt, isNew }, most recently sent first — "Ultime inviate"
-// shows the first DECKLIST_SENT_SHOWN; all of them stay out of the list).
-const DECKLIST_SENT_SHOWN = 3;
-// Only recent events are offered: the next DECKLIST_EVENTS_EACH upcoming and
-// the last DECKLIST_EVENTS_EACH played (by date — one out of sends just
-// isn't listed, no older one takes its place).
-const DECKLIST_EVENTS_EACH = 2;
-// Sends allowed per event (the send-decklist function's MAX_SENDS, migration
-// 009); how many each event has had so far (event id → 1 or 2).
-const DECKLIST_MAX_SENDS = 2;
-let decklistEvents = new Map();
-let sentDecklists = [];
-let decklistSendCount = new Map();
-
-// One more send recorded for an event: it moves to the front of "Ultime
-// inviate" (one chip per event) and leaves the list once out of sends.
-function recordDecklistSend(ev, count) {
-  decklistSendCount.set(ev.id, count);
-  if (count >= DECKLIST_MAX_SENDS) decklistEvents.delete(ev.id);
-  sentDecklists = sentDecklists.filter((item) => item.event.id !== ev.id);
-  sentDecklists.unshift({ event: ev, sentAt: new Date().toISOString(), isNew: true });
-}
-
-async function loadDecklistCard(player, entries) {
-  decklistCard.hidden = false;
-  closeDecklistConfirm();
-  setMessage(decklistMessageEl, "");
-  let upcoming;
-  let sent;
-  try {
-    [upcoming, sent] = await Promise.all([Events.listUpcoming(), Decklists.sentEvents(player.id)]);
-  } catch (err) {
-    // E.g. migration 008 not run yet: no card rather than a broken one.
-    console.error(err);
-    decklistCard.hidden = true;
-    return;
-  }
-  const played = entries
-    .map((e) => e.event)
-    .filter((ev) => ev && !ev.is_open)
-    .sort((a, b) => (b.event_date ?? "").localeCompare(a.event_date ?? ""));
-  // One row per send: per event, how many and the latest.
-  decklistSendCount = new Map();
-  const lastSentAt = new Map();
-  for (const row of sent) {
-    decklistSendCount.set(row.event_id, (decklistSendCount.get(row.event_id) ?? 0) + 1);
-    if ((row.sent_at ?? "") > (lastSentAt.get(row.event_id) ?? "")) lastSentAt.set(row.event_id, row.sent_at);
-  }
-  // Every event the player has, for the "Ultime inviate" chips — the list
-  // itself offers only the recent ones.
-  const known = new Map([...upcoming, ...played].map((ev) => [ev.id, ev]));
-  decklistEvents = new Map(
-    [
-      ...upcoming.slice(0, DECKLIST_EVENTS_EACH).map((ev) => ({ ...ev, upcoming: true })),
-      ...played.slice(0, DECKLIST_EVENTS_EACH),
-    ]
-      .filter((ev) => (decklistSendCount.get(ev.id) ?? 0) < DECKLIST_MAX_SENDS)
-      .map((ev) => [ev.id, ev])
-  );
-  sentDecklists = [...lastSentAt.keys()]
-    .map((id) => known.get(id))
-    .filter(Boolean)
-    .map((event) => ({ event, sentAt: lastSentAt.get(event.id) ?? "", isNew: false }))
-    .sort((a, b) => b.sentAt.localeCompare(a.sentAt));
-  renderDecklistCard();
-}
-
-function decklistEventSublabel(ev) {
-  const sentOnce = (decklistSendCount.get(ev.id) ?? 0) > 0;
-  return [ev.upcoming ? "In arrivo" : "Giocato", formatDate(ev.event_date), ev.league?.name, sentOnce && "1 invio rimasto"]
-    .filter(Boolean)
-    .join(" · ");
-}
-
-function renderDecklistCard() {
-  const events = [...decklistEvents.values()];
-  decklistForm.hidden = events.length === 0;
-  decklistNoneEl.hidden = events.length > 0;
-  decklistNoneEl.textContent = sentDecklists.length
-    ? "Hai già inviato la decklist per tutti gli eventi disponibili."
-    : "Nessun evento disponibile: puoi inviare la decklist per i prossimi due eventi o per gli ultimi due che hai giocato.";
-  // data-label / data-sublabel: js/custom-select.js shows the name with a
-  // smaller line below (in arrivo / giocato · date · league).
-  decklistEventSelect.innerHTML =
-    '<option value="">Scegli un evento&hellip;</option>' +
-    events
-      .map((ev) => {
-        const name = eventTitle(ev);
-        const sub = decklistEventSublabel(ev);
-        return `<option value="${ev.id}" data-label="${escapeHtml(name)}" data-sublabel="${escapeHtml(sub)}">${escapeHtml(
-          name
-        )} — ${escapeHtml(sub)}</option>`;
-      })
-      .join("");
-  decklistSentBox.hidden = sentDecklists.length === 0;
-  decklistSentList.innerHTML = sentDecklists
-    .slice(0, DECKLIST_SENT_SHOWN)
-    .map(
-      ({ event, isNew }) => `<li class="decklist-sent-chip${isNew ? " is-new" : ""}">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
-        <span class="decklist-sent-name">${escapeHtml(eventTitle(event))}</span>
-      </li>`
-    )
-    .join("");
-  // Animated once, as it's added — not again on the next redraw.
-  for (const item of sentDecklists) item.isNew = false;
-}
-
-// What's in the box, said under it as you type: a link, or the cards counted
-// from the list (a leading number is the quantity, "1 Sol Ring" / "1x Sol
-// Ring"; section names like "Commander" or "Sideboard:" aren't cards). A
-// Duel Commander deck is 100 cards: that count turns green.
-const DECKLIST_SECTION = /^(commander|commanders|deck|mainboard|main|sideboard|companion|maybeboard)\s*:?$/i;
-
-function updateDecklistMeter() {
-  const text = decklistText.value.trim();
-  decklistMeter.className = "decklist-meter";
-  if (!text) {
-    decklistMeter.textContent = "";
-    return;
-  }
-  if (/^https?:\/\/\S+$/i.test(text)) {
-    decklistMeter.textContent = "Link alla decklist";
-    decklistMeter.classList.add("is-link");
-    return;
-  }
-  let cards = 0;
-  for (const raw of text.split(/\r?\n/)) {
-    const line = raw.trim();
-    if (!line || /^(\/\/|#)/.test(line) || DECKLIST_SECTION.test(line)) continue;
-    const quantity = line.match(/^(\d+)\s*x?\s+\S/i);
-    cards += quantity ? Number(quantity[1]) : 1;
-  }
-  decklistMeter.textContent = `${cards} ${cards === 1 ? "carta" : "carte"}`;
-  decklistMeter.classList.toggle("is-full", cards === 100);
-}
-
-// The warning before sending slides open in place of the send button.
-function openDecklistConfirm(ev) {
-  // First send: one more possible; second: the last, replacing the first.
-  const last = (decklistSendCount.get(ev.id) ?? 0) + 1 >= DECKLIST_MAX_SENDS;
-  decklistConfirmText.innerHTML = `Inviare la decklist per <strong>${escapeHtml(eventTitle(ev))}</strong> del ${formatDate(
-    ev.event_date
-  )}? ${
-    last
-      ? "È il tuo <strong>ultimo invio</strong> per questo evento: sostituirà la lista che hai già mandato."
-      : "Potrai inviarne <strong>al massimo due</strong> per questo evento: la seconda sostituirà la prima."
-  }`;
-  decklistConfirm.classList.add("is-open");
-  decklistConfirm.inert = false;
-  decklistActions.hidden = true;
-  decklistConfirmSend.focus({ preventScroll: true });
-}
-
-function closeDecklistConfirm() {
-  decklistConfirm.classList.remove("is-open");
-  decklistConfirm.inert = true;
-  decklistActions.hidden = false;
-}
-
-function setDecklistSending(sending) {
-  decklistConfirmSend.disabled = sending;
-  decklistConfirmCancel.disabled = sending;
-  decklistConfirmSend.classList.toggle("is-sending", sending);
-  decklistConfirmSend.textContent = sending ? "Invio in corso…" : "Conferma e invia";
-}
-
-decklistText.addEventListener("input", () => {
-  updateDecklistMeter();
-  // Changed after the warning: it's for the old text, so it goes.
-  if (decklistConfirm.classList.contains("is-open")) closeDecklistConfirm();
-});
-decklistEventSelect.addEventListener("change", () => {
-  if (decklistConfirm.classList.contains("is-open")) closeDecklistConfirm();
-});
-decklistConfirmCancel.addEventListener("click", closeDecklistConfirm);
-
-decklistForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-  setMessage(decklistMessageEl, "");
-  // Checked here, not with `required`: the native <select> is hidden behind
-  // js/custom-select.js's skin, where the browser can't show its warning.
-  const ev = decklistEvents.get(decklistEventSelect.value);
-  if (!ev) {
-    setMessage(decklistMessageEl, "Scegli l'evento.");
-    return;
-  }
-  if (!decklistText.value.trim()) {
-    setMessage(decklistMessageEl, "Incolla la decklist o un link.");
-    return;
-  }
-  openDecklistConfirm(ev);
-});
-
-decklistConfirmSend.addEventListener("click", async () => {
-  const ev = decklistEvents.get(decklistEventSelect.value);
-  if (!ev) {
-    closeDecklistConfirm();
-    return;
-  }
-  setDecklistSending(true);
-  try {
-    await Decklists.send(ev.id, decklistText.value);
-  } catch (err) {
-    console.error(err);
-    setDecklistSending(false);
-    closeDecklistConfirm();
-    const known = DECKLIST_ERROR_TEXT[err?.message];
-    if (known) {
-      setMessage(decklistMessageEl, known);
-    } else {
-      // The send itself failed: by hand, to the same address.
-      decklistMessageEl.className = "form-message is-error";
-      decklistMessageEl.innerHTML = decklistFallbackHtml(ev, decklistText.value);
-    }
-    // Out of sends (another tab, another device): it leaves the list.
-    if (err?.message === "already_sent") {
-      recordDecklistSend(ev, DECKLIST_MAX_SENDS);
-      renderDecklistCard();
-    }
-    return;
-  }
-  setDecklistSending(false);
-  closeDecklistConfirm();
-  recordDecklistSend(ev, (decklistSendCount.get(ev.id) ?? 0) + 1);
-  decklistText.value = "";
-  updateDecklistMeter();
-  renderDecklistCard();
-  setMessage(decklistMessageEl, `Decklist inviata per ${eventTitle(ev)}.`, "ok");
-});
-
-// --- Seguiti -----------------------------------------------------------------------------
-
-// The players, commanders and leagues this account follows (★ on their
-// pages, js/follow-button.js), newest follow first, in three groups (each
-// only when it has someone, with its count). One sub-card each, like the
-// Comandanti / Giocatori pages' lists (js/history-list.js), the whole card a
-// link to the player's / commander's / league's page: the name (a player's badges after it), a
-// small line with the last event, the numbers on the right (below on
-// phones). The only part that doesn't lead there: a filled ★ in a circle to
-// unfollow (hollow on hover — the same star as on their pages), beside the
-// link rather than inside it (a link can't hold a button), placed over the
-// card's right edge. Any signed-in account — following needs no linked
-// player.
-const followsCard = document.getElementById("profile-follows");
-const followsListEl = document.getElementById("follows-list");
-const followsEmptyEl = document.getElementById("follows-empty");
-
-function followRowHtml(kind, target) {
-  const href = `${kind}.html?id=${target.id}`;
-  const name = kind === "player" ? playerLabel(target) : target.name;
-  return `<li class="follow-row" data-kind="${kind}" data-id="${target.id}">
-    <a class="history-item follow-card" href="${href}">
-      <div class="history-main">
-        <span class="follow-title">
-          <span class="follow-name">${escapeHtml(name)}</span>${kind === "player" ? '<span class="follow-badges"></span>' : ""}
-        </span>
-        <span class="history-deck follow-meta"></span>
-      </div>
-      <div class="follow-stats"></div>
-    </a>
-    <button type="button" class="follow-remove" aria-label="Non seguire più ${escapeHtml(name)}" title="Non seguire più">
-      <span class="follow-remove-star" aria-hidden="true"></span>
-    </button>
-  </li>`;
-}
-
-function followGroupHtml(title, kind, targets) {
-  if (!targets.length) return "";
-  return `<li class="follow-group">
-    <p class="follow-group-title">${title} <span class="history-count">${targets.length}</span></p>
-    <ul class="follow-group-list">${targets.map((t) => followRowHtml(kind, t)).join("")}</ul>
-  </li>`;
-}
-
-function updateFollowsEmpty() {
-  // A group whose last row went goes too; the others recount.
-  for (const group of followsListEl.querySelectorAll(".follow-group")) {
-    const rows = group.querySelectorAll(".follow-row").length;
-    if (!rows) group.remove();
-    else group.querySelector(".history-count").textContent = String(rows);
-  }
-  followsEmptyEl.hidden = followsListEl.querySelector(".follow-row") !== null;
-}
-
-async function loadFollows() {
-  let follows;
-  try {
-    follows = await Follows.mine(user.id);
-  } catch (err) {
-    // E.g. migration 010 not run yet: no card rather than a broken one.
-    console.error(err);
-    followsCard.hidden = true;
-    return;
-  }
-  followsListEl.innerHTML =
-    followGroupHtml("Giocatori", "player", follows.map((f) => f.player).filter(Boolean)) +
-    followGroupHtml("Comandanti", "commander", follows.map((f) => f.commander).filter(Boolean)) +
-    followGroupHtml("Leghe", "league", follows.map((f) => f.league).filter(Boolean));
-  updateFollowsEmpty();
-  followsCard.hidden = false;
-  // The numbers next to each name come after, without holding up the page.
-  fillFollowStats(follows).catch((err) => console.error(err));
-}
-
-// --- Seguiti: the numbers of each sub-card ---
-
-// Filled in after the list shows (labelled numbers, js/history-list.js
-// historyStatsHtml — the full text on hover — and the small line below the
-// name):
-//  - a player: its badges right after the name (the same icons as in the
-//    lists, js/player-badges.js); Winrate (its cached standings — closed
-//    events, counted like the player page's), its placement in the last
-//    event (the event on the line below), and — while a league is open — its
-//    position in that league's standings (a real league, not a Topdeck
-//    series; computed like the Bacheca's, js/home.js), "—" when not in them;
-//  - a commander: Winrate counted like commander.html's (a bye or a drop
-//    isn't a match it played) and how many events it was played in; the
-//    latest of them, and who played it, on the line below;
-//  - a league: how many of its events were played (closed ones, as on
-//    league.html); "In corso" / "Conclusa" and the latest event below.
-const winrate = ({ wins, draws, losses }) => {
-  const played = wins + draws + losses;
-  return played ? `${Math.round((wins / played) * 100)}%` : null;
-};
-
-function setFollowStats(kind, id, { stats, meta }) {
-  const row = followsListEl.querySelector(`.follow-row[data-kind="${kind}"][data-id="${id}"]`);
-  if (!row) return;
-  const slot = row.querySelector(".follow-stats");
-  slot.innerHTML = historyStatsHtml(stats);
-  slot.classList.add("is-ready");
-  if (meta) row.querySelector(".follow-meta").textContent = meta;
-}
-
-const latestEvent = (rows) =>
-  rows.reduce((best, row) => (!best || (row.event?.event_date ?? "") > (best.event?.event_date ?? "") ? row : best), null);
-
-async function openLeagueStandings() {
-  const league = await Leagues.getOpen();
-  if (!league) return null;
-  const allEvents = await Events.listByLeague(league.id);
-  const [eventsData, scheduledEvents] = await Promise.all([
-    fetchEventsResults(allEvents.filter((ev) => !ev.is_open).map((ev) => ev.id)),
-    Leagues.eventCount(league.id, allEvents.length),
-  ]);
-  return { league, standings: computeLeaguePoints(eventsData, { scheduledEvents }) };
-}
-
-async function fillPlayerStats(playerIds) {
-  const [results, open, badgesFor] = await Promise.all([
-    Follows.playerResults(playerIds),
-    openLeagueStandings().catch((err) => (console.error(err), null)),
-    // Never rejects: without them the names just have no badges.
-    fetchPlayerBadgesRenderer(),
-  ]);
-  for (const id of playerIds) {
-    const badgesSlot = followsListEl.querySelector(`.follow-row[data-kind="player"][data-id="${id}"] .follow-badges`);
-    if (badgesSlot) badgesSlot.innerHTML = badgesFor({ id });
-    const rows = results.filter((r) => r.player_id === id);
-    const totals = rows.reduce(
-      (t, r) => ({ wins: t.wins + r.wins, draws: t.draws + r.draws, losses: t.losses + r.losses }),
-      { wins: 0, draws: 0, losses: 0 }
-    );
-    const latest = latestEvent(rows);
-    const stats = [
-      { label: "Winrate", value: winrate(totals) ?? "—", main: true, title: "Winrate su tutti gli eventi" },
-      {
-        label: "Ultimo",
-        value: latest ? `${latest.position}°` : "—",
-        title: latest ? `Ultimo evento: ${eventTitle(latest.event)}, ${formatDate(latest.event.event_date)}` : "",
-      },
-    ];
-    if (open) {
-      const index = open.standings.findIndex((row) => row.player?.id === id);
-      stats.push({
-        label: "Lega",
-        value: index >= 0 ? `${index + 1}°` : "—",
-        title: index >= 0 ? `${open.league.name}: ${index + 1}° in classifica` : `Non in classifica in ${open.league.name}`,
-      });
-    }
-    setFollowStats("player", id, {
-      stats,
-      meta: latest ? `Ultimo evento: ${eventTitle(latest.event)}` : "",
-    });
-  }
-}
-
-async function fillCommanderStats(commanderIds) {
-  const appearances = await Follows.commanderAppearances(commanderIds);
-  const eventIds = [...new Set(appearances.map((a) => a.event.id))];
-  const results = await fetchEventsResults(eventIds);
-  const plays = (entry, id) => entry && (entry.commander_id === id || entry.partner_commander_id === id);
-  for (const id of commanderIds) {
-    const mine = appearances.filter((a) => a.commander_id === id || a.partner_commander_id === id);
-    if (!mine.length) continue;
-    const bucket = { wins: 0, draws: 0, losses: 0 };
-    for (const { entries, matches } of results) {
-      const entryByPlayer = new Map(entries.map((e) => [e.player_id, e]));
-      for (const m of matches) {
-        if (isBye(m) || isDrop(m)) continue;
-        const outcome = matchRoundOutcome(m);
-        // Each side that piloted it (both, in a mirror) counts.
-        for (const [playerId, side] of [
-          [m.player1_id, "player1"],
-          [m.player2_id, "player2"],
-        ]) {
-          if (!plays(entryByPlayer.get(playerId), id)) continue;
-          tallyOutcome(bucket, outcome === "draw" ? "draw" : outcome === side ? "win" : "loss");
-        }
-      }
-    }
-    const latest = latestEvent(mine);
-    setFollowStats("commander", id, {
-      stats: [
-        { label: "Winrate", value: winrate(bucket) ?? "—", main: true, title: "Winrate su tutti gli eventi" },
-        { label: "Eventi", value: mine.length, title: `Giocato in ${mine.length} ${mine.length === 1 ? "evento" : "eventi"}` },
-      ],
-      meta: `Ultimo evento: ${eventTitle(latest.event)}${latest.player?.name ? ` · ${latest.player.name}` : ""}`,
-    });
-  }
-}
-
-async function fillLeagueStats(leagues) {
-  await Promise.all(
-    leagues.map(async (league) => {
-      const played = (await Events.listByLeague(league.id)).filter((ev) => !ev.is_open);
-      const latest = played.reduce(
-        (best, ev) => (!best || (ev.event_date ?? "") > (best.event_date ?? "") ? ev : best),
-        null
-      );
-      setFollowStats("league", league.id, {
-        stats: [
-          {
-            label: "Eventi",
-            value: played.length,
-            main: true,
-            title: `${played.length} ${played.length === 1 ? "evento giocato" : "eventi giocati"}`,
-          },
-        ],
-        meta: `${league.is_open ? "In corso" : "Conclusa"}${latest ? ` · Ultimo evento: ${eventTitle(latest)}` : ""}`,
-      });
-    })
-  );
-}
-
-async function fillFollowStats(follows) {
-  const playerIds = follows.filter((f) => f.player).map((f) => f.player.id);
-  const commanderIds = follows.filter((f) => f.commander).map((f) => f.commander.id);
-  const leagues = follows.map((f) => f.league).filter(Boolean);
-  await Promise.all([
-    playerIds.length ? fillPlayerStats(playerIds) : null,
-    commanderIds.length ? fillCommanderStats(commanderIds) : null,
-    leagues.length ? fillLeagueStats(leagues) : null,
-  ]);
-}
-
-// ★: unfollowed, and the row slides away (or just goes, with reduced motion).
-followsListEl.addEventListener("click", async (e) => {
-  const button = e.target.closest(".follow-remove");
-  if (!button) return;
-  const row = button.closest(".follow-row");
-  button.disabled = true;
-  try {
-    await Follows.unfollow(user.id, row.dataset.kind, row.dataset.id);
-  } catch (err) {
-    console.error(err);
-    button.disabled = false;
-    return;
-  }
-  const remove = () => {
-    row.remove();
-    updateFollowsEmpty();
-  };
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    remove();
-    return;
-  }
-  row.classList.add("is-leaving");
-  row.addEventListener("animationend", remove, { once: true });
-});
-
-// --- Loading the signed-in view -----------------------------------------------------
-
-// Also kept by id, for the card's live preview of a commander picked in
-// edit mode (its name → Scryfall art).
-async function loadSignedIn(sessionUser) {
-  user = sessionUser;
-  profile = null;
-  firstYear = null;
-  cardProgress = null;
-  playerBadges = [];
-  setEditing(false, { animate: false });
-  accountDangerEl.hidden = true;
-  decklistCard.hidden = true;
-  albumCard.hidden = true;
-  followsCard.hidden = true;
-  setMessage(accountMessageEl, "");
-  try {
-    let isAdmin;
-    [profile, , isAdmin] = await Promise.all([Profiles.mine(user.id), loadClaim(), MyAccount.isAdmin()]);
-    // Admins can't delete their own account from here (nor in the database).
-    accountDangerEl.hidden = isAdmin;
-    if (claim.linked) await loadStats(claim.linked);
-  } catch (err) {
-    console.error(err);
-    setMessage(pageMessageEl(), "Impossibile caricare il profilo, ricarica la pagina.");
-  }
-  await loadFollows();
-  renderCard(savedValues());
-  renderPublicSwitch();
-  show("signed-in");
-}
-
-// --- Auth ---------------------------------------------------------------------------
-
-// A sign-in that failed or was cancelled on Google's side comes back with
-// the error in the address (query or fragment) instead of a session.
-function returnedError() {
-  const params = [window.location.search, window.location.hash.replace(/^#/, "?")].map((s) => new URLSearchParams(s));
-  return params.some((p) => p.has("error") || p.has("error_code"));
-}
-
-let firstEvent = true;
-sb.auth.onAuthStateChange((_event, session) => {
-  const isFirst = firstEvent;
-  firstEvent = false;
-  // Deferred: supabase-js freezes if another Supabase call is awaited inside
-  // its own auth-change callback (loadSignedIn makes several).
-  setTimeout(async () => {
-    if (session) {
-      // Token refreshes etc. for the account already on screen: nothing to do.
-      if (user?.id !== session.user.id) await loadSignedIn(session.user);
-    } else {
-      user = null;
-      profile = null;
-      show("login");
-      showGoogleButton();
-      const loginMessageEl = viewOf("login").querySelector("[data-message]");
-      if (loginNotice) {
-        setMessage(loginMessageEl, loginNotice, "ok");
-        loginNotice = null;
-      } else if (isFirst && returnedError()) {
-        setMessage(loginMessageEl, "Accesso con Google non riuscito o annullato: riprova.");
-      }
-    }
-    if (isFirst) hidePageLoading();
-  }, 0);
-});
-
-// --- Sign in with Google's own button ------------------------------------------
-
-// Google Identity Services: Google's button, drawn on this page, signs the
-// user in itself and hands its ID token to Supabase (signInWithIdToken) —
-// the sign-in never leaves the site, so Google's window names the site
-// instead of Supabase's address (the redirect flow below does that). The
-// script loads only here, only while the sign-in card is shown; if it's
-// blocked or slow (privacy browsers, ad blockers), the redirect button below
-// takes its place. Same Google client as Supabase's Google provider (its
-// Client ID is public; the secret stays in Supabase); this site's addresses
-// are its "Authorized JavaScript origins" (PLAYER_LOGIN.md).
-const GOOGLE_CLIENT_ID = "758643767973-5akt6sepj004h3l0qjn1o9tts8nld00g.apps.googleusercontent.com";
-const GOOGLE_SCRIPT_TIMEOUT_MS = 5000;
-const googleButtonEl = document.getElementById("account-google-gsi");
-const googleFallbackBtn = document.getElementById("account-google");
-
+// Google's script (loadGoogleScript, in mount): added to the document once,
+// kept across visits.
 let googleScript = null;
 
-function loadGoogleScript() {
-  googleScript ??= new Promise((resolve, reject) => {
-    const script = document.createElement("script");
-    script.src = "https://accounts.google.com/gsi/client";
-    script.async = true;
-    script.onload = () => (window.google?.accounts?.id ? resolve(window.google.accounts.id) : reject(new Error("gsi_missing")));
-    script.onerror = () => reject(new Error("gsi_blocked"));
-    document.head.appendChild(script);
-    setTimeout(() => reject(new Error("gsi_timeout")), GOOGLE_SCRIPT_TIMEOUT_MS);
-  });
-  return googleScript;
-}
+// In-app page (js/router.js): mounted by the router on this page's <main>
+// (data-page), on first load and after each in-app navigation; `signal`
+// aborts when the page is left (the auth subscription, the Escape key).
+// Google's redirect sign-in comes back with a normal load of this page.
+export function mount({ signal = new AbortController().signal } = {}) {
+  const views = Array.from(document.querySelectorAll("[data-view]"));
+  const viewOf = (name) => views.find((v) => v.dataset.view === name);
+  const pageMessageEl = () => viewOf("signed-in").querySelector("[data-message]");
 
-// A one-time value tying Google's token to this attempt, so a token can't be
-// replayed: Google gets its SHA-256 (hex), Supabase the value itself, and
-// checks they match.
-async function newNonce() {
-  const raw = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(24))));
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
-  const hashed = [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
-  return { raw, hashed };
-}
+  // Player card
+  const cardEl = document.getElementById("player-card");
+  const artEl = document.getElementById("pc-art");
+  const avatarImg = document.getElementById("profile-avatar");
+  const initialEl = document.getElementById("profile-initial");
+  const nameEl = document.getElementById("profile-name");
+  // The same name, big, in the hero beside the card; the background card's
+  // art blurred behind it all (styles.css .profile-hero).
+  const heroNameEl = document.getElementById("profile-hero-name");
+  const bioEl = document.getElementById("profile-bio");
+  const sinceEl = document.getElementById("pc-since");
+  const badgesEl = document.getElementById("pc-badges");
+  const linksEl = document.getElementById("pc-links");
+  const editToggleBtn = document.getElementById("profile-edit-toggle");
+  const editCancelBtn = document.getElementById("profile-edit-cancel");
+  const emailEl = document.getElementById("account-email");
+  // The same email in the Account section's header (shown while it's closed).
+  const emailSummaryEl = document.getElementById("account-email-summary");
 
-// Draws (or redraws, each with a fresh nonce) Google's button on the
-// sign-in card; the fallback instead if Google's script can't be had.
-async function showGoogleButton() {
-  const loginMessageEl = viewOf("login").querySelector("[data-message]");
-  let gsi;
-  let nonce;
-  try {
-    [gsi, nonce] = await Promise.all([loadGoogleScript(), newNonce()]);
-  } catch (err) {
-    console.error(err);
-    googleButtonEl.hidden = true;
-    googleFallbackBtn.hidden = false;
-    return;
+  // The card's edit mode: each value's editable twin, in its place.
+  const profileForm = document.getElementById("profile-form");
+  const showAvatarInput = document.getElementById("profile-show-avatar");
+  const cardInput = document.getElementById("profile-card");
+  const cardClearBtn = document.getElementById("profile-card-clear");
+  const cardListEl = document.getElementById("profile-card-list");
+  const artPickerEl = document.getElementById("profile-art-picker");
+  const artStripEl = document.getElementById("profile-art-strip");
+  const colorInputs = Array.from(profileForm.querySelectorAll('input[name="profile-color"]'));
+  const descriptionEl = document.getElementById("profile-description");
+  const counterEl = document.getElementById("profile-counter");
+  // One field per site (CARD_LINK_SITES: instagram, moxfield, archidekt).
+  const linkInputs = Object.fromEntries(Object.keys(CARD_LINK_SITES).map((key) => [key, document.getElementById(`profile-${key}`)]));
+
+  // "Il tuo giocatore" (top, until linked)
+  const claimCard = document.getElementById("profile-claim");
+  const claimBlocks = Array.from(document.querySelectorAll("[data-claim]"));
+  const claimMessageEl = document.querySelector("[data-claim-message]");
+  const claimSelect = document.getElementById("account-claim-player");
+  const pendingPlayerEl = document.getElementById("account-pending-player");
+
+  // "Le tue statistiche" (once linked)
+  const statsCard = document.getElementById("profile-stats");
+  const albumCard = document.getElementById("profile-album");
+  const albumEl = document.getElementById("profile-album-carousel");
+  document.getElementById("album-help").addEventListener("click", openAlbumEffectsInfo);
+  const statsLink = document.getElementById("profile-stats-link");
+  const statsTilesEl = document.getElementById("profile-stats-tiles");
+  const publicWrapEl = document.getElementById("profile-public-wrap");
+  const publicInput = document.getElementById("profile-public");
+  const publicLabelEl = document.getElementById("profile-public-label");
+  const publicHintEl = document.getElementById("profile-public-hint");
+
+  // "Account"
+  const accountMessageEl = document.getElementById("account-message");
+  const accountDangerEl = document.getElementById("account-danger");
+  const accountDeleteBtn = document.getElementById("account-delete");
+
+  // Shown on the sign-in card right after the account is deleted (the
+  // SIGNED_OUT that follows switches to it).
+  let loginNotice = null;
+
+  // What's on screen: the account, its saved profile, its player link/request,
+  // and the linked player's first event year (the card's "Dal …") and badges.
+  let user = null;
+  let profile = null;
+  let claim = { linked: null, pending: null };
+  // The background card picked in edit mode (a card name, null for none) —
+  // only ever a name chosen from Scryfall's list (or the saved one).
+  let pickedCard = null;
+  // …and its printing (a Scryfall card id — the "Versione" picked), null for
+  // Scryfall's default printing of that card.
+  let pickedPrint = null;
+  let firstYear = null;
+  // The linked player's progress row (player_progress): the card's cosmetics
+  // (js/card-cosmetics.js). null: none (not linked, no results, no table).
+  let cardProgress = null;
+  let playerBadges = [];
+
+  // --- Helpers ------------------------------------------------------------------
+
+  function setMessage(el, text, kind = "error") {
+    el.textContent = text;
+    el.className = "form-message" + (text ? ` is-${kind}` : "");
   }
-  gsi.initialize({
-    client_id: GOOGLE_CLIENT_ID,
-    nonce: nonce.hashed,
-    // Never signs in by itself: after "Esci" (or on a shared device) only
-    // a click signs in again.
-    auto_select: false,
-    callback: async ({ credential }) => {
-      setMessage(loginMessageEl, "");
-      const { error } = await sb.auth.signInWithIdToken({ provider: "google", token: credential, nonce: nonce.raw });
-      if (error) {
-        console.error(error);
-        setMessage(loginMessageEl, "Accesso con Google non riuscito, riprova.");
-        // The nonce is spent: a fresh button for the next try.
-        showGoogleButton();
-      }
-      // On success the SIGNED_IN event switches to the profile.
-    },
-  });
-  googleButtonEl.hidden = false;
-  googleFallbackBtn.hidden = true;
-  googleButtonEl.innerHTML = "";
-  gsi.renderButton(googleButtonEl, {
-    type: "standard",
-    theme: document.documentElement.dataset.theme === "dark" ? "filled_black" : "outline",
-    size: "large",
-    shape: "pill",
-    text: "signin_with",
-    locale: "it",
-    // Google's own limits: 200–400px.
-    width: Math.max(200, Math.min(400, Math.floor(googleButtonEl.clientWidth || 320))),
-  });
-}
 
-document.getElementById("account-google").addEventListener("click", async () => {
-  const { error } = await sb.auth.signInWithOAuth({
-    provider: "google",
-    options: { redirectTo: ACCOUNT_URL },
-  });
-  // On success the page is already on its way to Google.
-  if (error) {
-    console.error(error);
-    setMessage(viewOf("login").querySelector("[data-message]"), "Impossibile avviare l'accesso con Google, riprova.");
+  function show(view) {
+    for (const v of views) v.hidden = v.dataset.view !== view;
   }
-});
 
-document.getElementById("account-logout").addEventListener("click", async () => {
-  // Google's button never signs in by itself (auto_select: false); this also
-  // makes Google forget the last choice, if its script was loaded here.
-  window.google?.accounts?.id?.disableAutoSelect();
-  const { error } = await sb.auth.signOut();
-  if (error) {
-    console.error(error);
-    setMessage(accountMessageEl, "Uscita non riuscita, riprova.");
+  function playerLabel(player) {
+    return player.handle ? `${player.name} (${player.handle})` : player.name;
   }
-  // The SIGNED_OUT event switches back to the login view.
-});
 
-// Deletes the login account for good (supabase/migrations/006's
-// delete_my_account()): its card and pending request go with it, its
-// player is unlinked and kept. Signing in with Google again later creates a
-// new, empty account.
-accountDeleteBtn.addEventListener("click", async () => {
-  if (
-    !confirm(
-      "Eliminare definitivamente il tuo account?\n\nLa tua carta verrà cancellata e il collegamento al tuo giocatore rimosso. Il giocatore e i suoi risultati restano."
-    )
-  ) {
-    return;
+  // The commander art behind the card (js/player-card.js: Scryfall's art crop).
+  const paintArt = createArtPainter(artEl);
+  const paintHeroArt = createArtPainter(document.getElementById("profile-hero-art"));
+
+  // --- Player card ------------------------------------------------------------------
+
+  // What the card shows: the saved profile, or — in edit mode — the form's
+  // current values (the live preview).
+  function savedValues() {
+    return {
+      colors: profile?.fav_colors ?? "",
+      // A card saved before the background could be any card: its favourite
+      // commander's (supabase/migrations/014_fav_card.sql).
+      card: profile?.fav_card ?? profile?.fav_commander?.name ?? null,
+      print: (profile?.fav_card && profile?.fav_card_print) || null,
+      description: profile?.description ?? "",
+      showAvatar: profile?.show_avatar ?? true,
+      instagram: profile?.instagram ?? null,
+      moxfield: profile?.moxfield ?? null,
+      archidekt: profile?.archidekt ?? null,
+    };
   }
-  setMessage(accountMessageEl, "");
-  accountDeleteBtn.disabled = true;
-  try {
-    await MyAccount.remove();
-  } catch (err) {
-    console.error(err);
-    accountDeleteBtn.disabled = false;
-    setMessage(
-      accountMessageEl,
-      err?.message === "admin_account"
-        ? "Un account amministratore non può essere eliminato da qui."
-        : "Eliminazione non riuscita, riprova."
+
+  function formValues() {
+    return {
+      colors: COLOR_ORDER.filter((c) => colorInputs.some((i) => i.value === c && i.checked)).join(""),
+      card: pickedCard,
+      print: pickedPrint,
+      description: descriptionEl.value,
+      showAvatar: showAvatarInput.checked,
+    };
+  }
+
+  function renderCard(values) {
+    const meta = user.user_metadata ?? {};
+    // The linked player's own name once there is one, the Google name before.
+    const displayName = claim.linked ? playerLabel(claim.linked) : meta.full_name || meta.name || user.email;
+    nameEl.textContent = displayName;
+    heroNameEl.textContent = displayName;
+    emailEl.textContent = user.email;
+    emailSummaryEl.textContent = user.email;
+
+    // The Google picture. Hidden by the owner: outside edit mode no avatar
+    // circle at all, leaving the commander art in view (.hides-avatar); in
+    // edit mode the circle stays, with the initial, next to its "Mostra foto"
+    // switch. No Google picture at all: the initial on red, no switch.
+    initialEl.textContent = (displayName.trim()[0] ?? "?").toUpperCase();
+    const hasPicture = Boolean(meta.avatar_url);
+    const showPicture = hasPicture && values.showAvatar;
+    if (showPicture) avatarImg.src = meta.avatar_url;
+    avatarImg.hidden = !showPicture;
+    cardEl.classList.toggle("hides-avatar", hasPicture && !values.showAvatar);
+    document.getElementById("profile-show-avatar-wrap").classList.toggle("is-unavailable", !hasPicture);
+
+    applyCardAccents(cardEl, values.colors);
+
+    const description = values.description.trim();
+    bioEl.textContent = description || "Nessuna descrizione: premi ✎ per raccontare qualcosa di te.";
+    bioEl.classList.toggle("is-empty", !description);
+
+    // The links: what's saved (the edit fields are only read on save).
+    linksEl.innerHTML = cardLinksHtml(savedValues());
+
+    // The player's (not the account's) first event and badges, once linked.
+    sinceEl.textContent = claim.linked && firstYear ? `Dal ${firstYear}` : "";
+    badgesEl.innerHTML = claim.linked ? cardBadgesHtml(playerBadges) : "";
+
+    // After "Dal …" above (the stars go after it); taken off and put back on
+    // every redraw.
+    applyCardCosmetics(cardEl, claim.linked ? cardProgress : null);
+
+    paintArt(values.card, values.print);
+    paintHeroArt(values.card, values.print);
+  }
+
+  // --- Edit mode (on the card itself, same layout) -----------------------------------
+
+  function updateCounter() {
+    counterEl.textContent = `${descriptionEl.value.length}/${DESCRIPTION_MAX}`;
+  }
+
+  // Puts the saved profile into the form (also how "Annulla" discards edits).
+  function fillForm() {
+    const saved = savedValues();
+    showAvatarInput.checked = saved.showAvatar;
+    pickedCard = saved.card;
+    pickedPrint = saved.print;
+    cardInput.value = saved.card ?? "";
+    cardClearBtn.hidden = !saved.card;
+    closeCardList();
+    loadArtPicker();
+    for (const input of colorInputs) input.checked = saved.colors.includes(input.value);
+    descriptionEl.value = saved.description;
+    for (const [key, input] of Object.entries(linkInputs)) input.value = saved[key] ?? "";
+    updateCounter();
+  }
+
+  const isEditing = () => cardEl.classList.contains("is-editing");
+
+  // The animated switch between the two modes (animateSwitch) — one motion,
+  // not each piece moving on its own: the glass panel's contents fade out;
+  // the panel then grows/shrinks to its new height, the nameplate riding on
+  // top of it (the name sliding over when the avatar comes or goes, the
+  // avatar and "Mostra foto" growing/fading in or out with it); and the
+  // contents fade back in, already in their new places, as it settles.
+  const NAMEPLATE_PIECES = ".pc-avatar, .pc-name, .pc-avatar-toggle";
+  const SWITCH_MS = 320;
+  const FADE_OUT_MS = 120;
+  const FADE_IN_DELAY_MS = 140;
+  const FADE_IN_MS = 220;
+  const EASE = "cubic-bezier(0.2, 0.8, 0.2, 1)";
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  // True while a switch animates: ✎/✓, ✕ and Esc wait for it to end.
+  let switching = false;
+
+  const finished = (animation) => animation.finished.catch(() => {});
+
+  // ✕ slides out from under ✓ when editing starts, and back under it after.
+  function showCancelButton(open, animate) {
+    const tucked = { opacity: 0, transform: "translateX(40px) scale(0.6)" };
+    const out = { opacity: 1, transform: "none" };
+    if (!animate) {
+      editCancelBtn.hidden = !open;
+    } else if (open) {
+      editCancelBtn.hidden = false;
+      editCancelBtn.animate([tucked, out], { duration: SWITCH_MS, easing: EASE });
+    } else {
+      finished(editCancelBtn.animate([out, tucked], { duration: 200, easing: "ease-in" })).then(() => {
+        if (!isEditing()) editCancelBtn.hidden = true;
+      });
+    }
+  }
+
+  async function animateSwitch(open) {
+    const panel = cardEl.querySelector(".pc-panel");
+    const pieces = Array.from(cardEl.querySelectorAll(NAMEPLATE_PIECES));
+    const visible = (els) => els.filter((el) => el.getClientRects().length);
+
+    // Which nameplate pieces each mode shows: the other mode tried for a
+    // moment, within this same frame, so it never paints.
+    const before = new Set(visible(pieces));
+    cardEl.classList.toggle("is-editing", open);
+    const after = new Set(visible(pieces));
+    cardEl.classList.toggle("is-editing", !open);
+    const leaving = pieces.filter((el) => before.has(el) && !after.has(el));
+    const entering = pieces.filter((el) => after.has(el) && !before.has(el));
+    const staying = pieces.filter((el) => before.has(el) && after.has(el));
+
+    const fadeOuts = [...visible(Array.from(panel.children)), ...leaving].map((el) =>
+      el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: FADE_OUT_MS, easing: "ease-in", fill: "forwards" })
     );
-    return;
+    await Promise.all(fadeOuts.map(finished));
+
+    // Where the name is now, and the panel's top edge: the nameplate sits
+    // right on the panel, so the name's move is measured against it — the
+    // panel's own animated height carries the nameplate the rest of the way.
+    const panelBefore = panel.getBoundingClientRect();
+    const rectsBefore = new Map(staying.map((el) => [el, el.getBoundingClientRect()]));
+    cardEl.classList.toggle("is-editing", open);
+    const panelAfter = panel.getBoundingClientRect();
+
+    const animations = [];
+    // The new contents start hidden (fill: backwards) in this same frame the
+    // old ones' faded-out state is dropped, so nothing flashes in between.
+    for (const el of visible(Array.from(panel.children))) {
+      animations.push(
+        el.animate([{ opacity: 0 }, { opacity: 1 }], {
+          duration: FADE_IN_MS,
+          delay: FADE_IN_DELAY_MS,
+          easing: "ease-out",
+          fill: "backwards",
+        })
+      );
+    }
+    for (const animation of fadeOuts) animation.cancel();
+
+    panel.style.boxSizing = "border-box";
+    panel.style.overflow = "hidden";
+    animations.push(
+      panel.animate([{ height: `${panelBefore.height}px` }, { height: `${panelAfter.height}px` }], {
+        duration: SWITCH_MS,
+        easing: EASE,
+      })
+    );
+    for (const el of staying) {
+      const was = rectsBefore.get(el);
+      const is = el.getBoundingClientRect();
+      const dx = was.left - is.left;
+      const dy = was.top - panelBefore.top - (is.top - panelAfter.top);
+      if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) continue;
+      animations.push(
+        el.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: "none" }], {
+          duration: SWITCH_MS,
+          easing: EASE,
+        })
+      );
+    }
+    for (const el of entering) {
+      const from = el.classList.contains("pc-avatar") ? "scale(0.5)" : "translateY(4px)";
+      animations.push(
+        el.animate([{ opacity: 0, transform: from }, { opacity: 1, transform: "none" }], {
+          duration: SWITCH_MS,
+          easing: EASE,
+        })
+      );
+    }
+    await Promise.all(animations.map(finished));
+    panel.style.boxSizing = "";
+    panel.style.overflow = "";
   }
-  accountDeleteBtn.disabled = false;
-  loginNotice = "Account eliminato. Puoi accedere di nuovo con Google quando vuoi.";
-  // The account no longer exists, so only this browser's session is
-  // cleared (a server-side sign-out would just fail); SIGNED_OUT follows.
-  await sb.auth.signOut({ scope: "local" });
-});
+
+  async function setEditing(open, { animate = true } = {}) {
+    if (open === isEditing()) return;
+    const label = open ? "Salva le modifiche" : "Modifica la tua carta";
+    editToggleBtn.setAttribute("aria-label", label);
+    editToggleBtn.title = label;
+    editToggleBtn.classList.toggle("is-save", open);
+    // The values first (hidden ones included), so both modes are measured
+    // with what they'll show.
+    if (open) {
+      fillForm();
+      renderCard(formValues());
+    } else {
+      renderCard(savedValues());
+    }
+    const animated = animate && !reducedMotion.matches && cardEl.getClientRects().length > 0;
+    showCancelButton(open, animated);
+    if (!animated) {
+      cardEl.classList.toggle("is-editing", open);
+      return;
+    }
+    switching = true;
+    try {
+      await animateSwitch(open);
+    } finally {
+      switching = false;
+    }
+  }
+
+  // ✎ enters edit mode; there, the same button is ✓ and saves.
+  editToggleBtn.addEventListener("click", () => {
+    if (switching) return;
+    setMessage(pageMessageEl(), "");
+    if (isEditing()) profileForm.requestSubmit();
+    else setEditing(true);
+  });
+  editCancelBtn.addEventListener("click", () => {
+    if (!switching) setEditing(false);
+  });
+  document.addEventListener(
+    "keydown",
+    (e) => {
+      // Not while a dropdown is open: Escape closes that first.
+      if (e.key === "Escape" && isEditing() && !switching && !cardEl.querySelector(".cs-wrap.is-open") && cardListEl.hidden) {
+        setEditing(false);
+      }
+    },
+    { signal }
+  );
+
+  // --- The sections, one at a time behind tabs -------------------------------------
+
+  // Album comandanti, Seguiti, Decklist, Account: a tab each, only for a
+  // section that's shown (styles.css hides the others' tabs) — a pill bar on
+  // desktop, a full-width segmented control on phones. Until the user picks
+  // one, the first section shown is the open one (the album once linked);
+  // when the open one goes (e.g. no decklist to send any more), the first
+  // still shown takes over.
+  const tabButtons = [...document.querySelectorAll(".profile-tab")];
+  const tabPanels = tabButtons.map((b) => document.getElementById(b.dataset.tab));
+  let currentTab = null;
+  let tabChosen = false;
+
+  function selectTab(id) {
+    currentTab = id;
+    for (const b of tabButtons) {
+      const on = b.dataset.tab === id;
+      b.classList.toggle("is-active", on);
+      b.setAttribute("aria-selected", String(on));
+    }
+    for (const panel of tabPanels) panel.classList.toggle("is-current", panel.id === id);
+  }
+
+  function syncTabs() {
+    const shown = tabPanels.filter((p) => !p.hidden).map((p) => p.id);
+    if (!tabChosen || !shown.includes(currentTab)) selectTab(shown[0] ?? null);
+  }
+
+  for (const b of tabButtons) {
+    b.addEventListener("click", () => {
+      tabChosen = true;
+      selectTab(b.dataset.tab);
+    });
+  }
+  const tabsObserver = new MutationObserver(syncTabs);
+  for (const panel of tabPanels) tabsObserver.observe(panel, { attributes: true, attributeFilter: ["hidden"] });
+  signal.addEventListener("abort", () => tabsObserver.disconnect(), { once: true });
+  syncTabs();
+
+  // "Invia la tua decklist" in the hero: its tab, brought into view.
+  document.getElementById("profile-action-decklist").addEventListener("click", () => {
+    tabChosen = true;
+    selectTab("profile-decklist");
+    document.querySelector(".profile-tabs").scrollIntoView({
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      block: "start",
+    });
+  });
+
+  // --- The background card: any Magic card, searched on Scryfall ----------------
+
+  // Scryfall's autocomplete (card names, up to 20) as the user types; a name
+  // is only taken when picked from the list (click, or ↑↓ + Enter) — typed
+  // text alone is put back to the picked card when the field is left. Picking
+  // redraws the card (its art) right away; × clears it.
+  const CARD_SEARCH_MIN = 2;
+  const CARD_SEARCH_DELAY_MS = 200;
+  let cardSearchTimer = 0;
+  let cardSearchToken = 0;
+  let cardOptions = [];
+  let cardHighlight = -1;
+
+  function closeCardList() {
+    cardListEl.hidden = true;
+    cardListEl.innerHTML = "";
+    cardInput.setAttribute("aria-expanded", "false");
+    cardOptions = [];
+    cardHighlight = -1;
+  }
+
+  function renderCardList() {
+    cardListEl.innerHTML = cardOptions.length
+      ? cardOptions
+          .map(
+            (name, i) =>
+              `<button type="button" class="pc-card-option${i === cardHighlight ? " is-highlighted" : ""}" role="option" data-i="${i}" tabindex="-1">${escapeHtml(name)}</button>`
+          )
+          .join("")
+      : '<p class="pc-card-empty">Nessuna carta trovata.</p>';
+    cardListEl.hidden = false;
+    cardInput.setAttribute("aria-expanded", "true");
+  }
+
+  function pickCard(name) {
+    // A new card starts on its default art.
+    if (name !== pickedCard) pickedPrint = null;
+    pickedCard = name;
+    cardInput.value = name ?? "";
+    cardClearBtn.hidden = !name;
+    closeCardList();
+    renderCard(formValues());
+    loadArtPicker();
+  }
+
+  // "Versione": the picked card's different illustrations (Scryfall's search,
+  // one result per illustration, oldest first), as a strip of small art
+  // crops — only when there's more than one. The one in use is marked: the
+  // picked printing's, else the one of Scryfall's default printing (that
+  // name's own lookup). Picking one redraws the card with it.
+  const ART_PICKER_MAX = 60;
+  const artPrintsCache = new Map();
+  let artPickerToken = 0;
+
+  function fetchArtPrints(name) {
+    if (!artPrintsCache.has(name)) {
+      const q = encodeURIComponent(`!"${name}"`);
+      artPrintsCache.set(
+        name,
+        Promise.all([
+          fetch(`https://api.scryfall.com/cards/search?q=${q}&unique=art&order=released&dir=asc`)
+            .then((res) => (res.ok ? res.json() : { data: [] }))
+            .then((json) => (json.data ?? []).filter(cardArtUrl).slice(0, ART_PICKER_MAX)),
+          fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}`)
+            .then((res) => (res.ok ? res.json() : null))
+            .then((card) => card?.illustration_id ?? card?.card_faces?.[0]?.illustration_id ?? null),
+        ]).catch(() => [[], null])
+      );
+    }
+    return artPrintsCache.get(name);
+  }
+
+  function markArtInUse() {
+    for (const option of artStripEl.children) {
+      const on = pickedPrint ? option.dataset.id === pickedPrint : option.dataset.default === "true";
+      option.classList.toggle("is-selected", on);
+      option.setAttribute("aria-selected", String(on));
+    }
+  }
+
+  async function loadArtPicker() {
+    const token = ++artPickerToken;
+    const name = pickedCard;
+    if (!name) {
+      artPickerEl.hidden = true;
+      artStripEl.innerHTML = "";
+      return;
+    }
+    const [prints, defaultIllustration] = await fetchArtPrints(name);
+    if (token !== artPickerToken) return;
+    artPickerEl.hidden = prints.length < 2;
+    artStripEl.innerHTML = prints
+      .map((card) => {
+        const illustration = card.illustration_id ?? card.card_faces?.[0]?.illustration_id;
+        const label = `${card.set_name} (${(card.released_at ?? "").slice(0, 4)})`;
+        return `<button type="button" class="pc-art-option" role="option" data-id="${escapeHtml(card.id)}" data-default="${
+          illustration && illustration === defaultIllustration
+        }" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}"><img src="${escapeHtml(cardArtUrl(card))}" alt="" loading="lazy" draggable="false"></button>`;
+      })
+      .join("");
+    markArtInUse();
+    artStripEl.querySelector(".is-selected")?.scrollIntoView({ block: "nearest", inline: "center" });
+  }
+
+  artStripEl.addEventListener("click", (e) => {
+    const option = e.target.closest(".pc-art-option");
+    if (!option) return;
+    pickedPrint = option.dataset.id;
+    markArtInUse();
+    renderCard(formValues());
+  });
+
+  cardInput.addEventListener("input", () => {
+    clearTimeout(cardSearchTimer);
+    const q = cardInput.value.trim();
+    if (q.length < CARD_SEARCH_MIN) {
+      closeCardList();
+      return;
+    }
+    cardSearchTimer = setTimeout(async () => {
+      const token = ++cardSearchToken;
+      let names = [];
+      try {
+        const res = await fetch(`https://api.scryfall.com/cards/autocomplete?q=${encodeURIComponent(q)}`);
+        names = res.ok ? ((await res.json()).data ?? []) : [];
+      } catch (err) {
+        console.error(err);
+      }
+      // A slower earlier answer doesn't replace a newer one.
+      if (token !== cardSearchToken || document.activeElement !== cardInput) return;
+      cardOptions = names;
+      cardHighlight = names.length ? 0 : -1;
+      renderCardList();
+    }, CARD_SEARCH_DELAY_MS);
+  });
+
+  cardInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      // Never submits the card from here.
+      e.preventDefault();
+      if (cardHighlight >= 0) pickCard(cardOptions[cardHighlight]);
+      return;
+    }
+    if (e.key === "Escape" && !cardListEl.hidden) {
+      closeCardList();
+      return;
+    }
+    if ((e.key === "ArrowDown" || e.key === "ArrowUp") && cardOptions.length) {
+      e.preventDefault();
+      const n = cardOptions.length;
+      cardHighlight = (cardHighlight + (e.key === "ArrowDown" ? 1 : -1) + n) % n;
+      renderCardList();
+      cardListEl.querySelector(".is-highlighted")?.scrollIntoView({ block: "nearest" });
+    }
+  });
+
+  // mousedown, not click: picked before the field loses focus (its blur
+  // puts the text back).
+  cardListEl.addEventListener("mousedown", (e) => {
+    const option = e.target.closest(".pc-card-option");
+    if (!option) return;
+    e.preventDefault();
+    pickCard(cardOptions[Number(option.dataset.i)]);
+  });
+
+  cardInput.addEventListener("blur", () => {
+    closeCardList();
+    cardInput.value = pickedCard ?? "";
+  });
+
+  cardClearBtn.addEventListener("click", () => {
+    pickCard(null);
+    cardInput.focus();
+  });
+
+  // Live preview: every change in edit mode redraws the card from the form.
+  profileForm.addEventListener("change", () => renderCard(formValues()));
+
+  // The description stays on one line: Enter adds no line break, and a pasted
+  // text's breaks become spaces (the database refuses them too). The
+  // textarea's own maxlength keeps it to DESCRIPTION_MAX.
+  descriptionEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") e.preventDefault();
+  });
+  descriptionEl.addEventListener("input", () => {
+    if (/[\r\n]/.test(descriptionEl.value)) {
+      const caret = descriptionEl.selectionStart;
+      descriptionEl.value = descriptionEl.value.replace(/\s*[\r\n]+\s*/g, " ").slice(0, DESCRIPTION_MAX);
+      descriptionEl.setSelectionRange(caret, caret);
+    }
+    updateCounter();
+  });
+
+  profileForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const values = formValues();
+    // The links: a username, or that site's own profile link — anything else
+    // is refused here (the database only takes a plain username anyway).
+    const links = {};
+    for (const [key, input] of Object.entries(linkInputs)) {
+      const parsed = parseCardLink(key, input.value);
+      if (parsed.error) {
+        setMessage(pageMessageEl(), parsed.error);
+        input.focus();
+        return;
+      }
+      links[key] = parsed.username;
+    }
+    const fields = {
+      ...links,
+      description: values.description.trim() || null,
+      fav_colors: values.colors,
+      fav_card: values.card,
+      fav_card_print: values.card ? values.print : null,
+      // The older favourite commander: replaced by fav_card (migration 014).
+      fav_commander_id: null,
+      show_avatar: values.showAvatar,
+    };
+    editToggleBtn.disabled = true;
+    try {
+      profile = await Profiles.save(user.id, fields);
+    } catch (err) {
+      console.error(err);
+      setMessage(pageMessageEl(), "Salvataggio non riuscito, riprova.");
+      return;
+    } finally {
+      editToggleBtn.disabled = false;
+    }
+    // Back to the card itself is the confirmation — no message.
+    setEditing(false);
+    // The first save makes the card showable on the player page.
+    renderPublicSwitch();
+  });
+
+  // --- The card on the player page ----------------------------------------------------
+
+  // The switch under the card: whether player.html shows this card too
+  // (profiles.show_on_player_page, read there through
+  // supabase/migrations/007's public_player_card()). Only while linked to a
+  // player (no player page otherwise), and usable only once the card has
+  // been saved at least once — before that there's no profile at all, and
+  // nothing to show; on by default from the first save. Saved right away.
+  function renderPublicSwitch(errorText = "") {
+    publicWrapEl.hidden = !claim.linked;
+    const saved = Boolean(profile);
+    publicInput.disabled = !saved;
+    publicInput.checked = saved && (profile.show_on_player_page ?? true);
+    // Not saved yet: what to do first takes the label's place.
+    publicLabelEl.textContent = saved ? "Mostra nella pagina giocatore" : "Salva prima la tua carta almeno una volta.";
+    publicHintEl.textContent = errorText;
+    publicHintEl.classList.toggle("is-error", Boolean(errorText));
+  }
+
+  publicInput.addEventListener("change", async () => {
+    const show = publicInput.checked;
+    publicInput.disabled = true;
+    try {
+      profile = await Profiles.save(user.id, { show_on_player_page: show });
+    } catch (err) {
+      console.error(err);
+      // Back to what's saved.
+      renderPublicSwitch("Salvataggio non riuscito, riprova.");
+      return;
+    }
+    renderPublicSwitch();
+  });
+
+  // --- Il tuo giocatore -------------------------------------------------------------
+
+  // request_player_claim()'s error codes (supabase/migrations/002_player_claims.sql).
+  const CLAIM_ERROR_TEXT = {
+    not_signed_in: "Sessione scaduta: accedi di nuovo e riprova.",
+    already_linked: "Il tuo account è già collegato a un giocatore.",
+    request_pending: "Hai già una richiesta in attesa.",
+    player_not_found: "Giocatore non trovato: ricarica la pagina.",
+    player_taken: "Questo giocatore è già collegato a un altro account.",
+    player_requested: "Qualcun altro ha già chiesto questo giocatore. Se sei tu, contatta un amministratore.",
+  };
+
+  function showClaim(state) {
+    for (const block of claimBlocks) block.hidden = block.dataset.claim !== state;
+  }
+
+  // Linked: no claim card, the stats card instead (loaded by loadStats). Not
+  // linked (no request, or one waiting): the claim card at the top.
+  async function loadClaim() {
+    const linked = await PlayerClaims.linkedPlayer(user.id);
+    const pending = linked ? null : await PlayerClaims.mine(user.id);
+    claim = { linked, pending };
+    claimCard.hidden = Boolean(linked);
+    statsCard.hidden = !linked;
+    albumCard.hidden = !linked;
+    // Shown by loadDecklistCard once linked.
+    if (!linked) decklistCard.hidden = true;
+    if (linked) return;
+    if (pending) {
+      pendingPlayerEl.textContent = playerLabel(pending.player);
+      showClaim("pending");
+    } else {
+      const players = await PlayerClaims.unlinkedPlayers();
+      claimSelect.innerHTML =
+        '<option value="">Scegli il tuo nome&hellip;</option>' +
+        players.map((p) => `<option value="${p.id}">${escapeHtml(playerLabel(p))}</option>`).join("");
+      showClaim("none");
+    }
+  }
+
+  async function reloadClaim(okText) {
+    try {
+      await loadClaim();
+      // Approved by the admin in the meantime: the stats take its place.
+      if (claim.linked) await loadStats(claim.linked);
+    } catch (err) {
+      console.error(err);
+      setMessage(claimMessageEl, "Impossibile caricare il tuo giocatore, ricarica la pagina.");
+      return;
+    }
+    // The card's name follows the link (the player's name once approved), and
+    // the switch under it comes with it.
+    renderCard(cardEl.classList.contains("is-editing") ? formValues() : savedValues());
+    renderPublicSwitch();
+    setMessage(claimMessageEl, okText, "ok");
+  }
+
+  // --- Le tue statistiche --------------------------------------------------------------
+
+  // Same figures as the player page's own tiles (js/player-detail.js), over the
+  // player's whole history: match-basis winrate, a bye counts as a win, a drop
+  // isn't a match at all; "Eventi" counts entries (an event counts even if the
+  // player dropped before playing).
+  function matchOutcome(m, isPlayer1) {
+    const outcome = matchRoundOutcome(m);
+    if (outcome === "draw") return "draw";
+    return (outcome === "player1") === isPlayer1 ? "win" : "loss";
+  }
+
+  async function loadStats(player) {
+    statsLink.href = `player.html?id=${player.id}`;
+    const [entries, { asP1, asP2 }, badgeSlots, autoBadgeRows] = await Promise.all([
+      EventEntries.listByPlayer(player.id),
+      Matches.listByPlayer(player.id),
+      // The card's badges, same as next to the name on the player page: the
+      // two manual slots (Players' badge embed), then the automatic ones by
+      // priority. Not fatal: the card just shows none.
+      Players.get(player.id).catch((err) => {
+        console.error(err);
+        return {};
+      }),
+      PlayerAutoBadges.listByPlayer(player.id).catch((err) => {
+        console.error(err);
+        return [];
+      }),
+    ]);
+    playerBadges = uniqueBadges([
+      badgeSlots.badge1,
+      badgeSlots.badge2,
+      ...autoBadgeRows
+        .map((r) => r.badge)
+        .filter(Boolean)
+        .sort((a, b) => b.priority - a.priority),
+    ]);
+
+    const bucket = { wins: 0, draws: 0, losses: 0 };
+    for (const m of asP1) if (!isDrop(m)) tallyOutcome(bucket, matchOutcome(m, true));
+    for (const m of asP2) if (!isDrop(m)) tallyOutcome(bucket, matchOutcome(m, false));
+
+    // The hero's numbers: Winrate, Leghe (the leagues, open or closed, with at
+    // least one closed event played), Eventi — the player page's tiles' look
+    // (styles.css .profile-hero .stat-tile), not its whole set (no wins /
+    // draws / losses here). No match played yet: just a line.
+    const played = bucket.wins + bucket.draws + bucket.losses;
+    const rate = winRatePct(bucket.wins, played);
+    const leagueIds = new Set(
+      entries.filter((e) => e.event && !e.event.is_open && e.event.league).map((e) => e.event.league.id)
+    );
+    const tile = (label, value) =>
+      `<div class="stat-tile"><div class="stat-tile-label">${label}</div><div class="stat-tile-value">${value}</div></div>`;
+    statsTilesEl.innerHTML =
+      rate === null
+        ? '<p class="page-empty">Non ci sono ancora dati sufficienti.</p>'
+        : tile("Winrate", `${rate}%`) + tile("Leghe", leagueIds.size) + tile("Eventi", entries.length);
+
+    // Album comandanti: player.html's carousel, from the same entries and
+    // matches — the frame of each card from its events, its foil from the
+    // matches won with it, counted like player.html (a drop skipped, a bye a
+    // win).
+    const carousel = renderCommanderCarousel(albumEl, albumItems(entries));
+    const pairByEvent = new Map(
+      entries.filter((e) => e.commander).map((e) => [e.event_id, commanderPairKey(e.commander, e.partner_commander)])
+    );
+    const records = new Map();
+    const tallyPair = (m, isPlayer1) => {
+      const key = pairByEvent.get(m.event_id);
+      if (!key || isDrop(m)) return;
+      if (!records.has(key)) records.set(key, { wins: 0, draws: 0, losses: 0 });
+      tallyOutcome(records.get(key), matchOutcome(m, isPlayer1));
+    };
+    for (const m of asP1) tallyPair(m, true);
+    for (const m of asP2) tallyPair(m, false);
+    carousel.setRecords(records);
+
+    // The player card's "Dal …": the year of the player's first event.
+    const firstDate = entries.reduce((min, e) => {
+      const d = e.event?.event_date;
+      return d && (!min || d < min) ? d : min;
+    }, null);
+    firstYear = firstDate ? firstDate.slice(0, 4) : null;
+
+    // The card's cosmetics: never fatal (a card without them).
+    cardProgress = await PlayerProgress.get(player.id).catch((err) => {
+      console.error(err);
+      return null;
+    });
+
+    // "Invia la tua decklist" needs the same entries (the closed events played).
+    await loadDecklistCard(player, entries);
+  }
+
+  // "?" next to "Le tue statistiche": how the card's effects are earned.
+  document.getElementById("card-effects-help").addEventListener("click", openCardEffectsInfo);
+
+  document.getElementById("account-claim-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    setMessage(claimMessageEl, "");
+    // Checked here, not with `required`: the native <select> is hidden behind
+    // js/custom-select.js's skin, where the browser can't show its warning.
+    if (!claimSelect.value) {
+      setMessage(claimMessageEl, "Scegli il tuo nome dalla lista.");
+      return;
+    }
+    try {
+      await PlayerClaims.request(claimSelect.value);
+    } catch (err) {
+      console.error(err);
+      setMessage(claimMessageEl, CLAIM_ERROR_TEXT[err?.message] ?? "Richiesta non riuscita, riprova.");
+      return;
+    }
+    await reloadClaim("Richiesta inviata.");
+  });
+
+  document.getElementById("account-claim-cancel").addEventListener("click", async () => {
+    setMessage(claimMessageEl, "");
+    try {
+      await PlayerClaims.cancel();
+    } catch (err) {
+      console.error(err);
+      setMessage(claimMessageEl, "Annullamento non riuscito, riprova.");
+      return;
+    }
+    await reloadClaim("Richiesta annullata.");
+  });
+
+  // --- Invia la tua decklist ------------------------------------------------------------
+
+  // For an upcoming event (open, today or later) or a closed one the player
+  // is in, emailed to the organisers by the send-decklist Edge Function
+  // (js/db.js's Decklists) — never stored, only *that* it was sent: two per
+  // player and event (supabase/migrations/008-009). The function checks it
+  // all again; this only offers the events that qualify, shows the ones
+  // already sent, and asks for confirmation before each send.
+  const decklistCard = document.getElementById("profile-decklist");
+  const decklistNoneEl = document.getElementById("decklist-none");
+  const decklistForm = document.getElementById("decklist-form");
+  const decklistEventSelect = document.getElementById("decklist-event");
+  const decklistText = document.getElementById("decklist-text");
+  const decklistMeter = document.getElementById("decklist-meter");
+  const decklistConfirm = document.getElementById("decklist-confirm");
+  const decklistConfirmText = document.getElementById("decklist-confirm-text");
+  const decklistConfirmSend = document.getElementById("decklist-confirm-send");
+  const decklistConfirmCancel = document.getElementById("decklist-confirm-cancel");
+  const decklistActions = document.getElementById("decklist-actions");
+  const decklistMessageEl = document.getElementById("decklist-message");
+  const decklistSentBox = document.getElementById("decklist-sent");
+  const decklistSentList = document.getElementById("decklist-sent-list");
+  const decklistBody = document.getElementById("decklist-body");
+  const decklistBodyClip = document.getElementById("decklist-body-clip");
+
+  // "Invia la tua decklist" and Account, each in its own tab, are always
+  // open: their old collapsible header is hidden (styles.css .profile-panel),
+  // the body lets go of its inert and its clip — so the event list's dropdown
+  // isn't cut off at the card's edge (CLAUDE.md gotcha #13).
+  for (const [body, clip] of [
+    [decklistBody, decklistBodyClip],
+    [document.getElementById("account-body"), document.getElementById("account-body-clip")],
+  ]) {
+    body.inert = false;
+    clip.classList.add("is-open");
+  }
+
+  // The send-decklist function's error codes.
+  const DECKLIST_ERROR_TEXT = {
+    not_signed_in: "Sessione scaduta: accedi di nuovo e riprova.",
+    blocked: "Il tuo account è bloccato.",
+    empty: "Scegli l'evento e incolla la decklist.",
+    too_long: "La decklist è troppo lunga.",
+    not_linked: "Il tuo account non è collegato a un giocatore.",
+    event_not_found: "Evento non trovato: ricarica la pagina.",
+    event_not_allowed: "Per questo evento non puoi inviare la decklist.",
+    already_sent: "Hai già inviato due decklist per questo evento.",
+  };
+
+  // When the send itself fails (Resend refusing or over its limits, the
+  // function unreachable, the network), the user is pointed to sending it by
+  // hand to the same address — a mail link already filled in like the
+  // function's own email (subject, and the list as the body when it fits a
+  // mail link: those get cut past ~2000 characters in some mail apps). Public
+  // here, unlike DECKLIST_TO (the function's secret).
+  const DECKLIST_FALLBACK_TO = "lamialistadeck@gmail.com";
+  const DECKLIST_MAILTO_MAX = 1800;
+
+  function decklistFallbackHtml(ev, text) {
+    // The same subject as supabase/functions/send-decklist's.
+    const eventName = ev.name || ev.league?.name || "Evento";
+    const date = (ev.event_date ?? "").split("-").reverse().join("/");
+    const subject = `${eventName} - ${date} - ${playerLabel(claim.linked)}`;
+    const base = `mailto:${DECKLIST_FALLBACK_TO}?subject=${encodeURIComponent(subject)}`;
+    const withBody = `${base}&body=${encodeURIComponent(text.trim())}`;
+    const fits = withBody.length <= DECKLIST_MAILTO_MAX;
+    return `Invio non riuscito. Puoi mandare la lista via email a <a href="${
+      fits ? withBody : base
+    }">${DECKLIST_FALLBACK_TO}</a>, con oggetto «${escapeHtml(subject)}»${
+      fits ? "" : ": incolla la lista nel testo dell'email"
+    }.`;
+  }
+
+  // The events that can still get a list (id → event: upcoming first, soonest
+  // first, then the ones played, newest first) and the ones already sent
+  // ({ event, sentAt, isNew }, most recently sent first — "Ultime inviate"
+  // shows the first DECKLIST_SENT_SHOWN; all of them stay out of the list).
+  const DECKLIST_SENT_SHOWN = 3;
+  // Only recent events are offered: the next DECKLIST_EVENTS_EACH upcoming and
+  // the last DECKLIST_EVENTS_EACH played (by date — one out of sends just
+  // isn't listed, no older one takes its place).
+  const DECKLIST_EVENTS_EACH = 2;
+  // Sends allowed per event (the send-decklist function's MAX_SENDS, migration
+  // 009); how many each event has had so far (event id → 1 or 2).
+  const DECKLIST_MAX_SENDS = 2;
+  let decklistEvents = new Map();
+  let sentDecklists = [];
+  let decklistSendCount = new Map();
+
+  // One more send recorded for an event: it moves to the front of "Ultime
+  // inviate" (one chip per event) and leaves the list once out of sends.
+  function recordDecklistSend(ev, count) {
+    decklistSendCount.set(ev.id, count);
+    if (count >= DECKLIST_MAX_SENDS) decklistEvents.delete(ev.id);
+    sentDecklists = sentDecklists.filter((item) => item.event.id !== ev.id);
+    sentDecklists.unshift({ event: ev, sentAt: new Date().toISOString(), isNew: true });
+  }
+
+  async function loadDecklistCard(player, entries) {
+    decklistCard.hidden = false;
+    closeDecklistConfirm();
+    setMessage(decklistMessageEl, "");
+    let upcoming;
+    let sent;
+    try {
+      [upcoming, sent] = await Promise.all([Events.listUpcoming(), Decklists.sentEvents(player.id)]);
+    } catch (err) {
+      // E.g. migration 008 not run yet: no card rather than a broken one.
+      console.error(err);
+      decklistCard.hidden = true;
+      return;
+    }
+    const played = entries
+      .map((e) => e.event)
+      .filter((ev) => ev && !ev.is_open)
+      .sort((a, b) => (b.event_date ?? "").localeCompare(a.event_date ?? ""));
+    // One row per send: per event, how many and the latest.
+    decklistSendCount = new Map();
+    const lastSentAt = new Map();
+    for (const row of sent) {
+      decklistSendCount.set(row.event_id, (decklistSendCount.get(row.event_id) ?? 0) + 1);
+      if ((row.sent_at ?? "") > (lastSentAt.get(row.event_id) ?? "")) lastSentAt.set(row.event_id, row.sent_at);
+    }
+    // Every event the player has, for the "Ultime inviate" chips — the list
+    // itself offers only the recent ones.
+    const known = new Map([...upcoming, ...played].map((ev) => [ev.id, ev]));
+    decklistEvents = new Map(
+      [
+        ...upcoming.slice(0, DECKLIST_EVENTS_EACH).map((ev) => ({ ...ev, upcoming: true })),
+        ...played.slice(0, DECKLIST_EVENTS_EACH),
+      ]
+        .filter((ev) => (decklistSendCount.get(ev.id) ?? 0) < DECKLIST_MAX_SENDS)
+        .map((ev) => [ev.id, ev])
+    );
+    sentDecklists = [...lastSentAt.keys()]
+      .map((id) => known.get(id))
+      .filter(Boolean)
+      .map((event) => ({ event, sentAt: lastSentAt.get(event.id) ?? "", isNew: false }))
+      .sort((a, b) => b.sentAt.localeCompare(a.sentAt));
+    renderDecklistCard();
+  }
+
+  function decklistEventSublabel(ev) {
+    const sentOnce = (decklistSendCount.get(ev.id) ?? 0) > 0;
+    return [ev.upcoming ? "In arrivo" : "Giocato", formatDate(ev.event_date), ev.league?.name, sentOnce && "1 invio rimasto"]
+      .filter(Boolean)
+      .join(" · ");
+  }
+
+  function renderDecklistCard() {
+    const events = [...decklistEvents.values()];
+    decklistForm.hidden = events.length === 0;
+    decklistNoneEl.hidden = events.length > 0;
+    decklistNoneEl.textContent = sentDecklists.length
+      ? "Hai già inviato la decklist per tutti gli eventi disponibili."
+      : "Nessun evento disponibile: puoi inviare la decklist per i prossimi due eventi o per gli ultimi due che hai giocato.";
+    // data-label / data-sublabel: js/custom-select.js shows the name with a
+    // smaller line below (in arrivo / giocato · date · league).
+    decklistEventSelect.innerHTML =
+      '<option value="">Scegli un evento&hellip;</option>' +
+      events
+        .map((ev) => {
+          const name = eventTitle(ev);
+          const sub = decklistEventSublabel(ev);
+          return `<option value="${ev.id}" data-label="${escapeHtml(name)}" data-sublabel="${escapeHtml(sub)}">${escapeHtml(
+            name
+          )} — ${escapeHtml(sub)}</option>`;
+        })
+        .join("");
+    decklistSentBox.hidden = sentDecklists.length === 0;
+    decklistSentList.innerHTML = sentDecklists
+      .slice(0, DECKLIST_SENT_SHOWN)
+      .map(
+        ({ event, isNew }) => `<li class="decklist-sent-chip${isNew ? " is-new" : ""}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+          <span class="decklist-sent-name">${escapeHtml(eventTitle(event))}</span>
+        </li>`
+      )
+      .join("");
+    // Animated once, as it's added — not again on the next redraw.
+    for (const item of sentDecklists) item.isNew = false;
+  }
+
+  // What's in the box, said under it as you type: a link, or the cards counted
+  // from the list (a leading number is the quantity, "1 Sol Ring" / "1x Sol
+  // Ring"; section names like "Commander" or "Sideboard:" aren't cards). A
+  // Duel Commander deck is 100 cards: that count turns green.
+  const DECKLIST_SECTION = /^(commander|commanders|deck|mainboard|main|sideboard|companion|maybeboard)\s*:?$/i;
+
+  function updateDecklistMeter() {
+    const text = decklistText.value.trim();
+    decklistMeter.className = "decklist-meter";
+    if (!text) {
+      decklistMeter.textContent = "";
+      return;
+    }
+    if (/^https?:\/\/\S+$/i.test(text)) {
+      decklistMeter.textContent = "Link alla decklist";
+      decklistMeter.classList.add("is-link");
+      return;
+    }
+    let cards = 0;
+    for (const raw of text.split(/\r?\n/)) {
+      const line = raw.trim();
+      if (!line || /^(\/\/|#)/.test(line) || DECKLIST_SECTION.test(line)) continue;
+      const quantity = line.match(/^(\d+)\s*x?\s+\S/i);
+      cards += quantity ? Number(quantity[1]) : 1;
+    }
+    decklistMeter.textContent = `${cards} ${cards === 1 ? "carta" : "carte"}`;
+    decklistMeter.classList.toggle("is-full", cards === 100);
+  }
+
+  // The warning before sending slides open in place of the send button.
+  function openDecklistConfirm(ev) {
+    // First send: one more possible; second: the last, replacing the first.
+    const last = (decklistSendCount.get(ev.id) ?? 0) + 1 >= DECKLIST_MAX_SENDS;
+    decklistConfirmText.innerHTML = `Inviare la decklist per <strong>${escapeHtml(eventTitle(ev))}</strong> del ${formatDate(
+      ev.event_date
+    )}? ${
+      last
+        ? "È il tuo <strong>ultimo invio</strong> per questo evento: sostituirà la lista che hai già mandato."
+        : "Potrai inviarne <strong>al massimo due</strong> per questo evento: la seconda sostituirà la prima."
+    }`;
+    decklistConfirm.classList.add("is-open");
+    decklistConfirm.inert = false;
+    decklistActions.hidden = true;
+    decklistConfirmSend.focus({ preventScroll: true });
+  }
+
+  function closeDecklistConfirm() {
+    decklistConfirm.classList.remove("is-open");
+    decklistConfirm.inert = true;
+    decklistActions.hidden = false;
+  }
+
+  function setDecklistSending(sending) {
+    decklistConfirmSend.disabled = sending;
+    decklistConfirmCancel.disabled = sending;
+    decklistConfirmSend.classList.toggle("is-sending", sending);
+    decklistConfirmSend.textContent = sending ? "Invio in corso…" : "Conferma e invia";
+  }
+
+  decklistText.addEventListener("input", () => {
+    updateDecklistMeter();
+    // Changed after the warning: it's for the old text, so it goes.
+    if (decklistConfirm.classList.contains("is-open")) closeDecklistConfirm();
+  });
+  decklistEventSelect.addEventListener("change", () => {
+    if (decklistConfirm.classList.contains("is-open")) closeDecklistConfirm();
+  });
+  decklistConfirmCancel.addEventListener("click", closeDecklistConfirm);
+
+  decklistForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    setMessage(decklistMessageEl, "");
+    // Checked here, not with `required`: the native <select> is hidden behind
+    // js/custom-select.js's skin, where the browser can't show its warning.
+    const ev = decklistEvents.get(decklistEventSelect.value);
+    if (!ev) {
+      setMessage(decklistMessageEl, "Scegli l'evento.");
+      return;
+    }
+    if (!decklistText.value.trim()) {
+      setMessage(decklistMessageEl, "Incolla la decklist o un link.");
+      return;
+    }
+    openDecklistConfirm(ev);
+  });
+
+  decklistConfirmSend.addEventListener("click", async () => {
+    const ev = decklistEvents.get(decklistEventSelect.value);
+    if (!ev) {
+      closeDecklistConfirm();
+      return;
+    }
+    setDecklistSending(true);
+    try {
+      await Decklists.send(ev.id, decklistText.value);
+    } catch (err) {
+      console.error(err);
+      setDecklistSending(false);
+      closeDecklistConfirm();
+      const known = DECKLIST_ERROR_TEXT[err?.message];
+      if (known) {
+        setMessage(decklistMessageEl, known);
+      } else {
+        // The send itself failed: by hand, to the same address.
+        decklistMessageEl.className = "form-message is-error";
+        decklistMessageEl.innerHTML = decklistFallbackHtml(ev, decklistText.value);
+      }
+      // Out of sends (another tab, another device): it leaves the list.
+      if (err?.message === "already_sent") {
+        recordDecklistSend(ev, DECKLIST_MAX_SENDS);
+        renderDecklistCard();
+      }
+      return;
+    }
+    setDecklistSending(false);
+    closeDecklistConfirm();
+    recordDecklistSend(ev, (decklistSendCount.get(ev.id) ?? 0) + 1);
+    decklistText.value = "";
+    updateDecklistMeter();
+    renderDecklistCard();
+    setMessage(decklistMessageEl, `Decklist inviata per ${eventTitle(ev)}.`, "ok");
+  });
+
+  // --- Seguiti -----------------------------------------------------------------------------
+
+  // The players, commanders and leagues this account follows (★ on their
+  // pages, js/follow-button.js), newest follow first, in three groups (each
+  // only when it has someone, with its count). One sub-card each, like the
+  // Comandanti / Giocatori pages' lists (js/history-list.js), the whole card a
+  // link to the player's / commander's / league's page: the name (a player's badges after it), a
+  // small line with the last event, the numbers on the right (below on
+  // phones). The only part that doesn't lead there: a filled ★ in a circle to
+  // unfollow (hollow on hover — the same star as on their pages), beside the
+  // link rather than inside it (a link can't hold a button), placed over the
+  // card's right edge. Any signed-in account — following needs no linked
+  // player.
+  const followsCard = document.getElementById("profile-follows");
+  const followsListEl = document.getElementById("follows-list");
+  const followsEmptyEl = document.getElementById("follows-empty");
+
+  function followRowHtml(kind, target) {
+    const href = `${kind}.html?id=${target.id}`;
+    const name = kind === "player" ? playerLabel(target) : target.name;
+    return `<li class="follow-row" data-kind="${kind}" data-id="${target.id}">
+      <a class="history-item follow-card" href="${href}">
+        <div class="history-main">
+          <span class="follow-title">
+            <span class="follow-name">${escapeHtml(name)}</span>${kind === "player" ? '<span class="follow-badges"></span>' : ""}
+          </span>
+          <span class="history-deck follow-meta"></span>
+        </div>
+        <div class="follow-stats"></div>
+      </a>
+      <button type="button" class="follow-remove" aria-label="Non seguire più ${escapeHtml(name)}" title="Non seguire più">
+        <span class="follow-remove-star" aria-hidden="true"></span>
+      </button>
+    </li>`;
+  }
+
+  function followGroupHtml(title, kind, targets) {
+    if (!targets.length) return "";
+    return `<li class="follow-group">
+      <p class="follow-group-title">${title} <span class="history-count">${targets.length}</span></p>
+      <ul class="follow-group-list">${targets.map((t) => followRowHtml(kind, t)).join("")}</ul>
+    </li>`;
+  }
+
+  function updateFollowsEmpty() {
+    // A group whose last row went goes too; the others recount.
+    for (const group of followsListEl.querySelectorAll(".follow-group")) {
+      const rows = group.querySelectorAll(".follow-row").length;
+      if (!rows) group.remove();
+      else group.querySelector(".history-count").textContent = String(rows);
+    }
+    followsEmptyEl.hidden = followsListEl.querySelector(".follow-row") !== null;
+  }
+
+  async function loadFollows() {
+    let follows;
+    try {
+      follows = await Follows.mine(user.id);
+    } catch (err) {
+      // E.g. migration 010 not run yet: no card rather than a broken one.
+      console.error(err);
+      followsCard.hidden = true;
+      return;
+    }
+    followsListEl.innerHTML =
+      followGroupHtml("Giocatori", "player", follows.map((f) => f.player).filter(Boolean)) +
+      followGroupHtml("Comandanti", "commander", follows.map((f) => f.commander).filter(Boolean)) +
+      followGroupHtml("Leghe", "league", follows.map((f) => f.league).filter(Boolean));
+    updateFollowsEmpty();
+    followsCard.hidden = false;
+    // The numbers next to each name come after, without holding up the page.
+    fillFollowStats(follows).catch((err) => console.error(err));
+  }
+
+  // --- Seguiti: the numbers of each sub-card ---
+
+  // Filled in after the list shows (labelled numbers, js/history-list.js
+  // historyStatsHtml — the full text on hover — and the small line below the
+  // name):
+  //  - a player: its badges right after the name (the same icons as in the
+  //    lists, js/player-badges.js); Winrate (its cached standings — closed
+  //    events, counted like the player page's), its placement in the last
+  //    event (the event on the line below), and — while a league is open — its
+  //    position in that league's standings (a real league, not a Topdeck
+  //    series; computed like the Bacheca's, js/home.js), "—" when not in them;
+  //  - a commander: Winrate counted like commander.html's (a bye or a drop
+  //    isn't a match it played) and how many events it was played in; the
+  //    latest of them, and who played it, on the line below;
+  //  - a league: how many of its events were played (closed ones, as on
+  //    league.html); "In corso" / "Conclusa" and the latest event below.
+  const winrate = ({ wins, draws, losses }) => {
+    const played = wins + draws + losses;
+    return played ? `${Math.round((wins / played) * 100)}%` : null;
+  };
+
+  function setFollowStats(kind, id, { stats, meta }) {
+    const row = followsListEl.querySelector(`.follow-row[data-kind="${kind}"][data-id="${id}"]`);
+    if (!row) return;
+    const slot = row.querySelector(".follow-stats");
+    slot.innerHTML = historyStatsHtml(stats);
+    slot.classList.add("is-ready");
+    if (meta) row.querySelector(".follow-meta").textContent = meta;
+  }
+
+  const latestEvent = (rows) =>
+    rows.reduce((best, row) => (!best || (row.event?.event_date ?? "") > (best.event?.event_date ?? "") ? row : best), null);
+
+  async function openLeagueStandings() {
+    const league = await Leagues.getOpen();
+    if (!league) return null;
+    const allEvents = await Events.listByLeague(league.id);
+    const [eventsData, scheduledEvents] = await Promise.all([
+      fetchEventsResults(allEvents.filter((ev) => !ev.is_open).map((ev) => ev.id)),
+      Leagues.eventCount(league.id, allEvents.length),
+    ]);
+    return { league, standings: computeLeaguePoints(eventsData, { scheduledEvents }) };
+  }
+
+  async function fillPlayerStats(playerIds) {
+    const [results, open, badgesFor] = await Promise.all([
+      Follows.playerResults(playerIds),
+      openLeagueStandings().catch((err) => (console.error(err), null)),
+      // Never rejects: without them the names just have no badges.
+      fetchPlayerBadgesRenderer(),
+    ]);
+    for (const id of playerIds) {
+      const badgesSlot = followsListEl.querySelector(`.follow-row[data-kind="player"][data-id="${id}"] .follow-badges`);
+      if (badgesSlot) badgesSlot.innerHTML = badgesFor({ id });
+      const rows = results.filter((r) => r.player_id === id);
+      const totals = rows.reduce(
+        (t, r) => ({ wins: t.wins + r.wins, draws: t.draws + r.draws, losses: t.losses + r.losses }),
+        { wins: 0, draws: 0, losses: 0 }
+      );
+      const latest = latestEvent(rows);
+      const stats = [
+        { label: "Winrate", value: winrate(totals) ?? "—", main: true, title: "Winrate su tutti gli eventi" },
+        {
+          label: "Ultimo",
+          value: latest ? `${latest.position}°` : "—",
+          title: latest ? `Ultimo evento: ${eventTitle(latest.event)}, ${formatDate(latest.event.event_date)}` : "",
+        },
+      ];
+      if (open) {
+        const index = open.standings.findIndex((row) => row.player?.id === id);
+        stats.push({
+          label: "Lega",
+          value: index >= 0 ? `${index + 1}°` : "—",
+          title: index >= 0 ? `${open.league.name}: ${index + 1}° in classifica` : `Non in classifica in ${open.league.name}`,
+        });
+      }
+      setFollowStats("player", id, {
+        stats,
+        meta: latest ? `Ultimo evento: ${eventTitle(latest.event)}` : "",
+      });
+    }
+  }
+
+  async function fillCommanderStats(commanderIds) {
+    const appearances = await Follows.commanderAppearances(commanderIds);
+    const eventIds = [...new Set(appearances.map((a) => a.event.id))];
+    const results = await fetchEventsResults(eventIds);
+    const plays = (entry, id) => entry && (entry.commander_id === id || entry.partner_commander_id === id);
+    for (const id of commanderIds) {
+      const mine = appearances.filter((a) => a.commander_id === id || a.partner_commander_id === id);
+      if (!mine.length) continue;
+      const bucket = { wins: 0, draws: 0, losses: 0 };
+      for (const { entries, matches } of results) {
+        const entryByPlayer = new Map(entries.map((e) => [e.player_id, e]));
+        for (const m of matches) {
+          if (isBye(m) || isDrop(m)) continue;
+          const outcome = matchRoundOutcome(m);
+          // Each side that piloted it (both, in a mirror) counts.
+          for (const [playerId, side] of [
+            [m.player1_id, "player1"],
+            [m.player2_id, "player2"],
+          ]) {
+            if (!plays(entryByPlayer.get(playerId), id)) continue;
+            tallyOutcome(bucket, outcome === "draw" ? "draw" : outcome === side ? "win" : "loss");
+          }
+        }
+      }
+      const latest = latestEvent(mine);
+      setFollowStats("commander", id, {
+        stats: [
+          { label: "Winrate", value: winrate(bucket) ?? "—", main: true, title: "Winrate su tutti gli eventi" },
+          { label: "Eventi", value: mine.length, title: `Giocato in ${mine.length} ${mine.length === 1 ? "evento" : "eventi"}` },
+        ],
+        meta: `Ultimo evento: ${eventTitle(latest.event)}${latest.player?.name ? ` · ${latest.player.name}` : ""}`,
+      });
+    }
+  }
+
+  async function fillLeagueStats(leagues) {
+    await Promise.all(
+      leagues.map(async (league) => {
+        const played = (await Events.listByLeague(league.id)).filter((ev) => !ev.is_open);
+        const latest = played.reduce(
+          (best, ev) => (!best || (ev.event_date ?? "") > (best.event_date ?? "") ? ev : best),
+          null
+        );
+        setFollowStats("league", league.id, {
+          stats: [
+            {
+              label: "Eventi",
+              value: played.length,
+              main: true,
+              title: `${played.length} ${played.length === 1 ? "evento giocato" : "eventi giocati"}`,
+            },
+          ],
+          meta: `${league.is_open ? "In corso" : "Conclusa"}${latest ? ` · Ultimo evento: ${eventTitle(latest)}` : ""}`,
+        });
+      })
+    );
+  }
+
+  async function fillFollowStats(follows) {
+    const playerIds = follows.filter((f) => f.player).map((f) => f.player.id);
+    const commanderIds = follows.filter((f) => f.commander).map((f) => f.commander.id);
+    const leagues = follows.map((f) => f.league).filter(Boolean);
+    await Promise.all([
+      playerIds.length ? fillPlayerStats(playerIds) : null,
+      commanderIds.length ? fillCommanderStats(commanderIds) : null,
+      leagues.length ? fillLeagueStats(leagues) : null,
+    ]);
+  }
+
+  // ★: unfollowed, and the row slides away (or just goes, with reduced motion).
+  followsListEl.addEventListener("click", async (e) => {
+    const button = e.target.closest(".follow-remove");
+    if (!button) return;
+    const row = button.closest(".follow-row");
+    button.disabled = true;
+    try {
+      await Follows.unfollow(user.id, row.dataset.kind, row.dataset.id);
+    } catch (err) {
+      console.error(err);
+      button.disabled = false;
+      return;
+    }
+    const remove = () => {
+      row.remove();
+      updateFollowsEmpty();
+    };
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      remove();
+      return;
+    }
+    row.classList.add("is-leaving");
+    row.addEventListener("animationend", remove, { once: true });
+  });
+
+  // --- Loading the signed-in view -----------------------------------------------------
+
+  // Also kept by id, for the card's live preview of a commander picked in
+  // edit mode (its name → Scryfall art).
+  async function loadSignedIn(sessionUser) {
+    user = sessionUser;
+    profile = null;
+    firstYear = null;
+    cardProgress = null;
+    playerBadges = [];
+    setEditing(false, { animate: false });
+    accountDangerEl.hidden = true;
+    decklistCard.hidden = true;
+    albumCard.hidden = true;
+    followsCard.hidden = true;
+    setMessage(accountMessageEl, "");
+    try {
+      let isAdmin;
+      [profile, , isAdmin] = await Promise.all([Profiles.mine(user.id), loadClaim(), MyAccount.isAdmin()]);
+      // Admins can't delete their own account from here (nor in the database).
+      accountDangerEl.hidden = isAdmin;
+      if (claim.linked) await loadStats(claim.linked);
+    } catch (err) {
+      console.error(err);
+      setMessage(pageMessageEl(), "Impossibile caricare il profilo, ricarica la pagina.");
+    }
+    await loadFollows();
+    renderCard(savedValues());
+    renderPublicSwitch();
+    show("signed-in");
+  }
+
+  // --- Auth ---------------------------------------------------------------------------
+
+  // A sign-in that failed or was cancelled on Google's side comes back with
+  // the error in the address (query or fragment) instead of a session.
+  function returnedError() {
+    const params = [window.location.search, window.location.hash.replace(/^#/, "?")].map((s) => new URLSearchParams(s));
+    return params.some((p) => p.has("error") || p.has("error_code"));
+  }
+
+  // (Each visit subscribes anew — supabase-js reports the current session to
+  // a new subscriber straight away — and unsubscribes on leaving.)
+  let firstEvent = true;
+  const {
+    data: { subscription },
+  } = sb.auth.onAuthStateChange((_event, session) => {
+    const isFirst = firstEvent;
+    firstEvent = false;
+    // Deferred: supabase-js freezes if another Supabase call is awaited inside
+    // its own auth-change callback (loadSignedIn makes several).
+    setTimeout(async () => {
+      if (signal.aborted) return;
+      if (session) {
+        // Token refreshes etc. for the account already on screen: nothing to do.
+        if (user?.id !== session.user.id) await loadSignedIn(session.user);
+      } else {
+        user = null;
+        profile = null;
+        show("login");
+        showGoogleButton();
+        const loginMessageEl = viewOf("login").querySelector("[data-message]");
+        if (loginNotice) {
+          setMessage(loginMessageEl, loginNotice, "ok");
+          loginNotice = null;
+        } else if (isFirst && returnedError()) {
+          setMessage(loginMessageEl, "Accesso con Google non riuscito o annullato: riprova.");
+        }
+      }
+      if (isFirst) hidePageLoading(signal);
+    }, 0);
+  });
+  signal.addEventListener("abort", () => subscription.unsubscribe(), { once: true });
+
+  // --- Sign in with Google's own button ------------------------------------------
+
+  // Google Identity Services: Google's button, drawn on this page, signs the
+  // user in itself and hands its ID token to Supabase (signInWithIdToken) —
+  // the sign-in never leaves the site, so Google's window names the site
+  // instead of Supabase's address (the redirect flow below does that). The
+  // script loads only here, only while the sign-in card is shown; if it's
+  // blocked or slow (privacy browsers, ad blockers), the redirect button below
+  // takes its place. Same Google client as Supabase's Google provider (its
+  // Client ID is public; the secret stays in Supabase); this site's addresses
+  // are its "Authorized JavaScript origins" (PLAYER_LOGIN.md).
+  const GOOGLE_CLIENT_ID = "758643767973-5akt6sepj004h3l0qjn1o9tts8nld00g.apps.googleusercontent.com";
+  const GOOGLE_SCRIPT_TIMEOUT_MS = 5000;
+  const googleButtonEl = document.getElementById("account-google-gsi");
+  const googleFallbackBtn = document.getElementById("account-google");
+
+  function loadGoogleScript() {
+    googleScript ??= new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      script.onload = () => (window.google?.accounts?.id ? resolve(window.google.accounts.id) : reject(new Error("gsi_missing")));
+      script.onerror = () => reject(new Error("gsi_blocked"));
+      document.head.appendChild(script);
+      setTimeout(() => reject(new Error("gsi_timeout")), GOOGLE_SCRIPT_TIMEOUT_MS);
+    });
+    return googleScript;
+  }
+
+  // A one-time value tying Google's token to this attempt, so a token can't be
+  // replayed: Google gets its SHA-256 (hex), Supabase the value itself, and
+  // checks they match.
+  async function newNonce() {
+    const raw = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(24))));
+    const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
+    const hashed = [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+    return { raw, hashed };
+  }
+
+  // Draws (or redraws, each with a fresh nonce) Google's button on the
+  // sign-in card; the fallback instead if Google's script can't be had.
+  async function showGoogleButton() {
+    const loginMessageEl = viewOf("login").querySelector("[data-message]");
+    let gsi;
+    let nonce;
+    try {
+      [gsi, nonce] = await Promise.all([loadGoogleScript(), newNonce()]);
+    } catch (err) {
+      console.error(err);
+      googleButtonEl.hidden = true;
+      googleFallbackBtn.hidden = false;
+      return;
+    }
+    gsi.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      nonce: nonce.hashed,
+      // Never signs in by itself: after "Esci" (or on a shared device) only
+      // a click signs in again.
+      auto_select: false,
+      callback: async ({ credential }) => {
+        setMessage(loginMessageEl, "");
+        const { error } = await sb.auth.signInWithIdToken({ provider: "google", token: credential, nonce: nonce.raw });
+        if (error) {
+          console.error(error);
+          setMessage(loginMessageEl, "Accesso con Google non riuscito, riprova.");
+          // The nonce is spent: a fresh button for the next try.
+          showGoogleButton();
+        }
+        // On success the SIGNED_IN event switches to the profile.
+      },
+    });
+    googleButtonEl.hidden = false;
+    googleFallbackBtn.hidden = true;
+    googleButtonEl.innerHTML = "";
+    gsi.renderButton(googleButtonEl, {
+      type: "standard",
+      theme: document.documentElement.dataset.theme === "dark" ? "filled_black" : "outline",
+      size: "large",
+      shape: "pill",
+      text: "signin_with",
+      locale: "it",
+      // Google's own limits: 200–400px.
+      width: Math.max(200, Math.min(400, Math.floor(googleButtonEl.clientWidth || 320))),
+    });
+  }
+
+  document.getElementById("account-google").addEventListener("click", async () => {
+    const { error } = await sb.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: ACCOUNT_URL },
+    });
+    // On success the page is already on its way to Google.
+    if (error) {
+      console.error(error);
+      setMessage(viewOf("login").querySelector("[data-message]"), "Impossibile avviare l'accesso con Google, riprova.");
+    }
+  });
+
+  document.getElementById("account-logout").addEventListener("click", async () => {
+    // Google's button never signs in by itself (auto_select: false); this also
+    // makes Google forget the last choice, if its script was loaded here.
+    window.google?.accounts?.id?.disableAutoSelect();
+    const { error } = await sb.auth.signOut();
+    if (error) {
+      console.error(error);
+      setMessage(accountMessageEl, "Uscita non riuscita, riprova.");
+    }
+    // The SIGNED_OUT event switches back to the login view.
+  });
+
+  // Deletes the login account for good (supabase/migrations/006's
+  // delete_my_account()): its card and pending request go with it, its
+  // player is unlinked and kept. Signing in with Google again later creates a
+  // new, empty account.
+  accountDeleteBtn.addEventListener("click", async () => {
+    if (
+      !confirm(
+        "Eliminare definitivamente il tuo account?\n\nLa tua carta verrà cancellata e il collegamento al tuo giocatore rimosso. Il giocatore e i suoi risultati restano."
+      )
+    ) {
+      return;
+    }
+    setMessage(accountMessageEl, "");
+    accountDeleteBtn.disabled = true;
+    try {
+      await MyAccount.remove();
+    } catch (err) {
+      console.error(err);
+      accountDeleteBtn.disabled = false;
+      setMessage(
+        accountMessageEl,
+        err?.message === "admin_account"
+          ? "Un account amministratore non può essere eliminato da qui."
+          : "Eliminazione non riuscita, riprova."
+      );
+      return;
+    }
+    accountDeleteBtn.disabled = false;
+    loginNotice = "Account eliminato. Puoi accedere di nuovo con Google quando vuoi.";
+    // The account no longer exists, so only this browser's session is
+    // cleared (a server-side sign-out would just fail); SIGNED_OUT follows.
+    await sb.auth.signOut({ scope: "local" });
+  });
+}

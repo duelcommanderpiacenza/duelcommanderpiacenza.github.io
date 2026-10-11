@@ -61,7 +61,10 @@ function vsChartHtml(matchups) {
     </div>`;
 }
 
-async function init() {
+// In-app page (js/router.js): mounted by the router on this page's <main>
+// (data-page), on first load and after each in-app navigation; `signal`
+// aborts when the page is left.
+export async function mount({ signal = new AbortController().signal } = {}) {
   const archetype = new URLSearchParams(window.location.search).get("id");
   const titleEl = document.getElementById("archetype-title");
   const statsEl = document.getElementById("archetype-stats");
@@ -71,14 +74,14 @@ async function init() {
   if (!ARCHETYPES.includes(archetype)) {
     titleEl.textContent = "Archetipo non trovato";
     for (const el of [chartsEl, commandersEl]) el.innerHTML = "";
-    hidePageLoading();
+    hidePageLoading(signal);
     return;
   }
 
   const name = capitalize(archetype);
   titleEl.textContent = name;
   document.title = `${name} - Duel Commander Piacenza`;
-  initTitleFit(titleEl);
+  initTitleFit(titleEl, { signal });
 
   try {
     // Every closed event (an open one isn't published yet), oldest first.
@@ -86,6 +89,7 @@ async function init() {
       .filter((ev) => !ev.is_open)
       .sort((a, b) => (a.event_date ?? "").localeCompare(b.event_date ?? ""));
     const eventsData = await fetchEventsResults(events.map((ev) => ev.id));
+    if (signal.aborted) return;
 
     // The archetype's own numbers, and the whole field's deck count (for
     // its metashare): match-basis, byes and drops not counted
@@ -200,8 +204,6 @@ async function init() {
   } catch (err) {
     showError(document.getElementById("archetype-content"), err);
   } finally {
-    hidePageLoading();
+    hidePageLoading(signal);
   }
 }
-
-init();

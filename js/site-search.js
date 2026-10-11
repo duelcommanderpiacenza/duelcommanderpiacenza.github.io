@@ -179,6 +179,14 @@ function init() {
       trigger.focus();
     }
   });
+
+  // In-app navigation (js/router.js, e.g. a result picked): closed and
+  // cleared for the next page.
+  document.addEventListener("app:navigate", () => {
+    input.value = "";
+    input.blur();
+    close();
+  });
 }
 
 init();

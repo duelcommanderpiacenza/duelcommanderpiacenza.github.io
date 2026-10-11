@@ -60,7 +60,9 @@ function buildGrid(viewY, viewM) {
   return cells;
 }
 
-function init() {
+// Wired by js/home.js's mount (the Bacheca, an in-app page — js/router.js):
+// the trigger and the dialog both live in <main>, so nothing outlives it.
+export function mountCalendar() {
   const trigger = document.getElementById("events-calendar-btn");
   const dialog = document.getElementById("events-calendar-dialog");
   if (!trigger || !dialog) return;
@@ -176,10 +178,32 @@ function init() {
     renderDayPanel();
   }
 
+  // Closing (×, a click on the backdrop, Escape) plays the exit animation
+  // first (styles.css: the same in / out as the "?" pop-ups, .is-closing),
+  // then the real close(); straight away when there's no animation (reduced
+  // motion).
+  function close() {
+    if (dialog.classList.contains("is-closing")) return;
+    if (getComputedStyle(dialog).animationName === "none") return dialog.close();
+    dialog.classList.add("is-closing");
+    dialog.addEventListener(
+      "animationend",
+      () => {
+        dialog.classList.remove("is-closing");
+        dialog.close();
+      },
+      { once: true }
+    );
+  }
+
   trigger.addEventListener("click", open);
-  dialog.querySelector(".ecal-close").addEventListener("click", () => dialog.close());
+  dialog.querySelector(".ecal-close").addEventListener("click", close);
   dialog.addEventListener("click", (e) => {
-    if (e.target === dialog) dialog.close();
+    if (e.target === dialog) close();
+  });
+  dialog.addEventListener("cancel", (e) => {
+    e.preventDefault();
+    close();
   });
   dialog.querySelector(".ecal-nav-prev").addEventListener("click", () => {
     view = view.m === 0 ? { y: view.y - 1, m: 11 } : { y: view.y, m: view.m - 1 };
@@ -190,5 +214,3 @@ function init() {
     renderGrid();
   });
 }
-
-init();

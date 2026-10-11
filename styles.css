@@ -104,6 +104,25 @@ body {
   min-height: 50vh;
 }
 
+/* While loading, at least a whole screen tall, and the footer hidden: the
+   footer isn't seen high up and then dropping as the content arrives — it
+   shows once loaded, straight in its place (also through an in-app
+   navigation, js/router.js, which sets body.is-loading again). */
+body.is-loading .page-loading-region {
+  min-height: 100vh;
+}
+
+body.is-loading footer {
+  visibility: hidden;
+}
+
+/* The scrollbar's room always kept (desktop): a page growing past the
+   window's height as it loads doesn't get narrower — nothing shifts when
+   the scrollbar appears. */
+html {
+  scrollbar-gutter: stable;
+}
+
 /* The real content underneath (filters, chart, table, each with its own
    small "Caricamento..." placeholder) is hidden outright — see the
    visibility rule below — rather than painted over with a matching color,
@@ -1194,7 +1213,6 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
       transform: translateX(-50%) translateY(10px);
     }
   }
-
   @media (prefers-reduced-motion: reduce) {
     html.nav-mobile .site-nav.is-open .site-nav-inner,
     html.nav-mobile .site-nav.is-open .site-nav-inner > * {
@@ -3498,22 +3516,28 @@ body.is-loading .filter-panel.detail-filter-panel {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.28);
 }
 
-/* In: rises and scales up slightly as it fades in, backdrop fading with it.
+/* The "?" pop-ups and the Bacheca's calendar (#events-calendar-dialog,
+   js/events-calendar.js). In: rises and scales up slightly as it fades in,
+   backdrop fading with it.
    Out: the reverse, a touch quicker — js adds .is-closing and waits for
    the animation before the real close(). */
-.info-dialog[open] {
+.info-dialog[open],
+#events-calendar-dialog[open] {
   animation: info-dialog-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.info-dialog[open]::backdrop {
+.info-dialog[open]::backdrop,
+#events-calendar-dialog[open]::backdrop {
   animation: info-backdrop-in 220ms ease;
 }
 
-.info-dialog.is-closing {
+.info-dialog.is-closing,
+#events-calendar-dialog.is-closing {
   animation: info-dialog-out 160ms ease-in forwards;
 }
 
-.info-dialog.is-closing::backdrop {
+.info-dialog.is-closing::backdrop,
+#events-calendar-dialog.is-closing::backdrop {
   animation: info-backdrop-out 160ms ease-in forwards;
 }
 
@@ -3547,7 +3571,11 @@ body.is-loading .filter-panel.detail-filter-panel {
   .info-dialog[open],
   .info-dialog[open]::backdrop,
   .info-dialog.is-closing,
-  .info-dialog.is-closing::backdrop {
+  .info-dialog.is-closing::backdrop,
+  #events-calendar-dialog[open],
+  #events-calendar-dialog[open]::backdrop,
+  #events-calendar-dialog.is-closing,
+  #events-calendar-dialog.is-closing::backdrop {
     animation: none;
   }
 }
@@ -14109,6 +14137,109 @@ html[data-theme="dark"]:not(.nav-mobile) .site-search-results {
 
   .site-header.has-hero-accent .site-search-trigger {
     color: var(--hero-accent-deep);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Page transitions (js/router.js, in-app navigation): the screen changes
+   with Material's fade through, while the header's own controls (the logo,
+   the search, the profile picture) and the nav (the mobile pill) stay still
+   on top of it — wider than a phone, the whole red header and the tab row
+   stay still instead. The names only during the transition
+   (html.is-page-transition — a name changes how an element stacks);
+   reduced motion: no transition at all (the router swaps straight away).
+   --------------------------------------------------------------------------- */
+html.is-page-transition .site-header,
+html.is-page-transition footer {
+  view-transition-name: none;
+}
+
+html.is-page-transition .site-header-brand {
+  view-transition-name: hdr-brand;
+}
+
+html.is-page-transition .site-search {
+  view-transition-name: hdr-search;
+}
+
+html.is-page-transition .site-account {
+  view-transition-name: hdr-account;
+}
+
+html.is-page-transition .site-nav {
+  view-transition-name: site-nav;
+}
+
+/* Wider than a phone: the whole red header (and the white tab row under
+   it) stays still instead — only its controls staying looked broken there,
+   the header being an opaque bar; the page below it moves. */
+@media (min-width: 641px) {
+  html.is-page-transition .site-header {
+    view-transition-name: site-header;
+  }
+
+  html.is-page-transition .site-header-brand,
+  html.is-page-transition .site-search,
+  html.is-page-transition .site-account {
+    view-transition-name: none;
+  }
+}
+
+::view-transition-group(site-header),
+::view-transition-old(site-header),
+::view-transition-new(site-header) {
+  z-index: 10;
+  animation-duration: 0s;
+}
+
+/* The still controls: on top of the sliding screen, swapped at once. */
+::view-transition-group(hdr-brand),
+::view-transition-group(hdr-search),
+::view-transition-group(hdr-account),
+::view-transition-group(site-nav) {
+  z-index: 10;
+  animation-duration: 0s;
+}
+
+::view-transition-old(hdr-brand),
+::view-transition-new(hdr-brand),
+::view-transition-old(hdr-search),
+::view-transition-new(hdr-search),
+::view-transition-old(hdr-account),
+::view-transition-new(hdr-account) {
+  animation-duration: 0s;
+}
+
+/* The nav cross-fades with the old screen's fade out instead: its open
+   panel (closed in the swap, js/nav-dropdown.js) leaves with the old page,
+   the pill's label / active tab change the same way; the pill itself, the
+   same in both, stays as it is. */
+::view-transition-old(site-nav),
+::view-transition-new(site-nav) {
+  animation-duration: 90ms;
+}
+
+/* The screen itself, on every in-app navigation (between nav sections,
+   list ↔ detail, back and forth): Material's fade through — the old screen
+   out quickly, then the new one in while it grows from 92% to its size. */
+::view-transition-old(root) {
+  animation: page-fade-out 90ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+::view-transition-new(root) {
+  animation: page-fade-through-in 210ms cubic-bezier(0, 0, 0.2, 1) 90ms both;
+}
+
+@keyframes page-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes page-fade-through-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
   }
 }
 

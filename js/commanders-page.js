@@ -51,7 +51,10 @@ const SORTERS = {
   wins: (a, b) => b.wins - a.wins,
 };
 
-async function init() {
+// In-app page (js/router.js): mounted by the router on this page's <main>
+// (data-page), on first load and after each in-app navigation; `signal`
+// aborts when the page is left.
+export async function mount({ signal = new AbortController().signal } = {}) {
   const chartEl = document.getElementById("commanders-chart");
   const tableEl = document.getElementById("commanders-table");
   const leagueSelect = document.getElementById("commanders-league-filter");
@@ -64,11 +67,11 @@ async function init() {
   const colorExactCheckbox = document.getElementById("commanders-color-exact");
   const countEl = document.getElementById("commanders-count");
   // A long list: a round button back to the top once scrolled down.
-  initBackToTop();
+  initBackToTop({ signal });
 
   // Full commander name on hover for any bar-chart label (Winrate) cut off
   // with an ellipsis — delegated on chartEl, which survives re-renders.
-  attachHoverTooltips(chartEl, ".bar-chart-label", fullTextIfTruncated);
+  attachHoverTooltips(chartEl, ".bar-chart-label", fullTextIfTruncated, { signal });
 
   let allCommanders = [];
   let eventDateById = new Map();
@@ -82,7 +85,7 @@ async function init() {
     eventDateById = new Map(events.map((e) => [e.id, e.event_date]));
   } catch (err) {
     showError(chartEl, err);
-    hidePageLoading();
+    hidePageLoading(signal);
     return;
   }
 
@@ -287,7 +290,7 @@ async function init() {
     } catch (err) {
       showError(chartEl, err);
     } finally {
-      hidePageLoading();
+      hidePageLoading(signal);
     }
   }
 
@@ -316,5 +319,3 @@ async function init() {
     },
   });
 }
-
-init();

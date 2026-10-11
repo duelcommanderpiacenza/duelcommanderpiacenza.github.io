@@ -74,7 +74,10 @@ function renderMatchesByRound(matches) {
     .join("");
 }
 
-async function init() {
+// In-app page (js/router.js): mounted by the router on this page's <main>
+// (data-page), on first load and after each in-app navigation; `signal`
+// aborts when the page is left.
+export async function mount({ signal = new AbortController().signal } = {}) {
   const id = getId();
   const titleEl = document.getElementById("event-title");
   const metaEl = document.getElementById("event-meta");
@@ -87,7 +90,7 @@ async function init() {
 
   if (!id) {
     titleEl.textContent = "Evento non trovato";
-    hidePageLoading();
+    hidePageLoading(signal);
     return;
   }
 
@@ -102,7 +105,7 @@ async function init() {
     const resultsHtml = resultsLink(event.results_url, event.decklists_url);
     resultsEl.innerHTML = resultsHtml;
     resultsEl.hidden = !resultsHtml;
-    initTitleFit(titleEl);
+    initTitleFit(titleEl, { signal });
     metaEl.innerHTML = `${formatDate(event.event_date)}${
       event.league
         ? ` &middot; <a href="league.html?id=${event.league.id}">${escapeHtml(event.league.name)}</a>`
@@ -191,8 +194,6 @@ async function init() {
   } catch (err) {
     showError(document.getElementById("event-content"), err);
   } finally {
-    hidePageLoading();
+    hidePageLoading(signal);
   }
 }
-
-init();

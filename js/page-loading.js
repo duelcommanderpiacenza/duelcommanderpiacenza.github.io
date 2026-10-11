@@ -5,7 +5,10 @@
 // per render on a page that re-renders on every filter change) — only the
 // first call actually does anything, every call after that is a no-op
 // since the element is already gone.
-export function hidePageLoading() {
+// `signal` (js/router.js mount): a page already left (aborted) doesn't
+// touch the splash of the page now shown.
+export function hidePageLoading(signal) {
+  if (signal?.aborted) return;
   // Content built behind the splash while loading has its entrance
   // animations paused at their first frame (body.is-loading * in
   // styles.css) — removing the class here, at the same moment the splash

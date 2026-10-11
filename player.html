@@ -16,10 +16,10 @@
   </script>
   <title>Giocatore - Duel Commander Piacenza</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="view-transition" content="same-origin">
   <link rel="icon" type="image/png" href="dc_pc.png">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#dc181c">
+  <meta name="theme-color" content="#fff9f7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1b1315" media="(prefers-color-scheme: dark)">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -73,7 +73,7 @@
   </div>
 </nav>
 
-<main class="page-main" id="player-content" data-accent-from-hero>
+<main class="page-main" id="player-content" data-accent-from-hero data-page="player">
   <div class="page-loading-region">
     <div id="page-loading-overlay" class="page-loading-overlay"><p>Caricamento...</p></div>
 
@@ -137,7 +137,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script type="module" src="js/layout.js"></script>
-<script type="module" src="js/player-detail.js"></script>
 
 </body>
 </html>

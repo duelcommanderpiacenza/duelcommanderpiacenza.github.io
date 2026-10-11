@@ -25,11 +25,11 @@
   </script>
   <title>Social - Duel Commander Piacenza</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="view-transition" content="same-origin">
 
   <link rel="icon" type="image/png" href="dc_pc.png">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#dc181c">
+  <meta name="theme-color" content="#fff9f7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1b1315" media="(prefers-color-scheme: dark)">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -99,7 +99,7 @@
   </a>
 </div>
 
-<main class="page-main">
+<main class="page-main" data-page="social">
 
   <div class="page-loading-region">
     <div id="page-loading-overlay" class="page-loading-overlay"><p>Caricamento...</p></div>
@@ -139,28 +139,7 @@
   <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="false" aria-label="Cambia tema"></button>
 </footer>
 
-<script>
-  // moxfield.js (below) is a plain classic script, not a module, so it
-  // can't rely on js/layout.js (a deferred module, which has to fetch
-  // several JS files before it can even run) to set window.hidePageLoading
-  // in time — decks.json/videos.json are small, fast, cache-friendly
-  // requests that can easily resolve before that module chain does, and
-  // when that happened window.hidePageLoading was still undefined, so the
-  // splash never got hidden at all. Defined here, inline, synchronously,
-  // it's guaranteed to exist before moxfield.js's own script tag even
-  // starts running — same logic as js/page-loading.js's own export.
-  window.hidePageLoading = function () {
-    document.body.classList.remove("is-loading");
-    var el = document.getElementById("page-loading-overlay");
-    if (!el) return;
-    el.classList.add("is-hidden");
-    el.addEventListener("transitionend", function () {
-      el.remove();
-    }, { once: true });
-  };
-</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/moxfield.js"></script>
 <script type="module" src="js/layout.js"></script>
 
 </body>

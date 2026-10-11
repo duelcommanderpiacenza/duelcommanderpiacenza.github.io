@@ -85,7 +85,10 @@ function initHelpToggle() {
   );
 }
 
-async function init() {
+// In-app page (js/router.js): mounted by the router on this page's <main>
+// (data-page), on first load and after each in-app navigation; `signal`
+// aborts when the page is left.
+export async function mount({ signal = new AbortController().signal } = {}) {
   initHelpToggle();
   const modeTitleEl = document.getElementById("matchups-mode-title");
   const customBtn = document.getElementById("matchups-custom-btn");
@@ -103,15 +106,21 @@ async function init() {
   // The phone column widths follow the screen (rotating it, resizing);
   // switching in or out of the one-column mode redraws it (its drag differs).
   const refit = () => fitColumns(matrixEl.querySelector(".matchups-matrix-scroll"));
-  new ResizeObserver(refit).observe(matrixEl);
-  columnModeQuery.addEventListener("change", () => {
-    if (matrixEl.querySelector(".matchups-matrix-wrap")) renderMatrix();
-  });
+  const refitObserver = new ResizeObserver(refit);
+  refitObserver.observe(matrixEl);
+  signal.addEventListener("abort", () => refitObserver.disconnect(), { once: true });
+  columnModeQuery.addEventListener(
+    "change",
+    () => {
+      if (matrixEl.querySelector(".matchups-matrix-wrap")) renderMatrix();
+    },
+    { signal }
+  );
 
   attachHoverTooltips(matrixEl, ".matchups-row-header, .matchups-col-header", (cell) => {
     const text = cell.querySelector(".matchups-row-header-text, .matchups-col-header-text");
     return text && fullTextIfTruncated(text) ? cell.dataset.tooltip : null;
-  });
+  }, { signal });
 
   let allDecks = []; // { id, name, commanderId, partnerId } — one per unique commander(+partner) combo actually played
   let matchSides = []; // { side1, side2: deckId, side1GameWins, side2GameWins, gameDraws }
@@ -379,9 +388,13 @@ async function init() {
   searchInput.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeDropdown();
   });
-  document.addEventListener("click", (e) => {
-    if (!e.target.closest(".matchups-typeahead")) closeDropdown();
-  });
+  document.addEventListener(
+    "click",
+    (e) => {
+      if (!e.target.closest(".matchups-typeahead")) closeDropdown();
+    },
+    { signal }
+  );
 
   // The one button toggles between the two modes rather than being a
   // one-way reveal — its label always names the *other* mode, the one a
@@ -447,7 +460,7 @@ async function init() {
     matrixEl.innerHTML = '<p class="page-loading">Caricamento...</p>';
     try {
       const eventsData = await fetchEventsResults(effectiveEventIds());
-      if (token !== loadToken) return;
+      if (token !== loadToken || signal.aborted) return;
       buildFromData(
         eventsData.flatMap((d) => d.entries),
         eventsData.flatMap((d) => d.matches)
@@ -471,10 +484,11 @@ async function init() {
 
   try {
     const events = await Events.list();
+    if (signal.aborted) return;
     eventDateById = new Map(events.map((e) => [e.id, e.event_date]));
   } catch (err) {
     showError(matrixEl, err);
-    hidePageLoading();
+    hidePageLoading(signal);
     return;
   }
 
@@ -493,10 +507,8 @@ async function init() {
       const done = load();
       if (firstLoad) {
         firstLoad = false;
-        done.finally(hidePageLoading);
+        done.finally(() => hidePageLoading(signal));
       }
     },
   });
 }
-
-init();

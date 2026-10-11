@@ -9,12 +9,13 @@ import { Follows } from "./db.js";
 
 // kind: "player", "commander" or "league"; the button goes on a line of its own right
 // after titleEl (the page's <h1>, inside .page-heading).
-export async function initFollowButton(titleEl, kind, id) {
+// `signal` (js/router.js mount): a page left meanwhile gets nothing added.
+export async function initFollowButton(titleEl, kind, id, { signal } = {}) {
   if (!titleEl || !id) return;
   const {
     data: { session },
   } = await sb.auth.getSession();
-  if (!session) return;
+  if (!session || signal?.aborted) return;
   const userId = session.user.id;
   // Not on one's own player page: following yourself makes no sense (the
   // database refuses it too).
@@ -29,6 +30,7 @@ export async function initFollowButton(titleEl, kind, id) {
     console.error(err);
     return;
   }
+  if (signal?.aborted) return;
 
   const btn = document.createElement("button");
   btn.type = "button";

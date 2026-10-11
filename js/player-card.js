@@ -129,9 +129,22 @@ function rgbToHue(r, g, b) {
 // so its buttons, chips, tabs, links… follow the hero; the header and the
 // nav, outside <main>, stay red. In dark mode red text uses a light shade
 // of it (--hero-accent-light).
-const ACCENT_VARS = ["--hero-accent", "--hero-accent-deep", "--hero-accent-deep-2", "--hero-accent-light"];
+const ACCENT_VARS = ["--hero-accent", "--hero-accent-deep", "--hero-accent-deep-2", "--hero-accent-light", "--hero-bar"];
+
+// js/router.js, on an in-app navigation: the header's (and the nav's)
+// hero colour dropped when the next page won't set its own.
+export function clearHeroTone({ header = true, nav = true } = {}) {
+  const els = [header && document.querySelector(".site-header"), nav && document.querySelector(".site-nav")];
+  for (const el of els.filter(Boolean)) {
+    ACCENT_VARS.forEach((v) => el.style.removeProperty(v));
+    el.classList.remove("has-hero-accent");
+  }
+}
 
 function applyHeroTone(artEl, img) {
+  // Its page already left (in-app navigation): the colour isn't this
+  // page's any more.
+  if (!artEl.isConnected) return;
   const host = artEl.closest(".detail-hero-wrap") ?? artEl.closest(".profile-hero");
   if (!host) return;
   const main = artEl.closest("main[data-accent-from-hero]");
@@ -162,6 +175,8 @@ function applyHeroTone(artEl, img) {
     header.style.setProperty("--hero-accent-deep", `hsl(${tone.h} ${sat}% 33%)`);
     header.style.setProperty("--hero-accent-deep-2", `hsl(${tone.h} ${sat}% 28%)`);
     header.style.setProperty("--hero-accent-light", `hsl(${tone.h} ${Math.max(sat, 55)}% 72%)`);
+    // The phone's status bar over the hero's dark top (js/system-bars.js).
+    header.style.setProperty("--hero-bar", `hsl(${tone.h} ${sat}% 11%)`);
     header.classList.add("has-hero-accent");
   }
   if (main) {
