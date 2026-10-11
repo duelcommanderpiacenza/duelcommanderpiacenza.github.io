@@ -7,11 +7,21 @@
 //    of the hero's colour (--hero-bar, js/player-card.js applyHeroTone), or
 //    a near-black before it's known;
 //  - any other page: the page's own background, light or dark;
-//  - wider than a phone (the red header bar): the brand red.
+//  - a computer wider than a phone (the red header bar): the brand red.
 // Kept in step with the theme, the header's colour, the window's width, and
 // js/router.js's in-app navigation (refreshSystemBars after each swap).
+//
+// Also keeps html.app-header in step with the window's width: the phone
+// header (transparent, the logo alone, heroes up behind it — styles.css) on
+// phones and on every touch screen, tablets included, whatever the width;
+// set first by each page's inline head script, before the first paint.
 
 const PHONE = window.matchMedia("(max-width: 640px)");
+const TOUCH = navigator.maxTouchPoints > 0;
+
+function syncAppHeader() {
+  document.documentElement.classList.toggle("app-header", TOUCH || PHONE.matches);
+}
 
 const PAGE_LIGHT = "#fff9f7";
 const PAGE_DARK = "#1b1315";
@@ -23,7 +33,7 @@ function heroUnderHeader() {
 }
 
 function barColor() {
-  if (!PHONE.matches) return BRAND;
+  if (!document.documentElement.classList.contains("app-header")) return BRAND;
   if (heroUnderHeader()) {
     const header = document.querySelector(".site-header");
     const tone = header ? getComputedStyle(header).getPropertyValue("--hero-bar").trim() : "";
@@ -45,5 +55,9 @@ new MutationObserver(refreshSystemBars).observe(document.documentElement, {
 });
 const header = document.querySelector(".site-header");
 if (header) new MutationObserver(refreshSystemBars).observe(header, { attributes: true, attributeFilter: ["class", "style"] });
-PHONE.addEventListener("change", refreshSystemBars);
+PHONE.addEventListener("change", () => {
+  syncAppHeader();
+  refreshSystemBars();
+});
+syncAppHeader();
 refreshSystemBars();

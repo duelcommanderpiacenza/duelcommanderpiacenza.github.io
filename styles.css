@@ -6385,9 +6385,11 @@ a.history-item.is-me {
   height: 22px;
 }
 
+/* (Lifted above the footer here too, like the desktop's: otherwise, at the
+   page's bottom, it lies on the footer's theme switch.) */
 html.nav-mobile .back-to-top {
   right: 16px;
-  bottom: calc(16px + 48px + 12px + env(safe-area-inset-bottom));
+  bottom: calc(16px + 48px + 12px + env(safe-area-inset-bottom) + var(--back-to-top-lift, 0px));
 }
 
 /* Wide enough for it beside the pill (centred, 220px): 12px gap + 46px
@@ -6400,7 +6402,7 @@ html.nav-mobile .back-to-top {
   html.nav-mobile .back-to-top {
     right: auto;
     left: calc(50% + 110px + 12px);
-    bottom: calc(16px + 1px + env(safe-area-inset-bottom));
+    bottom: calc(16px + 1px + env(safe-area-inset-bottom) + var(--back-to-top-lift, 0px));
     z-index: 21;
   }
 }
@@ -13918,226 +13920,253 @@ html[data-theme="dark"]:not(.nav-mobile) .site-search-results {
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* Phones with a hero on the page (player / commander / league / event /
-   archetype / account): the red header transparent, laid over the page
-   (absolute — out of the flow), and the hero running up to the very top
+/* Phones and tablets (html.app-header) with a hero on the page (player /
+   commander / league / event / archetype / account): the red header
+   transparent, laid over the page (absolute — out of the flow), and the hero running up to the very top
    behind it: its content pushed down by the header's height
    (--hero-header-h), the back pill and follow star too; a dark shade at
    the hero's top keeps the header's logo, title and buttons readable on
    any art. Not while account.html's "Il tuo giocatore" banner sits above
    its hero (the header would lie over the banner). */
-@media (max-width: 640px) {
-  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) {
-    --hero-header-h: calc(80px + env(safe-area-inset-top));
+html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) {
+  --hero-header-h: calc(80px + env(safe-area-inset-top));
+}
+
+html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .site-header {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  border-bottom: 0;
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .page-main .profile-hero:first-child,
+html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .page-main .detail-hero-wrap:first-child .profile-hero,
+html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .page-loading-region > .detail-hero-wrap:nth-child(2) .profile-hero,
+html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .page-loading-region > .profile-hero {
+  margin-top: -20px;
+}
+
+html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .profile-hero-inner {
+  padding-top: calc(var(--hero-header-h) + 24px);
+}
+
+html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .detail-hero .profile-hero-inner {
+  padding-top: calc(var(--hero-header-h) + 68px);
+}
+
+html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .detail-hero-back,
+html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .detail-hero-wrap:has(.is-no-card) .detail-hero-back,
+html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .detail-hero-wrap > .follow-btn-row {
+  top: calc(var(--hero-header-h) + 14px);
+}
+
+html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .profile-hero::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 1;
+  height: calc(var(--hero-header-h) + 40px);
+  background: linear-gradient(rgba(10, 5, 6, 0.55), rgba(10, 5, 6, 0));
+  pointer-events: none;
+}
+
+/* Tablets (html.app-header wider than a phone): the hero edge to edge as
+   on phones — out of the page's centred column (.page-main: up to 1100px,
+   20px side padding; --hero-bleed is how far the column's edge is from the
+   screen's), its content still lined up with the column, no rounded
+   corners or shadow; pulled up by the page's 28px top padding (phones:
+   20px, above); the back pill and follow star inside its corners as up to
+   820px (desktop: on its top edge), lined up with the content. */
+@media (min-width: 641px) {
+  html.app-header .page-main {
+    --hero-bleed: calc(max(0px, (100vw - 1100px) / 2) + 20px);
   }
 
-  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .site-header {
-    position: absolute;
-    top: 0;
-    right: 0;
-    left: 0;
-    border-bottom: 0;
-    background: transparent;
+  html.app-header .profile-hero {
+    margin-inline: calc(-1 * var(--hero-bleed));
+    border-radius: 0;
     box-shadow: none;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
   }
 
-  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .page-main .profile-hero:first-child,
-  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .page-main .detail-hero-wrap:first-child .profile-hero,
-  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .page-loading-region > .detail-hero-wrap:nth-child(2) .profile-hero,
-  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .page-loading-region > .profile-hero {
-    margin-top: -20px;
+  html.app-header .profile-hero-inner {
+    padding-inline: var(--hero-bleed);
   }
 
-  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .profile-hero-inner {
-    padding-top: calc(var(--hero-header-h) + 24px);
+  html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .page-main .profile-hero:first-child,
+  html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .page-main .detail-hero-wrap:first-child .profile-hero,
+  html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .page-loading-region > .detail-hero-wrap:nth-child(2) .profile-hero,
+  html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .page-loading-region > .profile-hero {
+    margin-top: -28px;
   }
 
-  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .detail-hero .profile-hero-inner {
-    padding-top: calc(var(--hero-header-h) + 68px);
-  }
-
-  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .detail-hero-back,
-  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .detail-hero-wrap:has(.is-no-card) .detail-hero-back,
-  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .detail-hero-wrap > .follow-btn-row {
-    top: calc(var(--hero-header-h) + 14px);
-  }
-
-  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .profile-hero::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    right: 0;
+  html.app-header .detail-hero-back,
+  html.app-header .detail-hero-wrap:has(.is-no-card) .detail-hero-back {
     left: 0;
-    z-index: 1;
-    height: calc(var(--hero-header-h) + 40px);
-    background: linear-gradient(rgba(10, 5, 6, 0.55), rgba(10, 5, 6, 0));
-    pointer-events: none;
+    transform: none;
+  }
+
+  html.app-header .detail-hero-wrap > .follow-btn-row {
+    right: 0;
   }
 }
 
-/* Phones: the red header always transparent — over a hero (above) its white
-   logo, title and buttons sit on the hero's art; on every other page (or
+/* Phones and tablets (html.app-header — any touch screen, or a window as
+   narrow as a phone): the red header always transparent — over a hero
+   (above) its white logo, title and buttons sit on the hero's art; on every other page (or
    above account's "Il tuo giocatore" banner) it lies on the page itself,
    so its title turns dark and the account button white with a red icon
    (like the search one beside it), both lifted by a soft shadow. */
-@media (max-width: 640px) {
-  .site-header {
-    border-bottom: 0;
-    background: transparent;
-    box-shadow: none;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-  }
-
-  :is(body:not(:has(.page-main .profile-hero)), body:has(.profile-claim:not([hidden]))) .site-header-brand {
-    color: var(--text-title);
-  }
-
-
-
-  :is(body:not(:has(.page-main .profile-hero)), body:has(.profile-claim:not([hidden]))) .site-account {
-    border-color: rgba(154, 28, 32, 0.22);
-    background: #fff;
-    color: var(--brand-red);
-    box-shadow: 0 2px 8px rgba(80, 10, 14, 0.1);
-  }
-
-  :is(body:not(:has(.page-main .profile-hero)), body:has(.profile-claim:not([hidden]))) .site-search-trigger {
-    border: 1px solid rgba(154, 28, 32, 0.22);
-    box-shadow: 0 2px 8px rgba(80, 10, 14, 0.1);
-  }
-
-  :root[data-theme="dark"] :is(body:not(:has(.page-main .profile-hero)), body:has(.profile-claim:not([hidden]))) .site-account {
-    border-color: rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.08);
-    color: #fff;
-  }
+html.app-header .site-header {
+  border-bottom: 0;
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
-/* Phones, every page: the logo in brand red — the PNG as a mask over a red
-   fill, its own pixels pushed out of view (object-fit: none, or the image
-   would just fill the box and stay put); the signed-in picture ringed in
-   red. Over a hero: a deeper shade at the top, a soft shadow under the
-   title and the round buttons, so the header reads on any art. */
-@media (max-width: 640px) {
-  .site-header .site-logo-sm {
-    /* Off: the desktop's filter (brightness(0) invert(1), the logo white on
-       the red header) would turn the red fill white too. */
-    filter: none;
-    background: var(--brand-red);
-    object-fit: none;
-    object-position: -9999px 0;
-    -webkit-mask: url("dc_pc.png") center / contain no-repeat;
-    mask: url("dc_pc.png") center / contain no-repeat;
-  }
-
-  /* The signed-in picture: no white edge or fill of its own, just a red
-     ring a little apart from it (an outline with a gap). */
-  html body .site-header .site-account.is-signed-in,
-  :root[data-theme] body .site-header .site-account.is-signed-in.is-signed-in {
-    border-color: transparent;
-    background: transparent;
-    box-shadow: none;
-    outline: 3px solid var(--brand-red);
-    outline-offset: 2px;
-  }
-
-  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .profile-hero::before {
-    height: calc(var(--hero-header-h) + 56px);
-    background: linear-gradient(rgba(10, 5, 6, 0.72), rgba(10, 5, 6, 0.35) 60%, rgba(10, 5, 6, 0));
-  }
-
-  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .site-header-brand {
-    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
-  }
-
-  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) :is(.site-search-trigger, .site-account) {
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
-  }
-
-  body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .site-account.is-signed-in {
-    box-shadow: none;
-  }
+html.app-header :is(body:not(:has(.page-main .profile-hero)), body:has(.profile-claim:not([hidden]))) .site-header-brand {
+  color: var(--text-title);
 }
 
-/* Phones: the header a bit taller, its logo, title and round buttons a size
-   up (the hero pages' --hero-header-h, above, follows its 80px). */
-@media (max-width: 640px) {
-  .site-header,
-  html.nav-mobile .site-header {
-    padding-top: calc(16px + env(safe-area-inset-top));
-    padding-bottom: 16px;
-  }
-
-  .site-header .site-logo-sm {
-    width: 44px;
-    height: 44px;
-  }
-
-  .site-header-brand {
-    gap: 10px;
-    font-size: clamp(0.95rem, 4.3vw, 1.22rem);
-  }
-
-  .site-search-trigger,
-  html.nav-mobile .site-search-trigger,
-  .site-account {
-    width: 46px;
-    height: 46px;
-  }
-
-  .site-search-trigger svg,
-  .site-account-icon {
-    width: 22px;
-    height: 22px;
-  }
+html.app-header :is(body:not(:has(.page-main .profile-hero)), body:has(.profile-claim:not([hidden]))) .site-account {
+  border-color: rgba(154, 28, 32, 0.22);
+  background: #fff;
+  color: var(--brand-red);
+  box-shadow: 0 2px 8px rgba(80, 10, 14, 0.1);
 }
 
-/* Phones: just the logo in the header — the site's name hidden from view
-   but kept for screen readers (the logo link's only text). */
-@media (max-width: 640px) {
-  .site-header-brand > span {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-  }
+html.app-header :is(body:not(:has(.page-main .profile-hero)), body:has(.profile-claim:not([hidden]))) .site-search-trigger {
+  border: 1px solid rgba(154, 28, 32, 0.22);
+  box-shadow: 0 2px 8px rgba(80, 10, 14, 0.1);
 }
 
-/* Phones, a page with a hero (js/player-card.js applyHeroTone marks the
-   header .has-hero-accent once the art's colour is known): the logo and the
-   signed-in picture's ring — over the hero's dark top — in the colour's
-   light shade, the search icon (on its white circle) in its deep shade;
-   each fading over from red as the hero loads. */
-@media (max-width: 640px) {
-  .site-header .site-logo-sm {
-    transition: background-color 700ms ease;
-  }
+:root[data-theme="dark"].app-header :is(body:not(:has(.page-main .profile-hero)), body:has(.profile-claim:not([hidden]))) .site-account {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
 
-  .site-header .site-account {
-    transition: outline-color 700ms ease, background 150ms ease, border-color 150ms ease;
-  }
+/* Phones and tablets, every page: the logo in brand red — the PNG as a
+   mask over a red fill, its own pixels pushed out of view (object-fit:
+   none, or the image would just fill the box and stay put); the signed-in
+   picture ringed in red. Over a hero: a deeper shade at the top, a soft
+   shadow under the title and the round buttons, so the header reads on any
+   art. */
+html.app-header .site-header .site-logo-sm {
+  /* Off: the desktop's filter (brightness(0) invert(1), the logo white on
+     the red header) would turn the red fill white too. */
+  filter: none;
+  background: var(--brand-red);
+  object-fit: none;
+  object-position: -9999px 0;
+  -webkit-mask: url("dc_pc.png") center / contain no-repeat;
+  mask: url("dc_pc.png") center / contain no-repeat;
+}
 
-  .site-header .site-search-trigger {
-    transition: color 700ms ease, background 150ms ease;
-  }
+/* The signed-in picture: no white edge or fill of its own, just a red
+   ring a little apart from it (an outline with a gap). */
+html.app-header body .site-header .site-account.is-signed-in,
+:root[data-theme].app-header body .site-header .site-account.is-signed-in.is-signed-in {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  outline: 3px solid var(--brand-red);
+  outline-offset: 2px;
+}
 
-  .site-header.has-hero-accent .site-logo-sm {
-    background-color: var(--hero-accent-light);
-  }
+html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .profile-hero::before {
+  height: calc(var(--hero-header-h) + 56px);
+  background: linear-gradient(rgba(10, 5, 6, 0.72), rgba(10, 5, 6, 0.35) 60%, rgba(10, 5, 6, 0));
+}
 
-  html body .site-header.has-hero-accent .site-account.is-signed-in,
-  :root[data-theme] body .site-header.has-hero-accent .site-account.is-signed-in.is-signed-in {
-    outline-color: var(--hero-accent-light);
-  }
+html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .site-header-brand {
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
+}
 
-  .site-header.has-hero-accent .site-search-trigger {
-    color: var(--hero-accent-deep);
-  }
+html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) :is(.site-search-trigger, .site-account) {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .site-account.is-signed-in {
+  box-shadow: none;
+}
+
+/* Phones and tablets: the header a bit taller, its logo, title and round
+   buttons a size up (the hero pages' --hero-header-h, above, follows its
+   80px). */
+html.app-header .site-header {
+  padding-top: calc(16px + env(safe-area-inset-top));
+  padding-bottom: 16px;
+}
+
+html.app-header .site-header .site-logo-sm {
+  width: 44px;
+  height: 44px;
+}
+
+html.app-header .site-header-brand {
+  gap: 10px;
+  font-size: clamp(0.95rem, 4.3vw, 1.22rem);
+}
+
+html.app-header .site-search-trigger,
+html.app-header .site-account {
+  width: 46px;
+  height: 46px;
+}
+
+html.app-header .site-search-trigger svg,
+html.app-header .site-account-icon {
+  width: 22px;
+  height: 22px;
+}
+
+/* Phones and tablets: just the logo in the header — the site's name hidden
+   from view but kept for screen readers (the logo link's only text). */
+html.app-header .site-header-brand > span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Phones and tablets, a page with a hero (js/player-card.js applyHeroTone
+   marks the header .has-hero-accent once the art's colour is known): the
+   logo and the signed-in picture's ring in the colour's light shade, the
+   search icon (on its white circle) in its deep shade; each fading over
+   from red as the hero loads. */
+html.app-header .site-header .site-logo-sm {
+  transition: background-color 700ms ease;
+}
+
+html.app-header .site-header .site-account {
+  transition: outline-color 700ms ease, background 150ms ease, border-color 150ms ease;
+}
+
+html.app-header .site-header .site-search-trigger {
+  transition: color 700ms ease, background 150ms ease;
+}
+
+html.app-header .site-header.has-hero-accent .site-logo-sm {
+  background-color: var(--hero-accent-light);
+}
+
+html.app-header body .site-header.has-hero-accent .site-account.is-signed-in,
+:root[data-theme].app-header body .site-header.has-hero-accent .site-account.is-signed-in.is-signed-in {
+  outline-color: var(--hero-accent-light);
+}
+
+html.app-header .site-header.has-hero-accent .site-search-trigger {
+  color: var(--hero-accent-deep);
 }
 
 /* ---------------------------------------------------------------------------
@@ -14170,19 +14199,18 @@ html.is-page-transition .site-nav {
   view-transition-name: site-nav;
 }
 
-/* Wider than a phone: the whole red header (and the white tab row under
-   it) stays still instead — only its controls staying looked broken there,
-   the header being an opaque bar; the page below it moves. */
-@media (min-width: 641px) {
-  html.is-page-transition .site-header {
-    view-transition-name: site-header;
-  }
+/* The red header (a computer wider than a phone — not html.app-header): it
+   stays still whole instead, with the white tab row under it — only its
+   controls staying looked broken there, the header being an opaque bar;
+   the page below it moves. */
+html.is-page-transition:not(.app-header) .site-header {
+  view-transition-name: site-header;
+}
 
-  html.is-page-transition .site-header-brand,
-  html.is-page-transition .site-search,
-  html.is-page-transition .site-account {
-    view-transition-name: none;
-  }
+html.is-page-transition:not(.app-header) .site-header-brand,
+html.is-page-transition:not(.app-header) .site-search,
+html.is-page-transition:not(.app-header) .site-account {
+  view-transition-name: none;
 }
 
 ::view-transition-group(site-header),

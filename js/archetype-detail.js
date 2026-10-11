@@ -10,15 +10,13 @@ import { ARCHETYPES } from "./metagame-chart.js";
 import { commanderPairWithColors, archetypeBadge, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initTitleFit } from "./page-title-fit.js";
-import { historyPanelHtml, historyStatsHtml, initScrollFade, capScrollToItems, setHistoryCount } from "./history-list.js";
+import { historyPanelHtml, historyStatsHtml, setHistoryCount } from "./history-list.js";
+import { initBackToTop } from "./back-to-top.js";
 import { renderLineChart } from "./line-chart.js";
 import { initChartCarousel } from "./chart-carousel.js";
 import { createArtPainter } from "./player-card.js";
 
 const NO_LINK = { link: false };
-
-// The commanders list scrolls past this many.
-const COMMANDERS_VISIBLE = 8;
 
 const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 const pct = (n) => (n === null ? "—" : `${n.toFixed(1)}%`);
@@ -65,6 +63,8 @@ function vsChartHtml(matchups) {
 // (data-page), on first load and after each in-app navigation; `signal`
 // aborts when the page is left.
 export async function mount({ signal = new AbortController().signal } = {}) {
+  // The commanders list is shown whole (no inner scroll): a long page.
+  initBackToTop({ signal });
   const archetype = new URLSearchParams(window.location.search).get("id");
   const titleEl = document.getElementById("archetype-title");
   const statsEl = document.getElementById("archetype-stats");
@@ -164,11 +164,10 @@ export async function mount({ signal = new AbortController().signal } = {}) {
                 ? `<a class="history-item history-ranked" href="commander.html?id=${c.commander.id}">${inner}</a>`
                 : `<article class="history-item history-ranked">${inner}</article>`;
             })
-            .join("")
+            .join(""),
+          { scroll: false }
         )
       : '<p class="page-empty">Nessun mazzo registrato con questo archetipo.</p>';
-    initScrollFade(commandersEl);
-    capScrollToItems(commandersEl, ".history-item", COMMANDERS_VISIBLE);
     setHistoryCount("archetype-commanders-count", commanders.length);
 
     // Contro gli altri archetipi: its matches against each other archetype,

@@ -1,7 +1,7 @@
 // A round white "back to the top" button (styles.css .back-to-top), fixed in
 // the bottom-right corner — on touch screens just above the floating nav
 // pill — shown only once the page is scrolled down past SHOW_AFTER px.
-// Used by the long list pages (Comandanti, Giocatori).
+// Used by the long list pages (Comandanti, Giocatori, an archetype's page).
 
 const SHOW_AFTER = 400;
 
@@ -27,8 +27,8 @@ export function initBackToTop({ signal } = {}) {
 
   // Once the footer scrolls into view, the button rides up with it (styles.css
   // --back-to-top-lift) instead of sitting on the footer's theme switch in
-  // the same corner. Desktop only: on touch screens it sits beside the nav
-  // pill, clear of the switch.
+  // the same corner — on touch screens too, where it sits beside the nav
+  // pill.
   const footer = document.querySelector("footer");
 
   // At most one check per frame, however many scroll events arrive. While
