@@ -6762,15 +6762,17 @@ html.nav-mobile .back-to-top {
    track with the 50% axis marked in the middle and a bar from it (right and
    green: it wins more often than not; left and red: it loses more; a short
    yellow tick: even), then the winrate over the number of matches. Each
-   row a link to that archetype's page. The bars grow out of the axis. */
+   row a link to that archetype's page. The bars grow out of the axis.
+   Fixed win / loss / even colours — the losing side stays red on the
+   page's hero-coloured accent (not --brand-red, which it redefines). */
 .vs-chart {
   --vs-label-w: 96px;
   --vs-value-w: 78px;
   --vs-win: #1fa45a;
-  --vs-loss: var(--brand-red);
+  --vs-loss: #dc181c;
   --vs-even: #f5b300;
   --vs-win-text: #0e6e37;
-  --vs-loss-text: var(--brand-red-deep);
+  --vs-loss-text: #8d1d22;
   --vs-even-text: #7d5300;
   --vs-track-loss: rgba(220, 24, 28, 0.09);
   --vs-track-win: rgba(31, 164, 90, 0.11);
