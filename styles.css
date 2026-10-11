@@ -1545,38 +1545,139 @@ main {
   margin-bottom: 0;
 }
 
-.announcement-item {
-  padding: 16px 0;
-  border-bottom: 1px solid var(--hairline);
+/* Novità (index.html, js/home.js): a spotlight — a dark red-black block
+   with a soft red glow in its top-left corner, the same in both themes
+   (like the "Più giocati" card's stage); a red megaphone tile on the left,
+   "NOVITÀ" in small light-red capitals, then each announcement: a big white
+   title over its text, a thin rule between them. No dates. */
+.card.dashboard-announcements,
+:root[data-theme="dark"] .card.dashboard-announcements {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 18px;
+  border: 0;
+  border-radius: var(--radius-card);
+  background: #1c0f11;
+  color: #fff;
+  box-shadow: 0 14px 30px rgba(28, 8, 10, 0.35);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
-.announcement-item:first-child {
-  padding-top: 0;
+.card.dashboard-announcements[hidden] {
+  display: none;
 }
 
-.announcement-item:last-child {
-  padding-bottom: 0;
-  border-bottom: none;
+.dashboard-announcements::before {
+  content: "";
+  position: absolute;
+  top: -80px;
+  left: -60px;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(220, 24, 28, 0.45), transparent 70%);
+  pointer-events: none;
 }
 
-/* Brand red + bold, clearly heavier than the body text below it, so the
-   two read as distinct "headline vs. content" rather than similar-weight
-   lines running together. */
-.announcement-title {
-  margin: 0 0 8px;
-  font-size: 1.15rem;
+.announcements-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: var(--brand-red);
+  color: #fff;
+  box-shadow: 0 0 0 6px rgba(220, 24, 28, 0.18);
+}
+
+.announcements-icon svg {
+  width: 30px;
+  height: 30px;
+}
+
+.announcements-main {
+  position: relative;
+  min-width: 0;
+}
+
+.announcements-kicker {
+  margin: 0 0 4px;
+  color: #ff8a8d;
+  font-size: 0.74rem;
   font-weight: 800;
-  color: var(--brand-red-deep);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.announcement-item + .announcement-item {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.announcement-title {
+  margin: 0 0 6px;
+  color: #fff;
+  font-size: 1.3rem;
+  font-weight: 800;
 }
 
 .announcement-body {
   margin: 0;
-  color: var(--text-body);
+  color: rgba(255, 255, 255, 0.78);
   font-size: 0.95rem;
   line-height: 1.55;
   /* A plain textarea in admin — preserves the line breaks the admin
      actually typed instead of collapsing them like normal HTML text. */
   white-space: pre-line;
+}
+
+/* Phones: the text gets the card's whole width — a small tile beside
+   "NOVITÀ" on the first line, the announcements under both (the main
+   column's children placed in the card's own grid: display: contents;
+   kept positioned, so they stay above the glow). */
+@media (max-width: 640px) {
+  .card.dashboard-announcements,
+  :root[data-theme="dark"] .card.dashboard-announcements {
+    grid-template-columns: 36px minmax(0, 1fr);
+    grid-template-areas:
+      "icon kicker"
+      "body body";
+    align-items: center;
+    gap: 14px 12px;
+  }
+
+  .announcements-main {
+    display: contents;
+  }
+
+  .announcements-icon {
+    grid-area: icon;
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+    box-shadow: 0 0 0 4px rgba(220, 24, 28, 0.18);
+  }
+
+  .announcements-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .announcements-kicker {
+    position: relative;
+    grid-area: kicker;
+    margin: 0;
+  }
+
+  #dashboard-announcements-content {
+    position: relative;
+    grid-area: body;
+  }
 }
 
 /* "Prossimi eventi" deliberately reads heavier than the neutral cards
