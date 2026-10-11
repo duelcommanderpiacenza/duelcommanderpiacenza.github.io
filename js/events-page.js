@@ -101,13 +101,13 @@ function ringHtml(played, total, share, ring) {
 function nextTile(ev) {
   const days = daysUntil(ev.event_date);
   const when = days <= 0 ? "oggi" : days === 1 ? "domani" : `tra ${days} giorni`;
-  const parts = [weekday(ev.event_date), ev.start_time ? `ore ${formatTime(ev.start_time)}` : "", when].filter(Boolean);
+  const parts = [ev.start_time ? `ore ${formatTime(ev.start_time)}` : "", when].filter(Boolean);
   const inner = `
       <span class="ev-tile-k"><span class="ev-pulse"></span>Prossimo evento</span>
       <div>
         <div class="ev-date">${dayMonth(ev.event_date)}</div>
         <div class="ev-event-name">${escapeHtml(ev.name || ev.league?.name || "Evento")}</div>
-        <div class="ev-tile-s">${CLOCK}${parts.join(" · ")}</div>
+        <div class="ev-tile-s">${CLOCK}${marquee(parts.join(" · "))}</div>
       </div>`;
   return ev.league
     ? `<a class="ev-tile ev-next" href="league.html?id=${ev.league.id}">${inner}</a>`
@@ -124,7 +124,7 @@ function soonTile(league) {
       <span class="ev-tile-k"><span class="ev-pulse"></span>Prossimo evento</span>
       <div>
         <div class="ev-date">Prossimamente</div>
-        <div class="ev-tile-s">${CLOCK}Data da definire</div>
+        <div class="ev-tile-s">${CLOCK}${marquee("Data da definire")}</div>
       </div>
     </a>`;
 }
@@ -196,6 +196,23 @@ function openStandaloneList(events, counter) {
       )
       .join("")}</div>`,
   });
+}
+
+// A next event's time line ("ore 21:00 · tra 5 giorni"): on one line; where
+// it's wider than its tile (phones, the tile half the screen) it slides
+// slowly back and forth to show the rest (fitMarquees, styles.css
+// .ev-marquee).
+const marquee = (text) => `<span class="ev-marquee"><span class="ev-marquee-text">${escapeHtml(text)}</span></span>`;
+
+function fitMarquees(root) {
+  for (const box of root.querySelectorAll(".ev-marquee")) {
+    const text = box.firstElementChild;
+    box.classList.remove("is-scrolling");
+    const overflow = text.scrollWidth - box.clientWidth;
+    if (overflow <= 1) continue;
+    box.style.setProperty("--marquee-dist", `${Math.ceil(overflow)}px`);
+    box.classList.add("is-scrolling");
+  }
 }
 
 // A league in progress's name on one line, as big as its room allows: from
@@ -276,10 +293,14 @@ async function init() {
     }
     boardEl.innerHTML = groups.join("");
     fitBigNames(boardEl);
+    fitMarquees(boardEl);
     let fitTimer;
     window.addEventListener("resize", () => {
       clearTimeout(fitTimer);
-      fitTimer = setTimeout(() => fitBigNames(boardEl), 120);
+      fitTimer = setTimeout(() => {
+        fitBigNames(boardEl);
+        fitMarquees(boardEl);
+      }, 120);
     });
     if (!groups.length && !played.length) {
       boardEl.innerHTML = '<p class="page-empty">Nessuna lega o evento inserito ancora.</p>';
