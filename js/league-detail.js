@@ -5,7 +5,7 @@ import { computeLeagueSummary, computeLeagueWrapped } from "./stats.js";
 import {
   escapeHtml,
   formatDate,
-  eventTitle,
+  formatTime,
   leagueStatusBadge,
   playerLabel,
   showError,
@@ -43,6 +43,40 @@ function leagueDateRange(league, events) {
   if (league.is_open) return { html: `${start} – ${leagueStatusBadge(true)}`, withStatus: true };
   const end = escapeHtml(formatDate(dates[dates.length - 1]));
   return { html: start === end ? start : `${start} – ${end}`, withStatus: false };
+}
+
+// "Eventi della lega": every card the same three lines — a small label,
+// the name (an unnamed event by its weekday, the date being on the line
+// under it), the date. A played event's label is its number in the season
+// ("Evento 3"), the card a link to it; the next one comes first, not a link
+// (its page fills in once it's played) — a dashed red card, "Prossimo
+// evento" with a pulsing dot, the time after the date (styles.css
+// .entity-card-next).
+const cardName = (ev) => {
+  if (ev.name) return escapeHtml(ev.name);
+  const d = new Date(`${ev.event_date}T00:00:00`);
+  if (!ev.event_date || Number.isNaN(d.getTime())) return "Evento";
+  const day = d.toLocaleDateString("it-IT", { weekday: "long" });
+  return day.charAt(0).toUpperCase() + day.slice(1);
+};
+
+function nextEventCardHtml(ev) {
+  const when = [formatDate(ev.event_date), ev.start_time ? `ore ${formatTime(ev.start_time)}` : ""].filter(Boolean).join(" · ");
+  return `
+      <div class="entity-card entity-card-next">
+        <div class="entity-card-label"><span class="entity-card-next-dot" aria-hidden="true"></span>Prossimo evento</div>
+        <div class="entity-card-title">${cardName(ev)}</div>
+        <div class="entity-card-meta">${when}</div>
+      </div>`;
+}
+
+function playedEventCardHtml(ev, number) {
+  return `
+      <a class="entity-card" href="event.html?id=${ev.id}">
+        <div class="entity-card-label">Evento ${number}</div>
+        <div class="entity-card-title">${cardName(ev)}</div>
+        <div class="entity-card-meta">${formatDate(ev.event_date)}</div>
+      </a>`;
 }
 
 async function init() {
@@ -91,20 +125,25 @@ async function init() {
     statusEl.innerHTML = leagueStatusBadge(league.is_open);
     statusEl.hidden = dateRange.withStatus;
 
+    // The league's next event (the soonest still open, today or later —
+    // readable from its own date on), shown first among its events.
+    const today = todayIso();
+    const nextEvent = allEvents
+      .filter((ev) => ev.is_open && ev.event_date && ev.event_date >= today)
+      .sort((a, b) => a.event_date.localeCompare(b.event_date))[0];
+    const nextHtml = nextEvent ? nextEventCardHtml(nextEvent) : "";
+
     if (events.length === 0) {
-      eventsEl.innerHTML = '<p class="page-empty">Nessun evento associato a questa lega.</p>';
+      eventsEl.innerHTML = nextHtml
+        ? `<div class="entity-grid">${nextHtml}</div>`
+        : '<p class="page-empty">Nessun evento associato a questa lega.</p>';
       leaderboardEl.innerHTML = '<p class="page-empty">Nessun dato per la classifica.</p>';
       return;
     }
 
-    eventsEl.innerHTML = `<div class="entity-grid">${events
-      .map(
-        (ev) => `
-      <a class="entity-card" href="event.html?id=${ev.id}">
-        <div class="entity-card-title">${escapeHtml(eventTitle(ev))}</div>
-        ${ev.name ? `<div class="entity-card-meta">${formatDate(ev.event_date)}</div>` : ""}
-      </a>`
-      )
+    // Newest first; numbered from the season's first (Evento 1).
+    eventsEl.innerHTML = `<div class="entity-grid">${nextHtml}${events
+      .map((ev, i) => playedEventCardHtml(ev, events.length - i))
       .join("")}</div>`;
 
     const [eventsData, scheduledEvents] = await Promise.all([

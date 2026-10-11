@@ -75,14 +75,21 @@
 
 <main class="page-main">
   <div class="page-heading"><h1>Leghe <span class="amp">&amp;</span> Eventi</h1></div>
-  <p class="page-subtitle">Qui trovi tutte le leghe, in corso e concluse, con i rispettivi eventi, oltre agli eventi standalone.</p>
 
   <div class="page-loading-region">
     <div id="page-loading-overlay" class="page-loading-overlay"><p>Caricamento...</p></div>
 
-    <div id="events-list" class="league-grid">
-      <p class="page-loading">Caricamento eventi...</p>
-    </div>
+    <!-- A board of tiles (js/events-page.js, styles.css .ev-*): the league in
+         progress (big, its numbers and a progress ring), the next event, the
+         latest one, the Topdeck series in progress; then the archive:
+         the concluded leagues, the standalone events' tile among them by date. -->
+    <div id="events-board" class="ev-board"></div>
+
+    <section id="events-archive-section" hidden>
+      <h2>Archivio</h2>
+      <p class="page-subtitle ev-archive-subtitle">Leghe e eventi conclusi</p>
+      <div id="events-archive" class="ev-archive"></div>
+    </section>
   </div>
 </main>
 

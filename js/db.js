@@ -459,6 +459,11 @@ export const EventEntries = {
       .select(`*, player:players(id,name,handle), ${COMMANDER_EMBED}`)
       .in("event_id", eventIds)
       .then(assertOk),
+  // Who played which event, nothing else — every entry the visitor can see
+  // (closed events), paged past the row cap: the Leghe & Eventi page counts
+  // players per event / league from it (js/events-page.js).
+  listPlayersByEvent: () =>
+    selectAllRows(() => sb.from("event_entries").select("event_id, player_id").order("id")),
   // Same as listByEvents, but paged past the row cap and deterministically
   // ordered — for fetchEventsResults below, which may span a whole league.
   listByEventsForStandings: (eventIds) =>
@@ -499,6 +504,10 @@ export const Matches = {
   // Same rows and shape as listByEvent, for several events in one request
   // (paged past the row cap) — for fetchEventsResults below. Unlike
   // listByEvents, no event/league embed: callers already know the event.
+  // Which event each match belongs to, nothing else — every match the
+  // visitor can see (closed events), paged past the row cap: the Leghe &
+  // Eventi page counts a league's matches from it (js/events-page.js).
+  listEventIds: () => selectAllRows(() => sb.from("matches").select("event_id").order("id")),
   listByEventsForStandings: (eventIds) =>
     selectAllRows(() =>
       sb

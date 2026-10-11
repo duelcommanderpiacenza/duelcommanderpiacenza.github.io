@@ -1,199 +1,306 @@
-// The "Leghe & Eventi" tab: one collapsible section per league (plus one
-// for standalone events, between the ongoing and the concluded leagues),
-// each listing that league's own published events as cards.
+// The "Leghe & Eventi" tab, a board of tiles:
+//  - a group per league in progress (the real league, then the Topdeck
+//    series): its tile, big and dark — its name, since when, players /
+//    average attendance / matches played, a ring with events played out of
+//    those scheduled, a link to its page — and beside it its next event
+//    (red, the date big, its name, weekday / time / how soon) and its
+//    latest one (date, name, players);
+//  - then "Leghe concluse": one uniform tile per concluded league (the year,
+//    the name, events and players — a link to its page), newest first, with
+//    the standalone events' tile among them by the date of their latest one
+//    (it opens their list: they have no page of their own).
+// A tile with nothing to show is left out; the rest close up.
 
-import { Leagues, Events } from "./db.js";
-import { escapeHtml, formatDate, eventTitle, leagueStatusBadge, showError } from "./ui.js";
+import { Leagues, Events, EventEntries, Matches } from "./db.js";
+import { escapeHtml, formatDate, formatTime, eventTitle, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
+import { openInfoDialog } from "./info-dialog.js";
 
-// Open leagues first (real leagues before Topdeck within that), then
-// most-recently-active first, name as a
-// final tiebreak — so a league with no events yet still sorts sensibly
-// instead of always trailing at the very end.
-function compareLeagues(a, b) {
-  if (a.is_open !== b.is_open) return a.is_open ? -1 : 1;
-  if (a.is_open && b.is_open && a.is_topdeck !== b.is_topdeck) return a.is_topdeck ? 1 : -1;
-  const aDate = a.latestEventDate ?? "";
-  const bDate = b.latestEventDate ?? "";
-  if (aDate !== bDate) return aDate < bDate ? 1 : -1;
-  return a.name.localeCompare(b.name);
+const svg = (body, cls = "ev-ico") =>
+  `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
+const USERS = svg(
+  '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>'
+);
+const CLOCK = svg('<circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path>');
+
+const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+const toDate = (iso) => new Date(`${iso}T00:00:00`);
+// "24 ott" — day and short month.
+const dayMonth = (iso) => {
+  const d = toDate(iso);
+  return `${String(d.getDate()).padStart(2, "0")} ${d.toLocaleDateString("it-IT", { month: "short" }).replace(".", "")}`;
+};
+const weekday = (iso) => capitalize(toDate(iso).toLocaleDateString("it-IT", { weekday: "long" }));
+const year = (iso) => toDate(iso).getFullYear();
+const daysUntil = (iso) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Math.round((toDate(iso) - today) / 86400000);
+};
+const fmtAvg = (n) => n.toLocaleString("it-IT", { maximumFractionDigits: 1 });
+const stat = (value, label) => `<div class="ev-stat"><b>${value}</b><span>${label}</span></div>`;
+
+// Players per event, and the distinct players of a set of events.
+function playerCounter(entries) {
+  const byEvent = new Map();
+  for (const e of entries) {
+    if (!byEvent.has(e.event_id)) byEvent.set(e.event_id, new Set());
+    byEvent.get(e.event_id).add(e.player_id);
+  }
+  return {
+    ofEvent: (id) => byEvent.get(id)?.size ?? 0,
+    distinct: (events) => {
+      const all = new Set();
+      for (const ev of events) for (const p of byEvent.get(ev.id) ?? []) all.add(p);
+      return all.size;
+    },
+  };
 }
 
-function renderEventGrid(evs) {
-  return `<div class="entity-grid">
-      ${evs
-        .map(
-          (ev) => `
-        <a class="entity-card" href="event.html?id=${ev.id}">
-          <div class="entity-card-title">${escapeHtml(eventTitle(ev))}</div>
-          ${ev.name ? `<div class="entity-card-meta">${formatDate(ev.event_date)}</div>` : ""}
-        </a>`
-        )
-        .join("")}
-    </div>`;
-}
-
-// `link` is the href for the clickable name (a league) or null (the
-// standalone section, which has no page of its own to link to).
-function renderGroup({ id, name, link, badge, events, closed = false }) {
-  const count = events.length;
-  const countLabel = `${count} event${count === 1 ? "o" : "i"}`;
-  // The badge and event count sit outside the link on purpose — neither is
-  // navigable, just labels, so they shouldn't read (or act) as part of the
-  // clickable link the way they would nested inside the <a>. Only the name
-  // itself is the actual link.
-  const nameHtml = link
-    ? `<a class="league-group-link" href="${link}"><span class="league-group-name">${escapeHtml(name)}</span></a>`
-    : `<span class="league-group-link league-group-link-static"><span class="league-group-name">${escapeHtml(name)}</span></span>`;
-
+// A league in progress (the real league, or the Topdeck series): big and
+// dark, a progress ring on the right.
+function currentTile(league, played, scheduled, players, avg, matches) {
+  const total = Math.max(scheduled, played);
+  const ring = 2 * Math.PI * 46;
+  const share = total ? played / total : 0;
+  const since = league.events.length ? `dal ${formatDate(league.events[league.events.length - 1].event_date)}` : "";
   return `
-    <section class="league-group is-collapsed${closed ? " is-closed" : ""}" data-group-id="${id}" role="button" tabindex="0" aria-expanded="false">
-      <div class="league-group-header">
-        <div class="league-group-title-row">
-          ${nameHtml}
-          <div class="league-group-sub-row">
-            ${badge}
-            <span class="league-group-meta">${countLabel}</span>
-          </div>
-        </div>
-        <span class="league-group-toggle-icon" aria-hidden="true"></span>
+    <a class="ev-tile ev-big${league.is_topdeck ? " no-ring" : ""}" href="league.html?id=${league.id}">
+      <span class="ev-tile-k">${league.is_topdeck ? "Serie Topdeck in corso" : "Lega in corso"}</span>
+      <div class="ev-name-block">
+        <div class="ev-tile-t">${escapeHtml(league.name)}</div>
+        ${since ? `<div class="ev-since">${since}</div>` : ""}
       </div>
-      <div class="league-group-body">
-        <div class="league-group-body-clip">
-          ${count === 0 ? '<p class="page-empty">Nessun evento pubblicato ancora.</p>' : renderEventGrid(events)}
-        </div>
+      <div class="ev-stats">
+        ${stat(`${USERS}${players}`, "Giocatori")}
+        ${stat(played ? `${USERS}${fmtAvg(avg)}` : "—", "Media")}
+        ${stat(matches, "Partite")}
+        ${league.is_topdeck ? stat(played, "Eventi") : ""}
       </div>
-    </section>`;
+      ${league.is_topdeck ? "" : ringHtml(played, total, share, ring)}
+    </a>`;
 }
 
-// A 280px minimum card width and 18px gap — the same column count a CSS
-// auto-fill grid (minmax(280px, 1fr)) would produce, just
-// computed here so the cards can be pre-split into independent columns
-// (see .league-grid's own comment in styles.css for why).
-const GROUP_MIN_WIDTH = 280;
-const GROUP_GAP = 18;
-
-function computeColumnCount(containerWidth) {
-  return Math.max(1, Math.floor((containerWidth + GROUP_GAP) / (GROUP_MIN_WIDTH + GROUP_GAP)));
+// The ring of a league in progress: events played out of those scheduled
+// (the Topdeck series has none — no set number of events: its count is a
+// number among the others).
+function ringHtml(played, total, share, ring) {
+  return `
+      <span class="ev-ring" aria-label="${played} eventi giocati${total ? ` su ${total}` : ""}">
+        <svg viewBox="0 0 110 110" aria-hidden="true">
+          <circle cx="55" cy="55" r="46" class="ev-ring-track"></circle>
+          <circle cx="55" cy="55" r="46" class="ev-ring-fill" stroke-dasharray="${(ring * share).toFixed(1)} ${ring.toFixed(1)}"></circle>
+        </svg>
+        <span class="ev-ring-label"><span>${played}${total ? `/${total}` : ""}<small>EVENTI</small></span></span>
+      </span>`;
 }
 
-// Redistributes the .league-group cards already in the DOM into N fresh
-// .league-grid-col wrappers, round-robin. Moves the existing elements
-// (appendChild on an already-attached node relocates it, doesn't clone)
-// rather than re-rendering their HTML, so each card's current
-// expanded/collapsed state and event listeners survive a re-layout —
-// important since this also runs on resize, not just on first render.
-let lastColumnCount = null;
-function layoutColumns(listEl) {
-  const groups = Array.from(listEl.querySelectorAll(".league-group"));
-  if (groups.length === 0) return;
-  const count = computeColumnCount(listEl.clientWidth);
-  if (count === lastColumnCount) return;
-  lastColumnCount = count;
+// The next event: red, the date big, its name (an unnamed one by its
+// league's). A link to its league when it has one
+// (the event's own page fills in once it's played).
+function nextTile(ev) {
+  const days = daysUntil(ev.event_date);
+  const when = days <= 0 ? "oggi" : days === 1 ? "domani" : `tra ${days} giorni`;
+  const parts = [weekday(ev.event_date), ev.start_time ? `ore ${formatTime(ev.start_time)}` : "", when].filter(Boolean);
+  const inner = `
+      <span class="ev-tile-k"><span class="ev-pulse"></span>Prossimo evento</span>
+      <div>
+        <div class="ev-date">${dayMonth(ev.event_date)}</div>
+        <div class="ev-event-name">${escapeHtml(ev.name || ev.league?.name || "Evento")}</div>
+        <div class="ev-tile-s">${CLOCK}${parts.join(" · ")}</div>
+      </div>`;
+  return ev.league
+    ? `<a class="ev-tile ev-next" href="league.html?id=${ev.league.id}">${inner}</a>`
+    : `<div class="ev-tile ev-next">${inner}</div>`;
+}
 
-  const cols = Array.from({ length: count }, () => {
-    const col = document.createElement("div");
-    col.className = "league-grid-col";
-    return col;
+// The latest event: its date, its name (an unnamed one by its league's),
+// its players.
+// A league in progress with no next event scheduled yet: the same tile,
+// "Prossimamente" in place of the date. A link to the league.
+function soonTile(league) {
+  return `
+    <a class="ev-tile ev-next is-soon" href="league.html?id=${league.id}">
+      <span class="ev-tile-k"><span class="ev-pulse"></span>Prossimo evento</span>
+      <div>
+        <div class="ev-date">Prossimamente</div>
+        <div class="ev-tile-s">${CLOCK}Data da definire</div>
+      </div>
+    </a>`;
+}
+
+function latestTile(ev, players, leagueName) {
+  return `
+    <a class="ev-tile" href="event.html?id=${ev.id}">
+      <span class="ev-tile-k">Ultimo evento</span>
+      <div>
+        <div class="ev-date">${dayMonth(ev.event_date)}</div>
+        <div class="ev-event-name">${escapeHtml(ev.name || leagueName || weekday(ev.event_date))}</div>
+        <div class="ev-tile-s">${USERS}${players}</div>
+      </div>
+    </a>`;
+}
+
+// One league in progress as its own group: its big tile on the left, its
+// next event (or "Prossimamente", when none is scheduled yet) and latest
+// event beside it (the next one alone, before any is played, fills the
+// space). The real league is the main group (two
+// rows, dark); the Topdeck series a secondary one (`secondary`: one row,
+// light — styles.css .ev-board.is-secondary), under it.
+function groupHtml(bigHtml, sideTiles, secondary = false) {
+  const side = sideTiles.length === 1 ? sideTiles[0].replace('class="ev-tile', 'class="ev-tile ev-tall') : sideTiles.join("");
+  const cls = ["ev-board", sideTiles.length ? "" : "is-alone", secondary ? "is-secondary" : ""].filter(Boolean).join(" ");
+  return `<div class="${cls}">${bigHtml}${side}</div>`;
+}
+
+function closedTile(league, players) {
+  const last = league.events[0]?.event_date;
+  const count = league.events.length;
+  return `
+    <a class="ev-tile" href="league.html?id=${league.id}">
+      <span class="ev-tile-k">Conclusa${last ? `<span class="ev-tag">${year(last)}</span>` : ""}</span>
+      <div>
+        <div class="ev-tile-t">${escapeHtml(league.name)}</div>
+        <div class="ev-tile-s">${count} ${count === 1 ? "evento" : "eventi"} · ${USERS}${players}</div>
+      </div>
+    </a>`;
+}
+
+// The standalone events (no page of their own): the latest names on the
+// tile, the date of the latest as its tag; it opens the full list.
+function standaloneTile(events, players) {
+  const last = events[0].event_date;
+  const names = events.slice(0, 3).map((ev) => escapeHtml(eventTitle(ev))).join(" · ");
+  return `
+    <button type="button" class="ev-tile is-standalone" id="events-standalone-open">
+      <span class="ev-tile-k">Eventi standalone<span class="ev-tag">${dayMonth(last)} ${year(last)}</span></span>
+      <div>
+        <div class="ev-tile-t">${names}</div>
+        <div class="ev-tile-s">${events.length} ${events.length === 1 ? "evento" : "eventi"} · ${USERS}${players}</div>
+      </div>
+    </button>`;
+}
+
+function openStandaloneList(events, counter) {
+  openInfoDialog({
+    id: "events-standalone-dialog",
+    title: "Eventi standalone",
+    bodyHtml: `<div class="ev-list">${events
+      .map(
+        (ev) => `
+      <a class="ev-list-row" href="event.html?id=${ev.id}">
+        <span class="ev-list-date">${dayMonth(ev.event_date)} ${year(ev.event_date)}</span>
+        <span class="ev-list-name">${escapeHtml(eventTitle(ev))}</span>
+        <span class="ev-tile-s">${USERS}${counter.ofEvent(ev.id)}</span>
+      </a>`
+      )
+      .join("")}</div>`,
   });
-  groups.forEach((group, i) => cols[i % count].appendChild(group));
-  listEl.innerHTML = "";
-  cols.forEach((col) => listEl.appendChild(col));
+}
+
+// A league in progress's name on one line, as big as its room allows: from
+// the tile's own size (the stylesheet's — bigger on desktop; on phones the
+// main league's from NAME_MAX_PHONE) down to NAME_MIN px, the largest that
+// fits beside the ring; still too long at that, it ends in "…". Redone on
+// resize (a rotation).
+const NAME_MAX_PHONE = 28;
+const NAME_MIN = 15;
+
+function fitBigNames(root) {
+  for (const el of root.querySelectorAll(".ev-big .ev-tile-t")) {
+    el.style.fontSize = "";
+    const main = !el.closest(".is-secondary");
+    const start = main && window.innerWidth <= 480 ? NAME_MAX_PHONE : parseFloat(getComputedStyle(el).fontSize);
+    for (let size = Math.round(start); size >= NAME_MIN; size -= 1) {
+      el.style.fontSize = `${size}px`;
+      if (el.scrollWidth <= el.clientWidth) break;
+    }
+  }
 }
 
 async function init() {
-  const listEl = document.getElementById("events-list");
+  const boardEl = document.getElementById("events-board");
+  const archiveSectionEl = document.getElementById("events-archive-section");
+  const archiveEl = document.getElementById("events-archive");
   try {
-    const [leagues, allEvents] = await Promise.all([Leagues.list(), Events.list()]);
-    // A still-open (including future) event isn't published yet — it's
-    // previewed elsewhere (the homepage's "Prossimi eventi"), not listed
-    // here as if it had already happened.
-    const events = allEvents.filter((ev) => !ev.is_open);
+    const [leagues, allEvents, upcoming, entries, matchRows] = await Promise.all([
+      Leagues.list(),
+      Events.list(),
+      Events.listUpcoming().catch((err) => (console.error(err), [])),
+      EventEntries.listPlayersByEvent(),
+      Matches.listEventIds(),
+    ]);
+    const counter = playerCounter(entries);
+    // Matches per event — every match row, byes and drops included (the
+    // same count as league.html's "Partite giocate").
+    const matchesByEvent = new Map();
+    for (const m of matchRows) matchesByEvent.set(m.event_id, (matchesByEvent.get(m.event_id) ?? 0) + 1);
+    // A still-open event isn't published yet: only the next one is shown
+    // (its own tile); everything else counts played (closed) events.
+    const played = allEvents
+      .filter((ev) => !ev.is_open)
+      .sort((a, b) => (b.event_date ?? "").localeCompare(a.event_date ?? ""));
 
-    const eventsByLeague = new Map();
-    const standaloneEvents = [];
-    for (const ev of events) {
-      if (!ev.league_id) {
-        standaloneEvents.push(ev);
-        continue;
+    const eventsOf = (id) => played.filter((ev) => ev.league_id === id);
+    const withEvents = leagues.map((l) => ({ ...l, events: eventsOf(l.id) }));
+    const current = withEvents.filter((l) => l.is_open && !l.is_topdeck).sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""))[0];
+    const topdeck = withEvents.filter((l) => l.is_open && l.is_topdeck).sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""))[0];
+    const standalone = played.filter((ev) => !ev.league_id);
+
+    // The board: a group per league in progress (the real league first,
+    // then the Topdeck series) — its tile, its next event, its latest one.
+    const groups = [];
+    for (const league of [current, topdeck].filter(Boolean)) {
+      const scheduled = await Leagues.eventCount(league.id, allEvents.filter((ev) => ev.league_id === league.id).length);
+      const attendance = league.events.reduce((sum, ev) => sum + counter.ofEvent(ev.id), 0);
+      const big = currentTile(
+        league,
+        league.events.length,
+        scheduled,
+        counter.distinct(league.events),
+        league.events.length ? attendance / league.events.length : 0,
+        league.events.reduce((sum, ev) => sum + (matchesByEvent.get(ev.id) ?? 0), 0)
+      );
+      // Secondary: the Topdeck series while a real league is in progress —
+      // just its own tile (one row), no event tiles. With no league in
+      // progress the series takes the league's place: the main look, its
+      // next / latest event beside it.
+      const secondary = league.is_topdeck && Boolean(current);
+      const side = [];
+      if (!secondary) {
+        const next = upcoming.find((ev) => ev.league?.id === league.id);
+        side.push(next ? nextTile(next) : soonTile(league));
+        if (league.events[0]) side.push(latestTile(league.events[0], counter.ofEvent(league.events[0].id), league.name));
       }
-      if (!eventsByLeague.has(ev.league_id)) eventsByLeague.set(ev.league_id, []);
-      eventsByLeague.get(ev.league_id).push(ev);
+      groups.push(groupHtml(big, side, secondary));
     }
-
-    if (leagues.length === 0 && events.length === 0) {
-      listEl.innerHTML = '<p class="page-empty">Nessuna lega o evento inserito ancora.</p>';
-      return;
-    }
-
-    const orderedLeagues = leagues
-      .map((l) => {
-        const leagueEvents = eventsByLeague.get(l.id) ?? [];
-        return { ...l, events: leagueEvents, latestEventDate: leagueEvents[0]?.event_date ?? null };
-      })
-      .sort(compareLeagues);
-
-    const renderLeagues = (list) =>
-      list
-        .map((l) =>
-          renderGroup({
-            id: l.id,
-            name: l.name,
-            link: `league.html?id=${l.id}`,
-            badge: leagueStatusBadge(l.is_open),
-            events: l.events,
-            closed: !l.is_open,
-          })
-        )
-        .join("");
-
-    const standaloneSection =
-      standaloneEvents.length === 0
-        ? ""
-        : renderGroup({ id: "standalone", name: "Eventi standalone", link: null, badge: "", events: standaloneEvents });
-
-    // Ongoing leagues first, then the standalone events, then concluded
-    // leagues last — each group keeping compareLeagues' own order within it.
-    listEl.innerHTML =
-      renderLeagues(orderedLeagues.filter((l) => l.is_open)) +
-      standaloneSection +
-      renderLeagues(orderedLeagues.filter((l) => !l.is_open));
-
-    // The whole card toggles collapse/expand — except a click that
-    // actually landed on .league-group-link, which navigates to the
-    // league's own page instead (its own click is left alone, never
-    // reaching this handler's toggle logic).
-    function toggleGroup(group) {
-      const collapsed = group.classList.toggle("is-collapsed");
-      group.setAttribute("aria-expanded", String(!collapsed));
-    }
-
-    listEl.querySelectorAll(".league-group").forEach((group) => {
-      group.addEventListener("click", (e) => {
-        if (e.target.closest(".league-group-link")) return;
-        toggleGroup(group);
-      });
-      group.addEventListener("keydown", (e) => {
-        if ((e.key === "Enter" || e.key === " ") && !e.target.closest(".league-group-link")) {
-          e.preventDefault();
-          toggleGroup(group);
-        }
-      });
-    });
-
-    layoutColumns(listEl);
-    // Debounced: column *count* only actually changes at a few width
-    // thresholds, but resize fires continuously while dragging — layoutColumns
-    // itself already no-ops when the count hasn't changed, this just avoids
-    // running that check dozens of times a second while the window is
-    // actively being dragged.
-    let resizeTimer;
+    boardEl.innerHTML = groups.join("");
+    fitBigNames(boardEl);
+    let fitTimer;
     window.addEventListener("resize", () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => layoutColumns(listEl), 150);
+      clearTimeout(fitTimer);
+      fitTimer = setTimeout(() => fitBigNames(boardEl), 120);
     });
+    if (!groups.length && !played.length) {
+      boardEl.innerHTML = '<p class="page-empty">Nessuna lega o evento inserito ancora.</p>';
+    }
+
+    // Leghe concluse, newest first by their latest event (one without
+    // events last), the standalone tile placed among them the same way.
+    const archive = withEvents
+      .filter((l) => !l.is_open)
+      .map((l) => ({ last: l.events[0]?.event_date ?? "", html: closedTile(l, counter.distinct(l.events)) }));
+    if (standalone.length) {
+      archive.push({ last: standalone[0].event_date ?? "", html: standaloneTile(standalone, counter.distinct(standalone)) });
+    }
+    archive.sort((a, b) => b.last.localeCompare(a.last));
+    archiveEl.innerHTML = archive.map((x) => x.html).join("");
+    archiveSectionEl.hidden = archive.length === 0;
+    document
+      .getElementById("events-standalone-open")
+      ?.addEventListener("click", () => openStandaloneList(standalone, counter));
   } catch (err) {
-    showError(listEl, err);
+    showError(boardEl, err);
   } finally {
     hidePageLoading();
   }
