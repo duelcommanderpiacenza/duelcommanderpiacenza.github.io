@@ -1,5 +1,93 @@
 [
   {
+    "id": "woqRj4",
+    "publicId": "6SqhARhyLnW9uFXwiG1GMQ",
+    "name": "W26 2/7 - Rank 01/29 quintorius (ricc41)",
+    "url": "https://moxfield.com/decks/6SqhARhyLnW9uFXwiG1GMQ",
+    "commanderName": "Quintorius, History Chaser",
+    "updatedAtUtc": "2026-10-11T12:21:47.893Z",
+    "createdAtUtc": "2026-10-11T12:21:44.600Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/0742f19d-179c-43c4-ab95-4160c56b4384?format=image&version=art_crop"
+  },
+  {
+    "id": "JBQ505",
+    "publicId": "FGeKXdjH2UCHKps2c6_Q6w",
+    "name": "W26 2/7 - Rank 07/29 Elminster",
+    "url": "https://moxfield.com/decks/FGeKXdjH2UCHKps2c6_Q6w",
+    "commanderName": "Elminster",
+    "updatedAtUtc": "2026-10-11T08:13:11.177Z",
+    "createdAtUtc": "2026-10-11T07:46:19.897Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/4eac2b49-6cb6-4ff4-8fac-2ba669326640?format=image&version=art_crop"
+  },
+  {
+    "id": "BB8e4R",
+    "publicId": "9imhARXq3HuWYaIBo1M9EA",
+    "name": "W26 2/7 - Rank 03/29 Aragorn (Rinnen)",
+    "url": "https://moxfield.com/decks/9imhARXq3HuWYaIBo1M9EA",
+    "commanderName": "Aragorn, King of Gondor",
+    "updatedAtUtc": "2026-10-11T08:03:57.943Z",
+    "createdAtUtc": "2026-10-11T07:56:50.070Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/1c7ac04c-8510-468b-aa6f-f249bde9ff87?format=image&version=art_crop"
+  },
+  {
+    "id": "PoZ6qq",
+    "publicId": "9CmhAcWFSnK0oijLfOchxQ",
+    "name": "W26 2/7 - Rank 08/29 DC - Phlage (michele__f)",
+    "url": "https://moxfield.com/decks/9CmhAcWFSnK0oijLfOchxQ",
+    "commanderName": "Phlage, Titan of Fire's Fury",
+    "updatedAtUtc": "2026-10-11T07:54:18.563Z",
+    "createdAtUtc": "2026-10-11T07:54:13.317Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/e419cd0b-2449-4cc5-9ead-b9e45e271700?format=image&version=art_crop"
+  },
+  {
+    "id": "xoql5y",
+    "publicId": "8ymhAfClDnWSgCRtM4U9dQ",
+    "name": "W26 2/7 - Rank 06/29 [DC] Magda 1.0 (lord78)",
+    "url": "https://moxfield.com/decks/8ymhAfClDnWSgCRtM4U9dQ",
+    "commanderName": "Magda, Brazen Outlaw",
+    "updatedAtUtc": "2026-10-11T07:53:20.390Z",
+    "createdAtUtc": "2026-10-11T07:53:16.017Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/ab551f0e-7a9c-4c99-b199-042ab018dd9a?format=image&version=art_crop"
+  },
+  {
+    "id": "QOZ6q4",
+    "publicId": "8imhAeTN5n-8JEX_BNdI8A",
+    "name": "W26 2/7 - Rank 05/29 {DC} Made in Heaven 🪽 (Sancho182)",
+    "url": "https://moxfield.com/decks/8imhAeTN5n-8JEX_BNdI8A",
+    "commanderName": "Atraxa, Grand Unifier",
+    "updatedAtUtc": "2026-10-11T07:52:25.667Z",
+    "createdAtUtc": "2026-10-11T07:52:20.707Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/4a1f905f-1d55-4d02-9d24-e58070793d3f?format=image&version=art_crop"
+  },
+  {
+    "id": "ZbZNlN",
+    "publicId": "u35T8y2XF0W1fNEQTkk3fw",
+    "name": "W26 2/7 - Rank 04/29 Najeela, the Blade-Blossom",
+    "url": "https://moxfield.com/decks/u35T8y2XF0W1fNEQTkk3fw",
+    "commanderName": "Najeela, the Blade-Blossom",
+    "updatedAtUtc": "2026-10-11T07:50:00.580Z",
+    "createdAtUtc": "2026-10-11T07:50:00.537Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/2cb1d1da-6077-46b5-8c63-39882b8016f2?format=image&version=art_crop"
+  },
+  {
+    "id": "0RnNBb",
+    "publicId": "7SmhAYfkhniLJud91wBQkA",
+    "name": "W26 2/7 - Rank 02/29 Glarb (Gibbonz33)",
+    "url": "https://moxfield.com/decks/7SmhAYfkhniLJud91wBQkA",
+    "commanderName": "Glarb, Calamity's Augur",
+    "updatedAtUtc": "2026-10-11T07:47:04.917Z",
+    "createdAtUtc": "2026-10-11T07:46:58.823Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/ffc70b2d-5a3a-49ea-97db-175a62248302?format=image&version=art_crop"
+  },
+  {
     "id": "woXnWm",
     "publicId": "JOKgAYk1E3-1mrHMr6Z7aA",
     "name": "W26 1/7 - Rank 01/23 - DC - Silver Chariot 🤺 (Sancho182)",
@@ -20,93 +108,5 @@
     "createdAtUtc": "2026-09-27T09:09:39.527Z",
     "format": "duelCommander",
     "previewImageUrl": "https://api.scryfall.com/cards/e419cd0b-2449-4cc5-9ead-b9e45e271700?format=image&version=art_crop"
-  },
-  {
-    "id": "woXn4m",
-    "publicId": "JeKgAeea6nCrwvLic83QmQ",
-    "name": "W26 1/7 - Rank 08/23 - Brigid lista aggiornata (stantuffodado88)",
-    "url": "https://moxfield.com/decks/JeKgAeea6nCrwvLic83QmQ",
-    "commanderName": "Brigid, Clachan's Heart // Brigid, Doun's Mind",
-    "updatedAtUtc": "2026-09-27T09:19:53.350Z",
-    "createdAtUtc": "2026-09-27T09:15:10.440Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/cb7d5bbb-4f68-4e38-8bb0-a95af21b24c8?format=image&version=art_crop"
-  },
-  {
-    "id": "l0vQMG",
-    "publicId": "JOKgAXveV3u93mDqyHZcHg",
-    "name": "W26 1/7 - Rank 07/23 - DC_Grist_land_v5 (mtgporchettas)",
-    "url": "https://moxfield.com/decks/JOKgAXveV3u93mDqyHZcHg",
-    "commanderName": "Grist, the Hunger Tide",
-    "updatedAtUtc": "2026-09-27T09:19:32.120Z",
-    "createdAtUtc": "2026-09-27T09:14:22.203Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/69af2825-18c2-4463-b6ba-42eaa070ccc1?format=image&version=art_crop"
-  },
-  {
-    "id": "8rvoBa",
-    "publicId": "IeKgAVVyIXib-itkyLy9JQ",
-    "name": "W26 1/7 - Rank 05/23 - [DC] Light-Paws v19.5 (lex_luthor)",
-    "url": "https://moxfield.com/decks/IeKgAVVyIXib-itkyLy9JQ",
-    "commanderName": "Light-Paws, Emperor's Voice",
-    "updatedAtUtc": "2026-09-27T09:18:35.320Z",
-    "createdAtUtc": "2026-09-27T09:10:37.910Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/39555a72-a57b-45ee-9222-ce3b9e8de126?format=image&version=art_crop"
-  },
-  {
-    "id": "NojWyg",
-    "publicId": "I-KgAR-52H-61qSKbaYX7g",
-    "name": "W26 1/7 - Rank 04/23 - Tifona (Cannonalpha)",
-    "url": "https://moxfield.com/decks/I-KgAR-52H-61qSKbaYX7g",
-    "commanderName": "Tifa Lockhart",
-    "updatedAtUtc": "2026-09-27T09:18:33.667Z",
-    "createdAtUtc": "2026-09-27T09:13:07.103Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/fb781323-2746-405d-a9b2-e778c037a6e9?format=image&version=art_crop"
-  },
-  {
-    "id": "AjABG5",
-    "publicId": "IuKgAUfZoH-unJCoOfpE6g",
-    "name": "W26 1/7 - Rank 03/23 - [DC] Tifa Lockhart  26.09.26 (lord78)",
-    "url": "https://moxfield.com/decks/IuKgAUfZoH-unJCoOfpE6g",
-    "commanderName": "Tifa Lockhart",
-    "updatedAtUtc": "2026-09-27T09:18:30.517Z",
-    "createdAtUtc": "2026-09-27T09:12:09.800Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/fb781323-2746-405d-a9b2-e778c037a6e9?format=image&version=art_crop"
-  },
-  {
-    "id": "DXdaq5",
-    "publicId": "IuKgAUQp43aqAc6CRgLnZw",
-    "name": "W26 1/7 - Rank 02/23 - Zurgo [DC Piacenza] (Kemmotar)",
-    "url": "https://moxfield.com/decks/IuKgAUQp43aqAc6CRgLnZw",
-    "commanderName": "Zurgo Bellstriker",
-    "updatedAtUtc": "2026-09-27T09:18:28.783Z",
-    "createdAtUtc": "2026-09-27T09:11:24.740Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/bbac6d75-59ab-4d7d-87ae-46875abf8cc7?format=image&version=art_crop"
-  },
-  {
-    "id": "ozKvMZ",
-    "publicId": "T2R763SdOk-mfw6tzduc9Q",
-    "name": "[PRIMER] Toph, Greatest Earthbender (stantuffodado88)",
-    "url": "https://moxfield.com/decks/T2R763SdOk-mfw6tzduc9Q/primer",
-    "commanderName": "Toph, Greatest Earthbender",
-    "updatedAtUtc": "2026-06-08T11:02:11.720Z",
-    "createdAtUtc": "2026-05-04T13:11:33.450Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/b15acc09-dd32-4e93-a788-7c0ae965a0c8?format=image&version=art_crop"
-  },
-  {
-    "id": "Xn7jrD",
-    "publicId": "fnQu7tMqv0uk6xeCKBqOcQ",
-    "name": "[PRIMER] Ertai Hates You (Random_Raven_Man)",
-    "url": "https://moxfield.com/decks/fnQu7tMqv0uk6xeCKBqOcQ/primer",
-    "commanderName": "Ertai Resurrected",
-    "updatedAtUtc": "2026-06-08T11:00:40.600Z",
-    "createdAtUtc": "2026-05-18T14:13:04.600Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/7f7e780e-fbc5-4dc0-b5c7-efcb8645c7c6?format=image&version=art_crop"
   }
 ]
