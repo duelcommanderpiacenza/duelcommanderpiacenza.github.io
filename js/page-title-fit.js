@@ -17,9 +17,13 @@ const MIN_FONT_SIZE = 17;
 // only a genuinely long one shrinks, and only exactly as much as it needs
 // to. Desktop is untouched (plenty of width there) and a name still too
 // long even at the floor size is left to wrap, same as before.
+// A hero's name (.profile-hero-name: player, commander, league, event,
+// archetype) is fitted at every width — on one line with the follow star
+// before it (.detail-hero-title-row), shrinking into whatever room the star
+// leaves.
 export function fitTitleToOneLine(titleEl) {
   titleEl.style.fontSize = "";
-  if (window.innerWidth > MOBILE_MAX_WIDTH) return;
+  if (window.innerWidth > MOBILE_MAX_WIDTH && !titleEl.classList.contains("profile-hero-name")) return;
   const baseFontSize = parseFloat(getComputedStyle(titleEl).fontSize);
   const availableWidth = titleEl.clientWidth;
   // Forcing nowrap for a moment reveals the text's true single-line width

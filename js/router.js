@@ -220,8 +220,16 @@ async function go(url, { push = true, restoreY = null } = {}) {
   await mountCurrent(page, url);
 
   // Back / forward: the scroll position the page had, once its content is
-  // in (the splash gone).
-  if (restoreY) whenLoaded(() => token === navToken && window.scrollTo(0, restoreY));
+  // in (the splash gone) — then "app:scroll-restored", so the touch nav pill
+  // (js/nav-dropdown.js) stays shown instead of reading the jump as
+  // scrolling down.
+  if (restoreY) {
+    whenLoaded(() => {
+      if (token !== navToken) return;
+      window.scrollTo(0, restoreY);
+      document.dispatchEvent(new CustomEvent("app:scroll-restored"));
+    });
+  }
 }
 
 function whenLoaded(fn) {

@@ -119,6 +119,14 @@ function init() {
     lastY = 0;
   });
 
+  // Back / forward put the page back where it was (js/router.js): the pill
+  // stays shown — that position is the new starting point, not a scroll
+  // down (the jump's own scroll event then sees no move).
+  document.addEventListener("app:scroll-restored", () => {
+    nav.classList.remove("is-scrolled-away");
+    lastY = window.scrollY;
+  });
+
   // Touch screens: the pill slides away while the page scrolls down and
   // comes back as soon as it scrolls up (styles.css .is-scrolled-away) —
   // always shown near the top, and never hidden while its panel is open.

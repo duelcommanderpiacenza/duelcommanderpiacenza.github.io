@@ -4129,13 +4129,6 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
     padding-right: 0;
   }
 
-  /* The title takes its whole line, so the card always goes on the next
-     one, below it (a short name would otherwise leave room beside it on a
-     wider phone). */
-  #commander-title {
-    flex: 0 0 100%;
-  }
-
   /* No longer floating beside anything at this width — an in-flow block
      below the name, centred on the page like player.html's card: auto
      margins centre it in .page-heading, which starts right of the back
@@ -8884,49 +8877,23 @@ main.has-hero-accent .profile-tab:not(.is-active):hover {
 }
 
 /* The follow button in the detail heroes: the star alone (its name in
-   aria-label, js/follow-button.js), round, 40px like the back pill — not
+   aria-label, js/follow-button.js), round, 32px (smaller than the name beside it) — not
    following: a hollow star in the hero's reds, like the back pill;
-   following: a white filled star on brand red. Beside the hero in its wrap
-   (js puts it there), placed like the back pill but on the right: desktop
-   on the hero's top edge (48px in from the right); up to 820px in
-   the hero's top-right corner. */
-/* top: -20px — half its 40px — rather than a translate: the row's own
-   entrance animation (entrance-fade-up) ends on transform: none and holds
-   it. */
-.detail-hero-wrap > .follow-btn-row {
-  position: absolute;
-  top: -20px;
-  right: 48px;
-  z-index: 2;
-  margin: 0;
-}
-
-@media (max-width: 820px) {
-  .detail-hero-wrap > .follow-btn-row {
-    top: 14px;
-    right: 14px;
-  }
-}
-
-/* Phones: like the back pill — 0 is 16px in from the edge-to-edge hero. */
-@media (max-width: 640px) {
-  .detail-hero-wrap > .follow-btn-row {
-    right: 0;
-  }
-}
-
+   following: a white filled star on brand red. Before the name, on its
+   line (.detail-hero-title-row). */
 .detail-hero-wrap .follow-btn {
   justify-content: center;
   box-sizing: border-box;
-  width: 40px;
-  height: 40px;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
   padding: 0;
   border: 1px solid color-mix(in srgb, var(--hero-btn) 40%, #fff);
   border-radius: 50%;
   background: color-mix(in srgb, var(--hero-btn) 55%, #1c1012);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
   color: #fff;
-  font-size: 1.25rem;
+  font-size: 1rem;
   text-shadow: none;
 }
 
@@ -9113,18 +9080,19 @@ main.has-hero-accent .profile-tab:not(.is-active):hover {
     margin-top: 0;
   }
 
-  /* The card and the switch under it nearly as wide as the hero: its whole
-     inner width, the hero's side padding trimmed. */
+  /* The hero's side padding trimmed. */
   .profile-hero-inner {
     padding-inline: 16px;
   }
 
+  /* account.html's card (and the switch under it), centred: at most 260px
+     wide — the whole width made it taller than the screen; a little more
+     than player.html / commander.html's 240px below, for edit mode's
+     finger-sized fields. */
   .profile-hero .profile-card-col {
-    max-width: none;
+    max-width: 260px;
   }
 
-  /* player.html / commander.html: their card smaller than account's — the
-     whole width made it taller than the screen. */
   .detail-hero .detail-hero-card {
     max-width: 240px;
   }
@@ -14393,17 +14361,26 @@ html.app-header body:has(.page-main .detail-hero-back) .site-header :is(.site-se
   pointer-events: auto;
 }
 
-/* The name and the follow star on one centred line (js/follow-button.js
-   wraps them), the star wrapping under a name too long to share it. */
+/* Every detail hero with a follow star (player, commander, league; any
+   width): the star before the name, always on one line with it
+   (js/follow-button.js wraps the two) — the name shrinks into the room left
+   (js/page-title-fit.js) rather than wrapping under the star. Left-aligned
+   like the hero's text on a computer, centred from 820px down. */
 .detail-hero-title-row {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  justify-content: center;
-  gap: 6px 12px;
+  gap: 12px;
+}
+
+@media (max-width: 820px) {
+  .detail-hero-title-row {
+    justify-content: center;
+  }
 }
 
 .detail-hero-title-row > .profile-hero-name {
+  flex: 0 1 auto;
   min-width: 0;
 }
 
@@ -14429,8 +14406,8 @@ html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([
    20px side padding; --hero-bleed is how far the column's edge is from the
    screen's), its content still lined up with the column, no rounded
    corners or shadow; pulled up by the page's 28px top padding (phones:
-   20px, above); the back pill and follow star inside its corners as up to
-   820px (desktop: on its top edge), lined up with the content. */
+   20px, above); the back pill inside its top-left corner as up to 820px
+   (desktop: on its top edge), lined up with the content. */
 @media (min-width: 641px) {
   html.app-header .page-main {
     --hero-bleed: calc(max(0px, (100vw - 1100px) / 2) + 20px);
@@ -14456,10 +14433,6 @@ html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([
   html.app-header .detail-hero-wrap:has(.is-no-card) .detail-hero-back {
     left: 0;
     transform: none;
-  }
-
-  html.app-header .detail-hero-wrap > .follow-btn-row {
-    right: 0;
   }
 }
 
