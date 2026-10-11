@@ -117,9 +117,21 @@ export async function initFollowButton(titleEl, kind, id, { signal } = {}) {
   row.appendChild(btn);
   // The detail pages' hero: beside it, in its wrap (like the back pill —
   // the hero clips what's inside it, and the star sits on its edge on
-  // desktop, styles.css .detail-hero-wrap); else right after the title.
+  // desktop, styles.css .detail-hero-wrap) — on touch screens
+  // (html.app-header, set once per device) beside the name instead, the two
+  // in one centred line (.detail-hero-title-row), the back pill being up in
+  // the header's row there; else right after the title.
   const heroWrap = titleEl.closest(".detail-hero-wrap");
-  if (heroWrap) heroWrap.append(row);
+  if (heroWrap && document.documentElement.classList.contains("app-header")) {
+    let line = titleEl.parentElement;
+    if (!line.classList.contains("detail-hero-title-row")) {
+      line = document.createElement("div");
+      line.className = "detail-hero-title-row";
+      titleEl.before(line);
+      line.append(titleEl);
+    }
+    line.append(row);
+  } else if (heroWrap) heroWrap.append(row);
   else titleEl.insertAdjacentElement("afterend", row);
   // The heading just got taller: what's measured from it — the commander
   // image's / player card's height, the back button's alignment on phones —
