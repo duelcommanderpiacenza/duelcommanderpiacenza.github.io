@@ -400,7 +400,10 @@ html.nav-mobile .site-account {
   border: 1px solid rgba(255, 255, 255, 0.32);
   border-radius: var(--radius-pill);
   padding: 9px 14px;
-  width: 240px;
+  /* Narrower with the window (240px from 800px wide, 150px from 500px
+     down), leaving the site's name room beside it; touch screens size their
+     own (html.nav-mobile, the full-screen search). */
+  width: clamp(150px, 30vw, 240px);
   transition: background 150ms ease, border-color 150ms ease;
 }
 
@@ -425,6 +428,8 @@ html.nav-mobile .site-account {
   color: #fff;
   font: inherit;
   font-size: 0.88rem;
+  /* The placeholder ends with "…" once the pill is too narrow for it. */
+  text-overflow: ellipsis;
 }
 
 .site-search-input::placeholder {
@@ -762,12 +767,6 @@ html.nav-mobile .site-search-box.is-closing .site-search-results {
   html.nav-mobile .site-search-box.is-closing,
   html.nav-mobile .site-search-box.is-open .site-search-field {
     animation: none;
-  }
-}
-
-@media (max-width: 480px) {
-  .site-search-field {
-    width: 170px;
   }
 }
 

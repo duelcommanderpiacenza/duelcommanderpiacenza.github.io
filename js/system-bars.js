@@ -7,21 +7,16 @@
 //    of the hero's colour (--hero-bar, js/player-card.js applyHeroTone), or
 //    a near-black before it's known;
 //  - any other page: the page's own background, light or dark;
-//  - a computer wider than a phone (the red header bar): the brand red.
-// Kept in step with the theme, the header's colour, the window's width, and
-// js/router.js's in-app navigation (refreshSystemBars after each swap).
+//  - a computer, whatever the window's width (the red header bar): the brand red.
+// Kept in step with the theme, the header's colour, and js/router.js's
+// in-app navigation (refreshSystemBars after each swap).
 //
-// Also keeps html.app-header in step with the window's width: the phone
-// header (transparent, the logo alone, heroes up behind it — styles.css) on
-// phones and on every touch screen, tablets included, whatever the width;
-// set first by each page's inline head script, before the first paint.
-
-const PHONE = window.matchMedia("(max-width: 640px)");
-const TOUCH = navigator.maxTouchPoints > 0;
-
-function syncAppHeader() {
-  document.documentElement.classList.toggle("app-header", TOUCH || PHONE.matches);
-}
+// html.app-header — the phone header (transparent, the logo alone, heroes
+// up behind it — styles.css) — is set by each page's inline head script,
+// before the first paint, on every touch screen (tablets included, whatever
+// the width) and only there, like html.nav-mobile: a narrowed desktop
+// window keeps the desktop header, tab row and search pill (it used to get
+// the phone header too, mixed with the desktop nav — a mess at the top).
 
 const PAGE_LIGHT = "#fff9f7";
 const PAGE_DARK = "#1b1315";
@@ -55,9 +50,4 @@ new MutationObserver(refreshSystemBars).observe(document.documentElement, {
 });
 const header = document.querySelector(".site-header");
 if (header) new MutationObserver(refreshSystemBars).observe(header, { attributes: true, attributeFilter: ["class", "style"] });
-PHONE.addEventListener("change", () => {
-  syncAppHeader();
-  refreshSystemBars();
-});
-syncAppHeader();
 refreshSystemBars();
