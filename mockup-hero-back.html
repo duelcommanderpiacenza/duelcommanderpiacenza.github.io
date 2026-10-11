@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup — pulsante indietro nell'hero (base: barra unica)</title>
+<style>
+  /* Standalone mockup: not linked from the site. Fake art = gradients.
+     Base: proposal 2 of mockup-hero-header.html (one bar, tinted with the
+     hero's colour, the hero hanging under it). */
+  :root {
+    --cream: color-mix(in srgb, hsl(176 45% 40%) 7%, #fff);
+    --text: #2b1d1f;
+    --muted: #7b6466;
+    --acc: hsl(176 45% 40%);
+    --acc-deep: hsl(176 45% 26%);
+    --acc-bar: hsl(176 45% 14%);
+    --acc-light: hsl(176 55% 72%);
+    --font: "Trebuchet MS", "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--font); background: #ece6e4; color: var(--text); }
+  .intro { max-width: 1040px; margin: 0 auto; padding: 32px 20px 8px; }
+  .intro h1 { margin: 0 0 6px; }
+  .intro p { margin: 0; color: var(--muted); }
+  section.proposal { max-width: 1040px; margin: 36px auto 56px; padding: 0 20px; }
+  .proposal > h2 { margin: 0 0 4px; font-size: 1.5rem; }
+  .proposal > p { margin: 0 0 14px; color: var(--muted); line-height: 1.5; }
+  .proposal ul { margin: 10px 0 0; padding-left: 20px; color: var(--muted); line-height: 1.5; }
+  .label { margin: 18px 0 6px; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+
+  .frame { position: relative; overflow: hidden; border-radius: 14px; background: var(--cream); box-shadow: 0 20px 50px rgba(40, 10, 14, 0.18); border: 1px solid rgba(0,0,0,.08); }
+
+  /* The bar (proposal 2). */
+  .bar { position: relative; z-index: 3; display: flex; align-items: center; gap: 18px; height: 62px; padding: 0 28px; color: #fff; background: linear-gradient(135deg, var(--acc-bar), var(--acc-deep)); }
+  .logo { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-weight: 900; font-size: 0.8rem; border: 2px solid currentColor; flex-shrink: 0; }
+  .tabs { display: flex; gap: 4px; }
+  .tab { padding: 7px 13px; border-radius: 999px; font-weight: 700; font-size: 0.85rem; color: rgba(255,255,255,.85); white-space: nowrap; }
+  .tab.on { background: rgba(255,255,255,.95); color: var(--acc-deep); }
+  .search { margin-left: auto; width: 170px; padding: 8px 14px; border-radius: 999px; font-size: 0.85rem; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.32); color: rgba(255,255,255,.8); white-space: nowrap; }
+  .acct { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.32); flex-shrink: 0; }
+
+  /* The hero band hanging under it. */
+  .hero-band { position: relative; overflow: hidden; border-radius: 0 0 28px 28px; box-shadow: 0 14px 30px rgba(20,40,40,.18); }
+  .art { position: absolute; inset: -20px; background:
+      radial-gradient(40% 70% at 22% 40%, hsl(28 85% 58%), transparent 70%),
+      radial-gradient(45% 80% at 70% 30%, hsl(195 70% 62%), transparent 70%),
+      radial-gradient(60% 90% at 55% 90%, hsl(176 50% 32%), transparent 70%),
+      linear-gradient(135deg, hsl(176 40% 34%), hsl(200 40% 30%));
+    filter: blur(6px) saturate(1.2); }
+  .art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(18,12,13,.32), rgba(18,12,13,.58)); }
+  .hero-band::before { content: ""; position: absolute; inset: 0 0 auto; height: 40px; z-index: 1; background: linear-gradient(hsl(176 45% 18% / .7), transparent); }
+  .hero-inner { position: relative; z-index: 1; display: grid; grid-template-columns: 170px 1fr; gap: 34px; align-items: center; max-width: 1000px; margin: 0 auto; padding: 30px 32px; color: #fff; }
+  .pcard { aspect-ratio: 488 / 680; border-radius: 12px; background:
+      linear-gradient(180deg, transparent 55%, rgba(10,10,12,.85) 56%),
+      linear-gradient(160deg, hsl(190 60% 70%), hsl(28 80% 60%) 60%, hsl(176 40% 30%));
+    box-shadow: 0 16px 34px rgba(0,0,0,.4); border: 3px solid #c9c2b0; }
+  .name { margin: 0; font-size: 2.6rem; font-weight: 800; line-height: 1.05; text-shadow: 0 1px 10px rgba(0,0,0,.35); }
+  .stats { display: flex; gap: 34px; margin-top: 18px; }
+  .stat b { display: block; font-size: 1.9rem; line-height: 1.1; }
+  .stat span { font-size: 0.72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; opacity: .75; }
+  .stat:first-child b { color: var(--acc-light); }
+  .star { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.6); background: color-mix(in srgb, var(--acc-deep) 55%, #1c1012); color: #fff; font-size: 1.15rem; flex-shrink: 0; }
+  .after { height: 40px; }
+
+  /* ===== 1 — Nella barra: the back pill opens the bar, the logo's place. ===== */
+  .v1 .back { display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 15px 0 10px; border-radius: 999px; background: rgba(255,255,255,.95); color: var(--acc-deep); font-weight: 800; font-size: 0.88rem; white-space: nowrap; max-width: 190px; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+  .v1 .sep { width: 1px; height: 26px; background: rgba(255,255,255,.25); flex-shrink: 0; }
+  .v1 .tab.on { background: rgba(255,255,255,.18); color: #fff; }
+  .v1 .title-line { display: flex; align-items: center; gap: 12px; }
+
+  /* ===== 2 — Breadcrumb: a light line at the top of the hero. ===== */
+  .v2 .crumbs { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 0.8rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.7); }
+  .v2 .crumbs a { color: #fff; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 6px; margin-left: -6px; border-radius: 999px; background: rgba(255,255,255,.12); }
+  .v2 .crumbs .here { color: rgba(255,255,255,.55); }
+  .v2 .title-line { display: flex; align-items: center; gap: 12px; }
+
+  /* ===== 3 — Linguetta: tabs hanging from the bar's lower edge. ===== */
+  .v3 .hanger { position: absolute; top: 0; z-index: 2; display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 16px 0 11px; border-radius: 0 0 16px 16px; background: linear-gradient(135deg, var(--acc-bar), var(--acc-deep)); color: #fff; font-weight: 800; font-size: 0.88rem; box-shadow: 0 6px 14px rgba(0,0,0,.25); white-space: nowrap; }
+  .v3 .hanger.left { left: 32px; }
+  .v3 .hanger.right { right: 32px; padding: 0 12px; font-size: 1.1rem; }
+  .v3 .hero-band::before { display: none; }
+  .v3 .hero-inner { padding-top: 58px; }
+
+  .note { color: var(--muted); font-size: .85rem; margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <h1>Pulsante indietro nell'hero — 3 proposte</h1>
+  <p>Base: proposta 2 (barra unica nel colore dell'hero, l'hero appeso sotto). Desktop. L'etichetta è dinamica: la pagina da cui si arriva (qui "Leghe &amp; Eventi", oppure "Giocatori" arrivando direttamente).</p>
+</div>
+
+<!-- ================= 1 ================= -->
+<section class="proposal v1">
+  <h2>1 · Nella barra</h2>
+  <p>The back pill opens the bar, where the logo is on the other pages (the logo comes back on pages without a hero) — a thin divider, then the tabs. The same place as on phones now (header row, logo's spot), so desktop and phone agree. The active tab dims to a glass pill, so the white back pill is the bar's one strong element. The star moves beside the name, as on phones.</p>
+  <div class="label">Con hero — giocatore</div>
+  <div class="frame">
+    <div class="bar"><span class="back">‹ Leghe &amp; Eventi</span><span class="sep"></span><div class="tabs"><span class="tab">Bacheca</span><span class="tab">Leghe &amp; Eventi</span><span class="tab">Comandanti</span><span class="tab">Matchups</span><span class="tab">Archetipi</span><span class="tab on">Giocatori</span><span class="tab">Social</span></div><div class="search">Cerca…</div><div class="acct"></div></div>
+    <div class="hero-band"><div class="art"></div>
+      <div class="hero-inner"><div class="pcard"></div><div>
+        <div class="title-line"><span class="star">☆</span><h3 class="name">Mario Rossi</h3></div>
+        <div class="stats"><div class="stat"><b>58%</b><span>Winrate</span></div><div class="stat"><b>24</b><span>Eventi</span></div><div class="stat"><b>2</b><span>Leghe</span></div></div>
+      </div></div>
+    </div>
+    <div class="after"></div>
+  </div>
+  <ul>
+    <li><b>Pro:</b> the familiar spot (top-left, like a browser / app); identical to phones; frees the hero entirely for its content.</li>
+    <li><b>Contro:</b> the bar gets busier (back + 7 tabs + search) — a long label must be cut sooner (~190px); the logo is gone on those pages.</li>
+  </ul>
+</section>
+
+<!-- ================= 2 ================= -->
+<section class="proposal v2">
+  <h2>2 · Breadcrumb</h2>
+  <p>A light line at the top of the hero, lined up with the name: the page you came from as a small glass link, then where you are. Reads as the title's own context ("you're in Leghe &amp; Eventi › Mario Rossi") rather than as a button; the bar stays exactly as on every other page. The star beside the name.</p>
+  <div class="label">Con hero — giocatore</div>
+  <div class="frame">
+    <div class="bar"><div class="logo">DC</div><div class="tabs"><span class="tab">Bacheca</span><span class="tab">Leghe &amp; Eventi</span><span class="tab">Comandanti</span><span class="tab">Matchups</span><span class="tab">Archetipi</span><span class="tab on">Giocatori</span><span class="tab">Social</span></div><div class="search">Cerca…</div><div class="acct"></div></div>
+    <div class="hero-band"><div class="art"></div>
+      <div class="hero-inner"><div class="pcard"></div><div>
+        <div class="crumbs"><a>‹ Leghe &amp; Eventi</a><span>›</span><span class="here">Mario Rossi</span></div>
+        <div class="title-line"><span class="star">☆</span><h3 class="name">Mario Rossi</h3></div>
+        <div class="stats"><div class="stat"><b>58%</b><span>Winrate</span></div><div class="stat"><b>24</b><span>Eventi</span></div><div class="stat"><b>2</b><span>Leghe</span></div></div>
+      </div></div>
+    </div>
+    <div class="after"></div>
+  </div>
+  <ul>
+    <li><b>Pro:</b> the calmest; tied to the title, so it reads as navigation context; plenty of room for a long label; the bar unchanged everywhere.</li>
+    <li><b>Contro:</b> smaller target than a pill; the name appears twice (the breadcrumb's "here" could be dropped, leaving just "‹ Leghe &amp; Eventi"); on phones the back stays in the header — the two differ.</li>
+  </ul>
+</section>
+
+<!-- ================= 3 ================= -->
+<section class="proposal v3">
+  <h2>3 · Linguetta</h2>
+  <p>The back pill as a tab hanging from the bar's lower edge into the hero — same colour as the bar, square top, rounded bottom — so it visibly belongs to the bar while sitting over the hero. The follow star mirrors it as a small tab on the right. Bar and hero become one shape with two handles.</p>
+  <div class="label">Con hero — giocatore</div>
+  <div class="frame">
+    <div class="bar"><div class="logo">DC</div><div class="tabs"><span class="tab">Bacheca</span><span class="tab">Leghe &amp; Eventi</span><span class="tab">Comandanti</span><span class="tab">Matchups</span><span class="tab">Archetipi</span><span class="tab on">Giocatori</span><span class="tab">Social</span></div><div class="search">Cerca…</div><div class="acct"></div></div>
+    <div class="hero-band"><div class="art"></div>
+      <span class="hanger left">‹ Leghe &amp; Eventi</span><span class="hanger right">☆</span>
+      <div class="hero-inner"><div class="pcard"></div><div>
+        <h3 class="name">Mario Rossi</h3>
+        <div class="stats"><div class="stat"><b>58%</b><span>Winrate</span></div><div class="stat"><b>24</b><span>Eventi</span></div><div class="stat"><b>2</b><span>Leghe</span></div></div>
+      </div></div>
+    </div>
+    <div class="after"></div>
+  </div>
+  <ul>
+    <li><b>Pro:</b> the most "designed" — it uses option 2's seam between bar and hero; keeps today's desktop idea (back left, star right, on the hero's top edge) but no longer floating; room for long labels.</li>
+    <li><b>Contro:</b> a new shape to build (and to keep in step with the bar's colour); the hero needs a bit more top padding under the tabs.</li>
+  </ul>
+</section>
+
+</body>
+</html>

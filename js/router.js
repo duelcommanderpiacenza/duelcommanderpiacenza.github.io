@@ -127,6 +127,18 @@ function syncBackButton() {
   btn.replaceChildren(...(svg ? [svg] : []), label);
 }
 
+// A computer (not html.app-header): the back pill in the top bar instead,
+// in the logo's place before the tabs (styles.css "One top bar") — a copy
+// at the start of the nav's row, replaced on every page (the click listener
+// below handles it like the original); the hero's own one hidden there.
+function syncBarBackButton() {
+  document.querySelectorAll(".site-nav .detail-hero-back").forEach((el) => el.remove());
+  if (document.documentElement.classList.contains("app-header")) return;
+  const btn = document.querySelector("main .detail-hero-back");
+  const row = document.querySelector(".site-nav-inner");
+  if (btn && row) row.prepend(btn.cloneNode(true));
+}
+
 // Leaves the current page for `url` (already a supported page). `restoreY`
 // comes from a history back/forward.
 async function go(url, { push = true, restoreY = null } = {}) {
@@ -193,6 +205,7 @@ async function go(url, { push = true, restoreY = null } = {}) {
     enhanceSelects(newMain);
     enhanceDateInputs(newMain);
     syncBackButton();
+    syncBarBackButton();
     refreshSystemBars();
     window.scrollTo(0, 0);
   };
@@ -261,6 +274,7 @@ function start() {
   if (page && document.querySelector(`main[data-page="${page.name}"]`)) mountCurrent(page, url);
   else current = null;
   syncBackButton();
+  syncBarBackButton();
 
   document.addEventListener(
     "click",

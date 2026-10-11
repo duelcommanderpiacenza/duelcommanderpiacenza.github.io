@@ -8259,6 +8259,36 @@ main.has-hero-accent {
   --brand-red-darker: var(--hero-accent-light);
 }
 
+/* The page itself on those pages (every hero page: player, commander,
+   league, event, archetype, account — js/player-card.js puts the colour on
+   <body> too): its background — the glow at the top and the cream under
+   it — and the footer in faint tints of the hero's colour instead of the
+   site's red-warm ones, light and dark. The cream variables redefined
+   (not just body's background), so what paints "the page's colour"
+   elsewhere (the phone's full-screen search) follows too. */
+body.has-hero-accent {
+  --bg-cream-1: color-mix(in srgb, var(--hero-accent) 7%, #fff);
+  --bg-cream-2: color-mix(in srgb, var(--hero-accent) 2%, #fff);
+  --bg-cream-3: color-mix(in srgb, var(--hero-accent) 4%, #fff);
+  background:
+    radial-gradient(circle at top, color-mix(in srgb, var(--hero-accent) 10%, transparent), transparent 32%),
+    linear-gradient(180deg, var(--bg-cream-1) 0%, var(--bg-cream-2) 24%, var(--bg-cream-3) 100%);
+}
+
+:root[data-theme="dark"] body.has-hero-accent {
+  --bg-cream-1: color-mix(in srgb, var(--hero-accent) 12%, #141214);
+  --bg-cream-2: color-mix(in srgb, var(--hero-accent) 7%, #100e10);
+  --bg-cream-3: color-mix(in srgb, var(--hero-accent) 5%, #0e0c0d);
+}
+
+body.has-hero-accent footer {
+  background: color-mix(in srgb, var(--hero-accent) 8%, #f4f2f2);
+}
+
+:root[data-theme="dark"] body.has-hero-accent footer {
+  background: color-mix(in srgb, var(--hero-accent) 9%, #121012);
+}
+
 /* …and the bits tinted with a fixed red: the "?" help buttons (their foil
    over a base in the accent's shades), the position chips and the count
    badges (a faint tint of it; :root to outrank the dark-mode ones). */
@@ -8878,42 +8908,8 @@ main.has-hero-accent .profile-tab:not(.is-active):hover {
 /* The follow button in the detail heroes: the star alone (its name in
    aria-label, js/follow-button.js), round, 32px (smaller than the name beside it) — not
    following: a hollow star in the hero's reds, like the back pill;
-   following: a white filled star on brand red. On touch screens before the
-   name, on its line (.detail-hero-title-row); on a computer beside the hero
-   in its wrap (js puts it there), placed like the back pill but on the
-   right, 40px like it: on the hero's top edge (48px in from the right), up
-   to 820px in the hero's top-right corner. */
-/* top: -20px — half its 40px — rather than a translate: the row's own
-   entrance animation (entrance-fade-up) ends on transform: none and holds
-   it. */
-.detail-hero-wrap > .follow-btn-row {
-  position: absolute;
-  top: -20px;
-  right: 48px;
-  z-index: 2;
-  margin: 0;
-}
-
-@media (max-width: 820px) {
-  .detail-hero-wrap > .follow-btn-row {
-    top: 14px;
-    right: 14px;
-  }
-}
-
-/* Phones: like the back pill — 0 is 16px in from the edge-to-edge hero. */
-@media (max-width: 640px) {
-  .detail-hero-wrap > .follow-btn-row {
-    right: 0;
-  }
-}
-
-.detail-hero-wrap > .follow-btn-row .follow-btn {
-  width: 40px;
-  height: 40px;
-  font-size: 1.25rem;
-}
-
+   following: a white filled star on brand red. Before the name, on its
+   line (.detail-hero-title-row), on every screen. */
 .detail-hero-wrap .follow-btn {
   justify-content: center;
   box-sizing: border-box;
@@ -14752,6 +14748,435 @@ html.is-page-transition:not(.app-header) .site-account {
 }
 
 @keyframes page-fade-through-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   One top bar (a computer — html:not(.nav-mobile); touch screens keep their
+   transparent header + nav pill): the red header and the white tab row
+   become a single sticky bar — the logo (the site's name hidden from view),
+   the tabs, the search and the account button. The markup stays two
+   elements (duplicated in every page, js/router.js relies on it): the nav
+   is laid over the header's middle — pulled up by the bar's height, sticky
+   at the same top, letting clicks through except on its own links — with
+   its row placed between the logo and the search (the same 1100px centred
+   column as .site-header-inner), scrolling sideways when the tabs don't
+   fit. On a hero page (every one, the header .has-hero-accent) the bar
+   takes a deep shade of the hero's colour, the hero hangs right under it
+   (square top, rounded bottom) and the back pill sits in the bar, in the
+   logo's place (js/router.js syncBarBackButton copies it there; the
+   hero's own one hidden), a thin divider before the tabs.
+   --------------------------------------------------------------------------- */
+html:not(.nav-mobile) {
+  --bar-h: 64px;
+  --bar-pad: 20px;
+  --bar-gap: 16px;
+  --bar-logo: 40px;
+  /* The search: a round button (below). */
+  --bar-search: 38px;
+}
+
+@media (max-width: 480px) {
+  html:not(.nav-mobile) {
+    --bar-pad: 16px;
+    --bar-gap: 12px;
+    --bar-logo: 34px;
+  }
+}
+
+html:not(.nav-mobile) .site-header:not(.site-header--admin) {
+  position: sticky;
+  top: 0;
+  box-sizing: border-box;
+  height: var(--bar-h);
+  padding: 0 var(--bar-pad);
+}
+
+html:not(.nav-mobile) .site-header:not(.site-header--admin) .site-header-inner {
+  height: 100%;
+  gap: var(--bar-gap);
+}
+
+/* The name hidden from view, kept for screen readers (the logo link's only
+   text) — as on phones. */
+html:not(.nav-mobile) .site-header:not(.site-header--admin) .site-header-brand > span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+html:not(.nav-mobile) .site-nav,
+:root[data-theme="dark"]:not(.nav-mobile) .site-nav {
+  position: sticky;
+  top: 0;
+  z-index: 26;
+  box-sizing: border-box;
+  height: var(--bar-h);
+  margin-top: calc(-1 * var(--bar-h));
+  padding: 0 var(--bar-pad);
+  border-bottom: 0;
+  background: none;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  pointer-events: none;
+  /* The active tab's and the back pill's ink: the bar's colour. */
+  --bar-ink: var(--brand-red);
+}
+
+html:not(.nav-mobile) .site-nav.has-hero-accent {
+  --bar-ink: var(--hero-accent-deep);
+}
+
+/* Between the logo and the search, in the header row's centred column:
+   margins (not padding — a scrolled tab would show under the search). */
+html:not(.nav-mobile) .site-nav-inner {
+  box-sizing: border-box;
+  height: 100%;
+  max-width: none;
+  margin: 0 calc(max(0px, (100% - 1100px) / 2) + var(--bar-search) + 38px + 2 * var(--bar-gap)) 0 calc(max(0px, (100% - 1100px) / 2) + var(--bar-logo) + var(--bar-gap));
+  padding: 0;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  /* Not smooth: a mouse drag (js/top-bar.js) sets scrollLeft on every
+     move. */
+  scroll-behavior: auto;
+  /* Its own area only (the bar's middle) takes clicks and drags. */
+  pointer-events: auto;
+  transition: margin-right 260ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 180ms ease, visibility 0s;
+}
+
+html:not(.nav-mobile) .site-nav-inner::-webkit-scrollbar {
+  display: none;
+}
+
+html:not(.nav-mobile) .site-nav-inner > * {
+  flex-shrink: 0;
+}
+
+/* Tabs that don't fit: dragged with the mouse (grab cursor), faded at the
+   edge(s) with more that way (js/drag-scroll.js's classes). */
+html:not(.nav-mobile) .site-nav-inner.is-scrollable {
+  cursor: grab;
+}
+
+html:not(.nav-mobile) .site-nav-inner.is-dragging {
+  cursor: grabbing;
+}
+
+html:not(.nav-mobile) .site-nav-inner.fade-right {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+}
+
+html:not(.nav-mobile) .site-nav-inner.fade-left {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 32px);
+  mask-image: linear-gradient(to right, transparent, #000 32px);
+}
+
+html:not(.nav-mobile) .site-nav-inner.fade-left.fade-right {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 32px, #000 calc(100% - 32px), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 32px, #000 calc(100% - 32px), transparent);
+}
+
+/* The search in the bar: always a round button like the phones' one (the
+   field shrunk to a 38px circle, the icon alone, centred), which opens
+   into the field over the tabs (hidden meanwhile) when clicked — focused,
+   the search is open (js/site-search.js; the click, js/top-bar.js) — and
+   closes back into the circle, both animated. */
+html:not(.nav-mobile) .site-header:not(.site-header--admin) .site-search-field {
+  box-sizing: border-box;
+  width: 38px;
+  height: 38px;
+  padding: 0 0 0 9.5px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: width 260ms cubic-bezier(0.2, 0.8, 0.2, 1), padding 260ms cubic-bezier(0.2, 0.8, 0.2, 1), background 150ms ease, border-color 150ms ease;
+}
+
+html:not(.nav-mobile) .site-header:not(.site-header--admin) .site-search-input {
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+html:not(.nav-mobile) .site-header:not(.site-header--admin) .site-search-box.is-open .site-search-field {
+  width: min(280px, 60vw);
+  padding: 0 14px;
+  cursor: auto;
+}
+
+html:not(.nav-mobile) .site-header:not(.site-header--admin) .site-search-box.is-open .site-search-input {
+  opacity: 1;
+}
+
+html:not(.nav-mobile) body:has(.site-search-box.is-open) .site-nav-inner {
+  opacity: 0;
+  visibility: hidden;
+  transition: margin-right 260ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 180ms ease, visibility 0s linear 180ms;
+}
+
+/* The tabs on the bar: light text, a glass hover, the current one white
+   in the bar's colour (Social's blue too). Social no longer pushed to the
+   far right (the search is there). */
+html:not(.nav-mobile) .site-nav .nav-link,
+html:not(.nav-mobile) .site-nav .nav-link[data-nav="social"] {
+  margin-left: 0;
+  border-color: transparent;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+html:not(.nav-mobile) .site-nav .nav-link:hover,
+:root[data-theme="dark"]:not(.nav-mobile) .site-nav .nav-link:hover,
+html:not(.nav-mobile) .site-nav .nav-link[data-nav="social"]:hover {
+  border-color: transparent;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+html:not(.nav-mobile) :is(
+  body[data-active-nav="current"] .nav-link[data-nav="current"],
+  body[data-active-nav="events"] .nav-link[data-nav="events"],
+  body[data-active-nav="commanders"] .nav-link[data-nav="commanders"],
+  body[data-active-nav="matchups"] .nav-link[data-nav="matchups"],
+  body[data-active-nav="archetypes"] .nav-link[data-nav="archetypes"],
+  body[data-active-nav="players"] .nav-link[data-nav="players"]
+),
+html:not(.nav-mobile) :is(
+  body[data-active-nav="current"] .nav-link[data-nav="current"],
+  body[data-active-nav="events"] .nav-link[data-nav="events"],
+  body[data-active-nav="commanders"] .nav-link[data-nav="commanders"],
+  body[data-active-nav="matchups"] .nav-link[data-nav="matchups"],
+  body[data-active-nav="archetypes"] .nav-link[data-nav="archetypes"],
+  body[data-active-nav="players"] .nav-link[data-nav="players"]
+):hover {
+  background: #fff;
+  color: var(--bar-ink);
+}
+
+html:not(.nav-mobile) body[data-active-nav="social"] .nav-link[data-nav="social"],
+html:not(.nav-mobile) body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
+  background: #fff;
+  color: var(--social-blue);
+}
+
+/* The bar's colour: its gradient's two ends as registered colours, so it
+   blends from one to the other (a gradient itself can't be transitioned) —
+   the brand red, or on a hero page a deep shade of the hero's colour
+   (js/player-card.js applyHeroTone sets it on the header, --hero-bar the
+   darkest). The header stays across in-app navigations, so this plays
+   during the page's own transition, with the logo / back pill's morph
+   (below), and again when a hero's colour arrives. */
+@property --bar-c1 {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: #7e0c13;
+}
+
+@property --bar-c2 {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: #dc181c;
+}
+
+html:not(.nav-mobile) .site-header:not(.site-header--admin) {
+  --bar-c1: #7e0c13;
+  --bar-c2: #dc181c;
+  background: linear-gradient(135deg, var(--bar-c1), var(--bar-c2));
+  transition: --bar-c1 450ms ease, --bar-c2 450ms ease, box-shadow 450ms ease;
+}
+
+html:not(.nav-mobile) .site-header.has-hero-accent {
+  --bar-c1: var(--hero-bar);
+  --bar-c2: var(--hero-accent-deep);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+}
+
+html:not(.nav-mobile) .site-nav .nav-link {
+  transition: background 180ms ease, color 450ms ease;
+}
+
+/* The back pill in the bar, in the logo's place (hidden there), a thin
+   divider after it; the hero's own one hidden. White, in the bar's colour,
+   the label cut with an ellipsis past 220px. */
+html:not(.nav-mobile) .page-main .detail-hero-back {
+  display: none;
+}
+
+html:not(.nav-mobile) body:has(.site-nav .detail-hero-back) .site-header-brand {
+  visibility: hidden;
+}
+
+html:not(.nav-mobile) body:has(.site-nav .detail-hero-back) .site-nav-inner {
+  margin-left: max(0px, (100% - 1100px) / 2);
+}
+
+html:not(.nav-mobile) .site-nav .detail-hero-back {
+  position: relative;
+  top: auto;
+  left: auto;
+  z-index: auto;
+  transform: none;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  height: 38px;
+  min-height: 0;
+  max-width: 220px;
+  margin-right: 14px;
+  padding: 0 15px 0 10px;
+  border: 0;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: none;
+  color: var(--bar-ink);
+  font-size: 0.88rem;
+}
+
+html:not(.nav-mobile) .site-nav .detail-hero-back:hover {
+  border: 0;
+  background: #fff;
+  color: var(--bar-ink);
+}
+
+html:not(.nav-mobile) .site-nav .detail-hero-back::after {
+  content: "";
+  position: absolute;
+  top: 7px;
+  right: -8px;
+  bottom: 7px;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* The hero hanging from the bar: pulled up by the page's top padding
+   (28px; 20px on phone widths), square top, rounded bottom. Not under
+   account.html's "Il tuo giocatore" banner (the hero isn't first there). */
+html:not(.nav-mobile) body:not(:has(.profile-claim:not([hidden]))) :is(
+  .page-main .profile-hero:first-child,
+  .page-main .detail-hero-wrap:first-child .profile-hero,
+  .page-loading-region > .detail-hero-wrap:nth-child(2) .profile-hero,
+  .page-loading-region > .profile-hero
+) {
+  margin-top: -28px;
+  border-radius: 0 0 28px 28px;
+}
+
+@media (max-width: 640px) {
+  html:not(.nav-mobile) body:not(:has(.profile-claim:not([hidden]))) :is(
+    .page-main .profile-hero:first-child,
+    .page-main .detail-hero-wrap:first-child .profile-hero,
+    .page-loading-region > .detail-hero-wrap:nth-child(2) .profile-hero,
+    .page-loading-region > .profile-hero
+  ) {
+    margin-top: -20px;
+  }
+}
+
+/* No pill in the hero's corner any more (up to 820px it pushed the
+   content down to make room). */
+@media (max-width: 820px) {
+  html:not(.nav-mobile) .detail-hero .profile-hero-inner {
+    padding-top: 24px;
+  }
+}
+
+/* Page transitions in the bar (see "Page transitions" above — the bar
+   itself stays still): the logo and the back pill share one name, so
+   entering a hero page the logo grows into the back pill, leaving it the
+   pill shrinks back into the logo, and between two hero pages one pill
+   turns into the other; the tab row has its own, so it slides to where it
+   now starts (after the pill, or after the logo) instead of jumping. Each
+   one only while shown (the logo is hidden when the pill is there). The
+   snapshots keep their own height and width, anchored left — stretched to
+   the moving box, the logo would have grown as wide as the pill. */
+html.is-page-transition:not(.nav-mobile) body:not(:has(.site-nav .detail-hero-back)) .site-header:not(.site-header--admin) .site-header-brand,
+html.is-page-transition:not(.nav-mobile) .site-nav .detail-hero-back {
+  view-transition-name: bar-lead;
+}
+
+html.is-page-transition:not(.nav-mobile) .site-nav-inner {
+  view-transition-name: bar-tabs;
+}
+
+::view-transition-group(bar-lead),
+::view-transition-group(bar-tabs) {
+  z-index: 11;
+  animation-duration: 340ms;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+::view-transition-old(bar-lead),
+::view-transition-new(bar-lead),
+::view-transition-old(bar-tabs),
+::view-transition-new(bar-tabs) {
+  inset-inline-start: 0;
+  inline-size: auto;
+  block-size: 100%;
+  object-fit: none;
+  object-position: left center;
+  animation-duration: 340ms;
+}
+
+/* The logo ↔ back pill: one shape morphing — clipped to the moving box,
+   rounded like both (a circle, a capsule), so entering a hero page the
+   logo's circle stretches into the pill's capsule, uncovering its label as
+   it widens, and leaving it the pill folds back into the circle. The one
+   going fades out quickly, the one coming fades in just behind it (no
+   additive cross-fade: the white pill would flash brighter). */
+/* The clip's rounding follows the way it goes — the logo isn't round, a
+   capsule radius on its box cut its corners until the end: towards the
+   pill (the new page has one in the bar) square → the pill's 19px, towards
+   the logo 19px → square. */
+::view-transition-image-pair(bar-lead) {
+  overflow: hidden;
+  animation: bar-lead-clip-to-logo 340ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+:root:has(.site-nav .detail-hero-back)::view-transition-image-pair(bar-lead) {
+  animation-name: bar-lead-clip-to-pill;
+}
+
+@keyframes bar-lead-clip-to-logo {
+  from {
+    border-radius: 19px;
+  }
+  to {
+    border-radius: 0;
+  }
+}
+
+@keyframes bar-lead-clip-to-pill {
+  from {
+    border-radius: 0;
+  }
+  to {
+    border-radius: 19px;
+  }
+}
+
+::view-transition-old(bar-lead) {
+  mix-blend-mode: normal;
+  animation: bar-lead-out 150ms ease-out both;
+}
+
+::view-transition-new(bar-lead) {
+  mix-blend-mode: normal;
+  animation: bar-lead-in 220ms ease-out 70ms both;
+}
+
+@keyframes bar-lead-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes bar-lead-in {
   from {
     opacity: 0;
   }

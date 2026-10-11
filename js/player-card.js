@@ -134,18 +134,21 @@ const ACCENT_VARS = ["--hero-accent", "--hero-accent-deep", "--hero-accent-deep-
 // js/router.js, on an in-app navigation: the header's (and the nav's)
 // hero colour dropped when the next page won't set its own.
 export function clearHeroTone({ header = true, nav = true } = {}) {
-  const els = [header && document.querySelector(".site-header"), nav && document.querySelector(".site-nav")];
+  // `nav`: everything that follows the page's accent outside <main> — the
+  // nav and the page's own background (<body>).
+  const els = [header && document.querySelector(".site-header"), nav && document.querySelector(".site-nav"), nav && document.body];
   for (const el of els.filter(Boolean)) {
     ACCENT_VARS.forEach((v) => el.style.removeProperty(v));
     el.classList.remove("has-hero-accent");
   }
 }
 
-// What takes the page's hero colour: <main>, and outside it the nav and the
+// What takes the page's hero colour: <main>, and outside it the nav, the
 // "Torna all'inizio" button (js/back-to-top.js, which also copies the
-// colour from <main> when it's created after it's set).
+// colour from <main> when it's created after it's set) and <body> — the
+// page's background and footer (styles.css body.has-hero-accent).
 function accentTargets(main) {
-  return [main, document.querySelector(".site-nav"), ...document.querySelectorAll(".back-to-top")].filter(Boolean);
+  return [main, document.body, document.querySelector(".site-nav"), ...document.querySelectorAll(".back-to-top")].filter(Boolean);
 }
 
 function applyHeroTone(artEl, img) {

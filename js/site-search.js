@@ -63,7 +63,7 @@ function init() {
   function render() {
     const term = input.value.trim().toLowerCase();
     if (!term) {
-      resultsEl.innerHTML = '<p class="site-search-hint">Digita per cercare giocatori, eventi, leghe o comandanti.</p>';
+      resultsEl.innerHTML = '<p class="site-search-hint">Cerca giocatori, eventi, leghe o comandanti.</p>';
       return;
     }
     if (!dataByType) {
