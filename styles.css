@@ -5206,6 +5206,18 @@ button.ev-tile {
   .ev-board.is-secondary > .ev-big {
     grid-column: 1 / -1;
   }
+
+  /* Stacked, the series' tile read as one more of the league's: the two
+     boards set apart — more room between them, a line across. */
+  .ev-board + .ev-board {
+    margin-top: 10px;
+    padding-top: 28px;
+    border-top: 1px solid var(--hairline);
+  }
+}
+
+:root[data-theme="dark"] .ev-board + .ev-board {
+  border-top-color: rgba(255, 255, 255, 0.12);
 }
 
 :root[data-theme="dark"] .ev-board.is-secondary > .ev-big {
@@ -6412,57 +6424,6 @@ html.nav-mobile .back-to-top {
   .back-to-top.is-visible {
     transform: none;
     transition: none;
-  }
-}
-
-/* event.html (js/event-detail.js). Giocatori and Classifica side by side
-   (.history-grid, here at the top of the content: no margin of its own). */
-.history-grid.event-lists {
-  margin-top: 0;
-}
-
-.history-col-head > h2 {
-  margin-top: 0;
-}
-
-/* Desktop: the two columns share the grid's two rows (subgrid) — headers,
-   then lists — so both lists start on the same line however tall either
-   header is (Giocatori's count line vs Classifica's points line). */
-@media (min-width: 880px) {
-  .history-grid.event-lists {
-    grid-template-rows: auto auto;
-    row-gap: 0;
-  }
-
-  .event-lists .history-col {
-    display: grid;
-    grid-row: span 2;
-    grid-template-rows: subgrid;
-    align-self: stretch;
-  }
-
-  /* Every card of both lists the same height: one line per text (a long
-     name or deck cut with "…" rather than wrapping taller), a shared
-     minimum height (Giocatori's two lines; Classifica's chip + numbers fit
-     in it), the numbers' columns a little narrower to leave names room. */
-  .event-lists .history-item {
-    box-sizing: border-box;
-    min-height: 72px;
-  }
-
-  .event-lists .history-title,
-  .event-lists .history-deck {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .event-lists .history-lead .history-main {
-    flex: 1;
-  }
-
-  .event-lists .history-stats {
-    grid-template-columns: repeat(var(--stat-count), 72px);
   }
 }
 

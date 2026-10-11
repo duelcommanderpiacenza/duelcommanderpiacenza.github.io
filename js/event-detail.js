@@ -83,10 +83,23 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   const metaEl = document.getElementById("event-meta");
   const resultsEl = document.getElementById("event-results");
   const entriesEl = document.getElementById("event-entries");
-  const entriesCountEl = document.getElementById("event-entries-count");
   const matchesEl = document.getElementById("event-matches");
   const leaderboardEl = document.getElementById("event-leaderboard");
   const statsEl = document.getElementById("event-stats");
+
+  // Giocatori / Classifica / Partite: one panel at a time (event.html's
+  // tabs, account.html's look), Giocatori first.
+  const tabButtons = [...document.querySelectorAll(".event-tabs .profile-tab")];
+  const selectTab = (panelId) => {
+    for (const b of tabButtons) {
+      const on = b.dataset.tab === panelId;
+      b.classList.toggle("is-active", on);
+      b.setAttribute("aria-selected", String(on));
+      document.getElementById(b.dataset.tab)?.classList.toggle("is-current", on);
+    }
+  };
+  for (const b of tabButtons) b.addEventListener("click", () => selectTab(b.dataset.tab));
+  if (tabButtons.length) selectTab(tabButtons[0].dataset.tab);
 
   if (!id) {
     titleEl.textContent = "Evento non trovato";
@@ -112,9 +125,6 @@ export async function mount({ signal = new AbortController().signal } = {}) {
         : ""
     }`;
 
-    // Nothing with no entries: the empty message below already says so.
-    entriesCountEl.textContent =
-      entries.length === 0 ? "" : `${entries.length} ${entries.length === 1 ? "partecipante" : "partecipanti"}`;
     // Giocatori: one sub-card per entry, linking to the player — the name,
     // the deck below, the archetype on the right. Alphabetical by player
     // name (a sorted copy — `entries` itself also feeds the standings below).
