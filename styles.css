@@ -1609,103 +1609,63 @@ main {
   margin-bottom: 0;
 }
 
-/* Novità (index.html, js/home.js): a spotlight — a dark red-black block
-   with a soft red glow in its top-left corner, the same in both themes
-   (like the "Più giocati" card's stage); a red megaphone tile on the left,
-   "NOVITÀ" in small light-red capitals, then each announcement: a big white
-   title over its text, a thin rule between them. No dates. */
-.card.dashboard-announcements,
-:root[data-theme="dark"] .card.dashboard-announcements {
-  position: relative;
+/* Novità (index.html, js/home.js): a light card like the others, set
+   apart by its label on a red band across the top — the megaphone and
+   "NOVITÀ" in white on the top bar's gradient (like Leghe & Eventi's
+   league in progress, .ev-big) — then each announcement: its title over
+   its text, a thin rule between them. No dates. */
+.card.dashboard-announcements {
   overflow: hidden;
-  display: grid;
-  grid-template-columns: 64px minmax(0, 1fr);
-  gap: 18px;
-  border: 0;
-  border-radius: var(--radius-card);
-  background: #1c0f11;
-  color: #fff;
-  box-shadow: 0 14px 30px rgba(28, 8, 10, 0.35);
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
+  padding: 0;
+  border-color: rgba(220, 24, 28, 0.28);
+  background: #fff;
 }
 
 .card.dashboard-announcements[hidden] {
   display: none;
 }
 
-/* Dark mode: like the league's tile on Leghe & Eventi — a lifted deep
-   red-brown, a red edge, a deeper shadow and a brighter glow, so the card
-   doesn't melt into the near-black page. */
-:root[data-theme="dark"] .card.dashboard-announcements {
-  border: 1px solid rgba(255, 110, 110, 0.3);
-  background: #2c1215;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.07);
-}
-
-:root[data-theme="dark"] .dashboard-announcements::before {
-  background: radial-gradient(circle, rgba(255, 60, 66, 0.55), transparent 70%);
-}
-
-.dashboard-announcements::before {
-  content: "";
-  position: absolute;
-  top: -80px;
-  left: -60px;
-  width: 300px;
-  height: 300px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(220, 24, 28, 0.45), transparent 70%);
-  pointer-events: none;
-}
-
-.announcements-icon {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 64px;
-  height: 64px;
-  border-radius: 18px;
-  background: var(--brand-red);
+/* .card.: over .card h2's margin and size. */
+.card .announcements-band {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 11px 22px;
+  background: linear-gradient(135deg, #7e0c13, #dc181c);
   color: #fff;
-  box-shadow: 0 0 0 6px rgba(220, 24, 28, 0.18);
-}
-
-.announcements-icon svg {
-  width: 30px;
-  height: 30px;
-}
-
-.announcements-main {
-  position: relative;
-  min-width: 0;
-}
-
-.announcements-kicker {
-  margin: 0 0 4px;
-  color: #ff8a8d;
-  font-size: 0.74rem;
+  font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
+.announcements-band svg {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+#dashboard-announcements-content {
+  padding: 18px 22px 22px;
+}
+
 .announcement-item + .announcement-item {
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid rgba(154, 28, 32, 0.14);
 }
 
 .announcement-title {
   margin: 0 0 6px;
-  color: #fff;
+  color: var(--text-title);
   font-size: 1.3rem;
   font-weight: 800;
 }
 
 .announcement-body {
   margin: 0;
-  color: rgba(255, 255, 255, 0.78);
+  color: var(--text-body);
   font-size: 0.95rem;
   line-height: 1.55;
   /* A plain textarea in admin — preserves the line breaks the admin
@@ -1713,49 +1673,25 @@ main {
   white-space: pre-line;
 }
 
-/* Phones: the text gets the card's whole width — a small tile beside
-   "NOVITÀ" on the first line, the announcements under both (the main
-   column's children placed in the card's own grid: display: contents;
-   kept positioned, so they stay above the glow). */
+:root[data-theme="dark"] .card.dashboard-announcements {
+  border-color: rgba(255, 110, 110, 0.3);
+}
+
+:root[data-theme="dark"] .announcement-item + .announcement-item {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
 @media (max-width: 640px) {
-  .card.dashboard-announcements,
-  :root[data-theme="dark"] .card.dashboard-announcements {
-    grid-template-columns: 36px minmax(0, 1fr);
-    grid-template-areas:
-      "icon kicker"
-      "body body";
-    align-items: center;
-    gap: 14px 12px;
-  }
-
-  .announcements-main {
-    display: contents;
-  }
-
-  .announcements-icon {
-    grid-area: icon;
-    width: 36px;
-    height: 36px;
-    border-radius: 11px;
-    box-shadow: 0 0 0 4px rgba(220, 24, 28, 0.18);
-  }
-
-  .announcements-icon svg {
-    width: 20px;
-    height: 20px;
-  }
-
-  /* .card.: over .card h2's margin-bottom, which pushed "NOVITÀ" above the
-     icon's centre. */
-  .card .announcements-kicker {
-    position: relative;
-    grid-area: kicker;
-    margin: 0;
+  .card .announcements-band {
+    padding-inline: 16px;
   }
 
   #dashboard-announcements-content {
-    position: relative;
-    grid-area: body;
+    padding: 16px 16px 18px;
+  }
+
+  .announcement-title {
+    font-size: 1.15rem;
   }
 }
 
@@ -4829,38 +4765,44 @@ button.ev-tile {
   text-transform: uppercase;
 }
 
-/* The league in progress: dark, a red glow, its numbers under a rule, the
-   ring with events played on the right. */
+/* The league in progress: a light tile like the others, set apart by its
+   label on a red band across the top (the top bar's gradient — like the
+   Bacheca's Novità, .announcements-band), its numbers in red under a rule,
+   the ring with events played on the right. */
 .ev-big {
   grid-column: span 2;
   grid-row: span 2;
-  border: 0;
-  background: #1c0f11;
-  color: #fff;
-}
-
-.ev-big::before {
-  content: "";
-  position: absolute;
-  top: -80px;
-  left: -60px;
-  width: 300px;
-  height: 300px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(220, 24, 28, 0.5), transparent 70%);
-  pointer-events: none;
+  border: 1px solid rgba(220, 24, 28, 0.28);
+  background: #fff;
+  color: var(--text-title);
 }
 
 .ev-big > * {
   position: relative;
 }
 
-/* "Lega in corso" / "Serie Topdeck in corso": bigger than the other tiles'
-   labels. */
+/* "Lega in corso" / "Serie Topdeck in corso": the band, edge to edge over
+   the tile's padding. Not on the secondary board's tile (the Topdeck series
+   under a league: a step down, its label plain). */
 .ev-big .ev-tile-k {
-  color: #ff8a8d;
   font-size: 0.88rem;
   letter-spacing: 0.14em;
+}
+
+.ev-board:not(.is-secondary) > .ev-big .ev-tile-k {
+  margin: -16px -16px 0;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #7e0c13, #dc181c);
+  color: #fff;
+  font-size: 0.78rem;
+}
+
+.ev-board:not(.is-secondary) > .ev-big .ev-name-block {
+  margin-top: 14px;
+}
+
+.ev-board:not(.is-secondary) > .ev-big .ev-stat b {
+  color: var(--brand-red-deep);
 }
 
 .ev-name-block {
@@ -4877,7 +4819,7 @@ button.ev-tile {
 }
 
 .ev-since {
-  color: rgba(255, 255, 255, 0.62);
+  color: var(--text-muted);
   font-size: 0.8rem;
   font-weight: 700;
 }
@@ -4885,7 +4827,7 @@ button.ev-tile {
 .ev-big .ev-stats {
   max-width: calc(100% - 170px);
   padding-top: 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid rgba(154, 28, 32, 0.14);
 }
 
 /* No ring (the Topdeck series, with no set number of events): the name and
@@ -4895,13 +4837,14 @@ button.ev-tile {
   max-width: none;
 }
 
+/* Centred in the tile under the band (half its ~37px lower). */
 .ev-ring {
   position: absolute;
   top: 50%;
   right: 22px;
   width: 140px;
   height: 140px;
-  margin-top: -70px;
+  margin-top: -52px;
 }
 
 .ev-ring svg {
@@ -4916,7 +4859,7 @@ button.ev-tile {
 }
 
 .ev-ring-track {
-  stroke: rgba(255, 255, 255, 0.12);
+  stroke: rgba(220, 24, 28, 0.12);
 }
 
 .ev-ring-fill {
@@ -4937,7 +4880,7 @@ button.ev-tile {
 
 .ev-ring-label small {
   display: block;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
   font-size: 0.66rem;
   letter-spacing: 0.08em;
 }
@@ -4947,6 +4890,10 @@ button.ev-tile {
 @media (max-width: 480px) {
   .ev-big {
     padding: 14px 16px;
+  }
+
+  .ev-board:not(.is-secondary) > .ev-big .ev-tile-k {
+    margin-top: -14px;
   }
 
   .ev-name-block {
@@ -4984,8 +4931,9 @@ button.ev-tile {
     letter-spacing: 0.07em;
   }
 
+  /* In the top-right corner under the band. */
   .ev-ring {
-    top: 12px;
+    top: 48px;
     right: 12px;
     width: 76px;
     height: 76px;
@@ -5237,17 +5185,18 @@ button.ev-tile {
   background: rgba(255, 255, 255, 0.06);
 }
 
-/* Dark mode: the league's dark tile would melt into the near-black page —
-   a lifted deep red-brown, a red edge, a deeper shadow and a brighter glow
-   set it apart. */
+/* Dark mode: the league's tile like the other dark tiles, a red edge; the
+   band as in light mode; the ring's track and the rule light. */
 :root[data-theme="dark"] .ev-big {
-  border: 1px solid rgba(255, 110, 110, 0.3);
-  background: #2c1215;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 110, 110, 0.3);
 }
 
-:root[data-theme="dark"] .ev-big::before {
-  background: radial-gradient(circle, rgba(255, 60, 66, 0.55), transparent 70%);
+:root[data-theme="dark"] .ev-ring-track {
+  stroke: rgba(255, 255, 255, 0.12);
+}
+
+:root[data-theme="dark"] .ev-big .ev-stats {
+  border-top-color: rgba(255, 255, 255, 0.12);
 }
 
 :root[data-theme="dark"] .ev-next {
@@ -12672,49 +12621,12 @@ html.nav-mobile .help-toggle-btn {
 /* A deck against itself: the even (50%) tile, just "50%" — no record under
    it (js/matchups-page.js renders it .is-even). */
 
-/* The Bacheca's "Più giocati" card (its two bubble slides): a dark stage,
-   the same in both themes — deep red-black with a soft red glow behind the
-   bubbles and a faint dot grid; the slides' titles, legends and links in
-   light colours. */
-.card.dashboard-card-commanders,
-:root[data-theme="dark"] .card.dashboard-card-commanders {
-  border-color: rgba(255, 255, 255, 0.08);
-  background:
-    radial-gradient(ellipse at 50% 30%, rgba(220, 24, 28, 0.26), transparent 62%),
-    radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1.6px) 0 0 / 16px 16px,
-    linear-gradient(160deg, #2c1418, #110a0c);
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-  color: #fff;
-}
-
-.bubble-chart-wrap .pie-chart-title {
-  color: #fff;
-}
-
-.bubble-chart-wrap .pie-chart-subtitle {
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.bubble-chart-wrap .pie-legend-item {
-  color: rgba(255, 255, 255, 0.82);
-}
-
-.bubble-chart-wrap .pie-legend-pct {
-  color: #fff;
-}
-
-.bubble-chart-wrap .section-link,
-:root[data-theme="dark"] .bubble-chart-wrap .section-link {
-  border-color: rgba(255, 255, 255, 0.25);
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-}
-
-.bubble-chart-wrap .section-link:hover,
-:root[data-theme="dark"] .bubble-chart-wrap .section-link:hover {
-  border-color: rgba(255, 255, 255, 0.5);
-  background: rgba(255, 255, 255, 0.18);
+/* The Bacheca's "Più giocati" card (its two bubble slides): a plain light
+   card like the Bacheca's others (dark mode: the dark cards' look) — the
+   slides' titles, legends and links in the site's usual colours. */
+.card.dashboard-card-commanders {
+  border-color: rgba(220, 24, 28, 0.28);
+  background: #fff;
 }
 
 /* The Bacheca's "Commander più giocati" as bubbles (js/metagame-chart.js
@@ -12739,13 +12651,14 @@ html.nav-mobile .help-toggle-btn {
   overflow: hidden;
   border-radius: 50%;
   /* A neutral placeholder until the art fades in over it (not the chart
-     colour, which flashed as a coloured disc while loading). On the dark
-     stage: a deep shadow and a thin light rim (js BUBBLE_SHADOW is the same,
-     for its pulse). */
-  background: rgba(255, 255, 255, 0.08);
+     colour, which flashed as a coloured disc while loading). A soft shadow
+     and a thin light rim (--bubble-shadow: js/metagame-chart.js reads it
+     for its pulse; dark mode its own, deeper). */
+  --bubble-shadow: 0 6px 16px rgba(80, 10, 14, 0.22), inset 0 0 0 2px rgba(255, 255, 255, 0.35);
+  background: rgba(154, 28, 32, 0.08);
   /* Always a ring in its colour — the same as its row's bar in the legend,
      so a bubble and its row match at a glance; thicker when pointed at. */
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5), inset 0 0 0 2px rgba(255, 255, 255, 0.35), 0 0 0 3px var(--bubble-color);
+  box-shadow: var(--bubble-shadow), 0 0 0 3px var(--bubble-color);
   color: #fff;
   text-decoration: none;
   container-type: inline-size;
@@ -12789,7 +12702,12 @@ a.bubble:hover {
 .bubble:hover,
 .bubble.is-highlighted {
   z-index: 2;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5), inset 0 0 0 2px rgba(255, 255, 255, 0.35), 0 0 0 5px var(--bubble-color);
+  box-shadow: var(--bubble-shadow), 0 0 0 5px var(--bubble-color);
+}
+
+:root[data-theme="dark"] .bubble {
+  --bubble-shadow: 0 8px 22px rgba(0, 0, 0, 0.5), inset 0 0 0 2px rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 /* Pressed (a tap on a touch screen, a click): in for a moment. */
@@ -12900,6 +12818,10 @@ a.bubble:active {
   height: 6px;
   overflow: hidden;
   border-radius: var(--radius-pill);
+  background: rgba(154, 28, 32, 0.1);
+}
+
+:root[data-theme="dark"] .bubble-legend-bar {
   background: rgba(255, 255, 255, 0.1);
 }
 
@@ -12918,9 +12840,13 @@ a.bubble:active {
   background-size: cover;
   /* A neutral placeholder until its art arrives (the bar keeps the
      colour). */
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(154, 28, 32, 0.1);
   /* Its bubble's ring, in the same colour. */
-  box-shadow: 0 0 0 2px var(--bubble-color, rgba(255, 255, 255, 0.25));
+  box-shadow: 0 0 0 2px var(--bubble-color, rgba(154, 28, 32, 0.25));
+}
+
+:root[data-theme="dark"] .bubble-legend-swatch {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -196,8 +196,9 @@ export function renderBubbleChart(rows, emptyMessage, title, { subtitle = "", fo
 // Touch screens: an empty touchstart listener, so a tapped bubble gets its
 // :active press (iOS shows :active only with one).
 const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-// The bubble's own shadow (styles.css .bubble), kept under the ring.
-const BUBBLE_SHADOW = "0 8px 22px rgba(0, 0, 0, 0.5), inset 0 0 0 2px rgba(255, 255, 255, 0.35)";
+// The bubble's own shadow (styles.css .bubble's --bubble-shadow, light or
+// dark), kept under the ring.
+const bubbleShadow = (bubble) => getComputedStyle(bubble).getPropertyValue("--bubble-shadow").trim() || "0 0 0 0 transparent";
 const pulses = new WeakMap();
 
 export function initBubbleChart(rootEl) {
@@ -208,12 +209,13 @@ export function initBubbleChart(rootEl) {
     if (reducedMotion() || !bubble) return;
     pulses.get(bubble)?.cancel();
     const color = bubble.style.getPropertyValue("--bubble-color") || "#dc181c";
+    const shadow = bubbleShadow(bubble);
     pulses.set(
       bubble,
       bubble.animate(
         [
-          { scale: 1, boxShadow: `${BUBBLE_SHADOW}, 0 0 0 3px ${color}` },
-          { scale: 1.14, boxShadow: `${BUBBLE_SHADOW}, 0 0 0 7px ${color}`, offset: 0.4 },
+          { scale: 1, boxShadow: `${shadow}, 0 0 0 3px ${color}` },
+          { scale: 1.14, boxShadow: `${shadow}, 0 0 0 7px ${color}`, offset: 0.4 },
         ],
         { duration: 900, easing: "cubic-bezier(0.2, 0.9, 0.3, 1.3)" }
       )

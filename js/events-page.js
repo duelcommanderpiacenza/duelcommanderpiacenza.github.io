@@ -51,8 +51,9 @@ function playerCounter(entries) {
   };
 }
 
-// A league in progress (the real league, or the Topdeck series): big and
-// dark, a progress ring on the right.
+// A league in progress (the real league, or the Topdeck series): big, its
+// label on a red band across the top (styles.css .ev-big), a progress ring
+// on the right.
 function currentTile(league, played, scheduled, players, avg, matches) {
   const total = Math.max(scheduled, played);
   const ring = 2 * Math.PI * 46;
