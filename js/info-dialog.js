@@ -14,23 +14,29 @@
 import { escapeHtml } from "./ui.js";
 
 /**
- * @param {{ id: string, title: string, bodyHtml: string }} options
+ * @param {{ id: string, title: string, bodyHtml: string, subtitle?: string, className?: string }} options
  *   bodyHtml: the content under the title (trusted markup, not escaped).
+ *   subtitle: a line under the title (plain text); className: an extra
+ *   class on the dialog, for a pop-up with its own look (js/header-news.js's
+ *   "Novità").
  * @returns {HTMLDialogElement} the dialog (e.g. to finish its content with
  *   JS — js/card-cosmetics.js dresses its preview cards).
  */
-export function openInfoDialog({ id, title, bodyHtml }) {
+export function openInfoDialog({ id, title, bodyHtml, subtitle = "", className = "" }) {
   let dialog = document.getElementById(id);
   if (!dialog) {
     dialog = document.createElement("dialog");
     dialog.id = id;
-    dialog.className = "ecal-dialog info-dialog";
+    dialog.className = `ecal-dialog info-dialog${className ? ` ${className}` : ""}`;
     dialog.setAttribute("aria-labelledby", `${id}-title`);
     // The content scrolls on its own under the title (.info-dialog-body), so
     // a long one's scrollbar stays inside the rounded box.
     dialog.innerHTML = `
       <div class="info-dialog-head">
-        <h3 id="${id}-title">${escapeHtml(title)}</h3>
+        <div class="info-dialog-titles">
+          <h3 id="${id}-title">${escapeHtml(title)}</h3>
+          <p class="info-dialog-subtitle"${subtitle ? "" : " hidden"}>${escapeHtml(subtitle)}</p>
+        </div>
         <button type="button" class="ecal-close" aria-label="Chiudi">&times;</button>
       </div>
       <div class="info-dialog-body">${bodyHtml}</div>`;
@@ -61,6 +67,9 @@ export function openInfoDialog({ id, title, bodyHtml }) {
     // (with in-app navigation the same dialog can be opened from another
     // visit of the page, with other data).
     dialog.querySelector(`#${CSS.escape(id)}-title`).textContent = title;
+    const subtitleEl = dialog.querySelector(".info-dialog-subtitle");
+    subtitleEl.textContent = subtitle;
+    subtitleEl.hidden = !subtitle;
     dialog.querySelector(".info-dialog-body").innerHTML = bodyHtml;
   }
   dialog.showModal();

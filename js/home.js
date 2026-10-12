@@ -1,8 +1,9 @@
-// Home dashboard: independent widgets (announcements, upcoming events,
-// active leagues, latest events, most played commanders) — each fetches
-// and renders on its own, so one failing doesn't block the others.
+// Home dashboard: independent widgets (upcoming events, active leagues,
+// latest events, most played commanders; Novità is the header's bell,
+// js/header-news.js) — each fetches and renders on its own, so one failing
+// doesn't block the others.
 
-import { Announcements, Leagues, Events, EventEntries, fetchEventsResults } from "./db.js";
+import { Leagues, Events, EventEntries, fetchEventsResults } from "./db.js";
 import { computeLeaguePoints } from "./leaderboard.js";
 import { renderBubbleChart, initBubbleChart, ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
 import { initChartCarousel } from "./chart-carousel.js";
@@ -133,33 +134,9 @@ function renderLeagueCard({ league, standings: allStandings, played, scheduled }
     </div>`;
 }
 
-// The section itself is hidden entirely (not just empty) whenever there
-// are no announcements — including on a fetch failure, since this widget
-// is a nice-to-have, not critical page content worth an error box.
-async function renderAnnouncementsSection(sectionEl, contentEl) {
-  try {
-    // Expired ones (past their optional expires_on) are left out.
-    const announcements = await Announcements.listActive();
-    sectionEl.hidden = announcements.length === 0;
-    if (announcements.length === 0) return;
-    contentEl.innerHTML = announcements
-      .map(
-        (a) => `
-      <article class="announcement-item">
-        <h3 class="announcement-title">${escapeHtml(a.title)}</h3>
-        <p class="announcement-body">${escapeHtml(a.body)}</p>
-      </article>`
-      )
-      .join("");
-  } catch (err) {
-    console.error(err);
-    sectionEl.hidden = true;
-  }
-}
-
-// Same "hidden entirely when empty" treatment as the Annunci section above
-// — purely a nice-to-have widget, not critical page content. The query
-// itself already only returns events whose date hasn't passed yet (and, for
+// Hidden entirely when empty — purely a nice-to-have widget, not critical
+// page content. The query itself already only returns events whose date
+// hasn't passed yet (and, for
 // a still-open one, only once RLS lets it through at all — see
 // events_public_read in supabase/schema.sql).
 async function renderUpcomingSection(sectionEl, contentEl) {
@@ -366,10 +343,6 @@ export function mount({ signal = new AbortController().signal } = {}) {
   activeLeaguesPromise = null;
   mountCalendar();
   return Promise.allSettled([
-    renderAnnouncementsSection(
-      document.getElementById("dashboard-announcements"),
-      document.getElementById("dashboard-announcements-content")
-    ),
     renderLeaguesSection(document.getElementById("dashboard-leagues-content")),
     renderUpcomingSection(
       document.getElementById("dashboard-upcoming"),

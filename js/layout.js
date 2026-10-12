@@ -19,6 +19,7 @@ import "./nav-dropdown.js";
 import "./site-search.js";
 import "./top-bar.js";
 import "./header-account.js";
+import "./header-news.js";
 import { initMeHighlight } from "./me-highlight.js";
 import { attachHoverTooltips, showFloatingTooltip } from "./floating-tooltip.js";
 import { watchPageLoading } from "./page-loading.js";
