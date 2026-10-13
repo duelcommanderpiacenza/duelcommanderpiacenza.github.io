@@ -232,18 +232,18 @@ async function mostMatchesPlayedPlayerIds(closedIds) {
   return playersWithMaxValue(stats, (s) => s.played, MIN_MATCHES_FOR_MOST_MATCHES_BADGE, (s) => s.played);
 }
 
-// Distinct commanders piloted — counts a commander whether it was played as
-// the primary or as the partner/background, same convention as the
-// commander detail page's own "played this commander" definition.
+// Distinct commanders piloted — a commander with its partner/background is
+// one commander, not two: each commander + partner pair counts once, the
+// same pairs as the player page's album (js/commander-carousel.js
+// commanderPairKey), so the count is that album's number of cards.
 async function mostCommandersPlayedPlayerIds(closedIds) {
   const entries = (await EventEntries.listAll()).filter((e) => closedIds.has(e.event_id));
-  const commandersByPlayer = new Map(); // player id -> Set of commander ids
+  const commandersByPlayer = new Map(); // player id -> Set of commander pair keys
 
   for (const e of entries) {
+    if (!e.commander_id) continue;
     if (!commandersByPlayer.has(e.player_id)) commandersByPlayer.set(e.player_id, new Set());
-    const set = commandersByPlayer.get(e.player_id);
-    if (e.commander_id) set.add(e.commander_id);
-    if (e.partner_commander_id) set.add(e.partner_commander_id);
+    commandersByPlayer.get(e.player_id).add(`${e.commander_id}_${e.partner_commander_id ?? ""}`);
   }
 
   return playersWithMaxValue(
