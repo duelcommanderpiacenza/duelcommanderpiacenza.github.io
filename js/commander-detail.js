@@ -8,6 +8,8 @@ import {
   bannedBadge,
   formatDate,
   showError,
+  isoDateYearsAgo,
+  DEFAULT_DATE_FROM_YEARS,
 } from "./ui.js";
 import {
   historyPanelHtml,
@@ -209,20 +211,21 @@ export async function mount({ signal = new AbortController().signal } = {}) {
 
     // Decks played per event date — playedEntries (one per pilot per event),
     // not `rows` (per match-side, which would inflate the count by however
-    // many rounds that event had). Every event played from its first
-    // appearance up to the latest one is a point, 0 where nobody played it,
-    // so the line drops when it stops being played (events on the same date
-    // added together).
+    // many rounds that event had). Every played event is a point, 0 where
+    // nobody played it — from the club's first event (not this commander's:
+    // the line shows when it arrived too), at most the last
+    // DEFAULT_DATE_FROM_YEARS years (the filters' default "Dal"), up to the
+    // latest one (events on the same date added together).
+    const chartFrom = isoDateYearsAgo(DEFAULT_DATE_FROM_YEARS);
     const deckCountByDate = new Map();
     for (const e of playedEntries) {
       const date = e.event?.event_date;
-      if (!date) continue;
+      if (!date || date < chartFrom) continue;
       deckCountByDate.set(date, (deckCountByDate.get(date) ?? 0) + 1);
     }
-    const firstDate = [...deckCountByDate.keys()].sort()[0];
     const chartDates = new Set(deckCountByDate.keys());
     for (const ev of allEvents) {
-      if (!ev.is_open && ev.event_date && firstDate && ev.event_date >= firstDate) chartDates.add(ev.event_date);
+      if (!ev.is_open && ev.event_date && ev.event_date >= chartFrom) chartDates.add(ev.event_date);
     }
     const deckChartPoints = [...chartDates]
       .sort()
