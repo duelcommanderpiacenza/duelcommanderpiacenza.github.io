@@ -5289,6 +5289,84 @@ html.nav-mobile .results-links {
   grid-column: 1 / -1;
 }
 
+/* A computer: the league's tile wider (~60%), its next / latest event in
+   the narrower column beside it, one over the other — fuller than at half
+   the row each, where a date and a name left them mostly empty. The
+   Topdeck series' board below in the same columns (its tile as wide as the
+   league's). */
+@media (min-width: 821px) {
+  .ev-board {
+    grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  }
+
+  /* (.ev-tile.ev-big: over the Topdeck board's own span 2, later in the
+     file.) */
+  .ev-board > .ev-big,
+  .ev-board.is-secondary.is-alone > .ev-tile.ev-big {
+    grid-column: 1;
+  }
+
+  .ev-board > .ev-tile:not(.ev-big) {
+    grid-column: 2;
+  }
+
+  .ev-board.is-alone:not(.is-secondary) > .ev-big {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Inside the next / latest event tiles (a computer): the date and name on
+   the left, on the right the start time (big) or the players and the
+   results links — under them when there isn't room beside. */
+.ev-event-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px 14px;
+}
+
+.ev-event-main {
+  min-width: 0;
+}
+
+.ev-event-side {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.ev-event-time {
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.ev-event-players {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.ev-event-side .results-links {
+  margin-left: 0;
+}
+
+/* Phones (the board's two narrow tiles side by side): only the date and
+   the name, as before — no weekday, no "tra N giorni", no time, players or
+   links (too crowded at half the screen). */
+@media (max-width: 820px) {
+  .ev-board .ev-date-wd,
+  .ev-board .ev-k-when,
+  .ev-board .ev-event-side {
+    display: none;
+  }
+}
+
 @media (max-width: 820px) {
   .ev-board {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -5675,7 +5753,7 @@ button.ev-tile {
    step down: light (not the league's dark one with the red glow), the
    name smaller and no "dal …", the numbers smaller, no ring. */
 .ev-board.is-secondary {
-  grid-auto-rows: 132px;
+  grid-auto-rows: 150px;
 }
 
 .ev-board.is-secondary > .ev-big {
@@ -5695,8 +5773,31 @@ button.ev-tile {
   grid-column: span 2;
 }
 
+/* Its label ("Serie Topdeck in corso") on a band across the top too, like
+   the league's, but a step down: thinner, a light red tint with a red
+   hairline under it, the text dark red — not the league's solid red. */
 .ev-board.is-secondary .ev-big .ev-tile-k {
-  color: var(--text-muted);
+  margin: -16px -16px 0;
+  padding: 6px 16px;
+  border-bottom: 1px solid rgba(154, 28, 32, 0.2);
+  background: color-mix(in srgb, var(--brand-red) 13%, #fff);
+  color: var(--brand-red-deep);
+  font-size: 0.7rem;
+}
+
+:root[data-theme="dark"] .ev-board.is-secondary .ev-big .ev-tile-k {
+  border-bottom-color: rgba(255, 110, 110, 0.22);
+  background: rgba(220, 24, 28, 0.2);
+}
+
+.ev-board.is-secondary .ev-big .ev-name-block {
+  margin-top: 10px;
+}
+
+@media (max-width: 480px) {
+  .ev-board.is-secondary .ev-big .ev-tile-k {
+    margin-top: -14px;
+  }
 }
 
 /* No ring here (no set number of events): the name and the numbers have

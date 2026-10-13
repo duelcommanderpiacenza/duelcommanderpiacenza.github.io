@@ -3,8 +3,8 @@
 //    series): its tile, big and dark — its name, since when, players /
 //    average attendance / matches played, a ring with events played out of
 //    those scheduled, a link to its page — and beside it its next event
-//    (red, the date big, its name, weekday / time / how soon) and its
-//    latest one (date, name, players);
+//    (red: how soon, the date and name, the time big) and its latest one
+//    (date, name, players, the results links);
 //  - then "Leghe concluse": one uniform tile per concluded league (the year,
 //    the name, events and players — a link to its page), newest first, with
 //    the standalone events' tile among them by the date of their latest one
@@ -12,7 +12,8 @@
 // A tile with nothing to show is left out; the rest close up.
 
 import { Leagues, Events, EventEntries, Matches } from "./db.js";
-import { escapeHtml, formatDate, eventTitle, showError } from "./ui.js";
+import { escapeHtml, formatDate, formatTime, eventTitle, showError } from "./ui.js";
+import { nestedResultsLink } from "./results-link.js";
 import { hidePageLoading } from "./page-loading.js";
 import { openInfoDialog } from "./info-dialog.js";
 
@@ -30,6 +31,17 @@ const dayMonth = (iso) => {
   return `${String(d.getDate()).padStart(2, "0")} ${d.toLocaleDateString("it-IT", { month: "short" }).replace(".", "")}`;
 };
 const weekday = (iso) => capitalize(toDate(iso).toLocaleDateString("it-IT", { weekday: "long" }));
+// "dom 25 ott" — short weekday (in its own span: phones leave it out,
+// styles.css), day and short month.
+const shortDate = (iso) =>
+  `<span class="ev-date-wd">${toDate(iso).toLocaleDateString("it-IT", { weekday: "short" }).replace(".", "")} </span>${dayMonth(iso)}`;
+// "oggi" / "domani" / "tra N giorni".
+const fromToday = (iso) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const days = Math.round((toDate(iso) - today) / 86400000);
+  return days <= 0 ? "oggi" : days === 1 ? "domani" : `tra ${days} giorni`;
+};
 const year = (iso) => toDate(iso).getFullYear();
 const fmtAvg = (n) => n.toLocaleString("it-IT", { maximumFractionDigits: 1 });
 const stat = (value, label) => `<div class="ev-stat"><b>${value}</b><span>${label}</span></div>`;
@@ -90,15 +102,19 @@ function ringHtml(played, total, share, ring) {
       </span>`;
 }
 
-// The next event: red, the date big, its name (an unnamed one by its
-// league's). A link to its league when it has one
-// (the event's own page fills in once it's played).
+// The next event: red — "Prossimo evento · tra N giorni", its date (with the
+// weekday) and name (an unnamed one by its league's) on the left, its start
+// time big on the right. A link to its league when it has one (the event's
+// own page fills in once it's played).
 function nextTile(ev) {
   const inner = `
-      <span class="ev-tile-k"><span class="ev-pulse"></span>Prossimo evento</span>
-      <div>
-        <div class="ev-date">${dayMonth(ev.event_date)}</div>
-        <div class="ev-event-name">${escapeHtml(ev.name || ev.league?.name || "Evento")}</div>
+      <span class="ev-tile-k"><span class="ev-pulse"></span>Prossimo evento<span class="ev-k-when"> · ${fromToday(ev.event_date)}</span></span>
+      <div class="ev-event-row">
+        <div class="ev-event-main">
+          <div class="ev-date">${shortDate(ev.event_date)}</div>
+          <div class="ev-event-name">${escapeHtml(ev.name || ev.league?.name || "Evento")}</div>
+        </div>
+        ${ev.start_time ? `<div class="ev-event-side"><span class="ev-event-time">${formatTime(ev.start_time)}</span></div>` : ""}
       </div>`;
   return ev.league
     ? `<a class="ev-tile ev-next" href="league.html?id=${ev.league.id}">${inner}</a>`
@@ -118,13 +134,21 @@ function soonTile(league) {
     </a>`;
 }
 
-function latestTile(ev, leagueName) {
+// The latest event: its date and name on the left, its players and the
+// Moxfield / Top 8 links (js/results-link.js) on the right. A link to it.
+function latestTile(ev, leagueName, players) {
   return `
     <a class="ev-tile" href="event.html?id=${ev.id}">
       <span class="ev-tile-k">Ultimo evento</span>
-      <div>
-        <div class="ev-date">${dayMonth(ev.event_date)}</div>
-        <div class="ev-event-name">${escapeHtml(ev.name || leagueName || weekday(ev.event_date))}</div>
+      <div class="ev-event-row">
+        <div class="ev-event-main">
+          <div class="ev-date">${shortDate(ev.event_date)}</div>
+          <div class="ev-event-name">${escapeHtml(ev.name || leagueName || weekday(ev.event_date))}</div>
+        </div>
+        <div class="ev-event-side">
+          <span class="ev-event-players">${USERS}${players}</span>
+          ${nestedResultsLink(ev.results_url, ev.decklists_url)}
+        </div>
       </div>
     </a>`;
 }
@@ -261,7 +285,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       if (!secondary) {
         const next = upcoming.find((ev) => ev.league?.id === league.id);
         side.push(next ? nextTile(next) : soonTile(league));
-        if (league.events[0]) side.push(latestTile(league.events[0], league.name));
+        if (league.events[0]) side.push(latestTile(league.events[0], league.name, counter.ofEvent(league.events[0].id)));
       }
       groups.push(groupHtml(big, side, secondary));
     }
