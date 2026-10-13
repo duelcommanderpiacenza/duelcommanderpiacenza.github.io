@@ -2439,7 +2439,7 @@ html.app-header .home-events-head {
 }
 
 .home-board .chart-carousel-nav {
-  margin: 14px 0 0;
+  margin: 14px auto 0;
 }
 
 /* A computer, the two columns side by side: */
@@ -2983,7 +2983,7 @@ html.app-header .home-events-head {
 .deck-filter {
   border: 1px solid rgba(154, 28, 32, 0.18);
   background: rgba(255, 250, 249, 0.96);
-  color: #7f2024;
+  color: var(--brand-red-darker);
   border-radius: 999px;
   padding: 9px 14px;
   font: inherit;
@@ -3007,7 +3007,7 @@ html.app-header .home-events-head {
 .video-filter {
   border: 1px solid rgba(154, 28, 32, 0.18);
   background: rgba(255, 250, 249, 0.96);
-  color: #7f2024;
+  color: var(--brand-red-darker);
   border-radius: 999px;
   padding: 9px 14px;
   font: inherit;
@@ -3187,7 +3187,7 @@ html.app-header .home-events-head {
 .expand-button {
   border: 1px solid rgba(154, 28, 32, 0.18);
   background: #fff7f4;
-  color: #8d1d22;
+  color: var(--brand-red-deep);
   border-radius: 999px;
   padding: 10px 15px;
   font: inherit;
@@ -3218,7 +3218,7 @@ html.app-header .home-events-head {
   border: 1px solid rgba(154, 28, 32, 0.18);
   border-radius: 999px;
   background: #ffffff;
-  color: #8d1d22;
+  color: var(--brand-red-deep);
   font-weight: 800;
   text-decoration: none;
   transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
@@ -13781,13 +13781,37 @@ html:not(.nav-mobile) .chart-grid.is-draggable.is-dragging {
   justify-content: space-evenly;
 }
 
-/* Below the row: ‹ • • › (arrows hidden on touch devices, which swipe). */
+/* Below the row: ‹ • • › as a small pill bar, the site's tab-bar look
+   (white, a hairline edge, a soft shadow) — on touch devices, which swipe,
+   no arrows and no bar, the dots alone. */
 .chart-carousel-nav {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
-  margin: -8px 0 20px;
+  gap: 8px;
+  width: fit-content;
+  /* Up into the row's 24px bottom padding (kept for the cards' shadows):
+     about 10px under the charts, 10px down to what follows. */
+  margin: -6px auto 10px;
+  padding: 3px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-pill);
+  background: #fff;
+  box-shadow: var(--shadow-card);
+}
+
+:root[data-theme="dark"] .chart-carousel-nav {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: none;
+}
+
+html.nav-mobile .chart-carousel-nav,
+:root[data-theme="dark"].nav-mobile .chart-carousel-nav {
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
 }
 
 /* display: flex above would otherwise override the hidden attribute. */
@@ -13795,32 +13819,60 @@ html:not(.nav-mobile) .chart-grid.is-draggable.is-dragging {
   display: none;
 }
 
+/* The arrows (the charts' and player.html's album, js/commander-carousel.js):
+   small round light buttons — white, a hairline edge, a dark red chevron, a
+   faint red on hover — not solid red discs; inside the charts' pill bar,
+   no edge of their own. */
 .chart-carousel-arrow {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border: none;
+  box-sizing: border-box;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--hairline);
   border-radius: 50%;
-  background: var(--brand-red);
-  color: #fff;
+  background: #fff;
+  color: var(--brand-red-deep);
   cursor: pointer;
-  transition: background 150ms ease, opacity 150ms ease;
+  transition: background 150ms ease, border-color 150ms ease, opacity 150ms ease;
+}
+
+.chart-carousel-nav .chart-carousel-arrow {
+  border-color: transparent;
+  background: transparent;
 }
 
 .chart-carousel-arrow:hover:not(:disabled) {
-  background: var(--brand-red-deep-2);
+  border-color: var(--hairline-hover);
+  background: color-mix(in srgb, var(--brand-red) 8%, #fff);
+}
+
+:root[data-theme="dark"] .chart-carousel-arrow {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: #ff9a9d;
+}
+
+:root[data-theme="dark"] .chart-carousel-nav .chart-carousel-arrow {
+  border-color: transparent;
+  background: transparent;
+}
+
+:root[data-theme="dark"] .chart-carousel-arrow:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .chart-carousel-arrow:disabled {
-  opacity: 0.35;
+  opacity: 0.3;
   cursor: default;
 }
 
 .chart-carousel-arrow svg {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
 
 html.nav-mobile .chart-carousel-arrow {
