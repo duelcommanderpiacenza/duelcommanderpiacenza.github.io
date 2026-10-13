@@ -9598,8 +9598,8 @@ html.nav-mobile .profile-tab svg {
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  width: 9.5cqw;
-  height: 9.5cqw;
+  width: 16cqw;
+  height: 16cqw;
   margin: 0;
   border: 2px solid rgba(255, 106, 110, 0.6);
   border-radius: 50%;
@@ -9614,9 +9614,9 @@ html.nav-mobile .profile-tab svg {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 5.6cqw;
-  height: 5.6cqw;
-  font-size: 5.2cqw;
+  width: 10cqw;
+  height: 10cqw;
+  font-size: 9cqw;
   line-height: 1;
 }
 
@@ -10568,10 +10568,13 @@ html.nav-mobile .pc-card-option {
    discs with the badges' red ring, on the glass panel; none set, no row.
    In edit mode one field per site, the same translucent look as the
    description's. */
+/* The discs 2cqw bigger than the row's room: -1cqw above and below, so the
+   panel stays as tall as with the old 8cqw discs. */
 .pc-links {
   display: flex;
   flex-wrap: wrap;
   gap: 2cqw;
+  margin-block: -1cqw;
 }
 
 .pc-links:empty {
@@ -10584,8 +10587,8 @@ html.nav-mobile .pc-card-option {
   justify-content: center;
   flex-shrink: 0;
   box-sizing: border-box;
-  width: 8cqw;
-  height: 8cqw;
+  width: 10cqw;
+  height: 10cqw;
   border: 2px solid rgba(255, 106, 110, 0.6);
   border-radius: 50%;
   background: #fff;
@@ -10602,9 +10605,10 @@ a.pc-link:focus-visible {
   outline-offset: 2px;
 }
 
+/* The icons fill most of their disc. */
 .pc-link svg {
-  width: 4.6cqw;
-  height: 4.6cqw;
+  width: 7.6cqw;
+  height: 7.6cqw;
 }
 
 .pc-link-instagram {
@@ -10612,14 +10616,14 @@ a.pc-link:focus-visible {
 }
 
 .pc-link img {
-  width: 5cqw;
-  height: 5cqw;
+  width: 7.8cqw;
+  height: 7.8cqw;
   object-fit: contain;
 }
 
 .pc-link-letter {
   color: #1b6ec2;
-  font-size: 4.4cqw;
+  font-size: 7cqw;
   font-weight: 900;
   line-height: 1;
 }
