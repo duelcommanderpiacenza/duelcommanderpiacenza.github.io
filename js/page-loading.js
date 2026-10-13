@@ -1,5 +1,5 @@
-// A full-page splash shown while a page's own data is still loading —
-// static markup duplicated on every public page (same reasoning as the
+// The loading placeholders (a .sk-page sketch of the page's layout,
+// styles.css) shown while a page's own data is still loading — static markup duplicated on every public page (same reasoning as the
 // header/nav in js/layout.js: present at first paint, not injected, so
 // there's no pop-in). Idempotent and safe to call repeatedly (e.g. once
 // per render on a page that re-renders on every filter change) — only the

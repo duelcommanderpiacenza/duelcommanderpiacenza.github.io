@@ -126,6 +126,10 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     // Known before the title is drawn (started alongside, so barely a wait):
     // with a card shown, the badges are on the card, not after the name.
     const card = await cardRequest;
+    if (signal.aborted) return;
+    // The loading placeholder's hero (styles.css .sk-hero) makes room for
+    // the card too, so the page arrives at the size it's shown at.
+    if (card) document.querySelector("#page-loading-overlay .sk-hero")?.classList.add("has-card");
     const nameLabel = player.handle ? `${player.name} (${player.handle})` : player.name;
     // Not fatal if this fails — the page still works with just the
     // manually assigned badges, so it's kept out of this try/catch.

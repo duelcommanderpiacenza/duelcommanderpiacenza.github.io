@@ -134,9 +134,6 @@ html {
   position: absolute;
   inset: 0;
   z-index: 5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   transition: opacity 220ms ease;
 }
 
@@ -153,14 +150,19 @@ body.is-loading .page-loading-region > *:not(.page-loading-overlay) {
    another it can stay in place and just resize to its new label (the page
    transition's "hero-back", "Page transitions" below). */
 html.app-header body.is-loading .page-loading-region > .detail-hero-wrap > .detail-hero-back {
+  z-index: 6;
   visibility: visible;
 }
 
-.page-loading-overlay p {
-  margin: 0;
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--text-muted);
+/* "Caricamento..." only for screen readers — the placeholders below say it
+   on screen. */
+.page-loading-overlay > p {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .page-loading-overlay.is-hidden {
@@ -169,11 +171,480 @@ html.app-header body.is-loading .page-loading-region > .detail-hero-wrap > .deta
 }
 
 /* Loading too long, or failed (js/page-loading.js watchPageLoading): the
-   message with a "Ricarica la pagina" button under it. */
+   placeholders give way to the message, with a "Ricarica la pagina" button
+   under it. */
 .page-loading-overlay.is-stuck {
+  display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 14px;
   text-align: center;
+}
+
+.page-loading-overlay.is-stuck > .sk-page {
+  display: none;
+}
+
+.page-loading-overlay.is-stuck > p {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  clip-path: none;
+  color: var(--text-muted);
+  font-size: 1.05rem;
+  font-weight: 700;
+  white-space: normal;
+}
+
+/* The placeholders (.sk-page, static in the overlay of every public page):
+   the page's own layout drawn as soft blocks — a hero, the tabs, a chart,
+   list rows, tiles — each page its own (a modifier on .sk-page), so the
+   content arrives where the eye already is. A brand-red shimmer sweeps
+   across them, one wave for the whole screen (fixed: the gradient spans the
+   window, not each block); still with reduced motion. */
+.sk-page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sk-page i {
+  display: block;
+}
+
+.sk {
+  --sk-base: rgba(220, 24, 28, 0.06);
+  --sk-shine: rgba(220, 24, 28, 0.13);
+  border-radius: 18px;
+  background: linear-gradient(100deg, var(--sk-base) 35%, var(--sk-shine) 50%, var(--sk-base) 65%) fixed;
+  background-size: 250% 100%;
+}
+
+:root[data-theme="dark"] .sk {
+  --sk-base: rgba(255, 255, 255, 0.045);
+  --sk-shine: rgba(255, 120, 120, 0.12);
+}
+
+/* Over the `body.is-loading *` pause (below) — the one animation that
+   plays while loading. */
+.page-loading-overlay .sk {
+  animation: sk-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes sk-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-loading-overlay .sk {
+    animation: none;
+  }
+}
+
+/* A heading's line, a search field, a segmented control, a list row. */
+.sk-title {
+  width: 160px;
+  height: 26px;
+  border-radius: 10px;
+}
+
+.sk-search {
+  height: 48px;
+  border-radius: 16px;
+}
+
+.sk-tabs {
+  height: 50px;
+  border-radius: var(--radius-pill);
+}
+
+.sk-row {
+  height: 58px;
+  border-radius: 16px;
+}
+
+/* The touch screens' segmented control only on touch screens. */
+html:not(.app-header) .sk-touch-only {
+  display: none;
+}
+
+/* The hero: like .profile-hero, hanging from the bar on a computer
+   (square top, rounded bottom), edge to edge on phones and tablets, under
+   the transparent header there (its white logo and buttons on it, as on
+   the real one); the title, a line and the stat chips as lighter bars —
+   beside the card when the page has one (.has-card, below). */
+.sk-hero {
+  --sk-base: rgba(255, 255, 255, 0);
+  --sk-shine: rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  min-height: 236px;
+  margin-bottom: 8px;
+  padding: 36px 32px;
+  border-radius: 0 0 28px 28px;
+  background:
+    linear-gradient(100deg, var(--sk-base) 35%, var(--sk-shine) 50%, var(--sk-base) 65%) fixed,
+    linear-gradient(135deg, #b0585f, #6a3036);
+  background-size: 250% 100%, auto;
+}
+
+:root[data-theme="dark"] .sk-hero {
+  --sk-base: rgba(255, 255, 255, 0);
+  --sk-shine: rgba(255, 255, 255, 0.07);
+  background-color: #3a2226;
+  background-image:
+    linear-gradient(100deg, var(--sk-base) 35%, var(--sk-shine) 50%, var(--sk-base) 65%),
+    linear-gradient(135deg, #5a2c32, #2a1418);
+}
+
+.sk-hero i {
+  height: 16px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.sk-hero .sk-hero-title {
+  width: min(320px, 70%);
+  height: 34px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.sk-hero-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* The line under the name (league's status and dates, event's details),
+   above it on account (its "Il tuo profilo") — not on the heroes with only
+   the name. */
+.sk-hero-text > .sk-hero-line {
+  width: min(200px, 45%);
+}
+
+.sk-hero-chips {
+  display: flex;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.sk-hero-chips i {
+  width: 84px;
+  height: 52px;
+  border-radius: 16px;
+}
+
+@media (max-width: 640px) {
+  .sk-hero {
+    margin-inline: -16px;
+    padding-inline: 16px;
+    border-radius: 0;
+  }
+}
+
+html.app-header .sk-hero {
+  min-height: 260px;
+  padding-top: calc(var(--hero-header-h, 80px) + 24px);
+  border-radius: 0;
+}
+
+/* With the card (commander.html and account.html always; player.html once
+   its card request says the player shows one — js/player-detail.js): laid
+   out like .profile-hero-inner — the card's 280px column beside the text;
+   from 820px down the card first, centred (240px wide on phones, account's
+   260px), the text centred under it. */
+/* (.sk-page .sk-hero-card: over .sk-page i's display: block.) */
+.sk-page .sk-hero-card {
+  display: none;
+}
+
+.sk-hero.has-card {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  align-items: center;
+  gap: 40px;
+  padding-block: 32px;
+}
+
+.sk-hero.has-card .sk-hero-card {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 488 / 680;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.sk-hero.has-card .sk-hero-text {
+  align-self: stretch;
+  justify-content: center;
+}
+
+.sk-hero.has-card .sk-hero-chips {
+  margin-top: 12px;
+}
+
+@media (max-width: 820px) {
+  .sk-hero.has-card {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+    padding: 24px 20px;
+  }
+
+  .sk-hero.has-card .sk-hero-card {
+    max-width: 280px;
+    margin: 0 auto;
+  }
+
+  /* As the real one: the name above the card, the numbers under it (the
+     text's bars join the hero's grid); account's line too. */
+  .sk-hero.has-card .sk-hero-text {
+    display: contents;
+  }
+
+  .sk-hero.has-card .sk-hero-title {
+    order: -1;
+    justify-self: center;
+  }
+
+  .sk-hero.has-card .sk-hero-line {
+    order: -1;
+    justify-self: center;
+  }
+
+  .sk-hero.has-card .sk-hero-chips {
+    justify-content: center;
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .sk-hero.has-card {
+    padding-inline: 16px;
+  }
+
+  .sk-hero.has-card .sk-hero-card {
+    max-width: 240px;
+  }
+
+  .sk-page.is-account .sk-hero.has-card .sk-hero-card {
+    max-width: 260px;
+  }
+}
+
+html.app-header .sk-hero.has-card {
+  padding-top: calc(var(--hero-header-h, 80px) + 24px);
+}
+
+@media (min-width: 641px) {
+  html.app-header .sk-hero,
+  html.app-header .sk-hero.has-card {
+    margin-inline: calc(-1 * var(--hero-bleed));
+    padding-inline: var(--hero-bleed);
+  }
+}
+
+/* Account: its hero sits in the signed-in view, hidden (display: none)
+   while loading, so its pull-up doesn't move the region — the placeholder
+   pulls itself up the same (28px; 20px on phone widths); its tabs a pill
+   bar on a computer, the full-width segmented control on phones. */
+.sk-page.is-account .sk-hero {
+  margin-top: -28px;
+}
+
+@media (max-width: 640px) {
+  .sk-page.is-account .sk-hero {
+    margin-top: -20px;
+  }
+}
+
+@media (min-width: 641px) {
+  html:not(.app-header) .sk-page.is-account .sk-tabs {
+    width: 440px;
+  }
+}
+
+/* Two columns on a computer (a hero page's lists, the Bacheca), one on
+   phones and touch screens. */
+.sk-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 14px 28px;
+}
+
+.sk-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (max-width: 860px) {
+  .sk-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sk-cols > .sk-col + .sk-col {
+    display: none;
+  }
+}
+
+html.app-header .sk-cols {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+html.app-header .sk-cols > .sk-col + .sk-col {
+  display: none;
+}
+
+/* Bacheca: the timeline (a dot and a card per event) beside Classifica,
+   the charts' card under both. */
+@media (min-width: 861px) {
+  html:not(.app-header) .sk-page.is-home .sk-cols {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 30px 32px;
+  }
+}
+
+.sk-tl {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px 26px;
+}
+
+.sk-tl .sk-dot {
+  width: 14px;
+  height: 14px;
+  margin-left: 13px;
+  border-radius: 50%;
+}
+
+.sk-tl .sk-row {
+  height: 56px;
+}
+
+.sk-standings {
+  height: 420px;
+  margin-top: 38px;
+}
+
+.sk-page.is-home .sk-chart {
+  height: 330px;
+  margin-top: 16px;
+}
+
+/* Touch screens: the segmented control, then Eventi alone (no heading of
+   its own there). */
+html.app-header .sk-page.is-home .sk-tabs {
+  margin-bottom: 4px;
+}
+
+html.app-header .sk-page.is-home .sk-title,
+html.app-header .sk-page.is-home > .sk-chart {
+  display: none;
+}
+
+/* A chart (Comandanti, Archetipi, a commander's or archetype's decks). */
+.sk-chart {
+  height: 300px;
+  border-radius: var(--radius-card);
+}
+
+@media (max-width: 820px) {
+  .sk-chart {
+    height: 420px;
+  }
+}
+
+/* Leghe & Eventi: the league's big tile, its next and latest event beside
+   it (under it on phones, side by side), then the archive's tiles. */
+.sk-ev-board {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  grid-auto-rows: 118px;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.sk-ev-board > .sk {
+  border-radius: var(--radius-card);
+}
+
+.sk-ev-board > .sk-ev-big {
+  grid-row: span 2;
+}
+
+.sk-ev-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.sk-ev-grid > .sk {
+  height: 150px;
+  border-radius: var(--radius-card);
+}
+
+.sk-page.is-events .sk-title {
+  margin-top: 20px;
+}
+
+@media (max-width: 820px) {
+  .sk-ev-board {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sk-ev-board > .sk-ev-big {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Tiles (Badge, Social), and a plain card (Account). */
+.sk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 14px;
+}
+
+.sk-grid > .sk {
+  height: 180px;
+  border-radius: var(--radius-card);
+}
+
+.sk-card {
+  height: 300px;
+  border-radius: var(--radius-card);
+}
+
+/* Matchups: the selector beside the title, then the matrix. */
+.sk-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sk-toolbar .sk-search {
+  width: 220px;
+  height: 40px;
+}
+
+.sk-matrix {
+  height: 560px;
+  border-radius: var(--radius-card);
 }
 
 /* Content gets built (and its entrance animations technically start
