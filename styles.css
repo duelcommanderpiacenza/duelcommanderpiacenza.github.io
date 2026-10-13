@@ -9485,8 +9485,8 @@ html.nav-mobile .profile-tab svg {
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  width: 16cqw;
-  height: 16cqw;
+  width: 13cqw;
+  height: 13cqw;
   margin: 0;
   border: 2px solid rgba(255, 106, 110, 0.6);
   border-radius: 50%;
@@ -9501,9 +9501,9 @@ html.nav-mobile .profile-tab svg {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 10cqw;
-  height: 10cqw;
-  font-size: 9cqw;
+  width: 8cqw;
+  height: 8cqw;
+  font-size: 7.2cqw;
   line-height: 1;
 }
 
