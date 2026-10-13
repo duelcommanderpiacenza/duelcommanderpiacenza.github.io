@@ -1491,6 +1491,17 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
     padding-bottom: calc(18px + env(safe-area-inset-bottom));
   }
 
+  /* A page shorter than the screen would leave its footer under the pill
+     (which never slides away without scrolling): every page at least a
+     screen tall (the large viewport — browser bars hidden — so it never
+     peeks in), the footer just below the screen's edge, shown by scrolling
+     down to it, which slides the pill away (js/nav-dropdown.js, at the
+     bottom however little the page scrolls). */
+  html.nav-mobile .page-main {
+    min-height: 100vh;
+    min-height: 100lvh;
+  }
+
 @media (max-width: 480px) {
   .site-header {
     /* Same trade-off as the desktop rule above — padding trimmed by

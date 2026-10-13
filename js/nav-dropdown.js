@@ -145,7 +145,12 @@ function init() {
         if (!document.documentElement.classList.contains("nav-mobile")) return;
         const y = window.scrollY;
         if (Math.abs(y - lastY) < SCROLL_SLACK) return;
-        const away = y > lastY && y > SHOW_NEAR_TOP && !nav.classList.contains("is-open");
+        // Reaching the bottom while scrolling down hides it too, however
+        // little the page scrolls (a short page — styles.css makes it a screen
+        // tall, the footer just below — would otherwise keep it over the
+        // footer).
+        const atBottom = window.innerHeight + y >= document.documentElement.scrollHeight - 2;
+        const away = y > lastY && (y > SHOW_NEAR_TOP || atBottom) && !nav.classList.contains("is-open");
         nav.classList.toggle("is-scrolled-away", away);
         lastY = y;
       });
