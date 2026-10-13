@@ -2436,7 +2436,7 @@ html.app-header .home-timeline :is(.league-tl-k-state, .league-tl-clock, .league
 /* "Tutti gli eventi": in the heading on a computer, under the timeline on
    touch screens (no heading there). */
 .home-events-more {
-  margin-top: 4px;
+  margin-top: 18px;
 }
 
 html:not(.app-header) .home-events-more,
@@ -15181,6 +15181,38 @@ html.app-header :is(body:not(:has(.page-main .profile-hero)), body:has(.profile-
   border-color: rgba(255, 255, 255, 0.2);
   background: rgba(255, 255, 255, 0.08);
   color: #fff;
+}
+
+/* …and the search and the bell beside it the same (not white discs on the
+   dark page). Over a hero all three stay white. */
+:root[data-theme="dark"].app-header :is(body:not(:has(.page-main .profile-hero)), body:has(.profile-claim:not([hidden]))) :is(.site-search-trigger, .site-news) {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: none;
+  color: #fff;
+}
+
+/* Touch screens, dark mode: the Moxfield / Top 8 buttons a dark glass, not
+   white blobs — the Top 8 wordmark (dark blue, made for white) inverted
+   to a light one, hue kept; the Moxfield logo brightened. */
+:root[data-theme="dark"].nav-mobile .results-link {
+  border-color: rgba(255, 110, 110, 0.6);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+:root[data-theme="dark"].nav-mobile .results-link:hover,
+:root[data-theme="dark"].nav-mobile .results-link:focus-visible {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+:root[data-theme="dark"].nav-mobile .results-link-top8 img {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* The Moxfield logo's dark purple swirl brightened, so it doesn't sink into
+   the dark glass. */
+:root[data-theme="dark"].nav-mobile .results-link-moxfield img {
+  filter: brightness(1.7) saturate(1.15);
 }
 
 /* Phones and tablets, every page: the logo in brand red — the PNG as a
