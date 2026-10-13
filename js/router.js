@@ -214,6 +214,33 @@ async function go(url, { push = true, restoreY = null } = {}) {
   // nav get their view-transition names (to stay still) only while it runs
   // (html.is-page-transition) — a name changes how an element stacks, not
   // wanted the rest of the time.
+  // Mounts the new page module (once): its loading splash watched, its data
+  // fetched.
+  let mounted = null;
+  const mountNew = () => {
+    if (!mounted) {
+      watchPageLoading();
+      mounted = mountCurrent(page, url);
+    }
+    return mounted;
+  };
+
+  // Back / forward: the scroll position the page had, once its content is
+  // in (the splash gone) — then "app:scroll-restored", so the touch nav pill
+  // (js/nav-dropdown.js) stays shown instead of reading the jump as
+  // scrolling down.
+  let scrollRestored = false;
+  const restoreScroll = () => {
+    if (!restoreY || scrollRestored || token !== navToken) return;
+    scrollRestored = true;
+    window.scrollTo(0, restoreY);
+    document.dispatchEvent(new CustomEvent("app:scroll-restored"));
+  };
+
+  // The slide (styles.css "Page transitions"): the header's controls and the
+  // nav get their view-transition names (to stay still) only while it runs
+  // (html.is-page-transition) — a name changes how an element stacks, not
+  // wanted the rest of the time.
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (document.startViewTransition && !reduceMotion) {
     const root = document.documentElement;
@@ -236,20 +263,9 @@ async function go(url, { push = true, restoreY = null } = {}) {
   }
   if (token !== navToken) return;
 
-  watchPageLoading();
-  await mountCurrent(page, url);
+  await mountNew();
 
-  // Back / forward: the scroll position the page had, once its content is
-  // in (the splash gone) — then "app:scroll-restored", so the touch nav pill
-  // (js/nav-dropdown.js) stays shown instead of reading the jump as
-  // scrolling down.
-  if (restoreY) {
-    whenLoaded(() => {
-      if (token !== navToken) return;
-      window.scrollTo(0, restoreY);
-      document.dispatchEvent(new CustomEvent("app:scroll-restored"));
-    });
-  }
+  if (restoreY) whenLoaded(restoreScroll);
 }
 
 function whenLoaded(fn) {

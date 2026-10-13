@@ -148,6 +148,14 @@ body.is-loading .page-loading-region > *:not(.page-loading-overlay) {
   visibility: hidden;
 }
 
+/* Touch screens: a detail hero's back pill stays shown while the page loads
+   (the hero itself hidden as the rest), so going from one hero page to
+   another it can stay in place and just resize to its new label (the page
+   transition's "hero-back", "Page transitions" below). */
+html.app-header body.is-loading .page-loading-region > .detail-hero-wrap > .detail-hero-back {
+  visibility: visible;
+}
+
 .page-loading-overlay p {
   margin: 0;
   font-size: 1.05rem;
@@ -336,19 +344,20 @@ html.nav-mobile .site-search-trigger {
   margin-left: 0;
 }
 
-/* The bell on the Bacheca only (body[data-active-nav="current"]; js/router.js
-   swaps the attribute, the page transition pops it in / out — "Page
-   transitions" below): elsewhere hidden, the search taking the push back.
-   On a computer the bar's tab row leaves room for it there only. */
-body:not([data-active-nav="current"]) .site-news {
+/* The bell: on a computer always there (the bar's tab row leaving room for
+   it); on touch screens on every page but those with a hero (their header
+   over the art keeps just the search and the account) — hidden there, the
+   search taking the push back; the page transition pops it in / out
+   ("Page transitions" below). */
+html.app-header body:has(.page-main .profile-hero) .site-news {
   display: none;
 }
 
-body:not([data-active-nav="current"]) .site-news + .site-search {
+html.app-header body:has(.page-main .profile-hero) .site-news + .site-search {
   margin-left: auto;
 }
 
-html:not(.nav-mobile) body[data-active-nav="current"] {
+html:not(.nav-mobile) {
   --bar-news: calc(38px + var(--bar-gap));
 }
 
@@ -15406,11 +15415,11 @@ html.is-page-transition:not(.app-header) .site-header-brand {
   animation-duration: 0s;
 }
 
-/* The bell is the Bacheca's alone (.site-news): arriving there it pops in
-   — scaling up from small with a little bounce as it fades in — and leaving
-   it shrinks away; the search and the account button (their own names on a
-   computer too, out of the still bar's snapshot) slide over to where they
-   now are instead of jumping. */
+/* The bell (.site-news) comes and goes on touch screens (not on the hero
+   pages): arriving it pops in — scaling up from small with a little bounce
+   as it fades in — and leaving it shrinks away; the search and the account
+   button (their own names on a computer too, out of the still bar's
+   snapshot) slide over to where they now are instead of jumping. */
 ::view-transition-group(hdr-search),
 ::view-transition-group(hdr-account) {
   animation-duration: 320ms;
@@ -15892,6 +15901,86 @@ html.is-page-transition:not(.nav-mobile) .site-nav-inner {
 
 ::view-transition-new(bar-lead) {
   mix-blend-mode: normal;
+  animation: bar-lead-in 220ms ease-out 70ms both;
+}
+
+/* Touch screens: a hero's back pill (in the page, up in the header's row)
+   has its own name too, so going from one hero page to another — back or
+   forward — it stays where it is and just resizes to the new label (clipped
+   to its moving capsule, the old label fading out, the new one in, like
+   the bar's on a computer); arriving from / leaving for a page without one,
+   it fades in / out. */
+html.is-page-transition.app-header .page-main .detail-hero-back {
+  view-transition-name: hero-back;
+}
+
+/* …and the logo shares that name when the other page has a pill and this
+   one doesn't: entering a hero page the logo morphs into the back pill,
+   leaving it the pill morphs back into the logo (tab to tab — no pill on
+   either page, js/router.js html.is-bar-logo-stay — the logo stays still,
+   with its own hdr-brand). */
+html.is-page-transition.app-header:not(.is-bar-logo-stay) body:not(:has(.page-main .detail-hero-back)) .site-header-brand {
+  view-transition-name: hero-back;
+}
+
+::view-transition-group(hero-back) {
+  z-index: 11;
+  animation-duration: 340ms;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Clipped to the moving box (the label uncovered as it widens), with room
+   round it — the pill (46px, its shadow under it) is taller than the logo
+   (44px): a clip at the box's own edges cut it; the rounding by direction
+   (like the bar's, bar-lead): towards a pill square → capsule, towards the
+   logo capsule → square (the logo isn't round — a fixed capsule cut its
+   corners). */
+::view-transition-image-pair(hero-back) {
+  animation: hero-back-clip-to-logo 340ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+:root:has(.page-main .detail-hero-back)::view-transition-image-pair(hero-back) {
+  animation-name: hero-back-clip-to-pill;
+}
+
+/* The clip ~10px out round the box on every side (4px above): the pill's
+   whole shape and its shadow inside it at the end; its corners rounding to
+   a capsule's (30px — the pill's own 23px end fits within) towards the
+   pill, so its leading edge stays round as it widens; towards the logo
+   square all the way (rounded corners still easing off trimmed the logo's
+   as it came in — the pill fading out quickly, its straight cut barely
+   shows). */
+@keyframes hero-back-clip-to-logo {
+  from,
+  to {
+    clip-path: inset(-4px -10px -10px -10px);
+  }
+}
+
+@keyframes hero-back-clip-to-pill {
+  from {
+    clip-path: inset(-4px -10px -10px -10px round 0);
+  }
+  to {
+    clip-path: inset(-4px -10px -10px -10px round 30px);
+  }
+}
+
+::view-transition-old(hero-back),
+::view-transition-new(hero-back) {
+  inset-inline-start: 0;
+  inline-size: auto;
+  block-size: auto;
+  object-fit: none;
+  object-position: left top;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(hero-back) {
+  animation: bar-lead-out 150ms ease-out both;
+}
+
+::view-transition-new(hero-back) {
   animation: bar-lead-in 220ms ease-out 70ms both;
 }
 
