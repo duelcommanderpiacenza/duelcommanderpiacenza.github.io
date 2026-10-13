@@ -11,7 +11,7 @@
 //    (it opens their list: they have no page of their own).
 // A tile with nothing to show is left out; the rest close up.
 
-import { Leagues, Events, EventEntries, Matches } from "./db.js";
+import { Leagues, Events, EventEntries, Matches, EventCounts, LeaguePlayerCounts } from "./db.js";
 import { escapeHtml, formatDate, formatTime, eventTitle, showError } from "./ui.js";
 import { nestedResultsLink } from "./results-link.js";
 import { hidePageLoading } from "./page-loading.js";
@@ -46,20 +46,45 @@ const year = (iso) => toDate(iso).getFullYear();
 const fmtAvg = (n) => n.toLocaleString("it-IT", { maximumFractionDigits: 1 });
 const stat = (value, label) => `<div class="ev-stat"><b>${value}</b><span>${label}</span></div>`;
 
-// Players per event, and the distinct players of a set of events.
-function playerCounter(entries) {
-  const byEvent = new Map();
+// The page's numbers: players and matches per event, a league's distinct
+// players (null: the standalone events together). Counted by the database
+// (db.js EventCounts / LeaguePlayerCounts, migration 021) — a few hundred
+// rows instead of every entry and match ever; until those views exist, the
+// old way: every entry and match downloaded and counted here.
+async function loadCounts(events) {
+  try {
+    const [eventRows, leagueRows] = await Promise.all([EventCounts.list(), LeaguePlayerCounts.list()]);
+    const byEvent = new Map(eventRows.map((r) => [r.event_id, r]));
+    const byLeague = new Map(leagueRows.map((r) => [r.league_id ?? null, r.players]));
+    return {
+      ofEvent: (id) => byEvent.get(id)?.players ?? 0,
+      matchesOf: (id) => byEvent.get(id)?.matches ?? 0,
+      ofLeague: (leagueId) => byLeague.get(leagueId ?? null) ?? 0,
+    };
+  } catch (err) {
+    console.warn("event_counts views unavailable, counting from every entry (run migration 021):", err);
+  }
+  const [entries, matchRows] = await Promise.all([EventEntries.listPlayersByEvent(), Matches.listEventIds()]);
+  const playersByEvent = new Map();
   for (const e of entries) {
-    if (!byEvent.has(e.event_id)) byEvent.set(e.event_id, new Set());
-    byEvent.get(e.event_id).add(e.player_id);
+    if (!playersByEvent.has(e.event_id)) playersByEvent.set(e.event_id, new Set());
+    playersByEvent.get(e.event_id).add(e.player_id);
+  }
+  // Every match row, byes and drops included (the same count as
+  // league.html's "Partite giocate").
+  const matchesByEvent = new Map();
+  for (const m of matchRows) matchesByEvent.set(m.event_id, (matchesByEvent.get(m.event_id) ?? 0) + 1);
+  const leagueOf = new Map(events.map((ev) => [ev.id, ev.league_id ?? null]));
+  const byLeague = new Map();
+  for (const [eventId, players] of playersByEvent) {
+    const key = leagueOf.get(eventId) ?? null;
+    if (!byLeague.has(key)) byLeague.set(key, new Set());
+    for (const p of players) byLeague.get(key).add(p);
   }
   return {
-    ofEvent: (id) => byEvent.get(id)?.size ?? 0,
-    distinct: (events) => {
-      const all = new Set();
-      for (const ev of events) for (const p of byEvent.get(ev.id) ?? []) all.add(p);
-      return all.size;
-    },
+    ofEvent: (id) => playersByEvent.get(id)?.size ?? 0,
+    matchesOf: (id) => matchesByEvent.get(id) ?? 0,
+    ofLeague: (leagueId) => byLeague.get(leagueId ?? null)?.size ?? 0,
   };
 }
 
@@ -73,7 +98,7 @@ function currentTile(league, played, scheduled, players, avg, matches) {
   const since = league.events.length ? `dal ${formatDate(league.events[league.events.length - 1].event_date)}` : "";
   return `
     <a class="ev-tile ev-big${league.is_topdeck ? " no-ring" : ""}" href="league.html?id=${league.id}">
-      <span class="ev-tile-k">${league.is_topdeck ? "Serie Topdeck in corso" : "Lega in corso"}</span>
+      <span class="ev-tile-k">${league.is_topdeck ? "Serie Topdeck in corso" : league.is_open ? "Lega in corso" : "Ultima lega"}</span>
       <div class="ev-name-block">
         <div class="ev-tile-t">${escapeHtml(league.name)}</div>
         ${since ? `<div class="ev-since">${since}</div>` : ""}
@@ -238,18 +263,12 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   const archiveSectionEl = document.getElementById("events-archive-section");
   const archiveEl = document.getElementById("events-archive");
   try {
-    const [leagues, allEvents, upcoming, entries, matchRows] = await Promise.all([
+    const [leagues, allEvents, upcoming] = await Promise.all([
       Leagues.list(),
       Events.list(),
       Events.listUpcoming().catch((err) => (console.error(err), [])),
-      EventEntries.listPlayersByEvent(),
-      Matches.listEventIds(),
     ]);
-    const counter = playerCounter(entries);
-    // Matches per event — every match row, byes and drops included (the
-    // same count as league.html's "Partite giocate").
-    const matchesByEvent = new Map();
-    for (const m of matchRows) matchesByEvent.set(m.event_id, (matchesByEvent.get(m.event_id) ?? 0) + 1);
+    const counter = await loadCounts(allEvents);
     // A still-open event isn't published yet: only the next one is shown
     // (its own tile); everything else counts played (closed) events.
     const played = allEvents
@@ -261,30 +280,41 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     const current = withEvents.filter((l) => l.is_open && !l.is_topdeck).sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""))[0];
     const topdeck = withEvents.filter((l) => l.is_open && l.is_topdeck).sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""))[0];
     const standalone = played.filter((ev) => !ev.league_id);
+    // No league in progress: the latest finished one (by its latest event)
+    // keeps the board's main place — "Ultima lega" on its band, its latest
+    // event beside it (no next one) — and leaves the archive.
+    const lastLeague = current
+      ? null
+      : withEvents
+          .filter((l) => !l.is_open && !l.is_topdeck && l.events.length)
+          .sort((a, b) => (b.events[0].event_date ?? "").localeCompare(a.events[0].event_date ?? ""))[0] ?? null;
+    const mainLeague = current ?? lastLeague;
 
-    // The board: a group per league in progress (the real league first,
-    // then the Topdeck series) — its tile, its next event, its latest one.
+    // The board: a group per league in progress (the real league — or the
+    // latest finished one — first, then the Topdeck series) — its tile, its
+    // next event, its latest one.
     const groups = [];
-    for (const league of [current, topdeck].filter(Boolean)) {
+    for (const league of [mainLeague, topdeck].filter(Boolean)) {
       const scheduled = await Leagues.eventCount(league.id, allEvents.filter((ev) => ev.league_id === league.id).length);
       const attendance = league.events.reduce((sum, ev) => sum + counter.ofEvent(ev.id), 0);
       const big = currentTile(
         league,
         league.events.length,
         scheduled,
-        counter.distinct(league.events),
+        counter.ofLeague(league.id),
         league.events.length ? attendance / league.events.length : 0,
-        league.events.reduce((sum, ev) => sum + (matchesByEvent.get(ev.id) ?? 0), 0)
+        league.events.reduce((sum, ev) => sum + counter.matchesOf(ev.id), 0)
       );
-      // Secondary: the Topdeck series while a real league is in progress —
-      // just its own tile (one row), no event tiles. With no league in
-      // progress the series takes the league's place: the main look, its
-      // next / latest event beside it.
-      const secondary = league.is_topdeck && Boolean(current);
+      // Secondary: the Topdeck series while the main place has a real league
+      // (in progress, or the latest finished one) — just its own tile (one
+      // row), no event tiles. With no real league at all the series takes
+      // that place: the main look, its next / latest event beside it.
+      const secondary = league.is_topdeck && Boolean(mainLeague);
       const side = [];
       if (!secondary) {
         const next = upcoming.find((ev) => ev.league?.id === league.id);
-        side.push(next ? nextTile(next) : soonTile(league));
+        // A finished league: no next event to wait for.
+        if (league.is_open) side.push(next ? nextTile(next) : soonTile(league));
         if (league.events[0]) side.push(latestTile(league.events[0], league.name, counter.ofEvent(league.events[0].id)));
       }
       groups.push(groupHtml(big, side, secondary));
@@ -307,10 +337,10 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     // Leghe concluse, newest first by their latest event (one without
     // events last), the standalone tile placed among them the same way.
     const archive = withEvents
-      .filter((l) => !l.is_open)
-      .map((l) => ({ last: l.events[0]?.event_date ?? "", html: closedTile(l, counter.distinct(l.events)) }));
+      .filter((l) => !l.is_open && l !== lastLeague)
+      .map((l) => ({ last: l.events[0]?.event_date ?? "", html: closedTile(l, counter.ofLeague(l.id)) }));
     if (standalone.length) {
-      archive.push({ last: standalone[0].event_date ?? "", html: standaloneTile(standalone, counter.distinct(standalone)) });
+      archive.push({ last: standalone[0].event_date ?? "", html: standaloneTile(standalone, counter.ofLeague(null)) });
     }
     archive.sort((a, b) => b.last.localeCompare(a.last));
     archiveEl.innerHTML = archive.map((x) => x.html).join("");

@@ -895,3 +895,28 @@ create policy "user_settings_insert_own" on user_settings for insert
 create policy "user_settings_update_own" on user_settings for update
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
+
+-- ---------------------------------------------------------------------------
+-- Leghe & Eventi's numbers (js/events-page.js): per event its players and
+-- matches, per league its distinct players (league_id null = the standalone
+-- events) — read instead of every entry and match. security_invoker: the
+-- tables' RLS applies as for a direct query (visitors: closed events only).
+-- Added by supabase/migrations/021_event_counts.sql.
+-- ---------------------------------------------------------------------------
+
+create view event_counts with (security_invoker = true) as
+select
+  e.id as event_id,
+  (select count(*) from event_entries ee where ee.event_id = e.id)::int as players,
+  (select count(*) from matches m where m.event_id = e.id)::int as matches
+from events e;
+
+create view league_player_counts with (security_invoker = true) as
+select
+  e.league_id,
+  count(distinct ee.player_id)::int as players
+from event_entries ee
+join events e on e.id = ee.event_id
+group by e.league_id;
+
+grant select on event_counts, league_player_counts to anon, authenticated;

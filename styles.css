@@ -657,7 +657,7 @@ html.nav-mobile .site-search-result + .site-search-result::before {
 }
 
 /* Same muted uppercase tag as the league under an event elsewhere
-   (.upcoming-row-league, .event-league-tag), inline here. */
+   (.event-league-tag), inline here. */
 .site-search-result-league {
   flex: 0 1000 auto;
   color: var(--text-muted);
@@ -1635,45 +1635,30 @@ main {
    block. Capped at 6 steps: a long list re-using the last delay for every
    item past that reads better than a multi-second queued cascade. */
 .entity-card:nth-child(2),
-.dashboard-league-card:nth-child(2),
-.dashboard-league-chip:nth-child(2),
-.dashboard-event-row:nth-child(2),
 .stat-tile:nth-child(2),
 .badge-card:nth-child(2) {
   animation-delay: 45ms;
 }
 
 .entity-card:nth-child(3),
-.dashboard-league-card:nth-child(3),
-.dashboard-league-chip:nth-child(3),
-.dashboard-event-row:nth-child(3),
 .stat-tile:nth-child(3),
 .badge-card:nth-child(3) {
   animation-delay: 90ms;
 }
 
 .entity-card:nth-child(4),
-.dashboard-league-card:nth-child(4),
-.dashboard-league-chip:nth-child(4),
-.dashboard-event-row:nth-child(4),
 .stat-tile:nth-child(4),
 .badge-card:nth-child(4) {
   animation-delay: 135ms;
 }
 
 .entity-card:nth-child(5),
-.dashboard-league-card:nth-child(5),
-.dashboard-league-chip:nth-child(5),
-.dashboard-event-row:nth-child(5),
 .stat-tile:nth-child(5),
 .badge-card:nth-child(5) {
   animation-delay: 180ms;
 }
 
 .entity-card:nth-child(n + 6),
-.dashboard-league-card:nth-child(n + 6),
-.dashboard-league-chip:nth-child(n + 6),
-.dashboard-event-row:nth-child(n + 6),
 .stat-tile:nth-child(n + 6),
 .badge-card:nth-child(n + 6) {
   animation-delay: 225ms;
@@ -1685,15 +1670,11 @@ main {
   .history-panel,
   .admin-form-card,
   .entity-card,
-  .dashboard-league-card,
-  .dashboard-league-chip,
-  .dashboard-event-row,
   .admin-topbar h1,
   input[type="search"],
   .stat-tile,
   .pie-chart-wrap,
   .badge-card,
-  .upcoming-row,
   .league-group,
   .bar-chart-row,
   .filter-toggle-btn,
@@ -1720,333 +1701,31 @@ main {
   letter-spacing: 0.02em;
 }
 
-/* Home dashboard (index.html) — two columns: leagues + events stacked in
-   their own wrapper on the left, commanders on the right. Deliberately NOT
-   a single grid with commanders spanning both rows — a spanning item
-   forces the grid to stretch the shared row tracks to fit it, which left a
-   large dead gap under the (usually much shorter) leagues card before the
-   events card started. Two independently-sized columns avoids that
-   entirely. Collapses to one stacked column below 860px. */
-
-/* minmax(0, …), not a bare fr: a bare fr track can't shrink below its
-   content's min-content width (the charts carousel, a card header's
-   nowrap button), which pushed every dashboard card slightly wider than
-   the full-width announcements card above the grid on phones. */
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-  gap: 22px;
-  align-items: start;
-}
-
-.dashboard-left-col {
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-}
-
 /* .card's own margin-bottom (for normal document-flow stacking elsewhere)
    would otherwise stack on top of the flex/grid gaps above. */
 .dashboard-card {
   margin-bottom: 0;
 }
 
-/* Novità (index.html, js/home.js): a light card like the others, set
-   apart by its label on a red band across the top — the megaphone and
-   "NOVITÀ" in white on the top bar's gradient (like Leghe & Eventi's
-   league in progress, .ev-big) — then each announcement: its title over
-   its text, a thin rule between them. No dates. */
-.card.dashboard-announcements {
-  overflow: hidden;
-  padding: 0;
-  border-color: rgba(220, 24, 28, 0.28);
-  background: #fff;
-}
-
-.card.dashboard-announcements[hidden] {
-  display: none;
-}
-
-/* .card.: over .card h2's margin and size. */
-.card .announcements-band {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0;
-  padding: 11px 22px;
-  background: linear-gradient(135deg, #7e0c13, #dc181c);
-  color: #fff;
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.announcements-band svg {
-  flex-shrink: 0;
-  width: 18px;
-  height: 18px;
-}
-
 #dashboard-announcements-content {
   padding: 18px 22px 22px;
 }
 
-.announcement-item + .announcement-item {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(154, 28, 32, 0.14);
-}
-
-.announcement-title {
-  margin: 0 0 6px;
-  color: var(--text-title);
-  font-size: 1.3rem;
-  font-weight: 800;
-}
-
-.announcement-body {
-  margin: 0;
-  color: var(--text-body);
-  font-size: 0.95rem;
-  line-height: 1.55;
-  /* A plain textarea in admin — preserves the line breaks the admin
-     actually typed instead of collapsing them like normal HTML text. */
-  white-space: pre-line;
-}
-
-:root[data-theme="dark"] .card.dashboard-announcements {
-  border-color: rgba(255, 110, 110, 0.3);
-}
-
-:root[data-theme="dark"] .announcement-item + .announcement-item {
-  border-top-color: rgba(255, 255, 255, 0.1);
-}
-
 @media (max-width: 640px) {
-  .card .announcements-band {
-    padding-inline: 16px;
-  }
 
   #dashboard-announcements-content {
     padding: 16px 16px 18px;
   }
 
-  .announcement-title {
-    font-size: 1.15rem;
-  }
 }
 
-/* "Prossimi eventi" deliberately reads heavier than the neutral cards
-   around it — a brand-red tint/border on the card itself and a calendar-
-   style date badge per row (day + month, not a plain text date) — since
-   this is meant to catch the eye as important, actionable information
-   rather than blend in with routine stats. */
-/* .dashboard-card-accent is that same look (red border, red uppercase
-   title, red row separators) shared by "Leghe in corso" and
-   "Ultimi eventi" too — those two on a plain white card, only "Prossimi
-   eventi" keeps the red-tinted background. */
-.dashboard-card-accent {
-  border-color: rgba(220, 24, 28, 0.28);
-  background: #fff;
-}
-
-.dashboard-card-upcoming {
-  background:
-    linear-gradient(135deg, rgba(220, 24, 28, 0.08), rgba(220, 24, 28, 0.02));
-}
-
-.dashboard-card-accent h2 {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--brand-red-deep);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-size: 1.05rem;
-}
-
-.upcoming-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.upcoming-row {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 12px 0;
-  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-
-.upcoming-row + .upcoming-row {
-  border-top: 1px solid rgba(220, 24, 28, 0.14);
-}
-
-.upcoming-date-badge {
-  flex-shrink: 0;
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
-  background: var(--brand-red);
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8px 18px rgba(220, 24, 28, 0.3);
-}
-
-.upcoming-date-day {
-  font-size: 1.2rem;
-  font-weight: 800;
-  line-height: 1.15;
-}
-
-.upcoming-date-month {
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.upcoming-row-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.upcoming-row-title {
-  font-weight: 800;
-  font-size: 1.03rem;
-  color: var(--text-title);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* The time is the main reason this row exists (when to show up) — its own
-   line, bold and in the brand accent, clearly heavier than the league tag
-   underneath it. */
-.upcoming-row-time {
-  font-size: 0.95rem;
-  font-weight: 800;
-  color: var(--brand-red-deep);
-}
-
-/* One line, cut with an ellipsis like the name above it, rather than
-   wrapping onto a second one when the row is narrow. */
-.upcoming-row-league {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* "Ultimi eventi" reuses the upcoming-row markup, but each row is a link
-   to the event page — no underline across the whole row, only the title
-   on hover, same as .dashboard-event-row (the calendar's rows). */
-a.upcoming-row {
-  color: inherit;
-  text-decoration: none;
-}
-
-a.upcoming-row:hover {
-  text-decoration: none;
-}
-
-a.upcoming-row:hover .upcoming-row-title {
-  text-decoration: underline;
-}
-
-/* "Ultimi eventi": the name (+ league) and the event's mtgtop8/Moxfield
-   links (js/results-link.js) in one wrapping box beside the date badge —
-   the links at the right end of the name's line while the whole name fits
-   beside them, on a line of their own under it only when it doesn't (the
-   badge stays centred on both lines). The name column's own width is its
-   title's (the league tag doesn't count — contain: inline-size — and is cut
-   to whatever width the title gets); alone on its line, a name wider than
-   the row is still cut with an ellipsis. */
-.upcoming-row-main {
-  display: flex;
-  flex: 1 1 auto;
-  flex-wrap: wrap;
-  align-items: center;
-  column-gap: 14px;
-  row-gap: 8px;
-  min-width: 0;
-}
-
-.upcoming-row-main > .upcoming-row-text {
-  flex: 1 0 auto;
-  max-width: 100%;
-}
-
-.upcoming-row-main .upcoming-row-league {
-  contain: inline-size;
-}
-
-.upcoming-row-main > .results-links {
-  flex-shrink: 0;
-  margin-left: 0;
-}
-
-/* "Leghe in corso" inside the accent card: no box per league / Topdeck
-   series — just its name (a link to league.html, red on hover), "Lista
-   completa", the progress and its top-8 preview straight in the card, one
-   league after another with a thin rule between them. The top 8's rows are
-   the only boxes inside: solid white, like the site's lists. */
-.dashboard-card-leagues .dashboard-league-list {
-  gap: 0;
-}
-
-.dashboard-card-leagues .dashboard-league-card,
-:root[data-theme="dark"] .dashboard-card-leagues .dashboard-league-card {
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: none;
-  box-shadow: none;
-}
-
-.dashboard-card-leagues .dashboard-league-card:hover {
-  transform: none;
-  box-shadow: none;
-}
-
-.dashboard-card-leagues .dashboard-league-card + .dashboard-league-card {
-  margin-top: 18px;
-  padding-top: 18px;
-  border-top: 1px solid rgba(154, 28, 32, 0.14);
-}
-
-:root[data-theme="dark"] .dashboard-card-leagues .dashboard-league-card + .dashboard-league-card {
-  border-top-color: rgba(255, 255, 255, 0.1);
-}
-
-.dashboard-card-leagues .dashboard-league-card-name {
-  font-size: 1.15rem;
-  line-height: 1.25;
-  transition: color 150ms ease;
-}
-
-.dashboard-card-leagues .dashboard-league-card-name:hover {
-  color: var(--brand-red-deep);
-  text-decoration: none;
-}
-
-:is(.dashboard-card-leagues, .home-board) .dashboard-standing {
+.home-board .dashboard-standing {
   border-color: rgba(154, 28, 32, 0.2);
   background: #fff;
   box-shadow: 0 2px 8px rgba(80, 10, 14, 0.07);
 }
 
-:is(.dashboard-card-leagues, .home-board) a.dashboard-standing:hover {
+.home-board a.dashboard-standing:hover {
   border-color: rgba(154, 28, 32, 0.34);
   background: color-mix(in srgb, #dc181c 4%, #fff);
 }
@@ -2142,19 +1821,6 @@ a.dashboard-standing:hover .dashboard-standings-name-text {
 
 .dashboard-standings-points .history-stat-value {
   color: var(--brand-red-deep);
-}
-
-.dashboard-card-subtitle {
-  margin: -8px 0 14px;
-  color: var(--text-muted);
-  font-size: 0.82rem;
-  font-weight: 700;
-}
-
-@media (max-width: 860px) {
-  .dashboard-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
 /* ---------------------------------------------------------------------------
@@ -2528,9 +2194,6 @@ html.app-header .home-events-head {
    more of the width — the card's side padding trimmed (22px → 12px), the
    top-8 rows' own a little too. (.card.: over .card's own padding.) */
 @media (max-width: 640px) {
-  .card.dashboard-card-accent {
-    padding-inline: 12px;
-  }
 
   .dashboard-standings .dashboard-standing {
     padding-inline: 8px;
@@ -2566,27 +2229,6 @@ html.app-header .home-events-head {
   gap: 18px;
 }
 
-/* The "Più giocati" card and its carousel controls (placed right after the
-   card, outside the white box — js/home.js) share one grid column. */
-/* "Ultimi eventi", then the charts card with its ‹ • › controls under it
-   (14px from it: the column's gap pulled back). */
-.dashboard-right-col {
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-}
-
-.dashboard-right-col > .chart-carousel-nav {
-  margin: -8px 0 0;
-}
-
-/* A card header's button ("Calendario", "Tutti gli eventi") never gets
-   squeezed into two lines by a long title beside it. */
-.dashboard-card-head > .btn-secondary {
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-
 /* Each "Più giocati" slide's own "Vedi tutti" (js/home.js) — the slide is a
    flex column (.chart-grid > .pie-chart-wrap), which would otherwise
    stretch the link into a full-width bar; kept its natural size, pinned to
@@ -2601,44 +2243,6 @@ html.app-header .home-events-head {
 .dashboard-card-commanders .pie-chart-body,
 .dashboard-card-commanders .bubble-legend {
   margin-bottom: 18px;
-}
-
-.dashboard-league-list {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.dashboard-league-card {
-  display: block;
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius-card-sm);
-  background: rgba(255, 255, 255, 0.7);
-  padding: 14px 16px;
-  text-decoration: none;
-  color: inherit;
-  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
-  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-
-.dashboard-league-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-card);
-  border-color: var(--hairline-hover);
-}
-
-.dashboard-league-card-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 6px;
-}
-
-.dashboard-league-card-name {
-  font-weight: 800;
-  font-size: 1.05rem;
-  color: var(--text-title);
 }
 
 /* A real league's progress (js/home.js leagueProgressHtml): "3 di 8 eventi
@@ -2713,100 +2317,6 @@ html.app-header .home-events-head {
   box-shadow: inset 0 0 0 1.5px #ff6a6e;
 }
 
-.dashboard-league-chip-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.dashboard-league-chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 7px 14px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--hairline);
-  background: rgba(255, 255, 255, 0.7);
-  color: var(--brand-red-deep);
-  font-weight: 700;
-  font-size: 0.85rem;
-  text-decoration: none;
-  transition: transform 180ms ease, border-color 180ms ease;
-  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-
-.dashboard-league-chip:hover {
-  transform: translateY(-1px);
-  border-color: var(--hairline-hover);
-}
-
-.dashboard-event-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.dashboard-event-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 4px;
-  border-bottom: 1px solid var(--hairline);
-  text-decoration: none;
-  color: var(--text-body);
-  font-weight: 700;
-  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-
-.dashboard-event-row:last-child {
-  border-bottom: none;
-}
-
-.dashboard-event-row:hover .dashboard-event-name {
-  text-decoration: underline;
-}
-
-.dashboard-event-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.dashboard-event-meta {
-  flex-shrink: 0;
-  color: var(--text-muted);
-  font-size: 0.82rem;
-  font-weight: 700;
-}
-
-/* .dashboard-event-meta's own flex-shrink: 0 (above) means it never gives
-   up width to its row-mate — on a narrow phone, that squeezed the event
-   name (the more important of the two) down to just a handful of visible
-   characters before ellipsis kicked in. Stacking the two instead — name on
-   its own full-width line, meta below on a second, smaller one — gives the
-   name priority without needing to truncate anything at all in the common
-   case, rather than trying to tune how much of the row each one "deserves"
-   while still sharing one line. */
-@media (max-width: 640px) {
-  .dashboard-event-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
-  }
-}
-
-.dashboard-card-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 14px;
-}
-
-.dashboard-card-head h2 {
-  margin-bottom: 0;
-}
-
 /* Events calendar overlay ("Calendario" button on "Prossimi eventi"), js/
    events-calendar.js. A <dialog> rather than a hand-rolled backdrop div —
    free Escape-to-close, focus trapping, and top-layer stacking, same
@@ -2828,22 +2338,6 @@ html.app-header .home-events-head {
   background: rgba(32, 18, 20, 0.55);
 }
 
-.ecal-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.ecal-month-label {
-  flex: 1;
-  text-align: center;
-  font-weight: 800;
-  font-size: 1rem;
-  color: var(--text-title);
-  text-transform: capitalize;
-}
-
 .ecal-close {
   width: 30px;
   height: 30px;
@@ -2861,92 +2355,6 @@ html.app-header .home-events-head {
 .ecal-close:hover {
   background: #fff7f4;
   border-color: var(--hairline-hover);
-}
-
-/* Tinted fill + bold red number, not just a dot — a marked day needs to
-   read as such while just browsing the grid, not only once clicked. The
-   dot underneath stays as a second, smaller cue once .is-selected's own
-   solid fill below overrides the tint (a selected day is no longer
-   "unvisited", so it no longer needs the same loud treatment). */
-.ecal-day.has-events {
-  position: relative;
-  background: rgba(220, 24, 28, 0.14);
-  color: var(--brand-red-deep);
-  font-weight: 800;
-}
-
-.ecal-day.has-events:hover,
-.ecal-day.has-events:focus {
-  background: rgba(220, 24, 28, 0.24);
-}
-
-.ecal-day.has-events::after {
-  content: "";
-  position: absolute;
-  bottom: 4px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--brand-red);
-}
-
-.ecal-day.is-selected.has-events {
-  background: var(--brand-red);
-  color: #fff;
-}
-
-.ecal-day.is-selected.has-events::after,
-.ecal-day.is-today.has-events::after {
-  background: #fff;
-}
-
-.ecal-day-panel {
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid var(--hairline);
-  max-height: 240px;
-  overflow-y: auto;
-}
-
-.ecal-day-panel-empty {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 0.88rem;
-}
-
-/* A still-open event's row (rendered as a plain div, not an <a> — see
-   js/events-calendar.js) shouldn't carry the same hover affordance as a
-   clickable one. */
-.ecal-event-row-future {
-  cursor: default;
-}
-
-.ecal-event-row-future:hover .dashboard-event-name {
-  text-decoration: none;
-}
-
-/* The calendar's day panel is too narrow for the Bacheca's side-by-side
-   row, so it always uses the stacked layout (same as the Bacheca's own
-   ≤640px one): event name on its own line — allowed to wrap rather than
-   ellipsize, it's the part that matters — with league · time below it. */
-.ecal-day-panel .dashboard-event-row {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-}
-
-.ecal-day-panel .dashboard-event-name {
-  white-space: normal;
-  overflow-wrap: anywhere;
-}
-
-.ecal-day-panel .dashboard-event-meta {
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .section-heading {
@@ -4141,28 +3549,24 @@ body.is-loading .filter-panel.detail-filter-panel {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.28);
 }
 
-/* The "?" pop-ups and the Bacheca's calendar (#events-calendar-dialog,
-   js/events-calendar.js). In: rises and scales up slightly as it fades in,
+/* The "?" pop-ups (js/info-dialog.js). In: rises and scales up slightly as
+   it fades in,
    backdrop fading with it.
    Out: the reverse, a touch quicker — js adds .is-closing and waits for
    the animation before the real close(). */
-.info-dialog[open],
-#events-calendar-dialog[open] {
+.info-dialog[open] {
   animation: info-dialog-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.info-dialog[open]::backdrop,
-#events-calendar-dialog[open]::backdrop {
+.info-dialog[open]::backdrop {
   animation: info-backdrop-in 220ms ease;
 }
 
-.info-dialog.is-closing,
-#events-calendar-dialog.is-closing {
+.info-dialog.is-closing {
   animation: info-dialog-out 160ms ease-in forwards;
 }
 
-.info-dialog.is-closing::backdrop,
-#events-calendar-dialog.is-closing::backdrop {
+.info-dialog.is-closing::backdrop {
   animation: info-backdrop-out 160ms ease-in forwards;
 }
 
@@ -4196,11 +3600,7 @@ body.is-loading .filter-panel.detail-filter-panel {
   .info-dialog[open],
   .info-dialog[open]::backdrop,
   .info-dialog.is-closing,
-  .info-dialog.is-closing::backdrop,
-  #events-calendar-dialog[open],
-  #events-calendar-dialog[open]::backdrop,
-  #events-calendar-dialog.is-closing,
-  #events-calendar-dialog.is-closing::backdrop {
+  .info-dialog.is-closing::backdrop {
     animation: none;
   }
 }
@@ -5244,7 +4644,7 @@ html.nav-mobile .results-links {
 
 /* The league under an event's name in an "Evento" table cell (js/ui.js's
    eventCellLabel) — a second, small line instead of its own column, in the
-   same muted uppercase as the Bacheca's league tag (.upcoming-row-league). */
+   muted uppercase. */
 .event-league-tag {
   display: block;
   margin-top: 2px;
@@ -5518,8 +4918,8 @@ button.ev-tile {
 }
 
 /* The league in progress: a light tile like the others, set apart by its
-   label on a red band across the top (the top bar's gradient — like the
-   Bacheca's Novità, .announcements-band), its numbers in red under a rule,
+   label on a red band across the top (the top bar's gradient), its
+   numbers in red under a rule,
    the ring with events played on the right. */
 .ev-big {
   grid-column: span 2;
@@ -8154,7 +7554,7 @@ frame in a way that wasn't worth chasing further). */
 /* An option can instead carry a data-label/data-sublabel pair (e.g. the
    event filter's own "event name" + "league name") for a two-line row —
    same "bold name, muted smaller line below" convention as event rows
-   elsewhere on the site (js/home.js's .dashboard-event-name/-meta). */
+   elsewhere on the site. */
 .cs-option-text {
   display: flex;
   flex-direction: column;
@@ -9707,7 +9107,6 @@ main.has-hero-accent .profile-tab:not(.is-active):hover {
   :root[data-theme="dark"] .profile-hero.detail-hero .stat-tile:first-child .stat-tile-value {
     align-self: center;
   }
-
 
   .profile-hero.detail-hero .stat-tile-value,
   :root[data-theme="dark"] .profile-hero.detail-hero .stat-tile-value {
@@ -12845,7 +12244,6 @@ html.nav-mobile .help-toggle-btn {
   font-style: italic;
 }
 
-
 .filter-panel {
   display: grid;
   grid-template-rows: 1fr;
@@ -13013,8 +12411,8 @@ html.nav-mobile .help-toggle-btn {
   font-size: 0.9rem;
 }
 
-/* Selected commanders as removable chips, same pill language as
-   .dashboard-league-chip elsewhere, with a small "x" appended to remove. */
+/* Selected commanders as removable chips (the site's pill language), with
+   a small "x" appended to remove. */
 .matchups-selected-list {
   display: flex;
   flex-wrap: wrap;
@@ -13609,7 +13007,6 @@ a.bubble:active {
   inset: 0 auto 0 0;
   border-radius: inherit;
 }
-
 
 .bubble-legend-swatch {
   width: 18px;
@@ -14488,8 +13885,6 @@ html.nav-mobile .chart-carousel-arrow {
 :root[data-theme="dark"] .pie-chart-wrap,
 :root[data-theme="dark"] .deck,
 :root[data-theme="dark"] .video-card,
-:root[data-theme="dark"] .dashboard-league-card,
-:root[data-theme="dark"] .dashboard-league-chip,
 :root[data-theme="dark"] .filter-panel-body {
   background: rgba(255, 255, 255, 0.045);
 }
@@ -14506,13 +13901,13 @@ html.nav-mobile .chart-carousel-arrow {
 
 /* "Leghe in corso"'s top-8 rows (no box per league any more): a brighter
    glass with a clearer edge, straight in the accent card. */
-:root[data-theme="dark"] :is(.dashboard-card-leagues, .home-board) .dashboard-standing {
+:root[data-theme="dark"] .home-board .dashboard-standing {
   border-color: rgba(255, 255, 255, 0.14);
   background: rgba(255, 255, 255, 0.08);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
 }
 
-:root[data-theme="dark"] :is(.dashboard-card-leagues, .home-board) a.dashboard-standing:hover {
+:root[data-theme="dark"] .home-board a.dashboard-standing:hover {
   background: rgba(255, 110, 110, 0.14);
 }
 
@@ -14535,15 +13930,6 @@ html.nav-mobile .chart-carousel-arrow {
 
 :root[data-theme="dark"] .badge-holder:hover {
   background: rgba(255, 110, 110, 0.2);
-}
-
-/* .dashboard-card-upcoming's own red-tinted gradient (hardcoded rgba, not a
-   theme var) would otherwise be overridden back to the plain dark-card
-   background by the shared rule above — same specificity, later in dark
-   mode's own :root scope, so it needs its own explicit override to keep
-   the tint instead of losing it. */
-:root[data-theme="dark"] .dashboard-card-upcoming {
-  background: linear-gradient(135deg, rgba(220, 24, 28, 0.18), rgba(255, 255, 255, 0.045));
 }
 
 :root[data-theme="dark"] table.data-table tbody tr:hover {

@@ -479,6 +479,20 @@ export const EventEntries = {
   remove: (id) => sb.from("event_entries").delete().eq("id", id).then(assertOk),
 };
 
+// Leghe & Eventi's numbers, counted by the database (supabase/migrations/
+// 021_event_counts.sql) instead of downloading every entry and match: per
+// event its players and matches; per league its distinct players
+// (league_id null = the standalone events). RLS applies as for the tables
+// (visitors: closed events only). Throw if the views aren't there yet —
+// js/events-page.js then counts the old way.
+export const EventCounts = {
+  list: () => selectAllRows(() => sb.from("event_counts").select("event_id, players, matches").order("event_id")),
+};
+
+export const LeaguePlayerCounts = {
+  list: () => sb.from("league_player_counts").select("league_id, players").then(assertOk),
+};
+
 export const Matches = {
   // Every match of the whole history (matchups page, auto-badge rules) —
   // paged past the 1000-row cap, which ~5 months of weekly events outgrow.
