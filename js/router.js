@@ -218,11 +218,18 @@ async function go(url, { push = true, restoreY = null } = {}) {
   if (document.startViewTransition && !reduceMotion) {
     const root = document.documentElement;
     root.classList.add("is-page-transition");
+    // Neither page with a back pill (tab to tab): the logo stays as it is
+    // (styles.css doesn't give it the bar-lead name, so no morph of the logo
+    // into itself).
+    const pill = (main) => Boolean(main?.querySelector(".detail-hero-back"));
+    root.classList.toggle("is-bar-logo-stay", !pill(document.querySelector("main")) && !pill(newMain));
     const transition = document.startViewTransition(swap);
     transition.ready.catch(() => {});
     // (Swallowed: an interrupted transition rejects — not an error to report;
     // js/page-loading.js would show it as one.)
-    transition.finished.catch(() => {}).then(() => root.classList.remove("is-page-transition"));
+    transition.finished
+      .catch(() => {})
+      .then(() => root.classList.remove("is-page-transition", "is-bar-logo-stay"));
     await transition.updateCallbackDone.catch(() => {});
   } else {
     swap();

@@ -15772,10 +15772,12 @@ html:not(.nav-mobile) body:not(:has(.profile-claim:not([hidden]))) :is(
    pill shrinks back into the logo, and between two hero pages one pill
    turns into the other; the tab row has its own, so it slides to where it
    now starts (after the pill, or after the logo) instead of jumping. Each
-   one only while shown (the logo is hidden when the pill is there). The
+   one only while shown (the logo is hidden when the pill is there); tab to
+   tab (no pill on either page, js/router.js html.is-bar-logo-stay) the logo
+   gets no name at all — it just stays where it is, no morph into itself. The
    snapshots keep their own height and width, anchored left — stretched to
    the moving box, the logo would have grown as wide as the pill. */
-html.is-page-transition:not(.nav-mobile) body:not(:has(.site-nav .detail-hero-back)) .site-header:not(.site-header--admin) .site-header-brand,
+html.is-page-transition:not(.nav-mobile):not(.is-bar-logo-stay) body:not(:has(.site-nav .detail-hero-back)) .site-header:not(.site-header--admin) .site-header-brand,
 html.is-page-transition:not(.nav-mobile) .site-nav .detail-hero-back {
   view-transition-name: bar-lead;
 }
