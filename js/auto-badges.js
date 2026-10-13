@@ -25,7 +25,8 @@ export const MAX_AUTO_BADGES_PER_PLAYER = 3;
 // A tiny sample shouldn't win either stats-based badge below — a single
 // lucky win is a meaningless 100% winrate, and a handful of matches
 // shouldn't out-rank nobody-else-qualifies for "most played" either.
-// "Più match giocati": only players with at least this many matches played.
+// "Più match giocati": only players with at least this many matches played
+// (real ones: a bye or a drop isn't a match against anyone).
 export const MIN_MATCHES_FOR_MOST_MATCHES_BADGE = 20;
 // "Winrate più alto": only players who've played at least this many events,
 // and are still active — at least one event in the last
@@ -157,10 +158,12 @@ async function top8StreakPlayerIds(closedIds) {
 // self-contained.
 async function playerMatchStats(closedIds) {
   const allMatches = (await Matches.listAll()).filter((m) => closedIds.has(m.event_id));
-  const stats = new Map(); // player id -> { played, wins, events: Set of event ids }
+  // played / wins: the winrate's (a bye a won match); faced: matches
+  // against an opponent only — no bye, no drop ("Più match giocati").
+  const stats = new Map(); // player id -> { played, wins, faced, events: Set of event ids }
 
   function ensure(playerId) {
-    if (!stats.has(playerId)) stats.set(playerId, { played: 0, wins: 0, events: new Set() });
+    if (!stats.has(playerId)) stats.set(playerId, { played: 0, wins: 0, faced: 0, events: new Set() });
     return stats.get(playerId);
   }
 
@@ -182,6 +185,8 @@ async function playerMatchStats(closedIds) {
     }
     const p2 = ensure(m.player2_id);
     p2.played += 1;
+    p1.faced += 1;
+    p2.faced += 1;
     const outcome = matchRoundOutcome(m);
     if (outcome === "player1") p1.wins += 1;
     else if (outcome === "player2") p2.wins += 1;
@@ -229,7 +234,7 @@ async function highestWinratePlayerIds(closedIds, events) {
 
 async function mostMatchesPlayedPlayerIds(closedIds) {
   const stats = await playerMatchStats(closedIds);
-  return playersWithMaxValue(stats, (s) => s.played, MIN_MATCHES_FOR_MOST_MATCHES_BADGE, (s) => s.played);
+  return playersWithMaxValue(stats, (s) => s.faced, MIN_MATCHES_FOR_MOST_MATCHES_BADGE, (s) => s.faced);
 }
 
 // Distinct commanders piloted — a commander with its partner/background is
