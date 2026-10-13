@@ -180,7 +180,9 @@ export function renderBubbleChart(rows, emptyMessage, title, { subtitle = "", fo
   return `
     <div class="pie-chart-wrap bubble-chart-wrap">
       ${titleHtml}
-      <div class="bubble-chart" style="aspect-ratio:${W.toFixed(3)} / ${H.toFixed(3)};" role="img" aria-label="Grafico a bolle del metagame">${bubbles}</div>
+      <div class="bubble-stage">
+        <div class="bubble-chart" style="aspect-ratio:${W.toFixed(3)} / ${H.toFixed(3)}; --bubble-ratio:${(W / H).toFixed(3)};" role="img" aria-label="Grafico a bolle del metagame">${bubbles}</div>
+      </div>
       <div class="pie-legend bubble-legend">${legend}</div>
       ${footer}
     </div>

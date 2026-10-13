@@ -98,51 +98,38 @@
   <div class="page-loading-region">
     <div id="page-loading-overlay" class="page-loading-overlay"><p>Caricamento...</p></div>
 
-    <div class="dashboard-grid">
-      <div class="dashboard-left-col">
-        <section class="card dashboard-card dashboard-card-accent dashboard-card-upcoming" id="dashboard-upcoming" hidden>
-          <div class="dashboard-card-head">
-            <h2>Prossimi eventi</h2>
-            <button type="button" class="btn-secondary" id="events-calendar-btn">Calendario</button>
-          </div>
-          <div id="dashboard-upcoming-content"></div>
-        </section>
+    <!-- Touch screens: one section at a time behind the site's segmented
+         control (.profile-tabs, js/tabs.js — hidden on a computer, where
+         the three are side by side). -->
+    <nav class="profile-tabs home-tabs" role="tablist" aria-label="Sezioni della bacheca">
+      <button type="button" class="profile-tab" role="tab" id="home-tab-events" data-tab="home-panel-events" aria-controls="home-panel-events"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M3 10h18"></path></svg><span>Eventi</span></button>
+      <button type="button" class="profile-tab" role="tab" id="home-tab-standings" data-tab="home-panel-standings" aria-controls="home-panel-standings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4"></path><path d="M7 4h10v5a5 5 0 0 1-10 0Z"></path><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"></path></svg><span>Classifica</span></button>
+      <button type="button" class="profile-tab" role="tab" id="home-tab-meta" data-tab="home-panel-meta" aria-controls="home-panel-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12A9 9 0 1 1 12 3v9Z"></path><path d="M15 3.5A9 9 0 0 1 20.5 9H15Z"></path></svg><span>Più giocati</span></button>
+    </nav>
 
-        <section class="card dashboard-card dashboard-card-accent dashboard-card-leagues">
-          <h2>Leghe in corso</h2>
-          <div id="dashboard-leagues-content"><p class="page-loading">Caricamento...</p></div>
-        </section>
-      </div>
+    <!-- Eventi (the timeline around "Oggi") and Classifica side by side on a
+         computer, Più giocati under them (js/home.js). -->
+    <div class="home-board">
+      <section class="home-panel home-panel-events" id="home-panel-events" role="tabpanel" aria-labelledby="home-tab-events">
+        <div class="home-panel-head home-events-head">
+          <h2 class="home-panel-label">Eventi</h2>
+          <a class="section-link" href="events.html">Tutti gli eventi</a>
+        </div>
+        <div id="home-timeline"><p class="page-loading">Caricamento...</p></div>
+        <a class="section-link home-events-more" href="events.html">Tutti gli eventi &rarr;</a>
+      </section>
 
-      <div class="dashboard-right-col" id="dashboard-charts-col">
-        <!-- Desktop: beside "Prossimi eventi", the charts under it; phones
-             (one column): after "Leghe in corso", as before. -->
-        <section class="card dashboard-card dashboard-card-accent dashboard-card-events">
-          <div class="dashboard-card-head">
-            <h2>Ultimi eventi</h2>
-            <a class="btn-secondary" href="events.html">Tutti gli eventi</a>
-          </div>
-          <div id="dashboard-events-content"><p class="page-loading">Caricamento...</p></div>
-        </section>
+      <section class="home-panel" id="home-panel-standings" role="tabpanel" aria-labelledby="home-tab-standings">
+        <div id="dashboard-leagues-content"><p class="page-loading">Caricamento...</p></div>
+      </section>
 
-        <section class="card dashboard-card dashboard-card-commanders" id="dashboard-charts-card">
+      <section class="home-panel home-panel-meta" id="home-panel-meta" role="tabpanel" aria-labelledby="home-tab-meta">
+        <div class="card dashboard-card dashboard-card-commanders" id="dashboard-charts-card">
           <div id="dashboard-commanders-content"><p class="page-loading">Caricamento...</p></div>
-        </section>
-      </div>
+        </div>
+      </section>
     </div>
   </div>
-
-  <dialog id="events-calendar-dialog" class="ecal-dialog">
-    <div class="ecal-head">
-      <button type="button" class="cd-nav ecal-nav-prev" aria-label="Mese precedente">&lsaquo;</button>
-      <span class="ecal-month-label"></span>
-      <button type="button" class="cd-nav ecal-nav-next" aria-label="Mese successivo">&rsaquo;</button>
-      <button type="button" class="ecal-close" aria-label="Chiudi calendario">&times;</button>
-    </div>
-    <div class="cd-weekdays ecal-weekdays"></div>
-    <div class="cd-grid ecal-grid" role="grid"></div>
-    <div class="ecal-day-panel"></div>
-  </dialog>
 </main>
 
 <footer>

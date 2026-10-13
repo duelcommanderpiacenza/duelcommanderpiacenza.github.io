@@ -2020,13 +2020,13 @@ a.upcoming-row:hover .upcoming-row-title {
   text-decoration: none;
 }
 
-.dashboard-card-leagues .dashboard-standing {
+:is(.dashboard-card-leagues, .home-board) .dashboard-standing {
   border-color: rgba(154, 28, 32, 0.2);
   background: #fff;
   box-shadow: 0 2px 8px rgba(80, 10, 14, 0.07);
 }
 
-.dashboard-card-leagues a.dashboard-standing:hover {
+:is(.dashboard-card-leagues, .home-board) a.dashboard-standing:hover {
   border-color: rgba(154, 28, 32, 0.34);
   background: color-mix(in srgb, #dc181c 4%, #fff);
 }
@@ -2134,6 +2134,373 @@ a.dashboard-standing:hover .dashboard-standings-name-text {
 @media (max-width: 860px) {
   .dashboard-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The Bacheca (index.html, js/home.js): no hero (that's for the profile-like
+   pages) — the title, then three sections in the site's boxless lists:
+   Eventi (league.html's timeline, .league-timeline: the next few events
+   above "Oggi", the latest played below), Classifica (the league in
+   progress, or the latest finished one's final standings, "Conclusa") and
+   Più giocati (the bubble charts). A computer: Eventi and Classifica side by
+   side, Più giocati under them (one column below 860px); touch screens: one
+   at a time behind the site's segmented control (.profile-tabs, js/tabs.js
+   — sticky, like event.html's).
+   --------------------------------------------------------------------------- */
+.home-board {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 30px 32px;
+}
+
+.home-panel-meta {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 860px) {
+  .home-board {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+html:not(.app-header) .home-tabs {
+  display: none;
+}
+
+html.app-header .home-board {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+html.app-header .home-board > .home-panel:not(.is-current) {
+  display: none;
+}
+
+/* A section's heading: its name (Eventi — on a computer only, the tab names
+   it on touch screens — or the league's name, a link) and its link on the
+   right, on one line (the name cut with "…"). */
+.home-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  margin-bottom: 12px;
+}
+
+.home-panel-label {
+  flex: 1;
+  margin: 0;
+  color: var(--text-title);
+  font-size: 1.3rem;
+}
+
+.home-panel-title {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-title);
+  font-size: 1.3rem;
+  font-weight: 800;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-panel-title:hover {
+  color: var(--brand-red-deep);
+  text-decoration: none;
+}
+
+.home-panel-head .section-link {
+  flex-shrink: 0;
+  min-height: 36px;
+  margin: 0 0 0 auto;
+  padding: 0 13px;
+  gap: 7px;
+  font-size: 0.86rem;
+  white-space: nowrap;
+}
+
+.home-panel-head .section-link svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* "Conclusa": the league's over (between two leagues the Classifica shows
+   the latest one's final standings). */
+.home-finished-chip {
+  flex-shrink: 0;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  background: rgba(123, 100, 102, 0.14);
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+:root[data-theme="dark"] .home-finished-chip {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.home-board .league-progress {
+  margin: 0 0 14px;
+}
+
+.home-board .dashboard-standings {
+  margin: 0;
+}
+
+/* A finished league's winner: gold, a trophy for its position. */
+.home-board .dashboard-standing.is-winner,
+:root[data-theme="dark"] .home-board .dashboard-standing.is-winner {
+  border-color: rgba(201, 150, 30, 0.55);
+  background: linear-gradient(90deg, rgba(240, 190, 60, 0.2), transparent 65%), #fff;
+}
+
+:root[data-theme="dark"] .home-board .dashboard-standing.is-winner {
+  background: linear-gradient(90deg, rgba(240, 190, 60, 0.2), transparent 65%), rgba(255, 255, 255, 0.08);
+}
+
+.home-board .history-pos.is-winner {
+  background: linear-gradient(135deg, #f3c74b, #c9961e);
+  color: #fff;
+  font-size: 0.95rem;
+}
+
+/* Eventi: the timeline (its own size container, like league.html's list —
+   the full date on the left of the line from 620px). Upcoming on top, so
+   the next event's stretch of line is grey above, red below; the played
+   ones' red. The kicker (the league) on one line. */
+#home-timeline {
+  container-type: inline-size;
+}
+
+.home-timeline .league-tl-item.is-next::before {
+  background: linear-gradient(var(--tl-line) 50%, var(--brand-red) 50%);
+}
+
+.home-timeline .league-tl-k {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The next event's pulsing dot: its ring spreads 8px round it — room for it
+   inside the kicker's clip (padding), the text where it was (the same
+   negative margin). */
+.home-timeline .is-next .league-tl-k {
+  padding: 8px 0 8px 8px;
+  margin: -8px 0 -8px -8px;
+}
+
+/* No room under the last card (it's for the next one): the list ends with
+   it — on a computer Classifica beside it ends level. */
+.home-timeline > :last-child {
+  padding-bottom: 0;
+}
+
+.home-timeline .league-tl-side .results-links {
+  margin-left: 0;
+}
+
+/* Touch screens: no "In calendario" before the league; the next event's
+   time alone (no clock, no "tra N giorni"), short enough to sit on the
+   name's line. */
+html.app-header .home-timeline :is(.league-tl-k-state, .league-tl-clock, .league-tl-when) {
+  display: none;
+}
+
+.league-tl-clock {
+  display: inline-flex;
+}
+
+/* A played event with no links: nothing on that side. */
+.home-timeline .is-played .league-tl-side:not(:has(.results-links)) {
+  display: none;
+}
+
+/* The card's extra (players and the Moxfield / Top 8 links, or the time)
+   on the right of the name's line while the whole name fits beside it, on
+   a line of its own under it when it doesn't (a wrapping row, any width).
+   Only the name decides: the kicker (the league) doesn't count towards the
+   text's width (contain: inline-size) and is cut with "…" instead. */
+.home-timeline .league-tl-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+}
+
+.home-timeline .league-tl-text {
+  flex: 1 1 auto;
+  max-width: 100%;
+}
+
+.home-timeline .league-tl-k {
+  contain: inline-size;
+}
+
+.home-timeline .league-tl-side {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* An upcoming event's time on the name's line (its baseline — the text's
+   last), not centred between the league and the name. */
+.home-timeline :is(.is-next, .is-future) .league-tl-side {
+  align-self: last baseline;
+}
+
+/* "Oggi": a small red dot on the line, the word, a rule to the right. */
+.league-tl-today {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--tl-node) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--tl-gap);
+  padding-bottom: 12px;
+}
+
+.league-tl-today::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--tl-node) / 2 - 1px);
+  width: 2px;
+  background: var(--brand-red);
+}
+
+.league-tl-today:first-child::before {
+  top: 50%;
+}
+
+.league-tl-today:last-child::before {
+  bottom: 50%;
+}
+
+.league-tl-today-dot {
+  position: relative;
+  z-index: 1;
+  justify-self: center;
+  width: 12px;
+  height: 12px;
+  border: 3px solid var(--tl-node-bg);
+  border-radius: 50%;
+  background: var(--brand-red);
+  box-shadow: 0 0 0 1px var(--brand-red);
+}
+
+.league-tl-today-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--brand-red);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.league-tl-today-label::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: color-mix(in srgb, var(--brand-red) 35%, transparent);
+}
+
+@container (min-width: 620px) {
+  .league-tl-today {
+    padding-left: calc(110px + var(--tl-gap));
+  }
+
+  .league-tl-today::before {
+    left: calc(110px + var(--tl-gap) + var(--tl-node) / 2 - 1px);
+  }
+}
+
+/* "Tutti gli eventi": in the heading on a computer, under the timeline on
+   touch screens (no heading there). */
+.home-events-more {
+  margin-top: 4px;
+}
+
+html:not(.app-header) .home-events-more,
+html.app-header .home-events-head {
+  display: none;
+}
+
+/* Più giocati: the charts' card, its carousel controls under it. */
+.home-board .dashboard-card-commanders {
+  margin-bottom: 0;
+}
+
+.home-board .chart-carousel-nav {
+  margin: 14px 0 0;
+}
+
+/* A computer, the two columns side by side: */
+@media (min-width: 861px) {
+  /* Classifica exactly as tall as Eventi beside it, so the two end level:
+     no height of its own (contain: size — player.html's .fills-row idea),
+     the row's height set by the timeline, 420px at least; its rows a little
+     more compact, sharing that height evenly. */
+  html:not(.app-header) .home-board {
+    align-items: stretch;
+  }
+
+  html:not(.app-header) #home-panel-standings {
+    contain: size;
+    min-height: 420px;
+  }
+
+  html:not(.app-header) #home-panel-standings,
+  html:not(.app-header) #dashboard-leagues-content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  html:not(.app-header) #dashboard-leagues-content {
+    flex: 1;
+    min-height: 0;
+  }
+
+  html:not(.app-header) .home-board .dashboard-standings {
+    flex: 1;
+    min-height: 0;
+    gap: 5px;
+  }
+
+  html:not(.app-header) .home-board .dashboard-standings > li {
+    display: flex;
+    flex: 1 1 0;
+    min-height: 0;
+  }
+
+  html:not(.app-header) .home-board .dashboard-standings > li > .history-item {
+    flex: 1;
+    min-height: 0;
+    padding-block: 4px;
+  }
+
+  /* Più giocati (in its light card, as on touch screens): each chart in
+     the same 300px-tall area (centred, scaled to fit, js/metagame-chart.js
+     gives each chart its --bubble-ratio), so the two lists with the
+     percentages start at the same height. */
+  html:not(.app-header) .home-board .bubble-stage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    margin: 10px 0 4px;
+  }
+
+  html:not(.app-header) .home-board .bubble-stage .bubble-chart {
+    width: min(100%, calc(300px * var(--bubble-ratio, 1)));
+    margin: 0;
   }
 }
 
@@ -13966,13 +14333,13 @@ html.nav-mobile .chart-carousel-arrow {
 
 /* "Leghe in corso"'s top-8 rows (no box per league any more): a brighter
    glass with a clearer edge, straight in the accent card. */
-:root[data-theme="dark"] .dashboard-card-leagues .dashboard-standing {
+:root[data-theme="dark"] :is(.dashboard-card-leagues, .home-board) .dashboard-standing {
   border-color: rgba(255, 255, 255, 0.14);
   background: rgba(255, 255, 255, 0.08);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
 }
 
-:root[data-theme="dark"] .dashboard-card-leagues a.dashboard-standing:hover {
+:root[data-theme="dark"] :is(.dashboard-card-leagues, .home-board) a.dashboard-standing:hover {
   background: rgba(255, 110, 110, 0.14);
 }
 
