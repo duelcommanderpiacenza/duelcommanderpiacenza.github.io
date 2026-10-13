@@ -15309,13 +15309,15 @@ html:not(.nav-mobile) .site-nav .detail-hero-back::after {
 }
 
 /* The hero hanging from the bar: pulled up by the page's top padding
-   (28px; 20px on phone widths), square top, rounded bottom. Not under
-   account.html's "Il tuo giocatore" banner (the hero isn't first there). */
+   (28px; 20px on phone widths), square top, rounded bottom — account.html's
+   too, inside its signed-in section (.profile). Not under its "Il tuo
+   giocatore" banner (the hero isn't first there). */
 html:not(.nav-mobile) body:not(:has(.profile-claim:not([hidden]))) :is(
   .page-main .profile-hero:first-child,
   .page-main .detail-hero-wrap:first-child .profile-hero,
   .page-loading-region > .detail-hero-wrap:nth-child(2) .profile-hero,
-  .page-loading-region > .profile-hero
+  .page-loading-region > .profile-hero,
+  .page-loading-region > .profile > .profile-hero
 ) {
   margin-top: -28px;
   border-radius: 0 0 28px 28px;
@@ -15326,7 +15328,8 @@ html:not(.nav-mobile) body:not(:has(.profile-claim:not([hidden]))) :is(
     .page-main .profile-hero:first-child,
     .page-main .detail-hero-wrap:first-child .profile-hero,
     .page-loading-region > .detail-hero-wrap:nth-child(2) .profile-hero,
-    .page-loading-region > .profile-hero
+    .page-loading-region > .profile-hero,
+    .page-loading-region > .profile > .profile-hero
   ) {
     margin-top: -20px;
   }
