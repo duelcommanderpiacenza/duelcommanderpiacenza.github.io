@@ -159,17 +159,6 @@ async function go(url, { push = true, restoreY = null } = {}) {
     return;
   }
 
-  // Leaving from the open nav panel (a link in it, touch screens): the panel
-  // closed — and drawn closed — before the new history entry, so the
-  // browser's own snapshot of this page (shown by its back button / gesture
-  // until the page itself is back) isn't taken with the panel open over it,
-  // then seen snapping shut. It no longer fades out with the old page.
-  if (push && document.querySelector(".site-nav.is-open")) {
-    document.dispatchEvent(new CustomEvent("app:leave"));
-    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    if (token !== navToken) return;
-  }
-
   // Leaving: the old page's listeners / helpers stop.
   current?.controller.abort();
 
@@ -193,8 +182,7 @@ async function go(url, { push = true, restoreY = null } = {}) {
   };
 
   const swap = () => {
-    // The shell's overlays (search, tooltip, theme menu; the nav panel is
-    // already closed, app:leave above) close —
+    // The shell's overlays (nav panel, search, tooltip, theme menu) close —
     // here, once the old screen's snapshot is taken: they leave with it, in
     // the transition's fade, with no closing animation of their own over it.
     document.dispatchEvent(new CustomEvent("app:navigate"));
