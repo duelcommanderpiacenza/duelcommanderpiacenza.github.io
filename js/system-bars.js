@@ -18,8 +18,8 @@
 // window keeps the desktop header, tab row and search pill (it used to get
 // the phone header too, mixed with the desktop nav — a mess at the top).
 
-const PAGE_LIGHT = "#fff9f7";
-const PAGE_DARK = "#1b1315";
+const PAGE_LIGHT = "#fffdf8";
+const PAGE_DARK = "#120d0e";
 const HERO_DEFAULT = "#140c0e";
 const BRAND = "#dc181c";
 

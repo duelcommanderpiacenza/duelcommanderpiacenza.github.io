@@ -7,8 +7,10 @@
   --brand-red-deep: #8d1d22;
   --brand-red-deep-2: #9f141b;
 
-  --bg-cream-1: #fff9f7;
-  --bg-cream-2: #ffffff;
+  /* The page's background: one colour top to bottom (the three kept for
+     the hero pages' tinted gradient, body.has-hero-accent). */
+  --bg-cream-1: #fffdf8;
+  --bg-cream-2: #fffdf8;
   --bg-cream-3: #fffdf8;
 
   --text-body: #22181a;
@@ -84,9 +86,9 @@ body {
   flex-direction: column;
   overflow-x: hidden;
   font-family: var(--font-main);
-  background:
-    radial-gradient(circle at top, rgba(220, 24, 28, 0.08), transparent 32%),
-    linear-gradient(180deg, var(--bg-cream-1) 0%, var(--bg-cream-2) 24%, var(--bg-cream-3) 100%);
+  /* Plain, no red glow at the top (hero pages: their own tint,
+     body.has-hero-accent). */
+  background: linear-gradient(180deg, var(--bg-cream-1) 0%, var(--bg-cream-2) 24%, var(--bg-cream-3) 100%);
   color: var(--text-body);
 }
 
@@ -1708,11 +1710,10 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
     overscroll-behavior: contain;
     border: 1px solid var(--hairline);
     border-radius: 32px;
-    /* A soft red tint rather than the plain white .cs-menu/.cd-popup use
-       elsewhere — the trigger below is solid brand red, so the panel it
-       opens from reads as the same "family" at a lower intensity, not an
-       unrelated plain-white popup. */
-    background: #fdecec;
+    /* The page background's own colour at its bottom (--bg-cream-3, the end
+       of body's gradient — a hero's tint of it on those pages), so the panel
+       sits on the page as part of it rather than as a red-tinted popup. */
+    background: var(--bg-cream-3);
     box-shadow: var(--shadow-card-hover);
     padding: 6px;
   }
@@ -1727,11 +1728,11 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
   html.nav-mobile .site-nav-inner {
     scrollbar-width: none;
     background:
-      linear-gradient(#fdecec 40%, rgba(253, 236, 236, 0)) center top / 100% 36px no-repeat local,
-      linear-gradient(rgba(253, 236, 236, 0), #fdecec 60%) center bottom / 100% 36px no-repeat local,
+      linear-gradient(var(--bg-cream-3) 40%, transparent) center top / 100% 36px no-repeat local,
+      linear-gradient(transparent, var(--bg-cream-3) 60%) center bottom / 100% 36px no-repeat local,
       radial-gradient(farthest-side at 50% 0, rgba(159, 20, 27, 0.22), rgba(159, 20, 27, 0)) center top / 100% 14px no-repeat,
       radial-gradient(farthest-side at 50% 100%, rgba(159, 20, 27, 0.22), rgba(159, 20, 27, 0)) center bottom / 100% 14px no-repeat,
-      #fdecec;
+      var(--bg-cream-3);
   }
 
   html.nav-mobile .site-nav-inner::-webkit-scrollbar {
@@ -1911,9 +1912,10 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
     font-weight: 700;
     cursor: pointer;
     /* No backdrop behind it: a deep, soft shadow (a tight one close under
-       it, a wide one around) keeps it standing out from whatever page
-       content scrolls beneath. */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4), 0 14px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(0, 0, 0, 0.12);
+       it, a wide halo around — not pushed down, it would reach the screen's
+       bottom edge, the pill only 16px above it) keeps it standing out from
+       whatever page content scrolls beneath. */
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35), 0 -4px 28px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 0, 0, 0.12);
   }
 
   /* Hover only with a real pointer: on a touch screen the tapped pill would
@@ -4688,6 +4690,20 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   padding: 6px 0;
 }
 
+/* js/ui.js showError: the message, its "Riprova" button under it. */
+.page-error-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.page-error-box .page-error {
+  margin: 0;
+  padding: 0;
+}
+
 /* Sits to the left of the page's <h1> (or h3, in admin's subviews) — see
    .page-heading-row below, which wraps the two together. Vertically
    centered (desktop) against the title, or the title+subtitle pair
@@ -6627,7 +6643,7 @@ html.app-header .league-tabs[hidden] + .league-lists > section > h2 {
   --tl-node: 52px;
   --tl-gap: 14px;
   --tl-line: var(--hairline-hover);
-  --tl-node-bg: #fff9f7;
+  --tl-node-bg: #fffdf8;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -6635,7 +6651,7 @@ html.app-header .league-tabs[hidden] + .league-lists > section > h2 {
 
 :root[data-theme="dark"] .league-timeline {
   --tl-line: rgba(255, 255, 255, 0.14);
-  --tl-node-bg: #1b1315;
+  --tl-node-bg: #120d0e;
 }
 
 .league-tl-item {
@@ -14308,8 +14324,8 @@ html.nav-mobile .chart-carousel-arrow {
      dark chrome instead of staying light regardless of our own CSS. */
   color-scheme: dark;
 
-  --bg-cream-1: #1b1315;
-  --bg-cream-2: #150f11;
+  --bg-cream-1: #120d0e;
+  --bg-cream-2: #120d0e;
   --bg-cream-3: #120d0e;
 
   --text-body: #ecdcdf;
@@ -14529,14 +14545,14 @@ html[data-theme="dark"].nav-mobile .site-nav {
 
 /* Its own slightly red-tinted dark shade, not the plain neutral one below
    — same "less intense red, same family as the solid-red trigger pill"
-   reasoning as its light-mode #fdecec background. */
+   reasoning as its light-mode background. */
 /* Dark mode: the touch nav pill in the same deep red-brown as the dark
    cards (the league tile, Novità) with a red edge, rather than the light
    theme's bright solid red; Social's own blue pill unchanged. */
 html[data-theme="dark"].nav-mobile .nav-dropdown-trigger {
   border: 1.5px solid rgba(255, 110, 110, 0.75);
   background: #4a1a1f;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5), 0 14px 40px rgba(0, 0, 0, 0.6), 0 0 0 4px rgba(255, 90, 95, 0.1);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45), 0 -4px 28px rgba(0, 0, 0, 0.55), 0 0 0 4px rgba(255, 90, 95, 0.1);
 }
 
 @media (hover: hover) {
@@ -14570,7 +14586,7 @@ html.nav-mobile .site-nav.has-hero-accent {
 /* Its panel too: a pale tint of the colour (dark: a deep shade of it),
    with the same scroll shadows as the plain panel, in its own colour. */
 html.nav-mobile .site-nav.has-hero-accent .site-nav-inner {
-  --nav-panel: color-mix(in srgb, var(--hero-accent) 10%, #fff);
+  --nav-panel: var(--bg-cream-3);
   border-color: color-mix(in srgb, var(--hero-accent) 20%, transparent);
   background:
     linear-gradient(var(--nav-panel) 40%, transparent) center top / 100% 36px no-repeat local,
@@ -14581,7 +14597,7 @@ html.nav-mobile .site-nav.has-hero-accent .site-nav-inner {
 }
 
 html[data-theme="dark"].nav-mobile .site-nav.has-hero-accent .site-nav-inner {
-  --nav-panel: color-mix(in srgb, var(--hero-accent) 22%, #1c1214);
+  --nav-panel: var(--bg-cream-3);
   border-color: color-mix(in srgb, var(--hero-accent-light) 22%, transparent);
   background:
     linear-gradient(var(--nav-panel) 40%, transparent) center top / 100% 36px no-repeat local,
@@ -14594,7 +14610,7 @@ html[data-theme="dark"].nav-mobile .site-nav.has-hero-accent .site-nav-inner {
 html[data-theme="dark"].nav-mobile .site-nav.has-hero-accent .nav-dropdown-trigger {
   border-color: color-mix(in srgb, var(--hero-accent-light) 75%, transparent);
   background: color-mix(in srgb, var(--hero-accent) 42%, #1c0f11);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5), 0 14px 40px rgba(0, 0, 0, 0.6), 0 0 0 4px color-mix(in srgb, var(--hero-accent-light) 12%, transparent);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45), 0 -4px 28px rgba(0, 0, 0, 0.55), 0 0 0 4px color-mix(in srgb, var(--hero-accent-light) 12%, transparent);
 }
 
 @media (hover: hover) {
@@ -14605,11 +14621,11 @@ html[data-theme="dark"].nav-mobile .site-nav.has-hero-accent .nav-dropdown-trigg
 
 html[data-theme="dark"].nav-mobile .site-nav-inner {
   background:
-    linear-gradient(#2c1719 40%, rgba(44, 23, 25, 0)) center top / 100% 36px no-repeat local,
-    linear-gradient(rgba(44, 23, 25, 0), #2c1719 60%) center bottom / 100% 36px no-repeat local,
+    linear-gradient(var(--bg-cream-3) 40%, transparent) center top / 100% 36px no-repeat local,
+    linear-gradient(transparent, var(--bg-cream-3) 60%) center bottom / 100% 36px no-repeat local,
     radial-gradient(farthest-side at 50% 0, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0)) center top / 100% 14px no-repeat,
     radial-gradient(farthest-side at 50% 100%, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0)) center bottom / 100% 14px no-repeat,
-    #2c1719;
+    var(--bg-cream-3);
 }
 
 /* The mobile search field switches to a normal light/dark-aware input

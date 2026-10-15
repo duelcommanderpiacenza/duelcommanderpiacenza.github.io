@@ -167,9 +167,13 @@ export function leagueStatusBadge(isOpen) {
     : '<span class="badge-status badge-status-closed status-chip">Conclusa</span>';
 }
 
+// A data request that failed — often only the connection not back yet
+// (the app reopened, a restored tab): "Riprova" reloads the page, its data
+// asked for again.
 export function showError(el, err) {
   console.error(err);
-  el.innerHTML = `<p class="page-error">Si &egrave; verificato un errore nel caricamento dei dati. ${
+  el.innerHTML = `<div class="page-error-box"><p class="page-error">Si &egrave; verificato un errore nel caricamento dei dati. ${
     !window.supabase ? "Controlla la connessione." : ""
-  }</p>`;
+  }</p><button type="button" class="btn-secondary page-error-retry">Riprova</button></div>`;
+  el.querySelector(".page-error-retry").addEventListener("click", () => window.location.reload());
 }
