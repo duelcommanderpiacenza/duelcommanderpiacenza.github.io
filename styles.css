@@ -3883,6 +3883,27 @@ body.is-loading .filter-panel.detail-filter-panel {
   white-space: pre-line;
 }
 
+/* An event's announcement (made when it's first closed): a button to the
+   event's page under its text — the site's red pill, a size down. */
+.info-dialog .news-link {
+  gap: 4px;
+  min-height: 36px;
+  margin-top: 12px;
+  padding: 0 12px 0 16px;
+  font-size: 0.9rem;
+  box-shadow: 0 6px 14px rgba(220, 24, 28, 0.22);
+}
+
+.info-dialog .news-link svg {
+  width: 16px;
+  height: 16px;
+}
+
+.info-dialog .news-link:hover {
+  color: #fff;
+  text-decoration: none;
+}
+
 .news-empty {
   padding: 26px 10px 18px;
   color: var(--text-muted);

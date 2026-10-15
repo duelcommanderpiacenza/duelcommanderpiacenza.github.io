@@ -8,6 +8,9 @@
 // the unread ones marked "Nuovo"). The red
 // badge on the bell counts the ones this browser hasn't opened yet (their ids
 // in localStorage "seenNews"), and goes once the bell is clicked.
+// An event's own one (made when it's first closed — supabase/migrations/
+// 022: announcements.event_id) gets a button to the event's page;
+// following it closes the pop-up.
 
 import { Announcements } from "./db.js";
 import { escapeHtml } from "./ui.js";
@@ -49,6 +52,7 @@ function bodyHtml(announcements, unseen) {
         ${unseen.has(String(a.id)) ? '<span class="news-new">Nuovo</span>' : ""}
         <h4 class="news-title">${escapeHtml(a.title)}</h4>
         <p class="news-body">${escapeHtml(a.body)}</p>
+        ${a.event_id ? `<a class="btn-primary news-link" href="event.html?id=${encodeURIComponent(a.event_id)}">Vai all'evento<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></a>` : ""}
       </article>`
     )
     .join("")}</div>`;
@@ -87,13 +91,20 @@ async function init() {
   button.addEventListener("click", async () => {
     await loaded;
     const unseen = unseenIds();
-    openInfoDialog({
+    const dialog = openInfoDialog({
       id: "news-dialog",
       className: "news-dialog",
       title: "Novità",
       subtitle: subtitleFor(announcements, unseen.size),
       bodyHtml: bodyHtml(announcements, unseen),
     });
+    // (Once per dialog — it's built once, then reopened.)
+    if (!dialog.dataset.linksWired) {
+      dialog.dataset.linksWired = "";
+      dialog.addEventListener("click", (e) => {
+        if (e.target.closest?.(".news-link")) dialog.close();
+      });
+    }
     // Every one shown is now seen (the ones no longer active dropped, so the
     // list doesn't grow forever).
     writeSeen(new Set(announcements.map((a) => String(a.id))));

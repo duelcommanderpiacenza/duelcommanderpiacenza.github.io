@@ -176,6 +176,8 @@ create table events (
     --   alter table events add column decklists_url text
     --     constraint events_decklists_url_http check (decklists_url ~* '^https?://');
   created_at timestamptz not null default now(),
+  first_closed_at timestamptz, -- set the first time it's closed (its "Risultati online" announcement made then —
+    -- events_notify_first_close below); never again, however often it's reopened. Added by migration 022.
   constraint events_unique_name_per_league unique (league_id, name), -- same name OK across leagues, not within one
   constraint events_results_url_http check (results_url ~* '^https?://'),
   constraint events_decklists_url_http check (decklists_url ~* '^https?://')
@@ -287,6 +289,42 @@ create trigger leagues_block_delete_with_closed_events
   before delete on leagues
   for each row execute function leagues_block_delete_with_closed_events();
 
+-- Every event's first close makes a "Novità" of its own (js/header-news.js):
+-- "Risultati online: <event>", linked to it (announcements.event_id, shown
+-- only while the event is closed — announcements_public_read below), gone
+-- after 5 days (expires_on: the closing day + 4; the nightly cron job below
+-- deletes it). Stamped on events.first_closed_at, so reopening and closing
+-- again never makes another. Added by migration 022.
+alter table announcements add column event_id uuid unique references events(id) on delete cascade;
+
+create or replace function events_notify_first_close() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare
+  label text;
+  league_name text;
+begin
+  if old.is_open and not new.is_open and new.first_closed_at is null then
+    new.first_closed_at := now();
+    select name into league_name from leagues where id = new.league_id;
+    -- A Topdeck event can have no name: its date instead, as on the site.
+    label := coalesce(nullif(trim(new.name), ''), to_char(new.event_date, 'DD/MM/YYYY'), 'Evento');
+    insert into announcements (title, body, event_id, expires_on)
+    values (
+      'Risultati online: ' || label,
+      concat_ws(' · ', league_name, to_char(new.event_date, 'DD/MM/YYYY')),
+      new.id,
+      current_date + 4
+    )
+    on conflict (event_id) do nothing;
+  end if;
+  return new;
+end;
+$$;
+
+create trigger events_notify_first_close
+  before update of is_open on events
+  for each row execute function events_notify_first_close();
+
 -- A league's total event count, open and closed alike — the X in the league
 -- score's best-(X−1)-results rule (js/leaderboard.js's computeLeaguePoints).
 -- events_public_read below hides an open event from anonymous visitors once
@@ -395,7 +433,12 @@ begin
   end loop;
 end $$;
 
-create policy "announcements_public_read" on announcements for select using (true);
+-- An event's own announcement (migration 022) only while the event is closed.
+create policy "announcements_public_read" on announcements for select
+  using (
+    event_id is null
+    or exists (select 1 from events e where e.id = announcements.event_id and not e.is_open)
+  );
 create policy "commanders_public_read" on commanders for select using (true);
 create policy "players_public_read" on players for select using (true);
 create policy "badges_public_read" on badges for select using (true);
