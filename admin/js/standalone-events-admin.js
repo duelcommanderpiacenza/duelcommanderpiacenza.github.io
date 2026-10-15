@@ -1,6 +1,6 @@
 import { Events } from "../../js/db.js";
 import { formatDate, formatTime, isHttpUrl } from "../../js/ui.js";
-import { renderTable, setMessage, statusToggleButton } from "./crud-ui.js";
+import { renderTable, setMessage, statusToggleButton, onBusySubmit, runBusy } from "./crud-ui.js";
 import { on } from "./bus.js";
 import { syncAutoBadges } from "./badges-sync.js";
 
@@ -64,7 +64,7 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
     listEl.querySelectorAll("[data-toggle]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const ev = events.find((e) => e.id === btn.dataset.toggle);
-        if (ev) onToggleOpen(ev);
+        if (ev) runBusy(btn, () => onToggleOpen(ev));
       });
     });
   }
@@ -123,7 +123,7 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
     }
   }
 
-  form.addEventListener("submit", async (e) => {
+  onBusySubmit(form, async (e) => {
     e.preventDefault();
     const resultsUrl = resultsUrlField.value.trim();
     const decklistsUrl = decklistsUrlField.value.trim();

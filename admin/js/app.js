@@ -4,7 +4,7 @@ import { setupThemeToggle } from "../../js/theme.js";
 import { eventTitle } from "../../js/ui.js";
 import { enhanceSelects } from "../../js/custom-select.js";
 import { enhanceDateInputs } from "../../js/custom-date.js";
-import { setStatusToggle } from "./crud-ui.js";
+import { setStatusToggle, runBusy, onBusySubmit } from "./crud-ui.js";
 import { emit } from "./bus.js";
 import { initPlayersAdmin } from "./players-admin.js";
 import { initCommandersAdmin } from "./commanders-admin.js";
@@ -235,7 +235,7 @@ function showAdmin(session) {
       }
     }
 
-    eventFlowToggleBtn.addEventListener("click", toggleEventOpen);
+    eventFlowToggleBtn.addEventListener("click", () => runBusy(eventFlowToggleBtn, toggleEventOpen));
 
     const eventsCtl = initEventsAdmin({ onOpenEvent: openEvent });
     initStandaloneEventsAdmin({ onOpenEvent: openEvent });
@@ -274,7 +274,7 @@ function showLogin() {
   loginView.style.display = "flex";
 }
 
-loginForm.addEventListener("submit", async (e) => {
+onBusySubmit(loginForm, async (e) => {
   e.preventDefault();
   loginError.textContent = "";
   const email = document.getElementById("login-email").value.trim();
@@ -286,9 +286,7 @@ loginForm.addEventListener("submit", async (e) => {
   }
 });
 
-logoutBtn.addEventListener("click", async () => {
-  await signOut();
-});
+logoutBtn.addEventListener("click", () => runBusy(logoutBtn, signOut));
 
 // A signed-in account that isn't in the admins table (a player) never sees
 // the admin UI — the database would refuse its writes anyway. It stays on

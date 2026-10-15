@@ -1,7 +1,7 @@
 import { EventEntries, Matches, Events } from "../../js/db.js";
 import { isBye, isDrop, computeEventLeaderboard } from "../../js/leaderboard.js";
 import { escapeHtml } from "../../js/ui.js";
-import { renderTable, setMessage, fillSelect } from "./crud-ui.js";
+import { renderTable, setMessage, fillSelect, onBusySubmit, runBusy } from "./crud-ui.js";
 import { on } from "./bus.js";
 
 /**
@@ -122,10 +122,11 @@ export function initMatchesAdmin() {
     roundTabsEl.querySelectorAll(".round-tab-delete").forEach((btn) => {
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
-        deleteRound(parseInt(btn.dataset.round, 10));
+        runBusy(btn, () => deleteRound(parseInt(btn.dataset.round, 10)));
       });
     });
-    document.getElementById("add-round-btn")?.addEventListener("click", addRound);
+    const addRoundBtn = document.getElementById("add-round-btn");
+    addRoundBtn?.addEventListener("click", () => runBusy(addRoundBtn, addRound));
   }
 
   async function addRound() {
@@ -250,11 +251,11 @@ export function initMatchesAdmin() {
 
     eventLeaderboardEl.querySelectorAll("[data-move]").forEach((btn) => {
       btn.addEventListener("click", () =>
-        moveStanding(standings, parseInt(btn.dataset.index, 10), btn.dataset.move === "up" ? -1 : 1)
+        runBusy(btn, () => moveStanding(standings, parseInt(btn.dataset.index, 10), btn.dataset.move === "up" ? -1 : 1))
       );
     });
     eventLeaderboardEl.querySelectorAll(".standings-bonus-input").forEach((input) => {
-      input.addEventListener("change", () => saveBonus(input));
+      input.addEventListener("change", () => runBusy(input, () => saveBonus(input)));
     });
   }
 
@@ -407,7 +408,7 @@ export function initMatchesAdmin() {
     updateFormAvailability();
   });
 
-  form.addEventListener("submit", async (e) => {
+  onBusySubmit(form, async (e) => {
     e.preventDefault();
     if (!currentEvent) return;
 

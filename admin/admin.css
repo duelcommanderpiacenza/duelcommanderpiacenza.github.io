@@ -524,6 +524,118 @@ html.nav-mobile .sync-status {
   }
 }
 
+/* Annunci: an automatic one (an event's "Risultati online") — delete-only,
+   marked so. */
+.admin-auto-chip {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--hairline-hover);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: 2px;
+}
+
+/* The event's "Iscritti" heading: how many players it has so far
+   (js/entries-admin.js). */
+.admin-heading-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  margin-left: 6px;
+  padding: 0 8px;
+  box-sizing: border-box;
+  border-radius: var(--radius-pill);
+  background: var(--brand-red);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 800;
+  vertical-align: 2px;
+}
+
+.admin-heading-count[hidden] {
+  display: none;
+}
+
+/* An action under way (js/crud-ui.js runBusy — a save, a delete, opening /
+   closing): its button with a small spinner after its label (an icon
+   button: in place of its icon), the bonus field dimmed, a progress cursor;
+   and a thin red bar sweeping across the top of the page while anything is
+   still saving. Clicks on it meanwhile are ignored by the JS. */
+.is-busy {
+  cursor: progress !important;
+}
+
+button.is-busy::after {
+  content: "";
+  display: inline-block;
+  vertical-align: -0.12em;
+  flex-shrink: 0;
+  width: 0.9em;
+  height: 0.9em;
+  margin-left: 8px;
+  box-sizing: border-box;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: sync-spin 700ms linear infinite;
+}
+
+.icon-btn.is-busy svg {
+  display: none;
+}
+
+.icon-btn.is-busy::after {
+  width: 18px;
+  height: 18px;
+  margin-left: 0;
+}
+
+input.is-busy {
+  opacity: 0.6;
+}
+
+body.is-busy::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 1000;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--brand-red), transparent) no-repeat;
+  background-size: 40% 100%;
+  animation: busy-bar 1.1s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes busy-bar {
+  from {
+    background-position: -40% 0;
+  }
+  to {
+    background-position: 140% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button.is-busy::after {
+    animation: none;
+  }
+
+  body.is-busy::before {
+    background: var(--brand-red);
+    animation: none;
+  }
+}
+
 /* The admin lists (js/crud-ui.js renderTable): the public site's sub-card
    look (.history-panel / .history-item, ../../styles.css), one card per row
    — not clickable, so no hover change; only its buttons react. Title on the

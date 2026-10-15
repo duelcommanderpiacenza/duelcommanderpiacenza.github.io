@@ -1,6 +1,6 @@
 import { Badges, BadgeIcons } from "../../js/db.js";
 import { badgeDiscHtml, escapeHtml } from "../../js/ui.js";
-import { renderTable, setMessage, fillSelect } from "./crud-ui.js";
+import { renderTable, setMessage, fillSelect, onBusySubmit } from "./crud-ui.js";
 import { emit } from "./bus.js";
 import { syncAutoBadges } from "./badges-sync.js";
 import { initEmojiPicker, isCustomIcon } from "./emoji-picker.js";
@@ -253,7 +253,7 @@ export function initBadgesAdmin() {
     }
   }
 
-  form.addEventListener("submit", async (e) => {
+  onBusySubmit(form, async (e) => {
     e.preventDefault();
     const name = nameField.value.trim();
     if (!name) return;

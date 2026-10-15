@@ -1,6 +1,6 @@
 import { Players, Commanders, EventEntries } from "../../js/db.js";
 import { archetypeBadge } from "../../js/ui.js";
-import { renderTable, setMessage, fillSelect } from "./crud-ui.js";
+import { renderTable, setMessage, fillSelect, onBusySubmit } from "./crud-ui.js";
 import { emit, on } from "./bus.js";
 
 /**
@@ -18,6 +18,16 @@ export function initEntriesAdmin() {
   const archetypeField = document.getElementById("entries-admin-archetype");
   const msgEl = document.getElementById("entries-admin-message");
   const cancelBtn = document.getElementById("entries-admin-cancel");
+  // How many players the event has so far, by the "Iscritti" heading —
+  // updated with the list after every add / removal.
+  const countEl = document.getElementById("entries-admin-count");
+
+  function showCount(n) {
+    if (!countEl) return;
+    countEl.hidden = n == null;
+    countEl.textContent = n == null ? "" : String(n);
+    countEl.setAttribute("aria-label", n === 1 ? "1 giocatore" : `${n} giocatori`);
+  }
 
   let currentEvent = null;
   let allPlayers = [];
@@ -62,11 +72,13 @@ export function initEntriesAdmin() {
   async function refresh() {
     if (!currentEvent) {
       listEl.innerHTML = '<p class="page-empty">Nessun iscritto ancora.</p>';
+      showCount(null);
       return;
     }
     try {
       const entries = await EventEntries.listByEvent(currentEvent.id);
       currentEntries = entries;
+      showCount(entries.length);
       updatePlayerOptions();
       renderTable(
         listEl,
@@ -116,7 +128,7 @@ export function initEntriesAdmin() {
     }
   }
 
-  form.addEventListener("submit", async (e) => {
+  onBusySubmit(form, async (e) => {
     e.preventDefault();
     if (!currentEvent) return;
     if (partnerField.value && partnerField.value === commanderField.value) {

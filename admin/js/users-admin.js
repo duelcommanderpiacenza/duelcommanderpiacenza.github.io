@@ -1,6 +1,6 @@
 import { AdminUsers, Players } from "../../js/db.js";
 import { escapeHtml, formatDate } from "../../js/ui.js";
-import { renderTable, setMessage, fillSelect } from "./crud-ui.js";
+import { renderTable, setMessage, fillSelect, onBusySubmit, runBusy } from "./crud-ui.js";
 import { on } from "./bus.js";
 import { setTabCount } from "./tab-counts.js";
 
@@ -83,12 +83,12 @@ export function initUsersAdmin() {
     );
 
     requestsEl.querySelectorAll("[data-approve]").forEach((btn) =>
-      btn.addEventListener("click", () => act(() => AdminUsers.approveClaim(btn.dataset.approve), "Richiesta approvata."))
+      btn.addEventListener("click", () => runBusy(btn, () => act(() => AdminUsers.approveClaim(btn.dataset.approve), "Richiesta approvata.")))
     );
     requestsEl.querySelectorAll("[data-reject]").forEach((btn) =>
       btn.addEventListener("click", () => {
         if (!confirm("Rifiutare questa richiesta?")) return;
-        act(() => AdminUsers.rejectClaim(btn.dataset.reject), "Richiesta rifiutata.");
+        runBusy(btn, () => act(() => AdminUsers.rejectClaim(btn.dataset.reject), "Richiesta rifiutata."));
       })
     );
   }
@@ -147,10 +147,12 @@ export function initUsersAdmin() {
         const u = users.find((x) => x.user_id === btn.dataset.block);
         if (!u) return;
         if (!u.is_blocked && !confirm(`Bloccare ${u.email}? Non potrà più accedere finché non lo sblocchi.`)) return;
-        act(
-          () => AdminUsers.setBlocked(u.user_id, !u.is_blocked),
-          u.is_blocked ? "Account sbloccato." : "Account bloccato.",
-          false
+        runBusy(btn, () =>
+          act(
+            () => AdminUsers.setBlocked(u.user_id, !u.is_blocked),
+            u.is_blocked ? "Account sbloccato." : "Account bloccato.",
+            false
+          )
         );
       })
     );
@@ -212,7 +214,7 @@ export function initUsersAdmin() {
     if (idField.value === u.user_id) resetForm();
   }
 
-  form.addEventListener("submit", async (e) => {
+  onBusySubmit(form, async (e) => {
     e.preventDefault();
     const userId = idField.value;
     if (!userId) {

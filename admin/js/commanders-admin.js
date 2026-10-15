@@ -1,6 +1,6 @@
 import { Commanders, EventEntries } from "../../js/db.js";
 import { colorIdentityPips } from "../../js/ui.js";
-import { renderTable, setMessage } from "./crud-ui.js";
+import { renderTable, setMessage, onBusySubmit } from "./crud-ui.js";
 import { emit } from "./bus.js";
 
 export function initCommandersAdmin() {
@@ -106,7 +106,7 @@ export function initCommandersAdmin() {
     }
   }
 
-  form.addEventListener("submit", async (e) => {
+  onBusySubmit(form, async (e) => {
     e.preventDefault();
     const colorIdentity = colorBoxes()
       .filter((b) => b.checked)

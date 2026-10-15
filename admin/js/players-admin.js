@@ -1,6 +1,6 @@
 import { Players, Badges, EventEntries } from "../../js/db.js";
 import { escapeHtml, badgeDiscHtml } from "../../js/ui.js";
-import { renderTable, setMessage, fillSelect } from "./crud-ui.js";
+import { renderTable, setMessage, fillSelect, onBusySubmit } from "./crud-ui.js";
 import { emit, on } from "./bus.js";
 
 export function initPlayersAdmin() {
@@ -142,7 +142,7 @@ export function initPlayersAdmin() {
     }
   }
 
-  form.addEventListener("submit", async (e) => {
+  onBusySubmit(form, async (e) => {
     e.preventDefault();
     const badgeIds = [badge1Field.value, badge2Field.value].filter(Boolean);
     if (new Set(badgeIds).size !== badgeIds.length) {

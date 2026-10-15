@@ -1,6 +1,6 @@
 import { Announcements } from "../../js/db.js";
-import { formatDate } from "../../js/ui.js";
-import { renderTable, setMessage } from "./crud-ui.js";
+import { formatDate, escapeHtml } from "../../js/ui.js";
+import { renderTable, setMessage, onBusySubmit } from "./crud-ui.js";
 
 /**
  * Flat, always-editable list — shown on the public Bacheca homepage
@@ -8,6 +8,9 @@ import { renderTable, setMessage } from "./crud-ui.js";
  * otherwise). Optional expiry date (expires_on): the Bacheca shows an
  * announcement up to and including that day, then hides it (the row itself
  * stays here, marked "scaduto", until deleted). No pinning.
+ * The automatic ones (an event's "Risultati online", made when it's first
+ * closed — supabase/migrations/022, announcements.event_id) are listed too,
+ * marked "Automatico", to be deleted if something's wrong — not edited.
  */
 export function initAnnouncementsAdmin() {
   const listEl = document.getElementById("announcements-admin-list");
@@ -36,14 +39,18 @@ export function initAnnouncementsAdmin() {
       listEl,
       visible,
       [
-        { key: "title", label: "Titolo" },
+        {
+          key: "title",
+          label: "Titolo",
+          render: (r) => `${escapeHtml(r.title)}${r.event_id ? ' <span class="admin-auto-chip">Automatico</span>' : ""}`,
+        },
         {
           key: "expires_on",
           label: "Scadenza",
           render: (r) => (r.expires_on ? `${formatDate(r.expires_on)}${isExpired(r) ? " (scaduto)" : ""}` : "—"),
         },
       ],
-      { onEdit, onDelete },
+      { onEdit, onDelete, canEdit: (r) => !r.event_id },
       { animate }
     );
   }
@@ -69,6 +76,7 @@ export function initAnnouncementsAdmin() {
   }
 
   function onEdit(row) {
+    if (row.event_id) return;
     idField.value = row.id;
     titleField.value = row.title;
     bodyField.value = row.body;
@@ -91,7 +99,7 @@ export function initAnnouncementsAdmin() {
     }
   }
 
-  form.addEventListener("submit", async (e) => {
+  onBusySubmit(form, async (e) => {
     e.preventDefault();
     const payload = {
       title: titleField.value.trim(),

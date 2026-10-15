@@ -1,5 +1,5 @@
 import { Leagues, Events } from "../../js/db.js";
-import { renderTable, setMessage, statusToggleButton } from "./crud-ui.js";
+import { renderTable, setMessage, statusToggleButton, onBusySubmit, runBusy } from "./crud-ui.js";
 import { syncAutoBadges } from "./badges-sync.js";
 
 // The proactive close-before-open/create calls should normally prevent this
@@ -82,7 +82,7 @@ export function initLeaguesAdmin({ onOpenLeague }) {
     listEl.querySelectorAll("[data-toggle]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const league = leagues.find((l) => l.id === btn.dataset.toggle);
-        if (league) onToggleOpen(league);
+        if (league) runBusy(btn, () => onToggleOpen(league));
       });
     });
   }
@@ -173,7 +173,7 @@ export function initLeaguesAdmin({ onOpenLeague }) {
     }
   }
 
-  form.addEventListener("submit", async (e) => {
+  onBusySubmit(form, async (e) => {
     e.preventDefault();
     const payload = { name: nameField.value.trim(), is_topdeck: topdeckField.checked };
     if (!payload.name) return;

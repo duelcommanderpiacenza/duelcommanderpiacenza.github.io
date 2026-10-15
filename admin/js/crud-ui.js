@@ -29,7 +29,8 @@ const DELETE_ICON_SVG = `<svg width="21" height="21" viewBox="0 0 24 24" fill="n
  * @param {HTMLElement} container
  * @param {Array} rows - each with a unique `id`
  * @param {Array<{key:string,label:string,render?:(row)=>string,primary?:boolean}>} columns
- * @param {{onEdit?: (row)=>void, onDelete?: (row)=>void}} actions
+ * @param {{onEdit?: (row)=>void, onDelete?: (row)=>void, canEdit?: (row)=>boolean}} actions
+ *   canEdit: false for a row that can only be deleted (no Modifica on it).
  * @param {{animate?: boolean, empty?: string}} [options] - animate defaults
  *   to true; live search callers pass false so re-filtering on every
  *   keystroke doesn't replay the list's entrance animation each time.
@@ -64,7 +65,7 @@ export function renderTable(container, rows, columns, actions, { animate = true,
           <div class="row-actions admin-card-actions">
             ${extras.map((c) => cell(c, row)).join("")}
             ${
-              actions.onEdit
+              actions.onEdit && (actions.canEdit?.(row) ?? true)
                 ? `<button type="button" class="icon-btn icon-btn-edit" data-action="edit" aria-label="Modifica" title="Modifica">${EDIT_ICON_SVG}</button>`
                 : ""
             }
@@ -82,7 +83,8 @@ export function renderTable(container, rows, columns, actions, { animate = true,
   container.querySelectorAll(".admin-card[data-id]").forEach((card) => {
     const row = rows.find((r) => String(r.id) === card.dataset.id);
     card.querySelector('[data-action="edit"]')?.addEventListener("click", () => actions.onEdit(row));
-    card.querySelector('[data-action="delete"]')?.addEventListener("click", () => actions.onDelete(row));
+    const deleteBtn = card.querySelector('[data-action="delete"]');
+    deleteBtn?.addEventListener("click", () => runBusy(deleteBtn, () => actions.onDelete(row)));
   });
 }
 
@@ -118,6 +120,47 @@ export function setStatusToggle(button, isOpen, kind) {
   button.className = className;
   button.textContent = label;
   button.title = title;
+}
+
+// Actions that take a moment (a save, a delete, opening / closing an event or
+// a league…): while one runs, its control is marked busy — a small spinner
+// in it, admin.css .is-busy — and a thin bar runs across the top of the page
+// (body.is-busy), so the admin sees it working; another click on it (or
+// Enter in its form) meanwhile is ignored instead of sending the action
+// again. Not `disabled`: some code disables / re-enables these controls
+// itself (a closed event's locked forms), which a restore here would undo.
+let busyCount = 0;
+
+export async function runBusy(control, task) {
+  if (control?.classList.contains("is-busy")) return undefined;
+  control?.classList.add("is-busy");
+  control?.setAttribute("aria-busy", "true");
+  busyCount += 1;
+  document.body.classList.add("is-busy");
+  try {
+    return await task();
+  } finally {
+    control?.classList.remove("is-busy");
+    control?.removeAttribute("aria-busy");
+    busyCount -= 1;
+    if (busyCount === 0) document.body.classList.remove("is-busy");
+  }
+}
+
+// A form's save through runBusy: its submit button shows the spinner; a
+// submit while the save is still going (a double click, Enter again) is
+// dropped.
+export function onBusySubmit(form, handler) {
+  let saving = false;
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (saving) return;
+    saving = true;
+    const submitBtn = e.submitter ?? form.querySelector('button[type="submit"], button:not([type])');
+    runBusy(submitBtn, () => handler(e)).finally(() => {
+      saving = false;
+    });
+  });
 }
 
 export function setMessage(el, text, isError) {
