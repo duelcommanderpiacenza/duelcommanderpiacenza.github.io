@@ -13988,6 +13988,46 @@ html.nav-mobile .chart-carousel-arrow {
   flex-shrink: 0;
 }
 
+/* Comandanti / Archetipi on a phone-wide chart area (the carousel's
+   container, .chart-carousel-host): the legend beside a smaller ring
+   instead of under it — the ring card was the carousel's tallest, setting
+   every slide's height. Long names cut with "…". */
+@container (max-width: 559px) {
+  :is(#commanders-chart, #archetypes-chart) .pie-chart-body {
+    flex-wrap: nowrap;
+    gap: 16px;
+  }
+
+  :is(#commanders-chart, #archetypes-chart) .pie-chart {
+    width: 112px;
+    height: 112px;
+  }
+
+  :is(#commanders-chart, #archetypes-chart) .pie-legend {
+    flex: 1;
+    min-width: 0;
+    gap: 8px;
+  }
+
+  :is(#commanders-chart, #archetypes-chart) .pie-legend-item {
+    min-width: 0;
+    gap: 6px;
+    font-size: 0.82rem;
+  }
+
+  :is(#commanders-chart, #archetypes-chart) .pie-legend-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  :is(#commanders-chart, #archetypes-chart) .pie-legend-swatch {
+    width: 12px;
+    height: 12px;
+  }
+}
+
 /* Commander detail's "decks played over time" line (js/line-chart.js) —
    shares the pie/bar charts' own .pie-chart-wrap card, just full-width
    instead of paired side-by-side. aspect-ratio (matching the SVG's own
