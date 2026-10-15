@@ -15422,10 +15422,10 @@ html.is-page-transition:not(.app-header) .site-header-brand {
   }
 }
 
-/* The nav cross-fades with the old screen's fade out instead: its open
-   panel (closed in the swap, js/nav-dropdown.js) leaves with the old page,
-   the pill's label / active tab change the same way; the pill itself, the
-   same in both, stays as it is. */
+/* The nav cross-fades with the old screen's fade out instead: the pill's
+   label / active tab change that way; the pill itself, the same in both,
+   stays as it is. (Its open panel is already closed by then — js/router.js
+   app:leave, before the history entry, for the browser's back snapshot.) */
 ::view-transition-old(site-nav),
 ::view-transition-new(site-nav) {
   animation-duration: 90ms;

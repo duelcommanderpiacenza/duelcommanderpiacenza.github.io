@@ -112,6 +112,10 @@ function init() {
     }
   });
 
+  // Leaving from a link in the open panel (js/router.js): closed at once,
+  // before the page changes (the browser's snapshot for its back button).
+  document.addEventListener("app:leave", () => closeDropdown(nav, trigger, { instant: true }));
+
   // In-app navigation (js/router.js): the panel closes, the pill shows.
   document.addEventListener("app:navigate", () => {
     closeDropdown(nav, trigger, { instant: true });
