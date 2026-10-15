@@ -17,16 +17,385 @@ html {
   --admin-max-width: 1400px;
 }
 
-/* Recolored black (instead of the public site's red) purely so the admin
-   area reads as visually distinct at a glance — same gradient technique as
-   .site-header, just in near-black tones. */
+/* ---------------------------------------------------------------------------
+   The admin's accent is black, not the public site's red: the site's red
+   variables (../styles.css :root — buttons, active tabs and chips, links,
+   focus rings, the phone logo, hairlines, the warm muted text) redefined to
+   neutral black / greys here, so everything built on them follows. Only
+   what carries a meaning keeps a colour of its own (--status-*, below):
+   open (Aperto / Aperta, Attivo) green, closed grey, deleting and errors
+   red. Dark mode: light greys for text, a dark grey for fills.
+   --------------------------------------------------------------------------- */
+:root {
+  --brand-red: #1a1a1a;
+  --brand-red-dark: rgba(12, 12, 13, 0.9);
+  --brand-red-darker: #1a1a1a;
+  --brand-red-deep: #1a1a1a;
+  --brand-red-deep-2: #000;
+  --text-body: #1f1f21;
+  --text-title: #141416;
+  --text-muted: #6b6b70;
+  --text-muted-2: #57575c;
+  --text-value: #3d3d42;
+  --hairline: rgba(0, 0, 0, 0.12);
+  --hairline-hover: rgba(0, 0, 0, 0.26);
+  --hairline-hover-strong: rgba(0, 0, 0, 0.34);
+  --table-row-line: rgba(0, 0, 0, 0.06);
+  --shadow-soft: 0 18px 42px rgba(0, 0, 0, 0.08);
+  --shadow-card: 0 12px 28px rgba(0, 0, 0, 0.08);
+  --shadow-card-hover: 0 18px 36px rgba(0, 0, 0, 0.14);
+  --status-open: #14914a;
+  --status-closed: #8a8a90;
+  --status-danger: #c8362b;
+  --status-danger-hover: #b3261e;
+}
+
+:root[data-theme="dark"] {
+  --brand-red: #4a4a50;
+  --brand-red-dark: rgba(30, 30, 32, 0.9);
+  --brand-red-darker: #e4e4e7;
+  --brand-red-deep: #e4e4e7;
+  --brand-red-deep-2: #5a5a60;
+  --text-body: #e2e2e5;
+  --text-title: #f4f4f6;
+  --text-muted: #9a9aa0;
+  --text-muted-2: #a8a8ae;
+  --text-value: #d0d0d4;
+  --hairline: rgba(255, 255, 255, 0.1);
+  --hairline-hover: rgba(255, 255, 255, 0.26);
+  --hairline-hover-strong: rgba(255, 255, 255, 0.34);
+  --table-row-line: rgba(255, 255, 255, 0.06);
+  --status-closed: #6e6e74;
+}
+
+/* What carries a meaning keeps its colour: open green, closed grey (the
+   open / close toggles and the users' Attivo / Bloccato ones — the same
+   classes), delete red. */
+.badge-status-open {
+  background: var(--status-open);
+}
+
+.badge-status-closed {
+  background: var(--status-closed);
+}
+
+.icon-btn-delete {
+  background: var(--status-danger);
+}
+
+.icon-btn-delete:hover {
+  background: var(--status-danger-hover);
+}
+
+.round-tab-delete:hover {
+  background: var(--status-danger);
+}
+
+/* The rest of the site's red written as plain colours (not through the
+   variables above), wherever the admin uses it — found by scanning every
+   admin screen's computed colours: neutral greys instead. */
+.btn-primary {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.18);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 14px 26px rgba(0, 0, 0, 0.24);
+}
+
+.btn-secondary:hover,
+.icon-btn-edit:hover,
+.ecal-close:hover,
+.cd-nav:hover,
+.cd-footer-btn:hover {
+  background: #f1f1f2;
+}
+
+.history-item {
+  border-color: rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.03);
+}
+
+a.history-item:hover,
+.history-item.is-top8,
+.history-item.is-me-row {
+  border-color: rgba(0, 0, 0, 0.18);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+table.data-table tbody tr:hover,
+table.data-table tbody tr.is-top8,
+table.data-table tbody tr.is-top8:hover,
+table.data-table tbody tr.is-me-row,
+table.data-table tbody tr.is-me-row:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.badge-disc {
+  border-color: rgba(0, 0, 0, 0.22);
+}
+
+.theme-menu-option:hover,
+.theme-menu-option:focus-visible {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.sk {
+  --sk-base: rgba(0, 0, 0, 0.045);
+  --sk-shine: rgba(0, 0, 0, 0.1);
+}
+
+:root[data-theme="dark"] .history-item {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+:root[data-theme="dark"] a.history-item:hover,
+:root[data-theme="dark"] .history-item.is-top8,
+:root[data-theme="dark"] .history-item.is-me-row {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+:root[data-theme="dark"] table.data-table tbody tr:hover,
+:root[data-theme="dark"] table.data-table tbody tr.is-top8,
+:root[data-theme="dark"] table.data-table tbody tr.is-top8:hover,
+:root[data-theme="dark"] table.data-table tbody tr.is-me-row,
+:root[data-theme="dark"] table.data-table tbody tr.is-me-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+:root[data-theme="dark"] .badge-disc {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+:root[data-theme="dark"] .sk {
+  --sk-base: rgba(255, 255, 255, 0.045);
+  --sk-shine: rgba(255, 255, 255, 0.1);
+}
+
+/* The phone logo (styles.css: the PNG as a mask over the accent): black
+   on the transparent header, white in dark mode. */
+html.app-header .site-header--admin .site-logo-sm {
+  background: #1a1a1a;
+}
+
+html[data-theme="dark"].app-header .site-header--admin .site-logo-sm {
+  background: #f4f4f6;
+}
+
+/* ---------------------------------------------------------------------------
+   Top bar — the public site's "One top bar" (styles.css), in near-black so
+   the admin reads as the admin at a glance. A computer: one sticky bar —
+   the logo (the name hidden from view), the tabs laid over its middle
+   (#admin-tabs-bar, below), the account button on the right (your email
+   and Esci in a small menu, js/app.js); drilled into a league or an event,
+   the back pill in the logo's place (#admin-back, js/app.js syncBarBack —
+   its width, --bar-lead, is where the tabs start), a thin divider after it.
+   Touch screens: the public phone header — transparent, the logo (or the
+   back pill) and the round account button — and the floating tab pill.
+   --------------------------------------------------------------------------- */
 .site-header--admin {
-  background: linear-gradient(135deg, #050505, #1c1c1c), #000;
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+  background: linear-gradient(135deg, #0b0b0c, #2a2a2d), #000;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
 }
 
 .site-header--admin .site-header-inner {
+  justify-content: flex-start;
   max-width: var(--admin-max-width);
+}
+
+/* The name hidden from view, kept for screen readers (the logo link's only
+   text). */
+.site-header--admin .site-header-brand > span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+html:not(.nav-mobile) .site-header--admin {
+  position: sticky;
+  top: 0;
+  box-sizing: border-box;
+  height: var(--bar-h);
+  padding: 0 var(--bar-pad);
+}
+
+html:not(.nav-mobile) .site-header--admin .site-header-inner {
+  height: 100%;
+  gap: var(--bar-gap);
+}
+
+html:not(.nav-mobile) .site-header--admin .site-logo-sm {
+  width: var(--bar-logo);
+  height: var(--bar-logo);
+}
+
+/* Back (to the leagues, or to where an event was opened from): a white
+   pill in the bar's ink, the label cut with "…". */
+.admin-back {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  height: 38px;
+  max-width: 220px;
+  padding: 0 15px 0 10px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.95);
+  color: #1a1a1a;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.admin-back:hover {
+  background: #fff;
+}
+
+.admin-back[hidden] {
+  display: none;
+}
+
+.admin-back svg {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+.admin-back-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.site-header--admin:has(.admin-back:not([hidden])) .site-header-brand {
+  display: none;
+}
+
+html:not(.nav-mobile) .admin-back {
+  position: relative;
+}
+
+html:not(.nav-mobile) .admin-back::after {
+  content: "";
+  position: absolute;
+  top: 7px;
+  right: calc(-1 * var(--bar-gap) / 2);
+  bottom: 7px;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Touch screens: the pill in the header row, as tall as the round buttons. */
+html.app-header .admin-back {
+  height: 46px;
+  max-width: calc(100% - 70px);
+  padding: 0 18px 0 12px;
+  background: #fff;
+  box-shadow: var(--shadow-card);
+  font-size: 0.95rem;
+}
+
+/* Dark mode, touch screens: a dark glass pill, like the account button
+   beside it. */
+html[data-theme="dark"].app-header .admin-back {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+  color: #fff;
+}
+
+/* The account button (the public header's round one) and its menu. */
+.admin-account {
+  position: relative;
+  margin-left: auto;
+}
+
+.admin-account[hidden] {
+  display: none;
+}
+
+html.app-header body .site-header--admin .admin-account-btn.site-account {
+  border: 0;
+  background: #fff;
+  color: #1a1a1a;
+}
+
+.admin-account-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 40;
+  box-sizing: border-box;
+  width: max-content;
+  min-width: 220px;
+  max-width: calc(100vw - 32px);
+  padding: 14px;
+  border: 1px solid var(--hairline);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: var(--shadow-card-hover);
+  color: var(--text-body);
+  text-align: left;
+  animation: entrance-fade-up 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.admin-account-menu[hidden] {
+  display: none;
+}
+
+.admin-account-label {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-account-email {
+  margin: 4px 0 12px;
+  color: var(--text-title);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.admin-account-menu .btn-secondary {
+  width: 100%;
+}
+
+:root[data-theme="dark"] .admin-account-menu {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: #241a1d;
+}
+
+/* Drilling in has the bar's back pill now: the old round back buttons
+   beside the titles hidden (kept in the markup, their clicks still wired). */
+#league-detail-back,
+#event-flow-back {
+  display: none;
+}
+
+/* The fade between screens (js/app.js swapScreen, styles.css "Page
+   transitions"): the bar stays still on top — the header is named already
+   (site-header, styles.css); the tabs (and the touch pill) too. */
+html.is-admin-transition .admin-tabs {
+  view-transition-name: admin-tabs;
+}
+
+::view-transition-group(admin-tabs),
+::view-transition-old(admin-tabs),
+::view-transition-new(admin-tabs) {
+  z-index: 10;
+  animation-duration: 0s;
 }
 
 /* body is already the shared display:flex/flex-direction:column from
@@ -39,7 +408,12 @@ html {
   flex: 1 0 auto;
 }
 
+/* width: 100% — a flex item of body (a column) with auto side margins
+   otherwise shrinks to its content: a page with a short list came out
+   narrow and centred instead of using the whole column. */
 .admin-shell {
+  box-sizing: border-box;
+  width: 100%;
   max-width: var(--admin-max-width);
   margin: 0 auto;
   padding: 28px 20px 48px;
@@ -102,83 +476,88 @@ html {
   margin-bottom: 20px;
 }
 
-.admin-topbar .whoami {
-  color: var(--text-muted);
-  font-size: 0.85rem;
+.admin-topbar h1 {
+  margin: 0;
+  color: var(--text-title);
+  font-size: 1.6rem;
 }
 
-/* Mimics .site-nav/.site-nav-inner on the public site exactly, including the
-   structure: #admin-tabs-bar is a direct sibling of <header> (not nested
-   inside .admin-shell), so it's naturally full viewport width with no
-   breakout trick needed, sticky right below the header. .admin-tabs-inner
-   re-centers the actual buttons to the same content width as everything
-   else (--admin-max-width). */
+/* The tabs. A computer: laid over the bar's middle (like the public
+   .site-nav) — #admin-tabs-bar is a sibling of the header, pulled up by the
+   bar's height, sticky at the same top, letting clicks through except on
+   its own tabs; its row between the logo / back pill (--bar-lead) and the
+   account button, in the same centred column (--admin-max-width), scrolling
+   sideways when the tabs don't fit. Light text on the dark bar, a glass
+   hover, the current one white. */
 .admin-tabs {
   position: sticky;
   top: 0;
   z-index: 20;
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--hairline);
-  box-shadow: 0 8px 18px rgba(69, 29, 34, 0.05);
 }
 
-/* Padding/gap match .site-nav-inner exactly (same 10px 16px, not the old
-   10px 20px 14px) so the bar comes out the same total height. */
 .admin-tabs-inner {
-  max-width: var(--admin-max-width);
-  margin: 0 auto;
-  padding: 10px 16px;
   display: flex;
-  flex-wrap: wrap;
   gap: 8px;
 }
 
-@media (max-width: 640px) {
-  .admin-tabs-inner {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .admin-tab {
-    flex-shrink: 0;
-  }
+html:not(.nav-mobile) .admin-tabs {
+  z-index: 26;
+  box-sizing: border-box;
+  height: var(--bar-h);
+  margin-top: calc(-1 * var(--bar-h));
+  padding: 0 var(--bar-pad);
+  pointer-events: none;
 }
 
-/* Padding/font-size match .nav-link exactly (8px 14px / 0.92rem, not the
-   old 9px 15px inherited-size) so the tab buttons come out the same height
-   as the public site's nav links. Border also matches .nav-link: transparent
-   by default (unselected tabs shouldn't look boxed), colored in on
-   hover/active only. */
+html:not(.nav-mobile) .admin-tabs-inner {
+  box-sizing: border-box;
+  height: 100%;
+  margin: 0 calc(max(0px, (100% - var(--admin-max-width)) / 2) + 38px + var(--bar-gap)) 0
+    calc(max(0px, (100% - var(--admin-max-width)) / 2) + var(--bar-lead, var(--bar-logo)) + var(--bar-gap));
+  padding: 0;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  pointer-events: auto;
+}
+
+html:not(.nav-mobile) .admin-tabs-inner::-webkit-scrollbar {
+  display: none;
+}
+
 .admin-tab {
+  flex-shrink: 0;
   border: 1px solid transparent;
-  background: #fff;
-  color: var(--brand-red-darker);
+  background: transparent;
   border-radius: var(--radius-pill);
   padding: 8px 14px;
   font-family: inherit;
   font-size: 0.92rem;
   font-weight: 700;
   cursor: pointer;
-  transition: background 180ms ease, color 180ms ease, border-color 180ms ease, transform 180ms ease;
+  transition: background 180ms ease, color 180ms ease;
 }
 
-.admin-tab:hover {
-  transform: translateY(-1px);
-  border-color: var(--hairline-hover);
+html:not(.nav-mobile) .admin-tab {
+  color: rgba(255, 255, 255, 0.85);
 }
 
-.admin-tab.is-active {
-  background: var(--brand-red);
+html:not(.nav-mobile) .admin-tab:hover {
+  background: rgba(255, 255, 255, 0.14);
   color: #fff;
-  border-color: var(--brand-red);
+}
+
+html:not(.nav-mobile) .admin-tab.is-active,
+html:not(.nav-mobile) .admin-tab.is-active:hover {
+  background: #fff;
+  color: #1a1a1a;
 }
 
 /* A tab's count (js/tab-counts.js — "Utenti": pending link requests): a
-   small brand-red circle after its label; white with a red number on the
-   active (red) tab. .admin-nav-count is the pill's total on touch screens,
-   placed in its corner further down. */
+   small brand-red circle after its label. .admin-nav-count is the pill's
+   total on touch screens, placed in its corner further down. */
 .admin-tab-count,
 .admin-nav-count {
   display: inline-flex;
@@ -205,173 +584,225 @@ html {
   display: none;
 }
 
-.admin-tab.is-active .admin-tab-count {
-  background: #fff;
-  color: var(--brand-red);
-}
-
-/* Touch screens: the active row of the pill's list is black — the red
-   circle reads fine there. */
-html.nav-mobile .admin-tab.is-active .admin-tab-count {
-  background: var(--brand-red);
-  color: #fff;
-}
-
-/* Public-site nav's own pill (js/nav-dropdown.js, styles.css) recolored
-   black instead of brand red — a plain visual cue that this is the admin
-   area, not the public site, at a glance even before reading anything.
-   Structurally identical: same real-touch-device gating, same synchronous
-   html.nav-mobile class (see the inline head script above), same
-   self-healing fallback (admin-nav-dropdown.js), same upward-opening
-   dropdown panel. */
+/* Touch screens: the public nav pill (styles.css html.nav-mobile
+   .nav-dropdown-trigger) in near-black — the current tab's name, a caret;
+   its list grows up out of it (the public pill's own keyframes) and
+   retracts back into it (.is-closing, js/admin-nav-dropdown.js), in the
+   page's own colour, the current tab a black chip. The pill slides away
+   while the page scrolls down (.is-scrolled-away). */
 .admin-nav-trigger {
   display: none;
 }
 
-/* No @media wrapper here on purpose — see the equivalent note in
-   styles.css's .site-nav mobile-pill block. html.nav-mobile (set in JS
-   purely from navigator.maxTouchPoints) is the single source of truth;
-   every rule below is already scoped by that class on its own. */
-  html.nav-mobile .admin-tabs {
-    position: fixed;
-    top: auto;
-    bottom: 16px;
-    left: 0;
-    right: 0;
-    background: none;
-    backdrop-filter: none;
-    border-bottom: none;
-    box-shadow: none;
-    padding: 0;
-  }
+html.nav-mobile .admin-tabs {
+  position: fixed;
+  top: auto;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  left: 0;
+  right: 0;
+  padding: 0;
+  transition: bottom 450ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
 
-  html.nav-mobile .admin-tabs-inner {
-    display: none;
-    position: absolute;
-    z-index: 30;
-    bottom: calc(100% + 8px);
-    top: auto;
-    left: 50%;
+html.nav-mobile .admin-tabs.is-scrolled-away {
+  bottom: -90px;
+}
+
+html.nav-mobile .admin-tabs-inner {
+  display: none;
+  position: absolute;
+  z-index: 30;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+  width: 260px;
+  max-width: calc(100vw - 32px);
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* No scrollbar (it showed while the rows slid in, as the public list
+     hides its own). */
+  scrollbar-width: none;
+  padding: 6px;
+  border: 1px solid var(--hairline);
+  border-radius: 32px;
+  background: var(--bg-cream-3);
+  box-shadow: var(--shadow-card-hover);
+}
+
+html.nav-mobile .admin-tabs-inner::-webkit-scrollbar {
+  display: none;
+}
+
+/* Growing up out of the pill (the public list's motion), clipped only on
+   its top — the edge being revealed: the clip reaches 40px past the other
+   three sides, so the list's shadow shows the whole way up, not only once
+   it's fully open. */
+html.nav-mobile .admin-tabs.is-open .admin-tabs-inner {
+  display: flex;
+  animation: admin-nav-panel-in 380ms cubic-bezier(0.2, 0, 0, 1) backwards;
+}
+
+@keyframes admin-nav-panel-in {
+  from {
+    clip-path: inset(calc(100% - 52px) -40px -40px -40px round 28px);
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    clip-path: inset(-40px -40px -40px -40px round 32px);
     transform: translateX(-50%);
-    width: 260px;
-    max-width: calc(100vw - 32px);
-    flex-direction: column;
-    flex-wrap: nowrap;
-    overflow-x: hidden;
-    border: 1px solid var(--hairline);
-    border-radius: 14px;
-    /* Neutral gray, not the public site's red tint — same "less intense
-       version of the trigger's own color" idea, just black's version. */
-    background: #f0f0f0;
-    box-shadow: var(--shadow-card-hover);
-    padding: 6px;
   }
+}
 
-  html.nav-mobile .admin-tabs.is-open .admin-tabs-inner {
-    display: flex;
-    /* Not a shared/reused keyframe — see js/nav-dropdown.js's own note on
-       why this needs its own animation: a generic one ending in
-       `transform: none` would wipe out the translateX(-50%) centering
-       above once it finishes. */
-    animation: admin-nav-panel-in 140ms ease both;
+@keyframes admin-nav-panel-out {
+  from {
+    clip-path: inset(-40px -40px -40px -40px round 32px);
+    transform: translateX(-50%);
   }
-
-  @keyframes admin-nav-panel-in {
-    from {
-      opacity: 0;
-      transform: translateX(-50%) translateY(4px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(-50%);
-    }
+  to {
+    clip-path: inset(calc(100% - 52px) -40px -40px -40px round 28px);
+    transform: translateX(-50%) translateY(10px);
   }
+}
 
-  /* .admin-tab's own base color/active-highlight (further up this file)
-     are the site's red, same as the public nav-link pills — overridden
-     here to a black/gray scheme so the rows read as the same "family" as
-     the black trigger pill above, not an unrelated red list underneath it. */
-  html.nav-mobile .admin-tab {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    min-height: 54px;
-    padding: 14px 18px;
-    font-size: 1.05rem;
-    box-sizing: border-box;
-    /* Not a hardcoded dark color — var(--text-title) already flips to a
-       light color in dark mode (same as the rest of the site), so this
-       stays legible against the dark theme's own dark panel background
-       instead of going near-invisible dark-on-dark. */
-    color: var(--text-title);
-  }
+html.nav-mobile .admin-tabs.is-open .admin-tabs-inner > * {
+  animation: nav-dropdown-item-in 380ms cubic-bezier(0.2, 0, 0, 1) backwards;
+}
 
-  html.nav-mobile .admin-tab.is-active {
-    background: #1a1a1a;
-    color: #fff;
-    border-color: #1a1a1a;
-  }
+html.nav-mobile .admin-tabs.is-closing .admin-tabs-inner {
+  display: flex;
+  animation: admin-nav-panel-out 220ms cubic-bezier(0.3, 0, 0.8, 0.15) both;
+}
 
-  html.nav-mobile .admin-nav-trigger {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 14px;
-    width: 260px;
-    margin: 0 auto;
-    min-height: 56px;
-    font: inherit;
-    font-size: 1.15rem;
-    padding: 16px 22px;
-    border-radius: var(--radius-pill);
-    border: none;
-    background: #1a1a1a;
-    color: #fff;
-    font-weight: 700;
-    cursor: pointer;
-    box-shadow: var(--shadow-card-hover);
-  }
+html.nav-mobile .admin-tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 54px;
+  padding: 14px 18px;
+  box-sizing: border-box;
+  color: var(--text-title);
+  font-size: 1.05rem;
+}
 
+html.nav-mobile .admin-tab.is-active {
+  background: #1a1a1a;
+  color: #fff;
+}
+
+html.nav-mobile .admin-nav-trigger {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 220px;
+  margin: 0 auto;
+  min-height: 48px;
+  padding: 11px 18px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: #1a1a1a;
+  color: #fff;
+  font: inherit;
+  font-size: 1.02rem;
+  font-weight: 700;
+  cursor: pointer;
+  /* A tight shadow under it, a halo around (not pushed down to the
+     screen's edge) — as the public pill. */
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35), 0 -4px 28px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 0, 0, 0.12);
+  transition: transform 140ms ease;
+}
+
+html.nav-mobile .admin-nav-trigger:active {
+  transform: scale(0.96);
+}
+
+@media (hover: hover) {
   html.nav-mobile .admin-nav-trigger:hover {
     background: #000;
   }
+}
 
-  /* The pending-requests total (js/tab-counts.js) in the pill's top-right
-     corner, whichever tab is open. */
-  html.nav-mobile .admin-nav-trigger {
-    position: relative;
+/* The pending-requests total (js/tab-counts.js) in the pill's top-right
+   corner, whichever tab is open. */
+html.nav-mobile .admin-nav-count {
+  position: absolute;
+  top: -6px;
+  right: -4px;
+  min-width: 26px;
+  height: 26px;
+  border: 2px solid #fff;
+  font-size: 0.8rem;
+}
+
+html.nav-mobile .admin-nav-caret {
+  flex-shrink: 0;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 7px solid #fff;
+  transition: transform 180ms ease;
+}
+
+html.nav-mobile .admin-tabs.is-open .admin-nav-caret {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.nav-mobile .admin-tabs {
+    transition: none;
   }
 
-  html.nav-mobile .admin-nav-count {
-    position: absolute;
-    top: -6px;
-    right: -4px;
-    min-width: 26px;
-    height: 26px;
-    border: 2px solid #fff;
-    font-size: 0.8rem;
+  html.nav-mobile .admin-tabs.is-open .admin-tabs-inner,
+  html.nav-mobile .admin-tabs.is-open .admin-tabs-inner > * {
+    animation: none;
   }
+}
 
-  html.nav-mobile .admin-nav-caret {
-    flex-shrink: 0;
-    width: 0;
-    height: 0;
-    border-left: 6px solid transparent;
-    border-right: 6px solid transparent;
-    border-bottom: 7px solid #fff;
-    transition: transform 180ms ease;
-  }
+/* The pill slides away at the page's bottom (js/admin-nav-dropdown.js),
+   so the footer needs no room kept for it — just the home bar's space on
+   notched phones, as the public footer. */
+html.nav-mobile .admin-footer {
+  padding-bottom: calc(14px + env(safe-area-inset-bottom));
+}
 
-  html.nav-mobile .admin-tabs.is-open .admin-nav-caret {
-    transform: rotate(180deg);
-  }
+/* A page shorter than the screen never scrolls, so the pill wouldn't slide
+   away and would sit over the footer: at least a screen tall (the public
+   .page-main's rule), the footer just below it, reached by scrolling. */
+html.nav-mobile #admin-view,
+html.nav-mobile #login-view {
+  box-sizing: border-box;
+  min-height: 100vh;
+  min-height: 100lvh;
+}
 
-  /* Reserves space so the footer's theme toggle never ends up sitting
-     directly behind the now-fixed pill once scrolled to the very bottom. */
-  html.nav-mobile .admin-footer {
-    padding-bottom: 88px;
+/* A list still loading (index.html, replaced by js/crud-ui.js renderTable):
+   placeholder rows with the public site's shimmer (styles.css .sk). */
+.admin-sk {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-sk .sk {
+  display: block;
+  height: 64px;
+  border-radius: 16px;
+  animation: sk-shimmer 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-sk .sk {
+    animation: none;
   }
+}
 
 .admin-panel {
   display: none;
@@ -462,49 +893,134 @@ html.nav-mobile .admin-tab.is-active .admin-tab-count {
   gap: 8px;
 }
 
-/* The badges + caches sync's progress (js/badges-sync.js): a small dark
-   bar bottom-left while it runs (with a spinning ring), then "aggiornati"
-   for a moment — red if it failed. On touch screens above the nav pill. */
-.sync-status {
+/* The admin's notifications (js/toast.js — every action's outcome, the
+   badges sync's progress): dark pills, a coloured disc with the icon (ok:
+   green tick; error: the whole pill red, a "!"; running: a spinning ring).
+   A computer: bottom left, the newest at the bottom; touch screens: top
+   centre, the newest on top (clear of the nav pill at the bottom). Each
+   slides in, and out when it goes. */
+.admin-toasts {
   position: fixed;
   left: 16px;
   bottom: calc(16px + env(safe-area-inset-bottom));
-  z-index: 40;
+  z-index: 60;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: min(420px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+html.nav-mobile .admin-toasts {
+  top: calc(12px + env(safe-area-inset-top));
+  bottom: auto;
+  left: 50%;
+  flex-direction: column;
+  align-items: center;
+  transform: translateX(-50%);
+  width: calc(100vw - 32px);
+}
+
+.admin-toast {
   display: flex;
   align-items: center;
   gap: 10px;
-  max-width: calc(100vw - 32px);
-  padding: 10px 16px;
-  border-radius: var(--radius-pill);
+  box-sizing: border-box;
+  max-width: 100%;
+  padding: 10px 16px 10px 10px;
+  border-radius: 18px;
   background: #1a1a1a;
   color: #fff;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 700;
-  box-shadow: var(--shadow-card-hover);
-  animation: entrance-fade-up 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  line-height: 1.35;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+  cursor: pointer;
+  pointer-events: auto;
+  animation: admin-toast-in 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-.sync-status[hidden] {
-  display: none;
+.admin-toast[data-type="running"] {
+  cursor: default;
 }
 
-.sync-status[data-state="running"]::before {
-  content: "";
+.admin-toast[data-type="error"] {
+  background: var(--status-danger);
+}
+
+.admin-toast-icon {
+  display: inline-flex;
   flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.admin-toast-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.admin-toast[data-type="ok"] .admin-toast-icon {
+  background: var(--status-open);
+}
+
+.admin-toast[data-type="error"] .admin-toast-icon {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.admin-toast[data-type="running"] .admin-toast-icon::before {
+  content: "";
   width: 14px;
   height: 14px;
+  box-sizing: border-box;
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-top-color: #fff;
   border-radius: 50%;
   animation: sync-spin 800ms linear infinite;
 }
 
-.sync-status[data-state="done"] {
-  background: #14914a;
+.admin-toast.is-leaving {
+  animation: admin-toast-out 200ms ease-in both;
 }
 
-.sync-status[data-state="error"] {
-  background: var(--brand-red);
+@keyframes admin-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+}
+
+@keyframes admin-toast-out {
+  to {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+}
+
+html.nav-mobile .admin-toast {
+  animation-name: admin-toast-in-top;
+}
+
+html.nav-mobile .admin-toast.is-leaving {
+  animation-name: admin-toast-out-top;
+}
+
+@keyframes admin-toast-in-top {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.96);
+  }
+}
+
+@keyframes admin-toast-out-top {
+  to {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
 }
 
 @keyframes sync-spin {
@@ -513,15 +1029,29 @@ html.nav-mobile .admin-tab.is-active .admin-tab-count {
   }
 }
 
-html.nav-mobile .sync-status {
-  bottom: calc(16px + 56px + 12px + env(safe-area-inset-bottom));
+:root[data-theme="dark"] .admin-toast:not([data-type="error"]) {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: #2a2a2d;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sync-status,
-  .sync-status[data-state="running"]::before {
+  .admin-toast,
+  .admin-toast.is-leaving,
+  .admin-toast[data-type="running"] .admin-toast-icon::before {
     animation: none;
   }
+}
+
+/* The forms' own line under them: only a note that lasts now (a closed
+   event's locked entries — js/crud-ui.js setNote); empty, no room. */
+.admin-form-card .form-message:empty {
+  display: none;
+}
+
+/* The pending link requests' count (Utenti) stays red: an alert. */
+.admin-tab-count,
+.admin-nav-count {
+  background: var(--status-danger);
 }
 
 /* Annunci: an automatic one (an event's "Risultati online") — delete-only,
@@ -856,7 +1386,11 @@ body.is-busy::before {
 }
 
 .emoji-picker-cell.is-selected {
-  background: rgba(220, 24, 28, 0.18);
+  background: rgba(0, 0, 0, 0.14);
+}
+
+:root[data-theme="dark"] .emoji-picker-cell.is-selected {
+  background: rgba(255, 255, 255, 0.18);
 }
 
 /* The "Custom" tab's SVG icons (and the trigger / tab showing one): sized
@@ -1077,29 +1611,32 @@ body.is-busy::before {
   border-color: var(--brand-red);
 }
 
-/* Giocatori | Partite switch in an event's title bar — same pill language as
-   .round-tab, joined into one control so it reads as "which view", not two
-   actions. Two equal columns, so the red pill (.view-switch-indicator,
-   behind the labels) is exactly one column wide and moves by translateX(100%)
-   — no measuring in JS. js/app.js sets data-active; clicking the active
-   option does nothing. */
+/* Giocatori | Partite switch in an event's title bar — the public site's
+   segmented control (styles.css .profile-tabs: a white rounded bar, icon +
+   label tabs, the current one a red chip), its chip sliding between the
+   two (.view-switch-indicator, behind the labels: two equal columns, so it
+   moves by translateX(100%) — no measuring in JS). js/app.js sets
+   data-active; clicking the active option does nothing. Full width on
+   phones. */
 .view-switch {
   position: relative;
   display: inline-grid;
   grid-template-columns: 1fr 1fr;
   flex-shrink: 0;
-  padding: 3px;
+  box-sizing: border-box;
+  padding: 6px;
   border: 1px solid var(--hairline);
   border-radius: var(--radius-pill);
   background: #fff;
+  box-shadow: var(--shadow-card);
 }
 
 .view-switch-indicator {
   position: absolute;
-  top: 3px;
-  bottom: 3px;
-  left: 3px;
-  width: calc(50% - 3px);
+  top: 6px;
+  bottom: 6px;
+  left: 6px;
+  width: calc(50% - 6px);
   border-radius: var(--radius-pill);
   background: var(--brand-red);
   transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -1111,24 +1648,42 @@ body.is-busy::before {
 
 .view-switch-option {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   border: none;
   background: transparent;
-  color: var(--brand-red-darker);
+  color: var(--text-title);
   border-radius: var(--radius-pill);
-  padding: 7px 16px;
+  padding: 9px 18px;
   font: inherit;
-  font-weight: 700;
+  font-weight: 800;
+  white-space: nowrap;
   cursor: pointer;
-  transition: background 180ms ease, color 220ms ease;
+  transition: background 150ms ease, color 220ms ease;
+}
+
+.view-switch-option svg {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
 }
 
 .view-switch-option:not(.is-active):hover {
-  background: rgba(220, 24, 28, 0.08);
+  background: var(--hairline);
 }
 
 .view-switch-option.is-active {
   color: #fff;
   cursor: default;
+}
+
+@media (max-width: 640px) {
+  .view-switch {
+    display: grid;
+    width: 100%;
+  }
 }
 
 /* The event's content below its title bar, swapped by the switch: slides in
@@ -1273,7 +1828,7 @@ body.is-busy::before {
   }
 
   .admin-topbar h1 {
-    font-size: 1.15rem;
+    font-size: 1.35rem;
   }
 
   .login-card {
@@ -1281,14 +1836,8 @@ body.is-busy::before {
   }
 
   .round-tab,
-  .round-tab-add,
-  .admin-tab {
+  .round-tab-add {
     padding: 8px 12px;
-    font-size: 0.85rem;
-  }
-
-  .view-switch-option {
-    padding: 7px 12px;
     font-size: 0.85rem;
   }
 
@@ -1312,15 +1861,21 @@ body.is-busy::before {
 
 :root[data-theme="dark"] .login-card,
 :root[data-theme="dark"] .admin-form-card,
-:root[data-theme="dark"] .admin-tab,
 :root[data-theme="dark"] .round-tab,
-:root[data-theme="dark"] .view-switch,
 :root[data-theme="dark"] .badges-legend {
   background: rgba(255, 255, 255, 0.05);
 }
 
-:root[data-theme="dark"] .admin-tabs {
-  background: rgba(20, 14, 16, 0.92);
+/* The segmented control solid, as the public one's. */
+:root[data-theme="dark"] .view-switch {
+  background: #1e1517;
+}
+
+/* The dark pill: a lighter near-black with a soft light edge. */
+html[data-theme="dark"].nav-mobile .admin-nav-trigger {
+  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  background: #2a2a2d;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45), 0 -4px 28px rgba(0, 0, 0, 0.55);
 }
 
 /* Without this, :root[data-theme="dark"] .admin-tabs above (meant for the
@@ -1336,7 +1891,7 @@ html[data-theme="dark"].nav-mobile .admin-tabs {
    arbitrary content, so it needs a real color of its own, not a
    translucent tint, to stay legible regardless of what's underneath. */
 html[data-theme="dark"].nav-mobile .admin-tabs-inner {
-  background: #241a1d;
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 /* A lighter gray than the light-mode #1a1a1a — against this panel's own

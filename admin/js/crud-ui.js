@@ -1,4 +1,5 @@
 import { escapeHtml } from "../../js/ui.js";
+import { showToast } from "./toast.js";
 
 // Inline SVGs (not a font glyph) so the Modifica/Elimina row buttons render
 // crisp and identical across every OS/browser instead of relying on however
@@ -163,9 +164,21 @@ export function onBusySubmit(form, handler) {
   });
 }
 
+// An action's outcome ("Salvato.", an error): a notification (js/toast.js —
+// bottom left on a computer, top centre on touch screens), no longer a line
+// under the form; the form's line itself is cleared. Called with "" it only
+// clears it (a form reset). A lasting note about the form's state (a closed
+// event's locked entries) uses setNote instead.
 export function setMessage(el, text, isError) {
+  setNote(el, "");
+  if (text) showToast(text, isError ? "error" : "ok");
+}
+
+// A note that stays under a form while something holds (not an action's
+// outcome): the form's own line.
+export function setNote(el, text) {
   el.textContent = text;
-  el.className = "form-message" + (isError ? " is-error" : text ? " is-ok" : "");
+  el.className = "form-message";
 }
 
 /**

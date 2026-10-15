@@ -6,6 +6,7 @@ import { enhanceSelects } from "../../js/custom-select.js";
 import { enhanceDateInputs } from "../../js/custom-date.js";
 import { setStatusToggle, runBusy, onBusySubmit } from "./crud-ui.js";
 import { emit } from "./bus.js";
+import { showToast } from "./toast.js";
 import { initPlayersAdmin } from "./players-admin.js";
 import { initCommandersAdmin } from "./commanders-admin.js";
 import { initBadgesAdmin } from "./badges-admin.js";
@@ -40,6 +41,11 @@ const eventFlowTitle = document.getElementById("event-flow-title");
 const eventFlowBack = document.getElementById("event-flow-back");
 const eventFlowToggleBtn = document.getElementById("event-flow-toggle-open");
 const eventFlowSwitch = document.getElementById("event-flow-switch");
+const adminAccount = document.getElementById("admin-account");
+const accountBtn = document.getElementById("admin-account-btn");
+const accountMenu = document.getElementById("admin-account-menu");
+const barBack = document.getElementById("admin-back");
+const panelLeagues = document.getElementById("panel-leagues");
 
 let modulesInitialized = false;
 let currentEvent = null;
@@ -49,6 +55,79 @@ let currentEvent = null;
 // instead of shown.
 let shownView = null;
 let viewRequest = 0;
+// Where the event on screen was opened from — the bar's back pill's label
+// (the league's name, or the standalone events' tab).
+let eventOrigin = "";
+
+// The admin's screen changes (a tab, drilling into a league / an event and
+// back) with the public site's fade through (styles.css "Page transitions":
+// the old screen out quickly, the new one in): a View Transition, the bar
+// and the touch pill named so they stay still on top (admin.css). Without
+// View Transitions, or with reduced motion: the swap at once, the old
+// entrance animations (.subview-enter) instead.
+let inTransition = false;
+function swapScreen(update) {
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!document.startViewTransition || reduce || inTransition) {
+    update();
+    return;
+  }
+  const root = document.documentElement;
+  root.classList.add("is-admin-transition");
+  inTransition = true;
+  const transition = document.startViewTransition(() => {
+    update();
+    inTransition = false;
+  });
+  transition.ready.catch(() => {});
+  transition.finished.catch(() => {}).then(() => {
+    inTransition = false;
+    root.classList.remove("is-admin-transition");
+  });
+}
+
+// The back pill in the bar, in the logo's place (admin.css): drilled into
+// an event, back to where it was opened from; into a league, back to the
+// leagues; nowhere else. Its width is the tabs' start on a computer
+// (--bar-lead, the tabs laid over the bar from there).
+let barBackAction = null;
+function setBarBack(label, action) {
+  barBackAction = label ? action : null;
+  barBack.hidden = !label;
+  barBack.querySelector(".admin-back-label").textContent = label ?? "";
+  barBack.setAttribute("aria-label", label ? `Torna a ${label}` : "");
+  document.documentElement.style.setProperty("--bar-lead", label ? `${barBack.offsetWidth}px` : "");
+}
+
+function syncBarBack() {
+  if (!adminEventFlow.hidden) {
+    setBarBack(eventOrigin, () => swapScreen(exitEventFlow));
+  } else if (panelLeagues.classList.contains("is-active") && !subviewLeagueDetail.hidden) {
+    setBarBack("Leghe", () => swapScreen(showLeaguesListSubview));
+  } else {
+    setBarBack(null);
+  }
+}
+
+barBack.addEventListener("click", () => barBackAction?.());
+
+// The account button (on the bar's right): your email and Esci in a small
+// menu under it, closed by a click elsewhere or Escape.
+function setAccountMenu(open) {
+  accountMenu.hidden = !open;
+  accountBtn.setAttribute("aria-expanded", String(open));
+}
+
+accountBtn.addEventListener("click", () => setAccountMenu(accountMenu.hidden));
+document.addEventListener("click", (e) => {
+  if (!adminAccount.contains(e.target)) setAccountMenu(false);
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !accountMenu.hidden) {
+    setAccountMenu(false);
+    accountBtn.focus();
+  }
+});
 
 // Re-triggers a CSS entrance animation (removing the class, forcing a
 // reflow, then re-adding it), since simply toggling `hidden` wouldn't replay
@@ -68,7 +147,8 @@ function showSubview(group, target) {
   group.forEach((el) => {
     el.hidden = el !== target;
   });
-  replayAnimation(target, "subview-enter");
+  if (!inTransition) replayAnimation(target, "subview-enter");
+  syncBarBack();
 }
 
 const leaguesSubviews = [subviewLeaguesList, subviewLeagueDetail];
@@ -102,7 +182,8 @@ function showEventView(view, direction) {
 function enterEventFlow() {
   adminTabsView.hidden = true;
   adminEventFlow.hidden = false;
-  replayAnimation(adminEventFlow, "subview-enter");
+  if (!inTransition) replayAnimation(adminEventFlow, "subview-enter");
+  syncBarBack();
 }
 
 // Also cancels a view still loading, so it can't pop up over the list.
@@ -110,6 +191,7 @@ function exitEventFlow() {
   viewRequest += 1;
   adminEventFlow.hidden = true;
   adminTabsView.hidden = false;
+  syncBarBack();
 }
 
 function showLeaguesListSubview() {
@@ -135,6 +217,7 @@ function initTabs() {
     document.getElementById(`panel-${tab.dataset.tab}`).classList.add("is-active");
     pageTitle.textContent = tabLabel(tab);
     document.title = `${tabLabel(tab)} - Duel Commander Piacenza Admin`;
+    syncBarBack();
   }
 
   tabs.forEach((tab) => {
@@ -142,9 +225,12 @@ function initTabs() {
       // The tab bar is reachable from anywhere, including while drilled
       // into an event — back out of that flow first so the clicked panel is
       // actually visible (and so an event still loading doesn't open over
-      // it afterwards).
-      exitEventFlow();
-      setActiveTab(tab);
+      // it afterwards). The tab already on screen: no fade.
+      if (tab.classList.contains("is-active") && adminEventFlow.hidden) return;
+      swapScreen(() => {
+        exitEventFlow();
+        setActiveTab(tab);
+      });
     });
   });
   if (tabs[0]) setActiveTab(tabs[0]);
@@ -154,6 +240,7 @@ function showAdmin(session) {
   loginView.style.display = "none";
   adminView.style.display = "block";
   adminTabsBar.style.display = "block";
+  adminAccount.hidden = false;
   whoamiEl.textContent = session.user.email;
 
   if (!modulesInitialized) {
@@ -184,14 +271,20 @@ function showAdmin(session) {
 
     async function openEvent(event) {
       currentEvent = event;
+      // Opened from a league's events or from the standalone events tab.
+      const fromTab = document.querySelector(".admin-tab.is-active");
+      eventOrigin =
+        fromTab?.dataset.tab === "leagues" ? leagueDetailTitle.textContent || "Leghe" : fromTab ? tabLabel(fromTab) : "";
       eventFlowTitle.textContent = eventTitle(event);
       setStatusToggle(eventFlowToggleBtn, event.is_open, "event");
       // Set while the flow is still hidden, so the switch's pill jumps
       // straight to Giocatori instead of sliding there from last time.
       setSwitch("entries");
       if (!(await loadEventView("entries"))) return;
-      showEventView("entries", null);
-      enterEventFlow();
+      swapScreen(() => {
+        showEventView("entries", null);
+        enterEventFlow();
+      });
     }
 
     // The pill moves at once (immediate feedback); the content swaps once
@@ -244,13 +337,13 @@ function showAdmin(session) {
       onOpenLeague: (league) => {
         leagueDetailTitle.textContent = league.name;
         eventsCtl.openLeague(league);
-        showLeagueDetailSubview();
+        swapScreen(showLeagueDetailSubview);
       },
     });
 
     leagueDetailBack.addEventListener("click", (e) => {
       e.preventDefault();
-      showLeaguesListSubview();
+      swapScreen(showLeaguesListSubview);
     });
 
     // Back returns to the list the event was opened from — exitEventFlow
@@ -259,7 +352,7 @@ function showAdmin(session) {
     // places an event can be opened from).
     eventFlowBack.addEventListener("click", (e) => {
       e.preventDefault();
-      exitEventFlow();
+      swapScreen(exitEventFlow);
     });
 
     showLeaguesListSubview();
@@ -271,6 +364,9 @@ function showAdmin(session) {
 function showLogin() {
   adminView.style.display = "none";
   adminTabsBar.style.display = "none";
+  adminAccount.hidden = true;
+  setAccountMenu(false);
+  setBarBack(null);
   loginView.style.display = "flex";
 }
 
@@ -282,7 +378,7 @@ onBusySubmit(loginForm, async (e) => {
   try {
     await signIn(email, password);
   } catch (err) {
-    loginError.textContent = "Credenziali non valide.";
+    showToast("Credenziali non valide.", "error");
   }
 });
 
@@ -305,7 +401,7 @@ async function handleSession(session) {
   } catch (err) {
     console.error(err);
     showLogin();
-    loginError.textContent = "Impossibile verificare l'account, riprova.";
+    showToast("Impossibile verificare l'account, riprova.", "error");
     return;
   }
   if (allowed) {
@@ -313,7 +409,7 @@ async function handleSession(session) {
     return;
   }
   showLogin();
-  loginError.textContent = `${session.user.email} non è un account amministratore.`;
+  showToast(`${session.user.email} non è un account amministratore.`, "error");
 }
 
 onAuthChange(handleSession);

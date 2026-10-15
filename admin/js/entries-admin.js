@@ -1,6 +1,6 @@
 import { Players, Commanders, EventEntries } from "../../js/db.js";
 import { archetypeBadge } from "../../js/ui.js";
-import { renderTable, setMessage, fillSelect, onBusySubmit } from "./crud-ui.js";
+import { renderTable, setMessage, setNote, fillSelect, onBusySubmit } from "./crud-ui.js";
 import { emit, on } from "./bus.js";
 
 /**
@@ -41,7 +41,7 @@ export function initEntriesAdmin() {
   function applyLockState() {
     const locked = currentEvent ? !currentEvent.is_open : false;
     form.querySelectorAll("input, select, button").forEach((el) => (el.disabled = locked));
-    setMessage(msgEl, locked ? "Evento chiuso: riaprilo per modificare gli iscritti." : "", false);
+    setNote(msgEl, locked ? "Evento chiuso: riaprilo per modificare gli iscritti." : "");
   }
 
   async function populatePlayers() {

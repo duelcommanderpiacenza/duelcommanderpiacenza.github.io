@@ -29,11 +29,27 @@
 </head>
 <body>
 
+<!-- One bar, like the public site's (admin.css "Top bar"): the logo (or,
+     drilled into a league / an event, the back pill in its place —
+     js/app.js syncBarBack), the tabs laid over its middle (#admin-tabs-bar,
+     a sibling: on touch screens the floating pill instead), the account
+     button on the right (your email and Esci — js/app.js). -->
 <header class="site-header site-header--admin">
-  <a class="site-header-brand" href="index.html">
-    <img src="../dc_pc.png" alt="" class="site-logo-sm">
-    <span>Duel Commander Piacenza &mdash; Admin</span>
-  </a>
+  <div class="site-header-inner">
+    <button type="button" class="admin-back" id="admin-back" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg><span class="admin-back-label"></span></button>
+    <a class="site-header-brand" href="index.html">
+      <img src="../dc_pc.png" alt="" class="site-logo-sm">
+      <span>Duel Commander Piacenza &mdash; Admin</span>
+    </a>
+    <div class="admin-account" id="admin-account" hidden>
+      <button type="button" class="site-account admin-account-btn" id="admin-account-btn" aria-haspopup="true" aria-expanded="false" aria-controls="admin-account-menu" aria-label="Account"><svg class="site-account-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"></path></svg></button>
+      <div class="admin-account-menu" id="admin-account-menu" hidden>
+        <p class="admin-account-label">Connesso come</p>
+        <p class="admin-account-email" id="whoami"></p>
+        <button type="button" class="btn-secondary" id="logout-btn">Esci</button>
+      </div>
+    </div>
+  </div>
 </header>
 
 <!-- A direct sibling of <header>, same as .site-nav on the public site —
@@ -80,11 +96,7 @@
 
 <div id="admin-view" class="admin-shell" hidden>
   <div class="admin-topbar">
-    <h1 style="margin:0;font-size:1.4rem;" id="admin-page-title">Gestione dati</h1>
-    <div>
-      <span class="whoami" id="whoami"></span>
-      <button type="button" class="btn-secondary" id="logout-btn" style="margin-left:10px;">Esci</button>
-    </div>
+    <h1 id="admin-page-title">Gestione dati</h1>
   </div>
 
   <div id="admin-tabs-view">
@@ -123,7 +135,7 @@
           <label for="players-admin-search">Cerca</label>
           <input type="search" id="players-admin-search" placeholder="Nome o handle...">
         </div>
-        <div id="players-admin-list"><p class="page-loading">Caricamento...</p></div>
+        <div id="players-admin-list"><div class="admin-sk" role="status" aria-label="Caricamento..."><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i></div></div>
       </div>
     </div>
   </section>
@@ -180,7 +192,7 @@
           <label for="commanders-admin-search">Cerca</label>
           <input type="search" id="commanders-admin-search" placeholder="Nome comandante...">
         </div>
-        <div id="commanders-admin-list"><p class="page-loading">Caricamento...</p></div>
+        <div id="commanders-admin-list"><div class="admin-sk" role="status" aria-label="Caricamento..."><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i></div></div>
       </div>
     </div>
   </section>
@@ -258,7 +270,7 @@
             </select>
           </div>
         </div>
-        <div id="badges-admin-list"><p class="page-loading">Caricamento...</p></div>
+        <div id="badges-admin-list"><div class="admin-sk" role="status" aria-label="Caricamento..."><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i></div></div>
       </div>
     </div>
 
@@ -334,7 +346,7 @@
             <label for="leagues-admin-search">Cerca</label>
             <input type="search" id="leagues-admin-search" placeholder="Nome lega...">
           </div>
-          <div id="leagues-admin-list"><p class="page-loading">Caricamento...</p></div>
+          <div id="leagues-admin-list"><div class="admin-sk" role="status" aria-label="Caricamento..."><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i></div></div>
         </div>
       </div>
     </div>
@@ -381,7 +393,7 @@
             <p class="form-message" id="events-admin-message"></p>
           </form>
         </div>
-        <div id="events-admin-list"><p class="page-loading">Caricamento...</p></div>
+        <div id="events-admin-list"><div class="admin-sk" role="status" aria-label="Caricamento..."><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i></div></div>
       </div>
     </div>
 
@@ -426,7 +438,7 @@
           <label for="standalone-events-admin-search">Cerca</label>
           <input type="search" id="standalone-events-admin-search" placeholder="Nome evento...">
         </div>
-        <div id="standalone-events-admin-list"><p class="page-loading">Caricamento...</p></div>
+        <div id="standalone-events-admin-list"><div class="admin-sk" role="status" aria-label="Caricamento..."><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i></div></div>
       </div>
     </div>
   </section>
@@ -462,7 +474,7 @@
           <label for="announcements-admin-search">Cerca</label>
           <input type="search" id="announcements-admin-search" placeholder="Titolo annuncio...">
         </div>
-        <div id="announcements-admin-list"><p class="page-loading">Caricamento...</p></div>
+        <div id="announcements-admin-list"><div class="admin-sk" role="status" aria-label="Caricamento..."><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i></div></div>
       </div>
     </div>
   </section>
@@ -472,7 +484,7 @@
   <section class="admin-panel" id="panel-users">
     <div class="users-admin-requests-block">
       <h3>Richieste in attesa <span id="users-admin-requests-count"></span></h3>
-      <div id="users-admin-requests"><p class="page-loading">Caricamento...</p></div>
+      <div id="users-admin-requests"><div class="admin-sk" role="status" aria-label="Caricamento..."><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i></div></div>
     </div>
 
     <div class="admin-panel-layout">
@@ -500,7 +512,7 @@
           <label for="users-admin-search">Cerca</label>
           <input type="search" id="users-admin-search" placeholder="Email o giocatore...">
         </div>
-        <div id="users-admin-list"><p class="page-loading">Caricamento...</p></div>
+        <div id="users-admin-list"><div class="admin-sk" role="status" aria-label="Caricamento..."><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i></div></div>
       </div>
     </div>
   </section>
@@ -525,8 +537,8 @@
         </div>
         <div class="view-switch" id="event-flow-switch" data-active="entries" role="group" aria-label="Sezione dell'evento">
           <span class="view-switch-indicator" aria-hidden="true"></span>
-          <button type="button" class="view-switch-option is-active" data-view="entries" aria-pressed="true">Giocatori</button>
-          <button type="button" class="view-switch-option" data-view="matches" aria-pressed="false">Partite</button>
+          <button type="button" class="view-switch-option is-active" data-view="entries" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"></path><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18.5 14.4c1.8.8 3 2.7 3 5.6"></path></svg><span>Giocatori</span></button>
+          <button type="button" class="view-switch-option" data-view="matches" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 17.5 3 6V3h3l11.5 11.5"></path><path d="m13 19 6-6M16 16l4 4M19 21l2-2"></path><path d="M9.5 6.5 13 3h3v3l-3.5 3.5"></path><path d="m5 14 4 4M7 17l-3 3M3 19l2 2"></path></svg><span>Partite</span></button>
         </div>
       </div>
     </div>
@@ -625,7 +637,7 @@
 
       <div style="margin-top:32px;">
         <h3 style="margin:0;">Classifica evento</h3>
-        <div id="matches-event-leaderboard"><p class="page-loading">Caricamento...</p></div>
+        <div id="matches-event-leaderboard"><div class="admin-sk" role="status" aria-label="Caricamento..."><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i></div></div>
       </div>
     </div>
 

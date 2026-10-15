@@ -23,6 +23,7 @@
 // downloaded once and shared by both.
 
 import { computeAutoBadgeAssignments, closedLeagueWinners } from "../../js/auto-badges.js";
+import { showToast } from "./toast.js";
 import { computeEventLeaderboard } from "../../js/leaderboard.js";
 import { computeCardProgress } from "../../js/card-progress.js";
 import { PlayerAutoBadges, EventStandings, PlayerProgress, Events, Leagues, fetchEventsResults } from "../../js/db.js";
@@ -86,8 +87,8 @@ async function runSync() {
 // Callers fire and forget it (the "Salvato." message comes first), but it
 // takes several seconds — and leaving or reloading the admin page meanwhile
 // cuts it off, leaving the caches unchanged (or, between a table's delete
-// and its insert, empty). So it shows its progress (a small status bar,
-// admin.css .sync-status) and the browser asks before leaving while it runs.
+// and its insert, empty). So it shows its progress (one of the admin's
+// notifications, js/toast.js) and the browser asks before leaving while it runs.
 // And it never runs twice at once: two overlapping runs (closing then
 // reopening an event, quickly) would interleave their delete-all /
 // insert-all on the same tables — one failing on duplicate rows, the final
@@ -96,8 +97,7 @@ async function runSync() {
 
 let current = null; // the run in progress (its queued rerun included)
 let queued = false;
-let statusEl = null;
-let hideTimer = null;
+let statusToast = null;
 
 const STATUS_TEXT = {
   running: "Aggiornamento di badge e statistiche… non chiudere la pagina",
@@ -105,18 +105,17 @@ const STATUS_TEXT = {
   error: "Aggiornamento di badge e statistiche non riuscito (dettagli nella console)",
 };
 
+// Its progress as one of the admin's notifications (js/toast.js): a
+// spinning one while it runs, turned into "aggiornati" (or the error) at
+// the end, gone a few seconds later.
 function showStatus(state) {
-  if (!statusEl) {
-    statusEl = document.createElement("div");
-    statusEl.className = "sync-status";
-    statusEl.setAttribute("role", "status");
-    document.body.append(statusEl);
+  const type = state === "running" ? "running" : state === "done" ? "ok" : "error";
+  if (statusToast && state !== "running") {
+    statusToast.update(STATUS_TEXT[state], type);
+    statusToast = null;
+    return;
   }
-  clearTimeout(hideTimer);
-  statusEl.dataset.state = state;
-  statusEl.textContent = STATUS_TEXT[state];
-  statusEl.hidden = false;
-  if (state !== "running") hideTimer = setTimeout(() => (statusEl.hidden = true), state === "error" ? 8000 : 3000);
+  if (!statusToast) statusToast = showToast(STATUS_TEXT[state], type);
 }
 
 window.addEventListener("beforeunload", (e) => {
