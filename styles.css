@@ -13336,10 +13336,11 @@ a.bubble:active {
   height: 18px;
 }
 
-/* Short labels (renderBarChart's `shortLabels` — the Comandanti colours'
-   names): a narrow label column, the bars the rest of the row. */
-.bar-chart-body-short-labels .bar-chart-row {
-  grid-template-columns: 72px 1fr 48px;
+/* Their labels are short (an archetype, a colour — "midrange",
+   "Incolore"): a narrower label column than the commanders' 108px, the
+   bars taking the room. */
+.bar-chart-body-spacious .bar-chart-row {
+  grid-template-columns: 80px 1fr 52px;
 }
 
 /* Comandanti/Archetipi chart row (Metashare, Winrate, + Comandanti's
