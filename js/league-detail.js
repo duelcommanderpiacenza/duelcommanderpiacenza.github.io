@@ -17,6 +17,7 @@ import { createArtPainter } from "./player-card.js";
 import { initFollowButton } from "./follow-button.js";
 import { initTabs } from "./tabs.js";
 import { initBackToTop } from "./back-to-top.js";
+import { openInfoDialog } from "./info-dialog.js";
 
 // How many leaderboard rows get the "top 8" highlight (styles.css .is-top8).
 const LEAGUE_TOP_HIGHLIGHT = 8;
@@ -143,6 +144,20 @@ function timelineHtml(allEvents, playersById, scheduled, today) {
   return `<ol class="league-timeline">${items.map((item, i) => timelineItemHtml(item, i + 1, today)).join("")}</ol>`;
 }
 
+// The Classifica's "?" (on touch screens, the same "?" above the list): how
+// the standings are scored, in the site's shared pop-up (js/info-dialog.js);
+// the text lives in league.html's <template>. Wired first, so it works even
+// while the data still loads.
+function initLeagueHelp() {
+  const text = document.getElementById("league-help-text");
+  if (!text) return;
+  for (const btn of document.querySelectorAll("[data-league-help]")) {
+    btn.addEventListener("click", () =>
+      openInfoDialog({ id: "league-help-dialog", title: "Come si calcola la classifica", bodyHtml: text.innerHTML })
+    );
+  }
+}
+
 // In-app page (js/router.js): mounted by the router on this page's <main>
 // (data-page), on first load and after each in-app navigation; `signal`
 // aborts when the page is left.
@@ -162,6 +177,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   // — a long page, hence the back-to-top button.
   initTabs(tabsEl);
   initBackToTop({ signal });
+  initLeagueHelp();
 
   // The ★ on the hero's edge, for signed-in accounts (not awaited: it never
   // holds up the page).

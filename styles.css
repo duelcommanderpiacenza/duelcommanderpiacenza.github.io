@@ -3708,6 +3708,60 @@ body.is-loading .filter-panel.detail-filter-panel {
   gap: 10px;
 }
 
+/* league.html's Classifica: on touch screens, where the panels have no
+   titles (the "?" above goes with the hidden <h2>), the same "?" alone on
+   the right above the list instead. */
+.help-toggle-btn.league-help-touch {
+  display: none;
+}
+
+html.app-header .help-toggle-btn.league-help-touch {
+  display: flex;
+  margin: 0 0 12px auto;
+}
+
+/* Its pop-up (js/league-detail.js initLeagueHelp): a small heading per
+   rule, and the points by position as a row of little tiles. */
+#league-help-dialog h4 {
+  margin: 16px 0 6px;
+  color: var(--text-title);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+#league-help-dialog h4:first-child {
+  margin-top: 0;
+}
+
+.league-help-points {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  margin: 10px 0;
+}
+
+.league-help-points > div {
+  padding: 6px 2px;
+  border: 1px solid color-mix(in srgb, var(--brand-red) 18%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--brand-red) 5%, transparent);
+  text-align: center;
+}
+
+.league-help-points dt {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.league-help-points dd {
+  margin: 2px 0 0;
+  color: var(--brand-red);
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
 /* Small explanation pop-up (a <dialog> sharing .ecal-dialog's box). */
 /* Open: a column — the title fixed, the content scrolling on its own under
    it (.info-dialog-body), its scrollbar inside the rounded box rather than

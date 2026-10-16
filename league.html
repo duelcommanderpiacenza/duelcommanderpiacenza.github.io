@@ -149,11 +149,34 @@
       </section>
 
       <section id="league-leaderboard-section" role="tabpanel" aria-labelledby="league-tab-leaderboard">
-        <h2>Classifica</h2>
+        <!-- How the standings are scored: the "?" after the title on a
+             computer; on touch screens (no titles there, the tab names the
+             panel) the same "?" alone, on the right above the list. Both
+             open the shared pop-up with #league-help-text
+             (js/league-detail.js). -->
+        <h2 class="heading-help">Classifica <button type="button" class="help-toggle-btn" data-league-help aria-haspopup="dialog" aria-label="Come si calcola la classifica">?</button></h2>
+        <button type="button" class="help-toggle-btn league-help-touch" data-league-help aria-haspopup="dialog" aria-label="Come si calcola la classifica">?</button>
         <div id="league-leaderboard" class="page-loading">Caricamento...</div>
       </section>
     </div>
   </div>
+  <!-- The "?" pop-up's text (LEAGUE_RULES.md, simplified for players). -->
+  <template id="league-help-text">
+    <h4>Ogni evento</h4>
+    <p>Si gioca a punti partita (vittoria 3, pareggio 1, sconfitta 0; il bye vale una vittoria). La posizione finale vale punti lega:</p>
+    <dl class="league-help-points">
+      <div><dt>1°</dt><dd>20</dd></div>
+      <div><dt>2°</dt><dd>17</dd></div>
+      <div><dt>3°–4°</dt><dd>14</dd></div>
+      <div><dt>5°–8°</dt><dd>11</dd></div>
+      <div><dt>dal 9°</dt><dd>5</dd></div>
+    </dl>
+    <p><strong>+2</strong> a chi chiude l&rsquo;evento imbattuto.</p>
+    <h4>Il peggiore non conta</h4>
+    <p>Il tuo risultato peggiore della lega viene scartato: anche con una giornata storta resti in corsa per la classifica.</p>
+    <h4>Presenza completa</h4>
+    <p><strong>+5</strong> a chi ha giocato tutti gli eventi, assegnati quando la lega è conclusa.</p>
+  </template>
 </main>
 
 <footer>

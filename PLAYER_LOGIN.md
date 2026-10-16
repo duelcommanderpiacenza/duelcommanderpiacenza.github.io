@@ -472,10 +472,12 @@ live first (5.3), so that page exists before Google is given its address.
 
 ### Still to decide
 
-- [ ] Google Analytics (index.html, social.html — there before this
+- [x] Google Analytics (index.html, social.html — there before this
   feature): as configured it sets cookies without asking; under the Italian
   Garante's rules analytics cookies like these need prior consent (a cookie
   banner), unless GA is removed or set up not to. Decide before/at go-live.
+  **Decided 2026-10-16: removed** (the gtag snippet gone from both pages,
+  privacy.html updated).
 
 ## After go-live: Google's own sign-in button
 
