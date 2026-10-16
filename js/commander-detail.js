@@ -20,7 +20,7 @@ import {
   setHistoryCount,
 } from "./history-list.js";
 import { hidePageLoading } from "./page-loading.js";
-import { initTitleFit } from "./page-title-fit.js";
+import { initTitleFit, fitTitleToOneLine } from "./page-title-fit.js";
 import { initFollowButton } from "./follow-button.js";
 import { createArtPainter } from "./player-card.js";
 import { initTabs } from "./tabs.js";
@@ -164,7 +164,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       });
     });
 
-    // Every (event, player) pair that piloted this commander.
+    // Every (event, player) pair that piloted this commander — as the main
+    // commander or as someone's partner.
     const playedEntries = await EventEntries.listByCommander(id);
     if (signal.aborted) return;
 
@@ -176,7 +177,6 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       return;
     }
 
-    const playedEntryByKey = new Map(playedEntries.map((e) => [`${e.event_id}_${e.player_id}`, e]));
     const eventIds = [...new Set(playedEntries.map((e) => e.event_id))];
 
     // Every event too (for the usage chart's zeros) — not fatal: without
@@ -197,95 +197,134 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       return dateCompare !== 0 ? dateCompare : (b.round ?? 0) - (a.round ?? 0);
     });
 
-    const playersMap = new Map();
-    // One count per player of how many entries (events) they piloted this
-    // commander in — playedEntries itself, not `rows` below, since rows is
-    // per-match-side and would overcount a player across a multi-round event.
-    const timesPlayedByPlayer = new Map();
+    // Every pilot's final position in each event (Storico partite's
+    // sub-cards), whatever the pairing shown.
+    const positionByEventPlayer = new Map(); // `${event id}_${player id}` -> position
+    for (const eventId of eventIds) {
+      computeEventLeaderboard(
+        matches.filter((m) => m.event_id === eventId),
+        allEntries.filter((e) => e.event_id === eventId)
+      ).forEach((s, i) => {
+        if (s.player) positionByEventPlayer.set(`${eventId}_${s.player.id}`, i + 1);
+      });
+    }
+
+    // The pairings this commander was played in: an entry's other commander
+    // is its partner — whichever seat each was entered in (X + Y is Y + X);
+    // none, played alone. "Tutti" every entry; then alone, then each
+    // partner, most played first.
+    const partnerOf = (e) => (e.commander_id === id ? e.partner_commander ?? null : e.commander ?? null);
+    const byPartner = new Map(); // "none" | partner id -> { key, commander, count }
     for (const e of playedEntries) {
-      if (!e.player) continue;
-      playersMap.set(e.player.id, e.player);
-      timesPlayedByPlayer.set(e.player.id, (timesPlayedByPlayer.get(e.player.id) ?? 0) + 1);
+      const partner = partnerOf(e);
+      const key = partner?.id ?? "none";
+      if (!byPartner.has(key)) byPartner.set(key, { key, commander: partner, count: 0 });
+      byPartner.get(key).count += 1;
     }
-    const playerList = Array.from(playersMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+    const partnerOptions = [...byPartner.values()]
+      .filter((o) => o.key !== "none")
+      .sort((a, b) => b.count - a.count || a.commander.name.localeCompare(b.commander.name));
+    const options = [
+      { key: "all", label: "Tutti", count: playedEntries.length },
+      ...(byPartner.has("none") ? [{ key: "none", label: "Da solo", count: byPartner.get("none").count }] : []),
+      ...partnerOptions.map((o) => ({ key: o.key, label: `con ${o.commander.name.split(",")[0]}`, count: o.count, commander: o.commander })),
+    ];
 
-    // Decks played per event date — playedEntries (one per pilot per event),
-    // not `rows` (per match-side, which would inflate the count by however
-    // many rounds that event had). Every played event is a point, 0 where
-    // nobody played it — from the club's first event (not this commander's:
-    // the line shows when it arrived too), at most the last
-    // DEFAULT_DATE_FROM_YEARS years (the filters' default "Dal"), up to the
-    // latest one (events on the same date added together).
-    const chartFrom = isoDateYearsAgo(DEFAULT_DATE_FROM_YEARS);
-    const deckCountByDate = new Map();
-    for (const e of playedEntries) {
-      const date = e.event?.event_date;
-      if (!date || date < chartFrom) continue;
-      deckCountByDate.set(date, (deckCountByDate.get(date) ?? 0) + 1);
-    }
-    const chartDates = new Set(deckCountByDate.keys());
-    for (const ev of allEvents) {
-      if (!ev.is_open && ev.event_date && ev.event_date >= chartFrom) chartDates.add(ev.event_date);
-    }
-    const deckChartPoints = [...chartDates]
-      .sort()
-      .map((date) => ({ date, value: deckCountByDate.get(date) ?? 0 }));
-    decksChartEl.innerHTML = renderLineChart(deckChartPoints, "Non ci sono ancora dati sufficienti.", "Utilizzo");
+    // Draws the page's sections from `entries` (the pairing shown): the
+    // usage chart, Giocatori, Storico partite and the hero's numbers.
+    function renderSections(entries) {
+      const playedEntryByKey = new Map(entries.map((e) => [`${e.event_id}_${e.player_id}`, e]));
 
-    // One row per (match, side) where that side piloted this commander — a
-    // mirror match (both sides on this commander) legitimately yields two rows.
-    const rows = [];
-    for (const m of matches) {
-      const selfEntry1 = playedEntryByKey.get(`${m.event_id}_${m.player1_id}`);
-      if (selfEntry1) {
-        const oppEntry = entryByKey.get(`${m.event_id}_${m.player2_id}`);
-        rows.push({
-          event: m.event,
-          round: m.round,
-          self: m.player1,
-          opponent: m.player2,
-          isBye: isBye(m),
-          isDrop: isDrop(m),
-          outcome: outcomeFor(m, true),
-          scoreLabel: isBye(m) ? "Bye" : isDrop(m) ? "Drop" : selfScoreLabel(m, true),
-          oppCommander: oppEntry?.commander ?? null,
-          oppPartner: oppEntry?.partner_commander ?? null,
-        });
+      const playersMap = new Map();
+      // One count per player of how many entries (events) they piloted this
+      // commander in — the entries themselves, not `rows` below, since rows
+      // is per-match-side and would overcount a player across a multi-round
+      // event.
+      const timesPlayedByPlayer = new Map();
+      for (const e of entries) {
+        if (!e.player) continue;
+        playersMap.set(e.player.id, e.player);
+        timesPlayedByPlayer.set(e.player.id, (timesPlayedByPlayer.get(e.player.id) ?? 0) + 1);
       }
-      // player2_id is null for a bye, so this lookup naturally never matches
-      // one — a bye can only ever be "self as player1" above.
-      const selfEntry2 = playedEntryByKey.get(`${m.event_id}_${m.player2_id}`);
-      if (selfEntry2) {
-        const oppEntry = entryByKey.get(`${m.event_id}_${m.player1_id}`);
-        rows.push({
-          event: m.event,
-          round: m.round,
-          self: m.player2,
-          opponent: m.player1,
-          outcome: outcomeFor(m, false),
-          scoreLabel: selfScoreLabel(m, false),
-          oppCommander: oppEntry?.commander ?? null,
-          oppPartner: oppEntry?.partner_commander ?? null,
-        });
-      }
-    }
+      const playerList = Array.from(playersMap.values()).sort((a, b) => a.name.localeCompare(b.name));
 
-    // Most recent event date among a player's own rows above — i.e. the
-    // last time they actually played a match on this commander, not just
-    // the last event they were entered into with it.
-    const lastPlayedByPlayer = new Map();
-    for (const r of rows) {
-      if (!r.self || !r.event?.event_date) continue;
-      const current = lastPlayedByPlayer.get(r.self.id);
-      if (!current || r.event.event_date > current) lastPlayedByPlayer.set(r.self.id, r.event.event_date);
-    }
-    // Giocatori: one sub-card per pilot, the whole card a link to the
-    // player's page — name and last match, events played on the right.
-    playersEl.innerHTML = playerList.length
-      ? historyPanelHtml(
-          playerList
-            .map(
-              (p) => `
+      // Decks played per event date — the entries (one per pilot per event),
+      // not `rows` (per match-side, which would inflate the count by however
+      // many rounds that event had). Every played event is a point, 0 where
+      // nobody played it — from the club's first event (not this commander's:
+      // the line shows when it arrived too), at most the last
+      // DEFAULT_DATE_FROM_YEARS years (the filters' default "Dal"), up to the
+      // latest one (events on the same date added together).
+      const chartFrom = isoDateYearsAgo(DEFAULT_DATE_FROM_YEARS);
+      const deckCountByDate = new Map();
+      for (const e of entries) {
+        const date = e.event?.event_date;
+        if (!date || date < chartFrom) continue;
+        deckCountByDate.set(date, (deckCountByDate.get(date) ?? 0) + 1);
+      }
+      const chartDates = new Set(deckCountByDate.keys());
+      for (const ev of allEvents) {
+        if (!ev.is_open && ev.event_date && ev.event_date >= chartFrom) chartDates.add(ev.event_date);
+      }
+      const deckChartPoints = [...chartDates]
+        .sort()
+        .map((date) => ({ date, value: deckCountByDate.get(date) ?? 0 }));
+      decksChartEl.innerHTML = renderLineChart(deckChartPoints, "Non ci sono ancora dati sufficienti.", "Utilizzo");
+
+      // One row per (match, side) where that side piloted this commander — a
+      // mirror match (both sides on this commander) legitimately yields two rows.
+      const rows = [];
+      for (const m of matches) {
+        const selfEntry1 = playedEntryByKey.get(`${m.event_id}_${m.player1_id}`);
+        if (selfEntry1) {
+          const oppEntry = entryByKey.get(`${m.event_id}_${m.player2_id}`);
+          rows.push({
+            event: m.event,
+            round: m.round,
+            self: m.player1,
+            opponent: m.player2,
+            isBye: isBye(m),
+            isDrop: isDrop(m),
+            outcome: outcomeFor(m, true),
+            scoreLabel: isBye(m) ? "Bye" : isDrop(m) ? "Drop" : selfScoreLabel(m, true),
+            oppCommander: oppEntry?.commander ?? null,
+            oppPartner: oppEntry?.partner_commander ?? null,
+          });
+        }
+        // player2_id is null for a bye, so this lookup naturally never matches
+        // one — a bye can only ever be "self as player1" above.
+        const selfEntry2 = playedEntryByKey.get(`${m.event_id}_${m.player2_id}`);
+        if (selfEntry2) {
+          const oppEntry = entryByKey.get(`${m.event_id}_${m.player1_id}`);
+          rows.push({
+            event: m.event,
+            round: m.round,
+            self: m.player2,
+            opponent: m.player1,
+            outcome: outcomeFor(m, false),
+            scoreLabel: selfScoreLabel(m, false),
+            oppCommander: oppEntry?.commander ?? null,
+            oppPartner: oppEntry?.partner_commander ?? null,
+          });
+        }
+      }
+
+      // Most recent event date among a player's own rows above — i.e. the
+      // last time they actually played a match on this commander, not just
+      // the last event they were entered into with it.
+      const lastPlayedByPlayer = new Map();
+      for (const r of rows) {
+        if (!r.self || !r.event?.event_date) continue;
+        const current = lastPlayedByPlayer.get(r.self.id);
+        if (!current || r.event.event_date > current) lastPlayedByPlayer.set(r.self.id, r.event.event_date);
+      }
+      // Giocatori: one sub-card per pilot, the whole card a link to the
+      // player's page — name and last match, events played on the right.
+      playersEl.innerHTML = playerList.length
+        ? historyPanelHtml(
+            playerList
+              .map(
+                (p) => `
       <a class="history-item history-player" href="player.html?id=${p.id}">
         <div class="history-main">
           <span class="history-title"><span class="history-name">${playerLabel(p, { link: false })}</span></span>
@@ -296,72 +335,197 @@ export async function mount({ signal = new AbortController().signal } = {}) {
           <span class="history-stat-label">Volte giocato</span>
         </div>
       </a>`
-            )
-            .join("")
-        )
-      : '<p class="page-empty">Nessun giocatore ha ancora usato questo commander.</p>';
-    initScrollFade(playersEl);
-    setHistoryCount("commander-players-count", playerList.length);
+              )
+              .join("")
+          )
+        : '<p class="page-empty">Nessun giocatore ha ancora usato questo commander.</p>';
+      initScrollFade(playersEl);
+      setHistoryCount("commander-players-count", playerList.length);
 
-    // A bye has no real opponent/commander matchup to show — the hero's
-    // numbers below skip it too, only for its own reason.
-    // Event date (newest first) as the primary sort, then alphabetically by
-    // the player who piloted this commander (groups a date's rows by player
-    // instead of interleaving them round-by-round), then by round ascending
-    // within that player's own rows on that date (turno 1 before turno 2).
-    const matchRows = rows
-      .filter((r) => !r.isBye)
-      .sort((a, b) => {
-        const dateCompare = (b.event?.event_date ?? "").localeCompare(a.event?.event_date ?? "");
-        if (dateCompare !== 0) return dateCompare;
-        const nameCompare = (a.self?.name ?? "").localeCompare(b.self?.name ?? "");
-        if (nameCompare !== 0) return nameCompare;
-        return (a.round ?? 0) - (b.round ?? 0);
-      });
-    // Storico partite: one sub-card per event + pilot (matchRows' order), with
-    // the pilot and their final position in that event — computed from the
-    // event's entries + matches already loaded above.
-    const positionByEventPlayer = new Map(); // `${event id}_${player id}` -> position
-    for (const eventId of eventIds) {
-      computeEventLeaderboard(
-        matches.filter((m) => m.event_id === eventId),
-        allEntries.filter((e) => e.event_id === eventId)
-      ).forEach((s, i) => {
-        if (s.player) positionByEventPlayer.set(`${eventId}_${s.player.id}`, i + 1);
-      });
-    }
-    const matchGroups = new Map();
-    for (const r of matchRows) {
-      const key = `${r.event?.id ?? ""}_${r.self?.id ?? ""}`;
-      if (!matchGroups.has(key)) {
-        matchGroups.set(key, {
-          event: r.event,
-          // Unlinked: the whole sub-card links to the event.
-          subline: playerLabel(r.self, { link: false }),
-          position: positionByEventPlayer.get(key),
-          rounds: [],
+      // A bye has no real opponent/commander matchup to show — the hero's
+      // numbers below skip it too, only for its own reason.
+      // Event date (newest first) as the primary sort, then alphabetically by
+      // the player who piloted this commander (groups a date's rows by player
+      // instead of interleaving them round-by-round), then by round ascending
+      // within that player's own rows on that date (turno 1 before turno 2).
+      const matchRows = rows
+        .filter((r) => !r.isBye)
+        .sort((a, b) => {
+          const dateCompare = (b.event?.event_date ?? "").localeCompare(a.event?.event_date ?? "");
+          if (dateCompare !== 0) return dateCompare;
+          const nameCompare = (a.self?.name ?? "").localeCompare(b.self?.name ?? "");
+          if (nameCompare !== 0) return nameCompare;
+          return (a.round ?? 0) - (b.round ?? 0);
         });
+      // Storico partite: one sub-card per event + pilot (matchRows' order),
+      // with the pilot and their final position in that event.
+      const matchGroups = new Map();
+      for (const r of matchRows) {
+        const key = `${r.event?.id ?? ""}_${r.self?.id ?? ""}`;
+        if (!matchGroups.has(key)) {
+          matchGroups.set(key, {
+            event: r.event,
+            // Unlinked: the whole sub-card links to the event.
+            subline: playerLabel(r.self, { link: false }),
+            position: positionByEventPlayer.get(key),
+            rounds: [],
+          });
+        }
+        matchGroups.get(key).rounds.push(r);
       }
-      matchGroups.get(key).rounds.push(r);
-    }
-    matchesEl.innerHTML = matchGroupsHtml([...matchGroups.values()]);
-    initScrollFade(matchesEl);
-    // Past 8 matches it scrolls; the Giocatori list beside it keeps its own
-    // height, never taller than this one (scrolling past that).
-    capScrollToItems(matchesEl, ".history-round", 8);
-    capScrollToHeightOf(playersEl, matchesEl);
-    setHistoryCount("commander-matches-count", matchRows.length);
+      matchesEl.innerHTML = matchRows.length
+        ? matchGroupsHtml([...matchGroups.values()])
+        : '<p class="page-empty">Nessuna partita registrata.</p>';
+      initScrollFade(matchesEl);
+      // Past 8 matches it scrolls; the Giocatori list beside it keeps its own
+      // height, never taller than this one (scrolling past that).
+      capScrollToItems(matchesEl, ".history-round", 8);
+      capScrollToHeightOf(playersEl, matchesEl);
+      setHistoryCount("commander-matches-count", matchRows.length);
 
-    // The hero's numbers, over the commander's whole history. A bye is a
-    // free win for the player, not a "victory" for the commander — it never
-    // actually beat anything. A drop isn't a "victory" either, and isn't a
-    // match played at all.
-    const bucket = { wins: 0, draws: 0, losses: 0 };
-    for (const r of rows) {
-      if (r.isBye || r.isDrop) continue;
-      tallyOutcome(bucket, r.outcome);
+      // The hero's numbers. A bye is a free win for the player, not a
+      // "victory" for the commander — it never actually beat anything. A
+      // drop isn't a "victory" either, and isn't a match played at all.
+      const bucket = { wins: 0, draws: 0, losses: 0 };
+      for (const r of rows) {
+        if (r.isBye || r.isDrop) continue;
+        tallyOutcome(bucket, r.outcome);
+      }
+      renderWinrateTiles(winrateEl, bucket);
     }
-    renderWinrateTiles(winrateEl, bucket);
+
+    // The partner's card beside the commander's (Scryfall, fetched once per
+    // partner). One figure, two places: with a partner picked, beside the
+    // commander's (.has-partner); with none, the first partner's card tucked
+    // behind it, dimmed — the hint there's more to swipe to. Picking that
+    // first partner just brings the same card forward (CSS transitions);
+    // another one: the shown card slides back out, the new one in.
+    const cardColEl = document.getElementById("commander-card-col");
+    const partnerFigureEl = document.getElementById("commander-partner-figure");
+    const partnerImageEl = document.getElementById("commander-partner-image");
+    const partnerImageById = new Map();
+    const reduceMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const firstPartner = partnerOptions[0]?.commander ?? null;
+    let wantedId = null; // the card the figure should hold
+    let visibleId = null; // the card it holds on screen
+    function imageFor(c) {
+      if (!partnerImageById.has(c.id)) {
+        partnerImageById.set(
+          c.id,
+          fetchScryfallCard(c.name).then((card) => (card ? scryfallCardImages(card)[0] ?? null : null))
+        );
+      }
+      return partnerImageById.get(c.id);
+    }
+    function retractPartner(done) {
+      if (partnerFigureEl.hidden) {
+        done?.();
+        return;
+      }
+      // Once: the animation's end, or a moment after it should have ended
+      // (animationend can go missing — an interrupted animation, a tab in the
+      // background — and the next card mustn't wait on it forever).
+      let finished = false;
+      const finish = () => {
+        if (finished) return;
+        finished = true;
+        partnerFigureEl.classList.remove("is-leaving");
+        partnerFigureEl.hidden = true;
+        visibleId = null;
+        done?.();
+      };
+      if (reduceMotion()) return finish();
+      partnerFigureEl.classList.add("is-leaving");
+      partnerFigureEl.addEventListener("animationend", finish, { once: true });
+      setTimeout(finish, 260);
+    }
+    function showPartnerCard(partner) {
+      // The card to hold: the picked partner, else the first one (the hint).
+      const target = partner ?? firstPartner;
+      wantedId = target?.id ?? null;
+      // The commander's card takes its place for the pairing at once.
+      cardColEl.classList.toggle("has-partner", Boolean(partner));
+      if (!target) return retractPartner();
+      if (visibleId === target.id && !partnerFigureEl.classList.contains("is-leaving")) return;
+      imageFor(target).then((src) => {
+        if (wantedId !== target.id || signal.aborted) return;
+        if (!src) return retractPartner();
+        retractPartner(() => {
+          if (wantedId !== target.id) return;
+          const reveal = () => {
+            if (wantedId !== target.id) return;
+            partnerFigureEl.hidden = false;
+            visibleId = target.id;
+          };
+          partnerImageEl.alt = target.name;
+          if (partnerImageEl.getAttribute("src") === src && partnerImageEl.complete) reveal();
+          else {
+            partnerImageEl.addEventListener("load", reveal, { once: true });
+            partnerImageEl.src = src;
+          }
+        });
+      });
+    }
+
+    // The hero's pairing picker — only for a commander played with a partner
+    // at least once: Tutti / Da solo / con … (how many times each). Picking
+    // one redraws the page for it, with the partner's name in the title and
+    // its card beside the commander's; the address follows (?partner=<id> /
+    // none — no new history entry), so a link or a reload shows the same.
+    const picker = document.getElementById("commander-pairings");
+    let current = "all";
+    const titleHtml = `${escapeHtml(commander.name)}${commander.is_banned ? bannedBadge() : ""}`;
+    function select(key, { updateUrl = true } = {}) {
+      const option = options.find((o) => o.key === key) ?? options[0];
+      const entries =
+        option.key === "all"
+          ? playedEntries
+          : playedEntries.filter((e) => (partnerOf(e)?.id ?? "none") === option.key);
+      titleEl.innerHTML = option.commander
+        ? `${titleHtml} <span class="commander-title-partner">+ ${escapeHtml(option.commander.name)}</span>`
+        : titleHtml;
+      fitTitleToOneLine(titleEl);
+      showPartnerCard(option.commander ?? null);
+      current = option.key;
+      const compactLabel = picker.querySelector(".pairing-compact-label");
+      if (compactLabel) {
+        compactLabel.textContent = option.key === "all" ? "Tutti i partner" : option.label;
+      }
+      picker.querySelectorAll("[data-dot]").forEach((dot) => dot.classList.toggle("is-active", dot.dataset.dot === option.key));
+      renderSections(entries);
+      if (updateUrl) {
+        const url = new URL(window.location.href);
+        if (option.key === "all") url.searchParams.delete("partner");
+        else url.searchParams.set("partner", option.key);
+        history.replaceState(history.state, "", url);
+      }
+    }
+    // One badge with the pairing shown ("Tutti i partner", "Da solo", "con
+    // …"), ‹ › either side going to the previous / next one (round), and a
+    // dot per pairing under it. While no partner is picked, the first
+    // partner's card is tucked dimmed behind the commander's (showPartnerCard
+    // above): there are partners to pick.
+    const step = (by) => {
+      const i = options.findIndex((o) => o.key === current);
+      select(options[(i + by + options.length) % options.length].key);
+    };
+    if (partnerOptions.length > 0) {
+      picker.innerHTML = `
+        <div class="pairing-compact">
+          <button type="button" class="pairing-step" data-step="-1" aria-label="Partner precedente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg></button>
+          <span class="pairing-compact-label" aria-live="polite"></span>
+          <button type="button" class="pairing-step" data-step="1" aria-label="Partner successivo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+        </div>
+        <div class="pairing-dots" aria-hidden="true">${options.map((o) => `<i data-dot="${escapeHtml(o.key)}"></i>`).join("")}</div>`;
+      picker.hidden = false;
+      cardColEl.classList.add("has-pairings");
+      picker.addEventListener("click", (e) => {
+        const arrow = e.target.closest("[data-step]");
+        if (arrow) step(Number(arrow.dataset.step));
+      });
+    }
+    const requested = new URLSearchParams(window.location.search).get("partner");
+    select(options.some((o) => o.key === requested) ? requested : "all", { updateUrl: false });
   } catch (err) {
     showError(document.getElementById("commander-content"), err);
   } finally {

@@ -151,7 +151,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       rows
         .map(
           (r) => `
-      <a class="history-item history-ranked" href="commander.html?id=${r.commander.id}">
+      <a class="history-item history-ranked" href="${r.href}">
         <div class="history-main">
           <span class="history-title">${commanderPairWithColors(r.commander, r.partner, { link: false })}${
             r.isBanned ? bannedBadge() : ""
@@ -185,18 +185,40 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       const eventsData = await fetchEventsData(eventIds);
       const commandersById = new Map(allCommanders.map((c) => [c.id, c]));
 
-      // Grouped by the exact commander+partner pairing (partner_commander_id
-      // is part of the key, null for a solo entry) — a commander played with
+      // Grouped by the commander + partner pairing — a commander played with
       // two different partners, or both solo and partnered, shows as
       // separate rows here, each with its own stats and its own color
       // identity (the union of both commanders' colors), rather than being
-      // folded into one overall row for the primary commander alone.
-      const stats = computeGroupedStats(
-        eventsData,
-        (e) => `${e.commander_id}_${e.partner_commander_id ?? ""}`,
-        (e) => ({ commanderId: e.commander_id, partnerId: e.partner_commander_id ?? null })
-      );
+      // folded into one overall row for the primary commander alone. X + Y
+      // is the same pair as Y + X, whichever seat each was entered in: one
+      // row, led (its name first, the page its link opens) by the one
+      // entered as the main commander more often — ties alphabetical.
+      const pairKey = (e) =>
+        e.partner_commander_id ? [e.commander_id, e.partner_commander_id].sort().join("_") : `${e.commander_id}_`;
+      const leadCount = new Map(); // `${pair key}|${commander id}` -> times entered as the main one
+      for (const { entries } of eventsData) {
+        for (const e of entries) {
+          if (!e.partner_commander_id) continue;
+          const k = `${pairKey(e)}|${e.commander_id}`;
+          leadCount.set(k, (leadCount.get(k) ?? 0) + 1);
+        }
+      }
+      const stats = computeGroupedStats(eventsData, pairKey, (e) => ({
+        commanderId: e.commander_id,
+        partnerId: e.partner_commander_id ?? null,
+      }));
+      for (const s of stats) {
+        if (!s.partnerId) continue;
+        const a = leadCount.get(`${s.key}|${s.commanderId}`) ?? 0;
+        const b = leadCount.get(`${s.key}|${s.partnerId}`) ?? 0;
+        const nameA = commandersById.get(s.commanderId)?.name ?? "";
+        const nameB = commandersById.get(s.partnerId)?.name ?? "";
+        if (b > a || (b === a && nameB.localeCompare(nameA) < 0)) [s.commanderId, s.partnerId] = [s.partnerId, s.commanderId];
+      }
       const totalEntries = stats.reduce((sum, s) => sum + s.entries, 0);
+      // Commanders that also have a partnered row: their solo row opens their
+      // page's "Da solo" view.
+      const partnered = new Set(stats.filter((s) => s.partnerId).flatMap((s) => [s.commanderId, s.partnerId]));
 
       lastRows = stats
         .map((s) => {
@@ -207,6 +229,10 @@ export async function mount({ signal = new AbortController().signal } = {}) {
             id: s.key,
             commander,
             partner,
+            // The commander's page, on this row's pairing (js/commander-detail.js).
+            href: `commander.html?id=${commander.id}${
+              partner ? `&partner=${partner.id}` : partnered.has(commander.id) ? "&partner=none" : ""
+            }`,
             name,
             colorIdentity: (commander.color_identity ?? "") + (partner?.color_identity ?? ""),
             isBanned: commander.is_banned || (partner?.is_banned ?? false),

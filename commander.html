@@ -138,11 +138,19 @@
                 </svg>
               </button>
             </figure>
+            <!-- The partner's card, when a pairing is picked (js/commander-detail.js):
+                 behind the commander's, a little to the right. -->
+            <figure class="commander-partner-figure" id="commander-partner-figure" hidden>
+              <img id="commander-partner-image" class="commander-card-face" alt="">
+            </figure>
           </div>
           <div class="profile-hero-text">
             <div class="profile-hero-heading">
               <h1 class="profile-hero-name" id="commander-title">Caricamento...</h1>
             </div>
+            <!-- Played with partners: which pairing the page shows — all of
+                 them, alone, or with one partner (js/commander-detail.js). -->
+            <div class="pairing-picker" id="commander-pairings" role="group" aria-label="Partner" hidden></div>
             <div class="profile-hero-stats">
               <div class="profile-stats-tiles" id="commander-winrate"></div>
             </div>
