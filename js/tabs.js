@@ -4,6 +4,8 @@
 // aria-selected. The first tab open to start with. Used by event.html and
 // commander.html (there only on phones and touch screens — the CSS
 // decides); account.html has its own (tabs come and go with its sections).
+import { haptic } from "./haptics.js";
+
 export function initTabs(tabsEl) {
   const buttons = tabsEl ? [...tabsEl.querySelectorAll(".profile-tab[data-tab]")] : [];
   const select = (panelId) => {
@@ -14,6 +16,11 @@ export function initTabs(tabsEl) {
       document.getElementById(b.dataset.tab)?.classList.toggle("is-current", on);
     }
   };
-  for (const b of buttons) b.addEventListener("click", () => select(b.dataset.tab));
+  for (const b of buttons) {
+    b.addEventListener("click", () => {
+      if (!b.classList.contains("is-active")) haptic();
+      select(b.dataset.tab);
+    });
+  }
   if (buttons.length) select(buttons[0].dataset.tab);
 }

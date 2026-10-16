@@ -6,6 +6,7 @@
 // the follows can't be read (e.g. migration 010 not run yet).
 import { sb } from "./supabase-client.js";
 import { Follows } from "./db.js";
+import { haptic } from "./haptics.js";
 
 // kind: "player", "commander" or "league"; the button goes on a line of its own right
 // after titleEl (the page's <h1>, inside .page-heading).
@@ -100,6 +101,7 @@ export async function initFollowButton(titleEl, kind, id, { signal } = {}) {
       if (following) await Follows.unfollow(userId, kind, id);
       else await Follows.follow(userId, kind, id);
       following = !following;
+      haptic(following ? "confirm" : "tick");
       // No hover colour on the new state until the pointer leaves (styles.css
       // .is-fresh): it showed at once in its darker hover shade.
       btn.classList.add("is-fresh");

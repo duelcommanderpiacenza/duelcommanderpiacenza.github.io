@@ -278,6 +278,17 @@ function whenLoaded(fn) {
   observer.observe(document.body, { attributes: true, attributeFilter: ["class"] });
 }
 
+// The page on screen loaded again in place (js/pull-refresh.js): its HTML
+// swapped back in and its module mounted afresh — so its data fetched again
+// — like an in-app navigation to itself, without a full reload; a normal
+// reload for a page the router doesn't handle. Resolves once the new page
+// is mounted (its data may still be loading: body.is-loading).
+export async function refresh() {
+  const url = new URL(location.href);
+  if (pageOf(url) && current) await go(url, { push: false });
+  else location.reload();
+}
+
 // JS-driven navigation (e.g. an archetype badge): in-app when the page is
 // supported, a normal load otherwise.
 export function navigate(href) {

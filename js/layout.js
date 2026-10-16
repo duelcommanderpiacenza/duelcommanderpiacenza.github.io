@@ -25,6 +25,7 @@ import { attachHoverTooltips, showFloatingTooltip } from "./floating-tooltip.js"
 import { watchPageLoading } from "./page-loading.js";
 import { navigate } from "./router.js";
 import "./system-bars.js";
+import "./pull-refresh.js";
 
 // Never stuck on "Caricamento...": a reload offered when loading takes too
 // long or fails (js/page-loading.js).

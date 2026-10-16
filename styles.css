@@ -7319,6 +7319,99 @@ a.history-item.is-me {
    touch screens it sits right beside the floating nav pill (56px tall,
    16px from the bottom) when the screen has room for it, otherwise just
    above the pill. */
+/* Pull to refresh, installed app only (js/pull-refresh.js): a white disc
+   with the logo, hidden above the top edge, sliding down with the pull
+   (--ptr-y) — "Torna all'inizio"'s look; its red ring fills as it goes
+   (--ptr-p, 0–1) and the logo turns with it. Armed (.is-armed): the ring
+   full, a little pop. Refreshing: held there, a red arc spinning round.
+   Above the header (25) and the nav (20). */
+.ptr {
+  --ptr-y: 0px;
+  --ptr-p: 0;
+  position: fixed;
+  top: env(safe-area-inset-top);
+  left: 50%;
+  z-index: 40;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 8px + var(--ptr-y)));
+  transition: transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.ptr.is-pulling {
+  transition: none;
+}
+
+.ptr-disc {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 3px solid transparent;
+  border-radius: 50%;
+  background:
+    linear-gradient(#fff, #fff) padding-box,
+    conic-gradient(var(--brand-red) calc(var(--ptr-p) * 360deg), color-mix(in srgb, var(--brand-red) 14%, #fff) 0) border-box;
+  box-shadow: var(--shadow-card-hover);
+  opacity: min(1, calc(var(--ptr-p) * 2.5));
+  transition: scale 160ms ease, opacity 160ms ease;
+}
+
+.ptr.is-refreshing .ptr-disc {
+  opacity: 1;
+}
+
+.ptr-disc img {
+  width: 26px;
+  height: 26px;
+  rotate: calc(var(--ptr-p) * 300deg);
+}
+
+.ptr.is-armed .ptr-disc {
+  scale: 1.1;
+}
+
+.ptr.is-refreshing .ptr-disc {
+  scale: 1;
+  background:
+    linear-gradient(#fff, #fff) padding-box,
+    conic-gradient(var(--brand-red) 0 90deg, color-mix(in srgb, var(--brand-red) 14%, #fff) 0) border-box;
+  animation: ptr-spin 800ms linear infinite;
+}
+
+.ptr.is-refreshing .ptr-disc img {
+  animation: ptr-spin 800ms linear infinite reverse;
+}
+
+@keyframes ptr-spin {
+  to {
+    rotate: 1turn;
+  }
+}
+
+:root[data-theme="dark"] .ptr-disc {
+  background:
+    linear-gradient(#241c1e, #241c1e) padding-box,
+    conic-gradient(var(--brand-red) calc(var(--ptr-p) * 360deg), rgba(255, 255, 255, 0.12) 0) border-box;
+}
+
+:root[data-theme="dark"] .ptr.is-refreshing .ptr-disc {
+  background:
+    linear-gradient(#241c1e, #241c1e) padding-box,
+    conic-gradient(var(--brand-red) 0 90deg, rgba(255, 255, 255, 0.12) 0) border-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ptr,
+  .ptr-disc {
+    transition: none;
+  }
+
+  .ptr.is-refreshing .ptr-disc,
+  .ptr.is-refreshing .ptr-disc img {
+    animation: none;
+  }
+}
+
 .back-to-top {
   position: fixed;
   right: 24px;

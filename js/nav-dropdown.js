@@ -10,6 +10,8 @@
 // wrong on real touch phones). This file only adds the open/close
 // interaction on top of both.
 
+import { haptic } from "./haptics.js";
+
 function isMobileNav() {
   return navigator.maxTouchPoints > 0;
 }
@@ -39,6 +41,7 @@ function fitPanel(nav, trigger) {
 }
 
 function openDropdown(nav, trigger) {
+  haptic();
   fitPanel(nav, trigger);
   nav.classList.remove("is-closing");
   nav.classList.add("is-open");

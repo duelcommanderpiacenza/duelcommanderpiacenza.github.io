@@ -64,6 +64,7 @@ import { escapeHtml, uniqueBadges, eventTitle, formatDate } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { fetchPlayerBadgesRenderer } from "./player-badges.js";
 import { historyStatsHtml } from "./history-list.js";
+import { haptic } from "./haptics.js";
 import {
   applyCardAccents,
   createArtPainter,
@@ -478,6 +479,7 @@ export function mount({ signal = new AbortController().signal } = {}) {
   for (const b of tabButtons) {
     b.addEventListener("click", () => {
       tabChosen = true;
+      if (b.dataset.tab !== currentTab) haptic();
       selectTab(b.dataset.tab);
     });
   }
