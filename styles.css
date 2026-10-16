@@ -8891,6 +8891,39 @@ main.has-hero-accent .profile-tab:not(.is-active):hover {
   background: var(--hero-btn-hover);
 }
 
+/* The back pill on a page without a hero (badges.html): the site's red
+   (no art colour to take). On touch screens the header lies over the page
+   like the hero pages' (absolute), the pill in its row; the empty wrap
+   keeps the header's room (its height = the header's, pulled up over the
+   page's top padding), so the title stays where it was. */
+.page-back-wrap {
+  --hero-btn: var(--brand-red);
+  --hero-btn-hover: var(--brand-red-deep-2);
+}
+
+html.app-header body:has(.page-main > .page-back-wrap) {
+  --hero-header-h: calc(80px + env(safe-area-inset-top));
+}
+
+html.app-header body:has(.page-main > .page-back-wrap) .site-header {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+}
+
+html.app-header .page-back-wrap {
+  margin-top: -28px;
+  height: calc(var(--hero-header-h) + 28px);
+}
+
+@media (max-width: 640px) {
+  html.app-header .page-back-wrap {
+    margin-top: -20px;
+    height: calc(var(--hero-header-h) + 20px);
+  }
+}
+
 /* Desktop: left of the card column's centre. */
 @media (min-width: 821px) {
   .detail-hero-back {

@@ -77,16 +77,16 @@
 </nav>
 
 <main class="page-main" id="badges-page" data-page="badges">
-  <div class="page-heading-row">
-    <a class="breadcrumb-link" href="players.html" aria-label="Giocatori" title="Giocatori">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
-    </a>
+  <!-- "‹ Giocatori": the hero pages' back pill, on a page without a hero —
+       on a computer in the top bar, in the logo's place (js/router.js
+       copies it there), on touch screens in the header row (styles.css
+       .page-back-wrap). -->
+  <div class="detail-hero-wrap page-back-wrap">
+    <a class="detail-hero-back" href="players.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>Giocatori</a>
+  </div>
 
-    <div class="page-heading-text">
-      <div class="page-heading">
-        <h1 id="badges-title">Badge</h1>
-      </div>
-    </div>
+  <div class="page-heading">
+    <h1 id="badges-title">Badge</h1>
   </div>
 
   <div class="page-loading-region">
