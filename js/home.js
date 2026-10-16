@@ -121,8 +121,7 @@ const allEvents = () => once("events", () => Events.list());
 const openLeague = () => once("openLeague", () => Leagues.getOpen());
 const leagueStandings = (league) => once(`standings:${league.id}`, () => loadLeagueStandings(league));
 
-// The upcoming events (the furthest on top, the next one last), "Oggi", the
-// played ones (newest first).
+// The latest played events, "Oggi", the upcoming ones — in time order.
 async function renderTimeline(el) {
   try {
     const [upcoming, all] = await Promise.all([upcomingEvents(), allEvents()]);
@@ -135,10 +134,13 @@ async function renderTimeline(el) {
       el.innerHTML = '<p class="page-empty">Nessun evento ancora.</p>';
       return;
     }
+    // In time order, top to bottom (like league.html's): the latest played
+    // ones (the oldest of them first), "Oggi", then the upcoming ones (the
+    // next one first).
     const items = [
-      ...next.map((ev, i) => timelineItemHtml(ev, i === 0 ? "next" : "future")).reverse(),
+      ...played.map((ev) => timelineItemHtml(ev, "played")).reverse(),
       '<li class="league-tl-today"><span class="league-tl-today-dot" aria-hidden="true"></span><span class="league-tl-today-label">Oggi</span></li>',
-      ...played.map((ev) => timelineItemHtml(ev, "played")),
+      ...next.map((ev, i) => timelineItemHtml(ev, i === 0 ? "next" : "future")),
     ];
     el.innerHTML = `<ol class="league-timeline home-timeline">${items.join("")}</ol>`;
   } catch (err) {

@@ -2210,15 +2210,12 @@ html.app-header .home-board > .home-panel:not(.is-current) {
 }
 
 /* Eventi: the timeline (its own size container, like league.html's list —
-   the full date on the left of the line from 620px). Upcoming on top, so
-   the next event's stretch of line is grey above, red below; the played
-   ones' red. The kicker (the league) on one line. */
+   the full date on the left of the line from 620px). In time order like
+   league.html's — the played ones, "Oggi", the upcoming ones — so the base
+   timeline's colours apply: red up to the next event, grey after it. The
+   kicker (the league) on one line. */
 #home-timeline {
   container-type: inline-size;
-}
-
-.home-timeline .league-tl-item.is-next::before {
-  background: linear-gradient(var(--tl-line) 50%, var(--brand-red) 50%);
 }
 
 .home-timeline .league-tl-k {
