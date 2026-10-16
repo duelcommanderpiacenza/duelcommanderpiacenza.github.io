@@ -14,6 +14,7 @@ import { hidePageLoading } from "./page-loading.js";
 import { attachHoverTooltips, fullTextIfTruncated } from "./floating-tooltip.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { initFilterToggle } from "./filter-toggle.js";
+import { initMetaTabs } from "./meta-tabs.js";
 import { openInfoDialog } from "./info-dialog.js";
 import { enableDragScroll, enableSnapDrag } from "./drag-scroll.js";
 
@@ -72,24 +73,39 @@ function columnStops(wrap) {
   );
 }
 
-// The round "?" beside the title opens how to read the matrix, in the
+// The round "?" in the matrix's top-left corner (redrawn with it, hence the
+// click delegated on <main>; the title's own isn't shown — the page is
+// titled "Meta") opens how to read the matrix, in the
 // site's shared explanation pop-up (js/info-dialog.js, same as player.html's
 // "Carte speciali"); the text itself lives in matchups.html's <template>.
 // Wired first, so it works even while the data still loads.
 function initHelpToggle() {
-  const btn = document.getElementById("matchups-help-toggle");
   const text = document.getElementById("matchups-help-text");
-  if (!btn || !text) return;
-  btn.addEventListener("click", () =>
-    openInfoDialog({ id: "matchups-help-dialog", title: "Come si legge la matrice", bodyHtml: text.innerHTML })
-  );
+  if (!text) return;
+  document.querySelector("main")?.addEventListener("click", (e) => {
+    if (!e.target.closest("[data-matchups-help]")) return;
+    openInfoDialog({ id: "matchups-help-dialog", title: "Come si legge la matrice", bodyHtml: text.innerHTML });
+  });
 }
+
+// The "?" in the matrix's top-left corner.
+const CORNER_HELP =
+  '<button type="button" class="help-toggle-btn" data-matchups-help aria-haspopup="dialog" aria-label="Come si legge la matrice">?</button>';
 
 // In-app page (js/router.js): mounted by the router on this page's <main>
 // (data-page), on first load and after each in-app navigation; `signal`
 // aborts when the page is left.
 export async function mount({ signal = new AbortController().signal } = {}) {
   initHelpToggle();
+  // A computer: the filters' button onto the sub-tabs' row.
+  initMetaTabs();
+  // Touch screens: "Crea tabella personalizzata" under the matrix instead
+  // of beside its heading — the heading's line itself isn't shown there
+  // (styles.css), the button's label names the mode the matrix isn't in
+  // (picking it focuses the search, at the top, which brings it into view).
+  if (document.documentElement.classList.contains("nav-mobile")) {
+    document.getElementById("matchups-matrix").after(document.getElementById("matchups-custom-btn"));
+  }
   const modeTitleEl = document.getElementById("matchups-mode-title");
   const customBtn = document.getElementById("matchups-custom-btn");
   const pickerCardEl = document.getElementById("matchups-picker-card");
@@ -239,7 +255,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     matrixEl.innerHTML = `<div class="matchups-matrix-wrap"><div class="matchups-matrix-scroll"><table class="matchups-table">
       <thead>
         <tr>
-          <th class="matchups-corner-header"></th>
+          <th class="matchups-corner-header">${CORNER_HELP}</th>
           ${rows.map((c) => `<th class="matchups-col-header" data-tooltip="${escapeHtml(c.name)}"><span class="matchups-col-header-text">${escapeHtml(c.name)}</span></th>`).join("")}
         </tr>
       </thead>

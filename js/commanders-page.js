@@ -7,6 +7,7 @@ import { attachHoverTooltips, fullTextIfTruncated } from "./floating-tooltip.js"
 import { commanderPairWithColors, bannedBadge, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
+import { initMetaTabs } from "./meta-tabs.js";
 import { historyPanelHtml, historyStatsHtml } from "./history-list.js";
 import { initBackToTop } from "./back-to-top.js";
 
@@ -66,6 +67,10 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   const colorExactWrap = document.getElementById("commanders-color-exact-wrap");
   const colorExactCheckbox = document.getElementById("commanders-color-exact");
   const countEl = document.getElementById("commanders-count");
+  // A computer: the filters' button onto the sub-tabs' row.
+  initMetaTabs();
+  // The title reads "Meta" (styles.css), so this count goes in the search
+  // field's placeholder instead (below).
   // A long list: a round button back to the top once scrolled down.
   initBackToTop({ signal });
 
@@ -136,7 +141,9 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     const base = lastRows.filter((r) => r.entries > 0);
     // Table rows (commander + partner pairs) matching the filter panel —
     // Lega/Evento/Dal and colors; like players.html's, not the search box.
-    countEl.textContent = `${base.filter(matchesColorFilter).length} totali`;
+    const total = base.filter(matchesColorFilter).length;
+    countEl.textContent = `${total} totali`;
+    searchInput.placeholder = `Cerca tra ${total} ${total === 1 ? "comandante" : "comandanti"}…`;
     const anyFilterActive = Boolean(term) || colorCheckboxes.some((cb) => cb.checked);
     const filtered = base.filter((r) => (!term || r.name.toLowerCase().includes(term)) && matchesColorFilter(r));
     if (filtered.length === 0) {

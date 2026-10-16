@@ -1461,16 +1461,12 @@ html.nav-mobile .site-search-box.is-closing .site-search-results {
    blue treatment instead. */
 body[data-active-nav="current"] .nav-link[data-nav="current"],
 body[data-active-nav="events"] .nav-link[data-nav="events"],
-body[data-active-nav="commanders"] .nav-link[data-nav="commanders"],
-body[data-active-nav="matchups"] .nav-link[data-nav="matchups"],
-body[data-active-nav="archetypes"] .nav-link[data-nav="archetypes"],
+body[data-active-nav="meta"] .nav-link[data-nav="meta"],
 body[data-active-nav="players"] .nav-link[data-nav="players"],
 body[data-active-nav="account"] .nav-link[data-nav="account"],
 body[data-active-nav="current"] .nav-link[data-nav="current"]:hover,
 body[data-active-nav="events"] .nav-link[data-nav="events"]:hover,
-body[data-active-nav="commanders"] .nav-link[data-nav="commanders"]:hover,
-body[data-active-nav="matchups"] .nav-link[data-nav="matchups"]:hover,
-body[data-active-nav="archetypes"] .nav-link[data-nav="archetypes"]:hover,
+body[data-active-nav="meta"] .nav-link[data-nav="meta"]:hover,
 body[data-active-nav="players"] .nav-link[data-nav="players"]:hover,
 body[data-active-nav="account"] .nav-link[data-nav="account"]:hover {
   background: var(--brand-red);
@@ -2145,7 +2141,6 @@ main {
   .badge-card,
   .league-group,
   .bar-chart-row,
-  .filter-toggle-btn,
   .filter-panel.detail-filter-panel,
   #player-filter-panel,
   .follow-btn-row,
@@ -12901,18 +12896,10 @@ a.history-item:hover .follow-name {
   cursor: pointer;
   box-shadow: var(--shadow-card);
   transition: background 150ms ease;
-  /* Appears together with the rest of the page's loaded content, not at
-     first paint: on Comandanti/Archetipi/Matchups it sits in the heading,
-     outside .page-loading-region (whose content is hidden while loading) —
-     same entrance as the cards/tables, held on its invisible first frame
-     by body.is-loading until hidePageLoading(). */
-  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-
-/* Hidden outright while loading too — covers reduced-motion visitors,
-   whose animation is off and so wouldn't hold it invisible. */
-body.is-loading .filter-toggle-btn {
-  visibility: hidden;
+  /* No entrance and not hidden while loading: on Comandanti / Archetipi /
+     Matchups it sits on the title's line, outside .page-loading-region —
+     there from the first paint, like the title (Giocatori's is inside the
+     region, shown with it). */
 }
 
 .filter-toggle-btn:hover,
@@ -12938,6 +12925,25 @@ body.is-loading .filter-toggle-btn {
   background: #fff;
   box-shadow: 0 0 0 2px var(--brand-red);
   pointer-events: none;
+}
+
+/* The dot pops on when it appears (the filters read once the page's first
+   data is back, or a filter just set): from nothing, a small overshoot. */
+.filter-toggle-btn.has-active-filters::after {
+  animation: filter-dot-in 320ms cubic-bezier(0.2, 0.9, 0.3, 1.5) both;
+}
+
+@keyframes filter-dot-in {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .filter-toggle-btn.has-active-filters::after {
+    animation: none;
+  }
 }
 
 .filter-toggle-btn.has-active-filters:hover::after,
@@ -15858,6 +15864,240 @@ html.app-header .site-header.has-hero-accent .site-search-trigger {
 }
 
 /* ---------------------------------------------------------------------------
+   Tab bar (js/tab-bar.js) — touch screens: the navigation at the bottom of
+   the screen, in place of the old pill and its list (their markup still in
+   every page, the pill hidden here; a computer keeps its tabs in the top
+   bar). A frosted-glass capsule with five sections — Bacheca, Eventi, Meta,
+   Giocatori, Social — the current one in a red chip with its name (the
+   hero's colour on hero pages: .site-nav.has-hero-accent redefines the red),
+   the others icon only; the chip slides to the new section. It slides away
+   scrolling down with the whole .site-nav (.is-scrolled-away, above).
+   --------------------------------------------------------------------------- */
+html.nav-mobile .nav-dropdown-trigger {
+  display: none;
+}
+
+html.nav-mobile .tab-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  box-sizing: border-box;
+  width: min(420px, calc(100% - 24px));
+  margin: 0 auto;
+  padding: 5px;
+  border: 1px solid rgba(154, 28, 32, 0.12);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.78);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
+  box-shadow: 0 8px 28px rgba(40, 6, 9, 0.22);
+}
+
+.tab-bar-chip {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  left: 0;
+  width: 0;
+  border-radius: var(--radius-pill);
+  background: var(--brand-red);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--brand-red) 40%, transparent);
+  transition:
+    left 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    width 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    background 450ms ease;
+}
+
+.tab-bar-chip[hidden] {
+  display: none;
+}
+
+html.nav-mobile .tab-bar-link {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 48px;
+  padding: 0 4px;
+  border-radius: var(--radius-pill);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tab-bar-link svg {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  transition: transform 140ms ease;
+}
+
+.tab-bar-link:active svg {
+  transform: scale(0.88);
+}
+
+.tab-bar-link span {
+  display: none;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* The current section: its name beside the icon, white on the chip. */
+html.nav-mobile .tab-bar-link.is-current {
+  flex: 0 1 auto;
+  padding: 0 14px 0 12px;
+  color: #fff;
+}
+
+html.nav-mobile .tab-bar-link.is-current span {
+  display: inline;
+  animation: tab-bar-label 260ms ease both;
+}
+
+@keyframes tab-bar-label {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+}
+
+:root[data-theme="dark"].nav-mobile .tab-bar {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(36, 26, 28, 0.78);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+}
+
+:root[data-theme="dark"].nav-mobile .tab-bar-link:not(.is-current) {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+/* Hero pages in dark mode: the chip a deep shade of the colour, as the pill
+   was (white text reads on it). */
+:root[data-theme="dark"].nav-mobile .site-nav.has-hero-accent .tab-bar-chip {
+  background: var(--hero-accent-deep);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab-bar-chip {
+    transition: none;
+  }
+
+  html.nav-mobile .tab-bar-link.is-current span {
+    animation: none;
+  }
+}
+
+/* "Torna all'inizio": above the bar (it filled the screen's width) on the
+   right, no longer beside the old pill. */
+html.nav-mobile .back-to-top {
+  right: 16px;
+  left: auto;
+  bottom: calc(16px + 60px + 12px + env(safe-area-inset-bottom) + var(--back-to-top-lift, 0px));
+  z-index: 15;
+}
+
+/* Comandanti / Matchups / Archetipi's segmented control (the nav's "Meta",
+   on every screen — a pill bar on a computer, the sticky segmented control
+   on touch screens). Links, not buttons. */
+.meta-tabs .profile-tab {
+  text-decoration: none;
+}
+
+/* Its row (.meta-row): on a computer the filters' button at its right end
+   (js/meta-tabs.js moves it there; not shown on the title's line meanwhile,
+   so it never jumps); on touch screens the row is the sticky part (the
+   control inside it can't stick past the row's own box) and the button
+   stays on the title's line. */
+.meta-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 18px;
+}
+
+.meta-row > .meta-tabs {
+  margin: 0;
+}
+
+.meta-row > .filter-toggle-btn {
+  margin-left: auto;
+}
+
+html:not(.nav-mobile) main:has(> .meta-row) > .page-heading .filter-toggle-btn {
+  visibility: hidden;
+}
+
+html.nav-mobile .meta-row {
+  position: sticky;
+  top: calc(8px + env(safe-area-inset-top));
+  z-index: 10;
+  display: block;
+}
+
+html.nav-mobile .meta-row > .meta-tabs {
+  position: static;
+}
+
+/* Those three pages are one section, "Meta" — its title on the heading's
+   line (.meta-heading-title, like the other main pages' titles), the
+   filters' button at that line's right end, the segmented control below
+   it. The page's own <h1> stays for screen readers only; Matchups' "?" in
+   the matrix's top-left corner instead. */
+.page-heading .meta-heading-title {
+  display: block;
+  margin: 0;
+  color: var(--text-title);
+  font-size: 1.9rem;
+  font-weight: 700;
+}
+
+main:has(> .meta-row) > .page-heading h1 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+main:has(> .meta-row) > .page-heading .help-toggle-btn {
+  display: none;
+}
+
+/* Matchups on touch screens: "Crea tabella personalizzata" / "Mostra
+   tabella predefinita" centred under the matrix (js/matchups-page.js moves
+   it there). */
+html.nav-mobile #matchups-matrix + #matchups-custom-btn {
+  display: flex;
+  width: fit-content;
+  margin: 18px auto 0;
+}
+
+/* Matchups on touch screens: no "Comandanti più giocati" / "Tabella
+   personalizzata" line (its button is under the matrix, above). On every
+   screen the "?" is in the matrix's top-left corner (js/matchups-page.js),
+   on the corner cell's top left — sticky with it while the columns scroll. */
+html.nav-mobile .matchups-toolbar {
+  display: none;
+}
+
+.matchups-corner-header:has(.help-toggle-btn) {
+  text-align: left;
+  vertical-align: top;
+}
+
+/* ---------------------------------------------------------------------------
    Page transitions (js/router.js, in-app navigation): the screen changes
    with Material's fade through, while the header's own controls (the logo,
    the search, the profile picture) and the nav (the mobile pill) stay still
@@ -15997,6 +16237,38 @@ html.is-page-transition:not(.app-header) .site-header-brand {
   from {
     opacity: 0;
   }
+}
+
+/* Comandanti / Matchups / Archetipi — one section, "Meta": moving between
+   them, its title line (the filters' button on it) and the segmented
+   control stay still, swapped at once, while the rest of the page fades
+   through; to or from any other page (only one side has them) they fade
+   with the page as usual. */
+html.is-page-transition main:has(> .meta-row) > .page-heading {
+  view-transition-name: meta-heading;
+}
+
+html.is-page-transition main > .meta-row {
+  view-transition-name: meta-tabs;
+}
+
+::view-transition-group(meta-heading),
+::view-transition-group(meta-tabs),
+::view-transition-old(meta-heading),
+::view-transition-new(meta-heading),
+::view-transition-old(meta-tabs),
+::view-transition-new(meta-tabs) {
+  animation-duration: 0s;
+}
+
+::view-transition-old(meta-heading):only-child,
+::view-transition-old(meta-tabs):only-child {
+  animation: page-fade-out 90ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+::view-transition-new(meta-heading):only-child,
+::view-transition-new(meta-tabs):only-child {
+  animation: page-fade-through-in 250ms cubic-bezier(0, 0, 0.2, 1) 90ms both;
 }
 
 /* ---------------------------------------------------------------------------
@@ -16196,17 +16468,13 @@ html:not(.nav-mobile) .site-nav .nav-link[data-nav="social"]:hover {
 html:not(.nav-mobile) :is(
   body[data-active-nav="current"] .nav-link[data-nav="current"],
   body[data-active-nav="events"] .nav-link[data-nav="events"],
-  body[data-active-nav="commanders"] .nav-link[data-nav="commanders"],
-  body[data-active-nav="matchups"] .nav-link[data-nav="matchups"],
-  body[data-active-nav="archetypes"] .nav-link[data-nav="archetypes"],
+  body[data-active-nav="meta"] .nav-link[data-nav="meta"],
   body[data-active-nav="players"] .nav-link[data-nav="players"]
 ),
 html:not(.nav-mobile) :is(
   body[data-active-nav="current"] .nav-link[data-nav="current"],
   body[data-active-nav="events"] .nav-link[data-nav="events"],
-  body[data-active-nav="commanders"] .nav-link[data-nav="commanders"],
-  body[data-active-nav="matchups"] .nav-link[data-nav="matchups"],
-  body[data-active-nav="archetypes"] .nav-link[data-nav="archetypes"],
+  body[data-active-nav="meta"] .nav-link[data-nav="meta"],
   body[data-active-nav="players"] .nav-link[data-nav="players"]
 ):hover {
   background: #fff;
