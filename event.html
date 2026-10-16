@@ -136,7 +136,7 @@
       </section>
     </div>
 
-    <!-- Giocatori, Classifica, Partite: one at a time behind tabs, like
+    <!-- Giocatori, Classifica, Partite, Meta: one at a time behind tabs, like
          account.html's (styles.css .profile-tabs / .profile-panel — a pill
          bar, a sticky segmented control on touch screens and phones;
          js/event-detail.js wires them). The lists are sub-cards linking to
@@ -145,6 +145,7 @@
       <button type="button" class="profile-tab" role="tab" id="event-tab-entries" data-tab="event-panel-entries" aria-controls="event-panel-entries"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg><span>Giocatori</span></button>
       <button type="button" class="profile-tab" role="tab" id="event-tab-leaderboard" data-tab="event-panel-leaderboard" aria-controls="event-panel-leaderboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4"></path><path d="M7 4h10v5a5 5 0 0 1-10 0Z"></path><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"></path></svg><span>Classifica</span></button>
       <button type="button" class="profile-tab" role="tab" id="event-tab-matches" data-tab="event-panel-matches" aria-controls="event-panel-matches"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 17.5 3 6V3h3l11.5 11.5"></path><path d="m13 19 6-6M16 16l4 4M19 21l2-2"></path><path d="M14.5 6.5 18 3h3v3l-3.5 3.5"></path><path d="m5 14 4 4M7 17l-3 3M3 19l2 2"></path></svg><span>Partite</span></button>
+      <button type="button" class="profile-tab" role="tab" id="event-tab-meta" data-tab="event-panel-meta" aria-controls="event-panel-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12A9 9 0 1 1 12 3v9Z"></path><path d="M15 3.5A9 9 0 0 1 20.5 9H15Z"></path></svg><span>Meta</span></button>
     </nav>
 
     <div class="profile-panels event-panels">
@@ -156,6 +157,14 @@
       </section>
       <section class="profile-panel" id="event-panel-matches" role="tabpanel" aria-labelledby="event-tab-matches">
         <div id="event-matches" class="page-loading">Caricamento...</div>
+      </section>
+      <!-- Meta: the event's commanders and archetypes as the Bacheca's
+           bubble charts, in the same light card and carousel
+           (js/event-detail.js renderMeta). -->
+      <section class="profile-panel" id="event-panel-meta" role="tabpanel" aria-labelledby="event-tab-meta">
+        <div class="card dashboard-card dashboard-card-commanders event-meta-card" id="event-meta-card">
+          <div id="event-meta-charts" class="page-loading">Caricamento...</div>
+        </div>
       </section>
     </div>
   </div>

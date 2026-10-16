@@ -2595,13 +2595,20 @@ html.app-header .home-events-head {
   display: none;
 }
 
-/* Più giocati: the charts' card, its carousel controls under it. */
-.home-board .dashboard-card-commanders {
+/* Più giocati: the charts' card, its carousel controls under it — and
+   event.html's Meta tab, the same card (js/event-detail.js renderMeta). */
+:is(.home-board, .event-panels) .dashboard-card-commanders {
   margin-bottom: 0;
 }
 
-.home-board .chart-carousel-nav {
+:is(.home-board, .event-panels) .chart-carousel-nav {
   margin: 14px auto 0;
+}
+
+/* event.html's Meta card: its edge in the hero's colour (the Bacheca's
+   card has a fixed red one). */
+.card.dashboard-card-commanders.event-meta-card {
+  border-color: color-mix(in srgb, var(--brand-red) 28%, transparent);
 }
 
 /* A computer, the two columns side by side: */
@@ -2647,23 +2654,26 @@ html.app-header .home-events-head {
     min-height: 0;
     padding-block: 4px;
   }
+}
 
-  /* Più giocati (in its light card, as on touch screens): each chart in
-     the same 300px-tall area (centred, scaled to fit, js/metagame-chart.js
-     gives each chart its --bubble-ratio), so the two lists with the
-     percentages start at the same height. */
-  html:not(.app-header) .home-board .bubble-stage {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 300px;
-    margin: 10px 0 4px;
-  }
+/* Più giocati (the Bacheca) and event.html's Meta, at every width: each
+   bubble chart in an area of the same height (centred, scaled to fit —
+   js/metagame-chart.js gives each chart its --bubble-ratio), so the two
+   charts' lists start at the same height, swiping from one to the other
+   on a phone too. 300px; on a narrow screen 70% of the charts' width
+   (cqw: the carousel host, .chart-carousel-host, is a size container). */
+:is(.home-board, .event-meta-card) .bubble-stage {
+  --bubble-stage-h: min(300px, 70cqw);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--bubble-stage-h);
+  margin: 10px 0 4px;
+}
 
-  html:not(.app-header) .home-board .bubble-stage .bubble-chart {
-    width: min(100%, calc(300px * var(--bubble-ratio, 1)));
-    margin: 0;
-  }
+:is(.home-board, .event-meta-card) .bubble-stage .bubble-chart {
+  width: min(100%, calc(var(--bubble-stage-h) * var(--bubble-ratio, 1)));
+  margin: 0;
 }
 
 /* Phones: Prossimi eventi, Leghe in corso and Ultimi eventi give their rows
