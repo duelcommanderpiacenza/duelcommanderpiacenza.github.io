@@ -13495,6 +13495,30 @@ html.nav-mobile .help-toggle-btn {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   background: var(--mx-bg);
+  /* The site's scrollbar (like the scrolling lists'): thin, soft red. */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(220, 24, 28, 0.3) transparent;
+}
+
+:root[data-theme="dark"] .matchups-matrix-scroll {
+  scrollbar-color: rgba(255, 110, 110, 0.3) transparent;
+}
+
+/* Touch screens: none at all, like the lists — swiped with the finger. */
+html.nav-mobile .matchups-matrix-scroll {
+  scrollbar-width: none;
+}
+
+html.nav-mobile .matchups-matrix-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* More columns to the right (js/matchups-page.js syncScrollFade): the
+   right edge fades out — the peeking next column fading into it on
+   phones. The pinned names on the left untouched. */
+.matchups-matrix-scroll.can-scroll-right {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
 }
 
 @media (max-width: 480px) {

@@ -46,6 +46,13 @@ const columnModeQuery = window.matchMedia("(max-width: 640px)");
 const MX_SPACING = 4; // .matchups-table's border-spacing
 const COLUMN_PEEK = 22;
 
+// More columns to the right than in view: the matrix's right edge fades
+// (styles.css .can-scroll-right) — the site's sign of "more this way", in
+// place of a scrollbar on touch screens (a thin red one on a computer).
+function syncScrollFade(wrap) {
+  wrap?.classList.toggle("can-scroll-right", wrap.scrollLeft + wrap.clientWidth < wrap.scrollWidth - 2);
+}
+
 function fitColumns(wrap) {
   if (!wrap) return;
   const head = wrap.querySelector(".matchups-row-header");
@@ -121,7 +128,11 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   // their inner *-text span's ellipsis — one that fits needs no tooltip.
   // The phone column widths follow the screen (rotating it, resizing);
   // switching in or out of the one-column mode redraws it (its drag differs).
-  const refit = () => fitColumns(matrixEl.querySelector(".matchups-matrix-scroll"));
+  const refit = () => {
+    const wrap = matrixEl.querySelector(".matchups-matrix-scroll");
+    fitColumns(wrap);
+    syncScrollFade(wrap);
+  };
   const refitObserver = new ResizeObserver(refit);
   refitObserver.observe(matrixEl);
   signal.addEventListener("abort", () => refitObserver.disconnect(), { once: true });
@@ -313,6 +324,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     } else {
       enableDragScroll(wrap);
     }
+    wrap.addEventListener("scroll", () => syncScrollFade(wrap), { passive: true });
+    syncScrollFade(wrap);
   }
 
   function updateCount() {
