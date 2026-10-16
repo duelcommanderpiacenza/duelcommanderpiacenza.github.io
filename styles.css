@@ -217,9 +217,12 @@ html.app-header body.is-loading .page-loading-region > .detail-hero-wrap > .deta
   display: block;
 }
 
+/* In the page's accent (--brand-red: the site's red, or a hero page's
+   colour — neutral grey before it arrives), not a fixed red; dark mode
+   its light shade (--brand-red-deep there). */
 .sk {
-  --sk-base: rgba(220, 24, 28, 0.06);
-  --sk-shine: rgba(220, 24, 28, 0.13);
+  --sk-base: color-mix(in srgb, var(--brand-red) 6%, transparent);
+  --sk-shine: color-mix(in srgb, var(--brand-red) 13%, transparent);
   border-radius: 18px;
   background: linear-gradient(100deg, var(--sk-base) 35%, var(--sk-shine) 50%, var(--sk-base) 65%) fixed;
   background-size: 250% 100%;
@@ -227,7 +230,7 @@ html.app-header body.is-loading .page-loading-region > .detail-hero-wrap > .deta
 
 :root[data-theme="dark"] .sk {
   --sk-base: rgba(255, 255, 255, 0.045);
-  --sk-shine: rgba(255, 120, 120, 0.12);
+  --sk-shine: color-mix(in srgb, var(--brand-red-deep) 12%, transparent);
 }
 
 /* Over the `body.is-loading *` pause (below) — the one animation that
@@ -295,17 +298,17 @@ html:not(.app-header) .sk-touch-only {
   border-radius: 0 0 28px 28px;
   background:
     linear-gradient(100deg, var(--sk-base) 35%, var(--sk-shine) 50%, var(--sk-base) 65%) fixed,
-    linear-gradient(135deg, #b0585f, #6a3036);
+    linear-gradient(135deg, #6f6a67, #3b3735);
   background-size: 250% 100%, auto;
 }
 
 :root[data-theme="dark"] .sk-hero {
   --sk-base: rgba(255, 255, 255, 0);
   --sk-shine: rgba(255, 255, 255, 0.07);
-  background-color: #3a2226;
+  background-color: #2a2726;
   background-image:
     linear-gradient(100deg, var(--sk-base) 35%, var(--sk-shine) 50%, var(--sk-base) 65%),
-    linear-gradient(135deg, #5a2c32, #2a1418);
+    linear-gradient(135deg, #3b3735, #1c1a19);
 }
 
 .sk-hero i {
@@ -3584,9 +3587,9 @@ body.is-loading .filter-panel.detail-filter-panel {
   border-radius: 12px;
   background: linear-gradient(
     100deg,
-    rgba(220, 24, 28, 0.06) 30%,
-    rgba(220, 24, 28, 0.16) 50%,
-    rgba(220, 24, 28, 0.06) 70%
+    color-mix(in srgb, var(--brand-red) 6%, transparent) 30%,
+    color-mix(in srgb, var(--brand-red) 16%, transparent) 50%,
+    color-mix(in srgb, var(--brand-red) 6%, transparent) 70%
   );
   background-size: 250% 100%;
   animation: card-skeleton-shimmer 1.4s ease-in-out infinite;
@@ -3605,7 +3608,7 @@ body.is-loading .filter-panel.detail-filter-panel {
   background-image: linear-gradient(
     100deg,
     rgba(255, 255, 255, 0.04) 30%,
-    rgba(255, 110, 110, 0.14) 50%,
+    color-mix(in srgb, var(--brand-red-deep) 14%, transparent) 50%,
     rgba(255, 255, 255, 0.04) 70%
   );
 }
@@ -4191,9 +4194,9 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
 .cmd-carousel-slide.is-loading:not(.fx-rim) {
   background: linear-gradient(
     100deg,
-    rgba(220, 24, 28, 0.06) 30%,
-    rgba(220, 24, 28, 0.16) 50%,
-    rgba(220, 24, 28, 0.06) 70%
+    color-mix(in srgb, var(--brand-red) 6%, transparent) 30%,
+    color-mix(in srgb, var(--brand-red) 16%, transparent) 50%,
+    color-mix(in srgb, var(--brand-red) 6%, transparent) 70%
   );
   background-size: 250% 100%;
   animation: card-skeleton-shimmer 1.4s ease-in-out infinite;
@@ -4446,7 +4449,7 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   background-image: linear-gradient(
     100deg,
     rgba(255, 255, 255, 0.04) 30%,
-    rgba(255, 110, 110, 0.14) 50%,
+    color-mix(in srgb, var(--brand-red-deep) 14%, transparent) 50%,
     rgba(255, 255, 255, 0.04) 70%
   );
 }
@@ -6456,15 +6459,17 @@ img.badge-disc-glyph {
   transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, background 180ms ease;
 }
 
+/* Its glow in its own colour (--brand-red: the site's red, or a hero page's
+   colour — grey before it arrives), not a fixed red. */
 .btn-primary {
   background: var(--brand-red);
   color: #fff;
-  box-shadow: 0 10px 20px rgba(220, 24, 28, 0.24);
+  box-shadow: 0 10px 20px color-mix(in srgb, var(--brand-red) 24%, transparent);
 }
 
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 14px 26px rgba(220, 24, 28, 0.3);
+  box-shadow: 0 14px 26px color-mix(in srgb, var(--brand-red) 30%, transparent);
 }
 
 .btn-secondary {
@@ -8742,7 +8747,7 @@ img.cs-option-icon {
   border-radius: 28px;
   /* Lighter than the (always dark) player card in it, so the card stands
      out against it — under the art, and alone while there's none. */
-  background: linear-gradient(135deg, #b0585f, #6a3036);
+  background: linear-gradient(135deg, #6f6a67, #3b3735);
   color: #fff;
   box-shadow: var(--shadow-soft);
 }
@@ -8913,6 +8918,43 @@ body.has-hero-accent {
   --bg-cream-1: color-mix(in srgb, var(--hero-accent) 12%, #141214);
   --bg-cream-2: color-mix(in srgb, var(--hero-accent) 7%, #100e10);
   --bg-cream-3: color-mix(in srgb, var(--hero-accent) 5%, #0e0c0d);
+}
+
+/* A hero page whose art's colour isn't known yet (main[data-accent-from-hero]
+   without .has-hero-accent — not account.html's signed-out view, which has
+   no hero to colour it): a neutral warm grey instead of the site's red, so
+   the page arriving and then taking the colour (js/player-card.js
+   applyHeroTone) is a soft blend from grey, not a jump from red. On <body>,
+   so the header, the nav pill, the content and "Torna all'inizio" all
+   inherit it; the colour's own rules (main / .site-nav .has-hero-accent)
+   then take over, and once <main> has it this no longer applies. The
+   desktop bar (its gradient's own variables), the dark pill and button's
+   fixed red-browns, and the hero's own starting background follow suit. */
+body:has(main[data-accent-from-hero]:not(.has-hero-accent)):not(:has([data-view="login"]:not([hidden]))) {
+  --brand-red: #5b5552;
+  --brand-red-deep: #45403e;
+  --brand-red-deep-2: #3a3634;
+  --brand-red-darker: #45403e;
+}
+
+:root[data-theme="dark"] body:has(main[data-accent-from-hero]:not(.has-hero-accent)):not(:has([data-view="login"]:not([hidden]))) {
+  --brand-red-deep: #d4ceca;
+  --brand-red-darker: #d4ceca;
+}
+
+html:not(.nav-mobile) body:has(main[data-accent-from-hero]:not(.has-hero-accent)):not(:has([data-view="login"]:not([hidden]))) .site-header:not(.site-header--admin) {
+  --bar-c1: #1d1b1a;
+  --bar-c2: #4a4542;
+}
+
+html[data-theme="dark"].nav-mobile body:has(main[data-accent-from-hero]:not(.has-hero-accent)):not(:has([data-view="login"]:not([hidden]))) .site-nav:not(.has-hero-accent) .nav-dropdown-trigger,
+:root[data-theme="dark"] body:has(main[data-accent-from-hero]:not(.has-hero-accent)):not(:has([data-view="login"]:not([hidden]))) .back-to-top:not(.has-hero-accent) {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: #3a3634;
+}
+
+:root[data-theme="dark"] body:has(main[data-accent-from-hero]:not(.has-hero-accent)):not(:has([data-view="login"]:not([hidden]))) .back-to-top:not(.has-hero-accent) {
+  color: #ece6e2;
 }
 
 body.has-hero-accent footer {
@@ -9512,7 +9554,8 @@ main.has-hero-accent .profile-tab:not(.is-active):hover {
   margin: 0;
 }
 
-.detail-hero .commander-card-skeleton {
+.detail-hero .commander-card-skeleton,
+:root[data-theme="dark"] .detail-hero .commander-card-skeleton {
   aspect-ratio: 488 / 680;
   background-image: linear-gradient(
     100deg,
@@ -11133,14 +11176,14 @@ html.nav-mobile .pc-link-field .pc-link {
   border-radius: 50%;
   background: var(--brand-red);
   color: #fff;
-  box-shadow: 0 8px 18px rgba(220, 24, 28, 0.4);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--brand-red) 40%, transparent);
   cursor: pointer;
   transition: transform 150ms ease, box-shadow 150ms ease;
 }
 
 .pc-edit-btn:hover {
   transform: translateY(-1px) scale(1.05);
-  box-shadow: 0 12px 24px rgba(220, 24, 28, 0.5);
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--brand-red) 50%, transparent);
 }
 
 .pc-edit-btn:focus-visible,
@@ -11715,9 +11758,10 @@ a.history-item:hover .follow-name {
   width: 46px;
   height: 46px;
   border-radius: 14px;
-  background: linear-gradient(135deg, var(--brand-red), rgba(150, 12, 16, 1));
+  /* In the page's colour (a hero's on account.html), glow included. */
+  background: linear-gradient(135deg, var(--brand-red), color-mix(in srgb, var(--brand-red) 68%, #000));
   color: #fff;
-  box-shadow: 0 8px 18px rgba(220, 24, 28, 0.3);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--brand-red) 30%, transparent);
 }
 
 .decklist-icon svg {
@@ -15318,9 +15362,13 @@ html.app-header .site-header {
   padding-bottom: 16px;
 }
 
+/* The logo a size bigger than the round buttons (52px) without making the
+   header any taller: 3px of it reach into the header's own padding above
+   and below, so its row stays the buttons' 46px. */
 html.app-header .site-header .site-logo-sm {
-  width: 44px;
-  height: 44px;
+  width: 52px;
+  height: 52px;
+  margin-block: -3px;
 }
 
 html.app-header .site-header-brand {
@@ -15543,7 +15591,8 @@ html:not(.nav-mobile) {
   --bar-h: 64px;
   --bar-pad: 20px;
   --bar-gap: 16px;
-  --bar-logo: 40px;
+  /* The logo's size (and where the tabs start after it). */
+  --bar-logo: 48px;
   /* The search: a round button (below). */
   --bar-search: 38px;
 }
@@ -15552,8 +15601,13 @@ html:not(.nav-mobile) {
   html:not(.nav-mobile) {
     --bar-pad: 16px;
     --bar-gap: 12px;
-    --bar-logo: 34px;
+    --bar-logo: 40px;
   }
+}
+
+html:not(.nav-mobile) .site-header:not(.site-header--admin) .site-logo-sm {
+  width: var(--bar-logo);
+  height: var(--bar-logo);
 }
 
 html:not(.nav-mobile) .site-header:not(.site-header--admin) {
