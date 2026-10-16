@@ -69,9 +69,11 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   // A long list: a round button back to the top once scrolled down.
   initBackToTop({ signal });
 
-  // Full commander name on hover for any bar-chart label (Winrate) cut off
-  // with an ellipsis — delegated on chartEl, which survives re-renders.
-  attachHoverTooltips(chartEl, ".bar-chart-label", fullTextIfTruncated, { signal });
+  // A commander's full name for a label cut off with an ellipsis — the
+  // Winrate bars' and the Metashare legend's (phones: beside the ring) — on
+  // hover, or a tap on touch screens. Delegated on chartEl, which survives
+  // re-renders.
+  attachHoverTooltips(chartEl, ".bar-chart-label, .pie-legend-label", fullTextIfTruncated, { signal });
 
   let allCommanders = [];
   let eventDateById = new Map();
@@ -282,7 +284,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
         <div class="chart-grid">
           ${renderPieChart(chartRows, "Nessun dato per il grafico.", "Metashare")}
           ${renderBarChart(winsChartRows, "Nessun dato per il grafico.", "Winrate")}
-          ${renderBarChart(colorRows, "Nessun dato per il grafico.", "Colori più giocati")}
+          ${renderBarChart(colorRows, "Nessun dato per il grafico.", "Colori più giocati", { relative: true, shortLabels: true })}
         </div>`;
       chartEl.innerHTML = lastChartHtml;
       initChartCarousel(chartEl);

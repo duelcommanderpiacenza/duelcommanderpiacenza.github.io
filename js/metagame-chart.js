@@ -303,8 +303,14 @@ export async function hydrateBubbleArt(rootEl) {
  * @param {object} [options]
  * @param {boolean} [options.spacious] - see below.
  * @param {string} [options.subtitle] - small muted line under the title.
+ * @param {boolean} [options.relative] - each bar's length relative to the
+ *   largest value (it fills the track), not to 100% — for shares that are
+ *   all well under half (the Comandanti colours), which otherwise came out
+ *   as short stubs in an empty track. The % shown stays the real value.
+ * @param {boolean} [options.shortLabels] - a narrow label column, for short
+ *   labels (the colours' names), leaving the bars the room.
  */
-export function renderBarChart(rows, emptyMessage, title, { spacious = false, subtitle = "" } = {}) {
+export function renderBarChart(rows, emptyMessage, title, { spacious = false, subtitle = "", relative = false, shortLabels = false } = {}) {
   const titleHtml =
     (title ? `<h2 class="pie-chart-title">${escapeHtml(title)}</h2>` : "") +
     (subtitle ? `<p class="pie-chart-subtitle">${escapeHtml(subtitle)}</p>` : "");
@@ -312,13 +318,15 @@ export function renderBarChart(rows, emptyMessage, title, { spacious = false, su
     return `<div class="pie-chart-wrap">${titleHtml}<p class="page-empty">${emptyMessage}</p></div>`;
   }
 
+  const max = Math.max(0, ...rows.map((r) => r.value ?? 0));
+  const barWidth = (v) => Math.min(Math.max(relative ? (max > 0 ? (v / max) * 100 : 0) : v, 0), 100);
   const bars = rows
     .map(
       (r, i) => `
     <div class="bar-chart-row" style="animation-delay:${i * 60}ms;">
       <span class="bar-chart-label">${escapeHtml(r.label)}</span>
       <div class="bar-chart-track">
-        ${r.value === null ? "" : `<div class="bar-chart-fill" style="width:${Math.min(Math.max(r.value, 0), 100)}%; background:${r.color};"></div>`}
+        ${r.value === null ? "" : `<div class="bar-chart-fill" style="width:${barWidth(r.value)}%; background:${r.color};"></div>`}
       </div>
       <strong class="bar-chart-pct">${r.value === null ? "—" : `${r.value.toFixed(1)}%`}</strong>
     </div>`
@@ -333,7 +341,7 @@ export function renderBarChart(rows, emptyMessage, title, { spacious = false, su
   return `
     <div class="pie-chart-wrap">
       ${titleHtml}
-      <div class="bar-chart-body${spacious ? " bar-chart-body-spacious" : ""}">${bars}</div>
+      <div class="bar-chart-body${spacious ? " bar-chart-body-spacious" : ""}${shortLabels ? " bar-chart-body-short-labels" : ""}">${bars}</div>
     </div>
   `;
 }

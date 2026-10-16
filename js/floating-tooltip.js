@@ -106,6 +106,14 @@ export function attachHoverTooltips(containerEl, selector, textFor, { signal } =
     const el = e.target.closest?.(selector);
     if (el && el === anchorEl) hideFloatingTooltip();
   });
+  // Touch screens (no hover): a tap shows it — the same full text — and a
+  // tap anywhere else hides it (below).
+  containerEl.addEventListener("click", (e) => {
+    const touch = e.pointerType ? e.pointerType !== "mouse" : window.matchMedia("(hover: none)").matches;
+    if (!touch) return;
+    const el = e.target.closest?.(selector);
+    if (el) showFloatingTooltip(el, textFor(el));
+  });
   containerEl.addEventListener("scroll", hideFloatingTooltip, true);
   // `signal` (js/router.js mount): a page's own call stops with it.
   window.addEventListener("scroll", hideFloatingTooltip, { capture: true, signal });
@@ -113,6 +121,17 @@ export function attachHoverTooltips(containerEl, selector, textFor, { signal } =
 
 // In-app navigation (js/router.js): no tooltip left over the next page.
 document.addEventListener("app:navigate", () => hideFloatingTooltip());
+
+// A tap (or click) anywhere but on the element it's for hides it — on touch
+// screens there's no mouseleave to do it. Captured, so it runs before a
+// tap's own handler shows the next one.
+document.addEventListener(
+  "click",
+  (e) => {
+    if (anchorEl && !anchorEl.contains(e.target)) hideFloatingTooltip();
+  },
+  true
+);
 
 // textFor for a label cut off with an ellipsis: its full text only when it
 // actually is cut off (a name that fits needs no tooltip).

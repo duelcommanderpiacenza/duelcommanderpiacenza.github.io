@@ -13657,6 +13657,12 @@ a.bubble:active {
   height: 18px;
 }
 
+/* Short labels (renderBarChart's `shortLabels` — the Comandanti colours'
+   names): a narrow label column, the bars the rest of the row. */
+.bar-chart-body-short-labels .bar-chart-row {
+  grid-template-columns: 72px 1fr 48px;
+}
+
 /* Comandanti/Archetipi chart row (Metashare, Winrate, + Comandanti's
    "Colori più giocati") as a
    horizontal carousel of whole blocks — 2 side by side when there's room,
