@@ -160,7 +160,8 @@ export const Profiles = {
 
 // The signed-in account's own settings (supabase/migrations/019's
 // user_settings — private, its own row only): the theme picked from the
-// footer's button (js/theme.js), remembered across devices.
+// footer's button (js/theme.js) and the vibration switch
+// (js/haptics-toggle.js), remembered across devices.
 export const UserSettings = {
   theme: (userId) =>
     sb
@@ -174,6 +175,21 @@ export const UserSettings = {
     sb
       .from("user_settings")
       .upsert({ user_id: userId, theme, updated_at: new Date().toISOString() })
+      .then(assertOk),
+  // The vibration switch (js/haptics-toggle.js, supabase/migrations/024):
+  // true / false, null = never chosen.
+  haptics: (userId) =>
+    sb
+      .from("user_settings")
+      .select("haptics")
+      .eq("user_id", userId)
+      .maybeSingle()
+      .then(assertOk)
+      .then((row) => row?.haptics ?? null),
+  saveHaptics: (userId, on) =>
+    sb
+      .from("user_settings")
+      .upsert({ user_id: userId, haptics: on, updated_at: new Date().toISOString() })
       .then(assertOk),
 };
 

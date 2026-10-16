@@ -1,8 +1,8 @@
 // Pull to refresh, in the installed app only (display-mode: standalone —
 // a browser tab has its own, or its reload button): pulled down from the
-// very top of the page, a white disc with the logo slides down from the
-// top edge (styles.css .ptr), its red ring filling as it goes; past
-// THRESHOLD it's armed (a pop and a haptic tick, js/haptics.js) and letting
+// very top of the page, a white disc with a red refresh arrow slides down
+// from the top edge (styles.css .ptr), its red ring filling and the arrow
+// turning as it goes; past THRESHOLD it's armed (a pop and a haptic tick, js/haptics.js) and letting
 // go reloads the page's data in place (js/router.js refresh — no full
 // reload), the disc spinning until the page is shown again. Pulled less,
 // it just slides back.
@@ -79,7 +79,8 @@ function init() {
   const ptr = document.createElement("div");
   ptr.className = "ptr";
   ptr.setAttribute("aria-hidden", "true");
-  ptr.innerHTML = '<div class="ptr-disc"><img src="dc_pc.png" alt=""></div>';
+  ptr.innerHTML =
+    '<div class="ptr-disc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path></svg></div>';
   document.body.append(ptr);
 
   const setTravel = (travel) => {

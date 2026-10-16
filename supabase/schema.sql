@@ -915,15 +915,19 @@ create policy "follows_delete_own" on follows for delete
   using (user_id = auth.uid());
 
 -- ---------------------------------------------------------------------------
--- Settings remembered per account — for now the site's theme ('light',
--- 'dark' or 'system'), picked from the footer's theme button (js/theme.js).
--- Private: each account its own row. Not a profiles column: a profiles row
--- means "saved a player card". Added by supabase/migrations/019_user_settings.sql.
+-- Settings remembered per account — the site's theme ('light', 'dark' or
+-- 'system'), picked from the footer's theme button (js/theme.js), and the
+-- vibration switch (js/haptics-toggle.js, Android phones). null = never
+-- chosen (the browser's own choice stays). Private: each account its own
+-- row. Not a profiles column: a profiles row means "saved a player card".
+-- Added by supabase/migrations/019_user_settings.sql; haptics, and theme
+-- nullable, by 024_haptics_setting.sql.
 -- ---------------------------------------------------------------------------
 
 create table user_settings (
   user_id uuid primary key references auth.users(id) on delete cascade,
-  theme text not null default 'system' check (theme in ('light', 'dark', 'system')),
+  theme text check (theme in ('light', 'dark', 'system')),
+  haptics boolean,
   updated_at timestamptz not null default now()
 );
 

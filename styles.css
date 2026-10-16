@@ -7320,9 +7320,9 @@ a.history-item.is-me {
    16px from the bottom) when the screen has room for it, otherwise just
    above the pill. */
 /* Pull to refresh, installed app only (js/pull-refresh.js): a white disc
-   with the logo, hidden above the top edge, sliding down with the pull
-   (--ptr-y) — "Torna all'inizio"'s look; its red ring fills as it goes
-   (--ptr-p, 0–1) and the logo turns with it. Armed (.is-armed): the ring
+   with a red refresh arrow, hidden above the top edge, sliding down with
+   the pull (--ptr-y) — "Torna all'inizio"'s look; its red ring fills as it
+   goes (--ptr-p, 0–1) and the arrow turns with it. Armed (.is-armed): the ring
    full, a little pop. Refreshing: held there, a red arc spinning round.
    Above the header (25) and the nav (20). */
 .ptr {
@@ -7360,9 +7360,10 @@ a.history-item.is-me {
   opacity: 1;
 }
 
-.ptr-disc img {
-  width: 26px;
-  height: 26px;
+.ptr-disc svg {
+  width: 22px;
+  height: 22px;
+  color: var(--brand-red);
   rotate: calc(var(--ptr-p) * 300deg);
 }
 
@@ -7378,7 +7379,7 @@ a.history-item.is-me {
   animation: ptr-spin 800ms linear infinite;
 }
 
-.ptr.is-refreshing .ptr-disc img {
+.ptr.is-refreshing .ptr-disc svg {
   animation: ptr-spin 800ms linear infinite reverse;
 }
 
@@ -7407,7 +7408,7 @@ a.history-item.is-me {
   }
 
   .ptr.is-refreshing .ptr-disc,
-  .ptr.is-refreshing .ptr-disc img {
+  .ptr.is-refreshing .ptr-disc svg {
     animation: none;
   }
 }
@@ -15347,6 +15348,13 @@ html[data-theme="dark"]:not(.nav-mobile) .site-search-results {
 
 :root[data-theme="dark"] .theme-toggle {
   background: rgba(255, 255, 255, 0.08);
+}
+
+/* The vibration switch (js/haptics-toggle.js, Android phones only): the
+   theme button's look in the footer's left corner; off, its icon (struck
+   through) faded. */
+.haptics-toggle.is-off svg {
+  opacity: 0.5;
 }
 
 /* "Install app" banner (js/pwa-install.js) — shown at most once per

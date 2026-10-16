@@ -12,6 +12,7 @@
 // layout/reflow on every navigation.
 
 import { setupThemeToggle } from "./theme.js";
+import { setupHapticsToggle } from "./haptics-toggle.js";
 import { enhanceSelects } from "./custom-select.js";
 import { enhanceDateInputs } from "./custom-date.js";
 import "./pwa-install.js";
@@ -31,6 +32,7 @@ import "./pull-refresh.js";
 // long or fails (js/page-loading.js).
 watchPageLoading();
 setupThemeToggle();
+setupHapticsToggle();
 enhanceSelects();
 enhanceDateInputs();
 
