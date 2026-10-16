@@ -10373,7 +10373,7 @@ html.nav-mobile .profile-tab svg {
   inset: 0;
   border-radius: inherit;
   background:
-    url("dc_pc.png") center 30% / 38% no-repeat,
+    url("dc_pc.svg") center 30% / 38% no-repeat,
     radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--pc-glow, #8d959c) 55%, transparent), transparent 70%);
   opacity: 0.32;
   transition: opacity 400ms ease;
@@ -15743,7 +15743,7 @@ html.app-header :is(body:not(:has(.page-main .profile-hero)), body:has(.profile-
   filter: brightness(1.7) saturate(1.15);
 }
 
-/* Phones and tablets, every page: the logo in brand red — the PNG as a
+/* Phones and tablets, every page: the logo in brand red — the logo as a
    mask over a red fill, its own pixels pushed out of view (object-fit:
    none, or the image would just fill the box and stay put); the signed-in
    picture ringed in red. Over a hero: a deeper shade at the top, a soft
@@ -15756,8 +15756,8 @@ html.app-header .site-header .site-logo-sm {
   background: var(--brand-red);
   object-fit: none;
   object-position: -9999px 0;
-  -webkit-mask: url("dc_pc.png") center / contain no-repeat;
-  mask: url("dc_pc.png") center / contain no-repeat;
+  -webkit-mask: url("dc_pc.svg") center / contain no-repeat;
+  mask: url("dc_pc.svg") center / contain no-repeat;
 }
 
 /* The signed-in picture: no white edge or fill of its own, just a red

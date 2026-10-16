@@ -367,7 +367,7 @@ export function renderPublicPlayerCard(containerEl, card, { name, since, badges 
           ${panel}
           <div class="pc-foot">
             <span class="pc-since">${since ? `Dal ${escapeHtml(since)}` : ""}</span>
-            <img src="dc_pc.png" alt="" class="pc-logo">
+            <img src="dc_pc.svg" alt="" class="pc-logo">
           </div>
         </div>
       </div>
