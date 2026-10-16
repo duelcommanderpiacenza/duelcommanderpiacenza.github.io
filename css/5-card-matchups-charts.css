@@ -1432,14 +1432,6 @@ html.nav-mobile .help-toggle-btn {
 /* Giocatori: the round "?" to the badge page (badges.html) at the end of
    the search line — level with the 40px boxes, not their labels (the line
    aligns its items' bottoms). */
-.filter-toggle-line .players-badge-help {
-  margin-bottom: 9px;
-  text-decoration: none;
-}
-
-html.nav-mobile .filter-toggle-line .players-badge-help {
-  margin-bottom: 6px;
-}
 
 /* badges.html (js/badges-page.js): one card per automatic badge. */
 .badges-grid {
@@ -1819,7 +1811,16 @@ html.nav-mobile .filter-toggle-line .players-badge-help {
    paint it round themselves (box-shadow), so cells scrolling under them
    don't show through the gaps — invisible against the page. The colours:
    the site's win / loss ones (.history-score: green, red; even neutral). */
+/* The matrix on its own panel: a card in the panel colour (--mx-bg, which
+   the sticky names already paint round themselves, so they blend in) —
+   white, dark mode the dark one — no edge line, rounding and a soft
+   shadow; the scrolling inside its padding. */
 .matchups-matrix-wrap {
+  position: relative;
+  padding: 10px;
+  border-radius: var(--radius-card);
+  background: var(--mx-bg);
+  box-shadow: var(--shadow-card);
   --mx-bg: #fff;
   --mx-win: #1fa45a;
   --mx-loss: #e0262b;
@@ -2087,6 +2088,65 @@ html.nav-mobile .matchups-matrix-scroll::-webkit-scrollbar {
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
   border-top: 5px solid var(--brand-red);
+}
+
+/* A player badge's tooltip (js/floating-tooltip.js fillBadgeCard): a small
+   white card — the badge's icon and name, its description, "Come si
+   ottiene ›" (red) to its entry on badges.html. Clickable, unlike the pill. */
+.floating-tooltip.badge-tip {
+  width: max-content;
+  max-width: min(240px, calc(100vw - 16px));
+  padding: 12px 14px;
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  background: #fff;
+  color: var(--text-body);
+  font-weight: 400;
+  white-space: normal;
+  pointer-events: auto;
+}
+
+.badge-tip .floating-tooltip-arrow {
+  bottom: -6px;
+  border-left-width: 6px;
+  border-right-width: 6px;
+  border-top: 6px solid #fff;
+}
+
+.badge-tip-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.badge-tip-head .badge-disc {
+  flex: none;
+  font-size: 1.6rem;
+}
+
+.badge-tip-name {
+  color: var(--text-title);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.badge-tip-text {
+  margin: 8px 0 0;
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+.badge-tip-link {
+  display: inline-block;
+  margin-top: 10px;
+  color: var(--brand-red);
+  font-size: 0.84rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.badge-tip-link:hover {
+  text-decoration: underline;
 }
 
 /* Dragged sideways with the mouse when it doesn't fit (js/drag-scroll.js

@@ -80,7 +80,7 @@ function columnStops(wrap) {
   );
 }
 
-// The round "?" in the matrix's top-left corner (redrawn with it, hence the
+// The round "?" on the matrix panel's top-left corner (redrawn with it, hence the
 // click delegated on <main>; the title's own isn't shown — the page is
 // titled "Meta") opens how to read the matrix, in the
 // site's shared explanation pop-up (js/info-dialog.js, same as player.html's
@@ -95,9 +95,9 @@ function initHelpToggle() {
   });
 }
 
-// The "?" in the matrix's top-left corner.
+// The "?" on the matrix panel's top-left corner.
 const CORNER_HELP =
-  '<button type="button" class="help-toggle-btn" data-matchups-help aria-haspopup="dialog" aria-label="Come si legge la matrice">?</button>';
+  '<button type="button" class="help-toggle-btn matchups-help-corner" data-matchups-help aria-haspopup="dialog" aria-label="Come si legge la matrice">?</button>';
 
 // In-app page (js/router.js): mounted by the router on this page's <main>
 // (data-page), on first load and after each in-app navigation; `signal`
@@ -261,10 +261,10 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     // sub-cards. The panel (.matchups-matrix-wrap) and what scrolls inside
     // its padding (.matchups-matrix-scroll) are two boxes, so the scrollbar
     // stays inside the panel's rounded edges.
-    matrixEl.innerHTML = `<div class="matchups-matrix-wrap"><div class="matchups-matrix-scroll"><table class="matchups-table">
+    matrixEl.innerHTML = `<div class="matchups-matrix-wrap">${CORNER_HELP}<div class="matchups-matrix-scroll"><table class="matchups-table">
       <thead>
         <tr>
-          <th class="matchups-corner-header">${CORNER_HELP}</th>
+          <th class="matchups-corner-header"></th>
           ${rows.map((c) => `<th class="matchups-col-header" data-tooltip="${escapeHtml(c.name)}"><span class="matchups-col-header-text">${escapeHtml(c.name)}</span></th>`).join("")}
         </tr>
       </thead>

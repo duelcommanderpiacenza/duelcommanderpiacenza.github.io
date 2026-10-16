@@ -89,8 +89,27 @@
 <!-- /shell:nav -->
 
 <main class="page-main" data-page="players">
-  <div class="page-heading page-heading-with-action">
+  <!-- No visible title (the nav names the page): for screen readers. -->
+  <div class="page-heading visually-hidden">
     <h1>Giocatori</h1>
+  </div>
+
+  <!-- Search, sort, the badges' "?" and the filters' button, the filters'
+       panel under them — shown from the first paint (outside the loading
+       region), the list loading below. -->
+  <div class="filter-toggle-line">
+    <div class="field filter-toggle-search">
+      <label for="players-search">Cerca</label>
+      <input type="search" id="players-search" placeholder="Cerca giocatore...">
+    </div>
+    <div class="field filter-toggle-sort">
+      <label for="players-sort">Ordina per</label>
+      <select id="players-sort">
+        <option value="events">Eventi</option>
+        <option value="winrate">Winrate</option>
+        <option value="wins">Vittorie</option>
+      </select>
+    </div>
     <button type="button" class="filter-toggle-btn" id="players-filter-toggle" aria-expanded="false" aria-controls="players-filter-panel" aria-label="Filtri">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
     </button>
@@ -119,7 +138,6 @@
   <div class="page-loading-region">
     <div id="page-loading-overlay" class="page-loading-overlay">
       <div class="sk-page is-list" aria-hidden="true">
-        <i class="sk sk-search"></i>
         <i class="sk sk-row"></i>
         <i class="sk sk-row"></i>
         <i class="sk sk-row"></i>
@@ -132,22 +150,6 @@
       <p>Caricamento...</p>
     </div>
 
-    <div class="filter-toggle-line">
-      <div class="field filter-toggle-search">
-        <label for="players-search">Cerca</label>
-        <input type="search" id="players-search" placeholder="Cerca giocatore...">
-      </div>
-      <div class="field filter-toggle-sort">
-        <label for="players-sort">Ordina per</label>
-        <select id="players-sort">
-          <option value="events">Eventi</option>
-          <option value="winrate">Winrate</option>
-          <option value="wins">Vittorie</option>
-        </select>
-      </div>
-      <!-- How the badges are earned (badges.html): the site's round "?". -->
-      <a class="help-toggle-btn players-badge-help" href="badges.html" aria-label="Badge: come si ottengono" title="Badge">?</a>
-    </div>
 
     <div id="players-list">
       <p class="page-loading">Caricamento giocatori...</p>

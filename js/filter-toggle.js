@@ -70,6 +70,17 @@ export function initFilterToggle(buttonId, panelId) {
     }
     btn.classList.toggle("is-open", opening);
     btn.setAttribute("aria-expanded", String(opening));
+    // Opened from a button that stays in view while scrolling (the Meta
+    // pages' sticky sub-tabs) with the panel scrolled away above: back up
+    // to it.
+    if (opening) {
+      requestAnimationFrame(() => {
+        if (panel.getBoundingClientRect().top < 0) {
+          const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+          window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+        }
+      });
+    }
   }
 
   btn.addEventListener("click", () => setOpen(panel.classList.contains("is-collapsed")));

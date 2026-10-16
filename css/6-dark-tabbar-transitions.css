@@ -69,6 +69,16 @@
   background: rgba(255, 255, 255, 0.045);
 }
 
+/* A badge's tooltip card (opaque: it floats over the page). */
+:root[data-theme="dark"] .floating-tooltip.badge-tip {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: #241b1d;
+}
+
+:root[data-theme="dark"] .badge-tip .floating-tooltip-arrow {
+  border-top-color: #241b1d;
+}
+
 /* Without this, the generic dark-mode rule above (3 classes) wins on
    specificity over .dashboard-card-commanders .pie-chart-wrap's own
    background: none (2 classes) regardless of source order, giving the
@@ -1075,20 +1085,21 @@ html.nav-mobile .back-to-top {
   text-decoration: none;
 }
 
-/* The section's head (.meta-head: the title line + the sub-tabs' row),
-   laid out by CSS alone, so it's the same from the first frame on every
-   page of the section. A computer: one line — "Meta" on the left, the
-   sub-tabs centred on the line (a three-column grid, the side columns
-   equal, so the same spot whatever the title), the filters' button at the
-   right end (the title line and the matchups title group display:
-   contents, their items placed in the grid's columns). Touch screens:
-   the wrapper steps aside (display: contents), the title line as it is and
-   the sub-tabs' row the sticky part under it (the control inside it can't
-   stick past the row's own box). */
+/* The section's head (.meta-head), laid out by CSS alone, so it's the same
+   from the first frame on every page of the section. No visible title
+   (its .page-heading only holds the <h1>, for screen readers). The
+   sub-tabs' row (.meta-row) holds the switcher and the filters' button. A
+   computer: one line — the sub-tabs centred (a three-column grid, the side
+   columns equal), the filters' button at the right end (the row and the
+   heading display: contents, their items placed in the grid's columns).
+   Touch screens: the wrapper steps aside (display: contents), the row the
+   sticky part (the control inside it can't stick past the row's own box),
+   the filters' button on its top-right corner. */
 .meta-row > .meta-tabs {
   margin: 0;
 }
 
+.meta-head > .page-heading,
 .meta-head .page-heading-title-group {
   display: contents;
 }
@@ -1101,16 +1112,11 @@ html:not(.nav-mobile) .meta-head {
   margin-bottom: 22px;
 }
 
-html:not(.nav-mobile) .meta-head > .page-heading {
+html:not(.nav-mobile) .meta-head > .meta-row {
   display: contents;
 }
 
-html:not(.nav-mobile) .meta-head .meta-heading-title {
-  grid-column: 1;
-  grid-row: 1;
-}
-
-html:not(.nav-mobile) .meta-head > .meta-row {
+html:not(.nav-mobile) .meta-head .meta-tabs {
   grid-column: 2;
   grid-row: 1;
 }
@@ -1120,6 +1126,24 @@ html:not(.nav-mobile) .meta-head .filter-toggle-btn {
   grid-row: 1;
   justify-self: end;
   margin-left: 0;
+}
+
+/* Touch screens: the filters' button on the switcher's top-right corner,
+   like league.html's "?" — out over it, within the 8px the row keeps from
+   the screen's top while stuck. */
+html.nav-mobile .meta-row > .filter-toggle-btn {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  margin: 0;
+  box-shadow: 0 0 0 2px #fff, var(--shadow-card);
+}
+
+:root[data-theme="dark"].nav-mobile .meta-row > .filter-toggle-btn {
+  box-shadow: 0 0 0 2px #1e1517, var(--shadow-card);
 }
 
 html.nav-mobile .meta-head {
@@ -1214,19 +1238,8 @@ html.nav-mobile .meta-row > .meta-tabs {
   position: static;
 }
 
-/* Those three pages are one section, "Meta" — its title on the heading's
-   line (.meta-heading-title, like the other main pages' titles), the
-   filters' button at that line's right end, the segmented control below
-   it. The page's own <h1> stays for screen readers only; Matchups' "?" in
-   the matrix's top-left corner instead. */
-.page-heading .meta-heading-title {
-  display: block;
-  margin: 0;
-  color: var(--text-title);
-  font-size: 1.9rem;
-  font-weight: 700;
-}
-
+/* The page's own <h1>: for screen readers only; Matchups' "?" in the
+   matrix panel's top-left corner instead of beside it. */
 .meta-head .page-heading h1 {
   position: absolute;
   width: 1px;
@@ -1254,15 +1267,23 @@ html.nav-mobile #matchups-matrix + #matchups-custom-btn {
 
 /* Matchups on touch screens: no "Comandanti più giocati" / "Tabella
    personalizzata" line (its button is under the matrix, above). On every
-   screen the "?" is in the matrix's top-left corner (js/matchups-page.js),
-   on the corner cell's top left — sticky with it while the columns scroll. */
+   screen the "?" is on the matrix panel's top-left corner (below). */
 html.nav-mobile .matchups-toolbar {
   display: none;
 }
 
-.matchups-corner-header:has(.help-toggle-btn) {
-  text-align: left;
-  vertical-align: top;
+/* On every screen the "?" (how to read the matrix) on the matrix panel's
+   top-left corner (over the empty corner cell) — out over it, a white ring. */
+.matchups-matrix-wrap > .matchups-help-corner {
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  z-index: 2;
+  box-shadow: 0 0 0 2px #fff, var(--shadow-card);
+}
+
+:root[data-theme="dark"] .matchups-matrix-wrap > .matchups-help-corner {
+  box-shadow: 0 0 0 2px #1e1517, var(--shadow-card);
 }
 
 /* ---------------------------------------------------------------------------
@@ -1413,10 +1434,6 @@ html.is-page-transition:not(.app-header) .site-header-brand {
    through; to or from any other page (only one side has them) they fade
    with the page as usual. */
 html.is-page-transition:not(.nav-mobile) main > .meta-head {
-  view-transition-name: meta-heading;
-}
-
-html.is-page-transition.nav-mobile main > .meta-head > .page-heading {
   view-transition-name: meta-heading;
 }
 

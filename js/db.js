@@ -619,11 +619,11 @@ export const PlayerAutoBadges = {
   // don't guarantee row order without an explicit order() on the query,
   // and there's no direct column on this join table itself to order by.
   list: () =>
-    sb.from("player_badges_auto").select("player_id, badge:badges(id,name,description,icon,icon_url,priority)").then(assertOk),
+    sb.from("player_badges_auto").select("player_id, badge:badges(id,name,description,icon,icon_url,priority,auto_rule)").then(assertOk),
   listByPlayer: (playerId) =>
     sb
       .from("player_badges_auto")
-      .select("badge:badges(id,name,description,icon,icon_url,priority)")
+      .select("badge:badges(id,name,description,icon,icon_url,priority,auto_rule)")
       .eq("player_id", playerId)
       .then(assertOk),
   // Full replace, not a diff — simplest correct way to keep this in sync

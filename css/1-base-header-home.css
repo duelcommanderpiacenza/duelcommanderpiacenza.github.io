@@ -71,7 +71,10 @@ html {
 
 /* Read by screen readers, not shown (account.html's "Profilo" title, the
    hero being the visible header). */
-.visually-hidden {
+/* (Also a main page's title, .page-heading.visually-hidden — over the
+   heading's own position and margin, later in the stylesheet.) */
+.visually-hidden,
+.page-heading.visually-hidden {
   position: absolute;
   width: 1px;
   height: 1px;

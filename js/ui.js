@@ -96,11 +96,18 @@ export function uniqueBadges(badges) {
 // A player badge icon's hover/focus text (site-wide js/floating-tooltip.js,
 // fed by data-tooltip): the badge's own description when the admin set one,
 // else just its name. The screen-reader label always leads with the name.
+// data-badge-* turn that tooltip into a small card (its icon, name,
+// description) — with "Come si ottiene ›" to its entry on badges.html for an
+// automatic badge (the only ones listed there).
 export function badgeTooltipAttrs(badge) {
   const description = badge.description?.trim();
   const tooltip = description || badge.name;
   const label = description ? `${badge.name}: ${description}` : badge.name;
-  return `data-tooltip="${escapeHtml(tooltip)}" aria-label="${escapeHtml(label)}"`;
+  const card =
+    ` data-badge-name="${escapeHtml(badge.name)}"` +
+    (description ? ` data-badge-description="${escapeHtml(description)}"` : "") +
+    (badge.auto_rule ? ` data-badge-id="${escapeHtml(badge.id)}"` : "");
+  return `data-tooltip="${escapeHtml(tooltip)}" aria-label="${escapeHtml(label)}"${card}`;
 }
 
 // A badge's icon in its disc (styles.css .badge-disc: white, red ring) — the one

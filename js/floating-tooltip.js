@@ -12,8 +12,52 @@
 
 let tooltipEl = null;
 let anchorEl = null;
+let hideTimer = null;
+
+// A player badge (js/ui.js badgeTooltipAttrs, data-badge-*): a small white
+// card instead of the red pill — its icon, name, description and, for an
+// automatic badge, "Come si ottiene ›" to its entry on badges.html. The
+// one tooltip that can be clicked (see hideSoon).
+function fillBadgeCard(tip, anchor) {
+  const { badgeName, badgeDescription, badgeId } = anchor.dataset;
+  tip.classList.add("badge-tip");
+  const head = document.createElement("div");
+  head.className = "badge-tip-head";
+  // Its icon: the disc next to the name, or (the player card's own glass
+  // disc) the glyph put in the site's disc.
+  let disc = anchor.querySelector(".badge-disc")?.cloneNode(true);
+  if (!disc) {
+    disc = document.createElement("span");
+    disc.className = "badge-disc";
+    const glyph = anchor.querySelector(".pc-badge-glyph")?.cloneNode(true);
+    if (glyph) {
+      glyph.className = "badge-disc-glyph";
+      disc.appendChild(glyph);
+    }
+  }
+  disc.removeAttribute("style");
+  const name = document.createElement("b");
+  name.className = "badge-tip-name";
+  name.textContent = badgeName;
+  head.append(disc, name);
+  tip.appendChild(head);
+  if (badgeDescription) {
+    const text = document.createElement("p");
+    text.className = "badge-tip-text";
+    text.textContent = badgeDescription;
+    tip.appendChild(text);
+  }
+  if (badgeId) {
+    const link = document.createElement("a");
+    link.className = "badge-tip-link";
+    link.href = `badges.html#badge-${encodeURIComponent(badgeId)}`;
+    link.textContent = "Come si ottiene ›";
+    tip.appendChild(link);
+  }
+}
 
 export function showFloatingTooltip(anchor, text) {
+  clearTimeout(hideTimer);
   if (anchor === anchorEl) return;
   hideFloatingTooltip();
   anchorEl = anchor;
@@ -21,7 +65,19 @@ export function showFloatingTooltip(anchor, text) {
 
   const tip = document.createElement("div");
   tip.className = "floating-tooltip";
-  tip.textContent = text;
+  if (anchor.dataset.badgeName) {
+    fillBadgeCard(tip, anchor);
+    // The pointer crossing from the badge onto the card keeps it open.
+    tip.addEventListener("mouseenter", () => clearTimeout(hideTimer));
+    tip.addEventListener("mouseleave", (e) => {
+      if (!anchorEl?.contains(e.relatedTarget)) hideSoon();
+    });
+    // Pressing its link mustn't take the focus off the badge — the badge's
+    // focusout would remove the card before the click lands.
+    tip.addEventListener("mousedown", (e) => e.preventDefault());
+  } else {
+    tip.textContent = text;
+  }
   document.body.appendChild(tip);
   tooltipEl = tip;
 
@@ -56,9 +112,18 @@ export function showFloatingTooltip(anchor, text) {
 }
 
 export function hideFloatingTooltip() {
+  clearTimeout(hideTimer);
   tooltipEl?.remove();
   tooltipEl = null;
   anchorEl = null;
+}
+
+// Leaving a badge's card (or its badge): a moment's delay, time for the
+// pointer to cross the gap between them; any other tooltip goes at once.
+function hideSoon() {
+  if (!tooltipEl?.classList.contains("badge-tip")) return hideFloatingTooltip();
+  clearTimeout(hideTimer);
+  hideTimer = setTimeout(hideFloatingTooltip, 200);
 }
 
 /**
@@ -91,7 +156,7 @@ export function attachHoverTooltips(containerEl, selector, textFor, { signal } =
       const el = e.target.closest?.(selector);
       if (!el || el !== anchorEl) return;
       if (e.relatedTarget && el.contains(e.relatedTarget)) return;
-      hideFloatingTooltip();
+      hideSoon();
     },
     true
   );
@@ -122,13 +187,13 @@ export function attachHoverTooltips(containerEl, selector, textFor, { signal } =
 // In-app navigation (js/router.js): no tooltip left over the next page.
 document.addEventListener("app:navigate", () => hideFloatingTooltip());
 
-// A tap (or click) anywhere but on the element it's for hides it — on touch
-// screens there's no mouseleave to do it. Captured, so it runs before a
-// tap's own handler shows the next one.
+// A tap (or click) anywhere but on the element it's for (or on a badge's
+// card, its link) hides it — on touch screens there's no mouseleave to do
+// it. Captured, so it runs before a tap's own handler shows the next one.
 document.addEventListener(
   "click",
   (e) => {
-    if (anchorEl && !anchorEl.contains(e.target)) hideFloatingTooltip();
+    if (anchorEl && !anchorEl.contains(e.target) && !tooltipEl?.contains(e.target)) hideFloatingTooltip();
   },
   true
 );
