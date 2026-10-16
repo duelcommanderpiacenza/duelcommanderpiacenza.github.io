@@ -7389,6 +7389,18 @@ a.history-item.is-me {
   }
 }
 
+/* On a hero page, the page's accent (applyHeroTone sets --hero-accent on
+   <body>, the disc's parent) instead of the red — dark mode its light
+   shade, like the page's own red text there. Before the colour arrives, the
+   neutral grey <body> already gives every page with a hero. */
+body.has-hero-accent .ptr {
+  --brand-red: var(--hero-accent);
+}
+
+:root[data-theme="dark"] body.has-hero-accent .ptr {
+  --brand-red: var(--hero-accent-light);
+}
+
 :root[data-theme="dark"] .ptr-disc {
   background:
     linear-gradient(#241c1e, #241c1e) padding-box,
