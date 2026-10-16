@@ -7,7 +7,9 @@
 import { Leagues, Events } from "./db.js";
 import { escapeHtml, eventTitle } from "./ui.js";
 
-export async function initScopeFilter({ leagueSelect, eventSelect, onChange }) {
+// `initial` ({ league, event }, optional — the Meta section's shared filter,
+// js/meta-filters.js): picked to start with, when still offered.
+export async function initScopeFilter({ leagueSelect, eventSelect, onChange, initial = null }) {
   const [leagues, allEvents] = await Promise.all([Leagues.list(), Events.list()]);
   // A still-open (including future) event has no stats to filter by yet —
   // offering it here would just be a selectable option that always shows
@@ -53,6 +55,11 @@ export async function initScopeFilter({ leagueSelect, eventSelect, onChange }) {
   });
   eventSelect.addEventListener("change", () => onChange(currentEventIds()));
 
+  const offered = (select, value) => value && [...select.options].some((o) => o.value === value);
+  if (offered(leagueSelect, initial?.league)) leagueSelect.value = initial.league;
   populateEvents();
+  if (offered(eventSelect, initial?.event)) eventSelect.value = initial.event;
+  // The filters button's "set" dot (js/filter-toggle.js) re-reads the panel.
+  if (initial) leagueSelect.closest(".filter-panel")?.dispatchEvent(new Event("change"));
   onChange(currentEventIds());
 }

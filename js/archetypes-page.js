@@ -6,6 +6,7 @@ import { initChartCarousel } from "./chart-carousel.js";
 import { archetypeBadge, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
+import { savedMetaFilters, rememberMetaFilters } from "./meta-filters.js";
 import { historyPanelHtml, historyStatsHtml } from "./history-list.js";
 
 // Entries + matches of every event in scope, batched (js/db.js) rather than
@@ -23,6 +24,15 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   const leagueSelect = document.getElementById("archetypes-league-filter");
   const eventSelect = document.getElementById("archetypes-event-filter");
   const dateFromInput = document.getElementById("archetypes-date-from");
+  // The filters first — before any request, so the button (and its "set"
+  // dot) is already as it should be when the page appears.
+  // Default "Dal": the last DEFAULT_DATE_FROM_YEARS years (js/ui.js) — set before the
+  // first load, so that load already fetches only that window.
+  // (Or the Meta section's shared filter, as last set on any of its pages.)
+  const savedFilters = savedMetaFilters();
+  dateFromInput.value = savedFilters ? savedFilters.dateFrom : isoDateYearsAgo(DEFAULT_DATE_FROM_YEARS);
+  rememberMetaFilters({ leagueSelect, eventSelect, dateFromInput });
+  initFilterToggle("archetypes-filter-toggle", "archetypes-filter-panel");
 
   let eventDateById = new Map();
   let lastScopeEventIds = [];
@@ -135,16 +145,13 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     }
   }
 
-  // Default "Dal": the last DEFAULT_DATE_FROM_YEARS years (js/ui.js) — set before the
-  // first load, so that load already fetches only that window.
-  dateFromInput.value = isoDateYearsAgo(DEFAULT_DATE_FROM_YEARS);
-  initFilterToggle("archetypes-filter-toggle", "archetypes-filter-panel");
 
   dateFromInput.addEventListener("change", () => render(effectiveEventIds()));
 
   initScopeFilter({
     leagueSelect,
     eventSelect,
+    initial: savedFilters,
     onChange: (eventIds) => {
       lastScopeEventIds = eventIds;
       render(effectiveEventIds());

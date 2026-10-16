@@ -1,0 +1,3066 @@
+/* styles — part 1 of 6 (css/1-base-header-home.css). The site's one stylesheet, split in its
+   original order: the parts are loaded in this order (partials/head.html,
+   admin/index.html) and must stay so — later rules win ties. */
+
+:root {
+  --font-main: "Trebuchet MS", "Segoe UI", sans-serif;
+
+  --brand-red: #dc181c;
+  --brand-red-dark: rgba(116, 11, 18, 0.9);
+  --brand-red-darker: #7f2024;
+  --brand-red-deep: #8d1d22;
+  --brand-red-deep-2: #9f141b;
+
+  /* The page's background: one colour top to bottom (the three kept for
+     the hero pages' tinted gradient, body.has-hero-accent). */
+  --bg-cream-1: #fffdf8;
+  --bg-cream-2: #fffdf8;
+  --bg-cream-3: #fffdf8;
+
+  --text-body: #22181a;
+  --text-title: #201214;
+  --text-muted: #8b666c;
+  --text-muted-2: #6f5a5e;
+  --text-value: #4f3c40;
+
+  --hairline: rgba(154, 28, 32, 0.18);
+  --hairline-hover: rgba(220, 24, 28, 0.32);
+  --hairline-hover-strong: rgba(220, 24, 28, 0.36);
+  --table-row-line: rgba(154, 28, 32, 0.08);
+
+  --shadow-soft: 0 18px 42px rgba(69, 29, 34, 0.08);
+  --shadow-card: 0 12px 28px rgba(40, 24, 26, 0.08);
+  --shadow-card-hover: 0 18px 36px rgba(40, 24, 26, 0.14);
+
+  --radius-card: 22px;
+  --radius-card-sm: 20px;
+  --radius-pill: 999px;
+
+  --accent-green-2: #14914a;
+
+  --accent-aggro: #dc181c;
+  --accent-control: #2f5fdc;
+  --accent-combo: #2a2226;
+  --accent-tempo: #0aa8bd;
+  --accent-midrange: #e0752b;
+
+  /* Same blue family as --accent-control, but its own named variable —
+     the nav's Social tab intentionally breaks from the red brand family
+     (see .nav-link[data-nav="social"] below) to read as visually distinct
+     from the rest of the site's own content, not because it's secretly
+     "the control archetype's" color. Split into two, same reasoning as
+     --brand-red vs --brand-red-darker: --social-blue is a solid fill (the
+     active pill's own background), left untouched in dark mode like
+     --brand-red itself is; --social-blue-text is the inactive tab's own
+     (much thinner) text color, which does need brightening for contrast
+     once the page behind it goes dark — see the dark-theme override below. */
+  --social-blue: #2f5fdc;
+  --social-blue-text: #2f5fdc;
+}
+
+/* Suppresses the browser's default blue-ish tap-highlight flash on mobile
+   (WebKit/Chrome on touch devices briefly overlay a translucent color on
+   whatever you tapped) — a non-standard, touch-only property with no
+   effect at all on desktop, since there's no tap highlight to suppress
+   there in the first place. Every element already gets its own deliberate
+   :hover/:active feedback, so this flash was only ever redundant noise on
+   top of that, not a replacement for it. */
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Read by screen readers, not shown (account.html's "Profilo" title, the
+   hero being the visible header). */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  font-family: var(--font-main);
+  /* Plain, no red glow at the top (hero pages: their own tint,
+     body.has-hero-accent). */
+  background: linear-gradient(180deg, var(--bg-cream-1) 0%, var(--bg-cream-2) 24%, var(--bg-cream-3) 100%);
+  color: var(--text-body);
+}
+
+/* Splash shown until a page's own data has finished loading (see
+   js/page-loading.js) — static markup right after .page-heading in every
+   public page's <main>, same reasoning as the header/nav in js/layout.js:
+   present at first paint so there's nothing to pop in. Deliberately scoped
+   to below the title (header, nav and heading stay visible/interactive the
+   whole time) rather than covering the whole page — .page-loading-region
+   is the positioning parent, with a min-height so the splash still reads
+   as a proper "screen" even though its content starts out empty and only
+   grows to its natural height once the splash is gone. */
+.page-loading-region {
+  position: relative;
+  min-height: 50vh;
+}
+
+/* While loading, at least a whole screen tall, and the footer hidden: the
+   footer isn't seen high up and then dropping as the content arrives — it
+   shows once loaded, straight in its place (also through an in-app
+   navigation, js/router.js, which sets body.is-loading again). */
+body.is-loading .page-loading-region {
+  min-height: 100vh;
+}
+
+body.is-loading footer {
+  visibility: hidden;
+}
+
+/* The scrollbar's room always kept (desktop): a page growing past the
+   window's height as it loads doesn't get narrower — nothing shifts when
+   the scrollbar appears. */
+html {
+  scrollbar-gutter: stable;
+}
+
+/* The real content underneath (filters, chart, table, each with its own
+   small "Caricamento..." placeholder) is hidden outright — see the
+   visibility rule below — rather than painted over with a matching color,
+   since no fixed color could ever exactly match body's gradient (which
+   spans the full, variable document height) at this box's particular
+   position. With nothing left to paint over, there's nothing to mismatch:
+   the correct bit of body's own background just shows through on its own. */
+.page-loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  transition: opacity 220ms ease;
+}
+
+/* visibility (not display/opacity) so the region still reserves the real
+   content's actual layout space while it's hidden — kept in sync with the
+   same body.is-loading class that pauses entrance animations, so removing
+   it both reveals this content and starts those animations at once. */
+body.is-loading .page-loading-region > *:not(.page-loading-overlay) {
+  visibility: hidden;
+}
+
+/* Touch screens: a detail hero's back pill stays shown while the page loads
+   (the hero itself hidden as the rest), so going from one hero page to
+   another it can stay in place and just resize to its new label (the page
+   transition's "hero-back", "Page transitions" below). */
+html.app-header body.is-loading .page-loading-region > .detail-hero-wrap > .detail-hero-back {
+  z-index: 6;
+  visibility: visible;
+}
+
+/* "Caricamento..." only for screen readers — the placeholders below say it
+   on screen. */
+.page-loading-overlay > p {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.page-loading-overlay.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Loading too long, or failed (js/page-loading.js watchPageLoading): the
+   placeholders give way to the message, with a "Ricarica la pagina" button
+   under it. */
+.page-loading-overlay.is-stuck {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  text-align: center;
+}
+
+.page-loading-overlay.is-stuck > .sk-page {
+  display: none;
+}
+
+.page-loading-overlay.is-stuck > p {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  clip-path: none;
+  color: var(--text-muted);
+  font-size: 1.05rem;
+  font-weight: 700;
+  white-space: normal;
+}
+
+/* The placeholders (.sk-page, static in the overlay of every public page):
+   the page's own layout drawn as soft blocks — a hero, the tabs, a chart,
+   list rows, tiles — each page its own (a modifier on .sk-page), so the
+   content arrives where the eye already is. A brand-red shimmer sweeps
+   across them, one wave for the whole screen (fixed: the gradient spans the
+   window, not each block); still with reduced motion. */
+.sk-page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sk-page i {
+  display: block;
+}
+
+/* In the page's accent (--brand-red: the site's red, or a hero page's
+   colour — neutral grey before it arrives), not a fixed red; dark mode
+   its light shade (--brand-red-deep there). */
+.sk {
+  --sk-base: color-mix(in srgb, var(--brand-red) 6%, transparent);
+  --sk-shine: color-mix(in srgb, var(--brand-red) 13%, transparent);
+  border-radius: 18px;
+  background: linear-gradient(100deg, var(--sk-base) 35%, var(--sk-shine) 50%, var(--sk-base) 65%) fixed;
+  background-size: 250% 100%;
+}
+
+:root[data-theme="dark"] .sk {
+  --sk-base: rgba(255, 255, 255, 0.045);
+  --sk-shine: color-mix(in srgb, var(--brand-red-deep) 12%, transparent);
+}
+
+/* Over the `body.is-loading *` pause (below) — the one animation that
+   plays while loading. */
+.page-loading-overlay .sk {
+  animation: sk-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes sk-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-loading-overlay .sk {
+    animation: none;
+  }
+}
+
+/* A heading's line, a search field, a segmented control, a list row. */
+.sk-title {
+  width: 160px;
+  height: 26px;
+  border-radius: 10px;
+}
+
+.sk-search {
+  height: 48px;
+  border-radius: 16px;
+}
+
+.sk-tabs {
+  height: 50px;
+  border-radius: var(--radius-pill);
+}
+
+.sk-row {
+  height: 58px;
+  border-radius: 16px;
+}
+
+/* The touch screens' segmented control only on touch screens. */
+html:not(.app-header) .sk-touch-only {
+  display: none;
+}
+
+/* The hero: like .profile-hero, hanging from the bar on a computer
+   (square top, rounded bottom), edge to edge on phones and tablets, under
+   the transparent header there (its white logo and buttons on it, as on
+   the real one); the title, a line and the stat chips as lighter bars —
+   beside the card when the page has one (.has-card, below). */
+.sk-hero {
+  --sk-base: rgba(255, 255, 255, 0);
+  --sk-shine: rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  min-height: 236px;
+  margin-bottom: 8px;
+  padding: 36px 32px;
+  border-radius: 0 0 28px 28px;
+  background:
+    linear-gradient(100deg, var(--sk-base) 35%, var(--sk-shine) 50%, var(--sk-base) 65%) fixed,
+    linear-gradient(135deg, #6f6a67, #3b3735);
+  background-size: 250% 100%, auto;
+}
+
+:root[data-theme="dark"] .sk-hero {
+  --sk-base: rgba(255, 255, 255, 0);
+  --sk-shine: rgba(255, 255, 255, 0.07);
+  background-color: #2a2726;
+  background-image:
+    linear-gradient(100deg, var(--sk-base) 35%, var(--sk-shine) 50%, var(--sk-base) 65%),
+    linear-gradient(135deg, #3b3735, #1c1a19);
+}
+
+.sk-hero i {
+  height: 16px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.sk-hero .sk-hero-title {
+  width: min(320px, 70%);
+  height: 34px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.sk-hero-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* The line under the name (league's status and dates, event's details),
+   above it on account (its "Il tuo profilo") — not on the heroes with only
+   the name. */
+.sk-hero-text > .sk-hero-line {
+  width: min(200px, 45%);
+}
+
+.sk-hero-chips {
+  display: flex;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.sk-hero-chips i {
+  width: 84px;
+  height: 52px;
+  border-radius: 16px;
+}
+
+@media (max-width: 640px) {
+  .sk-hero {
+    margin-inline: -16px;
+    padding-inline: 16px;
+    border-radius: 0;
+  }
+}
+
+html.app-header .sk-hero {
+  min-height: 260px;
+  padding-top: calc(var(--hero-header-h, 80px) + 24px);
+  border-radius: 0;
+}
+
+/* With the card (commander.html and account.html always; player.html once
+   its card request says the player shows one — js/player-detail.js): laid
+   out like .profile-hero-inner — the card's 280px column beside the text;
+   from 820px down the card first, centred (240px wide on phones, account's
+   260px), the text centred under it. */
+/* (.sk-page .sk-hero-card: over .sk-page i's display: block.) */
+.sk-page .sk-hero-card {
+  display: none;
+}
+
+.sk-hero.has-card {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  align-items: center;
+  gap: 40px;
+  padding-block: 32px;
+}
+
+.sk-hero.has-card .sk-hero-card {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 488 / 680;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.sk-hero.has-card .sk-hero-text {
+  align-self: stretch;
+  justify-content: center;
+}
+
+.sk-hero.has-card .sk-hero-chips {
+  margin-top: 12px;
+}
+
+@media (max-width: 820px) {
+  .sk-hero.has-card {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+    padding: 24px 20px;
+  }
+
+  .sk-hero.has-card .sk-hero-card {
+    max-width: 280px;
+    margin: 0 auto;
+  }
+
+  /* As the real one: the name above the card, the numbers under it (the
+     text's bars join the hero's grid); account's line too. */
+  .sk-hero.has-card .sk-hero-text {
+    display: contents;
+  }
+
+  .sk-hero.has-card .sk-hero-title {
+    order: -1;
+    justify-self: center;
+  }
+
+  .sk-hero.has-card .sk-hero-line {
+    order: -1;
+    justify-self: center;
+  }
+
+  .sk-hero.has-card .sk-hero-chips {
+    justify-content: center;
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .sk-hero.has-card {
+    padding-inline: 16px;
+  }
+
+  .sk-hero.has-card .sk-hero-card {
+    max-width: 240px;
+  }
+
+  .sk-page.is-account .sk-hero.has-card .sk-hero-card {
+    max-width: 260px;
+  }
+}
+
+html.app-header .sk-hero.has-card {
+  padding-top: calc(var(--hero-header-h, 80px) + 24px);
+}
+
+@media (min-width: 641px) {
+  html.app-header .sk-hero,
+  html.app-header .sk-hero.has-card {
+    margin-inline: calc(-1 * var(--hero-bleed));
+    padding-inline: var(--hero-bleed);
+  }
+}
+
+/* Account: its hero sits in the signed-in view, hidden (display: none)
+   while loading, so its pull-up doesn't move the region — the placeholder
+   pulls itself up the same (28px; 20px on phone widths); its tabs a pill
+   bar on a computer, the full-width segmented control on phones. */
+.sk-page.is-account .sk-hero {
+  margin-top: -28px;
+}
+
+@media (max-width: 640px) {
+  .sk-page.is-account .sk-hero {
+    margin-top: -20px;
+  }
+}
+
+@media (min-width: 641px) {
+  html:not(.app-header) .sk-page.is-account .sk-tabs {
+    width: 440px;
+  }
+}
+
+/* Two columns on a computer (a hero page's lists, the Bacheca), one on
+   phones and touch screens. */
+.sk-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 14px 28px;
+}
+
+.sk-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (max-width: 860px) {
+  .sk-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sk-cols > .sk-col + .sk-col {
+    display: none;
+  }
+}
+
+html.app-header .sk-cols {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+html.app-header .sk-cols > .sk-col + .sk-col {
+  display: none;
+}
+
+/* Bacheca: the timeline (a dot and a card per event) beside Classifica,
+   the charts' card under both. */
+@media (min-width: 861px) {
+  html:not(.app-header) .sk-page.is-home .sk-cols {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 30px 32px;
+  }
+}
+
+.sk-tl {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px 26px;
+}
+
+.sk-tl .sk-dot {
+  width: 14px;
+  height: 14px;
+  margin-left: 13px;
+  border-radius: 50%;
+}
+
+.sk-tl .sk-row {
+  height: 56px;
+}
+
+.sk-standings {
+  height: 420px;
+  margin-top: 38px;
+}
+
+.sk-page.is-home .sk-chart {
+  height: 330px;
+  margin-top: 16px;
+}
+
+/* Touch screens: the segmented control, then Eventi alone (no heading of
+   its own there). */
+html.app-header .sk-page.is-home .sk-tabs {
+  margin-bottom: 4px;
+}
+
+html.app-header .sk-page.is-home .sk-title,
+html.app-header .sk-page.is-home > .sk-chart {
+  display: none;
+}
+
+/* A chart (Comandanti, Archetipi, a commander's or archetype's decks). */
+.sk-chart {
+  height: 300px;
+  border-radius: var(--radius-card);
+}
+
+/* The Bacheca's Più giocati while its charts still load, after the rest of
+   the page is shown (js/home.js): its own shimmering block in the card. */
+.home-charts-sk {
+  display: block;
+  height: 340px;
+  animation: sk-shimmer 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-charts-sk {
+    animation: none;
+  }
+}
+
+@media (max-width: 820px) {
+  .sk-chart {
+    height: 420px;
+  }
+}
+
+/* Leghe & Eventi: the league's big tile, its next and latest event beside
+   it (under it on phones, side by side), then the archive's tiles. */
+.sk-ev-board {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  grid-auto-rows: 118px;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.sk-ev-board > .sk {
+  border-radius: var(--radius-card);
+}
+
+.sk-ev-board > .sk-ev-big {
+  grid-row: span 2;
+}
+
+.sk-ev-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.sk-ev-grid > .sk {
+  height: 150px;
+  border-radius: var(--radius-card);
+}
+
+.sk-page.is-events .sk-title {
+  margin-top: 20px;
+}
+
+@media (max-width: 820px) {
+  .sk-ev-board {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sk-ev-board > .sk-ev-big {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Tiles (Badge, Social), and a plain card (Account). */
+.sk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 14px;
+}
+
+.sk-grid > .sk {
+  height: 180px;
+  border-radius: var(--radius-card);
+}
+
+.sk-card {
+  height: 300px;
+  border-radius: var(--radius-card);
+}
+
+/* Matchups: the selector beside the title, then the matrix. */
+.sk-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sk-toolbar .sk-search {
+  width: 220px;
+  height: 40px;
+}
+
+.sk-matrix {
+  height: 560px;
+  border-radius: var(--radius-card);
+}
+
+/* Touch screens: no heading line over the matrix (no title; its "Crea
+   tabella personalizzata" under the matrix — js/matchups-page.js), so the
+   matrix first, then that button, centred. */
+html.app-header .sk-page.is-matchups .sk-toolbar {
+  display: none;
+}
+
+.sk-matrix-button {
+  width: 220px;
+  height: 40px;
+  margin: 0 auto;
+  border-radius: var(--radius-pill);
+}
+
+/* Content gets built (and its entrance animations technically start
+   playing) behind the splash while data is still loading, well before the
+   splash itself fades out — without this, everything would already be
+   sitting fully settled the moment the splash clears, silently skipping
+   the animation entirely. Pausing every animation on the page while
+   .is-loading is present holds each one at its very first frame; js/
+   page-loading.js removes the class at the same moment it hides the
+   splash, so every element's entrance animation starts playing together,
+   in sync, right as the page becomes visible. */
+body.is-loading * {
+  animation-play-state: paused;
+}
+
+/* The same pause for entrance animations declared with a selector that
+   outranks `body.is-loading *` above (an id, or two classes): their
+   `animation` shorthand resets the play state to running, so they'd play —
+   and finish — unseen while the page is still loading. Any new one like
+   them goes here too. */
+body.is-loading input[type="search"]:not(#site-search-input) {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-loading-overlay {
+    transition: none;
+  }
+}
+
+/* Pushes the footer to the bottom of the viewport on short pages, while
+   letting it sit below the content as usual once content overflows it. */
+main,
+.page-main {
+  flex: 1 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Content links (player/commander/event/league references scattered through
+   tables and text) read as normal text rather than the browser's blue +
+   underline default; classed links (nav, buttons, cards, breadcrumbs) set
+   their own color/decoration and so aren't affected by this. */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Compact header, identical markup duplicated at the top of every page (see
+   js/layout.js for why it isn't fetched/injected at runtime). Named so a
+   cross-document view-transition treats it as one continuous element
+   instead of cross-fading it — it's pixel-identical between pages, so this
+   makes it stay fully static across a navigation instead of "reloading". */
+.site-header {
+  /* position + z-index, not just the search dropdown's own z-index: 60 —
+     view-transition-name (below) forces this element into its own stacking
+     context regardless of position, but without an explicit z-index that
+     context still only ranks as z-index: 0 among its siblings. .site-nav
+     right below declares an explicit z-index: 20 of its own, which beat
+     it (and, with it, the z-index: 60 search dropdown painted inside this
+     stacking context — a descendant's z-index only ever competes with its
+     OWN stacking context's siblings, never escapes past it) regardless of
+     that 60, making the dropdown render as if tucked behind the nav bar.
+     25 only needs to clear .site-nav's 20. */
+  position: relative;
+  z-index: 25;
+  background:
+    linear-gradient(135deg, var(--brand-red-dark), rgba(220, 24, 28, 0.96)),
+    var(--brand-red);
+  color: white;
+  /* Vertical padding trimmed from 18px to 15px, exactly offsetting the
+     logo/text size bump below (.site-logo-sm/.site-header-brand) — the
+     header's own total height stays the same, only what's inside it grows. */
+  padding: 15px 20px;
+  box-shadow: 0 20px 45px rgba(103, 16, 20, 0.22);
+  view-transition-name: site-header;
+}
+
+/* Centering used to live on .site-header-brand itself (the header's only
+   child) — now that the search box sits beside it, this wrapper does the
+   centering/max-width instead, with the brand and the search as two flex
+   children spaced apart. */
+.site-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.site-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 1.3rem;
+  letter-spacing: 0.01em;
+}
+
+.site-logo-sm {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+/* Site-wide search (js/site-search.js) — one shared markup block for both
+   desktop and mobile, styled entirely differently by CSS rather than two
+   separate widgets: desktop shows an always-visible translucent pill with
+   a live field right in the header; html.nav-mobile (the same touch-only
+   gate as the rest of the site's mobile chrome, see the .site-nav comment
+   below) collapses that to a round trigger button that opens the same
+   field + results as a full-screen overlay instead. Results are a live
+   dropdown either way — see js/site-search.js — never a separate results
+   page. */
+.site-search-trigger {
+  display: none;
+}
+
+html.nav-mobile .site-search-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--brand-red);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+}
+
+.site-search-trigger svg {
+  width: 19px;
+  height: 19px;
+}
+
+/* The header's right side: search, then the account button —
+   margin-left: auto keeps both together at the right end of
+   .site-header-inner's space-between row (a third child would otherwise
+   pull search into the middle). */
+.site-search {
+  margin-left: auto;
+}
+
+/* The public pages: the bell (.site-news) first, then the search and the
+   account button — the bell takes the push to the right instead (admin's
+   header has no bell: its search keeps it). */
+.site-news {
+  margin-left: auto;
+}
+
+.site-news + .site-search {
+  margin-left: 0;
+}
+
+/* The bell: on a computer always there (the bar's tab row leaving room for
+   it); on touch screens on every page but those with a hero (their header
+   over the art keeps just the search and the account) — hidden there, the
+   search taking the push back; the page transition pops it in / out
+   ("Page transitions" below). */
+html.app-header body:has(.page-main .profile-hero) .site-news {
+  display: none;
+}
+
+html.app-header body:has(.page-main .profile-hero) .site-news + .site-search {
+  margin-left: auto;
+}
+
+html:not(.nav-mobile) {
+  --bar-news: calc(38px + var(--bar-gap));
+}
+
+/* Account button (js/header-account.js, links to account.html): the same
+   round 38px shape as the phone's search button. Desktop: translucent like
+   the search pill beside it; touch devices (html.nav-mobile): white with a
+   red icon, like the search trigger. Signed in with a Google picture: the
+   picture fills the circle inside a white ring. */
+.site-account {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.site-account:hover {
+  background: rgba(255, 255, 255, 0.26);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.site-account:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+html.nav-mobile .site-account {
+  border: none;
+  background: #fff;
+  color: var(--brand-red);
+  box-shadow: var(--shadow-card);
+}
+
+.site-account.is-signed-in:has(.site-account-avatar) {
+  border: 2px solid #fff;
+}
+
+.site-account-icon {
+  width: 19px;
+  height: 19px;
+}
+
+.site-account-avatar {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* "Novità" (js/header-news.js): a bell before the search, the same round
+   button as its neighbours — on a computer translucent like the account
+   button, on touch screens white with a red icon like the search one (46px
+   with the phone header, html.app-header). A red badge on its top-right
+   corner counts the announcements not opened yet. */
+.site-news {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease, color 700ms ease;
+}
+
+.site-news:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.26);
+}
+
+.site-news:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.site-news-icon {
+  width: 19px;
+  height: 19px;
+}
+
+.site-news-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  border: 2px solid #fff;
+  border-radius: var(--radius-pill);
+  background: #dc181c;
+  color: #fff;
+  font-size: 0.64rem;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 2px 6px rgba(80, 10, 14, 0.3);
+}
+
+.site-news-badge[hidden] {
+  display: none;
+}
+
+html.nav-mobile .site-news {
+  border: none;
+  background: #fff;
+  color: var(--brand-red);
+  box-shadow: var(--shadow-card);
+}
+
+html.app-header .site-news {
+  width: 46px;
+  height: 46px;
+}
+
+html.app-header .site-news-icon {
+  width: 22px;
+  height: 22px;
+}
+
+/* Phone header on a page without a hero: a light edge like the search
+   button's; over a hero: a deeper shadow, the icon in the hero's colour. */
+html.app-header :is(body:not(:has(.page-main .profile-hero)), body:has(.profile-claim:not([hidden]))) .site-news {
+  border: 1px solid rgba(154, 28, 32, 0.22);
+  box-shadow: 0 2px 8px rgba(80, 10, 14, 0.1);
+}
+
+html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .site-news {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+html.app-header .site-header.has-hero-accent .site-news {
+  color: var(--hero-accent-deep);
+}
+
+.site-search-box {
+  position: relative;
+}
+
+.site-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.site-search-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: var(--radius-pill);
+  padding: 9px 14px;
+  /* Narrower with the window (240px from 800px wide, 150px from 500px
+     down), leaving the site's name room beside it; touch screens size their
+     own (html.nav-mobile, the full-screen search). */
+  width: clamp(150px, 30vw, 240px);
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.site-search-field:focus-within {
+  background: rgba(255, 255, 255, 0.26);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.site-search-field-icon {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.site-search-input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  color: #fff;
+  font: inherit;
+  font-size: 0.88rem;
+  /* The placeholder ends with "…" once the pill is too narrow for it. */
+  text-overflow: ellipsis;
+}
+
+.site-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* The browser's own built-in "clear" cross inside type="search" inputs —
+   redundant with (and, on mobile, visually crowding) .site-search-close,
+   which already serves the same purpose there; on desktop nothing else
+   closes the field at all (blur/Escape do that instead), so it's not
+   needed there either. */
+.site-search-input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.site-search-close {
+  display: none;
+}
+
+.site-search-results {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 360px;
+  max-width: calc(100vw - 40px);
+  max-height: 70vh;
+  overflow-y: auto;
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card-sm);
+  box-shadow: var(--shadow-card-hover);
+  padding: 10px;
+  z-index: 60;
+}
+
+.site-search-box.is-open .site-search-results {
+  display: block;
+  animation: cs-menu-in 140ms ease both;
+}
+
+/* One flat list, no per-type section headings — each row names its own
+   type via .site-search-result-type instead (a small pill, not the same
+   solid/bold .badge-status pill used for event/league open-closed state
+   elsewhere, so it reads as a lighter-weight label rather than a status).
+   Same roomy sizing on desktop's dropdown and mobile's full-screen overlay. */
+.site-search-result {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 10px;
+  border-radius: 10px;
+  color: var(--text-body);
+  font-size: 1.05rem;
+}
+
+/* Mobile's full-screen overlay only (desktop's dropdown has none): a
+   hairline between rows — a separate 1px line rather than a border-top,
+   which would bend along the row's rounded corners (kept for the hover
+   highlight) instead of running straight edge to edge. */
+html.nav-mobile .site-search-result + .site-search-result::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--hairline);
+}
+
+/* Name (+ an event's league tag) on one line. Both parts truncate, but the
+   league's huge flex-shrink makes it give up its width long before the
+   name does — the name only ever gets cut once the tag is already gone. */
+.site-search-result-label {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.site-search-result-name,
+.site-search-result-league {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.site-search-result-name {
+  flex: 0 1 auto;
+}
+
+/* The league, in a muted uppercase tag inline after the result's name. */
+.site-search-result-league {
+  flex: 0 1000 auto;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.site-search-result-type {
+  flex-shrink: 0;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(220, 24, 28, 0.1);
+  color: var(--brand-red-deep);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.site-search-result:hover {
+  background: var(--hairline-hover);
+  text-decoration: none;
+}
+
+.site-search-hint {
+  margin: 0;
+  padding: 16px 10px;
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 1rem;
+}
+
+/* Mobile: the round trigger opens this same block as a full-screen overlay
+   instead of a dropdown under a small inline pill — position/size/color
+   overridden wholesale rather than incrementally, since almost nothing
+   about the desktop layout (an absolutely-positioned white card floating
+   under a translucent-on-red pill) still applies once this is covering the
+   whole viewport. The field switches to a normal light/dark-aware input
+   (like .field input elsewhere) instead of translucent-on-red, since its
+   background is no longer the red header. */
+html.nav-mobile .site-search-field {
+  width: auto;
+  flex: 1;
+  background: #fff;
+  border-color: var(--hairline);
+}
+
+/* The close button is position: fixed now (see .site-search-close) — no
+   longer a flex sibling .site-search-bar itself reserves room for
+   automatically, so the field would otherwise stretch to flex: 1's full
+   width and run underneath it. Reserved explicitly instead, sized to the
+   button's own real width (from its rect) plus a bit of breathing room.
+   min-height pins the bar to that same real size too — .site-search-bar's
+   own padding-top (../..) only matches its TOP edge to the button's, not
+   its center; without a matching height, .site-search-field's own
+   padding/line-height can make the bar taller than the 38px button, so
+   align-items: center here was centering the field against a row bigger
+   than the button, not against the button itself. Only actually visible on
+   a touch device wide enough that this is still onscreen at all (iPad) —
+   a phone-width viewport has the same mismatch, just usually too subtle to
+   notice at that size. */
+html.nav-mobile .site-search-bar {
+  /* The ✕ sits where the header's search button was — no longer the
+     header's last button since the account button came after it, so its
+     distance from the screen's right edge (--search-close-right) counts
+     too, not just its size: the field stops 10px before it. The overlay's
+     own 16px side padding is already part of that distance. */
+  padding-right: calc(var(--search-close-right, 16px) + var(--search-close-size, 38px) - 6px);
+  min-height: var(--search-close-size, 38px);
+}
+
+html.nav-mobile .site-search-field-icon {
+  color: var(--text-muted);
+}
+
+html.nav-mobile .site-search-input {
+  color: var(--text-body);
+}
+
+html.nav-mobile .site-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Pinned to the exact spot/size the trigger button itself occupies
+   (js/site-search.js sets these custom properties from the trigger's own
+   getBoundingClientRect(), same call already made for the circle-reveal's
+   own origin) rather than wherever .site-search-bar's flex layout would
+   otherwise put it — reads as "the same button, still there" through the
+   whole open animation, not a second, differently-placed close affordance
+   that only shows up once the overlay has finished expanding. Taken out of
+   .site-search-bar's normal flex flow entirely (position: fixed) — see
+   .site-search-bar's own padding-right below for how the field avoids
+   running underneath it. */
+html.nav-mobile .site-search-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  top: var(--search-close-top, 12px);
+  right: var(--search-close-right, 16px);
+  width: var(--search-close-size, 38px);
+  height: var(--search-close-size, 38px);
+  z-index: 201;
+  border: none;
+  border-radius: 50%;
+  background: var(--brand-red);
+  color: #fff;
+  cursor: pointer;
+}
+
+html.nav-mobile .site-search-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+html.nav-mobile .site-search-results {
+  display: none;
+  position: static;
+  width: auto;
+  max-width: none;
+  max-height: none;
+  flex: 1;
+  margin-top: 16px;
+  background: none;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 0;
+}
+
+/* Hidden outright until opened — without this, the box (with no display
+   override otherwise) would still render as a normal block sitting next to
+   the trigger in the header row instead of staying off-screen. */
+html.nav-mobile .site-search-box {
+  display: none;
+}
+
+html.nav-mobile .site-search-box.is-open,
+html.nav-mobile .site-search-box.is-closing {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: var(--bg-cream-1);
+  padding: 18px 16px;
+  /* --search-close-top (js/site-search.js, same rect the close button
+     itself is pinned to) rather than a fixed guess — the bar's top edge
+     then lands at exactly the button's own top edge regardless of header
+     padding/safe-area-inset on this particular page/device, instead of
+     the two only coincidentally lining up. The fallback keeps the old
+     fixed value for the brief moment before JS has set it at all. */
+  padding-top: var(--search-close-top, calc(18px + env(safe-area-inset-top)));
+}
+
+/* Expands from the round trigger button's own position (js/site-search.js
+   sets --search-origin-x/-y/-max-radius on open, from the trigger's real
+   getBoundingClientRect()) out to cover the whole screen, like a ripple —
+   a plain fade read as generic and disconnected from the button that
+   triggered it; this reads as that same white circle growing into the
+   page. --search-max-radius is the exact distance to the farthest
+   viewport corner from that point, not a rough percentage, so the circle
+   is guaranteed to fully cover the screen at the end of the animation
+   regardless of where the trigger sits. Fallback values (top-right-ish)
+   only matter if this somehow plays before the custom properties are set. */
+html.nav-mobile .site-search-box.is-open {
+  animation: search-circle-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes search-circle-in {
+  from {
+    clip-path: circle(0px at var(--search-origin-x, calc(100% - 45px)) var(--search-origin-y, 45px));
+  }
+  to {
+    clip-path: circle(var(--search-max-radius, 150%) at var(--search-origin-x, calc(100% - 45px)) var(--search-origin-y, 45px));
+  }
+}
+
+/* Same ripple, reversed — collapses back down into the trigger instead of
+   just vanishing, so opening and closing read as one coherent motion
+   rather than two unrelated transitions. js/site-search.js keeps this
+   rendered (via .is-closing, since display: none can't itself be
+   animated) for exactly as long as this takes, then lets it go. */
+html.nav-mobile .site-search-box.is-closing {
+  animation: search-circle-out 320ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+@keyframes search-circle-out {
+  from {
+    clip-path: circle(var(--search-max-radius, 150%) at var(--search-origin-x, calc(100% - 45px)) var(--search-origin-y, 45px));
+  }
+  to {
+    clip-path: circle(0px at var(--search-origin-x, calc(100% - 45px)) var(--search-origin-y, 45px));
+  }
+}
+
+/* The circle expands on its own; the field cascades in a beat after it,
+   once the ripple has substantially grown. A scale-in (coalescing into
+   place), not entrance-fade-up's slide-up-from-below — that's a different
+   motion vocabulary with no relation to a circular reveal expanding from a
+   point, which read as two unrelated animations glued together rather
+   than one coherent gesture. Same easing curve as search-circle-in
+   itself, not entrance-fade-up's own, so it reads as a continuation of
+   that same motion, not a second, differently-paced one.
+   .site-search-field specifically, not the whole .site-search-bar — the
+   close button lives in that same bar in markup, but is position: fixed
+   now (pinned to the trigger's own real spot, see .site-search-close), and
+   an animated `transform` on an ancestor becomes the containing block for
+   a position: fixed descendant, which would drag the button along with
+   this scale instead of leaving it stationary. Only on the way in —
+   .is-closing has nothing analogous, the field just leaves with the rest
+   of the circle. */
+html.nav-mobile .site-search-box.is-open .site-search-field {
+  animation: search-content-in 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 140ms;
+}
+
+@keyframes search-content-in {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+html.nav-mobile .site-search-box.is-open .site-search-results,
+html.nav-mobile .site-search-box.is-closing .site-search-results {
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.nav-mobile .site-search-box.is-open,
+  html.nav-mobile .site-search-box.is-closing,
+  html.nav-mobile .site-search-box.is-open .site-search-field {
+    animation: none;
+  }
+}
+
+/* Deliberately no view-transition-name here, unlike the header/footer: this
+   bar's content genuinely differs between pages (a different active tab),
+   so treating it as a single "continuous" element across a navigation
+   isn't right — left as part of the ordinary root crossfade instead. */
+.site-nav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--hairline);
+  box-shadow: 0 8px 18px rgba(69, 29, 34, 0.05);
+}
+
+.site-nav-inner {
+  position: relative;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 10px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Below desktop width, seven tabs wrapping to two uneven lines looks messy —
+   a single horizontally-scrollable row (swipe on touch, drag-scroll with a
+   mouse) reads much cleaner and still reaches every tab. */
+@media (max-width: 900px) {
+  .site-nav-inner {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .nav-link,
+  .nav-item-has-sub {
+    flex-shrink: 0;
+  }
+}
+
+/* Trebuchet MS's own "&" reads as fairly chunky/plain — Arial/Helvetica
+   draw the classic, more familiar ampersand shape instead, still upright
+   and at the surrounding text's own bold weight (not italic, not
+   lightened), just a plain sans-serif swap rather than a stylistic one. */
+.amp {
+  font-family: Arial, Helvetica, sans-serif;
+  margin: 0 2px;
+}
+
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  color: var(--brand-red-darker);
+  font-weight: 700;
+  font-size: 0.92rem;
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: background 180ms ease, border-color 180ms ease, color 180ms ease;
+}
+
+.nav-link:hover {
+  background: #fff7f4;
+  border-color: var(--hairline);
+}
+
+/* Active-tab highlight driven entirely by matching <body data-active-nav>
+   (set statically per page, already in every page's HTML) against each
+   link's own data-nav — no JS, no separate pill element, no per-navigation
+   positioning/animation at all. Social is deliberately excluded from this
+   shared red group — see .nav-link[data-nav="social"] below for its own
+   blue treatment instead. */
+body[data-active-nav="current"] .nav-link[data-nav="current"],
+body[data-active-nav="events"] .nav-link[data-nav="events"],
+body[data-active-nav="meta"] .nav-link[data-nav="meta"],
+body[data-active-nav="players"] .nav-link[data-nav="players"],
+body[data-active-nav="account"] .nav-link[data-nav="account"],
+body[data-active-nav="current"] .nav-link[data-nav="current"]:hover,
+body[data-active-nav="events"] .nav-link[data-nav="events"]:hover,
+body[data-active-nav="meta"] .nav-link[data-nav="meta"]:hover,
+body[data-active-nav="players"] .nav-link[data-nav="players"]:hover,
+body[data-active-nav="account"] .nav-link[data-nav="account"]:hover {
+  background: var(--brand-red);
+  color: #fff;
+  border-color: transparent;
+}
+
+/* Social's own tab: pushed to the far right of the row (margin-left: auto,
+   the row's only "auto" margin, so everything else keeps its normal
+   left-packed flow) and given a blue identity instead of the shared red
+   one above — reads as a deliberately distinct, "external link" kind of
+   tab rather than one more page among the others. No effect once the row
+   becomes the mobile dropdown's vertical list (html.nav-mobile
+   .site-nav-inner is flex-direction: column there — margin-left has no
+   axis to push along), it just sits last, same as before. */
+.nav-link[data-nav="social"] {
+  margin-left: auto;
+  color: var(--social-blue-text);
+}
+
+.nav-link[data-nav="social"]:hover {
+  background: rgba(47, 95, 214, 0.08);
+  border-color: rgba(47, 95, 214, 0.3);
+}
+
+body[data-active-nav="social"] .nav-link[data-nav="social"],
+body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
+  background: var(--social-blue);
+  color: #fff;
+  border-color: transparent;
+}
+
+/* Reusable "tab with a submenu" scaffolding — not currently wired to any
+   live nav item (Matchups was tried as a Comandanti submenu and then
+   reverted back to its own top-level tab, see memory), kept here ready for
+   the next tab that actually needs one. To reuse: wrap the parent
+   <a class="nav-link"> + a sibling <div class="nav-submenu"> in a
+   <div class="nav-item-has-sub">, put the child link(s) in the submenu as
+   <a class="nav-sublink">, and add a body[data-active-nav="X"]
+   .nav-sublink[data-nav="X"] rule for the active-state highlight (plus,
+   optionally, a lighter "parent section" tint on the parent .nav-link,
+   the way the reverted Matchups version did). Desktop: hover/focus-opened
+   popup. Mobile: see the html.nav-mobile override further down, which
+   swaps it to an always-visible nested row instead (no hover on touch). */
+.nav-item-has-sub {
+  position: relative;
+  display: inline-flex;
+}
+
+/* Invisible bridge filling the gap between the Comandanti link and the
+   popup below it (.nav-submenu's own margin-top) — without this, moving
+   the pointer straight down from one to the other crosses a strip that
+   belongs to neither element, :hover is lost for that instant, and the
+   popup closes before the pointer ever reaches it. Sized to at least the
+   popup's own min-width so it covers the full width the popup can open
+   to, not just the (usually narrower) trigger link's width. */
+.nav-item-has-sub::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 160px;
+  width: 100%;
+  height: 6px;
+}
+
+/* Small downward caret next to "Comandanti" — the "there's more here" hint
+   the tab wouldn't otherwise give any sign of. Always at least partly
+   visible (not hover-only) so it reads as a hint rather than something
+   only discoverable by accident. */
+.nav-sub-hint {
+  display: inline-block;
+  margin-left: 6px;
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid currentColor;
+  opacity: 0.5;
+  transition: transform 200ms ease, opacity 200ms ease;
+}
+
+.nav-item-has-sub:hover .nav-sub-hint,
+.nav-item-has-sub:focus-within .nav-sub-hint {
+  opacity: 0.9;
+  transform: rotate(180deg);
+}
+
+.nav-submenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 6px;
+  min-width: 160px;
+  padding: 6px;
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: var(--shadow-card-hover);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-6px);
+  transition: opacity 180ms ease, transform 180ms ease, visibility 180ms;
+  z-index: 25;
+}
+
+.nav-item-has-sub:hover .nav-submenu,
+.nav-item-has-sub:focus-within .nav-submenu {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: none;
+}
+
+.nav-sublink {
+  display: block;
+  padding: 9px 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--text-body);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.nav-sublink:hover,
+.nav-sublink:focus-visible {
+  background: var(--hairline-hover);
+  outline: none;
+}
+
+/* Real touch devices only, via html.nav-mobile — set in JS purely from
+   navigator.maxTouchPoints > 0 (see every page's inline head script), not
+   a CSS media query. That's deliberate: an earlier version gated this
+   whole block on `@media (max-width: 640px) and (pointer: coarse) and
+   (hover: none)` in addition to the class, on the theory that (pointer:
+   coarse) and (hover: none) reliably meant "touch, no mouse" (true for
+   phones, false for a resized desktop window or a touch laptop with a
+   trackpad, which are naturally pointer: fine/hover: hover instead). In
+   practice, some Android OEM browsers — Samsung Internet included —
+   misreport those media features on a real touch phone, so the CSS media
+   query silently failed to match even once html.nav-mobile was already
+   correctly set, and the touch nav's styling just never applied. Every rule
+   below is scoped by html.nav-mobile alone now — simpler, and the
+   only thing actually gating it. Same inline-head-script pattern as the
+   dark/light theme flash-prevention script right above it in every page's
+   <head>, so there's no gap where the plain full-width nav flashes on
+   screen before collapsing — true no-JS still gets that plain,
+   always-visible, working list instead of a hidden/broken nav. Accepted
+   trade-off: this now also covers touch laptops and tablets (iPad
+   included, if narrow enough — though iPad's own viewport is normally
+   well above 640px anyway) rather than excluding them on purpose. */
+
+  /* Fills all the way up behind a translucent iOS status bar (see
+     apple-mobile-web-app-status-bar-style in every page's <head>) and
+     Android's own edge-to-edge status bar, instead of the red background
+     stopping short and leaving a plain white strip above it — env()
+     resolves to 0 on anything without a notch/inset, so this is a no-op
+     everywhere else. */
+  html.nav-mobile .site-header {
+    padding-top: calc(9px + env(safe-area-inset-top));
+  }
+
+  /* Same reasoning at the opposite edge — keeps the tab bar clear of the
+     home-indicator gesture bar on notched phones instead of sitting
+     underneath/behind it. */
+  html.nav-mobile .site-nav {
+    position: fixed;
+    top: auto;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    left: 0;
+    right: 0;
+    background: none;
+    backdrop-filter: none;
+    border-bottom: none;
+    box-shadow: none;
+    padding: 0;
+  }
+
+  /* Out of the way while reading: scrolling down slides the tab bar below the
+     screen's bottom edge, scrolling up brings it back (js/nav-dropdown.js
+     .is-scrolled-away). */
+  html.nav-mobile .site-nav {
+    transition: bottom 450ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  html.nav-mobile .site-nav.is-scrolled-away {
+    bottom: -90px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html.nav-mobile .site-nav {
+      transition: none;
+    }
+  }
+
+  /* Rubber-band/pull-to-refresh bounce reads as "a webpage in a browser
+     tab" — a real installed app doesn't do this, so it's turned off here
+     (touch-scrolling devices only; a mouse wheel on desktop never
+     triggered it in the first place, so nothing changes there). */
+  html.nav-mobile,
+  html.nav-mobile body {
+    overscroll-behavior-y: contain;
+  }
+
+  @keyframes nav-dropdown-item-in {
+    from {
+      transform: translateY(24px);
+    }
+    to {
+      transform: none;
+    }
+  }
+
+  /* There's no hover on a touchscreen, so the desktop hover-popup treatment
+     (.nav-submenu positioned/hidden, .nav-sub-hint as the only clue it
+     exists) doesn't work here — Matchups is shown directly underneath
+     Comandanti instead, always visible, indented, so the nesting itself is
+     the hint rather than something to discover. */
+  html.nav-mobile .nav-item-has-sub {
+    /* Overrides the base rule's row-direction inline-flex — without this,
+       the Comandanti link and the submenu below (both width: 100%) sat
+       side by side instead of stacked, pushing Matchups off the right
+       edge where .site-nav-inner's own overflow-x: hidden clips it. */
+    flex-direction: column;
+    width: 100%;
+  }
+
+  html.nav-mobile .nav-sub-hint {
+    display: none;
+  }
+
+  html.nav-mobile .nav-submenu {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    box-shadow: none;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+  }
+
+  html.nav-mobile .nav-sublink {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    width: 100%;
+    min-height: 44px;
+    padding: 8px 44px 8px 18px;
+    font-size: 1rem;
+    color: var(--text-body);
+    box-sizing: border-box;
+  }
+
+  html.nav-mobile .nav-sublink::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.6;
+    flex-shrink: 0;
+  }
+
+  /* .pwa-install-banner is also position: fixed, bottom: 16px, nearly
+     full-width — without this it would sit exactly on top of the tab bar
+     instead of stacking above it. */
+  html.nav-mobile .pwa-install-banner {
+    bottom: calc(78px + env(safe-area-inset-bottom));
+  }
+
+  /* No room reserved for the tab bar: it slides away while
+     scrolling down (js/nav-dropdown.js .is-scrolled-away), so at the
+     page's bottom the footer is clear — just the home-bar space on notched
+     phones. */
+  html.nav-mobile footer {
+    padding-bottom: calc(18px + env(safe-area-inset-bottom));
+  }
+
+  /* A page shorter than the screen would leave its footer under the tab bar
+     (which never slides away without scrolling): every page at least a
+     screen tall (the large viewport — browser bars hidden — so it never
+     peeks in), the footer just below the screen's edge, shown by scrolling
+     down to it, which slides the bar away (js/nav-dropdown.js, at the
+     bottom however little the page scrolls). */
+  html.nav-mobile .page-main {
+    min-height: 100vh;
+    min-height: 100lvh;
+  }
+
+@media (max-width: 480px) {
+  .site-header {
+    /* Same trade-off as the desktop rule above — padding trimmed by
+       exactly as much as the logo grows, so total header height holds. */
+    padding: 9px 16px;
+  }
+
+  /* Logo + title + two round buttons (search, account) in one row: the
+     title scales with the screen width (14px at 360px, 16px at 412px, up to
+     1.1rem) instead of a fixed size, the logo and gaps a touch smaller —
+     enough for "Duel Commander Piacenza" to stay on one line on a common
+     phone; on a narrower one it wraps to two lines rather than being cut. */
+  .site-header-inner {
+    gap: 12px;
+  }
+
+  .site-header-brand {
+    font-size: clamp(0.82rem, 3.9vw, 1.1rem);
+    gap: 8px;
+  }
+
+  .site-logo-sm {
+    width: 34px;
+    height: 34px;
+  }
+
+  .nav-link {
+    padding: 7px 12px;
+    font-size: 0.86rem;
+  }
+}
+
+.social-strip {
+  width: fit-content;
+  max-width: calc(100% - 32px);
+  margin: 22px auto 0;
+  padding: 12px 16px;
+  border: 1px solid rgba(154, 28, 32, 0.12);
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 18px 34px rgba(62, 29, 33, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.social-link {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #fffefd, #fff4f1);
+  border: 1px solid rgba(154, 28, 32, 0.12);
+  box-shadow: 0 10px 18px rgba(86, 44, 49, 0.08);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.social-link:hover {
+  transform: translateY(-2px);
+  border-color: rgba(220, 24, 28, 0.24);
+  box-shadow: 0 14px 24px rgba(86, 44, 49, 0.14);
+}
+
+.social-link img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+main {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 42px 20px 36px;
+}
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  align-items: start;
+  margin-bottom: 24px;
+}
+
+.overview-grid > .card {
+  margin-bottom: 0;
+}
+
+.card {
+  border: 1px solid rgba(154, 28, 32, 0.12);
+  padding: 22px;
+  margin-bottom: 22px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 18px 42px rgba(69, 29, 34, 0.08);
+  backdrop-filter: blur(10px);
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Same idea as the metagame ring chart's own entrance (pie-ring-in below) —
+   applied directly on the class rule rather than toggled by JS, so any
+   freshly-rendered card/table just plays it on insertion, everywhere on the
+   site (public pages and admin alike) without every call site needing to
+   know about it. */
+@keyframes entrance-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Repeating list/grid items (event & league cards, dashboard chips/rows) —
+   stagger the first few so they cascade in instead of popping as one flat
+   block. Capped at 6 steps: a long list re-using the last delay for every
+   item past that reads better than a multi-second queued cascade. */
+.stat-tile:nth-child(2),
+.badge-card:nth-child(2) {
+  animation-delay: 45ms;
+}
+
+.stat-tile:nth-child(3),
+.badge-card:nth-child(3) {
+  animation-delay: 90ms;
+}
+
+.stat-tile:nth-child(4),
+.badge-card:nth-child(4) {
+  animation-delay: 135ms;
+}
+
+.stat-tile:nth-child(5),
+.badge-card:nth-child(5) {
+  animation-delay: 180ms;
+}
+
+.stat-tile:nth-child(n + 6),
+.badge-card:nth-child(n + 6) {
+  animation-delay: 225ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .history-panel,
+  .admin-form-card,
+  .admin-topbar h1,
+  input[type="search"],
+  .stat-tile,
+  .pie-chart-wrap,
+  .badge-card,
+  .bar-chart-row,
+  .follow-btn-row,
+  .player-card,
+  .pc-art {
+    /* !important: most of these declare their own animation later in this
+       file, which would otherwise win on source order (equal specificity)
+       and keep animating despite the visitor's reduced-motion setting. */
+    animation: none !important;
+  }
+}
+
+.overview-card {
+  min-height: 100%;
+}
+
+.card h2 {
+  margin-top: 0;
+  margin-bottom: 14px;
+  font-size: 1.5rem;
+  letter-spacing: 0.02em;
+}
+
+/* .card's own margin-bottom (for normal document-flow stacking elsewhere)
+   would otherwise stack on top of the flex/grid gaps above. */
+.dashboard-card {
+  margin-bottom: 0;
+}
+
+.home-board .dashboard-standing {
+  border-color: rgba(154, 28, 32, 0.2);
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(80, 10, 14, 0.07);
+}
+
+.home-board a.dashboard-standing:hover {
+  border-color: rgba(154, 28, 32, 0.34);
+  background: color-mix(in srgb, #dc181c 4%, #fff);
+}
+
+/* "Classifica completa" under the top 8 (js/home.js), a small list icon
+   before it: the rest of the ranking, on league.html — under the preview
+   rather than beside the name, so a long league name keeps the whole row
+   on any screen. */
+.dashboard-league-more {
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.dashboard-league-more svg {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+/* The open league's standings preview (js/home.js): the top 8 as compact
+   sub-cards like league.html's Classifica (.history-item, each a link to
+   the player) — position chip, name + badges, points on the right. */
+.dashboard-standings {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Two classes: .history-item's own padding comes later in this file. */
+.dashboard-standings .dashboard-standing {
+  padding: 8px 10px;
+  gap: 10px;
+}
+
+.dashboard-standing .history-lead {
+  gap: 10px;
+}
+
+.dashboard-standing .history-pos {
+  min-width: 30px;
+  height: 30px;
+  font-size: 0.8rem;
+}
+
+/* The name (+ handle) comes first: always shown whole — cut with an
+   ellipsis only if it alone is wider than the column — and the player
+   badges get whatever room is left after it, as many *whole* badges as fit:
+   their strip is one disc tall with overflow hidden and wraps, so a badge
+   that doesn't fit drops onto the hidden second line instead of showing
+   half cut off. */
+.dashboard-standings-name {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  min-width: 0;
+  color: var(--text-title);
+  font-weight: 800;
+}
+
+.dashboard-standings-name-text {
+  flex: 0 0 auto;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 150ms ease;
+}
+
+a.dashboard-standing:hover .dashboard-standings-name-text {
+  color: var(--brand-red-deep);
+}
+
+.dashboard-standings-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  flex: 1 1 0;
+  min-width: 0;
+  /* One .badge-disc tall: 1.6em of .icon-badge's 1rem. */
+  height: 1.6rem;
+  overflow: hidden;
+}
+
+.dashboard-standings-points {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.15;
+}
+
+.dashboard-standings-points .history-stat-value {
+  color: var(--brand-red-deep);
+}
+
+/* ---------------------------------------------------------------------------
+   The Bacheca (index.html, js/home.js): no hero (that's for the profile-like
+   pages) — the title, then three sections in the site's boxless lists:
+   Eventi (league.html's timeline, .league-timeline: the next few events
+   above "Oggi", the latest played below), Classifica (the league in
+   progress, or the latest finished one's final standings, "Conclusa") and
+   Più giocati (the bubble charts). A computer: Eventi and Classifica side by
+   side, Più giocati under them (one column below 860px); touch screens: one
+   at a time behind the site's segmented control (.profile-tabs, js/tabs.js
+   — sticky, like event.html's).
+   --------------------------------------------------------------------------- */
+.home-board {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 30px 32px;
+}
+
+.home-panel-meta {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 860px) {
+  .home-board {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+html:not(.app-header) .home-tabs {
+  display: none;
+}
+
+html.app-header .home-board {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+html.app-header .home-board > .home-panel:not(.is-current) {
+  display: none;
+}
+
+/* A section's heading: its name (Eventi — on a computer only, the tab names
+   it on touch screens — or the league's name, a link) and its link on the
+   right, on one line (the name cut with "…"). */
+.home-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  margin-bottom: 12px;
+}
+
+.home-panel-label {
+  flex: 1;
+  margin: 0;
+  color: var(--text-title);
+  font-size: 1.3rem;
+}
+
+.home-panel-title {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-title);
+  font-size: 1.3rem;
+  font-weight: 800;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-panel-title:hover {
+  color: var(--brand-red-deep);
+  text-decoration: none;
+}
+
+.home-panel-head .section-link {
+  flex-shrink: 0;
+  min-height: 36px;
+  margin: 0 0 0 auto;
+  padding: 0 13px;
+  gap: 7px;
+  font-size: 0.86rem;
+  white-space: nowrap;
+}
+
+.home-panel-head .section-link svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* "Conclusa": the league's over (between two leagues the Classifica shows
+   the latest one's final standings). */
+.home-finished-chip {
+  flex-shrink: 0;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  background: rgba(123, 100, 102, 0.14);
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+:root[data-theme="dark"] .home-finished-chip {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.home-board .league-progress {
+  margin: 0 0 14px;
+}
+
+.home-board .dashboard-standings {
+  margin: 0;
+}
+
+/* A finished league's winner: gold, a trophy for its position. */
+.home-board .dashboard-standing.is-winner,
+:root[data-theme="dark"] .home-board .dashboard-standing.is-winner {
+  border-color: rgba(201, 150, 30, 0.55);
+  background: linear-gradient(90deg, rgba(240, 190, 60, 0.2), transparent 65%), #fff;
+}
+
+:root[data-theme="dark"] .home-board .dashboard-standing.is-winner {
+  background: linear-gradient(90deg, rgba(240, 190, 60, 0.2), transparent 65%), rgba(255, 255, 255, 0.08);
+}
+
+.home-board .history-pos.is-winner {
+  background: linear-gradient(135deg, #f3c74b, #c9961e);
+  color: #fff;
+  font-size: 0.95rem;
+}
+
+/* Eventi: the timeline (its own size container, like league.html's list —
+   the full date on the left of the line from 620px). Upcoming on top, so
+   the next event's stretch of line is grey above, red below; the played
+   ones' red. The kicker (the league) on one line. */
+#home-timeline {
+  container-type: inline-size;
+}
+
+.home-timeline .league-tl-item.is-next::before {
+  background: linear-gradient(var(--tl-line) 50%, var(--brand-red) 50%);
+}
+
+.home-timeline .league-tl-k {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The next event's pulsing dot: its ring spreads 8px round it — room for it
+   inside the kicker's clip (padding), the text where it was (the same
+   negative margin). */
+.home-timeline .is-next .league-tl-k {
+  padding: 8px 0 8px 8px;
+  margin: -8px 0 -8px -8px;
+}
+
+/* No room under the last card (it's for the next one): the list ends with
+   it — on a computer Classifica beside it ends level. */
+.home-timeline > :last-child {
+  padding-bottom: 0;
+}
+
+.home-timeline .league-tl-side .results-links {
+  margin-left: 0;
+}
+
+/* Touch screens: no "In calendario" before the league; the next event's
+   time alone (no clock, no "tra N giorni"), short enough to sit on the
+   name's line. */
+html.app-header .home-timeline :is(.league-tl-k-state, .league-tl-clock, .league-tl-when) {
+  display: none;
+}
+
+.league-tl-clock {
+  display: inline-flex;
+}
+
+/* A played event with no links: nothing on that side. */
+.home-timeline .is-played .league-tl-side:not(:has(.results-links)) {
+  display: none;
+}
+
+/* The card's extra (players and the Moxfield / Top 8 links, or the time)
+   on the right of the name's line while the whole name fits beside it, on
+   a line of its own under it when it doesn't (a wrapping row, any width).
+   Only the name decides: the kicker (the league) doesn't count towards the
+   text's width (contain: inline-size) and is cut with "…" instead. */
+.home-timeline .league-tl-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+}
+
+.home-timeline .league-tl-text {
+  flex: 1 1 auto;
+  max-width: 100%;
+}
+
+.home-timeline .league-tl-k {
+  contain: inline-size;
+}
+
+.home-timeline .league-tl-side {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* An upcoming event's time on the name's line (its baseline — the text's
+   last), not centred between the league and the name. */
+.home-timeline :is(.is-next, .is-future) .league-tl-side {
+  align-self: last baseline;
+}
+
+/* "Oggi": a small red dot on the line, the word, a rule to the right. */
+.league-tl-today {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--tl-node) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--tl-gap);
+  padding-bottom: 12px;
+}
+
+.league-tl-today::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--tl-node) / 2 - 1px);
+  width: 2px;
+  background: var(--brand-red);
+}
+
+.league-tl-today:first-child::before {
+  top: 50%;
+}
+
+.league-tl-today:last-child::before {
+  bottom: 50%;
+}
+
+.league-tl-today-dot {
+  position: relative;
+  z-index: 1;
+  justify-self: center;
+  width: 12px;
+  height: 12px;
+  border: 3px solid var(--tl-node-bg);
+  border-radius: 50%;
+  background: var(--brand-red);
+  box-shadow: 0 0 0 1px var(--brand-red);
+}
+
+.league-tl-today-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--brand-red);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.league-tl-today-label::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: color-mix(in srgb, var(--brand-red) 35%, transparent);
+}
+
+@container (min-width: 620px) {
+  .league-tl-today {
+    padding-left: calc(110px + var(--tl-gap));
+  }
+
+  .league-tl-today::before {
+    left: calc(110px + var(--tl-gap) + var(--tl-node) / 2 - 1px);
+  }
+}
+
+/* "Tutti gli eventi": in the heading on a computer, under the timeline on
+   touch screens (no heading there). */
+.home-events-more {
+  margin-top: 18px;
+}
+
+html:not(.app-header) .home-events-more,
+html.app-header .home-events-head {
+  display: none;
+}
+
+/* Più giocati: the charts' card, its carousel controls under it — and
+   event.html's Meta tab, the same card (js/event-detail.js renderMeta). */
+:is(.home-board, .event-panels) .dashboard-card-commanders {
+  margin-bottom: 0;
+}
+
+:is(.home-board, .event-panels) .chart-carousel-nav {
+  margin: 14px auto 0;
+}
+
+/* event.html's Meta card: its edge in the hero's colour (the Bacheca's
+   card has a fixed red one). */
+.card.dashboard-card-commanders.event-meta-card {
+  border-color: color-mix(in srgb, var(--brand-red) 28%, transparent);
+}
+
+/* A computer, the two columns side by side: */
+@media (min-width: 861px) {
+  /* Classifica exactly as tall as Eventi beside it, so the two end level:
+     no height of its own (contain: size — player.html's .fills-row idea),
+     the row's height set by the timeline, 420px at least; its rows a little
+     more compact, sharing that height evenly. */
+  html:not(.app-header) .home-board {
+    align-items: stretch;
+  }
+
+  html:not(.app-header) #home-panel-standings {
+    contain: size;
+    min-height: 420px;
+  }
+
+  html:not(.app-header) #home-panel-standings,
+  html:not(.app-header) #dashboard-leagues-content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  html:not(.app-header) #dashboard-leagues-content {
+    flex: 1;
+    min-height: 0;
+  }
+
+  html:not(.app-header) .home-board .dashboard-standings {
+    flex: 1;
+    min-height: 0;
+    gap: 5px;
+  }
+
+  html:not(.app-header) .home-board .dashboard-standings > li {
+    display: flex;
+    flex: 1 1 0;
+    min-height: 0;
+  }
+
+  html:not(.app-header) .home-board .dashboard-standings > li > .history-item {
+    flex: 1;
+    min-height: 0;
+    padding-block: 4px;
+  }
+}
+
+/* Più giocati (the Bacheca) and event.html's Meta, at every width: each
+   bubble chart in an area of the same height (centred, scaled to fit —
+   js/metagame-chart.js gives each chart its --bubble-ratio), so the two
+   charts' lists start at the same height, swiping from one to the other
+   on a phone too. 300px; on a narrow screen 70% of the charts' width
+   (cqw: the carousel host, .chart-carousel-host, is a size container). */
+:is(.home-board, .event-meta-card) .bubble-stage {
+  --bubble-stage-h: min(300px, 70cqw);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--bubble-stage-h);
+  margin: 10px 0 4px;
+}
+
+:is(.home-board, .event-meta-card) .bubble-stage .bubble-chart {
+  width: min(100%, calc(var(--bubble-stage-h) * var(--bubble-ratio, 1)));
+  margin: 0;
+}
+
+/* Phones: Prossimi eventi, Leghe in corso and Ultimi eventi give their rows
+   more of the width — the card's side padding trimmed (22px → 12px), the
+   top-8 rows' own a little too. (.card.: over .card's own padding.) */
+@media (max-width: 640px) {
+
+  .dashboard-standings .dashboard-standing {
+    padding-inline: 8px;
+  }
+}
+
+/* The pie chart already renders its own card-like frame (border/shadow) —
+   redundant nested inside a dashboard card, so it's stripped down to just
+   its content here. */
+.dashboard-card-commanders .pie-chart-wrap {
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  backdrop-filter: none;
+  padding: 0;
+  margin-bottom: 14px;
+}
+
+/* Inside the chart carousel (commanders + archetypes slides), the carousel's
+   own card shadow (.chart-grid > .pie-chart-wrap, later in this file, same
+   specificity) would otherwise put it back. */
+.dashboard-card-commanders .chart-grid > .pie-chart-wrap {
+  box-shadow: none;
+}
+
+/* Both slides always donut first, list below — left to .pie-chart-body's
+   own flex-wrap, the (long) commander legend wrapped under the donut while
+   the (short) archetype one fit beside it, so the two slides looked
+   different. */
+.dashboard-card-commanders .pie-chart-body {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+}
+
+/* Each "Più giocati" slide's own "Vedi tutti" (js/home.js) — the slide is a
+   flex column (.chart-grid > .pie-chart-wrap), which would otherwise
+   stretch the link into a full-width bar; kept its natural size, pinned to
+   the slide's bottom so both slides' links line up. */
+.dashboard-card-commanders .pie-chart-wrap > .section-link {
+  align-self: flex-start;
+  margin-top: auto;
+}
+
+/* Room between a slide's legend and its "Vedi tutti" below (the donut's
+   legend is in .pie-chart-body, the bubbles' right under the chart). */
+.dashboard-card-commanders .pie-chart-body,
+.dashboard-card-commanders .bubble-legend {
+  margin-bottom: 18px;
+}
+
+/* A real league's progress (js/home.js leagueProgressHtml): "3 di 8 eventi
+   giocati" over one segment per event — played ones
+   brand red, the next one outlined — or a continuous bar for a long
+   league. */
+.league-progress {
+  margin-top: 10px;
+}
+
+.league-progress-track {
+  position: relative;
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: rgba(220, 24, 28, 0.1);
+}
+
+.league-progress-track.is-segmented {
+  display: flex;
+  gap: 4px;
+  overflow: visible;
+  background: none;
+}
+
+.league-progress-seg {
+  flex: 1;
+  border-radius: var(--radius-pill);
+  background: rgba(220, 24, 28, 0.12);
+}
+
+.league-progress-seg.is-done {
+  background: var(--brand-red);
+}
+
+.league-progress-seg.is-next {
+  box-shadow: inset 0 0 0 1.5px var(--brand-red);
+}
+
+.league-progress-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: var(--brand-red);
+}
+
+:root[data-theme="dark"] .league-progress-track:not(.is-segmented),
+:root[data-theme="dark"] .league-progress-seg {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme="dark"] .league-progress-seg.is-done,
+:root[data-theme="dark"] .league-progress-fill {
+  background: #ff6a6e;
+}
+
+:root[data-theme="dark"] .league-progress-seg.is-next {
+  box-shadow: inset 0 0 0 1.5px #ff6a6e;
+}
+
+/* Events calendar overlay ("Calendario" button on "Prossimi eventi"), js/
+   events-calendar.js. A <dialog> rather than a hand-rolled backdrop div —
+   free Escape-to-close, focus trapping, and top-layer stacking, same
+   reasoning the site already leans on native <input type="date"> before
+   js/custom-date.js reskins it. Reuses .cd-nav/.cd-weekdays/.cd-grid/.cd-day
+   from the date-picker popup for a consistent look rather than redefining
+   the same grid/button chrome twice. */
+.ecal-dialog {
+  width: min(360px, calc(100vw - 32px));
+  border: 1px solid var(--hairline);
+  border-radius: 20px;
+  padding: 18px;
+  background: #fff;
+  box-shadow: var(--shadow-card-hover);
+  color: var(--text-body);
+}
+
+.ecal-dialog::backdrop {
+  background: rgba(32, 18, 20, 0.55);
+}
+
+.ecal-close {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid var(--hairline);
+  background: #fff;
+  color: var(--brand-red-darker);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.ecal-close:hover {
+  background: #fff7f4;
+  border-color: var(--hairline-hover);
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+  min-height: 42px;
+}
+
+.section-heading h2 {
+  margin: 0;
+}
+
+/* A count on its own line below a title, e.g. event.html's "Giocatori" →
+   "12 partecipanti", players.html's → "40 totali". Same muted uppercase
+   look as the other small meta labels (.entity-card-meta), a fixed size
+   whatever the title's own. */
+.heading-count {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* No count to show (an event with no entries): no empty line either. */
+.heading-count:empty {
+  display: none;
+}
+
+#deck-filters-slot,
+#video-filters-slot {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+}
+
+.deck-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.video-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.deck-filter {
+  border: 1px solid rgba(154, 28, 32, 0.18);
+  background: rgba(255, 250, 249, 0.96);
+  color: var(--brand-red-darker);
+  border-radius: 999px;
+  padding: 9px 14px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 180ms ease, color 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+
+.deck-filter:hover {
+  transform: translateY(-1px);
+  border-color: rgba(220, 24, 28, 0.3);
+}
+
+.deck-filter.is-active,
+.video-filter.is-active {
+  background: #dc181c;
+  color: #fff;
+  border-color: #dc181c;
+}
+
+.video-filter {
+  border: 1px solid rgba(154, 28, 32, 0.18);
+  background: rgba(255, 250, 249, 0.96);
+  color: var(--brand-red-darker);
+  border-radius: 999px;
+  padding: 9px 14px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 180ms ease, color 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+
+.video-filter:hover {
+  transform: translateY(-1px);
+  border-color: rgba(220, 24, 28, 0.3);
+}
+
+.decks-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.videos-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+.deck {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid rgba(154, 28, 32, 0.12);
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 248, 246, 0.95));
+  box-shadow: 0 12px 28px rgba(40, 24, 26, 0.08);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.card-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.deck:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 36px rgba(40, 24, 26, 0.14);
+  border-color: rgba(220, 24, 28, 0.28);
+}
+
+.deck.is-new-deck {
+  border-color: rgba(34, 153, 84, 0.58);
+  box-shadow: 0 20px 40px rgba(34, 153, 84, 0.22);
+  background: linear-gradient(180deg, rgba(244, 255, 248, 1), rgba(231, 250, 238, 0.98));
+}
+
+.deck.is-new-deck .deck-visual {
+  box-shadow: inset 0 0 0 3px rgba(39, 174, 96, 0.38);
+}
+
+.deck-visual {
+  display: block;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #1b1011;
+  text-decoration: none;
+}
+
+.deck-preview img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.deck-placeholder {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 16px;
+  color: #fff8f5;
+  background:
+    radial-gradient(circle at top right, rgba(255, 188, 137, 0.44), transparent 30%),
+    linear-gradient(140deg, #531116 0%, #8c191e 48%, #dd4d2e 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.deck-placeholder-format {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  opacity: 0.82;
+}
+
+.deck-placeholder-mark {
+  font-size: 2.8rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.deck-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  min-height: 112px;
+}
+
+.deck-topline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.deck-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.deck-badge {
+  background: rgba(220, 24, 28, 0.12);
+  color: #9f141b;
+}
+
+.new-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 13px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.new-badge-deck {
+  background: linear-gradient(180deg, #27ae60 0%, #14914a 100%);
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(34, 153, 84, 0.28);
+}
+
+.deck-title {
+  color: #201214;
+  font-size: 1.05rem;
+  line-height: 1.35;
+  font-weight: 800;
+}
+
+.deck-commander {
+  display: grid;
+  gap: 4px;
+}
+
+.deck-commander-label {
+  color: #8b666c;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.deck-commander-value {
+  color: #4f3c40;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.deck:hover .deck-title,
+.deck:focus-visible .deck-title {
+  text-decoration: underline;
+}
+
+.expand-button {
+  border: 1px solid rgba(154, 28, 32, 0.18);
+  background: #fff7f4;
+  color: var(--brand-red-deep);
+  border-radius: 999px;
+  padding: 10px 15px;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.expand-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(220, 24, 28, 0.32);
+  background: #fff1ed;
+}
+
+.section-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.section-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 15px;
+  border: 1px solid rgba(154, 28, 32, 0.18);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--brand-red-deep);
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.section-link:hover {
+  transform: translateY(-1px);
+  border-color: rgba(220, 24, 28, 0.32);
+  background: #fff7f4;
+}
+
+.video-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid rgba(154, 28, 32, 0.12);
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 248, 246, 0.95));
+  box-shadow: 0 12px 28px rgba(40, 24, 26, 0.08);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.video-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 36px rgba(40, 24, 26, 0.14);
+  border-color: rgba(220, 24, 28, 0.28);
+}
+
+.card-link:focus-visible {
+  outline: 3px solid rgba(220, 24, 28, 0.35);
+  outline-offset: 3px;
+}
+
+.video-card.is-new-video {
+  border-color: rgba(50, 115, 220, 0.56);
+  box-shadow: 0 20px 40px rgba(50, 115, 220, 0.2);
+  background: linear-gradient(180deg, rgba(246, 250, 255, 1), rgba(235, 243, 255, 0.98));
+}
+
+.video-card.is-new-video .video-thumb {
+  box-shadow: inset 0 0 0 3px rgba(74, 140, 255, 0.34);
+}
+
+.video-thumb {
+  display: block;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #150b0c;
+}
+
+.video-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.video-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  min-height: 112px;
+}
+
+.video-topline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.video-date {
+  color: #8b666c;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.video-title {
+  color: #201214;
+  font-size: 1.05rem;
+  line-height: 1.35;
+  font-weight: 800;
+}
+
+.video-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: rgba(220, 24, 28, 0.12);
+  color: #9f141b;
+}
+
+.new-badge-video {
+  background: linear-gradient(180deg, #4a8cff 0%, #2f67d8 100%);
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(50, 115, 220, 0.28);
+}
+
+@media (max-width: 640px) {
+  .social-strip {
+    width: fit-content;
+    max-width: calc(100% - 24px);
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .social-link {
+    width: 44px;
+    height: 44px;
+  }
+
+  .overview-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .overview-card {
+    min-height: 0;
+  }
+
+  .section-heading {
+    flex-direction: column;
+    align-items: flex-start;
+    min-height: 0;
+  }
+
+  #deck-filters-slot,
+  #video-filters-slot {
+    min-height: 0;
+    min-width: 0;
+  }
+
+  .deck {
+    min-height: 0;
+  }
+
+  .deck-visual {
+    min-height: 0;
+  }
+
+  .videos-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .section-actions {
+    margin-top: 18px;
+  }
+}
+
+footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px;
+  background: rgba(245, 241, 240, 0.95);
+  color: var(--text-muted-2);
+  view-transition-name: site-footer;
+}

@@ -110,11 +110,22 @@ function timelineItemHtml(ev, state) {
       </li>`;
 }
 
+// The page's shared requests, made once per visit (reset by mount).
+let shared = new Map();
+const once = (key, load) => {
+  if (!shared.has(key)) shared.set(key, load());
+  return shared.get(key);
+};
+const upcomingEvents = () => once("upcoming", () => Events.listUpcoming());
+const allEvents = () => once("events", () => Events.list());
+const openLeague = () => once("openLeague", () => Leagues.getOpen());
+const leagueStandings = (league) => once(`standings:${league.id}`, () => loadLeagueStandings(league));
+
 // The upcoming events (the furthest on top, the next one last), "Oggi", the
 // played ones (newest first).
 async function renderTimeline(el) {
   try {
-    const [upcoming, all] = await Promise.all([Events.listUpcoming(), Events.list()]);
+    const [upcoming, all] = await Promise.all([upcomingEvents(), allEvents()]);
     // Soonest first, across every league / standalone; RLS lets a future
     // open event through (see events_public_read in supabase/schema.sql).
     const next = upcoming.slice(0, UPCOMING_EVENTS_COUNT);
@@ -223,7 +234,7 @@ function standingsHtml({ league, standings: allStandings, played, scheduled }, b
 // "Conclusa".
 async function renderStandings(el) {
   try {
-    let league = await Leagues.getOpen();
+    let league = await openLeague();
     let finished = false;
     if (!league) {
       league = (await Leagues.list()).find((l) => !l.is_open && !l.is_topdeck) ?? null;
@@ -233,7 +244,7 @@ async function renderStandings(el) {
       el.innerHTML = '<p class="page-empty">Nessuna lega ancora.</p>';
       return;
     }
-    const [data, badgesFor] = await Promise.all([loadLeagueStandings(league), fetchPlayerBadgesRenderer()]);
+    const [data, badgesFor] = await Promise.all([leagueStandings(league), fetchPlayerBadgesRenderer()]);
     el.innerHTML = standingsHtml(data, badgesFor, finished);
   } catch (err) {
     showError(el, err);
@@ -242,13 +253,37 @@ async function renderStandings(el) {
 
 // --- Più giocati ---------------------------------------------------------------------
 
+// The Più giocati charts' entries since `cutoffIso`, reused from this
+// browser for CHART_CACHE_MS (localStorage "homeCharts": the cutoff, when,
+// the rows) — a reload or a return to the Bacheca within it skips the
+// request. Any storage problem: just fetched.
+const CHART_CACHE_KEY = "homeCharts";
+const CHART_CACHE_MS = 5 * 60 * 1000;
+async function chartEntries(cutoffIso) {
+  try {
+    const cached = JSON.parse(localStorage.getItem(CHART_CACHE_KEY) ?? "null");
+    if (cached?.cutoff === cutoffIso && Date.now() - cached.at < CHART_CACHE_MS) return cached.rows;
+  } catch {
+    // Unreadable: fetched below.
+  }
+  const rows = await EventEntries.listForChartsSince(cutoffIso);
+  try {
+    localStorage.setItem(CHART_CACHE_KEY, JSON.stringify({ cutoff: cutoffIso, at: Date.now(), rows }));
+  } catch {
+    // Full / private mode: not kept, no matter.
+  }
+  return rows;
+}
+
 async function renderCommandersSection(el) {
   try {
     const cutoff = new Date();
     cutoff.setMonth(cutoff.getMonth() - TOP_COMMANDERS_WINDOW_MONTHS);
     const cutoffIso = `${cutoff.getFullYear()}-${String(cutoff.getMonth() + 1).padStart(2, "0")}-${String(cutoff.getDate()).padStart(2, "0")}`;
-    // Only the window's entries, already date-filtered by the database.
-    const entries = await EventEntries.listForChartsSince(cutoffIso);
+    // Only the window's entries, already date-filtered by the database —
+    // kept in this browser for a few minutes (chartEntries), the charts'
+    // slowest part, since they change only when an event is published.
+    const entries = await chartEntries(cutoffIso);
 
     // Primary commander only, same as the Commanders page's own chart —
     // counting the partner too would let one appearance count twice and
@@ -325,6 +360,7 @@ async function renderCommandersSection(el) {
 // the slowest, its data and the commanders' art — keeps its own shimmering
 // placeholder (index.html .home-charts-sk) until its charts are in.
 export function mount({ signal = new AbortController().signal } = {}) {
+  shared = new Map();
   initTabs(document.querySelector(".home-tabs"));
   renderCommandersSection(document.getElementById("dashboard-commanders-content"));
   return Promise.allSettled([

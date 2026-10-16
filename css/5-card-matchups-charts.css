@@ -1,0 +1,3232 @@
+/* styles — part 5 of 6 (css/5-card-matchups-charts.css). The site's one stylesheet, split in its
+   original order: the parts are loaded in this order (partials/head.html,
+   admin/index.html) and must stay so — later rules win ties. */
+
+/* ✎ and ✓ stacked in the same spot, one turning out as the other turns in
+   (.is-save is set by js/account-page.js the moment the mode switches). */
+.pc-edit-btn svg {
+  grid-area: 1 / 1;
+  width: 20px;
+  height: 20px;
+  transition:
+    opacity 180ms ease,
+    transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.pc-icon-save,
+.pc-edit-btn.is-save .pc-icon-edit {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.4);
+}
+
+.pc-edit-btn.is-save .pc-icon-edit {
+  transform: rotate(90deg) scale(0.4);
+}
+
+.pc-edit-btn.is-save .pc-icon-save {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pc-edit-btn svg {
+    transition: none;
+  }
+}
+
+.pc-cancel-btn {
+  position: absolute;
+  top: -8px;
+  right: 40px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 50%;
+  background: #fff;
+  color: #6f5a5e;
+  box-shadow: 0 6px 14px rgba(20, 8, 10, 0.25);
+  cursor: pointer;
+  transition: transform 150ms ease;
+}
+
+.pc-cancel-btn:hover {
+  transform: translateY(-1px) scale(1.05);
+}
+
+.pc-cancel-btn[hidden] {
+  display: none;
+}
+
+.pc-cancel-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ---- Edit mode on touch screens (html.nav-mobile) ----
+   The card sizes everything in cqw, so on a ~300px card its controls come
+   out finger-unfriendly (colour toggles ~16px, the "Mostra foto" checkbox
+   ~10px, ~22px-tall lists). On touch, edit mode switches them to fixed,
+   finger-sized px instead — taps of 36-44px, text fields at 16px so iOS
+   doesn't zoom the page in when they're focused. The card just grows
+   taller while editing (its proportions are a minimum, see .pc-surface);
+   view mode is untouched. */
+html.nav-mobile .player-card.is-editing .pc-label {
+  font-size: 11px;
+}
+
+html.nav-mobile .player-card .cs-search {
+  padding: 10px 12px;
+  font-size: 16px;
+}
+
+html.nav-mobile .player-card .cs-option {
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+html.nav-mobile .player-card.is-editing .pc-colors-edit.pc-edit-only {
+  gap: 12px;
+  margin-top: 8px;
+}
+
+html.nav-mobile .pc-mana {
+  width: 36px;
+  height: 36px;
+}
+
+html.nav-mobile .pc-description-edit textarea {
+  /* 140 characters fit at this size, still not resizable. */
+  height: 136px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 16px;
+}
+
+html.nav-mobile .pc-counter {
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+html.nav-mobile .pc-avatar-toggle {
+  box-sizing: border-box;
+  gap: 8px;
+  min-height: 36px;
+  margin-top: 6px;
+  padding: 6px 14px;
+  font-size: 13px;
+}
+
+html.nav-mobile .pc-avatar-toggle input {
+  width: 18px;
+  height: 18px;
+}
+
+/* ✕ at ✓'s 44px, a 12px gap beside it. */
+html.nav-mobile .pc-cancel-btn {
+  top: -12px;
+  right: 44px;
+  width: 44px;
+  height: 44px;
+}
+
+html.nav-mobile .pc-cancel-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ---- Following (js/follow-button.js, account.html "Seguiti") ----
+   The button right below the name on player.html / commander.html: a
+   brand-red outline pill, "☆ Segui"; filled red once following, "★
+   Seguito", its star popping in. The profile's "Seguiti" card: one compact
+   row per followed player (initial on red) or commander (its colour pips),
+   its latest result below the name, ✕ to unfollow — the row folds away. */
+/* On its own line right below the name, in .page-heading (a flex row that
+   wraps): the full line, the button at its start. Fades up with the page
+   (paused until it shows, like everything else). */
+.follow-btn-row {
+  display: flex;
+  flex: 0 0 100%;
+  /* Up into .page-heading's 10px gap, close under the name. */
+  margin-top: -6px;
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Desktop: right after the name (and its badges), on the same line,
+   centred on it — the heading packed to the left instead of spreading its
+   items apart. Phones: its own line below, as above. */
+@media (min-width: 641px) {
+  .page-heading:has(> .follow-btn-row) {
+    justify-content: flex-start;
+    align-items: center;
+  }
+
+  .follow-btn-row {
+    flex: 0 0 auto;
+    margin-top: 0;
+  }
+}
+
+.follow-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1.5px solid var(--brand-red);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--brand-red);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+/* Hover: see .detail-hero-wrap .follow-btn's (real pointers only, not
+   right after a click). */
+@media (hover: hover) {
+  .follow-btn:not(.is-fresh):hover {
+    background: rgba(220, 24, 28, 0.08);
+  }
+}
+
+.follow-btn.is-following {
+  background: var(--brand-red);
+  color: #fff;
+}
+
+@media (hover: hover) {
+  .follow-btn.is-following:not(.is-fresh):hover {
+    background: var(--brand-red-deep-2);
+  }
+}
+
+.follow-btn:focus-visible {
+  outline: 3px solid rgba(220, 24, 28, 0.45);
+  outline-offset: 2px;
+}
+
+/* Its request running (js/follow-button.js): the same look, a "working"
+   cursor. */
+.follow-btn[aria-busy="true"] {
+  cursor: progress;
+}
+
+/* On its own layer for good (will-change): an animation ending would
+   otherwise hand it back to be redrawn as plain text, a visible snap. */
+.follow-btn-star {
+  display: inline-block;
+  font-size: 1.05em;
+  line-height: 1;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* A click spins the star (js/follow-button.js spinTo, a Web Animation) —
+   the new state drawn halfway round, where the swap doesn't show. */
+
+.follows-empty {
+  margin: 0;
+}
+
+.follows-empty[hidden] {
+  display: none;
+}
+
+/* One sub-card per followed player / commander (.history-item, like the
+   Comandanti / Giocatori pages' lists), the whole card a link to its page:
+   name + the last event's line | the numbers (js/history-list.js
+   historyStatsHtml, filled in after); the ★ (unfollow) over its right edge.
+   The card is a size container: narrower than 560px (phones, or a narrow
+   side column) the numbers go on their own row below, sharing its width. */
+.profile-follows {
+  container-type: inline-size;
+}
+
+.follows-list,
+.follow-group-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.follow-group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.follow-group + .follow-group {
+  margin-top: 18px;
+}
+
+.follow-group-title {
+  margin: 0 0 8px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.follow-group-title .history-count {
+  letter-spacing: 0;
+}
+
+/* The list item holds the card (the link) and, over its right edge, the ★
+   button — beside the link in the markup, a link can't hold a button. The
+   card keeps that edge clear for it (padding-right). */
+.follow-row {
+  position: relative;
+}
+
+.follow-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "main stats";
+  align-items: center;
+  gap: 8px 14px;
+  padding-right: calc(14px + 40px + 14px);
+}
+
+.follow-card > .history-main {
+  grid-area: main;
+}
+
+.follow-stats {
+  grid-area: stats;
+}
+
+.follow-meta:empty {
+  display: none;
+}
+
+@container (max-width: 560px) {
+  .follow-card {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "main"
+      "stats";
+  }
+
+  .follow-stats:not(:empty) {
+    padding-top: 10px;
+    border-top: 1px solid var(--table-row-line);
+  }
+
+  .follow-stats .history-stats {
+    grid-template-columns: repeat(var(--stat-count), minmax(0, 1fr));
+  }
+
+  /* Beside the name, on the card's first row. Two classes: the base
+     .follow-remove rule comes later in this file. */
+  .follow-row .follow-remove {
+    top: 10px;
+    margin-top: 0;
+  }
+}
+
+.follow-name {
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-title);
+  font-weight: 800;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+a.history-item:hover .follow-name {
+  color: var(--brand-red-deep);
+}
+
+/* The name with its badges (players), kept together on one line. */
+.follow-title {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.follow-badges {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.follow-badges:empty {
+  display: none;
+}
+
+.follow-stats.is-ready .history-stats {
+  animation: entrance-fade-up 300ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+
+/* Unfollow: the filled red star (following), hollow on hover — the same
+   star as the button on their pages — in a white circle with a red ring, a
+   finger-sized target over the card's right edge, vertically centred (on
+   the first row when the numbers wrap below). */
+.follow-remove {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  margin-top: -20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 2px solid rgba(220, 24, 28, 0.55);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--brand-red);
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease, transform 150ms ease;
+}
+
+.follow-remove:hover {
+  background: #fbe3e3;
+  border-color: var(--brand-red);
+  transform: scale(1.06);
+}
+
+.follow-remove:focus-visible {
+  outline: 3px solid rgba(220, 24, 28, 0.45);
+  outline-offset: 1px;
+}
+
+:root[data-theme="dark"] .follow-remove {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 110, 110, 0.55);
+  color: #ff6a6e;
+}
+
+:root[data-theme="dark"] .follow-remove:hover {
+  background: rgba(255, 110, 110, 0.16);
+  border-color: #ff6a6e;
+}
+
+.follow-remove-star::before {
+  content: "★";
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.follow-remove:hover .follow-remove-star::before,
+.follow-remove:focus-visible .follow-remove-star::before {
+  content: "☆";
+}
+
+.follow-row.is-leaving {
+  animation: follow-row-out 260ms ease forwards;
+}
+
+@keyframes follow-row-out {
+  to {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .follow-btn,
+  .follow-remove {
+    transition: none;
+  }
+
+  .follow-stats.is-ready .history-stats {
+    animation: none;
+  }
+}
+
+/* ---- account.html "Invia la tua decklist" (js/account-page.js) ----
+   In the column beside the player card, between the stats and Account
+   (Account always last). Closed at first: its header — a brand-red icon
+   tile, the title, Leghe & Eventi's red round arrow — is the button that
+   opens / closes the rest, with the same grid-rows collapse. Inside: the
+   list in a monospaced box with a live count in its corner (green at a
+   full 100-card deck); the warning before sending sliding open in place of
+   the button; the events already sent as green chips, a new one popping
+   in. */
+.decklist-toggle {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.decklist-toggle:focus-visible {
+  outline: 3px solid rgba(220, 24, 28, 0.45);
+  outline-offset: 6px;
+  border-radius: 14px;
+}
+
+.decklist-toggle-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.decklist-title {
+  color: var(--text-title);
+  font-size: 1.17rem;
+  font-weight: 800;
+}
+
+.decklist-subtitle {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+/* Leghe & Eventi's arrow: up when open, down when closed. */
+.decklist-toggle:hover .league-group-toggle-icon {
+  background: var(--brand-red-deep-2);
+}
+
+/* minmax(0, 1fr): the one column never wider than the card — by default a
+   grid column grows to its widest unbreakable content (Account's email, kept
+   on one line), which pushed the row, "Esci" included, out of the card on
+   phones instead of letting the email end in "…". */
+.decklist-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transition: grid-template-rows 300ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 240ms ease;
+}
+
+/* Clips the content while it slides (min-height: 0, so the row can really
+   shrink); lifted once fully open (.is-open, js), so the event list's
+   dropdown can open past the card's edge. */
+.decklist-body-clip {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.decklist-body-clip.is-open {
+  overflow: visible;
+}
+
+.decklist-body-inner {
+  padding-top: 18px;
+}
+
+.decklist-hint {
+  margin: 0 0 16px;
+}
+
+/* An open dropdown inside lifts the whole card above the Account card
+   below it (the card's entrance animation makes it a stacking context —
+   same fix as the claim card's). */
+.card.profile-decklist:has(.cs-wrap.is-open) {
+  position: relative;
+  z-index: 30;
+}
+
+.decklist-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  /* In the page's colour (a hero's on account.html), glow included. */
+  background: linear-gradient(135deg, var(--brand-red), color-mix(in srgb, var(--brand-red) 68%, #000));
+  color: #fff;
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--brand-red) 30%, transparent);
+}
+
+.decklist-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.decklist-form .field {
+  margin-bottom: 14px;
+}
+
+.decklist-text-wrap {
+  position: relative;
+}
+
+.decklist-form textarea {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-height: 210px;
+  padding: 12px 14px 34px;
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--text-body);
+  font: 0.92rem/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  resize: vertical;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.decklist-form textarea:focus {
+  outline: none;
+  border-color: var(--brand-red);
+  box-shadow: 0 0 0 3px rgba(220, 24, 28, 0.15);
+}
+
+/* The live count, in the box's bottom-right corner. */
+.decklist-meter {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(220, 24, 28, 0.08);
+  color: var(--brand-red);
+  font-size: 0.78rem;
+  font-weight: 800;
+  pointer-events: none;
+  transition: background 200ms ease, color 200ms ease;
+}
+
+.decklist-meter:empty {
+  display: none;
+}
+
+.decklist-meter.is-full {
+  background: rgba(30, 140, 80, 0.12);
+  color: var(--accent-green-2);
+}
+
+.decklist-meter.is-full::after {
+  content: " ✓";
+}
+
+/* The warning: slides open in place of the send button. */
+.decklist-confirm {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 260ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 200ms ease;
+}
+
+.decklist-confirm.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.decklist-confirm-clip {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.decklist-confirm-box {
+  margin-top: 4px;
+  padding: 14px 16px;
+  border-left: 4px solid var(--brand-red);
+  border-radius: 12px;
+  background: rgba(220, 24, 28, 0.06);
+}
+
+.decklist-confirm-box p {
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+
+.decklist-confirm-box .form-actions {
+  flex-wrap: wrap;
+  margin-top: 0;
+}
+
+.decklist-actions[hidden] {
+  display: none;
+}
+
+.decklist-submit,
+#decklist-confirm-send {
+  gap: 8px;
+}
+
+.decklist-submit svg {
+  width: 18px;
+  height: 18px;
+  transition: transform 200ms ease;
+}
+
+.decklist-submit:hover svg {
+  transform: translate(2px, -2px);
+}
+
+/* Sending: the button pulses while the email goes out. */
+#decklist-confirm-send.is-sending {
+  animation: decklist-sending 1s ease-in-out infinite;
+  cursor: progress;
+}
+
+@keyframes decklist-sending {
+  50% {
+    opacity: 0.65;
+  }
+}
+
+#decklist-message:empty {
+  min-height: 0;
+  margin-top: 0;
+}
+
+#decklist-message {
+  margin-top: 12px;
+}
+
+/* The address to send it to by hand, when sending fails: a clear link
+   inside the message. */
+#decklist-message a {
+  color: inherit;
+  font-weight: 800;
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+
+/* Events already sent: green chips, the newest first; one just sent pops in. */
+.decklist-sent {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--hairline);
+}
+
+.decklist-sent[hidden] {
+  display: none;
+}
+
+.decklist-sent-title {
+  margin: 0 0 10px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.decklist-sent-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.decklist-sent-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: rgba(30, 140, 80, 0.1);
+  color: var(--text-title);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.decklist-sent-chip svg {
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  color: var(--accent-green-2);
+}
+
+.decklist-sent-chip.is-new {
+  animation: decklist-chip-in 520ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+@keyframes decklist-chip-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+:root[data-theme="dark"] .decklist-form textarea {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+:root[data-theme="dark"] .decklist-confirm-box {
+  background: rgba(255, 110, 110, 0.1);
+}
+
+:root[data-theme="dark"] .decklist-sent-chip {
+  background: rgba(60, 190, 110, 0.14);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .decklist-body,
+  .decklist-confirm,
+  .decklist-form textarea,
+  .decklist-meter,
+  .decklist-submit svg {
+    transition: none;
+  }
+
+  #decklist-confirm-send.is-sending,
+  .decklist-sent-chip.is-new {
+    animation: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .decklist-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+  }
+
+  .decklist-icon svg {
+    width: 21px;
+    height: 21px;
+  }
+}
+
+/* Phones and narrow tablets: the player card centred (the profile's one
+   column: the 880px block of the profile layout above). */
+@media (max-width: 820px) {
+  .player-card {
+    margin: 0 auto;
+    max-width: 300px;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Phones: the player card as wide as its column (300px from 641px to
+     820px, where full width would make it far too tall). Scoped to the
+     card's column so it outranks the 300px rule. */
+  .profile-card-col .player-card {
+    max-width: none;
+  }
+
+  /* Two stat tiles per row: an auto-fit of 150px minimum each fits only
+     one in a phone-width card. */
+  .profile-stats-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
+
+/* White with Google's own multicolour "G", as Google's sign-in branding asks
+   (not restyled in the site's red). */
+/* account.html's "Account" card: the Google login as one row (logo,
+   email, "Esci"), then — for non-admin accounts — a separate delete
+   section, set apart by a line and the danger button. */
+.account-login-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.account-provider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--hairline);
+  border-radius: 50%;
+  background: #fff;
+}
+
+.account-provider svg {
+  width: 20px;
+  height: 20px;
+}
+
+.account-login-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.account-login-label {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.account-login-text strong {
+  overflow: hidden;
+  color: var(--text-title);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-danger {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--hairline);
+}
+
+.account-danger[hidden] {
+  display: none;
+}
+
+.account-danger-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.account-danger-text p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.account-danger-text .account-danger-title {
+  margin-bottom: 4px;
+  color: var(--text-title);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.account-danger .btn-danger {
+  flex-shrink: 0;
+}
+
+.profile-account .form-message:empty {
+  min-height: 0;
+  margin-top: 0;
+}
+
+@media (max-width: 480px) {
+  .account-danger {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* Under the player card, once linked: the on/off switch showing the card on
+   the player page too, as a small card of its own (the column's card +
+   switch together are as tall as the cards beside them — alignCardToSide).
+   The text on the left, a brand-red sliding switch on the right; the whole
+   box toggles it. The real checkbox stays, invisible, for keyboard and
+   screen readers. */
+.profile-switch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 16px 0 0;
+  padding: 14px 18px;
+  cursor: pointer;
+}
+
+.profile-switch[hidden] {
+  display: none;
+}
+
+.profile-switch:has(input:disabled) {
+  cursor: default;
+}
+
+.profile-switch-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.profile-switch-label {
+  color: var(--text-title);
+  font-size: 0.92rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.profile-switch-hint {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.profile-switch-hint:empty {
+  display: none;
+}
+
+.profile-switch-hint.is-error {
+  color: #b3261e;
+  font-weight: 700;
+}
+
+.profile-switch input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.profile-switch-track {
+  position: relative;
+  flex-shrink: 0;
+  width: 44px;
+  height: 26px;
+  border-radius: var(--radius-pill);
+  background: rgba(120, 104, 108, 0.35);
+  transition: background 180ms ease, opacity 180ms ease;
+}
+
+.profile-switch-track::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.profile-switch input:checked + .profile-switch-track {
+  background: var(--brand-red);
+}
+
+.profile-switch input:checked + .profile-switch-track::after {
+  transform: translateX(18px);
+}
+
+.profile-switch input:focus-visible + .profile-switch-track {
+  outline: 3px solid rgba(220, 24, 28, 0.45);
+  outline-offset: 2px;
+}
+
+.profile-switch input:disabled + .profile-switch-track {
+  opacity: 0.45;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-switch-track,
+  .profile-switch-track::after {
+    transition: none;
+  }
+}
+
+.google-signin-btn {
+  width: 100%;
+  gap: 10px;
+}
+
+/* Google's own sign-in button (js/account-page.js showGoogleButton): the
+   card's full width, Google drawing it centred inside; its 40px reserved
+   from the start, so nothing moves when it appears. */
+.google-gsi-btn {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-height: 40px;
+  /* Google draws the button in its own frame, whose page is light: in dark
+     mode (color-scheme: dark on the site) the browser gives a frame of a
+     different scheme a solid white background — a white box around the
+     button. The frame matching it, light, stays transparent; the button
+     itself keeps its own dark look (theme: "filled_black"). */
+  color-scheme: light;
+}
+
+.google-gsi-btn[hidden],
+.google-signin-btn[hidden] {
+  /* The fallback button's own .btn-secondary display: inline-flex would
+     otherwise beat the hidden attribute (author styles win over the
+     browser's [hidden] rule). */
+  display: none;
+}
+
+.google-signin-btn svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* account.html's sign-in card: what an account is for (a list with
+   brand-red ticks), then what Google shares — small and muted, right under
+   "Accedi con Google", where the data is collected. */
+.account-perks {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0 18px;
+  padding: 0;
+  list-style: none;
+}
+
+.account-perks li {
+  position: relative;
+  padding-left: 26px;
+  line-height: 1.45;
+}
+
+.account-perks li::before {
+  content: "";
+  position: absolute;
+  top: 0.32em;
+  left: 2px;
+  width: 6px;
+  height: 11px;
+  border: solid var(--brand-red);
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(45deg);
+}
+
+.account-privacy-note {
+  margin: 14px 0 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.account-privacy-note a {
+  color: var(--brand-red);
+  font-weight: 700;
+}
+
+/* privacy.html (also the address Google's sign-in setup requires; linked
+   from account.html's sign-in card): one card of plain prose, at a readable
+   line length. */
+.privacy-card {
+  max-width: 760px;
+  line-height: 1.6;
+}
+
+.privacy-card h2 {
+  margin: 26px 0 8px;
+  font-size: 1.15rem;
+  color: var(--text-title);
+}
+
+.privacy-card p,
+.privacy-card ul {
+  margin: 0 0 10px;
+}
+
+.privacy-card ul {
+  padding-left: 22px;
+}
+
+.privacy-card a {
+  color: var(--brand-red);
+  font-weight: 700;
+}
+
+.privacy-lead {
+  font-size: 1.05rem;
+}
+
+.privacy-updated {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* League/event scope filter (Commanders, Archetypes) */
+
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  /* Stretches every .field to the row's tallest sibling (the select/date
+     fields' own height) instead of each sizing to its own content — a
+     field with a shorter control (the color-swatch row, see
+     .filter-bar-row below) still gets that same overall height, so its
+     label lines up with every other field's label, and its own control
+     can center itself within the leftover space below the label rather
+     than being pinned to the top or bottom of a mismatched box. */
+  align-items: stretch;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.filter-bar .field {
+  margin-bottom: 0;
+  min-width: 200px;
+}
+
+/* A fixed (not min-) width, but only for fields wrapping a plain
+   select/date/search control — on pages with two stacked .filter-bar rows
+   (Comandanti, Giocatori) this keeps e.g. "Lega" (row 1) and "Cerca"
+   (row 2) the same width as each other so the two rows line up instead of
+   each field just sizing to its own content. A <select>/date <input> is
+   itself moved inside a .cs-wrap/.cd-wrap by custom-select.js/
+   custom-date.js, so those wrappers (not the now-nested control) are what
+   .field actually has as a direct child once enhanced — matched here
+   alongside a plain <input> (e.g. the search box, never wrapped) so this
+   leaves the color-identity field (whose direct child is a .filter-bar-row
+   holding the swatches, not any of these) at its own natural width instead
+   of squeezing it. */
+.filter-bar .field:has(> .cs-wrap),
+.filter-bar .field:has(> .cd-wrap),
+.filter-bar .field:has(> input) {
+  width: 220px;
+}
+
+/* Color-identity filter: the swatches and the "solo identità esatta"
+   toggle sit on the same line, checkbox on the right, both bottom-aligned
+   with each other. */
+.filter-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  /* Fills the leftover height .filter-bar's stretch (above) gives this
+     field beyond the swatch row's own natural height, so align-items:
+     center here centers the swatches against the taller select/date boxes
+     next to it instead of leaving them pinned to the top. */
+  flex: 1;
+}
+
+/* Search/sort (where a page has them) stay on their own top line, with a
+   small round "funnel" button pinned to its right (js/filter-toggle.js)
+   that expands/collapses a separate panel below holding the rest of that
+   page's filters (league/event/date/color-identity) — keeps the page's
+   own results visible without permanently reserving a whole extra row (or
+   two) of vertical space for filters most visits never touch. Same
+   collapse mechanics (grid-template-rows: 1fr/0fr) as .league-group
+   elsewhere, reused here under its own class names since
+   the trigger is a small icon button, not a whole clickable header row. */
+.filter-toggle-line {
+  display: flex;
+  /* Not center — .field is a label-above-input column, so centering
+     against its *full* height (label included) left the button sitting
+     noticeably higher than the actual search/sort input boxes, not level
+     with them. flex-end aligns every item's bottom edge instead, which
+     lines the button up with the boxes themselves (label or not), since
+     the input/select controls and the button are all close enough in
+     height already for their bottoms lining up to read as centered
+     against each other. */
+  align-items: flex-end;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.filter-toggle-line .field {
+  margin-bottom: 0;
+}
+
+/* Grows to fill whatever space the sort field + funnel button don't need,
+   rather than the fixed width .filter-bar's own fields get (that fixed
+   width exists to line up multiple fields against each other within a
+   single .filter-bar row, not relevant to this lone search field). */
+.filter-toggle-search {
+  flex: 1;
+  min-width: 0;
+}
+
+.filter-toggle-sort {
+  flex-shrink: 0;
+  /* Wider than the fields inside the collapsible panel (160px) — the sort
+     box now shows its own real current selection (e.g. "Winrate") rather
+     than a fixed placeholder, so it needs room for the widest of those
+     words plus the enhanced select's own icon/arrow padding, comfortably,
+     not just barely. Taken from the search field's own space (flex: 1
+     there absorbs the difference automatically), not the row's overall
+     width, since the search field is the one with room to spare. */
+  width: 220px;
+}
+
+/* Pinned to the row's right edge via the row's only auto margin — same
+   trick as the nav's own Social tab (.nav-link[data-nav="social"]) —
+   everything else stays left-packed regardless of how many (or how few —
+   Archetipi has neither a search nor a sort field) fields sit before it. */
+.filter-toggle-btn {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: var(--brand-red);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+  transition: background 150ms ease;
+  /* No entrance and not hidden while loading: on Comandanti / Archetipi /
+     Matchups / Giocatori it sits on the title's line, outside
+     .page-loading-region — there from the first paint, like the title (its
+     "filters set" dot pops on once the page reads them). */
+}
+
+.filter-toggle-btn:hover,
+.filter-toggle-btn.is-open {
+  background: var(--brand-red-deep-2);
+}
+
+/* At least one filter in the panel is set (js/filter-toggle.js) — a white
+   dot on the circle's top right, ringed in the button's own red so it
+   reads as sitting on the edge rather than floating off it. */
+.filter-toggle-btn {
+  position: relative;
+}
+
+.filter-toggle-btn.has-active-filters::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 2px var(--brand-red);
+  pointer-events: none;
+}
+
+/* The dot pops on when it appears (the filters read once the page's first
+   data is back, or a filter just set): from nothing, a small overshoot. */
+.filter-toggle-btn.has-active-filters::after {
+  animation: filter-dot-in 320ms cubic-bezier(0.2, 0.9, 0.3, 1.5) both;
+}
+
+@keyframes filter-dot-in {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+}
+
+/* Already shown earlier in the visit (js/filter-toggle.js): just there. */
+.filter-toggle-btn.no-dot-pop.has-active-filters::after {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .filter-toggle-btn.has-active-filters::after {
+    animation: none;
+  }
+}
+
+.filter-toggle-btn.has-active-filters:hover::after,
+.filter-toggle-btn.has-active-filters.is-open::after {
+  box-shadow: 0 0 0 2px var(--brand-red-deep-2);
+}
+
+.filter-toggle-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Comandanti/Archetipi: the funnel button on the title's own line, right
+   side, centered on the title (not baseline-aligned like .page-heading's
+   other content) — its filter panel then opens right below the title,
+   above the charts. */
+.page-heading-with-action {
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.page-heading-with-action .filter-toggle-btn {
+  margin-left: 0;
+}
+
+/* Title + a small control right after it (Matchups' "?"), kept together on
+   the left while the heading's own action button stays on the right. */
+.page-heading-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* Round "?" that opens a page's explanation pop-up (js/info-dialog.js,
+   .info-dialog) — red foil (.help-toggle-btn, .pc-help-btn: below), a thin
+   light ring in dark mode keeping it off the dark background. */
+.help-toggle-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+}
+
+/* Every "?" (.help-toggle-btn, the player card's .pc-help-btn): brand red
+   with a faint rainbow foil tint, a bright glare sweeping across it now and
+   then (only the glare layer moves: no-repeat, so it never wraps back in),
+   then a pause. Brighter on hover. */
+.help-toggle-btn,
+.pc-help-btn {
+  background:
+    linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.7) 50%, transparent 65%) no-repeat,
+    linear-gradient(135deg, rgba(255, 120, 200, 0.35), rgba(255, 210, 90, 0.3) 35%, rgba(120, 220, 255, 0.3) 70%, rgba(255, 120, 200, 0.35)),
+    linear-gradient(135deg, #ff5257, #dc181c 50%, #9f141b);
+  background-size: 300% 100%, 100% 100%, 100% 100%;
+  background-position: 120% 0, 0 0, 0 0;
+  text-shadow: 0 1px 2px rgba(80, 0, 0, 0.45);
+  animation: help-foil 3.6s ease-in-out infinite;
+  transition: filter 150ms ease, transform 150ms ease;
+}
+
+.help-toggle-btn:hover,
+.pc-help-btn:hover {
+  filter: brightness(1.12);
+}
+
+/* The glare crosses in the first 45%, then waits off the button. */
+@keyframes help-foil {
+  0% {
+    background-position: 120% 0, 0 0, 0 0;
+  }
+  45%,
+  100% {
+    background-position: -20% 0, 0 0, 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .help-toggle-btn,
+  .pc-help-btn {
+    animation: none;
+  }
+}
+
+/* Phones keep a bigger, easier-to-tap target. */
+html.nav-mobile .help-toggle-btn {
+  width: 28px;
+  height: 28px;
+  font-size: 0.95rem;
+}
+
+:root[data-theme="dark"] .help-toggle-btn {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+/* Giocatori: the round "?" to the badge page (badges.html) at the end of
+   the search line — level with the 40px boxes, not their labels (the line
+   aligns its items' bottoms). */
+.filter-toggle-line .players-badge-help {
+  margin-bottom: 9px;
+  text-decoration: none;
+}
+
+html.nav-mobile .filter-toggle-line .players-badge-help {
+  margin-bottom: 6px;
+}
+
+/* badges.html (js/badges-page.js): one card per automatic badge. */
+.badges-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+  gap: 18px;
+}
+
+/* A column, so the "Attualmente" section (label + holders) can be pushed to
+   the bottom — cards in a row already stretch to the same height, so it
+   lines up across them whatever the length of the text above. */
+.badge-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* the holder row scrolls instead of widening the card */
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card-sm);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 248, 246, 0.95));
+  box-shadow: var(--shadow-card);
+  padding: 18px;
+  transition: box-shadow 180ms ease, border-color 180ms ease;
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* The card a player page's badge link pointed at (badges.html#badge-<id>). */
+.badge-card.is-target {
+  border-color: var(--brand-red);
+  box-shadow: 0 0 0 3px rgba(220, 24, 28, 0.18), var(--shadow-card);
+}
+
+.badge-card-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.badge-card-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 52px;
+  height: 52px;
+  /* Same look as the small .badge-disc everywhere else. */
+  border: 2.5px solid rgba(220, 24, 28, 0.45);
+  border-radius: 50%;
+  background: #fff;
+}
+
+.badge-card-icon-emoji {
+  font-size: 1.7rem;
+  line-height: 1;
+}
+
+.badge-card-icon-img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.badge-card-name {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-title);
+}
+
+.badge-card-text {
+  margin: 0 0 14px;
+  color: var(--text-body);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.badge-card-holders-label {
+  margin-top: auto;
+  margin-bottom: 6px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* One row, scrolled sideways when the holders don't fit: swiped on touch,
+   dragged with the mouse on desktop (js/drag-scroll.js, which also sets the
+   classes below). No visible scrollbar; the edge fades show there's more.
+   The vertical padding (cancelled by the negative margin) keeps the pills'
+   focus ring from being clipped — overflow-x: auto clips vertically too. */
+.badge-card-holders {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  padding: 3px 0;
+  margin: -3px 0;
+}
+
+.badge-card-holders::-webkit-scrollbar {
+  display: none;
+}
+
+/* No text selection either: a drag would otherwise start selecting names
+   in its first few px, before it counts as a drag. */
+.badge-card-holders.is-scrollable {
+  cursor: grab;
+  user-select: none;
+}
+
+.badge-card-holders.is-dragging {
+  cursor: grabbing;
+}
+
+.badge-card-holders.is-dragging .badge-holder {
+  cursor: grabbing;
+}
+
+.badge-card-holders.fade-right {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+}
+
+.badge-card-holders.fade-left {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 32px);
+  mask-image: linear-gradient(to right, transparent, #000 32px);
+}
+
+.badge-card-holders.fade-left.fade-right {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 32px, #000 calc(100% - 32px), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 32px, #000 calc(100% - 32px), transparent);
+}
+
+.badge-holder {
+  flex-shrink: 0;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 11px;
+  border-radius: var(--radius-pill);
+  background: rgba(220, 24, 28, 0.08);
+  color: var(--brand-red-deep);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 150ms ease;
+}
+
+.badge-holder:hover {
+  background: rgba(220, 24, 28, 0.16);
+  text-decoration: none;
+}
+
+.badge-card-holders-empty {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.filter-panel {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 280ms ease;
+}
+
+.filter-panel.is-collapsed {
+  grid-template-rows: 0fr;
+}
+
+/* Same reasoning as .league-group-body-clip elsewhere: the clipping
+   boundary has to sit on a wrapper *inside* the collapsing grid row, not
+   the row itself — an element's own margin/padding is never clipped away
+   by its own overflow, only by an ancestor's. */
+.filter-panel-clip {
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Lifted once the expand animation genuinely finishes (js/filter-toggle.js)
+   — a select/date field inside opens its own popup positioned relative to
+   itself, a descendant of this clipping box, so as long as overflow stays
+   hidden here that popup gets cut off right at this box's own edge instead
+   of floating freely over whatever page content sits above/below it. */
+.filter-panel-clip.is-open {
+  overflow: visible;
+}
+
+.filter-panel-body {
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card-sm);
+  background: rgba(255, 255, 255, 0.7);
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.filter-panel-body .filter-bar {
+  margin-bottom: 0;
+}
+
+/* .filter-toggle-line is nowrap (no flex-wrap set) so it can never break
+   onto a second line — the search field's own min-width: 0 already lets
+   it shrink as needed, but the sort field's fixed 220px doesn't, and on a
+   narrow phone the two together plus the button can get tight enough to
+   force the row to overflow sideways instead. Narrowing the sort field
+   specifically (not the search field, which should stay the more usable
+   one of the two) keeps everything fitting comfortably down to a small
+   phone's actual width — still wide enough for its own longest option
+   ("Winrate"/"Vittorie") without truncating, just less generously than
+   on desktop. */
+@media (max-width: 480px) {
+  .filter-toggle-sort {
+    width: 130px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .filter-panel {
+    transition: none;
+  }
+}
+
+/* Matchups page: commander picker (search + capped checkbox list) and the
+   win% heatmap matrix built from it. */
+
+.matchups-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.matchups-toolbar h2 {
+  margin: 0;
+}
+
+.matchups-picker-card {
+  margin-bottom: 22px;
+}
+
+.matchups-picker-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.matchups-picker-head .field {
+  min-width: 240px;
+  flex: 1 1 240px;
+}
+
+.matchups-typeahead {
+  position: relative;
+}
+
+/* Promoted to its own stacking context (via JS, matchups-page.js) only
+   while the dropdown is actually open. .matchups-typeahead's own z-index
+   wasn't enough — it's nested *inside* .matchups-picker-card, which is
+   itself a plain, unpositioned element, so the z-index never actually got
+   compared against the matrix table's own stacking context below it; it
+   has to be the card itself that's promoted. */
+.matchups-picker-card.is-dropdown-open {
+  position: relative;
+  z-index: 30;
+}
+
+.matchups-count {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.matchups-count.is-full {
+  color: var(--brand-red-deep);
+}
+
+/* Same popup language as the custom-select dropdown (.cs-menu) elsewhere —
+   border/radius/shadow/open animation — just live-filtered by the search
+   box above it instead of a fixed option list. */
+.matchups-dropdown {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: var(--shadow-card-hover);
+  padding: 6px;
+  animation: cs-menu-in 140ms ease both;
+}
+
+.matchups-dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.95rem;
+  text-align: left;
+  color: var(--text-body);
+  cursor: pointer;
+}
+
+.matchups-dropdown-item:hover,
+.matchups-dropdown-item:focus {
+  outline: none;
+  background: var(--hairline-hover);
+}
+
+.matchups-dropdown-empty {
+  padding: 9px 12px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* Selected commanders as removable chips (the site's pill language), with
+   a small "x" appended to remove. */
+.matchups-selected-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.matchups-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px 6px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--hairline);
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--brand-red-deep);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.matchups-chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(220, 24, 28, 0.12);
+  color: var(--brand-red-deep);
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.matchups-chip-remove:hover {
+  background: rgba(220, 24, 28, 0.25);
+}
+
+/* The matrix in the site's list look (.history-item's tiles), with no
+   panel round it (like the boxless lists): every cell a small rounded tile
+   with gaps between (no ruled lines), the row names tiles like the lists'
+   sub-cards, straight on the page. --mx-bg is the page's own colour where
+   the matrix sits (body's cream-2 — white; dark: its near-black): the
+   scroller is painted with it (opaque, see below) and the sticky row names
+   paint it round themselves (box-shadow), so cells scrolling under them
+   don't show through the gaps — invisible against the page. The colours:
+   the site's win / loss ones (.history-score: green, red; even neutral). */
+.matchups-matrix-wrap {
+  --mx-bg: #fff;
+  --mx-win: #1fa45a;
+  --mx-loss: #e0262b;
+  --mx-mid: #f5b300;
+  --mx-win-text: #0e6e37;
+  --mx-loss-text: #a50f14;
+  --mx-mid-text: #7d5300;
+  --mx-tile: rgba(220, 24, 28, 0.055);
+  --mx-tile-line: rgba(154, 28, 32, 0.14);
+  /* The commanders' names (row and column): a stronger tint and edge than
+     the result tiles, so they stand apart from them. */
+  --mx-head: rgba(220, 24, 28, 0.12);
+  --mx-head-line: rgba(154, 28, 32, 0.32);
+  /* The empty slots' dashes. */
+  --mx-empty-line: rgba(154, 28, 32, 0.34);
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+:root[data-theme="dark"] .matchups-matrix-wrap {
+  --mx-bg: #140e10;
+  --mx-win: #4fdc8c;
+  --mx-loss: #ff5a5f;
+  --mx-mid: #ffcc33;
+  --mx-win-text: #7cf0ae;
+  --mx-loss-text: #ff9a9d;
+  --mx-mid-text: #ffe07a;
+  --mx-tile: rgba(255, 255, 255, 0.06);
+  --mx-tile-line: rgba(255, 255, 255, 0.1);
+  --mx-head: rgba(255, 110, 110, 0.16);
+  --mx-head-line: rgba(255, 110, 110, 0.34);
+  --mx-empty-line: rgba(255, 255, 255, 0.3);
+}
+
+/* Its own solid background (the page's colour, so it doesn't show): a
+   scroller without one isn't scrolled by the GPU in Chrome — it repaints
+   the whole table on every scroll step instead, which lagged. */
+.matchups-matrix-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: var(--mx-bg);
+  /* The site's scrollbar (like the scrolling lists'): thin, soft red. */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(220, 24, 28, 0.3) transparent;
+}
+
+:root[data-theme="dark"] .matchups-matrix-scroll {
+  scrollbar-color: rgba(255, 110, 110, 0.3) transparent;
+}
+
+/* Touch screens: none at all, like the lists — swiped with the finger. */
+html.nav-mobile .matchups-matrix-scroll {
+  scrollbar-width: none;
+}
+
+html.nav-mobile .matchups-matrix-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* More columns to the right (js/matchups-page.js syncScrollFade): the
+   right edge fades out — the peeking next column fading into it on
+   phones. The pinned names on the left untouched. */
+.matchups-matrix-scroll.can-scroll-right {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+}
+
+@media (max-width: 480px) {
+  /* Otherwise this sticky column alone can eat most of a phone's viewport
+     width, leaving barely a sliver of the next column peeking out — enough
+     to technically be scrollable but not to look or feel like it. */
+  .matchups-row-header {
+    max-width: 84px;
+  }
+}
+
+/* Phones: one result column at a time, read top to bottom — each column as
+   wide as the room beside the pinned names, but a peek of the next
+   (--mx-col-w, measured by js/matchups-page.js fitColumns, which also sets
+   the panel's scroll-padding to where a column starts), and a swipe snaps
+   to the next column, never past it (scroll-snap-stop). The numbers a size
+   up, with the room. */
+@media (max-width: 640px) {
+  .matchups-matrix-scroll {
+    scroll-snap-type: x mandatory;
+  }
+
+  .matchups-table .matchups-col-header {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  .matchups-table :is(.matchups-col-header, .matchups-cell) {
+    width: var(--mx-col-w, auto);
+    min-width: var(--mx-col-w, 58px);
+    box-sizing: border-box;
+  }
+
+  /* The names column as wide as a result column (--mx-head-w), and the
+     names — row and column — on up to two lines before they're cut, now
+     that there's room (scoped under .matchups-table to outrank the
+     desktop rules' widths and nowrap, later in this file). */
+  /* min-width too: a table wider than its box (it is, here) shrinks a
+     column with only a width down to its narrowest content. */
+  .matchups-table .matchups-row-header {
+    width: var(--mx-head-w, auto);
+    min-width: var(--mx-head-w, 0);
+    max-width: var(--mx-head-w, 84px);
+    box-sizing: border-box;
+  }
+
+  .matchups-table :is(.matchups-row-header, .matchups-col-header) {
+    white-space: normal;
+  }
+
+  .matchups-table :is(.matchups-row-header-text, .matchups-col-header-text) {
+    display: -webkit-box;
+    max-width: none;
+    overflow-wrap: anywhere;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+
+  /* A mouse drag (a narrow desktop window) moves freely; it snaps on
+     release. */
+  .matchups-matrix-scroll.is-dragging {
+    scroll-snap-type: none;
+  }
+
+  .matchups-cell-pct {
+    font-size: 1.15rem;
+  }
+
+  .matchups-cell-count {
+    font-size: 0.78rem;
+  }
+}
+
+.matchups-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 4px;
+  font-size: 0.85rem;
+}
+
+.matchups-table th,
+.matchups-table td {
+  padding: 8px 10px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Scoped under .matchups-table so it outranks `.matchups-table th`'s
+   text-align: center above (class + element beats a class alone) — without
+   it every row name was centered, which only showed on names short enough
+   not to fill the cell via the ellipsis truncation. */
+.matchups-table .matchups-row-header {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  text-align: left;
+  color: var(--text-title);
+  font-weight: 800;
+  border: 1px solid var(--mx-head-line);
+  border-radius: 10px;
+  /* The sub-card tint over the panel's solid colour (opaque: cells scroll
+     under it). Painted round it in the panel's colour too (box-shadow): the
+     gaps between it and its neighbours, and — the second one, pushed 40px
+     left — the whole strip between it and the panel's left edge (the
+     panel's padding + the table's spacing), where scrolled cells showed
+     through; its far end, rounded, lies past the edge, clipped. */
+  background: linear-gradient(var(--mx-head), var(--mx-head)), var(--mx-bg);
+  box-shadow:
+    0 0 0 4px var(--mx-bg),
+    -40px 0 0 4px var(--mx-bg);
+  cursor: default;
+}
+
+.matchups-corner-header {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--mx-bg);
+  box-shadow:
+    0 0 0 4px var(--mx-bg),
+    -40px 0 0 4px var(--mx-bg);
+}
+
+/* The column names: small tiles over their column, in the row names'
+   stronger tint, so both stand apart from the results. */
+.matchups-col-header {
+  position: relative;
+  border: 1px solid var(--mx-head-line);
+  border-radius: 10px;
+  background: var(--mx-head);
+  color: var(--text-title);
+  font-weight: 800;
+  font-size: 0.8rem;
+  vertical-align: middle;
+  cursor: default;
+}
+
+/* The ellipsis truncation lives on this inner span rather than the <th>
+   itself — overflow: hidden here would otherwise also clip the <th>'s own
+   ::before/::after tooltip below, since they're positioned children of
+   whichever element declares them (same fix as .league-group-body-clip
+   elsewhere: keep the clipping boundary off the element that also needs
+   to render content outside its own box). */
+.matchups-row-header-text,
+.matchups-col-header-text {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.matchups-row-header-text {
+  max-width: 120px;
+}
+
+.matchups-col-header-text {
+  max-width: 90px;
+}
+
+/* Full name on hover where a label truncates long ones with an ellipsis —
+   Matchups' row/column headers, the Comandanti/Archetipi bar charts' labels.
+   Same red-pill visual language as .icon-badge's own tooltip, but a real
+   element positioned by js/floating-tooltip.js and appended to <body>
+   rather than a CSS ::after anchored to the label — both live inside a
+   horizontally-scrolling wrapper (.matchups-matrix-scroll, .chart-grid),
+   which per the CSS overflow spec forces overflow-y to clip too, so
+   anything anchored *inside* it gets cut off at its edge instead of
+   escaping over the rest of the page. */
+.floating-tooltip {
+  position: fixed;
+  z-index: 60;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: var(--brand-red);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: var(--shadow-card-hover);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.floating-tooltip.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Positioned via inline `left` in js/floating-tooltip.js — the tooltip box
+   itself can get shifted off-center (clamped to stay on-screen), so the
+   arrow needs to track the actual anchor instead of staying fixed at the
+   tooltip's own midpoint. Points down (the tooltip always opens above). */
+.floating-tooltip-arrow {
+  position: absolute;
+  bottom: -5px;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid var(--brand-red);
+}
+
+/* Dragged sideways with the mouse when it doesn't fit (js/drag-scroll.js
+   enableDragScroll, the classes too): a grab cursor everywhere on it, no
+   text selection starting in a drag's first few px. */
+.matchups-matrix-scroll.is-scrollable,
+.matchups-matrix-scroll.is-scrollable :is(th, td) {
+  cursor: grab;
+  user-select: none;
+}
+
+.matchups-matrix-scroll.is-dragging,
+.matchups-matrix-scroll.is-dragging :is(th, td) {
+  cursor: grabbing;
+}
+
+/* A result tile: the percentage over its V-S-P record (a list's number
+   over its label). Its colour runs red → yellow → green: yellow at 50%,
+   turning into the side's colour as it leans that way (fully by 30 points
+   off even: --mix), the tint stronger the more one-sided (--heat,
+   js/matchups-page.js: 0 at 50%, 1 at 0% or 100%). */
+.matchups-cell {
+  --mix: calc(min(1, var(--heat, 0) * 1.67) * 100%);
+  min-width: 58px;
+  border: 1px solid var(--mx-tile-line);
+  border-radius: 10px;
+  background: var(--mx-tile);
+  color: var(--text-title);
+  line-height: 1.15;
+  cursor: default;
+}
+
+.matchups-cell-pct {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.matchups-cell-count {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.matchups-cell.is-win {
+  --mx-hue: color-mix(in srgb, var(--mx-win) var(--mix), var(--mx-mid));
+  --mx-hue-text: color-mix(in srgb, var(--mx-win-text) var(--mix), var(--mx-mid-text));
+}
+
+.matchups-cell.is-loss {
+  --mx-hue: color-mix(in srgb, var(--mx-loss) var(--mix), var(--mx-mid));
+  --mx-hue-text: color-mix(in srgb, var(--mx-loss-text) var(--mix), var(--mx-mid-text));
+}
+
+.matchups-cell.is-even {
+  --mx-hue: var(--mx-mid);
+  --mx-hue-text: var(--mx-mid-text);
+}
+
+.matchups-cell:is(.is-win, .is-loss, .is-even) {
+  border-color: color-mix(in srgb, var(--mx-hue) calc(45% + var(--heat) * 35%), transparent);
+  background: color-mix(in srgb, var(--mx-hue) calc(24% + var(--heat) * 34%), transparent);
+}
+
+.matchups-cell:is(.is-win, .is-loss, .is-even) .matchups-cell-pct {
+  color: var(--mx-hue-text);
+}
+
+/* The record in the body colour on a coloured tile (grey faded into it). */
+.matchups-cell:is(.is-win, .is-loss, .is-even) .matchups-cell-count {
+  color: var(--text-body);
+}
+
+/* No match between the two: an empty dashed slot — its dashes and the dash
+   inside it firm enough to read on the page. */
+.matchups-cell-empty {
+  border-style: dashed;
+  border-color: var(--mx-empty-line);
+  background: none;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* A deck against itself: the even (50%) tile, just "50%" — no record under
+   it (js/matchups-page.js renders it .is-even). */
+
+/* The Bacheca's "Più giocati" card (its two bubble slides): a plain light
+   card like the Bacheca's others (dark mode: the dark cards' look) — the
+   slides' titles, legends and links in the site's usual colours. */
+.card.dashboard-card-commanders {
+  border-color: rgba(220, 24, 28, 0.28);
+  background: #fff;
+}
+
+/* The Bacheca's "Commander più giocati" as bubbles (js/metagame-chart.js
+   renderBubbleChart): each placed and sized by js in % of the box, which
+   keeps the group's own proportions. A bubble: the commander's art (faded
+   in, js hydrateBubbleArt) over its chart colour, darkened at the bottom
+   for its % and — when it's big enough (a container query on it) — its
+   name; it grows a little on hover. "Altri": a grey disc. */
+.bubble-chart {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  margin: 10px auto 4px;
+}
+
+.bubble {
+  position: absolute;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 50%;
+  /* A neutral placeholder until the art fades in over it (not the chart
+     colour, which flashed as a coloured disc while loading). A soft shadow
+     and a thin light rim (--bubble-shadow: js/metagame-chart.js reads it
+     for its pulse; dark mode its own, deeper). */
+  --bubble-shadow: 0 6px 16px rgba(80, 10, 14, 0.22), inset 0 0 0 2px rgba(255, 255, 255, 0.35);
+  background: rgba(154, 28, 32, 0.08);
+  /* Always a ring in its colour — the same as its row's bar in the legend,
+     so a bubble and its row match at a glance; thicker when pointed at. */
+  box-shadow: var(--bubble-shadow), 0 0 0 3px var(--bubble-color);
+  color: #fff;
+  text-decoration: none;
+  container-type: inline-size;
+  /* Each motion on its own property, so they add up instead of replacing
+     each other: the drift moves (translate) and turns (rotate) it, the
+     entrance, hover, press and pulse (js, a Web Animation) size it
+     (scale) — all of them composited, nothing repainted per frame: its own
+     layer (will-change), so its drifting doesn't repaint the card around
+     it (whose blurred backdrop is costly). */
+  will-change: transform;
+  transition: scale 320ms cubic-bezier(0.2, 0.9, 0.3, 1.3), box-shadow 320ms ease;
+  animation:
+    bubble-in 800ms cubic-bezier(0.2, 0.9, 0.3, 1.25) var(--enter-delay, 0ms) backwards,
+    bubble-float var(--float-time, 6s) ease-in-out var(--float-delay, 0s) infinite alternate;
+}
+
+/* Drifting: a few px in its own direction and back, turning a little. */
+@keyframes bubble-float {
+  from {
+    translate: 0 0;
+    rotate: 0deg;
+  }
+  to {
+    translate: var(--float-x, 0) var(--float-y, 0);
+    rotate: var(--float-turn, 0deg);
+  }
+}
+
+a.bubble:hover {
+  z-index: 2;
+  scale: 1.08;
+  text-decoration: none;
+}
+
+/* Under the mouse, or its legend row is (.is-highlighted, js): a ring in
+   its colour, a little bigger (js pulses it on the way in). */
+.bubble.is-highlighted {
+  scale: 1.08;
+}
+
+.bubble:hover,
+.bubble.is-highlighted {
+  z-index: 2;
+  box-shadow: var(--bubble-shadow), 0 0 0 5px var(--bubble-color);
+}
+
+:root[data-theme="dark"] .bubble {
+  --bubble-shadow: 0 8px 22px rgba(0, 0, 0, 0.5), inset 0 0 0 2px rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Pressed (a tap on a touch screen, a click): in for a moment. */
+a.bubble:active {
+  scale: 0.93;
+  transition-duration: 90ms;
+}
+
+/* The legend rows lead to their bubble: a pointer cursor. */
+.bubble-legend-item {
+  cursor: pointer;
+}
+
+/* No art (an archetype): its colour fills it, the % in the middle. */
+.bubble.is-solid {
+  align-items: center;
+  background: var(--bubble-color, #9a9a94);
+}
+
+.bubble.is-solid .bubble-label {
+  padding-bottom: 0;
+}
+
+.bubble-art {
+  position: absolute;
+  inset: 0;
+  background-position: center 30%;
+  background-size: cover;
+  opacity: 0;
+  transition: opacity 400ms ease;
+}
+
+.bubble-art.is-loaded {
+  opacity: 1;
+}
+
+/* Each bubble a little sphere over its art: a soft highlight top-left,
+   shading towards the rim, and the bottom darker for its %. */
+.bubble::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.3), transparent 34%),
+    radial-gradient(circle at 50% 45%, transparent 52%, rgba(8, 4, 5, 0.55) 100%),
+    linear-gradient(180deg, transparent 45%, rgba(12, 7, 8, 0.7) 100%);
+  pointer-events: none;
+}
+
+/* A solid bubble (an archetype): flat, just its colour — no sphere light
+   or shading, no darker bottom (its label is in the middle). */
+.bubble.is-solid::after {
+  background: none;
+}
+
+/* Just the % (the name is on hover — the bubble's title — and in the
+   legend). */
+.bubble-label {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 78%;
+  padding-bottom: 14cqw;
+  line-height: 1.05;
+  text-align: center;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+.bubble-label strong {
+  font-size: max(11px, 22cqw);
+  font-weight: 800;
+}
+
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    scale: 0.4;
+  }
+}
+
+/* Below the bubbles, the donut's own legend (.pie-legend); each swatch a
+   small round crop of the commander's art (js hydrateBubbleArt) over its
+   colour. */
+.bubble-legend {
+  margin-top: 12px;
+}
+
+/* Swatch | name | % on the first line, the share bar under name and %.
+   Two classes: .pie-legend-item's own display comes later in this file. */
+.pie-legend-item.bubble-legend-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  column-gap: 8px;
+  row-gap: 4px;
+}
+
+.bubble-legend-item .pie-legend-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bubble-legend-bar {
+  grid-column: 2 / 4;
+  position: relative;
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: rgba(154, 28, 32, 0.1);
+}
+
+:root[data-theme="dark"] .bubble-legend-bar {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.bubble-legend-bar > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+}
+
+.bubble-legend-swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-position: center 30%;
+  background-size: cover;
+  /* A neutral placeholder until its art arrives (the bar keeps the
+     colour). */
+  background-color: rgba(154, 28, 32, 0.1);
+  /* Its bubble's ring, in the same colour. */
+  box-shadow: 0 0 0 2px var(--bubble-color, rgba(154, 28, 32, 0.25));
+}
+
+:root[data-theme="dark"] .bubble-legend-swatch {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bubble {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Metagame share chart (ring + side legend), js/metagame-chart.js. A single
+   mask cuts the hole directly out of the conic-gradient itself — it's a ring
+   from the very first frame, not a pie with a disc laid on top of it — and
+   the whole ring spins/scales/fades into place on render, legend rows
+   following with a slight stagger. */
+
+.pie-chart-wrap {
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card-sm);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow-card);
+  padding: 18px;
+  margin-bottom: 20px;
+  /* The card boundary itself was never animating — only the ring/legend
+     content inside it (see the pie-ring-in/pie-legend-in animations right
+     below). Fading the whole card up too covers every chart shape sharing
+     this wrapper uniformly, including the line chart (js/line-chart.js),
+     which had no entrance animation of its own at all. */
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.pie-chart-title {
+  margin: 0 0 14px;
+  font-size: 1.1rem;
+}
+
+.pie-chart-body {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+
+/* Winrate bar chart (js/metagame-chart.js's renderBarChart) — shares the
+   pie chart's own card wrapper/title, just a different body: one row per
+   entry, each independently 0-100% rather than a slice of a 100% whole. */
+.bar-chart-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bar-chart-row {
+  display: grid;
+  grid-template-columns: 108px 1fr 48px;
+  align-items: center;
+  gap: 10px;
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.bar-chart-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-title);
+}
+
+.bar-chart-track {
+  position: relative;
+  height: 14px;
+  border-radius: var(--radius-pill);
+  background: var(--hairline-hover);
+  overflow: hidden;
+}
+
+.bar-chart-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+}
+
+/* Small muted line under a chart's title (renderBarChart's `subtitle`). */
+.pie-chart-subtitle {
+  margin: -8px 0 14px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.bar-chart-pct {
+  text-align: right;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--text-title);
+}
+
+/* .bar-chart-body-spacious (see renderBarChart's `spacious` option) — a
+   short, fixed-length list (Archetipi's 5 rows) stretched to actually fill
+   the card's height (matched to the taller pie chart beside it) instead of
+   clustering at the top, with larger rows/text to match. Scoped to the
+   wrap that actually contains one, via :has(), rather than making every
+   .pie-chart-wrap flex — the Comandanti page's own (much longer, already
+   naturally fills the card) bar chart stays exactly as it was. */
+.pie-chart-wrap:has(.bar-chart-body-spacious) {
+  display: flex;
+  flex-direction: column;
+}
+
+.pie-chart-wrap:has(.bar-chart-body-spacious) .pie-chart-title {
+  flex-shrink: 0;
+}
+
+.bar-chart-body-spacious {
+  flex: 1;
+  justify-content: space-evenly;
+}
+
+.bar-chart-body-spacious .bar-chart-label,
+.bar-chart-body-spacious .bar-chart-pct {
+  font-size: 0.95rem;
+}
+
+.bar-chart-body-spacious .bar-chart-track {
+  height: 18px;
+}
+
+/* Their labels are short (an archetype, a colour — "midrange",
+   "Incolore"): a narrower label column than the commanders' 108px, the
+   bars taking the room. */
+.bar-chart-body-spacious .bar-chart-row {
+  grid-template-columns: 80px 1fr 52px;
+}
+
+/* Comandanti/Archetipi chart row (Metashare, Winrate, + Comandanti's
+   "Colori più giocati") as a
+   horizontal carousel of whole blocks — 2 side by side when there's room,
+   1 on phones — moved by swipe/trackpad (native scroll-snap, always landing
+   on whole charts) or the arrows/dots js/chart-carousel.js adds below it.
+   A flex row, so every chart in it stretches to the tallest one's height —
+   phones included — with bar charts spreading their rows out to fill it.
+   The row's own overflow (needed to scroll) would clip the cards' drop
+   shadows at its edges, hence the padding + matching negative margin:
+   room for the shadow inside the scroll box, same outer footprint as
+   before. */
+.chart-grid {
+  --chart-gap: 20px;
+  display: flex;
+  gap: var(--chart-gap);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 12px;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  margin: -8px -12px 0;
+  padding: 8px 12px 24px;
+}
+
+.chart-grid::-webkit-scrollbar {
+  display: none;
+}
+
+/* Mouse drag (js/chart-carousel.js): a grab cursor while there's anywhere
+   to go; no text selection, or the first px of a drag would start
+   selecting labels. Snapping is off during the drag and its glide after. */
+html:not(.nav-mobile) .chart-grid.is-draggable {
+  cursor: grab;
+  user-select: none;
+}
+
+.chart-grid.is-dragging {
+  scroll-snap-type: none;
+}
+
+/* As specific as the grab rule above, and after it, so it wins mid-drag. */
+html:not(.nav-mobile) .chart-grid.is-draggable.is-dragging {
+  cursor: grabbing;
+}
+
+/* border-box: the card's own padding/border must count inside that width,
+   or two cards + gap overshoot the row and the second gets cut off. */
+.chart-grid > .pie-chart-wrap {
+  box-sizing: border-box;
+  flex: 0 0 100%;
+  min-width: 0;
+  margin-bottom: 0;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  display: flex;
+  flex-direction: column;
+  /* A tighter shadow than the site-wide --shadow-card (0 12px 28px, ~40px
+     of spread below the card): the row's own scroll box clips anything
+     past its padding, and that big shadow got cut off in a hard edge that
+     read as a darker band behind the charts. This one (8px up, 12px to the
+     sides, 16px down) fits inside .chart-grid's padding. */
+  box-shadow: 0 4px 12px rgba(40, 24, 26, 0.08);
+}
+
+/* One chart per view by default; two side by side once the charts' own
+   area (js/chart-carousel.js marks it .chart-carousel-host) is wide enough
+   for two — a container query, not a viewport one, so the Bacheca's narrow
+   side card stays at one per view on a wide desktop, while Comandanti and
+   Archetipi (full-width) get two there, and one on phones. */
+.chart-carousel-host {
+  container-type: inline-size;
+}
+
+@container (min-width: 760px) {
+  .chart-grid > .pie-chart-wrap {
+    flex-basis: calc((100% - var(--chart-gap)) / 2);
+  }
+}
+
+/* archetype.html's row (js/archetype-detail.js): "Utilizzo" over 2/3 of
+   the row, "Contro gli altri archetipi" over 1/3 — both in view at once;
+   one per view below 760px, like the others. */
+@container (min-width: 760px) {
+  .chart-grid.is-wide-first > .pie-chart-wrap:first-child {
+    flex-basis: calc((100% - var(--chart-gap)) * 2 / 3);
+  }
+
+  .chart-grid.is-wide-first > .pie-chart-wrap:last-child {
+    flex-basis: calc((100% - var(--chart-gap)) / 3);
+  }
+}
+
+/* An edge-to-edge line chart stretched taller than its plot (to its row
+   neighbour's height): the plot (fixed 240px — its overlays are placed in
+   px) sits at the card's bottom, its area still reaching the bottom edge,
+   the extra room above the curve, under the title. */
+.chart-grid > .line-chart-wrap.is-edge > .line-chart-plot {
+  margin-top: auto;
+}
+
+/* The matchups in their card (a third of the row): one line per archetype —
+   its badge (a size down), the track, the winrate — with tight columns and spacing, so the track keeps
+   most of the width; the rows spread over the card's height (as tall as
+   Utilizzo). The axis under the tracks lined up with them. */
+/* (The value column as wide as the widest value, "100.0%" — narrower, it
+   ran into the track.) */
+.chart-grid > .vs-chart {
+  --vs-label-w: 78px;
+  --vs-value-w: 60px;
+  --vs-gap: 12px;
+  --vs-row-pad: 4px;
+}
+
+.chart-grid > .vs-chart > .vs-rows {
+  flex: 1;
+  justify-content: space-evenly;
+}
+
+.chart-grid > .vs-chart .vs-row {
+  gap: var(--vs-gap);
+  padding: 7px var(--vs-row-pad);
+}
+
+.chart-grid > .vs-chart .vs-value strong {
+  font-size: 0.95rem;
+}
+
+.chart-grid > .vs-chart .vs-axis {
+  margin: 2px calc(var(--vs-value-w) + var(--vs-gap) + var(--vs-row-pad)) 0
+    calc(var(--vs-label-w) + var(--vs-gap) + var(--vs-row-pad));
+}
+
+/* The label: the archetype's own badge, a size down to fit its column on
+   one line ("midrange" included). */
+.chart-grid > .vs-chart .badge-archetype {
+  min-height: 22px;
+  padding: 0 8px;
+  font-size: 0.68rem;
+  letter-spacing: 0.02em;
+}
+
+.chart-grid > .pie-chart-wrap > .pie-chart-body,
+.chart-grid > .pie-chart-wrap > .bar-chart-body {
+  flex: 1;
+}
+
+.chart-grid > .pie-chart-wrap > .bar-chart-body {
+  justify-content: space-evenly;
+}
+
+/* Below the row: ‹ • • › as a small pill bar, the site's tab-bar look
+   (white, a hairline edge, a soft shadow) — on touch devices, which swipe,
+   no arrows and no bar, the dots alone. */
+.chart-carousel-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: fit-content;
+  /* Up into the row's 24px bottom padding (kept for the cards' shadows):
+     about 10px under the charts, 10px down to what follows. */
+  margin: -6px auto 10px;
+  padding: 3px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-pill);
+  background: #fff;
+  box-shadow: var(--shadow-card);
+}
+
+:root[data-theme="dark"] .chart-carousel-nav {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: none;
+}
+
+html.nav-mobile .chart-carousel-nav,
+:root[data-theme="dark"].nav-mobile .chart-carousel-nav {
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+
+/* display: flex above would otherwise override the hidden attribute. */
+.chart-carousel-nav[hidden] {
+  display: none;
+}
+
+/* The arrows (the charts' and player.html's album, js/commander-carousel.js):
+   small round light buttons — white, a hairline edge, a dark red chevron, a
+   faint red on hover — not solid red discs; inside the charts' pill bar,
+   no edge of their own. */
+.chart-carousel-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--hairline);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--brand-red-deep);
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease, opacity 150ms ease;
+}
+
+.chart-carousel-nav .chart-carousel-arrow {
+  border-color: transparent;
+  background: transparent;
+}
+
+.chart-carousel-arrow:hover:not(:disabled) {
+  border-color: var(--hairline-hover);
+  background: color-mix(in srgb, var(--brand-red) 8%, #fff);
+}
+
+:root[data-theme="dark"] .chart-carousel-arrow {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: #ff9a9d;
+}
+
+:root[data-theme="dark"] .chart-carousel-nav .chart-carousel-arrow {
+  border-color: transparent;
+  background: transparent;
+}
+
+:root[data-theme="dark"] .chart-carousel-arrow:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.chart-carousel-arrow:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.chart-carousel-arrow svg {
+  width: 16px;
+  height: 16px;
+}
+
+html.nav-mobile .chart-carousel-arrow {
+  display: none;
+}
+
+.chart-carousel-dots {
+  display: flex;
+  gap: 8px;
+}
+
+.chart-carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--hairline-hover-strong);
+  transition: background 150ms ease, transform 150ms ease;
+}
+
+.chart-carousel-dot.is-active {
+  background: var(--brand-red);
+  transform: scale(1.25);
+}
+
+/* Reserves roughly the final chart-row height for the loading placeholder,
+   so the filters (and everything below) don't visibly jump down once the
+   async chart data actually arrives and replaces it — Archetipi's rendered
+   charts settle noticeably shorter than Comandanti's. */
+#commanders-chart {
+  min-height: 300px;
+}
+
+#archetypes-chart {
+  min-height: 220px;
+}
+
+.pie-chart {
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  box-shadow: var(--shadow-card);
+  flex-shrink: 0;
+  -webkit-mask: radial-gradient(circle, transparent 42%, #000 43%);
+  mask: radial-gradient(circle, transparent 42%, #000 43%);
+  transform-origin: 50% 50%;
+  animation: pie-ring-in 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes pie-ring-in {
+  from {
+    opacity: 0;
+    transform: scale(0.7) rotate(-80deg);
+  }
+  to {
+    opacity: 1;
+    /* Not "scale(1) rotate(0deg)" — any non-"none" transform value
+       permanently creates a new stacking context once the animation
+       settles there (fill-mode: both), even a visual no-op like this one.
+       That let the chart end up painting above a dropdown menu that
+       should sit on top of it, since the two ended up in different,
+       unrelated stacking contexts instead of comparing z-index directly. */
+    transform: none;
+  }
+}
+
+.pie-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 190px;
+}
+
+.pie-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: var(--text-body);
+  opacity: 0;
+  animation: pie-legend-in 420ms ease both;
+}
+
+@keyframes pie-legend-in {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.pie-legend-label {
+  flex: 1;
+  text-transform: capitalize;
+}
+
+.pie-legend-pct {
+  color: var(--text-title);
+}
+
+.pie-legend-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* Comandanti / Archetipi on a phone-wide chart area (the carousel's
+   container, .chart-carousel-host): the legend beside a smaller ring
+   instead of under it — the ring card was the carousel's tallest, setting
+   every slide's height. Long names cut with "…". */
+@container (max-width: 559px) {
+  :is(#commanders-chart, #archetypes-chart) .pie-chart-body {
+    flex-wrap: nowrap;
+    gap: 16px;
+  }
+
+  :is(#commanders-chart, #archetypes-chart) .pie-chart {
+    width: 112px;
+    height: 112px;
+  }
+
+  :is(#commanders-chart, #archetypes-chart) .pie-legend {
+    flex: 1;
+    min-width: 0;
+    gap: 8px;
+  }
+
+  :is(#commanders-chart, #archetypes-chart) .pie-legend-item {
+    min-width: 0;
+    gap: 6px;
+    font-size: 0.82rem;
+  }
+
+  :is(#commanders-chart, #archetypes-chart) .pie-legend-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  :is(#commanders-chart, #archetypes-chart) .pie-legend-swatch {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+/* Commander detail's "decks played over time" line (js/line-chart.js) —
+   shares the pie/bar charts' own .pie-chart-wrap card, just full-width
+   instead of paired side-by-side. aspect-ratio (matching the SVG's own
+   viewBox) rather than a fixed height: keeps x/y scaled together as the
+   card's actual width changes, so the line's stroke width and the dots
+   stay circular instead of stretching unevenly on narrow screens. */
+.line-chart-wrap {
+  margin-bottom: 20px;
+}
+
+.line-chart {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1000 / 280;
+}
+
+.line-chart-grid {
+  stroke: var(--hairline);
+  stroke-width: 1;
+}
+
+.line-chart-axis-label {
+  fill: var(--text-muted);
+  font-size: 13px;
+}
+
+.line-chart-area {
+  fill: rgba(220, 24, 28, 0.12);
+  stroke: none;
+}
+
+.line-chart-line {
+  fill: none;
+  stroke: var(--brand-red);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.line-chart-dot {
+  fill: var(--brand-red);
+}
+
+/* commander.html's "Utilizzo" (js/line-chart.js renderLineChart): the plot
+   edge to edge in its card (no padding — the card's corners clip it), the
+   title and the numbers (Ultimo / Picco / Totale) laid over its top, the
+   gridlines' values small on the left just above each line, the months in
+   the band under the zero line, the area filling it down to the card's
+   bottom edge. The plot 240px tall (= the SVG's viewBox height, so its y
+   units are px — the HTML overlays line up with it), stretched across. */
+.line-chart-wrap.is-edge {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+}
+
+.line-chart-head {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px 0;
+  pointer-events: none;
+}
+
+.line-chart-head .pie-chart-title {
+  margin: 0;
+}
+
+.line-chart-stats {
+  display: flex;
+  gap: 18px;
+}
+
+.line-chart-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.line-chart-stat-value {
+  color: var(--text-title);
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1.05;
+}
+
+.line-chart-stat:first-child .line-chart-stat-value {
+  color: var(--brand-red);
+}
+
+.line-chart-stat-label {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.line-chart-plot {
+  position: relative;
+  height: 240px;
+}
+
+.line-chart-plot .line-chart {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  overflow: visible;
+  animation: line-chart-reveal 900ms cubic-bezier(0.2, 0.8, 0.2, 1) 120ms both;
+}
+
+/* The curve drawn in from the left (paused with the rest while the page
+   loads, body.is-loading). */
+@keyframes line-chart-reveal {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.line-chart-plot .line-chart-grid {
+  stroke-dasharray: 3 5;
+}
+
+.line-chart-plot .line-chart-grid.is-zero {
+  stroke-dasharray: none;
+}
+
+.line-chart-plot .line-chart-area {
+  fill: rgba(220, 24, 28, 0.14);
+}
+
+.line-chart-plot .line-chart-line {
+  stroke-width: 3;
+}
+
+.line-chart-y,
+.line-chart-x {
+  position: absolute;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.line-chart-y {
+  left: 14px;
+  transform: translateY(calc(-100% - 3px));
+}
+
+.line-chart-x {
+  bottom: 9px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.line-chart-x.is-start {
+  transform: translateX(14px);
+}
+
+.line-chart-x.is-end {
+  transform: translateX(calc(-100% - 14px));
+}
+
+/* Hover / tap: the point's strip shows its guide, dot and tip. */
+.line-chart-hit {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 2;
+}
+
+.line-chart-guide,
+.line-chart-dot-html,
+.line-chart-tip {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+}
+
+.line-chart-guide {
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 1px dashed rgba(220, 24, 28, 0.45);
+}
+
+.line-chart-dot-html {
+  width: 12px;
+  height: 12px;
+  box-sizing: border-box;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--brand-red);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transform: translate(-50%, -50%);
+}
+
+.line-chart-tip {
+  padding: 5px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(12, 7, 8, 0.88);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transform: translate(-50%, calc(-100% - 12px));
+  /* (Moved back inside the card near its edges by js/line-chart.js fitTip,
+     through `translate`.) */
+}
+
+.line-chart-hit:hover > * {
+  opacity: 1;
+}
+
+@media (max-width: 640px) {
+  .line-chart-head {
+    padding: 14px 14px 0;
+  }
+
+  .line-chart-stats {
+    gap: 12px;
+  }
+
+  .line-chart-stat-value {
+    font-size: 1.15rem;
+  }
+
+  .line-chart-stat-label {
+    font-size: 0.6rem;
+  }
+
+  .line-chart-y,
+  .line-chart-x {
+    font-size: 0.66rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .line-chart-plot .line-chart {
+    animation: none;
+  }
+}
+
+:root[data-theme="dark"] .line-chart-plot .line-chart-area {
+  fill: rgba(255, 106, 110, 0.14);
+}
+
+:root[data-theme="dark"] .line-chart-stat:first-child .line-chart-stat-value {
+  color: #ff6a6e;
+}
+
+:root[data-theme="dark"] .line-chart-guide {
+  border-left-color: rgba(255, 106, 110, 0.5);
+}
+
+/* Archetipi page's multi-series chart (js/line-chart.js's
+   renderMultiLineChart) — each <path>/<circle> sets its own stroke/fill
+   inline (per-archetype color), so unlike the single-series chart there's
+   no shared color rule to override here, just the legend identifying which
+   line is which. */
+.line-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin-top: 14px;
+  justify-content: center;
+}
+
+.line-chart-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--text-body);
+  text-transform: capitalize;
+}
+
+.line-chart-legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .page-main {
+    padding: 20px 16px 36px;
+  }
+}

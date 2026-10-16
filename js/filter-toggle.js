@@ -26,16 +26,26 @@
 // Kept in sync from the panel's own (bubbling) change events; a page that
 // sets a filter from code calls the returned refresh() instead.
 
+// The dot pops on (styles.css) only the first time it shows in a visit:
+// moving to another page whose filters are set too (the Meta section's
+// shared filter, js/meta-filters.js) shows it already there — until a
+// filter is changed by hand there, which pops it again. (This module stays
+// loaded across in-app navigations, so the flag lasts the visit.)
+let dotShown = false;
+
 export function initFilterToggle(buttonId, panelId) {
   const btn = document.getElementById(buttonId);
   const panel = document.getElementById(panelId);
   const clip = panel?.querySelector(".filter-panel-clip");
   if (!btn || !panel || !clip) return { refresh() {} };
 
-  function refresh() {
+  btn.classList.toggle("no-dot-pop", dotShown);
+  function refresh(e) {
     const active = [...panel.querySelectorAll('select, input[type="date"], input[type="checkbox"]')].some((el) =>
       el.type === "checkbox" ? el.checked : el.value !== ""
     );
+    if (e?.isTrusted) btn.classList.remove("no-dot-pop");
+    if (active) dotShown = true;
     btn.classList.toggle("has-active-filters", active);
     btn.setAttribute("aria-label", active ? "Filtri (attivi)" : "Filtri");
   }

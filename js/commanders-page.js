@@ -7,6 +7,7 @@ import { attachHoverTooltips, fullTextIfTruncated } from "./floating-tooltip.js"
 import { commanderPairWithColors, bannedBadge, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
+import { savedMetaFilters, rememberMetaFilters } from "./meta-filters.js";
 import { historyPanelHtml, historyStatsHtml } from "./history-list.js";
 import { initBackToTop } from "./back-to-top.js";
 
@@ -60,6 +61,15 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   const leagueSelect = document.getElementById("commanders-league-filter");
   const eventSelect = document.getElementById("commanders-event-filter");
   const dateFromInput = document.getElementById("commanders-date-from");
+  // The filters first — before any request, so the button (and its "set"
+  // dot) is already as it should be when the page appears.
+  // Default "Dal": the last DEFAULT_DATE_FROM_YEARS years (js/ui.js) — set before the
+  // first load, so that load already fetches only that window.
+  // (Or the Meta section's shared filter, as last set on any of its pages.)
+  const savedFilters = savedMetaFilters();
+  dateFromInput.value = savedFilters ? savedFilters.dateFrom : isoDateYearsAgo(DEFAULT_DATE_FROM_YEARS);
+  rememberMetaFilters({ leagueSelect, eventSelect, dateFromInput });
+  initFilterToggle("commanders-filter-toggle", "commanders-filter-panel");
   const searchInput = document.getElementById("commanders-search");
   const sortSelect = document.getElementById("commanders-sort");
   const colorCheckboxes = Array.from(document.querySelectorAll('input[name="commanders-color-filter"]'));
@@ -326,10 +336,6 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     }
   }
 
-  // Default "Dal": the last DEFAULT_DATE_FROM_YEARS years (js/ui.js) — set before the
-  // first load, so that load already fetches only that window.
-  dateFromInput.value = isoDateYearsAgo(DEFAULT_DATE_FROM_YEARS);
-  initFilterToggle("commanders-filter-toggle", "commanders-filter-panel");
 
   searchInput.addEventListener("input", () => renderTable(false));
   sortSelect.addEventListener("change", () => renderTable());
@@ -345,6 +351,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   initScopeFilter({
     leagueSelect,
     eventSelect,
+    initial: savedFilters,
     onChange: (eventIds) => {
       lastScopeEventIds = eventIds;
       render(effectiveEventIds());

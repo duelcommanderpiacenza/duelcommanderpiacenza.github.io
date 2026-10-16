@@ -14,6 +14,7 @@ import { hidePageLoading } from "./page-loading.js";
 import { attachHoverTooltips, fullTextIfTruncated } from "./floating-tooltip.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { initFilterToggle } from "./filter-toggle.js";
+import { savedMetaFilters, rememberMetaFilters } from "./meta-filters.js";
 import { openInfoDialog } from "./info-dialog.js";
 import { enableDragScroll, enableSnapDrag } from "./drag-scroll.js";
 
@@ -464,6 +465,15 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   const leagueSelect = document.getElementById("matchups-league-filter");
   const eventSelect = document.getElementById("matchups-event-filter");
   const dateFromInput = document.getElementById("matchups-date-from");
+  // The filters first — before any request, so the button (and its "set"
+  // dot) is already as it should be when the page appears.
+  // Default "Dal": the last DEFAULT_DATE_FROM_YEARS years (js/ui.js) — set
+  // before the first load, so that load already fetches only that window.
+  // (Or the Meta section's shared filter, as last set on any of its pages.)
+  const savedFilters = savedMetaFilters();
+  dateFromInput.value = savedFilters ? savedFilters.dateFrom : isoDateYearsAgo(DEFAULT_DATE_FROM_YEARS);
+  rememberMetaFilters({ leagueSelect, eventSelect, dateFromInput });
+  initFilterToggle("matchups-filter-toggle", "matchups-filter-panel");
   let eventDateById = new Map();
   let lastScopeEventIds = [];
 
@@ -518,16 +528,13 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     return;
   }
 
-  // Default "Dal": the last DEFAULT_DATE_FROM_YEARS years (js/ui.js) — set
-  // before the first load, so that load already fetches only that window.
-  dateFromInput.value = isoDateYearsAgo(DEFAULT_DATE_FROM_YEARS);
-  initFilterToggle("matchups-filter-toggle", "matchups-filter-panel");
   dateFromInput.addEventListener("change", load);
 
   let firstLoad = true;
   await initScopeFilter({
     leagueSelect,
     eventSelect,
+    initial: savedFilters,
     onChange: (eventIds) => {
       lastScopeEventIds = eventIds;
       const done = load();

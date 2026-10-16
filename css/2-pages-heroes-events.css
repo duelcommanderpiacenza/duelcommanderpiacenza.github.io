@@ -1,0 +1,2342 @@
+/* styles — part 2 of 6 (css/2-pages-heroes-events.css). The site's one stylesheet, split in its
+   original order: the parts are loaded in this order (partials/head.html,
+   admin/index.html) and must stay so — later rules win ties. */
+
+/* Three-part bar: an invisible spacer the same width as the toggle keeps
+   the center block visually centered instead of drifting left once the
+   toggle occupies the right edge. */
+.footer-spacer {
+  width: 44px;
+  flex-shrink: 0;
+}
+
+.footer-center {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+/* "© 2026 Duel Commander Piacenza" always on one line: on narrow phones the
+   room between the spacer and the theme toggle is ~230px, a bit less than
+   it takes at full size — there its size follows the screen's width
+   (≈ 13px on a 360px phone), up to the usual 1rem. */
+.footer-center > :first-child {
+  white-space: nowrap;
+  font-size: min(1rem, 3.6vw);
+}
+
+.footer-credit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+}
+
+.footer-credit img {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  opacity: 0.8;
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.footer-credit a:hover img {
+  opacity: 1;
+  transform: scale(1.12);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Shared page shell for every new tracker page                          */
+/* ---------------------------------------------------------------------- */
+
+.page-main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 28px 20px 48px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+
+  .pie-chart,
+  .pie-legend-item,
+  .commander-card-perspective {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
+
+  .cs-wrap.is-open .cs-menu {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
+
+  .cd-wrap.is-open .cd-popup {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
+
+  .site-search-box.is-open .site-search-results {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.page-heading {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+/* Deliberately no entrance animation and no loading-state hiding here — a
+   detail page's <h1> starts as a plain "Caricamento..." placeholder
+   (static HTML, present at first paint) and is simply overwritten in place
+   once js/*-detail.js's first fetch resolves, the same way any other
+   already-there text would update. Treating that swap as something to
+   animate or hide until "ready" made it feel like part of the page's
+   loading choreography; the title isn't meant to be — it's meant to just
+   already be there, briefly wrong for a moment on a detail page, same as
+   a list page's own static title (which never changes at all). */
+.page-heading h1 {
+  margin: 0;
+  font-size: 1.9rem;
+  color: var(--text-title);
+}
+
+.admin-topbar h1 {
+  margin: 0;
+  font-size: 1.9rem;
+  color: var(--text-title);
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Admin's subview h3 titles (see .page-heading-row) only had their own
+   inline margin-top: 0 — the browser's default h3 margin-bottom (~1em)
+   was still there, making .page-heading's box taller than the text alone
+   and pushing the text toward the top of it, away from true vertical
+   center against the back button beside it. */
+.page-heading h3 {
+  margin: 0;
+}
+
+/* Commander detail page's Scryfall card art. Positioned relative to
+   .page-heading (made position: relative above) rather than sitting in
+   the Winrate row as a normal flex sibling — that way its top is pinned
+   to the title's own top for free via top: 0, no JS needed for that part.
+   Its height is set explicitly in JS instead (js/commander-detail.js's
+   syncCardImageLayout) to reach exactly down to the stat tiles' bottom —
+   two separate elements with no clean CSS-only way to span between them.
+   That same function also reads the image's own resulting width back and
+   sets it as .commander-top-row-main's padding-right, below, so the stat
+   tiles can grow to fill the space right up to the card's real edge. It's
+   allowed to visually extend past .page-heading's own bottom edge into
+   the Winrate row below since nothing here clips overflow. */
+.commander-card-figure {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 0;
+}
+
+/* Card-shaped loading placeholder, shown from first paint in exactly the
+   spot and size the card will take (same positioning as
+   .commander-card-figure; Scryfall "normal" image proportions, 488×680), so
+   nothing around it moves when the real card replaces it — its height is
+   set by the same js/commander-detail.js syncCardImageLayout as the card's,
+   280px until then. A soft brand-red shimmer sweeps across while waiting.
+   js hides it once the card is revealed, or drops it if there's no image. */
+.commander-card-skeleton {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 280px;
+  aspect-ratio: 488 / 680;
+  border-radius: 12px;
+  background: linear-gradient(
+    100deg,
+    color-mix(in srgb, var(--brand-red) 6%, transparent) 30%,
+    color-mix(in srgb, var(--brand-red) 16%, transparent) 50%,
+    color-mix(in srgb, var(--brand-red) 6%, transparent) 70%
+  );
+  background-size: 250% 100%;
+  animation: card-skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes card-skeleton-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0% 0;
+  }
+}
+
+:root[data-theme="dark"] .commander-card-skeleton {
+  background-image: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.04) 30%,
+    color-mix(in srgb, var(--brand-red-deep) 14%, transparent) 50%,
+    rgba(255, 255, 255, 0.04) 70%
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .commander-card-skeleton {
+    animation: none;
+  }
+}
+
+/* player.html "Album comandanti" card carousel (js/commander-carousel.js):
+   phones — the current card centered, its neighbours peeking on both
+   sides turned away like the sides of a drum, stats stacked below;
+   desktop (from 880px) — the current card lined up with the page's left
+   margin, the next ones peeking on the right (turned more steeply), a card
+   leaving on the left fading out through a gradient at that edge rather
+   than sliding past it. The stats below the cards at every width. The
+   per-card looks are js applyDepth, switched at the same width. */
+.cmd-carousel {
+  /* Phones: same size as commander.html's card on mobile
+     (.commander-card-face). The tighter gap below keeps a sliver of the
+     neighbours in view beside a card this wide. */
+  --cmd-card-w: min(260px, 80vw);
+  --cmd-card-gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  /* No bottom margin: the next section's <h2> already brings its own. */
+}
+
+.cmd-carousel-main {
+  min-width: 0;
+}
+
+/* A section heading with its "?" (.help-toggle-btn) right after the text —
+   "Album comandanti" on player.html and account.html. */
+.heading-help {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* league.html's Classifica: on touch screens, where the panels have no
+   titles (the "?" above goes with the hidden <h2>), the same "?" alone on
+   the right above the list instead. */
+.help-toggle-btn.league-help-touch {
+  display: none;
+}
+
+html.app-header .help-toggle-btn.league-help-touch {
+  display: flex;
+  margin: 0 0 12px auto;
+}
+
+/* Its pop-up (js/league-detail.js initLeagueHelp): a small heading per
+   rule, and the points by position as a row of little tiles. */
+#league-help-dialog h4 {
+  margin: 16px 0 6px;
+  color: var(--text-title);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+#league-help-dialog h4:first-child {
+  margin-top: 0;
+}
+
+.league-help-points {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  margin: 10px 0;
+}
+
+.league-help-points > div {
+  padding: 6px 2px;
+  border: 1px solid color-mix(in srgb, var(--brand-red) 18%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--brand-red) 5%, transparent);
+  text-align: center;
+}
+
+.league-help-points dt {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.league-help-points dd {
+  margin: 2px 0 0;
+  color: var(--brand-red);
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+/* Small explanation pop-up (a <dialog> sharing .ecal-dialog's box). */
+/* Open: a column — the title fixed, the content scrolling on its own under
+   it (.info-dialog-body), its scrollbar inside the rounded box rather than
+   over its corners (as when the dialog itself scrolled). Never closer than
+   24px to the screen's edges (so on a phone it doesn't touch them). */
+.ecal-dialog.info-dialog {
+  width: min(360px, calc(100vw - 48px));
+}
+
+.info-dialog[open] {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 48px);
+  overflow: hidden;
+}
+
+.info-dialog-head {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.info-dialog-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.info-dialog-head h3 {
+  margin: 0;
+  color: var(--text-title);
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.info-dialog p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.info-dialog p + p {
+  margin-top: 10px;
+}
+
+/* account.html's "Effetti della carta" (js/card-cosmetics.js
+   openCardEffectsInfo): a bit wider than the other pop-ups for a row of up
+   to four previews; per family, its name, a line, then one small live
+   preview per tier (a blank .player-card dressed by the real code) with its
+   name and how much it takes. Scrolls inside on a short screen (the
+   dialog's own max-height). */
+#card-effects-dialog {
+  width: min(440px, calc(100vw - 48px));
+}
+
+/* "Novità" (js/header-news.js — the shared pop-up, .news-dialog): a red
+   band on top in the top bar's gradient, with a soft glow and the faint dot
+   grid — the bell in a white disc, "Novità" and "N annunci · N da leggere"
+   in white, the close button glass on it — then, on a faint cream, the
+   announcements across the whole width, a thin rule between them (the
+   unread ones with a red "Nuovo" chip on the right), each sliding in a
+   beat after the one before. None: a big faded bell. */
+.ecal-dialog.info-dialog.news-dialog {
+  width: min(460px, calc(100vw - 48px));
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 24px;
+  background: #fff9f7;
+  box-shadow: 0 30px 70px rgba(40, 6, 9, 0.35);
+}
+
+.news-dialog .info-dialog-head {
+  position: relative;
+  justify-content: flex-start;
+  gap: 14px;
+  margin: 0;
+  padding: 18px 18px 18px 20px;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(255, 140, 140, 0.35), transparent 55%),
+    radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1.6px) 0 0 / 14px 14px,
+    linear-gradient(135deg, #7e0c13, #dc181c);
+  color: #fff;
+}
+
+.news-dialog .info-dialog-head::before {
+  content: "";
+  flex: 0 0 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23dc181c' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9'/%3E%3Cpath d='M10.3 21a1.94 1.94 0 0 0 3.4 0'/%3E%3C/svg%3E") center / 22px no-repeat;
+  box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.18), 0 6px 14px rgba(40, 6, 9, 0.3);
+}
+
+.news-dialog .info-dialog-titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.news-dialog .info-dialog-head h3 {
+  color: #fff;
+  font-size: 1.3rem;
+  letter-spacing: 0.01em;
+}
+
+.news-dialog .info-dialog-subtitle {
+  margin-top: 2px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.news-dialog .ecal-close,
+:root[data-theme="dark"] .news-dialog .ecal-close {
+  align-self: flex-start;
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+.news-dialog .ecal-close:hover,
+:root[data-theme="dark"] .news-dialog .ecal-close:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.28);
+}
+
+/* The announcements one under the other across the whole width (lined up
+   with the band's text), a thin rule between them — no cards. */
+.news-dialog .info-dialog-body {
+  padding: 4px 20px 8px;
+}
+
+.news-item {
+  position: relative;
+  padding: 16px 0;
+  animation: news-item-in 340ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.news-item + .news-item {
+  border-top: 1px solid rgba(154, 28, 32, 0.14);
+}
+
+.news-new {
+  position: absolute;
+  top: 16px;
+  right: 0;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  background: #dc181c;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.news-title {
+  margin: 0 0 6px;
+  color: var(--text-title);
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.news-item.is-new .news-title {
+  padding-right: 64px;
+}
+
+.info-dialog .news-body {
+  color: var(--text-body);
+  font-size: 0.93rem;
+  line-height: 1.55;
+  /* A plain textarea in admin: the line breaks it was typed with. */
+  white-space: pre-line;
+}
+
+/* An event's announcement (made when it's first closed): a button to the
+   event's page under its text — the site's red pill, a size down. */
+.info-dialog .news-link {
+  gap: 4px;
+  min-height: 36px;
+  margin-top: 12px;
+  padding: 0 12px 0 16px;
+  font-size: 0.9rem;
+  box-shadow: 0 6px 14px rgba(220, 24, 28, 0.22);
+}
+
+.info-dialog .news-link svg {
+  width: 16px;
+  height: 16px;
+}
+
+.info-dialog .news-link:hover {
+  color: #fff;
+  text-decoration: none;
+}
+
+.news-empty {
+  padding: 26px 10px 18px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.news-empty svg {
+  width: 56px;
+  height: 56px;
+  color: rgba(220, 24, 28, 0.25);
+}
+
+.news-empty p {
+  margin-top: 8px;
+  font-weight: 700;
+}
+
+@keyframes news-item-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .news-item {
+    animation: none;
+  }
+}
+
+:root[data-theme="dark"] .ecal-dialog.info-dialog.news-dialog {
+  border: 0;
+  background: #1f1416;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6);
+}
+
+:root[data-theme="dark"] .news-item + .news-item {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme="dark"] .news-empty svg {
+  color: rgba(255, 110, 110, 0.35);
+}
+
+.card-effects-family {
+  margin-top: 18px;
+}
+
+.card-effects-family h4 {
+  margin: 0 0 4px;
+  color: var(--brand-red-deep);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.card-effects-family p {
+  color: var(--text-muted-2);
+  font-size: 0.9rem;
+}
+
+.card-effects-tiers {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card-effects-tiers li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  font-size: 0.78rem;
+  line-height: 1.3;
+}
+
+.card-effects-tiers li strong {
+  display: block;
+  color: var(--text-title);
+}
+
+.player-card.pc-preview {
+  width: 64px;
+  animation: none;
+}
+
+.pc-preview .pc-art {
+  background: linear-gradient(160deg, #46577a, #7a5a8c 55%, #a06a4a);
+}
+
+/* An invisible stand-in for a real card's glass panel — just its height —
+   so the name (and the Podio bar behind it) sits where it does on a real
+   card. */
+.pc-preview .pc-panel {
+  height: 34cqw;
+  padding: 0;
+  border: none;
+  background: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* The seal and the stars, real size, would be a few px here: bigger in
+   the previews so they read. */
+.pc-preview .pc-fx-seal {
+  width: 22cqw;
+  height: 12cqw;
+}
+
+/* Centred in the preview's foot (on a 64px card the left edge is only a
+   few px away — the star ran into it). */
+.pc-preview .pc-foot {
+  justify-content: center;
+}
+
+.pc-preview .pc-fx-stars {
+  margin-left: 0;
+}
+
+.pc-preview .pc-fx-star {
+  font-size: 13cqw;
+}
+
+.pc-preview .pc-fx-star-count {
+  font-size: 10cqw;
+}
+
+/* A small card's shadow, not the full-size card's (scoped to the list to
+   outrank .player-card.fx-rim .pc-frame, later in this file). */
+.card-effects-tiers .player-card.pc-preview .pc-frame,
+:root[data-theme="dark"] .card-effects-tiers .player-card.pc-preview .pc-frame {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.28);
+}
+
+/* The "?" pop-ups (js/info-dialog.js). In: rises and scales up slightly as
+   it fades in,
+   backdrop fading with it.
+   Out: the reverse, a touch quicker — js adds .is-closing and waits for
+   the animation before the real close(). */
+.info-dialog[open] {
+  animation: info-dialog-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.info-dialog[open]::backdrop {
+  animation: info-backdrop-in 220ms ease;
+}
+
+.info-dialog.is-closing {
+  animation: info-dialog-out 160ms ease-in forwards;
+}
+
+.info-dialog.is-closing::backdrop {
+  animation: info-backdrop-out 160ms ease-in forwards;
+}
+
+@keyframes info-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+}
+
+@keyframes info-dialog-out {
+  to {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+}
+
+@keyframes info-backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes info-backdrop-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .info-dialog[open],
+  .info-dialog[open]::backdrop,
+  .info-dialog.is-closing,
+  .info-dialog.is-closing::backdrop {
+    animation: none;
+  }
+}
+
+/* Phones (below 880px): the current card centered in the track, the side
+   padding letting the first and last card reach the center too; the mask
+   fades the track out from the current card's edges to its own left/right
+   edges, so the peeking cards dissolve instead of being cut off (it fades
+   the track's own visible box, not its scrolling content). Desktop's
+   left-aligned version: the 880px block below. */
+.cmd-carousel-track {
+  position: relative;
+  display: flex;
+  gap: var(--cmd-card-gap);
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 calc(50% - var(--cmd-card-w) / 2), #000 calc(50% + var(--cmd-card-w) / 2), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, #000 calc(50% - var(--cmd-card-w) / 2), #000 calc(50% + var(--cmd-card-w) / 2), transparent 100%);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  /* Vertical room for the current card's shadow (an overflow-x scroller
+     clips vertically too). */
+  padding: 14px calc(50% - var(--cmd-card-w) / 2) 26px;
+  scrollbar-width: none;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cmd-carousel-track::-webkit-scrollbar {
+  display: none;
+}
+
+/* Mouse drag (js/commander-carousel.js → js/drag-scroll.js): the current
+   card shows a grab cursor (peeking ones keep the pointer: a click still
+   moves to them); no text selection (the name-only fallback cards).
+   Snapping is off during the drag and its glide after. */
+html:not(.nav-mobile) .cmd-carousel-track.is-draggable {
+  user-select: none;
+}
+
+html:not(.nav-mobile) .cmd-carousel-track.is-draggable .cmd-carousel-slide.is-active {
+  cursor: grab;
+}
+
+.cmd-carousel-track.is-dragging {
+  scroll-snap-type: none;
+}
+
+/* As specific as the grab rule above, and after it, so it wins mid-drag. */
+html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging,
+html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel-slide {
+  cursor: grabbing;
+}
+
+/* border-box: a card with a frame (.fx-rim, below — a wider border) stays
+   exactly as wide as the others, so the cards keep an even step. */
+.cmd-carousel-slide {
+  position: relative;
+  box-sizing: border-box;
+  flex: 0 0 var(--cmd-card-w);
+  aspect-ratio: 488 / 680;
+  scroll-snap-align: center;
+  /* Rounded like the card image itself (a Magic card's corner ≈ 4.75% of
+     its width), measured on the image — the box inside the border
+     (--rim: a frame's width, else the 1px edge) — plus that border: so the
+     inside curve the image is clipped to is exactly the image's own corner,
+     and a frame follows the card's edge all the way round. */
+  border-radius: calc((var(--cmd-card-w) - 2 * var(--rim, 1px)) * 0.0475 + var(--rim, 1px));
+  overflow: hidden;
+  background: rgba(220, 24, 28, 0.06);
+  border: 1px solid var(--hairline);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* transform/opacity/z-index are set per scroll frame by js
+     (applyDepth, the drum effect) — no transition on them, they already
+     follow the scroll continuously. */
+  cursor: pointer;
+  transition: box-shadow 260ms ease;
+  will-change: transform, opacity;
+}
+
+/* Sized to fit the track's padding (14px above, 26px below), which the
+   scroller clips at: 10px above, 26px below. */
+.cmd-carousel-slide.is-active {
+  cursor: default;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22);
+}
+
+.cmd-carousel-track:focus-visible .cmd-carousel-slide.is-active {
+  outline: 2px solid var(--brand-red);
+  outline-offset: 2px;
+}
+
+/* Not on a framed card (.fx-rim): its background is the frame. */
+.cmd-carousel-slide.is-loading:not(.fx-rim) {
+  background: linear-gradient(
+    100deg,
+    color-mix(in srgb, var(--brand-red) 6%, transparent) 30%,
+    color-mix(in srgb, var(--brand-red) 16%, transparent) 50%,
+    color-mix(in srgb, var(--brand-red) 6%, transparent) 70%
+  );
+  background-size: 250% 100%;
+  animation: card-skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.cmd-carousel-slide.has-image {
+  border-color: transparent;
+}
+
+/* No image (not found on Scryfall): the name, in a card-shaped box. */
+.cmd-carousel-fallback {
+  padding: 12px;
+  text-align: center;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.cmd-carousel-slide.is-loading .cmd-carousel-fallback,
+.cmd-carousel-slide.has-image .cmd-carousel-fallback {
+  visibility: hidden;
+}
+
+/* fill, not cover: the box inside the border is a hair off the card's
+   proportions (the border takes the same px from both sides), and cover
+   cropped a px or two off the image's edges — shifting its rounded corners
+   off the box's. The stretch is under 1%, invisible. */
+.cmd-carousel-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  opacity: 0;
+  transition: opacity 240ms ease;
+  user-select: none;
+}
+
+.cmd-carousel-slide.has-image .cmd-carousel-img {
+  opacity: 1;
+}
+
+/* Album cards' special effects (js/commander-carousel.js ALBUM_EFFECTS),
+   on the album's cards and the "?" pop-up's small previews alike
+   (.album-card), the same looks as the player card's (js/card-cosmetics.js):
+   - a frame for the events played with that commander (.fx-rim-1…4:
+     silver → animated foil → gold → mythic orange) — the card's own border,
+     the gradient painted on the border box under a dark padding-box fill, so
+     the image (absolute, inset 0 = the padding box) and the clip
+     (overflow, the inner radius) sit wholly inside it: nothing dark can
+     show through the frame's edge;
+   - a finish over the image for the matches won with it (.fx-art-1…4, the
+     player card's .pc-fx-art / .pc-fx-sparks layers and rules, here over
+     the whole image — no panel to fade out for — and above the image,
+     appended once it loads). A size container, so those layers' cqw scale
+     with the card. */
+.album-card {
+  container-type: inline-size;
+}
+
+/* A faint outer edge (an outline drawn over the frame's outer pixel, which
+   follows the corners): on the white page a light frame's near-white parts
+   would otherwise vanish, leaving only its grey ones — which read as a
+   shadow cut off at the corners. */
+.album-card.fx-rim {
+  border: var(--rim) solid transparent;
+  outline: 1px solid rgba(40, 44, 50, 0.22);
+  outline-offset: -1px;
+}
+
+/* The player card's silver, here evened out: grey-to-light in short bands
+   all the way round, no side left near-white (see the edge above). */
+.album-card.fx-rim-1 {
+  --rim: 4px;
+  background:
+    linear-gradient(#1d1315, #1d1315) padding-box,
+    linear-gradient(135deg, #c9d0d6, #8a939b 20%, #eef1f3 40%, #9aa3ab 60%, #e3e7ea 80%, #8a939b) border-box;
+}
+
+.album-card.fx-rim-2 {
+  --rim: 4px;
+  background:
+    linear-gradient(#1d1315, #1d1315) padding-box,
+    conic-gradient(from var(--pc-fx-angle), #ffffff, #c9f3ff 8%, #b9c4ff 18%, #e9b8ff 30%, #ffd3e8 42%, #fff2c2 55%, #c6ffe2 68%, #b8eaff 82%, #ffffff) border-box;
+  animation: pc-fx-turn 5s linear infinite;
+}
+
+.album-card.fx-rim-3 {
+  --rim: 4px;
+  background:
+    linear-gradient(#1d1315, #1d1315) padding-box,
+    conic-gradient(from var(--pc-fx-angle), #fffbe6, #ffe17d 8%, #f0bd3c 22%, #c8901a 50%, #f0bd3c 78%, #ffe17d 92%, #fffbe6) border-box;
+  animation: pc-fx-turn 4s linear infinite;
+}
+
+.album-card.fx-rim-4 {
+  --rim: 4px;
+  background:
+    linear-gradient(#1d1315, #1d1315) padding-box,
+    conic-gradient(from var(--pc-fx-angle), #ffe2c4, #ffab5e 8%, #f26b1d 22%, #b8400c 50%, #f26b1d 78%, #ffab5e 92%, #ffe2c4) border-box;
+  animation: pc-fx-turn 4s linear infinite;
+}
+
+.album-card .pc-fx-art {
+  z-index: 1;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+/* The "?" pop-up's small blank album card: a neutral "art" (so the foil
+   has something to shine on) inside its frame. */
+.album-preview {
+  position: relative;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 52px;
+  aspect-ratio: 488 / 680;
+  overflow: hidden;
+  border-radius: 5px;
+  background: #1d1315;
+}
+
+.album-preview-art {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, #46577a, #7a5a8c 55%, #a06a4a);
+}
+
+/* The sparks' 1-2px dots would vanish at this size: bigger, on a tighter
+   tile, fading out later. */
+.album-preview .pc-fx-sparks {
+  --sparks-tile-w: 28px;
+  --sparks-tile-h: 36px;
+  background-image:
+    radial-gradient(circle at 25% 30%, #fff3c4 0 1.5px, rgba(255, 205, 90, 0.7) 2.5px, transparent 4px),
+    radial-gradient(circle at 75% 75%, #ffe48a 0 1.5px, rgba(255, 190, 60, 0.7) 2.5px, transparent 4px);
+  -webkit-mask-image: linear-gradient(to top, #000 20%, transparent);
+  mask-image: linear-gradient(to top, #000 20%, transparent);
+  animation-duration: 3s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .album-card.fx-rim {
+    animation: none;
+  }
+}
+
+.cmd-carousel-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: -8px;
+}
+
+/* 3-dot window (js renderDots): current card red, its neighbours a
+   lighter red — both from --brand-red, so on the hero-accent pages (player,
+   account) they take the hero's colour. */
+.cmd-carousel-dots .chart-carousel-dot {
+  background: color-mix(in srgb, var(--brand-red) 30%, transparent);
+}
+
+.cmd-carousel-dots .chart-carousel-dot.is-active {
+  background: var(--brand-red);
+}
+
+/* Left-aligned at every width, like the page's own stat tiles above. */
+.cmd-carousel-stats {
+  min-width: 0;
+}
+
+.cmd-carousel-name {
+  color: var(--text-title);
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1.35;
+  margin-bottom: 12px;
+  overflow-wrap: anywhere;
+}
+
+.cmd-carousel-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+/* Both tiles' values (count and date) at the same, smaller size. Two
+   classes: .stat-tile-value comes later in this file and would win over a
+   single-class rule. */
+.stat-tile-value.cmd-carousel-stat-value {
+  font-size: 1.15rem;
+  line-height: 1.3;
+  margin-top: 8px;
+}
+@media (min-width: 880px) {
+  .cmd-carousel {
+    /* About commander.html's own desktop card, whose height js stretches
+       from the title to the stat tiles, so it has no fixed size to copy. */
+    --cmd-card-w: 260px;
+    --cmd-card-gap: 16px;
+  }
+
+  /* The current card plus room for the next one's steeply turned peek
+     (js applyDepth); the stats below it, in the column's whole width
+     (player.html's album sits in half the page, beside Storico partite). */
+  .cmd-carousel-main {
+    width: 100%;
+    max-width: calc(var(--cmd-card-w) * 1.7);
+  }
+
+  /* Desktop: the current card snapped to the left — lined up with the
+     page's left margin — the right padding letting the last card reach it
+     too. The track reaches 20px further left than that (negative margin,
+     same padding, snapped past it: scroll-padding), room for the card's
+     shadow, which the scroller clips at its edges like everything in it.
+     The mask only fades the right side, from the current card's right
+     edge; a card leaving on the left gets its own moving fade from js
+     (applyDepth), transparent from the card's slot on — so nothing of it
+     shows in that room. */
+  .cmd-carousel-track {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(var(--cmd-card-w) + 20px), transparent 100%);
+    mask-image: linear-gradient(to right, #000 calc(var(--cmd-card-w) + 20px), transparent 100%);
+    margin-left: -20px;
+    padding: 14px calc(100% - var(--cmd-card-w)) 26px 20px;
+    scroll-padding-left: 20px;
+  }
+
+  .cmd-carousel-slide {
+    scroll-snap-align: start;
+  }
+
+  /* Cast down-right, sized to fit the track's room: 13px to the left
+     (of 20), 10px above (of 14), 26px below (of 26). */
+  .cmd-carousel-slide.is-active {
+    box-shadow: 5px 8px 18px rgba(0, 0, 0, 0.22);
+  }
+
+  /* Drawn inside the card: outside, its left side would be clipped. */
+  .cmd-carousel-track:focus-visible .cmd-carousel-slide.is-active {
+    outline-offset: -2px;
+  }
+
+  /* Centered under the current card (at the left), not the whole track. */
+  .cmd-carousel-nav {
+    width: var(--cmd-card-w);
+  }
+
+}
+
+:root[data-theme="dark"] .cmd-carousel-slide.is-loading:not(.fx-rim) {
+  background-image: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.04) 30%,
+    color-mix(in srgb, var(--brand-red-deep) 14%, transparent) 50%,
+    rgba(255, 255, 255, 0.04) 70%
+  );
+}
+
+:root[data-theme="dark"] .cmd-carousel-dots .chart-carousel-dot {
+  background: rgba(255, 106, 110, 0.35);
+}
+
+:root[data-theme="dark"] .cmd-carousel-dots .chart-carousel-dot.is-active {
+  background: #ff6a6e;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cmd-carousel-slide,
+  .cmd-carousel-img {
+    transition: none;
+  }
+
+  .cmd-carousel-slide.is-loading {
+    animation: none;
+  }
+}
+
+@keyframes commander-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* perspective (not directly on .commander-card-flipper) is what gives the
+   flip below its 3D depth rather than looking like a flat horizontal
+   squash — kept on its own wrapper, one level below .commander-card-figure,
+   rather than on the figure itself: perspective establishes a new
+   stacking context on whatever it's set on, and .commander-card-flip-btn
+   is a sibling of this wrapper, not a child of it — keeping the two out
+   of the same stacking context is what actually fixed the button not
+   being reliably clickable over the card (pointer-events: none on the
+   svg, below, wasn't enough on its own).
+
+   The entrance animation lives here too, for the exact same reason —
+   putting it on .commander-card-figure itself (tried first) reintroduced
+   the same button-not-clickable bug, since a CSS Animation that animates
+   transform makes the browser treat its target as needing its own
+   stacking context for as long as animation-fill-mode holds it there,
+   regardless of the transform settling back to none. Removing the hidden
+   attribute (js/commander-detail.js, once both the image and the Winrate
+   stats are ready) inserts this into the render tree fresh, which is what
+   makes the animation actually play — it wouldn't if this had been
+   visible the whole time. */
+.commander-card-perspective {
+  perspective: 1200px;
+  animation: commander-card-in 450ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Double-faced commanders only (js/commander-detail.js only reveals the
+   flip button when a second face actually exists) — front and back are
+   both real <img> elements stacked in the same spot the whole time, not
+   swapped on click, so the 3D rotation below has something physically "on
+   the other side" to reveal rather than needing to cross-fade/swap
+   mid-animation. */
+.commander-card-flipper {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 600ms cubic-bezier(0.4, 0.2, 0.2, 1);
+}
+
+.commander-card-flipper.is-flipped {
+  transform: rotateY(180deg);
+}
+
+/* The space it takes is imposed, not left to the downloaded image: always
+   Scryfall's card proportions (488×680, same as the loading placeholder and
+   the player card), one side set (the JS height on desktop, the width on
+   phones) and the other following from this ratio; an image that ever came
+   in other proportions is cropped to fill the box (object-fit: cover), not
+   resized around. */
+.commander-card-face {
+  display: block;
+  width: auto;
+  height: auto;
+  aspect-ratio: 488 / 680;
+  object-fit: cover;
+  /* A cap this low would fight the JS-set height above: with width: auto
+     and an explicit height, the browser computes width from the
+     aspect-ratio — if that computed width would exceed max-width, the
+     browser shrinks the rendered height back down to match the capped
+     width instead, undershooting the actual target height. 320px is
+     comfortably above what the real height (title-to-stat-tiles) implies,
+     so it only acts as a safety ceiling, not a normal constraint. */
+  max-width: 320px;
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+  /* The face rotated away from the viewer (whichever one isn't currently
+     showing) renders as literally invisible instead of a mirror-flipped
+     image of itself. */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.commander-card-face-front {
+  /* In normal flow — its own natural size (height set by JS, width
+     derived from that) is what .commander-card-flipper itself sizes to,
+     since the flipper is otherwise just a plain, unsized div. */
+  position: relative;
+}
+
+.commander-card-face-back {
+  /* width/height: 100% (not auto) against the flipper's own definite
+     size — inset: 0 alone with width/height: auto (tried first) relies on
+     browsers correctly "stretching" an absolutely positioned <img> to fill
+     its containing block, which — like the height: 100% flex-stretch
+     attempt earlier on this same page — turned out unreliable in practice
+     (rendered oversized, close to the image's own intrinsic size instead
+     of matching the front face). Percentage sizing against a definite
+     ancestor size is the more reliably-supported path. max-width: none
+     since .commander-card-face's own 320px cap is meant for the
+     JS-height-driven front face, not relevant to this one sizing off it.
+     Pre-rotated 180deg from the start: with the flipper itself also
+     rotating, this face goes 180->360deg (i.e. back to facing the viewer)
+     in lockstep with the front's 0->180deg (i.e. away from the viewer). */
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  transform: rotateY(180deg);
+}
+
+.commander-card-flip-btn {
+  position: absolute;
+  top: 50%;
+  right: -14px;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  /* Brand red, not a neutral dark tint — the site's own accent color
+     family, same reasoning as .badge-status-open elsewhere: any small
+     floating accent like this should read as "part of the site" rather
+     than a generic dark UI chrome color. */
+  background: rgba(220, 24, 28, 0.78);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: var(--shadow-card-hover);
+  transition: background 150ms ease, transform 150ms ease;
+}
+
+/* Same fix as .field[hidden]/.icon-swatch-row[hidden] elsewhere — this
+   rule's own display: flex above has the same specificity as the browser
+   default [hidden] { display: none; }, but author styles always beat
+   user-agent ones regardless of specificity, so without this override the
+   hidden attribute was silently doing nothing and the button showed for
+   every commander, not just double-faced ones. */
+.commander-card-flip-btn[hidden] {
+  display: none;
+}
+
+.commander-card-flip-btn:hover {
+  background: rgba(220, 24, 28, 0.95);
+  transform: translateY(-50%) scale(1.06);
+}
+
+.commander-card-flip-btn svg {
+  width: 18px;
+  height: 18px;
+  /* Guarantees every click within the button's box — icon included — is
+     handled by the <button> itself, not intercepted by the svg/its paths
+     (a common source of "button not clickable right on the icon" bugs). */
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+
+  /* No longer floating beside anything at this width — an in-flow block
+     below the name, centred on the page like player.html's card: auto
+     margins centre it in .page-heading, which starts right of the back
+     button (.breadcrumb-link's 44px + .page-heading-row's 14px gap), and
+     left: -29px (half of that) moves it back to the page's own centre. The
+     figure itself stays card-sized (not stretched across the line):
+     .commander-card-flip-btn is position: absolute and needs *this*
+     element, card-sized, as its anchor — hence position: relative here, not
+     static, rather than whatever positioned ancestor is next up the tree
+     (.page-heading, spanning the full page width). */
+  .commander-card-figure {
+    position: relative;
+    top: auto;
+    right: auto;
+    left: -29px;
+    margin: 14px auto 0;
+  }
+
+  /* Same in-flow spot and width as the card below the title — reserving
+     its full height from the start is what stops the rest of the page
+     jumping down once the image arrives. */
+  .commander-card-skeleton {
+    position: relative;
+    top: auto;
+    right: auto;
+    left: -29px;
+    margin: 14px auto 0;
+    width: min(260px, 80vw);
+    height: auto;
+  }
+
+  /* min(260px, 80vw) rather than a flat 260px — that was wide enough to
+     overflow a narrow phone's actual viewport once page padding is
+     accounted for, forcing the whole page to become horizontally
+     scrollable (and, as a side effect, making the browser's own address
+     bar chrome show/hide oddly, reacting to that unexpected horizontal
+     scroll capability). 80vw leaves a comfortable margin on either side
+     so it still reads as "centered", not edge-to-edge. */
+  .commander-card-face {
+    width: min(260px, 80vw);
+    height: auto;
+    max-width: none;
+  }
+
+  /* Bigger touch target on mobile than the desktop 36px — comfortably
+     tappable without needing to aim, now that the card itself is bigger
+     here too. right: -14px (desktop) is kept as-is; it's already a
+     reasonable overhang at this size. */
+  .commander-card-flip-btn {
+    width: 48px;
+    height: 48px;
+  }
+
+  .commander-card-flip-btn svg {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+.page-subtitle {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin: -14px 0 22px;
+}
+
+.page-loading,
+.page-empty {
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 6px 0;
+}
+
+.page-error {
+  color: var(--brand-red-deep);
+  font-weight: 700;
+  padding: 6px 0;
+}
+
+/* js/ui.js showError: the message, its "Riprova" button under it. */
+.page-error-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.page-error-box .page-error {
+  margin: 0;
+  padding: 0;
+}
+
+/* Sits to the left of the page's <h1> (or h3, in admin's subviews) — see
+   .page-heading-row below, which wraps the two together. Vertically
+   centered (desktop) against the title, or the title+subtitle pair
+   together where a page has one (e.g. event.html's date/meta line) — see
+   .page-heading-row's own mobile override, though, for the one case
+   (commander.html) where centering isn't actually what's wanted. */
+.page-heading-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+@media (max-width: 640px) {
+  /* On the commander detail page specifically, the card image stacks
+     below the title on mobile (.commander-card-figure's own mobile rule),
+     making .page-heading's box a lot taller than just the title line —
+     align-items: center (above) was centering the button against that
+     *whole* stacked block, landing it next to the card image instead of
+     the name. flex-start aligns it to the top of whatever's in there
+     instead — the title, in every case — which reads correctly here and
+     doesn't visibly change anything on the pages that don't have this
+     tall-stacked-content situation (their own .page-heading is barely
+     taller than the title's own line height either way). */
+  .page-heading-row {
+    align-items: flex-start;
+  }
+}
+
+.page-heading-row .page-heading,
+.page-heading-row .page-heading-text {
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.page-heading-row .page-subtitle {
+  margin: 4px 0 0;
+}
+
+@media (min-width: 641px) {
+
+  .page-heading-text > .page-heading {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  /* Across both columns: in the first alone, a subtitle longer than the
+     title (event.html's "date · Lega: …") widened that column and pushed
+     the pill (results links, "In corso") away from the title's end. */
+  .page-heading-text > .page-subtitle {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+
+/* Round icon-only back button — the destination ("Tutti i comandanti" etc.)
+   is preserved as aria-label/title on the link itself rather than visible
+   text, since there's no text left in the DOM to announce it otherwise.
+   44px is the usual minimum comfortable touch-target size. */
+.breadcrumb-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--brand-red);
+  color: #fff;
+  text-decoration: none;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-card);
+  transition: background 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+}
+
+.breadcrumb-link:hover {
+  background: var(--brand-red-deep-2);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-card-hover);
+}
+
+/* Smaller in admin's h3 subview headers than the public h1 pages — a
+   full 44px circle next to h3's smaller text made the size mismatch
+   itself read as misalignment, even once actually centered. */
+.page-heading-row:has(h3) .breadcrumb-link {
+  width: 32px;
+  height: 32px;
+}
+
+.page-heading-row:has(h3) .breadcrumb-link svg {
+  width: 16px;
+  height: 16px;
+}
+
+.breadcrumb-link svg {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  /* The chevron shape is mathematically centered in its own 24x24 viewBox,
+     but reads as sitting slightly right of center once flex-centered in
+     the circle — its "point" concentrates visual weight on the left side,
+     the open "V" end leaves more empty space on the right, a common
+     optical-vs-geometric mismatch with chevron/arrow glyphs specifically.
+     Nudged left to compensate for how it actually looks, not just its
+     coordinates. */
+  transform: translateX(-1px);
+}
+
+/* Stat tiles */
+
+.stat-tile {
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card-sm);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: var(--shadow-card);
+  padding: 18px;
+  backdrop-filter: blur(10px);
+  /* Fades up like the site's other reveal-on-load cards. */
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.stat-tile-label {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.stat-tile-value {
+  color: var(--brand-red);
+  font-size: 2.1rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-top: 4px;
+}
+
+/* league.html's hero, like player.html's (.profile-hero.detail-hero
+   .league-hero, js/league-detail.js): the name, "In corso" / "Conclusa" and
+   the dates under it, then the numbers. */
+.league-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin-top: 12px;
+  color: rgba(255, 255, 255, 0.82);
+  font-weight: 700;
+}
+
+/* event.html's hero (.event-hero, js/event-detail.js), built like the
+   league's: the results / decklists links right after the name (wrapping
+   to their own line when the name leaves no room), the date and the league
+   (a link) in the meta line under them. */
+.event-hero-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+}
+
+.event-hero-title-row .profile-hero-name {
+  min-width: 0;
+}
+
+@media (max-width: 820px) {
+  .event-hero-title-row {
+    justify-content: center;
+  }
+}
+
+.event-hero-meta a {
+  color: #fff;
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.45);
+  text-underline-offset: 3px;
+}
+
+.event-hero-meta a:hover {
+  text-decoration-color: #fff;
+}
+
+#event-results:not([hidden]) {
+  display: inline-flex;
+  align-items: center;
+  text-shadow: none;
+}
+
+#event-results .results-links {
+  margin-left: 0;
+}
+
+/* "In corso" / "Conclusa" in the hero: the site's status chip
+   (.status-chip, below with .badge-status) as see-through glass on the art
+   — white text and edge, a slight blur; the dot keeps its colours. */
+.league-hero-meta .badge-status.status-chip,
+:root[data-theme="dark"] .league-hero-meta .badge-status.status-chip {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  text-shadow: none;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.league-hero-meta .badge-status-closed.status-chip::before,
+:root[data-theme="dark"] .league-hero-meta .badge-status-closed.status-chip::before {
+  background: rgba(255, 255, 255, 0.55);
+}
+
+/* A running league's "In corso" after its start date (js/league-detail.js
+   leagueDateRange: "26 set 2026 – In corso"): plain text, like the date —
+   no chip, no dot. (:root and the id: over the chip's own rules, dark mode
+   included.) The "Conclusa" chip standing alone keeps its look. */
+:root .league-hero-meta #league-dates .badge-status.status-chip {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:root .league-hero-meta #league-dates .badge-status.status-chip::before {
+  display: none;
+}
+
+/* The dates holding the chip ("12 set 2026 – ● In corso"): on one line,
+   centred on each other. */
+#league-dates:not([hidden]) {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Up to 820px the hero is one centred column. */
+@media (max-width: 820px) {
+  .league-hero-meta {
+    justify-content: center;
+  }
+}
+
+/* The numbers all white: no winrate among them, so no red pill on the
+   first one. */
+#league-stats .stat-tile:first-child .stat-tile-value,
+:root[data-theme="dark"] #league-stats .stat-tile:first-child .stat-tile-value,
+#event-stats .stat-tile:first-child .stat-tile-value,
+:root[data-theme="dark"] #event-stats .stat-tile:first-child .stat-tile-value {
+  align-self: auto;
+  padding: 0.12em 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  text-shadow: inherit;
+}
+
+/* An event's external links (js/results-link.js) — Bacheca "Ultimi eventi"
+   rows and beside event.html's title: a round white Moxfield-logo button
+   and a white pill with mtgtop8's wordmark (dark blue on transparent, only
+   readable on white), both with the brand-red outline, side by side in
+   .results-links (either one alone when the event has only that link).
+   32px tall, 36px on touch devices (an easier tap target). */
+.results-links {
+  --results-link-h: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 0.5em;
+  vertical-align: middle;
+}
+
+html.nav-mobile .results-links {
+  --results-link-h: 36px;
+}
+
+.results-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--results-link-h);
+  box-sizing: border-box;
+  border: 2px solid var(--brand-red);
+  border-radius: var(--radius-pill);
+  background: #fff;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 150ms ease;
+}
+
+/* Hover: color only, no lift (same as the badges). */
+.results-link:hover,
+.results-link:focus-visible {
+  background: #fbe3e3;
+  text-decoration: none;
+}
+
+.results-link img {
+  display: block;
+}
+
+.results-link-moxfield {
+  width: var(--results-link-h);
+}
+
+.results-link-moxfield img {
+  width: calc(var(--results-link-h) - 11px);
+  height: calc(var(--results-link-h) - 11px);
+}
+
+.results-link-top8 {
+  padding: 0 6px;
+}
+
+/* ~11px tall → ~49px wide (the wordmark is 243×55). */
+.results-link-top8 img {
+  width: auto;
+  height: calc(var(--results-link-h) * 0.35);
+}
+
+/* A player's handle shown inline next to their name (leaderboards, match
+   lists) — same muted tone as .entity-card-meta, but kept in whatever
+   case it was actually entered in admin, not forced uppercase. */
+.player-handle {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+/* Leghe & Eventi (events.html, js/events-page.js): a board of tiles —
+   4 columns (2 below 820px), the rows 118px. The league in progress big
+   (2×2, dark with a red glow, a progress ring), the next event solid red,
+   the others white with a firm edge like the site's lists; the concluded
+   leagues below in a grid of uniform tiles (as many as there are). */
+#events-board {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* One league in progress per board: its big tile (2×2) on the left, its
+   next and latest event stacked on the right (2 columns each; one alone
+   two rows tall; with neither, the big tile the whole row). Phones /
+   narrower: the big tile on top, the two events side by side under it. */
+.ev-board {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: 118px;
+  gap: 14px;
+}
+
+.ev-board > .ev-tile:not(.ev-big) {
+  grid-column: span 2;
+}
+
+.ev-board > .ev-tall {
+  grid-row: span 2;
+}
+
+.ev-board.is-alone > .ev-big {
+  grid-column: 1 / -1;
+}
+
+/* A computer: the league's tile wider (~60%), its next / latest event in
+   the narrower column beside it, one over the other — fuller than at half
+   the row each, where a date and a name left them mostly empty. The
+   Topdeck series' board below in the same columns (its tile as wide as the
+   league's). */
+@media (min-width: 821px) {
+  .ev-board {
+    grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  }
+
+  /* (.ev-tile.ev-big: over the Topdeck board's own span 2, later in the
+     file.) */
+  .ev-board > .ev-big,
+  .ev-board.is-secondary.is-alone > .ev-tile.ev-big {
+    grid-column: 1;
+  }
+
+  .ev-board > .ev-tile:not(.ev-big) {
+    grid-column: 2;
+  }
+
+  .ev-board.is-alone:not(.is-secondary) > .ev-big {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Inside the next / latest event tiles (a computer): the date and name on
+   the left, on the right the start time (big) or the players and the
+   results links — under them when there isn't room beside. */
+.ev-event-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px 14px;
+}
+
+.ev-event-main {
+  min-width: 0;
+}
+
+.ev-event-side {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.ev-event-time {
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.ev-event-players {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.ev-event-side .results-links {
+  margin-left: 0;
+}
+
+/* Phones (the board's two narrow tiles side by side): only the date and
+   the name, as before — no weekday, no "tra N giorni", no time, players or
+   links (too crowded at half the screen). */
+@media (max-width: 820px) {
+  .ev-board .ev-date-wd,
+  .ev-board .ev-k-when,
+  .ev-board .ev-event-side {
+    display: none;
+  }
+}
+
+@media (max-width: 820px) {
+  .ev-board {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ev-board > .ev-tile:not(.ev-big) {
+    grid-column: span 1;
+  }
+
+  .ev-board > .ev-tall {
+    grid-column: 1 / -1;
+    grid-row: span 1;
+  }
+}
+
+.ev-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(154, 28, 32, 0.18);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(80, 10, 14, 0.08);
+  color: var(--text-title);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+a.ev-tile:hover,
+button.ev-tile:hover {
+  box-shadow: 0 8px 20px rgba(80, 10, 14, 0.14);
+  text-decoration: none;
+  transform: translateY(-2px);
+}
+
+button.ev-tile {
+  cursor: pointer;
+}
+
+.ev-tile:focus-visible {
+  outline: 3px solid var(--brand-red);
+  outline-offset: 3px;
+}
+
+.ev-tile-k {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.ev-tile-t {
+  overflow: hidden;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ev-tile-s {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 3px;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ev-ico {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+}
+
+.ev-date {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+
+/* The next / latest event's name, under its date (a size down there, so
+   date, name and the line under them fit the tile). */
+.ev-event-name {
+  margin-top: 4px;
+  overflow: hidden;
+  font-size: 1.12rem;
+  font-weight: 800;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ev-tile:has(.ev-event-name) .ev-date {
+  font-size: 1.6rem;
+}
+
+/* Numbers in a row: each a big number over a small label. */
+.ev-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 26px;
+}
+
+.ev-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.ev-stat b {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.ev-stat b .ev-ico {
+  width: 18px;
+  height: 18px;
+}
+
+.ev-stat span {
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  opacity: 0.6;
+  text-transform: uppercase;
+}
+
+/* The league in progress: a light tile like the others, set apart by its
+   label on a red band across the top (the top bar's gradient), its
+   numbers in red under a rule,
+   the ring with events played on the right. */
+.ev-big {
+  grid-column: span 2;
+  grid-row: span 2;
+  border: 1px solid rgba(220, 24, 28, 0.28);
+  background: #fff;
+  color: var(--text-title);
+}
+
+.ev-big > * {
+  position: relative;
+}
+
+/* "Lega in corso" / "Serie Topdeck in corso": the band, edge to edge over
+   the tile's padding. Not on the secondary board's tile (the Topdeck series
+   under a league: a step down, its label plain). */
+.ev-big .ev-tile-k {
+  font-size: 0.88rem;
+  letter-spacing: 0.14em;
+}
+
+.ev-board:not(.is-secondary) > .ev-big .ev-tile-k {
+  margin: -16px -16px 0;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #7e0c13, #dc181c);
+  color: #fff;
+  font-size: 0.78rem;
+}
+
+.ev-board:not(.is-secondary) > .ev-big .ev-name-block {
+  margin-top: 14px;
+}
+
+.ev-board:not(.is-secondary) > .ev-big .ev-stat b {
+  color: var(--brand-red-deep);
+}
+
+.ev-name-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* One line, fitted to its room by js/events-page.js (fitBigNames), "…" if
+   it still doesn't fit at the smallest size. */
+.ev-big .ev-tile-t {
+  max-width: calc(100% - 170px);
+  font-size: 1.7rem;
+}
+
+.ev-since {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.ev-big .ev-stats {
+  max-width: calc(100% - 170px);
+  padding-top: 14px;
+  border-top: 1px solid rgba(154, 28, 32, 0.14);
+}
+
+/* No ring (the Topdeck series, with no set number of events): the name and
+   the numbers have the tile's whole width. */
+.ev-big.no-ring .ev-tile-t,
+.ev-big.no-ring .ev-stats {
+  max-width: none;
+}
+
+/* Centred in the tile under the band (half its ~37px lower). */
+.ev-ring {
+  position: absolute;
+  top: 50%;
+  right: 22px;
+  width: 140px;
+  height: 140px;
+  margin-top: -52px;
+}
+
+.ev-ring svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.ev-ring circle {
+  fill: none;
+  stroke-width: 10;
+}
+
+.ev-ring-track {
+  stroke: rgba(220, 24, 28, 0.12);
+}
+
+.ev-ring-fill {
+  stroke: var(--brand-red);
+  stroke-linecap: round;
+}
+
+.ev-ring-label {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.ev-ring-label small {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+}
+
+/* Phones: kept to the two rows of the board (not taller) — the name and
+   the numbers a size down, the ring small in the top-right corner. */
+@media (max-width: 480px) {
+  .ev-big {
+    padding: 14px 16px;
+  }
+
+  .ev-board:not(.is-secondary) > .ev-big .ev-tile-k {
+    margin-top: -14px;
+  }
+
+  .ev-name-block {
+    gap: 3px;
+  }
+
+  /* Its size fitted to the name by js/events-page.js (fitBigNames: up to
+     28px when there's room on one line). */
+  .ev-big .ev-tile-t {
+    max-width: calc(100% - 90px);
+    font-size: 1.2rem;
+  }
+
+  .ev-since {
+    font-size: 0.74rem;
+  }
+
+  .ev-big .ev-stats {
+    max-width: none;
+    gap: 8px 20px;
+    padding-top: 12px;
+  }
+
+  .ev-big .ev-stat b {
+    font-size: 1.4rem;
+  }
+
+  .ev-big .ev-stat b .ev-ico {
+    width: 18px;
+    height: 18px;
+  }
+
+  .ev-big .ev-stat span {
+    font-size: 0.64rem;
+    letter-spacing: 0.07em;
+  }
+
+  /* In the top-right corner under the band. */
+  .ev-ring {
+    top: 48px;
+    right: 12px;
+    width: 76px;
+    height: 76px;
+    margin: 0;
+  }
+
+  .ev-ring-label {
+    font-size: 0.95rem;
+  }
+
+  .ev-ring-label small {
+    font-size: 0.52rem;
+  }
+}
+
+/* "Prossimamente" (no next event scheduled yet) in the date's place: a
+   size down, on one line — smaller still where the tile is half the
+   screen (narrower than 820px). */
+.ev-tile.ev-next.is-soon .ev-date {
+  overflow: hidden;
+  font-size: 1.4rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 820px) {
+  .ev-tile.ev-next.is-soon .ev-date {
+    font-size: 1.1rem;
+  }
+}
+
+/* The next event: solid red, the date big, a pulsing white dot. */
+.ev-next {
+  border: 0;
+  background: var(--brand-red);
+  color: #fff;
+}
+
+.ev-next .ev-tile-k {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.ev-pulse {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #fff;
+  animation: ev-pulse 2s ease-out infinite;
+}
+
+@keyframes ev-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+  }
+
+  70%,
+  100% {
+    box-shadow: 0 0 0 6px rgba(255, 255, 255, 0);
+  }
+}
+
+/* The Topdeck series in progress: a secondary group, under the league's —
+   just its own tile, one row (no event tiles of its own), everything a
+   step down: light (not the league's dark one with the red glow), the
+   name smaller and no "dal …", the numbers smaller, no ring. */
+.ev-board.is-secondary {
+  grid-auto-rows: 150px;
+}
+
+.ev-board.is-secondary > .ev-big {
+  grid-row: span 1;
+  border: 1px solid rgba(154, 28, 32, 0.18);
+  background: #fff;
+  color: var(--text-title);
+}
+
+.ev-board.is-secondary > .ev-big::before {
+  display: none;
+}
+
+/* As wide as the league's tile above it (half the row on desktop), not the
+   whole row. */
+.ev-board.is-secondary.is-alone > .ev-big {
+  grid-column: span 2;
+}
+
+/* Its label ("Serie Topdeck in corso") on a band across the top too, like
+   the league's, but a step down: thinner, a light red tint with a red
+   hairline under it, the text dark red — not the league's solid red. */
+.ev-board.is-secondary .ev-big .ev-tile-k {
+  margin: -16px -16px 0;
+  padding: 6px 16px;
+  border-bottom: 1px solid rgba(154, 28, 32, 0.2);
+  background: color-mix(in srgb, var(--brand-red) 13%, #fff);
+  color: var(--brand-red-deep);
+  font-size: 0.7rem;
+}
+
+:root[data-theme="dark"] .ev-board.is-secondary .ev-big .ev-tile-k {
+  border-bottom-color: rgba(255, 110, 110, 0.22);
+  background: rgba(220, 24, 28, 0.2);
+}
+
+.ev-board.is-secondary .ev-big .ev-name-block {
+  margin-top: 10px;
+}
+
+@media (max-width: 480px) {
+  .ev-board.is-secondary .ev-big .ev-tile-k {
+    margin-top: -14px;
+  }
+}
+
+/* No ring here (no set number of events): the name and the numbers have
+   the tile's whole width. */
+.ev-board.is-secondary .ev-big .ev-tile-t {
+  max-width: none;
+  font-size: 1.3rem;
+}
+
+.ev-board.is-secondary .ev-since {
+  display: none;
+}
+
+.ev-board.is-secondary .ev-big .ev-stats {
+  max-width: none;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.ev-board.is-secondary .ev-big .ev-stat b {
+  font-size: 1.1rem;
+}
+
+.ev-board.is-secondary .ev-big .ev-stat b .ev-ico {
+  width: 15px;
+  height: 15px;
+}
+
+.ev-board.is-secondary .ev-big .ev-stat span {
+  font-size: 0.6rem;
+}
+
+@media (max-width: 820px) {
+  .ev-board.is-secondary > .ev-big {
+    grid-column: 1 / -1;
+  }
+
+  /* Stacked, the series' tile read as one more of the league's: the two
+     boards set apart — more room between them, a line across. */
+  .ev-board + .ev-board {
+    margin-top: 10px;
+    padding-top: 28px;
+    border-top: 1px solid var(--hairline);
+  }
+}
+
+:root[data-theme="dark"] .ev-board + .ev-board {
+  border-top-color: rgba(255, 255, 255, 0.12);
+}
+
+:root[data-theme="dark"] .ev-board.is-secondary > .ev-big {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Leghe concluse: uniform tiles, as many as there are; the standalone
+   events' tile dashed. */
+#events-archive-section {
+  margin-top: 34px;
+}
+
+/* "Archivio", its subtitle close under it. */
+#events-archive-section h2 {
+  margin-bottom: 4px;
+}
+
+.ev-archive-subtitle {
+  margin: 0 0 14px;
+}
+
+.ev-archive {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 16px;
+}
+
+.ev-archive .ev-tile {
+  min-height: 138px;
+  padding: 18px 20px;
+  background: #f6f2f2;
+}
+
+/* Its label ("Conclusa" / "Eventi standalone") and year / date tag a size
+   up too. */
+.ev-archive .ev-tile-k {
+  font-size: 0.8rem;
+}
+
+.ev-archive .ev-tag {
+  padding: 3px 10px;
+  font-size: 0.8rem;
+}
+
+.ev-archive .ev-tile-t {
+  font-size: 1.4rem;
+  line-height: 1.15;
+  white-space: normal;
+}
+
+.ev-archive .ev-tile.is-standalone {
+  border-style: dashed;
+  background: #fff;
+}
+
+.ev-tag {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: rgba(154, 28, 32, 0.08);
+  color: var(--brand-red-deep);
+  letter-spacing: 0.04em;
+}
+
+/* The standalone events' list (a dialog): one row each, a link to it. */
+.ev-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ev-list-row {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  border: 1px solid rgba(154, 28, 32, 0.18);
+  border-radius: 12px;
+  color: var(--text-title);
+  text-decoration: none;
+}
+
+.ev-list-row:hover {
+  border-color: rgba(154, 28, 32, 0.36);
+  background: rgba(220, 24, 28, 0.05);
+  text-decoration: none;
+}
+
+.ev-list-date {
+  color: var(--brand-red-deep);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.ev-list-name {
+  overflow: hidden;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ev-list-row .ev-tile-s {
+  margin: 0;
+}
+
+:root[data-theme="dark"] .ev-tile {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+}

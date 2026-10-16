@@ -8,6 +8,7 @@ import { haptic } from "./haptics.js";
 
 export function initTabs(tabsEl) {
   const buttons = tabsEl ? [...tabsEl.querySelectorAll(".profile-tab[data-tab]")] : [];
+  // (A hidden tab is skipped: the first shown one opens to start with.)
   const select = (panelId) => {
     for (const b of buttons) {
       const on = b.dataset.tab === panelId;
@@ -22,5 +23,7 @@ export function initTabs(tabsEl) {
       select(b.dataset.tab);
     });
   }
-  if (buttons.length) select(buttons[0].dataset.tab);
+  const first = buttons.find((b) => !b.hidden);
+  if (first) select(first.dataset.tab);
+  return { select };
 }
