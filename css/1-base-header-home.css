@@ -2374,11 +2374,11 @@ html.app-header .home-events-head {
 
 /* Più giocati: the charts' card, its carousel controls under it — and
    event.html's Meta tab, the same card (js/event-detail.js renderMeta). */
-:is(.home-board, .event-panels) .dashboard-card-commanders {
+:is(.home-board, .event-panels, .league-lists) .dashboard-card-commanders {
   margin-bottom: 0;
 }
 
-:is(.home-board, .event-panels) .chart-carousel-nav {
+:is(.home-board, .event-panels, .league-lists) .chart-carousel-nav {
   margin: 14px auto 0;
 }
 

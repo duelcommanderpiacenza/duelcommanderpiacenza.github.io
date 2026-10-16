@@ -232,17 +232,21 @@
   gap: 10px;
 }
 
-/* league.html's Classifica: on touch screens, where the panels have no
-   titles (the "?" above goes with the hidden <h2>), a "?" on the switcher's
-   corner instead (below). */
+/* league.html's Classifica: its scoring "?" on the switcher's corner
+   (below — the panels have no titles). */
 .help-toggle-btn.league-help-corner {
   display: none;
 }
 
-/* Touch screens: on the Eventi / Classifica switcher's top-right corner,
+/* On the Eventi / Classifica / Meta switcher's top-right corner (every screen),
    like the player card's "?" — shown, popping in, only while Classifica is
    open (placed against the switcher, sticky — so already positioned). */
-html.app-header .league-tabs:has(#league-tab-leaderboard.is-active) .help-toggle-btn.league-help-corner {
+/* (On a computer the switcher is a plain pill bar — placed against it.) */
+html:not(.app-header) .league-tabs {
+  position: relative;
+}
+
+.league-tabs:has(#league-tab-leaderboard.is-active) .help-toggle-btn.league-help-corner {
   position: absolute;
   /* Out over the corner, but within the 8px the switcher keeps from the
      screen's top while stuck — so it's never cut there. */
@@ -262,7 +266,7 @@ html.app-header .league-tabs:has(#league-tab-leaderboard.is-active) .help-toggle
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html.app-header .league-tabs .help-toggle-btn.league-help-corner {
+  .league-tabs .help-toggle-btn.league-help-corner {
     animation: none;
   }
 }

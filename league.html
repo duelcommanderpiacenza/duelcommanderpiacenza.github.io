@@ -93,25 +93,12 @@
     <div id="page-loading-overlay" class="page-loading-overlay">
       <div class="sk-page is-hero" aria-hidden="true">
         <div class="sk sk-hero"><div class="sk-hero-text"><i class="sk-hero-title"></i><i class="sk-hero-line"></i><div class="sk-hero-chips"><i></i><i></i><i></i></div></div></div>
-        <i class="sk sk-tabs sk-touch-only"></i>
-        <div class="sk-cols">
-          <div class="sk-col">
-            <i class="sk sk-title"></i>
-            <i class="sk sk-row"></i>
-            <i class="sk sk-row"></i>
-            <i class="sk sk-row"></i>
-            <i class="sk sk-row"></i>
-            <i class="sk sk-row"></i>
-          </div>
-          <div class="sk-col">
-            <i class="sk sk-title"></i>
-            <i class="sk sk-row"></i>
-            <i class="sk sk-row"></i>
-            <i class="sk sk-row"></i>
-            <i class="sk sk-row"></i>
-            <i class="sk sk-row"></i>
-          </div>
-        </div>
+        <i class="sk sk-tabs"></i>
+        <i class="sk sk-row"></i>
+        <i class="sk sk-row"></i>
+        <i class="sk sk-row"></i>
+        <i class="sk sk-row"></i>
+        <i class="sk sk-row"></i>
       </div>
       <p>Caricamento...</p>
     </div>
@@ -142,32 +129,34 @@
       </section>
     </div>
 
-    <!-- Eventi della lega (a timeline) and Classifica: side by side on a
-         computer, one under the other when narrow; on phones and touch
-         screens (html.app-header) one at a time behind tabs, like
-         commander.html's (styles.css .league-lists; no tabs for a Topdeck
-         series — no Classifica, js/league-detail.js). -->
+    <!-- Eventi della lega (a timeline), Classifica and Meta: one at a time
+         behind tabs on every screen, like event.html's (a pill bar on a
+         computer, the sticky segmented control on touch screens; no
+         titles — the tab names the panel). A Topdeck series has no
+         Classifica: that tab hidden (js/league-detail.js). -->
     <nav class="profile-tabs league-tabs" role="tablist" aria-label="Sezioni della lega">
       <button type="button" class="profile-tab" role="tab" id="league-tab-events" data-tab="league-events-section" aria-controls="league-events-section"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M3 10h18"></path></svg><span>Eventi</span></button>
       <button type="button" class="profile-tab" role="tab" id="league-tab-leaderboard" data-tab="league-leaderboard-section" aria-controls="league-leaderboard-section"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4"></path><path d="M7 4h10v5a5 5 0 0 1-10 0Z"></path><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"></path></svg><span>Classifica</span></button>
-      <!-- Touch screens: the scoring "?" on the switcher's top-right corner,
-           popping in while Classifica is open (styles .league-help-corner). -->
+      <button type="button" class="profile-tab" role="tab" id="league-tab-meta" data-tab="league-meta-section" aria-controls="league-meta-section"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12A9 9 0 1 1 12 3v9Z"></path><path d="M15 3.5A9 9 0 0 1 20.5 9H15Z"></path></svg><span>Meta</span></button>
+      <!-- The scoring "?" on the switcher's top-right corner, popping in
+           while Classifica is open (styles .league-help-corner). -->
       <button type="button" class="help-toggle-btn league-help-corner" data-league-help aria-haspopup="dialog" aria-label="Come si calcola la classifica">?</button>
     </nav>
     <div class="league-lists">
       <section id="league-events-section" role="tabpanel" aria-labelledby="league-tab-events">
-        <h2>Eventi della lega</h2>
         <div id="league-events" class="page-loading">Caricamento...</div>
       </section>
 
       <section id="league-leaderboard-section" role="tabpanel" aria-labelledby="league-tab-leaderboard">
-        <!-- How the standings are scored: the "?" after the title on a
-             computer; on touch screens (no titles there, the tab names the
-             panel) on the switcher's corner, above. Both
-             open the shared pop-up with #league-help-text
-             (js/league-detail.js). -->
-        <h2 class="heading-help">Classifica <button type="button" class="help-toggle-btn" data-league-help aria-haspopup="dialog" aria-label="Come si calcola la classifica">?</button></h2>
         <div id="league-leaderboard" class="page-loading">Caricamento...</div>
+      </section>
+
+      <!-- Meta: the league's commanders and archetypes, over all its played
+           events — event.html's Meta charts (js/meta-charts.js). -->
+      <section id="league-meta-section" role="tabpanel" aria-labelledby="league-tab-meta">
+        <div class="card dashboard-card dashboard-card-commanders event-meta-card" id="league-meta-card">
+          <div id="league-meta-charts" class="page-loading">Caricamento...</div>
+        </div>
       </section>
     </div>
   </div>

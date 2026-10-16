@@ -607,6 +607,13 @@ main.has-hero-accent .commander-card-flip-btn {
   background: #1e1517;
 }
 
+/* A tab hidden by a page's script (league.html's Classifica for a Topdeck
+   series): really hidden — its own display (below, and the touch screens'
+   segmented control) would otherwise win over the [hidden] attribute. */
+.profile-tabs .profile-tab[hidden] {
+  display: none;
+}
+
 .profile-tab {
   display: inline-flex;
   align-items: center;

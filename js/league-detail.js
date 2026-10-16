@@ -18,6 +18,7 @@ import { initFollowButton } from "./follow-button.js";
 import { initTabs } from "./tabs.js";
 import { initBackToTop } from "./back-to-top.js";
 import { openInfoDialog } from "./info-dialog.js";
+import { renderMetaCharts } from "./meta-charts.js";
 
 // How many leaderboard rows get the "top 8" highlight (styles.css .is-top8).
 const LEAGUE_TOP_HIGHLIGHT = 8;
@@ -175,7 +176,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   // Eventi / Classifica: tabs on phones and touch screens (the CSS hides
   // them on a computer, one section under the other), each list whole there
   // — a long page, hence the back-to-top button.
-  initTabs(tabsEl);
+  const tabs = initTabs(tabsEl);
   initBackToTop({ signal });
   initLeagueHelp();
 
@@ -195,11 +196,14 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     titleEl.textContent = league.name;
     initTitleFit(titleEl, { signal });
 
-    // A Topdeck series is just a bucket of events, with no points leaderboard
-    // (so no tabs either: Eventi alone).
+    // A Topdeck series is just a bucket of events, with no points leaderboard:
+    // no Classifica tab (Eventi and Meta). A closed league opens on its
+    // Classifica — its final standings — an open one on its Eventi.
     if (league.is_topdeck) {
       leaderboardSectionEl.hidden = true;
-      tabsEl.hidden = true;
+      document.getElementById("league-tab-leaderboard").hidden = true;
+    } else if (!league.is_open) {
+      tabs.select("league-leaderboard-section");
     }
     // Started now, awaited only right before the leaderboard renders, so it
     // loads alongside the league's events rather than after them.
@@ -232,6 +236,14 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     eventsEl.innerHTML =
       timelineHtml(allEvents, playersById, scheduledEvents, today) ||
       '<p class="page-empty">Nessun evento associato a questa lega.</p>';
+
+    // Meta: the league's commanders and archetypes over its played events
+    // (js/meta-charts.js, as event.html's).
+    renderMetaCharts(
+      document.getElementById("league-meta-charts"),
+      document.getElementById("league-meta-card"),
+      eventsData.flatMap((d) => d.entries)
+    );
 
     if (events.length === 0) {
       leaderboardEl.innerHTML = '<p class="page-empty">Nessun dato per la classifica.</p>';

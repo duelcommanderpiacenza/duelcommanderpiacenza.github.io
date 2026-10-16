@@ -573,8 +573,7 @@ a.btn-secondary:hover {
    scrolling inside (the caps are inline styles from js/history-list.js,
    hence !important). A Topdeck series has no Classifica: no tabs at all
    ([hidden], over .profile-tabs' own display on touch screens). */
-html:not(.app-header) :is(.commander-tabs, .league-tabs),
-html.app-header .league-tabs[hidden] {
+html:not(.app-header) .commander-tabs {
   display: none;
 }
 
@@ -588,13 +587,18 @@ html.app-header .commander-lists {
 }
 
 html.app-header .commander-lists > .history-col:not(.is-current),
-html.app-header .commander-lists > .history-col > h2,
-html.app-header .league-lists > section:not(.is-current),
-html.app-header .league-lists > section > h2 {
+html.app-header .commander-lists > .history-col > h2 {
   display: none;
 }
 
-html.app-header :is(.commander-lists, .league-lists) .history-scroll {
+/* league.html: Eventi / Classifica / Meta one at a time behind tabs on
+   every screen, like event.html's (a Topdeck series: no Classifica tab). */
+.league-lists > section:not(.is-current) {
+  display: none;
+}
+
+html.app-header .commander-lists .history-scroll,
+.league-lists .history-scroll {
   max-height: none !important;
 }
 
@@ -607,47 +611,6 @@ html.app-header :is(.commander-lists, .league-lists) .history-scroll {
   }
 }
 
-/* No tabs (a Topdeck series): its one section keeps its title. */
-html.app-header .league-tabs[hidden] + .league-lists > section > h2 {
-  display: block;
-}
-
-/* league.html on a computer: Classifica under the events when narrow, the
-   two side by side from 880px (the events alone, the whole width, for a
-   Topdeck series — no Classifica). */
-.league-lists > section + section > h2 {
-  margin-top: 28px;
-}
-
-@media (min-width: 880px) {
-  html:not(.app-header) .league-lists {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0 28px;
-    align-items: start;
-  }
-
-  html:not(.app-header) .league-lists:has(> #league-leaderboard-section[hidden]) {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  html:not(.app-header) .league-lists > section > h2 {
-    margin-top: 0;
-  }
-
-  /* Half the row: Classifica's cards as on phones — the name (and badges)
-     on its line, the numbers on their own row below sharing its width. */
-  html:not(.app-header) .league-lists #league-leaderboard .history-ranked {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 10px;
-  }
-
-  html:not(.app-header) .league-lists #league-leaderboard .history-ranked .history-stats {
-    grid-template-columns: repeat(var(--stat-count), minmax(0, 1fr));
-    padding-top: 10px;
-    border-top: 1px solid var(--table-row-line);
-  }
-}
 
 /* league.html's events as a timeline (js/league-detail.js timelineHtml):
    a vertical line, one round node per event (its day and month), its card
