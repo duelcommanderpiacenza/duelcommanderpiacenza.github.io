@@ -320,13 +320,15 @@ async function renderCommandersSection(el) {
 
 // In-app page (js/router.js): mounted by the router on this page's <main>
 // (data-page), on first load and after each in-app navigation; `signal`
-// aborts when the page is left. The page isn't "ready" until every section
-// has settled (success or already-shown error).
+// aborts when the page is left. Two steps: the page is shown once Eventi and
+// Classifica have settled (success or already-shown error); Più giocati —
+// the slowest, its data and the commanders' art — keeps its own shimmering
+// placeholder (index.html .home-charts-sk) until its charts are in.
 export function mount({ signal = new AbortController().signal } = {}) {
   initTabs(document.querySelector(".home-tabs"));
+  renderCommandersSection(document.getElementById("dashboard-commanders-content"));
   return Promise.allSettled([
     renderTimeline(document.getElementById("home-timeline")),
     renderStandings(document.getElementById("dashboard-leagues-content")),
-    renderCommandersSection(document.getElementById("dashboard-commanders-content")),
   ]).then(() => hidePageLoading(signal));
 }

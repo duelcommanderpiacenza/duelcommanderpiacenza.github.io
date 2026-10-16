@@ -567,6 +567,20 @@ html.app-header .sk-page.is-home > .sk-chart {
   border-radius: var(--radius-card);
 }
 
+/* The Bacheca's Più giocati while its charts still load, after the rest of
+   the page is shown (js/home.js): its own shimmering block in the card. */
+.home-charts-sk {
+  display: block;
+  height: 340px;
+  animation: sk-shimmer 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-charts-sk {
+    animation: none;
+  }
+}
+
 @media (max-width: 820px) {
   .sk-chart {
     height: 420px;
