@@ -233,15 +233,38 @@
 }
 
 /* league.html's Classifica: on touch screens, where the panels have no
-   titles (the "?" above goes with the hidden <h2>), the same "?" alone on
-   the right above the list instead. */
-.help-toggle-btn.league-help-touch {
+   titles (the "?" above goes with the hidden <h2>), a "?" on the switcher's
+   corner instead (below). */
+.help-toggle-btn.league-help-corner {
   display: none;
 }
 
-html.app-header .help-toggle-btn.league-help-touch {
-  display: flex;
-  margin: 0 0 12px auto;
+/* Touch screens: on the Eventi / Classifica switcher's top-right corner,
+   like the player card's "?" — shown, popping in, only while Classifica is
+   open (placed against the switcher, sticky — so already positioned). */
+html.app-header .league-tabs:has(#league-tab-leaderboard.is-active) .help-toggle-btn.league-help-corner {
+  position: absolute;
+  /* Out over the corner, but within the 8px the switcher keeps from the
+     screen's top while stuck — so it's never cut there. */
+  top: -5px;
+  right: -5px;
+  z-index: 2;
+  display: inline-flex;
+  box-shadow: 0 0 0 2px #fff, var(--shadow-card);
+  animation: league-help-pop 320ms cubic-bezier(0.2, 0.9, 0.3, 1.4) both;
+}
+
+@keyframes league-help-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.app-header .league-tabs .help-toggle-btn.league-help-corner {
+    animation: none;
+  }
 }
 
 /* Its pop-up (js/league-detail.js initLeagueHelp): a small heading per
