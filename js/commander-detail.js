@@ -475,21 +475,36 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     const picker = document.getElementById("commander-pairings");
     let current = "all";
     const titleHtml = `${escapeHtml(commander.name)}${commander.is_banned ? bannedBadge() : ""}`;
-    function select(key, { updateUrl = true } = {}) {
+    // What changes with a pairing picked slides in from the side of the arrow
+    // used (styles.css .is-swapped-next / -prev: › from the right, ‹ from the
+    // left) — not on the page's first render (updateUrl false).
+    let swapDir = 1;
+    const replaySwap = (el) => {
+      el.classList.remove("is-swapped-next", "is-swapped-prev");
+      void el.offsetWidth;
+      el.classList.add(swapDir < 0 ? "is-swapped-prev" : "is-swapped-next");
+    };
+    function select(key, { updateUrl = true, dir = 1 } = {}) {
+      swapDir = dir;
       const option = options.find((o) => o.key === key) ?? options[0];
       const entries =
         option.key === "all"
           ? playedEntries
           : playedEntries.filter((e) => (partnerOf(e)?.id ?? "none") === option.key);
+      const shownTitle = titleEl.innerText;
       titleEl.innerHTML = option.commander
         ? `${titleHtml} <span class="commander-title-partner">+ ${escapeHtml(option.commander.name)}</span>`
         : titleHtml;
       fitTitleToOneLine(titleEl);
+      // (Only when the name shown actually changed: up to 820px the partner's
+      // part is hidden.)
+      if (updateUrl && titleEl.innerText !== shownTitle) replaySwap(titleEl);
       showPartnerCard(option.commander ?? null);
       current = option.key;
       const compactLabel = picker.querySelector(".pairing-compact-label");
       if (compactLabel) {
         compactLabel.textContent = option.key === "all" ? "Tutti i partner" : option.label;
+        if (updateUrl) replaySwap(compactLabel);
       }
       renderSections(entries);
       if (updateUrl) {
@@ -505,7 +520,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     // above): there are partners to pick.
     const step = (by) => {
       const i = options.findIndex((o) => o.key === current);
-      select(options[(i + by + options.length) % options.length].key);
+      select(options[(i + by + options.length) % options.length].key, { dir: by });
     };
     if (partnerOptions.length > 0) {
       picker.innerHTML = `

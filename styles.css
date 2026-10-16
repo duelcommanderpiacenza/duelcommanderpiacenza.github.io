@@ -9725,6 +9725,54 @@ main.has-hero-accent .profile-tab:not(.is-active):hover {
   opacity: 0.8;
 }
 
+/* The title and the picker's label, a pairing picked (js/commander-detail.js
+   replaySwap): the new text slides in from the side of the arrow used — ›
+   from the right, ‹ from the left — fading in. */
+#commander-title.is-swapped-next,
+.pairing-compact-label.is-swapped-next {
+  animation: pairing-text-in-next 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+#commander-title.is-swapped-prev,
+.pairing-compact-label.is-swapped-prev {
+  animation: pairing-text-in-prev 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes pairing-text-in-next {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+}
+
+@keyframes pairing-text-in-prev {
+  from {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #commander-title:is(.is-swapped-next, .is-swapped-prev),
+  .pairing-compact-label:is(.is-swapped-next, .is-swapped-prev) {
+    animation: none;
+  }
+}
+
+/* A computer (two columns): the name's row always as tall as a full-size
+   name — the name itself is shrunk to fit one line (js/page-title-fit.js),
+   more so for a commander + partner — the name centred in it: the name's
+   centre line, the picker and the numbers under it stay put whatever the
+   name's length (the text column is centred in the hero, so a shorter name
+   moved all of it). */
+@media (min-width: 821px) {
+  #commander-hero .profile-hero-heading {
+    display: flex;
+    align-items: center;
+    min-height: calc(clamp(2rem, 4.5vw, 3rem) * 1.05 + 12px);
+  }
+}
+
 @media (max-width: 820px) {
   .pairing-picker {
     align-items: center;
