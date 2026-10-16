@@ -79,8 +79,30 @@
 
 <main class="page-main" data-page="players">
   <div class="page-heading page-heading-with-action">
-    <h1>Giocatori <span class="heading-count" id="players-count">&nbsp;</span></h1>
-    <a class="btn-secondary page-heading-link" href="badges.html"><span class="help-toggle-btn" aria-hidden="true">?</span> Badge</a>
+    <h1>Giocatori</h1>
+    <button type="button" class="filter-toggle-btn" id="players-filter-toggle" aria-expanded="false" aria-controls="players-filter-panel" aria-label="Filtri">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+    </button>
+  </div>
+  <div class="filter-panel is-collapsed" id="players-filter-panel">
+    <div class="filter-panel-clip">
+      <div class="filter-panel-body">
+        <div class="filter-bar">
+          <div class="field">
+            <label for="players-league-filter">Lega</label>
+            <select id="players-league-filter"><option value="">Tutte le leghe</option></select>
+          </div>
+          <div class="field">
+            <label for="players-event-filter">Evento</label>
+            <select id="players-event-filter"><option value="">Tutti gli eventi</option></select>
+          </div>
+          <div class="field">
+            <label for="players-date-from">Dal</label>
+            <input type="date" id="players-date-from" placeholder="Dal" data-open-on-today>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="page-loading-region">
@@ -112,30 +134,8 @@
           <option value="wins">Vittorie</option>
         </select>
       </div>
-      <button type="button" class="filter-toggle-btn" id="players-filter-toggle" aria-expanded="false" aria-controls="players-filter-panel" aria-label="Filtri">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
-      </button>
-    </div>
-
-    <div class="filter-panel is-collapsed" id="players-filter-panel">
-      <div class="filter-panel-clip">
-        <div class="filter-panel-body">
-          <div class="filter-bar">
-            <div class="field">
-              <label for="players-league-filter">Lega</label>
-              <select id="players-league-filter"><option value="">Tutte le leghe</option></select>
-            </div>
-            <div class="field">
-              <label for="players-event-filter">Evento</label>
-              <select id="players-event-filter"><option value="">Tutti gli eventi</option></select>
-            </div>
-            <div class="field">
-              <label for="players-date-from">Dal</label>
-              <input type="date" id="players-date-from" placeholder="Dal" data-open-on-today>
-            </div>
-          </div>
-        </div>
-      </div>
+      <!-- How the badges are earned (badges.html): the site's round "?". -->
+      <a class="help-toggle-btn players-badge-help" href="badges.html" aria-label="Badge: come si ottengono" title="Badge">?</a>
     </div>
 
     <div id="players-list">
