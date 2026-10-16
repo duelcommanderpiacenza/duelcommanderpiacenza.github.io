@@ -652,6 +652,20 @@ html.app-header .sk-page.is-home > .sk-chart {
   border-radius: var(--radius-card);
 }
 
+/* Touch screens: no heading line over the matrix (no title; its "Crea
+   tabella personalizzata" under the matrix — js/matchups-page.js), so the
+   matrix first, then that button, centred. */
+html.app-header .sk-page.is-matchups .sk-toolbar {
+  display: none;
+}
+
+.sk-matrix-button {
+  width: 220px;
+  height: 40px;
+  margin: 0 auto;
+  border-radius: var(--radius-pill);
+}
+
 /* Content gets built (and its entrance animations technically start
    playing) behind the splash while data is still loading, well before the
    splash itself fades out — without this, everything would already be
