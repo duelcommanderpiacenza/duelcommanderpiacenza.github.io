@@ -7,7 +7,6 @@ import { attachHoverTooltips, fullTextIfTruncated } from "./floating-tooltip.js"
 import { commanderPairWithColors, bannedBadge, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
-import { initMetaTabs } from "./meta-tabs.js";
 import { historyPanelHtml, historyStatsHtml } from "./history-list.js";
 import { initBackToTop } from "./back-to-top.js";
 
@@ -67,8 +66,6 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   const colorExactWrap = document.getElementById("commanders-color-exact-wrap");
   const colorExactCheckbox = document.getElementById("commanders-color-exact");
   const countEl = document.getElementById("commanders-count");
-  // A computer: the filters' button onto the sub-tabs' row.
-  initMetaTabs();
   // The title reads "Meta" (styles.css), so this count goes in the search
   // field's placeholder instead (below).
   // A long list: a round button back to the top once scrolled down.
@@ -317,7 +314,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
         <div class="chart-grid">
           ${renderPieChart(chartRows, "Nessun dato per il grafico.", "Metashare")}
           ${renderBarChart(winsChartRows, "Nessun dato per il grafico.", "Winrate")}
-          ${renderBarChart(colorRows, "Nessun dato per il grafico.", "Colori più giocati", { relative: true, shortLabels: true })}
+          ${renderBarChart(colorRows, "Nessun dato per il grafico.", "Colori più giocati", { spacious: true })}
         </div>`;
       chartEl.innerHTML = lastChartHtml;
       initChartCarousel(chartEl);

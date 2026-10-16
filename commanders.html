@@ -77,25 +77,29 @@
 </nav>
 
 <main class="page-main" data-page="commanders">
-  <div class="page-heading page-heading-with-action">
-    <!-- The section's title, "Meta" (the page's own <h1> kept for screen
-         readers only — styles.css .meta-heading-title). -->
-    <span class="meta-heading-title" aria-hidden="true">Meta</span>
-    <h1>Comandanti <span class="heading-count" id="commanders-count">&nbsp;</span></h1>
-    <button type="button" class="filter-toggle-btn" id="commanders-filter-toggle" aria-expanded="false" aria-controls="commanders-filter-panel" aria-label="Filtri">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
-    </button>
-  </div>
-  <!-- Comandanti / Matchups / Archetipi — the nav's "Meta" (and the tab
-       bar's, js/tab-bar.js), titled "Meta" above — in the site's segmented
-       control; on a computer the filters' button joins its row (.meta-row,
-       js/meta-tabs.js; styles.css .meta-tabs). -->
-  <div class="meta-row">
-    <nav class="profile-tabs meta-tabs" aria-label="Meta">
-      <a class="profile-tab is-active" href="commanders.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="11" height="15" rx="2"></rect><path d="M6 6.5V19a2 2 0 0 0 2 2h8"></path></svg><span>Comandanti</span></a>
-      <a class="profile-tab" href="matchups.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 17.5 3 6V3h3l11.5 11.5"></path><path d="m13 19 6-6M16 16l4 4M19 21l2-2"></path><path d="M14.5 6.5 18 3h3v3l-3.5 3.5"></path><path d="m5 14 4 4M7 17l-3 3M3 19l2 2"></path></svg><span>Matchups</span></a>
-      <a class="profile-tab" href="archetypes.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="4"></circle><rect x="13" y="3" width="8" height="8" rx="1.5"></rect><path d="M7 13.5l4 7H3z"></path><circle cx="17" cy="17" r="4"></circle></svg><span>Archetipi</span></a>
-    </nav>
+  <!-- The section's head: on a computer one line — "Meta", the sub-tabs,
+       the filters' button; on touch screens the title line, then the
+       sub-tabs' sticky row (styles.css .meta-head). -->
+  <div class="meta-head">
+    <div class="page-heading page-heading-with-action">
+      <!-- The section's title, "Meta" (the page's own <h1> kept for screen
+           readers only — styles.css .meta-heading-title). -->
+      <span class="meta-heading-title" aria-hidden="true">Meta</span>
+      <h1>Comandanti <span class="heading-count" id="commanders-count">&nbsp;</span></h1>
+      <button type="button" class="filter-toggle-btn" id="commanders-filter-toggle" aria-expanded="false" aria-controls="commanders-filter-panel" aria-label="Filtri">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+      </button>
+    </div>
+    <!-- Comandanti / Matchups / Archetipi — the nav's "Meta" (and the tab
+         bar's, js/tab-bar.js), titled "Meta" above — in the site's segmented
+         control (styles.css .meta-tabs). -->
+    <div class="meta-row">
+      <nav class="profile-tabs meta-tabs" aria-label="Meta">
+        <a class="profile-tab is-active" href="commanders.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="11" height="15" rx="2"></rect><path d="M6 6.5V19a2 2 0 0 0 2 2h8"></path></svg><span>Comandanti</span></a>
+        <a class="profile-tab" href="matchups.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 17.5 3 6V3h3l11.5 11.5"></path><path d="m13 19 6-6M16 16l4 4M19 21l2-2"></path><path d="M14.5 6.5 18 3h3v3l-3.5 3.5"></path><path d="m5 14 4 4M7 17l-3 3M3 19l2 2"></path></svg><span>Matchups</span></a>
+        <a class="profile-tab" href="archetypes.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="4"></circle><rect x="13" y="3" width="8" height="8" rx="1.5"></rect><path d="M7 13.5l4 7H3z"></path><circle cx="17" cy="17" r="4"></circle></svg><span>Archetipi</span></a>
+      </nav>
+    </div>
   </div>
   <div class="filter-panel is-collapsed" id="commanders-filter-panel">
     <div class="filter-panel-clip">

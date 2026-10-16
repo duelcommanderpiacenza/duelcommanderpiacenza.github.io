@@ -14,7 +14,6 @@ import { hidePageLoading } from "./page-loading.js";
 import { attachHoverTooltips, fullTextIfTruncated } from "./floating-tooltip.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { initFilterToggle } from "./filter-toggle.js";
-import { initMetaTabs } from "./meta-tabs.js";
 import { openInfoDialog } from "./info-dialog.js";
 import { enableDragScroll, enableSnapDrag } from "./drag-scroll.js";
 
@@ -104,8 +103,6 @@ const CORNER_HELP =
 // aborts when the page is left.
 export async function mount({ signal = new AbortController().signal } = {}) {
   initHelpToggle();
-  // A computer: the filters' button onto the sub-tabs' row.
-  initMetaTabs();
   // Touch screens: "Crea tabella personalizzata" under the matrix instead
   // of beside its heading — the heading's line itself isn't shown there
   // (styles.css), the button's label names the mode the matrix isn't in

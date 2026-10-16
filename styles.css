@@ -15107,31 +15107,59 @@ html.nav-mobile .back-to-top {
   text-decoration: none;
 }
 
-/* Its row (.meta-row): on a computer the filters' button at its right end
-   (js/meta-tabs.js moves it there; not shown on the title's line meanwhile,
-   so it never jumps); on touch screens the row is the sticky part (the
-   control inside it can't stick past the row's own box) and the button
-   stays on the title's line. */
-.meta-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 0 0 18px;
-}
-
+/* The section's head (.meta-head: the title line + the sub-tabs' row),
+   laid out by CSS alone, so it's the same from the first frame on every
+   page of the section. A computer: one line — "Meta" on the left, the
+   sub-tabs centred on the line (a three-column grid, the side columns
+   equal, so the same spot whatever the title), the filters' button at the
+   right end (the title line and the matchups title group display:
+   contents, their items placed in the grid's columns). Touch screens:
+   the wrapper steps aside (display: contents), the title line as it is and
+   the sub-tabs' row the sticky part under it (the control inside it can't
+   stick past the row's own box). */
 .meta-row > .meta-tabs {
   margin: 0;
 }
 
-.meta-row > .filter-toggle-btn {
-  margin-left: auto;
+.meta-head .page-heading-title-group {
+  display: contents;
 }
 
-html:not(.nav-mobile) main:has(> .meta-row) > .page-heading .filter-toggle-btn {
-  visibility: hidden;
+html:not(.nav-mobile) .meta-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 22px;
+}
+
+html:not(.nav-mobile) .meta-head > .page-heading {
+  display: contents;
+}
+
+html:not(.nav-mobile) .meta-head .meta-heading-title {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+html:not(.nav-mobile) .meta-head > .meta-row {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+html:not(.nav-mobile) .meta-head .filter-toggle-btn {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
+  margin-left: 0;
+}
+
+html.nav-mobile .meta-head {
+  display: contents;
 }
 
 html.nav-mobile .meta-row {
+  margin: 0 0 18px;
   position: sticky;
   top: calc(8px + env(safe-area-inset-top));
   z-index: 10;
@@ -15155,7 +15183,7 @@ html.nav-mobile .meta-row > .meta-tabs {
   font-weight: 700;
 }
 
-main:has(> .meta-row) > .page-heading h1 {
+.meta-head .page-heading h1 {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -15167,7 +15195,7 @@ main:has(> .meta-row) > .page-heading h1 {
   border: 0;
 }
 
-main:has(> .meta-row) > .page-heading .help-toggle-btn {
+.meta-head .page-heading .help-toggle-btn {
   display: none;
 }
 
@@ -15340,11 +15368,15 @@ html.is-page-transition:not(.app-header) .site-header-brand {
    control stay still, swapped at once, while the rest of the page fades
    through; to or from any other page (only one side has them) they fade
    with the page as usual. */
-html.is-page-transition main:has(> .meta-row) > .page-heading {
+html.is-page-transition:not(.nav-mobile) main > .meta-head {
   view-transition-name: meta-heading;
 }
 
-html.is-page-transition main > .meta-row {
+html.is-page-transition.nav-mobile main > .meta-head > .page-heading {
+  view-transition-name: meta-heading;
+}
+
+html.is-page-transition.nav-mobile main > .meta-head > .meta-row {
   view-transition-name: meta-tabs;
 }
 

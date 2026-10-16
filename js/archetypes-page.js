@@ -6,7 +6,6 @@ import { initChartCarousel } from "./chart-carousel.js";
 import { archetypeBadge, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
-import { initMetaTabs } from "./meta-tabs.js";
 import { historyPanelHtml, historyStatsHtml } from "./history-list.js";
 
 // Entries + matches of every event in scope, batched (js/db.js) rather than
@@ -24,8 +23,6 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   const leagueSelect = document.getElementById("archetypes-league-filter");
   const eventSelect = document.getElementById("archetypes-event-filter");
   const dateFromInput = document.getElementById("archetypes-date-from");
-  // A computer: the filters' button onto the sub-tabs' row.
-  initMetaTabs();
 
   let eventDateById = new Map();
   let lastScopeEventIds = [];

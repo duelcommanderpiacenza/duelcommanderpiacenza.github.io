@@ -303,14 +303,8 @@ export async function hydrateBubbleArt(rootEl) {
  * @param {object} [options]
  * @param {boolean} [options.spacious] - see below.
  * @param {string} [options.subtitle] - small muted line under the title.
- * @param {boolean} [options.relative] - each bar's length relative to the
- *   largest value (it fills the track), not to 100% — for shares that are
- *   all well under half (the Comandanti colours), which otherwise came out
- *   as short stubs in an empty track. The % shown stays the real value.
- * @param {boolean} [options.shortLabels] - a narrow label column, for short
- *   labels (the colours' names), leaving the bars the room.
  */
-export function renderBarChart(rows, emptyMessage, title, { spacious = false, subtitle = "", relative = false, shortLabels = false } = {}) {
+export function renderBarChart(rows, emptyMessage, title, { spacious = false, subtitle = "" } = {}) {
   const titleHtml =
     (title ? `<h2 class="pie-chart-title">${escapeHtml(title)}</h2>` : "") +
     (subtitle ? `<p class="pie-chart-subtitle">${escapeHtml(subtitle)}</p>` : "");
@@ -318,8 +312,7 @@ export function renderBarChart(rows, emptyMessage, title, { spacious = false, su
     return `<div class="pie-chart-wrap">${titleHtml}<p class="page-empty">${emptyMessage}</p></div>`;
   }
 
-  const max = Math.max(0, ...rows.map((r) => r.value ?? 0));
-  const barWidth = (v) => Math.min(Math.max(relative ? (max > 0 ? (v / max) * 100 : 0) : v, 0), 100);
+  const barWidth = (v) => Math.min(Math.max(v, 0), 100);
   const bars = rows
     .map(
       (r, i) => `
@@ -333,15 +326,15 @@ export function renderBarChart(rows, emptyMessage, title, { spacious = false, su
     )
     .join("");
 
-  // `spacious`: for a short, fixed-length list (Archetipi's 5 rows) rather
-  // than the Comandanti page's own much longer one — spreads the rows out
+  // `spacious`: for a short, fixed-length list (Archetipi's 5 rows,
+  // Comandanti's colours) rather than the Comandanti Winrate's longer one — spreads the rows out
   // to actually fill the card's full height (matched to the pie chart
   // beside it via .chart-grid) instead of clustering at the top with a
   // block of empty space below, and bumps up the row/font size to match.
   return `
     <div class="pie-chart-wrap">
       ${titleHtml}
-      <div class="bar-chart-body${spacious ? " bar-chart-body-spacious" : ""}${shortLabels ? " bar-chart-body-short-labels" : ""}">${bars}</div>
+      <div class="bar-chart-body${spacious ? " bar-chart-body-spacious" : ""}">${bars}</div>
     </div>
   `;
 }
