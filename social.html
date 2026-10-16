@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
+  <!-- shell:head (partials/head.html — scripts/sync-shell.py) -->
   <meta charset="UTF-8">
   <script>
     (function () {
@@ -15,6 +16,7 @@
       } catch (e) {}
     })();
   </script>
+  <!-- /shell:head -->
   <title>Social - Duel Commander Piacenza</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
@@ -31,6 +33,7 @@
 
 <body data-active-nav="social" class="is-loading">
 
+<!-- shell:header -->
 <header class="site-header">
   <div class="site-header-inner">
     <a class="site-header-brand" href="index.html">
@@ -67,7 +70,9 @@
     </a>
   </div>
 </header>
+<!-- /shell:header -->
 
+<!-- shell:nav -->
 <nav class="site-nav" aria-label="Navigazione principale">
   <div class="site-nav-inner">
     <a class="nav-link" data-nav="current" href="index.html">Bacheca</a>
@@ -77,6 +82,7 @@
     <a class="nav-link" data-nav="social" href="social.html">Social</a>
   </div>
 </nav>
+<!-- /shell:nav -->
 
 <div class="social-strip" aria-label="Social links">
   <a class="social-link" href="https://moxfield.com/users/Duel_Commander_Piacenza" target="_blank" rel="noopener noreferrer" aria-label="Moxfield">
@@ -128,6 +134,7 @@
 
 </main>
 
+<!-- shell:footer -->
 <footer>
   <div class="footer-spacer" aria-hidden="true"></div>
   <div class="footer-center">
@@ -141,6 +148,7 @@
   </div>
   <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="false" aria-label="Cambia tema"></button>
 </footer>
+<!-- /shell:footer -->
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script type="module" src="js/layout.js"></script>
