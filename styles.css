@@ -15905,7 +15905,7 @@ html.app-header .site-header.has-hero-accent .site-search-trigger {
    Tab bar (js/tab-bar.js) — touch screens: the navigation at the bottom of
    the screen, in place of the old pill and its list (their markup still in
    every page, the pill hidden here; a computer keeps its tabs in the top
-   bar). A frosted-glass capsule with five sections — Bacheca, Eventi, Meta,
+   bar). A solid capsule (white; dark mode near-black) with five sections — Bacheca, Eventi, Meta,
    Giocatori, Social — the current one in a red chip with its name (the
    hero's colour on hero pages: .site-nav.has-hero-accent redefines the red),
    the others icon only; the chip slides to the new section. It slides away
@@ -15926,9 +15926,9 @@ html.nav-mobile .tab-bar {
   padding: 5px;
   border: 1px solid rgba(154, 28, 32, 0.12);
   border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.78);
-  -webkit-backdrop-filter: blur(16px) saturate(1.4);
-  backdrop-filter: blur(16px) saturate(1.4);
+  /* Solid, like the segmented controls (.profile-tabs): white, dark mode
+     their near-black — nothing showing through. */
+  background: #fff;
   box-shadow: 0 8px 28px rgba(40, 6, 9, 0.22);
 }
 
@@ -16009,7 +16009,7 @@ html.nav-mobile .tab-bar-link.is-current span {
 
 :root[data-theme="dark"].nav-mobile .tab-bar {
   border-color: rgba(255, 255, 255, 0.1);
-  background: rgba(36, 26, 28, 0.78);
+  background: #1e1517;
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
 }
 

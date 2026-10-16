@@ -1,6 +1,6 @@
 // Touch screens (html.nav-mobile): the floating tab bar at the bottom of
 // the screen, in place of the old pill + list (styles.css "Tab bar") — a
-// frosted-glass capsule with five sections always in view, the current one
+// solid capsule with five sections always in view, the current one
 // in a red chip (the hero's colour on hero pages: .site-nav.has-hero-accent)
 // with its name, the others icon only. One tap to change section; the chip
 // slides to the new one (also on back / forward). Tapping the current one
