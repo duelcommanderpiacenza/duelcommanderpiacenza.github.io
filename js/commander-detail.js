@@ -491,7 +491,6 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       if (compactLabel) {
         compactLabel.textContent = option.key === "all" ? "Tutti i partner" : option.label;
       }
-      picker.querySelectorAll("[data-dot]").forEach((dot) => dot.classList.toggle("is-active", dot.dataset.dot === option.key));
       renderSections(entries);
       if (updateUrl) {
         const url = new URL(window.location.href);
@@ -501,8 +500,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       }
     }
     // One badge with the pairing shown ("Tutti i partner", "Da solo", "con
-    // …"), ‹ › either side going to the previous / next one (round), and a
-    // dot per pairing under it. While no partner is picked, the first
+    // …"), ‹ › either side going to the previous / next one (round). While no partner is picked, the first
     // partner's card is tucked dimmed behind the commander's (showPartnerCard
     // above): there are partners to pick.
     const step = (by) => {
@@ -515,8 +513,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
           <button type="button" class="pairing-step" data-step="-1" aria-label="Partner precedente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg></button>
           <span class="pairing-compact-label" aria-live="polite"></span>
           <button type="button" class="pairing-step" data-step="1" aria-label="Partner successivo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
-        </div>
-        <div class="pairing-dots" aria-hidden="true">${options.map((o) => `<i data-dot="${escapeHtml(o.key)}"></i>`).join("")}</div>`;
+        </div>`;
       picker.hidden = false;
       cardColEl.classList.add("has-pairings");
       picker.addEventListener("click", (e) => {

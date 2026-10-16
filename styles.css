@@ -9661,9 +9661,8 @@ main.has-hero-accent .profile-tab:not(.is-active):hover {
   }
 }
 
-/* The picker under the cards' row: one glass badge — ‹ the pairing shown
-   (how many times it was played) › — and a dot per pairing under it, the
-   shown one white. Centred where the hero's text is (up to 820px). */
+/* The picker under the cards' row: one glass badge — ‹ the pairing shown ›.
+   Centred where the hero's text is (up to 820px). */
 .pairing-picker {
   display: flex;
   flex-direction: column;
@@ -9721,25 +9720,6 @@ main.has-hero-accent .profile-tab:not(.is-active):hover {
   white-space: nowrap;
 }
 
-.pairing-dots {
-  display: flex;
-  gap: 6px;
-  padding-left: 18px;
-}
-
-.pairing-dots i {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.35);
-  transition: background 200ms ease, transform 200ms ease;
-}
-
-.pairing-dots i.is-active {
-  background: #fff;
-  transform: scale(1.3);
-}
-
 /* The partner's name after the commander's in the title. */
 .commander-title-partner {
   opacity: 0.8;
@@ -9759,7 +9739,7 @@ main.has-hero-accent .profile-tab:not(.is-active):hover {
   }
 
   /* One column: a hero with the pairing picker as tall as one without —
-     the picker slimmer (smaller arrows, no dots, no margins), the hero's
+     the picker slimmer (smaller arrows, no margins), the hero's
      rows closer together (12px, not 22px) and the card a little smaller
      (19px narrower), together exactly the picker's room. (A computer, two
      columns: the card already sets the hero's height either way.) */
@@ -9775,10 +9755,6 @@ main.has-hero-accent .profile-tab:not(.is-active):hover {
     margin: 0;
   }
 
-  .pairing-dots {
-    display: none;
-  }
-
   .pairing-compact {
     padding: 3px;
   }
@@ -9790,10 +9766,6 @@ main.has-hero-accent .profile-tab:not(.is-active):hover {
 
   .pairing-compact-label {
     font-size: 0.85rem;
-  }
-
-  .pairing-dots {
-    padding-left: 0;
   }
 }
 
