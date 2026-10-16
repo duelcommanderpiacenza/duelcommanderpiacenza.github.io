@@ -1478,14 +1478,6 @@ body[data-active-nav="account"] .nav-link[data-nav="account"]:hover {
   border-color: transparent;
 }
 
-/* "Profilo" (account.html) — a tab in the phone pill's list only: on
-   desktop the header's round account button (js/header-account.js) already
-   leads there. html.nav-mobile .nav-link's own display: flex (below)
-   outranks this, showing it on touch screens. */
-.nav-link.nav-link-mobile-only {
-  display: none;
-}
-
 /* Social's own tab: pushed to the far right of the row (margin-left: auto,
    the row's only "auto" margin, so everything else keeps its normal
    left-packed flow) and given a blue identity instead of the shared red
