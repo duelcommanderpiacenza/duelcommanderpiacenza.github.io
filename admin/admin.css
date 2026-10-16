@@ -122,14 +122,6 @@ a.history-item:hover,
   background: rgba(0, 0, 0, 0.05);
 }
 
-table.data-table tbody tr:hover,
-table.data-table tbody tr.is-top8,
-table.data-table tbody tr.is-top8:hover,
-table.data-table tbody tr.is-me-row,
-table.data-table tbody tr.is-me-row:hover {
-  background: rgba(0, 0, 0, 0.04);
-}
-
 .badge-disc {
   border-color: rgba(0, 0, 0, 0.22);
 }
@@ -154,14 +146,6 @@ table.data-table tbody tr.is-me-row:hover {
 :root[data-theme="dark"] .history-item.is-me-row {
   border-color: rgba(255, 255, 255, 0.18);
   background: rgba(255, 255, 255, 0.07);
-}
-
-:root[data-theme="dark"] table.data-table tbody tr:hover,
-:root[data-theme="dark"] table.data-table tbody tr.is-top8,
-:root[data-theme="dark"] table.data-table tbody tr.is-top8:hover,
-:root[data-theme="dark"] table.data-table tbody tr.is-me-row,
-:root[data-theme="dark"] table.data-table tbody tr.is-me-row:hover {
-  background: rgba(255, 255, 255, 0.05);
 }
 
 :root[data-theme="dark"] .badge-disc {
@@ -1724,7 +1708,6 @@ body.is-busy::before {
 /* The event views animate as a whole (entering the flow, or a switch), and
    only once their data is loaded — tables replaying their own fade-up on
    top of that (or on every save) read as the page reloading. */
-#admin-event-flow .data-table-wrap,
 #admin-event-flow .history-panel {
   animation: none;
 }

@@ -1,7 +1,7 @@
 // A tiny vibration as feedback for a tap — only on Android touch screens
 // whose browser can vibrate (navigator.vibrate: Chrome, Samsung Internet,
 // Firefox; iOS has no web vibration at all, and a computer's Chrome has the
-// function but nothing to vibrate). "tick": a tab switched, the nav pill
+// function but nothing to vibrate). "tick": a tab switched, a tab bar section
 // opened, pull-to-refresh armed; "confirm": a slightly fuller double tap,
 // for a follow. The browser may refuse until the visitor has tapped the page
 // once — harmless, it's just skipped.

@@ -2,8 +2,8 @@
 // icon and the "Top 8" pill (wired site-wide in js/layout.js), Matchups'
 // headers, the Comandanti chart labels. A real element appended to <body>
 // and positioned in JS, rather than a CSS ::after on the hovered element
-// itself — most of these live inside a clipping ancestor (every
-// .data-table-wrap, the Matchups matrix, the chart carousel are
+// itself — most of these live inside a clipping ancestor (the Matchups
+// matrix, the chart carousel are
 // horizontally-scrolling, and per the CSS overflow spec overflow-x: auto
 // forces overflow-y to clip too), so anything positioned relative to an
 // element inside it gets cut off at the wrapper's own edge (CLAUDE.md

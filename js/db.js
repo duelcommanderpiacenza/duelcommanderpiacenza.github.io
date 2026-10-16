@@ -76,7 +76,6 @@ const BADGE_EMBED =
 
 export const Badges = {
   list: () => sb.from("badges").select("*").order("name").then(assertOk),
-  get: (id) => sb.from("badges").select("*").eq("id", id).single().then(assertOk),
   create: (row) => sb.from("badges").insert(row).select().single().then(assertOk),
   update: (id, patch) => sb.from("badges").update(patch).eq("id", id).select().single().then(assertOk),
   remove: (id) => sb.from("badges").delete().eq("id", id).then(assertOk),
@@ -325,20 +324,6 @@ export const Leagues = {
       .select("*")
       .eq("is_open", true)
       .eq("is_topdeck", false)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .then(({ data, error }) => {
-        if (error) throw error;
-        return data?.[0] ?? null;
-      }),
-  // The homepage's fallback feature when no real league is open: the most
-  // recently created Topdeck series that's still open. Returns null if none.
-  getOpenTopdeck: () =>
-    sb
-      .from("leagues")
-      .select("*")
-      .eq("is_open", true)
-      .eq("is_topdeck", true)
       .order("created_at", { ascending: false })
       .limit(1)
       .then(({ data, error }) => {

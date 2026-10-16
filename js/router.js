@@ -1,5 +1,5 @@
 // App-like navigation: one document, no page reloads between the pages that
-// support it. The header, the nav (the mobile pill) and the footer stay in
+// support it. The header, the nav (the touch tab bar) and the footer stay in
 // the document; only <main> is replaced — fetched from the target page's own
 // .html (every route is still a real file, so deep links and reloads keep
 // working on GitHub Pages). The swap slides like a native app screen: the
@@ -192,9 +192,6 @@ async function go(url, { push = true, restoreY = null } = {}) {
     oldMain.replaceWith(document.adoptNode(newMain));
     document.title = doc.title;
     if (toNav) document.body.dataset.activeNav = toNav;
-    const label = doc.querySelector(".nav-dropdown-label");
-    const ownLabel = document.querySelector(".nav-dropdown-label");
-    if (label && ownLabel) ownLabel.innerHTML = label.innerHTML;
     document.body.classList.toggle("is-loading", doc.body.classList.contains("is-loading"));
     // The header / nav keep a hero's colour only while a hero is there to
     // set it again (the next page's own applyHeroTone).
@@ -210,10 +207,6 @@ async function go(url, { push = true, restoreY = null } = {}) {
     window.scrollTo(0, 0);
   };
 
-  // The slide (styles.css "Page transitions"): the header's controls and the
-  // nav get their view-transition names (to stay still) only while it runs
-  // (html.is-page-transition) — a name changes how an element stacks, not
-  // wanted the rest of the time.
   // Mounts the new page module (once): its loading splash watched, its data
   // fetched.
   let mounted = null;
@@ -226,7 +219,7 @@ async function go(url, { push = true, restoreY = null } = {}) {
   };
 
   // Back / forward: the scroll position the page had, once its content is
-  // in (the splash gone) — then "app:scroll-restored", so the touch nav pill
+  // in (the splash gone) — then "app:scroll-restored", so the touch tab bar
   // (js/nav-dropdown.js) stays shown instead of reading the jump as
   // scrolling down.
   let scrollRestored = false;

@@ -25,14 +25,8 @@
 // the collapsed panel (e.g. the default "Dal" date) never goes unnoticed.
 // Kept in sync from the panel's own (bubbling) change events; a page that
 // sets a filter from code calls the returned refresh() instead.
-//
-// openOnDesktop (commander.html, player.html): wider than the detail pages'
-// phone layout, the panel starts open — no animation, already unclipped, the
-// button showing it open — and still closes on click; on phones it starts
-// closed like everywhere else.
-const DESKTOP_QUERY = "(min-width: 641px)";
 
-export function initFilterToggle(buttonId, panelId, { openOnDesktop = false } = {}) {
+export function initFilterToggle(buttonId, panelId) {
   const btn = document.getElementById(buttonId);
   const panel = document.getElementById(panelId);
   const clip = panel?.querySelector(".filter-panel-clip");
@@ -66,12 +60,6 @@ export function initFilterToggle(buttonId, panelId, { openOnDesktop = false } = 
     }
     btn.classList.toggle("is-open", opening);
     btn.setAttribute("aria-expanded", String(opening));
-  }
-
-  if (openOnDesktop && window.matchMedia(DESKTOP_QUERY).matches) {
-    // Open from the start: nothing to wait for, so no clip at all.
-    setOpen(true);
-    clip.classList.add("is-open");
   }
 
   btn.addEventListener("click", () => setOpen(panel.classList.contains("is-collapsed")));

@@ -684,9 +684,6 @@ body.is-loading * {
    `animation` shorthand resets the play state to running, so they'd play —
    and finish — unseen while the page is still loading. Any new one like
    them goes here too. */
-body.is-loading .filter-panel.detail-filter-panel,
-body.is-loading #player-filter-panel,
-body.is-loading .player-page-card .player-card,
 body.is-loading input[type="search"]:not(#site-search-input) {
   animation-play-state: paused;
 }
@@ -1146,8 +1143,7 @@ html.nav-mobile .site-search-result + .site-search-result::before {
   flex: 0 1 auto;
 }
 
-/* Same muted uppercase tag as the league under an event elsewhere
-   (.event-league-tag), inline here. */
+/* The league, in a muted uppercase tag inline after the result's name. */
 .site-search-result-league {
   flex: 0 1000 auto;
   color: var(--text-muted);
@@ -1454,14 +1450,6 @@ html.nav-mobile .site-search-box.is-closing .site-search-results {
   transition: background 180ms ease, border-color 180ms ease, color 180ms ease;
 }
 
-/* js/nav-dropdown.js's trigger is always in the DOM (static HTML, present
-   from first paint) regardless of device — hidden here by default, shown
-   only inside the mobile media block below, where it replaces the plain
-   tab row entirely. */
-.nav-dropdown-trigger {
-  display: none;
-}
-
 .nav-link:hover {
   background: #fff7f4;
   border-color: var(--hairline);
@@ -1625,7 +1613,7 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
    practice, some Android OEM browsers — Samsung Internet included —
    misreport those media features on a real touch phone, so the CSS media
    query silently failed to match even once html.nav-mobile was already
-   correctly set, and the pill's styling just never applied. Every rule
+   correctly set, and the touch nav's styling just never applied. Every rule
    below is scoped by html.nav-mobile alone now — simpler, and the
    only thing actually gating it. Same inline-head-script pattern as the
    dark/light theme flash-prevention script right above it in every page's
@@ -1646,7 +1634,7 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
     padding-top: calc(9px + env(safe-area-inset-top));
   }
 
-  /* Same reasoning at the opposite edge — keeps the pill clear of the
+  /* Same reasoning at the opposite edge — keeps the tab bar clear of the
      home-indicator gesture bar on notched phones instead of sitting
      underneath/behind it. */
   html.nav-mobile .site-nav {
@@ -1662,7 +1650,7 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
     padding: 0;
   }
 
-  /* Out of the way while reading: scrolling down slides the pill below the
+  /* Out of the way while reading: scrolling down slides the tab bar below the
      screen's bottom edge, scrolling up brings it back (js/nav-dropdown.js
      .is-scrolled-away). */
   html.nav-mobile .site-nav {
@@ -1688,98 +1676,6 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
     overscroll-behavior-y: contain;
   }
 
-  html.nav-mobile .site-nav-inner {
-    display: none;
-    position: absolute;
-    z-index: 30;
-    bottom: calc(100% + 8px);
-    top: auto;
-    /* Centered on the same axis the trigger itself is centered on (both
-       relative to .site-nav's own full-width box) so the panel always
-       lines up under the pill regardless of the trigger's rendered width. */
-    left: 50%;
-    transform: translateX(-50%);
-    width: 260px;
-    max-width: calc(100vw - 32px);
-    flex-direction: column;
-    flex-wrap: nowrap;
-    /* Overrides the @media (max-width: 900px) block's own overflow-x: auto
-       above — still in effect at this width too, and would otherwise turn
-       the .nav-link width overflow below into a visible horizontal
-       scrollbar instead of just not happening. */
-    overflow-x: hidden;
-    /* Capped in height by js/nav-dropdown.js (fitPanel: never past the red
-       header or the screen's top) — scrolling inside when taller, without
-       scrolling the page behind it. */
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    border: 1px solid var(--hairline);
-    border-radius: 32px;
-    /* The page background's own colour at its bottom (--bg-cream-3, the end
-       of body's gradient — a hero's tint of it on those pages), so the panel
-       sits on the page as part of it rather than as a red-tinted popup. */
-    background: var(--bg-cream-3);
-    box-shadow: var(--shadow-card-hover);
-    padding: 6px;
-  }
-
-  /* When the list scrolls (taller than the room fitPanel leaves it): no
-     scrollbar — a soft shadow at the top and/or bottom edge instead, only
-     where there's more to scroll ("scroll shadows": two panel-coloured
-     covers that scroll with the content, background-attachment: local,
-     over two shadows fixed to the panel's edges — at the very top / bottom
-     the cover sits over its shadow and hides it). Dark mode: the same in
-     its colours (see the dark-mode block). */
-  html.nav-mobile .site-nav-inner {
-    scrollbar-width: none;
-    background:
-      linear-gradient(var(--bg-cream-3) 40%, transparent) center top / 100% 36px no-repeat local,
-      linear-gradient(transparent, var(--bg-cream-3) 60%) center bottom / 100% 36px no-repeat local,
-      radial-gradient(farthest-side at 50% 0, rgba(159, 20, 27, 0.22), rgba(159, 20, 27, 0)) center top / 100% 14px no-repeat,
-      radial-gradient(farthest-side at 50% 100%, rgba(159, 20, 27, 0.22), rgba(159, 20, 27, 0)) center bottom / 100% 14px no-repeat,
-      var(--bg-cream-3);
-  }
-
-  html.nav-mobile .site-nav-inner::-webkit-scrollbar {
-    display: none;
-  }
-
-  /* Opening, material-like (no fades): the panel grows straight up out of
-     the pill as one solid surface — revealed from its bottom edge upward
-     (clip-path, from a pill-shaped strip at the bottom to the whole panel),
-     on Material's emphasized easing; its links slide up into place behind
-     the reveal. The clip only while it runs (fill backwards: none after,
-     so the panel's shadow shows again). Not the shared cs-menu-in keyframe
-     — its `transform: none` would wipe out the translateX(-50%) centering. */
-  html.nav-mobile .site-nav.is-open .site-nav-inner {
-    display: flex;
-    animation: nav-dropdown-panel-in 380ms cubic-bezier(0.2, 0, 0, 1) backwards;
-  }
-
-  @keyframes nav-dropdown-panel-in {
-    from {
-      clip-path: inset(calc(100% - 52px) 0 0 0 round 28px);
-      transform: translateX(-50%) translateY(10px);
-    }
-    to {
-      clip-path: inset(0 0 0 0 round 32px);
-      transform: translateX(-50%);
-    }
-  }
-
-  html.nav-mobile .site-nav.is-open .site-nav-inner > * {
-    animation: nav-dropdown-item-in 380ms cubic-bezier(0.2, 0, 0, 1) backwards;
-  }
-
-  html.nav-mobile .site-nav.is-open .site-nav-inner > :nth-last-child(1) { animation-delay: 0ms; }
-  html.nav-mobile .site-nav.is-open .site-nav-inner > :nth-last-child(2) { animation-delay: 15ms; }
-  html.nav-mobile .site-nav.is-open .site-nav-inner > :nth-last-child(3) { animation-delay: 30ms; }
-  html.nav-mobile .site-nav.is-open .site-nav-inner > :nth-last-child(4) { animation-delay: 45ms; }
-  html.nav-mobile .site-nav.is-open .site-nav-inner > :nth-last-child(5) { animation-delay: 60ms; }
-  html.nav-mobile .site-nav.is-open .site-nav-inner > :nth-last-child(6) { animation-delay: 75ms; }
-  html.nav-mobile .site-nav.is-open .site-nav-inner > :nth-last-child(7) { animation-delay: 90ms; }
-  html.nav-mobile .site-nav.is-open .site-nav-inner > :nth-last-child(n + 8) { animation-delay: 105ms; }
-
   @keyframes nav-dropdown-item-in {
     from {
       transform: translateY(24px);
@@ -1787,58 +1683,6 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
     to {
       transform: none;
     }
-  }
-
-  /* The pill gives a little under the finger. */
-  /* The background, edge and glow fade (700ms) — so the pill eases into a
-     hero's colour when it's picked (js/player-card.js applyHeroTone). */
-  html.nav-mobile .nav-dropdown-trigger {
-    transition: transform 140ms ease, background 700ms ease, border-color 700ms ease, box-shadow 700ms ease;
-  }
-
-  html.nav-mobile .nav-dropdown-trigger:active {
-    transform: scale(0.96);
-  }
-
-  /* Closing: js/nav-dropdown.js keeps the panel rendered (.is-closing) for
-     exactly as long as nav-dropdown-panel-out takes — the surface retracts
-     back down into the pill (Material's emphasized-accelerate easing,
-     quicker than the opening) — then lets the display: none above take
-     back over. */
-  html.nav-mobile .site-nav.is-closing .site-nav-inner {
-    display: flex;
-    animation: nav-dropdown-panel-out 220ms cubic-bezier(0.3, 0, 0.8, 0.15) both;
-  }
-
-  @keyframes nav-dropdown-panel-out {
-    from {
-      clip-path: inset(0 0 0 0 round 32px);
-      transform: translateX(-50%);
-    }
-    to {
-      clip-path: inset(calc(100% - 52px) 0 0 0 round 28px);
-      transform: translateX(-50%) translateY(10px);
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    html.nav-mobile .site-nav.is-open .site-nav-inner,
-    html.nav-mobile .site-nav.is-open .site-nav-inner > * {
-      animation: none;
-    }
-  }
-
-  html.nav-mobile .nav-link {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    /* A comfortable, generous touch target, not the tighter desktop pill
-       padding .nav-link normally gets — and a larger font size than the
-       desktop tab row's own 0.92rem, to match. */
-    min-height: 54px;
-    padding: 14px 18px;
-    font-size: 1.05rem;
-    box-sizing: border-box;
   }
 
   /* There's no hover on a touchscreen, so the desktop hover-popup treatment
@@ -1899,78 +1743,14 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
     flex-shrink: 0;
   }
 
-  html.nav-mobile .nav-dropdown-trigger {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    width: 220px;
-    margin: 0 auto;
-    min-height: 48px;
-    font: inherit;
-    font-size: 1.02rem;
-    padding: 11px 18px;
-    border-radius: var(--radius-pill);
-    border: none;
-    background: var(--brand-red);
-    color: #fff;
-    font-weight: 700;
-    cursor: pointer;
-    /* No backdrop behind it: a deep, soft shadow (a tight one close under
-       it, a wide halo around — not pushed down, it would reach the screen's
-       bottom edge, the pill only 16px above it) keeps it standing out from
-       whatever page content scrolls beneath. */
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35), 0 -4px 28px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 0, 0, 0.12);
-  }
-
-  /* Hover only with a real pointer: on a touch screen the tapped pill would
-     keep the darker colour (sticky hover) until something else is tapped. */
-  @media (hover: hover) {
-    html.nav-mobile .nav-dropdown-trigger:hover {
-      background: var(--brand-red-deep-2);
-    }
-  }
-
-  /* The pill shows whatever page is currently active (its own label text,
-     set per-page in the static HTML) — when that's Social, it should
-     carry Social's own blue identity too, same reasoning as the desktop
-     tab row's .nav-link[data-nav="social"] override. */
-  html.nav-mobile body[data-active-nav="social"] .nav-dropdown-trigger {
-    background: var(--social-blue);
-  }
-
-  @media (hover: hover) {
-    html.nav-mobile body[data-active-nav="social"] .nav-dropdown-trigger:hover {
-      background: #1f47b8;
-    }
-  }
-
-  /* Points up at rest — the panel it opens always appears above the pill,
-     never below — and rotates to point down once open, same "flip to
-     signal toggle state" idea as a downward-opening dropdown, just
-     starting from the opposite resting direction. */
-  html.nav-mobile .nav-dropdown-caret {
-    flex-shrink: 0;
-    width: 0;
-    height: 0;
-    border-left: 6px solid transparent;
-    border-right: 6px solid transparent;
-    border-bottom: 7px solid #fff;
-    transition: transform 180ms ease;
-  }
-
-  html.nav-mobile .site-nav.is-open .nav-dropdown-caret {
-    transform: rotate(180deg);
-  }
-
   /* .pwa-install-banner is also position: fixed, bottom: 16px, nearly
-     full-width — without this it would sit exactly on top of the pill
-     above instead of stacking above it. */
+     full-width — without this it would sit exactly on top of the tab bar
+     instead of stacking above it. */
   html.nav-mobile .pwa-install-banner {
     bottom: calc(78px + env(safe-area-inset-bottom));
   }
 
-  /* No room reserved for the pill any more: it slides away while
+  /* No room reserved for the tab bar: it slides away while
      scrolling down (js/nav-dropdown.js .is-scrolled-away), so at the
      page's bottom the footer is clear — just the home-bar space on notched
      phones. */
@@ -1978,11 +1758,11 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
     padding-bottom: calc(18px + env(safe-area-inset-bottom));
   }
 
-  /* A page shorter than the screen would leave its footer under the pill
+  /* A page shorter than the screen would leave its footer under the tab bar
      (which never slides away without scrolling): every page at least a
      screen tall (the large viewport — browser bars hidden — so it never
      peeks in), the footer just below the screen's edge, shown by scrolling
-     down to it, which slides the pill away (js/nav-dropdown.js, at the
+     down to it, which slides the bar away (js/nav-dropdown.js, at the
      bottom however little the page scrolls). */
   html.nav-mobile .page-main {
     min-height: 100vh;
@@ -2112,31 +1892,26 @@ main {
    stagger the first few so they cascade in instead of popping as one flat
    block. Capped at 6 steps: a long list re-using the last delay for every
    item past that reads better than a multi-second queued cascade. */
-.entity-card:nth-child(2),
 .stat-tile:nth-child(2),
 .badge-card:nth-child(2) {
   animation-delay: 45ms;
 }
 
-.entity-card:nth-child(3),
 .stat-tile:nth-child(3),
 .badge-card:nth-child(3) {
   animation-delay: 90ms;
 }
 
-.entity-card:nth-child(4),
 .stat-tile:nth-child(4),
 .badge-card:nth-child(4) {
   animation-delay: 135ms;
 }
 
-.entity-card:nth-child(5),
 .stat-tile:nth-child(5),
 .badge-card:nth-child(5) {
   animation-delay: 180ms;
 }
 
-.entity-card:nth-child(n + 6),
 .stat-tile:nth-child(n + 6),
 .badge-card:nth-child(n + 6) {
   animation-delay: 225ms;
@@ -2144,19 +1919,14 @@ main {
 
 @media (prefers-reduced-motion: reduce) {
   .card,
-  .data-table-wrap,
   .history-panel,
   .admin-form-card,
-  .entity-card,
   .admin-topbar h1,
   input[type="search"],
   .stat-tile,
   .pie-chart-wrap,
   .badge-card,
-  .league-group,
   .bar-chart-row,
-  .filter-panel.detail-filter-panel,
-  #player-filter-panel,
   .follow-btn-row,
   .player-card,
   .pc-art {
@@ -2182,18 +1952,6 @@ main {
    would otherwise stack on top of the flex/grid gaps above. */
 .dashboard-card {
   margin-bottom: 0;
-}
-
-#dashboard-announcements-content {
-  padding: 18px 22px 22px;
-}
-
-@media (max-width: 640px) {
-
-  #dashboard-announcements-content {
-    padding: 16px 16px 18px;
-  }
-
 }
 
 .home-board .dashboard-standing {
@@ -2738,20 +2496,6 @@ html.app-header .home-events-head {
    league. */
 .league-progress {
   margin-top: 10px;
-}
-
-.league-progress-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 6px;
-  font-size: 0.78rem;
-  font-weight: 800;
-}
-
-.league-progress-label {
-  color: var(--text-title);
 }
 
 .league-progress-track {
@@ -3434,135 +3178,6 @@ footer {
   margin: 0;
 }
 
-.commander-top-row-main {
-  /* Reserves horizontal space on desktop so the Winrate content never
-     runs under the card art floating beside it (see .commander-card-figure
-     below) — the figure is positioned relative to .page-heading, not this
-     element, so flexbox/grid can't reserve the space automatically here.
-     Sized generously since the image's actual width isn't fixed (see
-     .commander-card-image's own comment) — a bit more than it should ever
-     need, rather than cutting it close. */
-  padding-right: 300px;
-}
-
-/* Commander page's "Statistiche" title with its filter button right after
-   it. The h2 keeps its own default margins inside the row, so the row is
-   exactly as tall as the lone title used to be. */
-.stats-heading {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.stats-heading .filter-toggle-btn {
-  margin-left: 0;
-}
-
-/* A detail page's filters beside a card (commander.html always, player.html
-   when it shows the player's card — js/player-detail.js adds the class)
-   collapse differently from the list pages':
-   the row keeps its space and only fades out (visibility too, so hidden
-   fields can't be tabbed to), while the stat tiles right after it slide up
-   into that space — --detail-filters-shift, set by js/commander-detail.js /
-   js/player-detail.js to the filter row's exact height. The layout never changes, so the card
-   beside it keeps its size and nothing further down the page moves.
-   Expanded, the fields sit in the same box as the list pages' filter
-   panels (.filter-panel-body), and it's never clipped (no height collapse
-   to clip for), so the select/date popups open freely. */
-/* .filter-panel.detail-filter-panel (not just the one class): the
-   shared .filter-panel / .filter-panel.is-collapsed rules come later in
-   this file with the same specificity, and would otherwise win — really
-   collapsing the row and replacing this fade transition. */
-.filter-panel.detail-filter-panel,
-.filter-panel.detail-filter-panel.is-collapsed {
-  grid-template-rows: 1fr;
-}
-
-.filter-panel.detail-filter-panel {
-  opacity: 1;
-  visibility: visible;
-  transition: opacity 220ms ease, visibility 0s linear 0s;
-}
-
-.filter-panel.detail-filter-panel.is-collapsed {
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 220ms ease, visibility 0s linear 220ms;
-}
-
-/* While the page loads, hidden like the rest of .page-loading-region: its
-   own visibility: visible above (open — the default on desktop,
-   js/filter-toggle.js's openOnDesktop) would otherwise show it through the
-   region's visibility: hidden, before the stats beside the card are sized —
-   full width, then squeezed once they are. */
-body.is-loading .filter-panel.detail-filter-panel {
-  visibility: hidden;
-  transition: none;
-}
-
-/* Desktop: it fades up with the rest of the page once loading is done
-   (held on its first frame by body.is-loading until then), a beat after the
-   filter button beside it — also player.html's panel without a card, a
-   plain .filter-panel then, open from the start all the same. Fill mode backwards only, not both: a finished
-   animation must leave nothing behind, or its last frame would keep
-   overriding the panel's own fade-out (opacity) when it's closed later —
-   and the transform, gone once it's over, never traps the fields' popups
-   in a stacking context (gotcha #10). */
-@media (min-width: 641px) {
-  .filter-panel.detail-filter-panel,
-  #player-filter-panel {
-    animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) 60ms backwards;
-  }
-}
-
-.detail-filter-panel .filter-panel-clip {
-  overflow: visible;
-}
-
-.detail-filter-panel + .stat-grid {
-  transition: transform 280ms ease;
-}
-
-.detail-filter-panel.is-collapsed + .stat-grid {
-  transform: translateY(calc(-1 * var(--detail-filters-shift, 0px)));
-}
-
-/* Phones: the card is stacked above the stats, not beside them, so there's
-   nothing to keep still — the filter row really collapses like the list
-   pages' panels (grid rows 1fr -> 0fr, clipped while animating, the clip
-   lifted by js/filter-toggle.js once open) and the rest of the page moves
-   up with it; no slide-up of the tiles. */
-@media (max-width: 640px) {
-  .filter-panel.detail-filter-panel {
-    transition: grid-template-rows 280ms ease, opacity 220ms ease, visibility 0s linear 0s;
-  }
-
-  .filter-panel.detail-filter-panel.is-collapsed {
-    grid-template-rows: 0fr;
-    transition: grid-template-rows 280ms ease, opacity 220ms ease, visibility 0s linear 280ms;
-  }
-
-  .detail-filter-panel .filter-panel-clip {
-    overflow: hidden;
-  }
-
-  .detail-filter-panel .filter-panel-clip.is-open {
-    overflow: visible;
-  }
-
-  .detail-filter-panel.is-collapsed + .stat-grid {
-    transform: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .filter-panel.detail-filter-panel,
-  .filter-panel.detail-filter-panel.is-collapsed,
-  .detail-filter-panel + .stat-grid {
-    transition: none;
-  }
-}
-
 /* Commander detail page's Scryfall card art. Positioned relative to
    .page-heading (made position: relative above) rather than sitting in
    the Winrate row as a normal flex sibling — that way its top is pinned
@@ -3627,63 +3242,6 @@ body.is-loading .filter-panel.detail-filter-panel {
 @media (prefers-reduced-motion: reduce) {
   .commander-card-skeleton {
     animation: none;
-  }
-}
-
-/* player.html's player card (js/player-detail.js, markup from
-   js/player-card.js; the card itself is the .player-card / .pc-* rules of
-   account.html), placed and sized like commander.html's card above: pinned
-   to the title's top-right, its width set in JS so that, at Magic-card
-   proportions, it reaches exactly down to the stat tiles' bottom; the title
-   and the stats kept clear of it (padding-right, also JS). Same entrance as
-   the commander card, played with the rest of the page. */
-.player-page-card {
-  position: absolute;
-  top: 0;
-  right: 0;
-  /* Above the page below the heading: the card hangs down beside the stats,
-     over .page-loading-region (position: relative, later in the page),
-     which would otherwise paint over its lower half and take the clicks
-     meant for its links. Not a trap for the filters' popups: that region
-     isn't a stacking context, so their own z-index still outranks this. */
-  z-index: 2;
-  width: 280px;
-}
-
-.player-page-card .player-card {
-  animation: commander-card-in 450ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-
-/* Beside the card, the player's five stat tiles fit on one row (.stat-grid's
-   own 150px minimum fits only four), like the commander page's four — so the
-   card, spanning title to tiles, comes out the commander card's size. */
-@media (min-width: 641px) {
-  .player-stats-col.has-card .stat-grid {
-    grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
-  }
-}
-
-/* Phones: below the title on a line of its own, like the commander card,
-   same width, centred on the page — its line reaches back under the back
-   button (.breadcrumb-link's 44px + .page-heading-row's 14px gap), since
-   .page-heading itself starts right of it. */
-@media (max-width: 640px) {
-  .player-page-card {
-    position: relative;
-    top: auto;
-    right: auto;
-    flex: 0 0 calc(100% + 58px);
-    width: auto;
-    margin: 14px 0 0 -58px;
-  }
-
-  /* As wide as the page's other cards: its line already spans the whole
-     content width (reaching back under the back button, above), so the
-     card just fills it — set outright, not as a max-width, which another
-     rule on .player-card could still narrow. */
-  .player-page-card .player-card {
-    width: 100%;
-    max-width: none;
   }
 }
 
@@ -4697,9 +4255,6 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
 }
 
 @media (max-width: 640px) {
-  .commander-top-row-main {
-    padding-right: 0;
-  }
 
   /* No longer floating beside anything at this width — an in-flow block
      below the name, centred on the page like player.html's card: auto
@@ -4833,30 +4388,7 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   margin: 4px 0 0;
 }
 
-/* Status / results pill beside a detail page's title — league.html's
-   "In corso"/"Conclusa", event.html's mtgtop8 "Top 8" — a sibling of the
-   title, not inside the <h1>. Phones: it just stacks on its own line
-   between name and date. Desktop: .page-heading-text becomes a 2-column
-   grid with the pill in the title's row, vertically centered on the name
-   (the date line below stays under the name only). */
-.page-heading-pill {
-  display: flex;
-  margin-top: 8px;
-}
-
-/* display: flex above would otherwise override the hidden attribute. */
-.page-heading-pill[hidden] {
-  display: none;
-}
-
 @media (min-width: 641px) {
-  .page-heading-text:has(> .page-heading-pill:not([hidden])) {
-    display: grid;
-    grid-template-columns: minmax(0, max-content) auto;
-    justify-content: start;
-    align-items: center;
-    column-gap: 16px;
-  }
 
   .page-heading-text > .page-heading {
     grid-column: 1;
@@ -4870,24 +4402,6 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
     grid-column: 1 / -1;
     grid-row: 2;
   }
-
-  .page-heading-text > .page-heading-pill {
-    grid-column: 2;
-    grid-row: 1;
-    margin-top: 0;
-  }
-}
-
-/* A bit bigger than a plain .badge-status (26px). */
-.page-heading-pill > .badge-status {
-  min-height: 32px;
-  margin-left: 0;
-  padding: 0 14px;
-  font-size: 0.85rem;
-}
-
-.page-heading-pill > .results-links {
-  margin-left: 0;
 }
 
 /* Round icon-only back button — the destination ("Tutti i comandanti" etc.)
@@ -4944,13 +4458,6 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
 
 /* Stat tiles */
 
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 16px;
-  margin-bottom: 26px;
-}
-
 .stat-tile {
   border: 1px solid var(--hairline);
   border-radius: var(--radius-card-sm);
@@ -4958,9 +4465,7 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   box-shadow: var(--shadow-card);
   padding: 18px;
   backdrop-filter: blur(10px);
-  /* Was missing entirely — every other reveal-on-load card/row on the site
-     (.card, .entity-card, .data-table-wrap, .dashboard-*) fades up, but
-     the Winrate/Vittorie/Pareggi/Sconfitte tiles just popped in flat. */
+  /* Fades up like the site's other reveal-on-load cards. */
   animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
@@ -5104,40 +4609,6 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   text-shadow: inherit;
 }
 
-/* Generic entity list/detail cards */
-
-.entity-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 18px;
-}
-
-.entity-card {
-  display: block;
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius-card-sm);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 248, 246, 0.95));
-  box-shadow: var(--shadow-card);
-  padding: 18px;
-  text-decoration: none;
-  color: inherit;
-  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
-  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-
-.entity-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-card-hover);
-  border-color: var(--hairline-hover);
-}
-
-.entity-card-title {
-  color: var(--text-title);
-  font-size: 1.05rem;
-  font-weight: 800;
-  margin-bottom: 6px;
-}
-
 /* An event's external links (js/results-link.js) — Bacheca "Ultimi eventi"
    rows and beside event.html's title: a round white Moxfield-logo button
    and a white pill with mtgtop8's wordmark (dark blue on transparent, only
@@ -5201,14 +4672,6 @@ html.nav-mobile .results-links {
   height: calc(var(--results-link-h) * 0.35);
 }
 
-.entity-card-meta {
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
 /* A player's handle shown inline next to their name (leaderboards, match
    lists) — same muted tone as .entity-card-meta, but kept in whatever
    case it was actually entered in admin, not forced uppercase. */
@@ -5216,19 +4679,6 @@ html.nav-mobile .results-links {
   color: var(--text-muted);
   font-size: 0.85rem;
   font-weight: 700;
-}
-
-/* The league under an event's name in an "Evento" table cell (js/ui.js's
-   eventCellLabel) — a second, small line instead of its own column, in the
-   muted uppercase. */
-.event-league-tag {
-  display: block;
-  margin-top: 2px;
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
 }
 
 /* Leghe & Eventi (events.html, js/events-page.js): a board of tiles —
@@ -6001,10 +5451,6 @@ button.ev-tile {
   transition: background 180ms ease;
 }
 
-.league-group:hover .league-group-toggle-icon {
-  background: var(--brand-red-deep-2);
-}
-
 .league-group-toggle-icon::before {
   content: "";
   width: 0;
@@ -6016,95 +5462,6 @@ button.ev-tile {
      accordion-chevron direction. */
   border-bottom: 8px solid #fff;
   transition: transform 180ms ease;
-}
-
-.league-group.is-collapsed .league-group-toggle-icon::before {
-  transform: rotate(180deg);
-}
-
-/* Data tables (leaderboards, match lists, admin lists) — styled as a list
-   inside a card rather than a spreadsheet grid: no filled header band, only
-   the header's own line at full strength, faint row separators, and the
-   rows inset from the card's edges (the wrapper's padding). */
-
-.data-table-wrap {
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius-card-sm);
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: var(--shadow-card);
-  padding: 6px 10px;
-  overflow: hidden;
-  overflow-x: auto;
-  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-
-/* Every live-search box rebuilds its .data-table-wrap on each keystroke
-   (same element, freshly recreated) — opting out here stops the entrance
-   animation from replaying on every character typed. */
-.data-table-wrap.no-entrance-anim {
-  animation: none;
-}
-
-/* separate + 0 spacing looks the same as collapse with bottom-only borders,
-   but keeps each cell's own box intact for the top-8 accent bar below (a
-   positioned ::before on a cell). tabular-nums keeps digits equal-width, so
-   scores/percentages line up down a column. */
-table.data-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  font-size: 0.95rem;
-  font-variant-numeric: tabular-nums;
-}
-
-table.data-table th,
-table.data-table td {
-  padding: 13px 14px;
-  text-align: left;
-  vertical-align: middle;
-  border-bottom: 1px solid var(--table-row-line);
-  white-space: nowrap;
-}
-
-table.data-table th {
-  padding-top: 12px;
-  padding-bottom: 10px;
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  border-bottom-color: var(--hairline);
-}
-
-table.data-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-table.data-table tbody tr {
-  transition: background 150ms ease;
-}
-
-table.data-table tbody tr:hover {
-  background: rgba(220, 24, 28, 0.04);
-}
-
-/* Player/commander/event names: red on hover rather than the site-wide
-   underline — reads as a row you can open, not a spreadsheet hyperlink. */
-table.data-table td a {
-  transition: color 150ms ease;
-}
-
-table.data-table td a:hover {
-  color: var(--brand-red-deep);
-  text-decoration: none;
-}
-
-/* width: 1% shrinks the column to its chip instead of sharing spare width. */
-.rank-cell {
-  width: 1%;
-  font-weight: 800;
-  color: var(--brand-red);
 }
 
 /* Round red position chip (the old Bacheca standings preview's look),
@@ -6123,35 +5480,6 @@ table.data-table td a:hover {
   color: var(--brand-red-deep);
   font-size: 0.82rem;
   font-weight: 800;
-}
-/* league.html leaderboard: the top 8 positions get a red accent bar on
-   their first cell plus a faint tint. Explicit :hover rule since
-   tr.is-top8 ties the generic tr:hover on specificity and, coming later,
-   would otherwise mask it. */
-table.data-table tbody tr.is-top8 {
-  background: rgba(220, 24, 28, 0.035);
-}
-
-table.data-table tbody tr.is-top8:hover {
-  background: rgba(220, 24, 28, 0.07);
-}
-
-/* A real 3px strip rather than an inset box-shadow: the shadow version
-   anti-aliased its inner edges on fractional row heights, leaving a faint
-   red hairline across the cell between rows. bottom: -1px runs it over the
-   cell's own separator line, so consecutive top-8 bars join seamlessly. */
-table.data-table tbody tr.is-top8 td:first-child {
-  position: relative;
-}
-
-table.data-table tbody tr.is-top8 td:first-child::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: -1px;
-  left: 0;
-  width: 3px;
-  background: var(--brand-red);
 }
 
 /* "Tu" (js/me-highlight.js): the signed-in account's own player — a small
@@ -6176,14 +5504,6 @@ table.data-table tbody tr.is-top8 td:first-child::before {
 
 a.is-me {
   font-weight: 800;
-}
-
-table.data-table tbody tr.is-me-row {
-  background: rgba(220, 24, 28, 0.08);
-}
-
-table.data-table tbody tr.is-me-row:hover {
-  background: rgba(220, 24, 28, 0.12);
 }
 
 /* Small inline icon with a hover/focus tooltip — player badges (Giocatori
@@ -6467,10 +5787,6 @@ img.badge-disc-glyph {
   transform: translateY(-1px);
 }
 
-.entity-card .badge-status {
-  margin-top: 10px;
-}
-
 .color-identity {
   display: inline-flex;
   gap: 4px;
@@ -6569,11 +5885,10 @@ a.btn-secondary:hover {
 /* Two half-width cards side by side from 880px (the album's own
    breakpoint), stacked on phones (js/history-list.js): player.html's
    "Album comandanti" + "Storico partite", commander.html's "Giocatori" +
-   "Storico partite". A list is a card (.history-panel, the .data-table-wrap
-   look) holding sub-cards that scroll inside — no pagination — its
-   top/bottom edge fading while there's more that way
-   (.can-scroll-up/-down); 70vh at most, or capped by js
-   (capScrollToItems: commander.html's matches, at 8 rounds;
+   "Storico partite". A list is a card (.history-panel) holding sub-cards
+   that scroll inside — no pagination — its top/bottom edge fading while
+   there's more that way (.can-scroll-up/-down); 70vh at most, or capped by
+   js (capScrollToItems: commander.html's matches, at 8 rounds;
    capScrollToHeightOf: its players, never taller than the matches). A
    column is as tall as its own list (align-self: start), except on desktop
    a `.fills-row` one: no height of its own (`contain: size`), so the other
@@ -7320,14 +6635,6 @@ a.history-item.is-me {
   }
 }
 
-/* "Torna all'inizio" (js/back-to-top.js, Comandanti / Giocatori): a round
-   white button with a brand-red ring and arrow (the .results-link look),
-   fixed bottom-right, fading/rising in once the page is scrolled down —
-   visibility too, so while hidden it's neither clickable nor tabbable.
-   z-index under .site-nav's (20): the phone nav's open menu covers it. On
-   touch screens it sits right beside the floating nav pill (56px tall,
-   16px from the bottom) when the screen has room for it, otherwise just
-   above the pill. */
 /* Pull to refresh, installed app only (js/pull-refresh.js): a white disc
    with a red refresh arrow, hidden above the top edge, sliding down with
    the pull (--ptr-y) — "Torna all'inizio"'s look; its red ring fills as it
@@ -7434,6 +6741,11 @@ body.has-hero-accent .ptr {
   }
 }
 
+/* "Torna all'inizio" (js/back-to-top.js, Comandanti / Giocatori): a round
+   white button with a brand-red ring and arrow (the .results-link look),
+   fixed bottom-right, fading/rising in once the page is scrolled down —
+   visibility too, so while hidden it's neither clickable nor tabbable. On
+   touch screens just above the tab bar, on the right (the "Tab bar" rules). */
 .back-to-top {
   position: fixed;
   right: 24px;
@@ -7523,25 +6835,6 @@ body.has-hero-accent .ptr {
 
 /* (Lifted above the footer here too, like the desktop's: otherwise, at the
    page's bottom, it lies on the footer's theme switch.) */
-html.nav-mobile .back-to-top {
-  right: 16px;
-  bottom: calc(16px + 48px + 12px + env(safe-area-inset-bottom) + var(--back-to-top-lift, 0px));
-}
-
-/* Wide enough for it beside the pill (centred, 220px): 12px gap + 46px
-   button + 8px to the screen edge on that side → (352 − 220) / 2 = 66px.
-   There, right next to the pill, centred on its height — and above
-   .site-nav (z-index 20): the fixed nav spans the screen's whole width at
-   the pill's height, so under it the button would never get the tap. Its
-   open menu opens upward above the pill, clear of the button. */
-@media (min-width: 352px) {
-  html.nav-mobile .back-to-top {
-    right: auto;
-    left: calc(50% + 110px + 12px);
-    bottom: calc(16px + 1px + env(safe-area-inset-bottom) + var(--back-to-top-lift, 0px));
-    z-index: 21;
-  }
-}
 
 @media (prefers-reduced-motion: reduce) {
   .back-to-top,
@@ -8663,58 +7956,6 @@ img.cs-option-icon {
   background: repeating-linear-gradient(45deg, #ddd 0, #ddd 5px, #eee 5px, #eee 10px);
 }
 
-/* Badge icon picker: same single-choice swatch pattern as the color-identity
-   picker above, just showing the emoji glyph itself instead of a color
-   fill, and radio (not checkbox) inputs since a badge has exactly one icon. */
-
-.icon-swatch-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-/* Same fix as .field[hidden] elsewhere — this class's own `display: flex`
-   above otherwise wins the tie against the browser's default
-   `[hidden] { display: none; }` rule, silently making a plain `hidden`
-   toggle do nothing (used by badges-admin.js to switch emoji/image mode). */
-.icon-swatch-row[hidden] {
-  display: none;
-}
-
-.icon-swatch {
-  position: relative;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  border: 2px solid var(--hairline);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.3rem;
-  background: #fff;
-  box-shadow: var(--shadow-card);
-  cursor: pointer;
-  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
-}
-
-.icon-swatch:hover {
-  transform: translateY(-2px);
-}
-
-.icon-swatch input {
-  position: absolute;
-  inset: 0;
-  margin: 0;
-  opacity: 0;
-  cursor: pointer;
-}
-
-.icon-swatch:has(input:checked) {
-  border-color: var(--brand-red);
-  box-shadow: 0 0 0 3px rgba(220, 24, 28, 0.25);
-  transform: scale(1.08);
-}
-
 #badges-admin-icon-preview img {
   display: block;
   width: 44px;
@@ -8817,11 +8058,6 @@ img.cs-option-icon {
   font-weight: 800;
 }
 
-.profile-empty {
-  color: var(--text-muted);
-  font-weight: 400;
-}
-
 .profile-card h3 {
   margin: 0 0 14px;
   font-size: 1.1rem;
@@ -8866,28 +8102,6 @@ img.cs-option-icon {
 .profile-claim .form-message:empty {
   min-height: 0;
   margin-top: 0;
-}
-
-/* A card title with an action on its right ("Le tue statistiche" + the
-   player page link); wraps under it on a narrow screen. */
-.profile-card-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px 16px;
-  margin-bottom: 14px;
-}
-
-.profile-card-heading h3 {
-  margin: 0;
-}
-
-/* "Le tue statistiche" + its "?" (the card effects' explanation). */
-.profile-card-title-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 /* The player page's stat tiles, inside a card here: no shadow of their own
@@ -9118,7 +8332,6 @@ html:not(.nav-mobile) body:has(main[data-accent-from-hero]:not(.has-hero-accent)
   --bar-c2: #4a4542;
 }
 
-html[data-theme="dark"].nav-mobile body:has(main[data-accent-from-hero]:not(.has-hero-accent)):not(:has([data-view="login"]:not([hidden]))) .site-nav:not(.has-hero-accent) .nav-dropdown-trigger,
 :root[data-theme="dark"] body:has(main[data-accent-from-hero]:not(.has-hero-accent)):not(:has([data-view="login"]:not([hidden]))) .back-to-top:not(.has-hero-accent) {
   border-color: rgba(255, 255, 255, 0.3);
   background: #3a3634;
@@ -10138,8 +9351,8 @@ main.has-hero-accent .profile-tab:not(.is-active):hover {
 
 /* Phones: the tabs become a segmented control — the bar's full width split
    in equal parts (only the tabs shown), icon over a short label — never
-   scrolling sideways; sticky on touch screens (the nav is the pill at the
-   bottom there). */
+   scrolling sideways; sticky on touch screens (the nav is the tab bar at
+   the bottom there). */
 @media (max-width: 640px) {
   /* overflow hidden + the labels allowed to shrink (an ellipsis if one ever
      doesn't fit its share): a label kept on one line and wider than its
@@ -10312,8 +9525,7 @@ html.nav-mobile .profile-tab svg {
    drawn here, as the frame's padding + background with the surface wholly
    inside it: drawn as a ring over the dark surface instead, along the same
    rounded edge, the surface's dark edge pixels showed through it (a thin
-   black line outside, worst at the corners). --rim: its width (0 = none);
-   the sizing code reads the padding (js/card-cosmetics.js cardFrameWidth). */
+   black line outside, worst at the corners). --rim: its width (0 = none). */
 .pc-frame {
   --rim: 0px;
   padding: var(--rim);
@@ -11153,29 +10365,6 @@ html.nav-mobile .player-card.is-editing .pc-art-space {
   accent-color: var(--brand-red);
 }
 
-/* A list on the card in edit mode (.pc-select): translucent on the glass
-   instead of the site's white field. Specific enough to outrank the
-   dark-mode .cs-trigger rule too. (None at the moment — the background
-   card is a search field, .pc-card-search.) */
-.player-card .pc-select .cs-wrap {
-  margin-top: 1cqw;
-}
-
-.player-card .pc-panel .pc-select .cs-trigger {
-  padding: 1.2cqw 2.4cqw;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 2.4cqw;
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  font-size: 4cqw;
-  font-weight: 800;
-}
-
-.player-card .pc-panel .pc-select .cs-trigger:hover,
-.player-card .pc-panel .pc-select .cs-trigger:focus-visible {
-  border-color: rgba(255, 255, 255, 0.6);
-}
-
 /* The background card's search (js/account-page.js): a field like the
    links' on the glass, × to clear it, and Scryfall's names in a list
    opening under it — over the card (the card is lifted above what's
@@ -11703,13 +10892,6 @@ html.nav-mobile .player-card.is-editing .pc-label {
   font-size: 11px;
 }
 
-html.nav-mobile .player-card .pc-panel .pc-select .cs-trigger {
-  min-height: 44px;
-  padding: 8px 12px;
-  border-radius: 10px;
-  font-size: 16px;
-}
-
 html.nav-mobile .player-card .cs-search {
   padding: 10px 12px;
   font-size: 16px;
@@ -12131,10 +11313,6 @@ a.history-item:hover .follow-name {
   background: var(--brand-red-deep-2);
 }
 
-.profile-collapsible.is-collapsed .league-group-toggle-icon::before {
-  transform: rotate(180deg);
-}
-
 /* minmax(0, 1fr): the one column never wider than the card — by default a
    grid column grows to its widest unbreakable content (Account's email, kept
    on one line), which pushed the row, "Esci" included, out of the card on
@@ -12145,11 +11323,6 @@ a.history-item:hover .follow-name {
   grid-template-rows: 1fr;
   opacity: 1;
   transition: grid-template-rows 300ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 240ms ease;
-}
-
-.profile-collapsible.is-collapsed .decklist-body {
-  grid-template-rows: 0fr;
-  opacity: 0;
 }
 
 /* Clips the content while it slides (min-height: 0, so the row can really
@@ -12461,8 +11634,8 @@ a.history-item:hover .follow-name {
     max-width: none;
   }
 
-  /* Two stat tiles per row: .stat-grid's own auto-fit (150px minimum each)
-     fits only one in a phone-width card. */
+  /* Two stat tiles per row: an auto-fit of 150px minimum each fits only
+     one in a phone-width card. */
   .profile-stats-tiles {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
@@ -13594,10 +12767,6 @@ html.nav-mobile .matchups-matrix-scroll::-webkit-scrollbar {
   }
 }
 
-/* Deliberately its own class, not table.data-table — that shared rule's
-   selector specificity (element+class+element) would otherwise win over
-   this one for shared properties like padding/text-align, since a plain
-   class selector alone is less specific. */
 .matchups-table {
   width: 100%;
   border-collapse: separate;
@@ -14868,20 +14037,6 @@ html.nav-mobile .chart-carousel-arrow {
   .page-main {
     padding: 20px 16px 36px;
   }
-
-  .data-table-wrap:not(.matchups-matrix-wrap) {
-    padding: 4px 6px;
-  }
-
-  table.data-table th,
-  table.data-table td {
-    padding: 12px 10px;
-  }
-
-  table.data-table th {
-    padding-top: 11px;
-    padding-bottom: 9px;
-  }
 }
 
 /* ==========================================================================
@@ -14943,8 +14098,6 @@ html.nav-mobile .chart-carousel-arrow {
    become a faint light-on-dark surface instead. */
 :root[data-theme="dark"] .card,
 :root[data-theme="dark"] .stat-tile,
-:root[data-theme="dark"] .entity-card,
-:root[data-theme="dark"] .data-table-wrap,
 :root[data-theme="dark"] .history-panel,
 :root[data-theme="dark"] .pie-chart-wrap,
 :root[data-theme="dark"] .deck,
@@ -14994,26 +14147,6 @@ html.nav-mobile .chart-carousel-arrow {
 
 :root[data-theme="dark"] .badge-holder:hover {
   background: rgba(255, 110, 110, 0.2);
-}
-
-:root[data-theme="dark"] table.data-table tbody tr:hover {
-  background: rgba(255, 110, 110, 0.06);
-}
-
-:root[data-theme="dark"] table.data-table tbody tr.is-top8 {
-  background: rgba(255, 110, 110, 0.05);
-}
-
-:root[data-theme="dark"] table.data-table tbody tr.is-top8:hover {
-  background: rgba(255, 110, 110, 0.1);
-}
-
-:root[data-theme="dark"] table.data-table tbody tr.is-me-row {
-  background: rgba(255, 110, 110, 0.12);
-}
-
-:root[data-theme="dark"] table.data-table tbody tr.is-me-row:hover {
-  background: rgba(255, 110, 110, 0.17);
 }
 
 :root[data-theme="dark"] .rank-chip {
@@ -15066,7 +14199,6 @@ html.nav-mobile .chart-carousel-arrow {
 :root[data-theme="dark"] .history-scroll {
   scrollbar-color: rgba(255, 110, 110, 0.3) transparent;
 }
-:root[data-theme="dark"] .rank-cell,
 :root[data-theme="dark"] .stat-tile-value,
 :root[data-theme="dark"] .cd-day.is-today {
   color: #ff6a6e;
@@ -15080,7 +14212,6 @@ html.nav-mobile .chart-carousel-arrow {
 :root[data-theme="dark"] .cd-nav,
 :root[data-theme="dark"] .cd-footer-btn,
 :root[data-theme="dark"] .ecal-close,
-:root[data-theme="dark"] .icon-swatch,
 :root[data-theme="dark"] #badges-admin-icon-file,
 :root[data-theme="dark"] .btn-secondary,
 :root[data-theme="dark"] .btn-danger,
@@ -15120,35 +14251,6 @@ html[data-theme="dark"].nav-mobile .site-nav {
   background: none;
 }
 
-/* Its own slightly red-tinted dark shade, not the plain neutral one below
-   — same "less intense red, same family as the solid-red trigger pill"
-   reasoning as its light-mode background. */
-/* Dark mode: the touch nav pill in the same deep red-brown as the dark
-   cards (the league tile, Novità) with a red edge, rather than the light
-   theme's bright solid red; Social's own blue pill unchanged. */
-html[data-theme="dark"].nav-mobile .nav-dropdown-trigger {
-  border: 1.5px solid rgba(255, 110, 110, 0.75);
-  background: #4a1a1f;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45), 0 -4px 28px rgba(0, 0, 0, 0.55), 0 0 0 4px rgba(255, 90, 95, 0.1);
-}
-
-@media (hover: hover) {
-  html[data-theme="dark"].nav-mobile .nav-dropdown-trigger:hover {
-    background: #5a2026;
-  }
-}
-
-html[data-theme="dark"].nav-mobile body[data-active-nav="social"] .nav-dropdown-trigger {
-  border-color: transparent;
-  background: var(--social-blue);
-}
-
-@media (hover: hover) {
-  html[data-theme="dark"].nav-mobile body[data-active-nav="social"] .nav-dropdown-trigger:hover {
-    background: #1f47b8;
-  }
-}
-
 /* player.html / account.html with a hero colour (js/player-card.js): the
    touch nav — its pill and the current page's link in its panel — in that
    colour too (the site's red variables redefined on the nav, touch only);
@@ -15158,51 +14260,6 @@ html.nav-mobile .site-nav.has-hero-accent {
   --brand-red-deep: var(--hero-accent-deep);
   --brand-red-deep-2: var(--hero-accent-deep-2);
   --brand-red-darker: var(--hero-accent-deep);
-}
-
-/* Its panel too: a pale tint of the colour (dark: a deep shade of it),
-   with the same scroll shadows as the plain panel, in its own colour. */
-html.nav-mobile .site-nav.has-hero-accent .site-nav-inner {
-  --nav-panel: var(--bg-cream-3);
-  border-color: color-mix(in srgb, var(--hero-accent) 20%, transparent);
-  background:
-    linear-gradient(var(--nav-panel) 40%, transparent) center top / 100% 36px no-repeat local,
-    linear-gradient(transparent, var(--nav-panel) 60%) center bottom / 100% 36px no-repeat local,
-    radial-gradient(farthest-side at 50% 0, color-mix(in srgb, var(--hero-accent-deep) 22%, transparent), transparent) center top / 100% 14px no-repeat,
-    radial-gradient(farthest-side at 50% 100%, color-mix(in srgb, var(--hero-accent-deep) 22%, transparent), transparent) center bottom / 100% 14px no-repeat,
-    var(--nav-panel);
-}
-
-html[data-theme="dark"].nav-mobile .site-nav.has-hero-accent .site-nav-inner {
-  --nav-panel: var(--bg-cream-3);
-  border-color: color-mix(in srgb, var(--hero-accent-light) 22%, transparent);
-  background:
-    linear-gradient(var(--nav-panel) 40%, transparent) center top / 100% 36px no-repeat local,
-    linear-gradient(transparent, var(--nav-panel) 60%) center bottom / 100% 36px no-repeat local,
-    radial-gradient(farthest-side at 50% 0, rgba(0, 0, 0, 0.55), transparent) center top / 100% 14px no-repeat,
-    radial-gradient(farthest-side at 50% 100%, rgba(0, 0, 0, 0.55), transparent) center bottom / 100% 14px no-repeat,
-    var(--nav-panel);
-}
-
-html[data-theme="dark"].nav-mobile .site-nav.has-hero-accent .nav-dropdown-trigger {
-  border-color: color-mix(in srgb, var(--hero-accent-light) 75%, transparent);
-  background: color-mix(in srgb, var(--hero-accent) 42%, #1c0f11);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45), 0 -4px 28px rgba(0, 0, 0, 0.55), 0 0 0 4px color-mix(in srgb, var(--hero-accent-light) 12%, transparent);
-}
-
-@media (hover: hover) {
-  html[data-theme="dark"].nav-mobile .site-nav.has-hero-accent .nav-dropdown-trigger:hover {
-    background: color-mix(in srgb, var(--hero-accent) 55%, #1c0f11);
-  }
-}
-
-html[data-theme="dark"].nav-mobile .site-nav-inner {
-  background:
-    linear-gradient(var(--bg-cream-3) 40%, transparent) center top / 100% 36px no-repeat local,
-    linear-gradient(transparent, var(--bg-cream-3) 60%) center bottom / 100% 36px no-repeat local,
-    radial-gradient(farthest-side at 50% 0, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0)) center top / 100% 14px no-repeat,
-    radial-gradient(farthest-side at 50% 100%, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0)) center bottom / 100% 14px no-repeat,
-    var(--bg-cream-3);
 }
 
 /* The mobile search field switches to a normal light/dark-aware input
@@ -15904,15 +14961,15 @@ html.app-header .site-header.has-hero-accent .site-search-trigger {
 
 /* ---------------------------------------------------------------------------
    Tab bar (js/tab-bar.js) — touch screens: the navigation at the bottom of
-   the screen, in place of the old pill and its list (their markup still in
-   every page, the pill hidden here; a computer keeps its tabs in the top
-   bar). A solid capsule (white; dark mode near-black) with five sections — Bacheca, Eventi, Meta,
+   the screen (the old pill and its list are gone; a computer keeps its tabs
+   in the top bar, .site-nav-inner — hidden here). A solid capsule (white;
+   dark mode near-black) with five sections — Bacheca, Eventi, Meta,
    Giocatori, Social — the current one in a red chip with its name (the
    hero's colour on hero pages: .site-nav.has-hero-accent redefines the red),
    the others icon only; the chip slides to the new section. It slides away
    scrolling down with the whole .site-nav (.is-scrolled-away, above).
    --------------------------------------------------------------------------- */
-html.nav-mobile .nav-dropdown-trigger {
+html.nav-mobile .site-nav-inner {
   display: none;
 }
 
@@ -16139,7 +15196,7 @@ html.nav-mobile .matchups-toolbar {
 /* ---------------------------------------------------------------------------
    Page transitions (js/router.js, in-app navigation): the screen changes
    with Material's fade through, while the header's own controls (the logo,
-   the search, the profile picture) and the nav (the mobile pill) stay still
+   the search, the profile picture) and the nav (the touch tab bar) stay still
    on top of it — wider than a phone, the whole red header and the tab row
    stay still instead. The names only during the transition
    (html.is-page-transition — a name changes how an element stacks);

@@ -1,8 +1,8 @@
 // Mobile (≤640px) page-title fitting for the detail pages (commander,
 // league, event): shrink a long <h1> to fit one line instead of wrapping,
-// and keep the back button beside it vertically centered on it. (League/
-// event status pills are a sibling of the <h1>, .page-heading-pill, not
-// inside it — only the name itself is ever fitted.)
+// and keep the back button beside it vertically centered on it. (Anything
+// beside a title is a sibling of the <h1>, not inside it — only the name
+// itself is ever fitted.)
 
 const MOBILE_MAX_WIDTH = 640;
 const MIN_FONT_SIZE = 17;

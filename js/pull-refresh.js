@@ -2,15 +2,15 @@
 // a browser tab has its own, or its reload button): pulled down from the
 // very top of the page, a white disc with a red refresh arrow slides down
 // from the top edge (styles.css .ptr), its red ring filling and the arrow
-// turning as it goes; past THRESHOLD it's armed (a pop and a haptic tick, js/haptics.js) and letting
-// go reloads the page's data in place (js/router.js refresh — no full
-// reload), the disc spinning until the page is shown again. Pulled less,
-// it just slides back.
+// turning as it goes; past THRESHOLD it's armed (a pop and a haptic tick,
+// js/haptics.js) and letting go reloads the page's data in place
+// (js/router.js refresh — no full reload), the disc spinning until the page
+// is shown again. Pulled less, it just slides back.
 //
-// Not started over an open pop-up, the nav pill's list or the search, nor
-// from inside something that scrolls on its own and isn't at its top (a
-// list, a dialog's body), nor while the page is still loading; a sideways
-// swipe (carousels, tabs) never turns into a pull.
+// Not started over an open pop-up or the search, nor from inside something
+// that scrolls on its own and isn't at its top (a list, a dialog's body),
+// nor while the page is still loading; a sideways swipe (carousels, tabs)
+// never turns into a pull.
 
 import { refresh } from "./router.js";
 import { haptic } from "./haptics.js";
@@ -22,22 +22,13 @@ const MAX_TRAVEL = 110;
 // Never spinning longer than this, whatever the page does.
 const MAX_WAIT_MS = 15000;
 
-// (localStorage "ptrTest" = "1": also in a browser tab — for trying it out
-// in DevTools' device emulation, where the app can't be installed.)
-const standalone = () => {
-  try {
-    if (localStorage.getItem("ptrTest") === "1") return true;
-  } catch {
-    // No storage: just the real check.
-  }
-  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
-};
+const standalone = () =>
+  window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
 
 function blocked() {
   return Boolean(
     document.body.classList.contains("is-loading") ||
       document.querySelector("dialog[open]") ||
-      document.querySelector(".site-nav.is-open") ||
       document.querySelector(".site-search-box.is-open")
   );
 }

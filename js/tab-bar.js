@@ -13,7 +13,7 @@
 // commanders.html / matchups.html / archetypes.html).
 //
 // Built here into .site-nav (every page's nav markup unchanged); it slides
-// away while scrolling down like the pill did (js/nav-dropdown.js toggles
+// away while scrolling down (js/nav-dropdown.js toggles
 // .is-scrolled-away on .site-nav). No section lit on a page outside them
 // (account, privacy).
 

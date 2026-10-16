@@ -189,11 +189,3 @@ export function openCardEffectsInfo() {
     applyCardCosmetics(card, JSON.parse(card.dataset.progress));
   }
 }
-
-// The frame's width on each side (px) — the cards' sizing code (player.html,
-// account.html) measures it rather than assuming one: a Presenze frame is
-// wider than none.
-export function cardFrameWidth(cardEl) {
-  const frame = cardEl?.querySelector(".pc-frame");
-  return frame ? parseFloat(getComputedStyle(frame).paddingLeft) || 0 : 0;
-}
