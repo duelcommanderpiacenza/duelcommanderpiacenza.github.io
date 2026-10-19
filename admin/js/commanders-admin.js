@@ -51,6 +51,8 @@ export function initCommandersAdmin() {
   async function refresh() {
     try {
       allCommanders = await Commanders.list();
+      // How many there are, in the search field (like the public lists').
+      searchField.placeholder = `Cerca tra ${allCommanders.length} comandanti...`;
       renderList();
     } catch (err) {
       setMessage(msgEl, "Errore nel caricamento.", true);

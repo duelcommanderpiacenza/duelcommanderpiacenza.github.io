@@ -104,6 +104,8 @@ export function initLeaguesAdmin({ onOpenLeague }) {
       leagues = allLeagues
         .map((l) => ({ ...l, latestEventDate: latestEventDateByLeague.get(l.id) ?? null }))
         .sort(compareLeagues);
+      // How many there are, in the search field (like the public lists').
+      searchField.placeholder = `Cerca tra ${leagues.length} leghe...`;
       renderList(animate);
     } catch (err) {
       setMessage(msgEl, "Errore nel caricamento.", true);

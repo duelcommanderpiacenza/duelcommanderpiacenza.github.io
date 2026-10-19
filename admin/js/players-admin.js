@@ -88,6 +88,8 @@ export function initPlayersAdmin() {
   async function refresh() {
     try {
       allPlayers = await Players.list();
+      // How many there are, in the search field (like the public lists').
+      searchField.placeholder = `Cerca tra ${allPlayers.length} giocatori (nome o handle)...`;
       renderList();
     } catch (err) {
       setMessage(msgEl, "Errore nel caricamento.", true);

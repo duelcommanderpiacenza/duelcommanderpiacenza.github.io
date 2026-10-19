@@ -251,6 +251,8 @@ export function initUsersAdmin() {
   async function refresh(animate = true) {
     try {
       users = await AdminUsers.list();
+      // How many there are, in the search field (like the public lists').
+      searchField.placeholder = `Cerca tra ${users.length} account (email o giocatore)...`;
       renderRequests();
       renderList(animate);
       renderPlayerOptions();
