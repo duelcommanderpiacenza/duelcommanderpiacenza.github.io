@@ -58,6 +58,10 @@ let viewRequest = 0;
 // Where the event on screen was opened from — the bar's back pill's label
 // (the league's name, or the standalone events' tab).
 let eventOrigin = "";
+// The tab left (for another tab) while one of its events was open: picking
+// it again brings that event back (still loaded, under the tabs), not the
+// list it was opened from. Dropped once another event is opened.
+let parkedEventTab = null;
 
 // The admin's screen changes (a tab, drilling into a league / an event and
 // back) with the public site's fade through (styles.css "Page transitions":
@@ -226,10 +230,16 @@ function initTabs() {
       // into an event — back out of that flow first so the clicked panel is
       // actually visible (and so an event still loading doesn't open over
       // it afterwards). The tab already on screen: no fade.
-      if (tab.classList.contains("is-active") && adminEventFlow.hidden) return;
+      const from = tabs.find((t) => t.classList.contains("is-active"));
+      if (tab === from && adminEventFlow.hidden) return;
       swapScreen(() => {
+        if (tab !== from && !adminEventFlow.hidden) parkedEventTab = from?.dataset.tab ?? null;
         exitEventFlow();
         setActiveTab(tab);
+        if (tab !== from && parkedEventTab === tab.dataset.tab) {
+          parkedEventTab = null;
+          enterEventFlow();
+        }
       });
     });
   });
@@ -271,6 +281,7 @@ function showAdmin(session) {
 
     async function openEvent(event) {
       currentEvent = event;
+      parkedEventTab = null;
       // Opened from a league's events or from the standalone events tab.
       const fromTab = document.querySelector(".admin-tab.is-active");
       eventOrigin =
