@@ -13,7 +13,7 @@ import { renderBubbleChart, initBubbleChart, ARCHETYPES, ARCHETYPE_COLORS } from
 import { initChartCarousel } from "./chart-carousel.js";
 import { escapeHtml, formatTime, playerLabel, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
-import { nestedResultsLink } from "./results-link.js";
+import { nestedResultsMenu } from "./results-link.js";
 import { fetchPlayerBadgesRenderer } from "./player-badges.js";
 import { initTabs } from "./tabs.js";
 
@@ -31,7 +31,6 @@ const OTHER_COLOR = "#9a9a94";
 
 const ICON = (body) =>
   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
-const CLOCK_ICON = ICON('<circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path>');
 const LIST_ICON =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="9" y1="6" x2="20" y2="6"></line><line x1="9" y1="12" x2="20" y2="12"></line><line x1="9" y1="18" x2="20" y2="18"></line><circle cx="4.5" cy="6" r="1"></circle><circle cx="4.5" cy="12" r="1"></circle><circle cx="4.5" cy="18" r="1"></circle></svg>';
 
@@ -42,27 +41,13 @@ function parseIsoDate(iso) {
   return new Date(y, m - 1, d);
 }
 
-function todayIso() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-// "oggi" / "domani" / "tra N giorni".
-function fromToday(iso) {
-  const days = Math.round((parseIsoDate(iso) - parseIsoDate(todayIso())) / 86400000);
-  if (days <= 0) return "oggi";
-  if (days === 1) return "domani";
-  return `tra ${days} giorni`;
-}
-
 // --- Eventi: the timeline ------------------------------------------------------------
 
 // One event on league.html's timeline (styles.css .league-timeline, the same
-// markup as js/league-detail.js's): its node (day, month), its card — the
-// league (or "Evento") as the kicker over its name, and on the right:
-// played → the results links (a link to the event); next → the time and
-// how far off (red, a pulsing dot — touch screens: the time alone); later →
-// its time ("In calendario" in the kicker, not on touch screens).
+// markup as js/league-detail.js's): its node (day, month), its card — its
+// name over the league (or "Evento"; the next one's circle pulsing), and on the right: played → "Liste", a menu of its results links (the card a link to
+// the event); upcoming → its time alone, when set ("15:00"), down on the
+// league's line.
 function timelineItemHtml(ev, state) {
   const date = ev.event_date ? parseIsoDate(ev.event_date) : null;
   const node = date
@@ -72,32 +57,18 @@ function timelineItemHtml(ev, state) {
     ? `${date.toLocaleDateString("it-IT", { day: "numeric", month: "long" })}<small>${date.toLocaleDateString("it-IT", { weekday: "long" })}</small>`
     : "—";
   const league = ev.league ? escapeHtml(ev.league.name) : "Evento";
-  const kicker = {
-    played: league,
-    next: `<span class="league-tl-pulse" aria-hidden="true"></span>Prossimo · ${league}`,
-    future: `<span class="league-tl-k-state">In calendario · </span>${league}`,
-  }[state];
   const title = escapeHtml(ev.name || ev.league?.name || "Evento");
-  let side = "";
-  if (state === "played") {
-    side = nestedResultsLink(ev.results_url, ev.decklists_url);
-  } else if (state === "next") {
-    // Touch screens: just the time (styles.css hides the clock and how far
-    // off); none set: how far off stays, the only thing to show.
-    const time = ev.start_time ? `ore ${formatTime(ev.start_time)}` : "";
-    const when = fromToday(ev.event_date);
-    side = `<span class="league-tl-clock">${CLOCK_ICON}</span>${time}${
-      time ? `<span class="league-tl-when"> · ${when}</span>` : when
-    }`;
-  } else if (ev.start_time) {
-    side = `ore ${formatTime(ev.start_time)}`;
-  }
+  // Played: "Liste" (its Moxfield / mtgtop8 links in a menu) beside the
+  // text, centred; upcoming: the time on the league's line under the name
+  // (its baseline), at the card's bottom right.
+  const links = state === "played" ? nestedResultsMenu(ev.results_url, ev.decklists_url) : "";
+  const time = state !== "played" && ev.start_time ? `<span class="league-tl-side">${formatTime(ev.start_time)}</span>` : "";
   const body = `
           <span class="league-tl-text">
-            <span class="league-tl-k">${kicker}</span>
             <span class="league-tl-t">${title}</span>
+            <span class="league-tl-k-row"><span class="league-tl-k">${league}</span>${time}</span>
           </span>
-          ${side ? `<span class="league-tl-side">${side}</span>` : ""}`;
+          ${links ? `<span class="league-tl-side">${links}</span>` : ""}`;
   const card =
     state === "played"
       ? `<a class="league-tl-card" href="event.html?id=${ev.id}">${body}</a>`

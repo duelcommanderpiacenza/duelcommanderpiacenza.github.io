@@ -2227,70 +2227,203 @@ html.app-header .home-board > .home-panel:not(.is-current) {
   white-space: nowrap;
 }
 
-/* The next event's pulsing dot: its ring spreads 8px round it — room for it
-   inside the kicker's clip (padding), the text where it was (the same
-   negative margin). */
-.home-timeline .is-next .league-tl-k {
-  padding: 8px 0 8px 8px;
-  margin: -8px 0 -8px -8px;
-}
-
 /* No room under the last card (it's for the next one): the list ends with
    it — on a computer Classifica beside it ends level. */
 .home-timeline > :last-child {
   padding-bottom: 0;
 }
 
-.home-timeline .league-tl-side .results-links {
-  margin-left: 0;
-}
-
-/* Touch screens: no "In calendario" before the league; the next event's
-   time alone (no clock, no "tra N giorni"), short enough to sit on the
-   name's line. */
-html.app-header .home-timeline :is(.league-tl-k-state, .league-tl-clock, .league-tl-when) {
-  display: none;
-}
-
-.league-tl-clock {
+/* A played event's links behind one "Liste" button (js/results-link.js
+   nestedResultsMenu) — the same on every row — opening a small menu of
+   them (.results-menu, on <body>). */
+.results-menu-btn {
   display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  box-sizing: border-box;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-pill);
+  background: #fff;
+  color: var(--brand-red-deep);
+  font-size: 0.8rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease;
 }
 
-/* A played event with no links: nothing on that side. */
-.home-timeline .is-played .league-tl-side:not(:has(.results-links)) {
-  display: none;
+.results-menu-btn svg {
+  width: 14px;
+  height: 14px;
 }
 
-/* The card's extra (players and the Moxfield / Top 8 links, or the time)
-   on the right of the name's line while the whole name fits beside it, on
-   a line of its own under it when it doesn't (a wrapping row, any width).
-   Only the name decides: the kicker (the league) doesn't count towards the
-   text's width (contain: inline-size) and is cut with "…" instead. */
+.results-menu-btn:hover,
+.results-menu-btn[aria-expanded="true"] {
+  border-color: var(--hairline-hover);
+  background: #fff7f4;
+}
+
+:root[data-theme="dark"] .results-menu-btn {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #ff8a8c;
+}
+
+:root[data-theme="dark"] .results-menu-btn:hover,
+:root[data-theme="dark"] .results-menu-btn[aria-expanded="true"] {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.results-menu {
+  position: fixed;
+  z-index: 60;
+  display: grid;
+  min-width: 160px;
+  padding: 6px;
+  box-sizing: border-box;
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: var(--shadow-card-hover);
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.results-menu.is-above {
+  transform: translateY(4px);
+}
+
+.results-menu.is-open {
+  opacity: 1;
+  transform: none;
+}
+
+:root[data-theme="dark"] .results-menu {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: #241b1d;
+}
+
+/* One row per link: its logo in a same-width white box (the mtgtop8
+   wordmark is only readable on white), the label. */
+.results-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  color: var(--text-title);
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.results-menu-item:hover,
+.results-menu-item:focus-visible {
+  background: color-mix(in srgb, var(--brand-red) 8%, transparent);
+  color: var(--text-title);
+  text-decoration: none;
+}
+
+.results-menu-logo {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 56px;
+  height: 28px;
+  box-sizing: border-box;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-pill);
+  background: #fff;
+}
+
+.is-moxfield .results-menu-logo img {
+  width: 18px;
+  height: 18px;
+}
+
+.is-top8 .results-menu-logo img {
+  width: auto;
+  height: 11px;
+}
+
+/* Every event the same: one row as tall as its date's circle — the circle
+   and the card side by side, level top and bottom; the name over the league
+   on the left (each cut with "…" when too long), the extra on the right,
+   centred (the played ones' Moxfield / Top 8 links) — the upcoming ones'
+   time alone, down on the league's line. The upcoming cards bare (no
+   surface), their names as readable as the played ones'. */
+.league-timeline.home-timeline {
+  --tl-node: 56px;
+}
+
 .home-timeline .league-tl-card {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 6px 12px;
+  gap: 12px;
+  height: var(--tl-node);
+  padding: 0 16px;
 }
 
 .home-timeline .league-tl-text {
   flex: 1 1 auto;
-  max-width: 100%;
-}
-
-.home-timeline .league-tl-k {
-  contain: inline-size;
 }
 
 .home-timeline .league-tl-side {
   flex-shrink: 0;
   margin-left: auto;
+  white-space: nowrap;
 }
 
-/* An upcoming event's time on the name's line (its baseline — the text's
-   last), not centred between the league and the name. */
-.home-timeline :is(.is-next, .is-future) .league-tl-side {
-  align-self: last baseline;
+/* The name first, the league under it — an upcoming event's time on the
+   league's line, sharing its baseline: at the card's bottom right. */
+.league-tl-k-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+}
+
+.league-tl-k-row .league-tl-k {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.home-timeline .is-future .league-tl-t {
+  color: var(--text-title);
+}
+
+/* The next event's circle: its halo pulsing outwards; still where motion
+   is reduced. */
+.home-timeline .is-next > .league-tl-node {
+  animation: home-tl-node-pulse 1.6s ease-out infinite;
+}
+
+@keyframes home-tl-node-pulse {
+  from {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--brand-red) 45%, transparent);
+  }
+
+  to {
+    box-shadow: 0 0 0 12px color-mix(in srgb, var(--brand-red) 0%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-timeline .is-next > .league-tl-node {
+    animation: none;
+  }
+}
+
+/* The upcoming cards outlined like their circles (the same grey). */
+.home-timeline .is-future > .league-tl-card {
+  border-color: var(--tl-line);
+}
+
+/* The upcoming circles: grey ring, the date as dark as the played ones'. */
+.home-timeline .is-future > .league-tl-node span {
+  color: var(--text-muted);
 }
 
 /* "Oggi": a small red dot on the line, the word, a rule to the right. */
