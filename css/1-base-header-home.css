@@ -132,6 +132,19 @@ html {
   scrollbar-gutter: stable;
 }
 
+/* Touch screens: no scrollbars anywhere — the page's and every inner
+   scroller's (lists, dialogs, carousels), as in an app; scrolling itself
+   unchanged. A computer keeps them (a mouse needs them). */
+html.nav-mobile,
+html.nav-mobile * {
+  scrollbar-width: none;
+}
+
+html.nav-mobile::-webkit-scrollbar,
+html.nav-mobile *::-webkit-scrollbar {
+  display: none;
+}
+
 /* The real content underneath (filters, chart, table, each with its own
    small "Caricamento..." placeholder) is hidden outright — see the
    visibility rule below — rather than painted over with a matching color,
