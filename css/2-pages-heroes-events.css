@@ -264,9 +264,10 @@ html:not(.app-header) .league-tabs {
 .league-tabs:has(#league-tab-leaderboard.is-active) .help-toggle-btn.league-help-corner {
   position: absolute;
   /* Out over the corner, but within the 8px the switcher keeps from the
-     screen's top while stuck — so it's never cut there. */
+     screen's top while stuck — so it's never cut there; 3px on the right
+     (the phone's page margin is only 6px — its ring stays on screen). */
   top: -5px;
-  right: -5px;
+  right: -3px;
   z-index: 2;
   display: inline-flex;
   box-shadow: 0 0 0 2px #fff, var(--shadow-card);

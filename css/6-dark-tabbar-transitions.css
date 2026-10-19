@@ -1236,12 +1236,13 @@ html:not(.nav-mobile) .meta-head .filter-toggle-btn {
 }
 
 /* Touch screens: the filters' button on the switcher's top-right corner,
-   like league.html's "?" — out over it, within the 8px the row keeps from
-   the screen's top while stuck. */
+   like league.html's "?" — out over it (3px on the right: the phone's page
+   margin is only 6px — its ring stays on screen), within the 8px the row
+   keeps from the screen's top while stuck. */
 html.nav-mobile .meta-row > .filter-toggle-btn {
   position: absolute;
   top: -5px;
-  right: -5px;
+  right: -3px;
   z-index: 2;
   width: 34px;
   height: 34px;

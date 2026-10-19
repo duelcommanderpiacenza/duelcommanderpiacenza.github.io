@@ -2607,15 +2607,21 @@ a.bubble:active {
    before. */
 .chart-grid {
   --chart-gap: 20px;
+  /* How far it reaches past the column on each side (room for the cards'
+     shadows): 12px, never more than the page's own margin on phones
+     (--page-pad-x) — past it, the carousel stuck out of the screen, and
+     Chrome on phones then made the whole page wider than the screen: the
+     sticky switcher and the tab bar lost their gap to the screen's edges. */
+  --chart-bleed: min(12px, var(--page-pad-x, 12px));
   display: flex;
   gap: var(--chart-gap);
   overflow-x: auto;
   scroll-snap-type: x mandatory;
-  scroll-padding-inline: 12px;
+  scroll-padding-inline: var(--chart-bleed);
   overscroll-behavior-x: contain;
   scrollbar-width: none;
-  margin: -8px -12px 0;
-  padding: 8px 12px 24px;
+  margin: -8px calc(-1 * var(--chart-bleed)) 0;
+  padding: 8px var(--chart-bleed) 24px;
 }
 
 .chart-grid::-webkit-scrollbar {
