@@ -180,3 +180,33 @@ export function matchGroupsHtml(groups) {
       .join("")
   );
 }
+
+// A number's trend since the latest event in scope — the winrate
+// (Comandanti, Giocatori), the metashare (Comandanti): ▲ up, ▼ down,
+// = unchanged — also when the commander / player wasn't in that event, or
+// it's their first (nothing before it to compare with). Compared as shown
+// (one decimal). Nothing for a value of "—".
+export function winrateTrendHtml(now, before, inLatest) {
+  if (now === null) return "";
+  const r = (x) => Math.round(x * 10);
+  let kind = "same";
+  if (inLatest && before !== null && r(now) !== r(before)) kind = r(now) > r(before) ? "up" : "down";
+  const symbol = { up: "▲", down: "▼", same: "=" }[kind];
+  const label = { up: "In crescita dall'ultimo evento", down: "In calo dall'ultimo evento", same: "Invariato dall'ultimo evento" }[kind];
+  return `<span class="wr-trend is-${kind}" role="img" aria-label="${label}" title="${label}">${symbol}</span>`;
+}
+
+// The latest event (by date) among `eventIds`, and `eventsData` (one item per
+// id, same order — js/db.js fetchEventsResults) without it: what the
+// numbers were before it.
+export function splitLatestEvent(eventIds, eventsData, eventDateById) {
+  let latest = -1;
+  eventIds.forEach((id, i) => {
+    const d = eventDateById.get(id) ?? "";
+    if (latest === -1 || d >= (eventDateById.get(eventIds[latest]) ?? "")) latest = i;
+  });
+  return {
+    latest: latest === -1 ? null : eventsData[latest],
+    before: eventsData.filter((_, i) => i !== latest),
+  };
+}

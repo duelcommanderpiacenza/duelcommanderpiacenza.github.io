@@ -1166,6 +1166,46 @@ a.history-item.is-me {
   color: var(--brand-red-deep);
 }
 
+/* A number's trend since the latest event — the winrate, Comandanti's
+   metashare (js/history-list.js winrateTrendHtml): a small ▲ green / ▼ red / = grey hanging just after
+   the number — outside its box, so the number stays centred in its column
+   like the others. */
+.history-stats .history-stat-value:has(.wr-trend) {
+  position: relative;
+}
+
+.wr-trend {
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  margin-left: 3px;
+  font-size: 0.6em;
+  line-height: 1;
+  transform: translateY(-50%);
+}
+
+.wr-trend.is-up {
+  color: #1a9a5c;
+}
+
+.wr-trend.is-down {
+  color: var(--brand-red);
+}
+
+.wr-trend.is-same {
+  color: var(--text-muted);
+  font-size: 0.7em;
+  font-weight: 800;
+}
+
+:root[data-theme="dark"] .wr-trend.is-up {
+  color: #4cd38f;
+}
+
+:root[data-theme="dark"] .wr-trend.is-down {
+  color: #ff6b6e;
+}
+
 /* Classifica (league.html, event.html): Punti — what the order is by —
    stands out from the other numbers: a size up, on a soft pill in the
    accent (the page's hero colour, or the brand red). */

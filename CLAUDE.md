@@ -211,3 +211,7 @@ starts right of it; player.html's card is centred the same way).
 ## Version
 
 - `js/version.js` exports `VERSION`, **`MAJOR.BUILD`** (BUILD = the repo's commit count with that commit — +1 on every commit; MAJOR raised by hand for a big release; since 2026-10-19), shown small in the footer under the credits (`#site-version`, filled by js/layout.js — the footer partial is untouched by a new version; the admin's footer too, by admin/js/app.js). Bumped automatically by **`.githooks/pre-commit`** on every commit (it rewrites and stages js/version.js, keeping MAJOR) — enabled once per clone with `git config core.hooksPath .githooks`. Only MAJOR is edited by hand.
+
+## Winrate trend
+
+- Comandanti and Giocatori lists: after the winrate (and Comandanti's metashare, the same rule — since 2026-10-19) a small **▲ (green) / ▼ (red) / = (grey)** — the winrate now vs. without the latest event in the current scope (filters included; `splitLatestEvent` + `winrateTrendHtml` in js/history-list.js), compared at the shown precision (one decimal). `=` also when that commander / player wasn't in the latest event or it was their first (nothing to compare); nothing for a "—" winrate. Hangs outside the number's box (`.wr-trend`, absolute) so the number stays centred in its column. Since 2026-10-19.

@@ -5,7 +5,7 @@ import { fetchTopAutoBadgesByPlayer, playerBadgesHtml } from "./player-badges.js
 import { escapeHtml, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
-import { historyPanelHtml, historyStatsHtml } from "./history-list.js";
+import { historyPanelHtml, historyStatsHtml, winrateTrendHtml, splitLatestEvent } from "./history-list.js";
 import { initBackToTop } from "./back-to-top.js";
 
 // One sub-card per player (js/history-list.js), the whole card a link to
@@ -18,8 +18,7 @@ function renderRow(r) {
       </div>
       ${historyStatsHtml([
         { label: "Eventi", value: r.eventsPlayed },
-        { label: "V-S-P", value: `${r.wins}-${r.losses}-${r.draws}` },
-        { label: "Winrate", value: r.rate, main: true },
+        { label: "Winrate", value: `${r.rate}${winrateTrendHtml(r.winRate, r.winRateBefore, r.inLatest)}`, main: true },
       ])}
     </a>`;
 }
@@ -28,6 +27,45 @@ function renderRow(r) {
 // two requests per event — "Tutte le leghe" spans the whole history.
 function fetchEventsData(eventIds) {
   return fetchEventsResults(eventIds);
+}
+
+// Each player's match record (wins / draws / losses) over `eventsData`: a
+// bye a win, a drop nothing at all.
+function playerRecords(eventsData) {
+  const recordByPlayer = new Map();
+  function ensureRecord(id) {
+    if (!recordByPlayer.has(id)) {
+      recordByPlayer.set(id, { wins: 0, draws: 0, losses: 0 });
+    }
+    return recordByPlayer.get(id);
+  }
+  for (const { matches } of eventsData) {
+    for (const m of matches) {
+      // A drop isn't a win, a loss, or a match played — it never
+      // touches either player's record.
+      if (isDrop(m)) continue;
+      const r1 = ensureRecord(m.player1_id);
+      if (isBye(m)) {
+        // A bye has no player2 to also credit/debit — a plain win for
+        // player1, nothing further to process for this match.
+        r1.wins += 1;
+        continue;
+      }
+      const r2 = ensureRecord(m.player2_id);
+      const outcome = matchRoundOutcome(m);
+      if (outcome === "player1") {
+        r1.wins += 1;
+        r2.losses += 1;
+      } else if (outcome === "player2") {
+        r2.wins += 1;
+        r1.losses += 1;
+      } else {
+        r1.draws += 1;
+        r2.draws += 1;
+      }
+    }
+  }
+  return recordByPlayer;
 }
 
 // Highest value first; a null winRate (no games played) always sorts last
@@ -127,39 +165,16 @@ export async function mount({ signal = new AbortController().signal } = {}) {
         }
       }
 
-      const recordByPlayer = new Map();
-      function ensureRecord(id) {
-        if (!recordByPlayer.has(id)) {
-          recordByPlayer.set(id, { wins: 0, draws: 0, losses: 0 });
-        }
-        return recordByPlayer.get(id);
-      }
-      for (const { matches } of eventsData) {
-        for (const m of matches) {
-          // A drop isn't a win, a loss, or a match played — it never
-          // touches either player's record.
-          if (isDrop(m)) continue;
-          const r1 = ensureRecord(m.player1_id);
-          if (isBye(m)) {
-            // A bye has no player2 to also credit/debit — a plain win for
-            // player1, nothing further to process for this match.
-            r1.wins += 1;
-            continue;
-          }
-          const r2 = ensureRecord(m.player2_id);
-          const outcome = matchRoundOutcome(m);
-          if (outcome === "player1") {
-            r1.wins += 1;
-            r2.losses += 1;
-          } else if (outcome === "player2") {
-            r2.wins += 1;
-            r1.losses += 1;
-          } else {
-            r1.draws += 1;
-            r2.draws += 1;
-          }
-        }
-      }
+      const recordByPlayer = playerRecords(eventsData);
+      // The winrate before the latest event in scope (its trend arrow), and
+      // who played in that event.
+      const { latest, before } = splitLatestEvent(eventIds, eventsData, eventDateById);
+      const recordBefore = playerRecords(before);
+      const inLatest = new Set((latest?.entries ?? []).map((e) => e.player_id));
+      const rateOf = (record) => {
+        const played = record ? record.wins + record.draws + record.losses : 0;
+        return played > 0 ? (record.wins / played) * 100 : null;
+      };
 
       lastRows = allPlayers.map((p) => {
         const playerEntries = entriesByPlayer.get(p.id) ?? [];
@@ -177,6 +192,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
           draws: record.draws,
           losses: record.losses,
           winRate,
+          winRateBefore: rateOf(recordBefore.get(p.id)),
+          inLatest: inLatest.has(p.id),
           rate: winRate === null ? "—" : `${winRate.toFixed(1)}%`,
         };
       });

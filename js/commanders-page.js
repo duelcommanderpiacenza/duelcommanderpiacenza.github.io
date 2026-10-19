@@ -8,7 +8,7 @@ import { commanderPairWithColors, bannedBadge, showError, isoDateYearsAgo, DEFAU
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
 import { savedMetaFilters, rememberMetaFilters } from "./meta-filters.js";
-import { historyPanelHtml, historyStatsHtml } from "./history-list.js";
+import { historyPanelHtml, historyStatsHtml, winrateTrendHtml, splitLatestEvent } from "./history-list.js";
 import { initBackToTop } from "./back-to-top.js";
 
 // Both charts are built from the *current filter's* data only (league /
@@ -173,9 +173,13 @@ export async function mount({ signal = new AbortController().signal } = {}) {
         </div>
         ${historyStatsHtml([
           { label: "Giocato", value: r.entries },
-          { label: "Metashare", value: `${r.share.toFixed(1)}%` },
-          { label: "V-S-P", value: `${r.wins}-${r.losses}-${r.draws}` },
-          { label: "Winrate", value: r.winRate === null ? "—" : `${r.winRate.toFixed(1)}%`, main: true },
+          { label: "Piloti", value: r.pilots },
+          { label: "Metashare", value: `${r.share.toFixed(1)}%${winrateTrendHtml(r.share, r.shareBefore, r.inLatest)}` },
+          {
+            label: "Winrate",
+            value: r.winRate === null ? "—" : `${r.winRate.toFixed(1)}%${winrateTrendHtml(r.winRate, r.winRateBefore, r.inLatest)}`,
+            main: true,
+          },
         ])}
       </a>`
         )
@@ -221,6 +225,24 @@ export async function mount({ signal = new AbortController().signal } = {}) {
         commanderId: e.commander_id,
         partnerId: e.partner_commander_id ?? null,
       }));
+      // The winrate before the latest event in scope (its trend arrow), and
+      // who was in that event.
+      const { latest, before } = splitLatestEvent(eventIds, eventsData, eventDateById);
+      const statsBefore = computeGroupedStats(before, pairKey, () => ({}));
+      const winRateBefore = new Map(statsBefore.map((s) => [s.key, s.winRate]));
+      // The metashare before it too (its own arrow).
+      const totalBefore = statsBefore.reduce((sum, s) => sum + s.entries, 0);
+      const shareBefore = new Map(statsBefore.map((s) => [s.key, totalBefore > 0 ? (s.entries / totalBefore) * 100 : null]));
+      const inLatest = new Set((latest?.entries ?? []).map(pairKey));
+      // How many different players piloted each pairing in scope.
+      const pilotsByKey = new Map();
+      for (const { entries } of eventsData) {
+        for (const e of entries) {
+          const k = pairKey(e);
+          if (!pilotsByKey.has(k)) pilotsByKey.set(k, new Set());
+          pilotsByKey.get(k).add(e.player_id);
+        }
+      }
       for (const s of stats) {
         if (!s.partnerId) continue;
         const a = leadCount.get(`${s.key}|${s.commanderId}`) ?? 0;
@@ -251,11 +273,15 @@ export async function mount({ signal = new AbortController().signal } = {}) {
             colorIdentity: (commander.color_identity ?? "") + (partner?.color_identity ?? ""),
             isBanned: commander.is_banned || (partner?.is_banned ?? false),
             entries: s.entries,
+            pilots: pilotsByKey.get(s.key)?.size ?? 0,
             share: totalEntries > 0 ? (s.entries / totalEntries) * 100 : 0,
+            shareBefore: shareBefore.get(s.key) ?? null,
             wins: s.wins,
             draws: s.draws,
             losses: s.losses,
             winRate: s.winRate,
+            winRateBefore: winRateBefore.get(s.key) ?? null,
+            inLatest: inLatest.has(s.key),
           };
         })
         .sort((a, b) => b.entries - a.entries || a.name.localeCompare(b.name));
