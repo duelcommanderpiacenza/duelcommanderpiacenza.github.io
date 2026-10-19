@@ -25,7 +25,7 @@ const svg = (body) =>
 // [key, label, href, icon, the body[data-active-nav] values it stands for]
 const TABS = [
   ["home", "Bacheca", "index.html", svg('<path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V21h14V9.5"></path><path d="M10 21v-6h4v6"></path>'), ["current"]],
-  ["events", "Eventi", "events.html", svg('<rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M3 10h18"></path>'), ["events"]],
+  ["events", "Leghe", "events.html", svg('<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"></path><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"></path>'), ["events"]],
   ["meta", "Meta", "commanders.html", svg('<path d="M21 12A9 9 0 1 1 12 3v9Z"></path><path d="M15 3.5A9 9 0 0 1 20.5 9H15Z"></path>'), ["meta"]],
   ["players", "Giocatori", "players.html", svg('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>'), ["players"]],
   ["social", "Social", "social.html", svg('<circle cx="12" cy="12" r="9"></circle><path d="m10 8.5 5.5 3.5-5.5 3.5z"></path>'), ["social"]],

@@ -112,8 +112,19 @@ function init() {
     box.style.setProperty("--search-origin-y", `${cy}px`);
     box.style.setProperty("--search-max-radius", `${maxRadius}px`);
     box.style.setProperty("--search-close-top", `${rect.top}px`);
-    box.style.setProperty("--search-close-right", `${window.innerWidth - rect.right}px`);
     box.style.setProperty("--search-close-size", `${rect.width}px`);
+    // The ✕ itself ends at the header's right end (the account button's
+    // spot), leaving the field the whole row: it starts as the trigger —
+    // its spot (--search-close-dx), its colours, the magnifier — and turns
+    // into the ✕ on the way there (styles.css search-close-in), backwards
+    // on close.
+    const endEl = document.querySelector(".site-header .site-account");
+    const end = endEl && endEl.getBoundingClientRect().width ? endEl.getBoundingClientRect() : rect;
+    box.style.setProperty("--search-close-right", `${window.innerWidth - end.right}px`);
+    box.style.setProperty("--search-close-dx", `${rect.right - end.right}px`);
+    const look = getComputedStyle(trigger);
+    box.style.setProperty("--search-trigger-bg", look.backgroundColor);
+    box.style.setProperty("--search-trigger-fg", look.color);
   }
 
   function isMobile() {
@@ -152,8 +163,21 @@ function init() {
     if (!isMobile() || prefersReducedMotion()) return;
     updateSearchOrigin();
     box.classList.add("is-closing");
-    box.addEventListener("animationend", () => box.classList.remove("is-closing"), { once: true });
+    // The overlay's own animation only — the ✕'s and its icons' end too,
+    // and bubble up here.
+    const done = (e) => {
+      if (e.target !== box) return;
+      box.classList.remove("is-closing");
+      box.removeEventListener("animationend", done);
+    };
+    box.addEventListener("animationend", done);
   }
+
+  // The ✕ holds the trigger's magnifier too, to turn from it (styles.css).
+  closeBtn.insertAdjacentHTML(
+    "afterbegin",
+    trigger.querySelector("svg").outerHTML.replace("<svg", '<svg class="site-search-close-glass"')
+  );
 
   trigger.addEventListener("click", open);
   input.addEventListener("focus", open);

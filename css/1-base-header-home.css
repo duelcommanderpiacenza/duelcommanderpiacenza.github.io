@@ -1058,6 +1058,12 @@ html.app-header .site-header.has-hero-accent .site-news {
   color: rgba(255, 255, 255, 0.85);
 }
 
+/* A computer: its lines as thick on screen as the bell's beside it (2.2 at
+   19px — 2.45 at this 17px). */
+html:not(.nav-mobile) .site-search-field-icon {
+  stroke-width: 2.45;
+}
+
 .site-search-input {
   flex: 1;
   min-width: 0;
@@ -1174,16 +1180,27 @@ html.nav-mobile .site-search-result + .site-search-result::before {
   letter-spacing: 0.03em;
 }
 
+/* The type tag: opaque (nothing behind it — the overlay's watermark —
+   shows through), in the site's small-caps chip style (like "Conclusa",
+   the timeline's kickers): a light tint of the red, a hairline edge, the
+   deep red; dark mode a deep red-brown with a light red. */
 .site-search-result-type {
   flex-shrink: 0;
-  padding: 3px 10px;
+  padding: 4px 10px;
+  border: 1px solid var(--hairline);
   border-radius: var(--radius-pill);
-  background: rgba(220, 24, 28, 0.1);
+  background: color-mix(in srgb, var(--brand-red) 9%, #fff);
   color: var(--brand-red-deep);
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+}
+
+:root[data-theme="dark"] .site-search-result-type {
+  border-color: rgba(255, 110, 110, 0.25);
+  background: color-mix(in srgb, var(--brand-red) 22%, #1e1517);
+  color: #ffb3b4;
 }
 
 .site-search-result:hover {
@@ -1280,6 +1297,81 @@ html.nav-mobile .site-search-close {
 html.nav-mobile .site-search-close svg {
   width: 18px;
   height: 18px;
+}
+
+/* The ✕ turning from the search button: from the trigger's spot (left of
+   the account button, --search-close-dx), colours and magnifier to the
+   header's right end, red, the ✕ — the magnifier turning away as the ✕
+   turns in (stacked); the same backwards while the overlay collapses. */
+.site-search-close-glass {
+  display: none;
+}
+
+html.nav-mobile .site-search-close {
+  display: grid;
+  place-items: center;
+}
+
+html.nav-mobile .site-search-close > svg {
+  grid-area: 1 / 1;
+}
+
+html.nav-mobile .site-search-close > .site-search-close-glass {
+  display: block;
+  width: 22px;
+  height: 22px;
+  opacity: 0;
+}
+
+html.nav-mobile .site-search-box.is-open .site-search-close {
+  animation: search-close-in 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+html.nav-mobile .site-search-box.is-open .site-search-close > svg:not(.site-search-close-glass) {
+  animation: search-close-x-in 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+html.nav-mobile .site-search-box.is-open .site-search-close > .site-search-close-glass {
+  animation: search-close-glass-out 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+html.nav-mobile .site-search-box.is-closing .site-search-close {
+  animation: search-close-in 320ms cubic-bezier(0.4, 0, 1, 1) reverse both;
+}
+
+html.nav-mobile .site-search-box.is-closing .site-search-close > svg:not(.site-search-close-glass) {
+  animation: search-close-x-in 320ms cubic-bezier(0.4, 0, 1, 1) reverse both;
+}
+
+html.nav-mobile .site-search-box.is-closing .site-search-close > .site-search-close-glass {
+  animation: search-close-glass-out 320ms cubic-bezier(0.4, 0, 1, 1) reverse both;
+}
+
+@keyframes search-close-in {
+  from {
+    transform: translateX(var(--search-close-dx, 0px));
+    background: var(--search-trigger-bg, #fff);
+    color: var(--search-trigger-fg, var(--brand-red));
+  }
+}
+
+@keyframes search-close-x-in {
+  from {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.5);
+  }
+}
+
+@keyframes search-close-glass-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+
+  to {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.5);
+  }
 }
 
 html.nav-mobile .site-search-results {
@@ -1400,10 +1492,35 @@ html.nav-mobile .site-search-box.is-closing .site-search-results {
   display: block;
 }
 
+/* The overlay's watermark: the DC Piacenza logo, big and very faint (a
+   whisper of the brand red), centred behind the field and the results —
+   z-index -1 in the overlay's own stacking context, under its contents,
+   revealed and collapsed with it. */
+html.nav-mobile .site-search-box::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: -1;
+  width: min(62vw, 300px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  background: color-mix(in srgb, var(--brand-red) 3.5%, transparent);
+  -webkit-mask: url("../dc_pc.svg") center / contain no-repeat;
+  mask: url("../dc_pc.svg") center / contain no-repeat;
+  pointer-events: none;
+}
+
+:root[data-theme="dark"].nav-mobile .site-search-box::before {
+  background: color-mix(in srgb, var(--brand-red) 5%, transparent);
+}
+
 @media (prefers-reduced-motion: reduce) {
   html.nav-mobile .site-search-box.is-open,
   html.nav-mobile .site-search-box.is-closing,
-  html.nav-mobile .site-search-box.is-open .site-search-field {
+  html.nav-mobile .site-search-box.is-open .site-search-field,
+  html.nav-mobile .site-search-box:is(.is-open, .is-closing) .site-search-close,
+  html.nav-mobile .site-search-box:is(.is-open, .is-closing) .site-search-close > svg {
     animation: none;
   }
 }

@@ -936,7 +936,7 @@ html.app-header .site-header.has-hero-accent .site-search-trigger {
    Tab bar (js/tab-bar.js) — touch screens: the navigation at the bottom of
    the screen (the old pill and its list are gone; a computer keeps its tabs
    in the top bar, .site-nav-inner — hidden here). A solid capsule (white;
-   dark mode near-black) with five sections — Bacheca, Eventi, Meta,
+   dark mode near-black) with five sections — Bacheca, Leghe, Meta,
    Giocatori, Social — the current one in a red chip with its name (the
    hero's colour on hero pages: .site-nav.has-hero-accent redefines the red),
    the others icon only; the chip slides to the new section. It slides away

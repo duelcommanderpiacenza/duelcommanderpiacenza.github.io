@@ -76,14 +76,16 @@ document.addEventListener("keydown", openNested, true);
 // clipping ancestor) and positioned under the button, its right edge on
 // the button's (above it when there's no room below).
 
-const LIST_ICON =
-  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="9" y1="6" x2="20" y2="6"></line><line x1="9" y1="12" x2="20" y2="12"></line><line x1="9" y1="18" x2="20" y2="18"></line><circle cx="4.5" cy="6" r="1"></circle><circle cx="4.5" cy="12" r="1"></circle><circle cx="4.5" cy="18" r="1"></circle></svg>';
+// Two cards, one behind the other (decklists) — not the list icon of the
+// Bacheca's "Classifica completa" beside it.
+const DECKS_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="3" width="12" height="16" rx="2"></rect><path d="M8 6H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2"></path></svg>';
 
 export function nestedResultsMenu(resultsUrl, decklistsUrl) {
   const moxfield = isHttpUrl(decklistsUrl) ? ` data-moxfield-url="${escapeHtml(decklistsUrl)}"` : "";
   const top8 = isHttpUrl(resultsUrl) ? ` data-top8-url="${escapeHtml(resultsUrl)}"` : "";
   if (!moxfield && !top8) return "";
-  return `<span class="results-menu-btn" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false"${moxfield}${top8}>${LIST_ICON}Liste</span>`;
+  return `<span class="results-menu-btn" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false"${moxfield}${top8}>${DECKS_ICON}Liste</span>`;
 }
 
 let menuEl = null;
