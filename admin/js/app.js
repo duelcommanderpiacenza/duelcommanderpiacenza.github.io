@@ -20,6 +20,7 @@ import { initMatchesAdmin } from "./matches-admin.js";
 import { initAdminNavDropdown } from "./admin-nav-dropdown.js";
 import { tabLabel } from "./tab-counts.js";
 import { syncAutoBadges } from "./badges-sync.js";
+import { VERSION } from "../../js/version.js";
 
 const loginView = document.getElementById("login-view");
 const adminView = document.getElementById("admin-view");
@@ -428,6 +429,8 @@ onAuthChange(handleSession);
 getSession().then(handleSession);
 
 setupThemeToggle();
+// The site's version in the footer (../js/version.js).
+document.getElementById("site-version").textContent = `v${VERSION}`;
 enhanceSelects();
 enhanceDateInputs();
 initAdminNavDropdown();

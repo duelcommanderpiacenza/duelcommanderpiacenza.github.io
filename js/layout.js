@@ -26,6 +26,7 @@ import { initMeHighlight } from "./me-highlight.js";
 import { attachHoverTooltips, showFloatingTooltip } from "./floating-tooltip.js";
 import { watchPageLoading } from "./page-loading.js";
 import { navigate } from "./router.js";
+import { VERSION } from "./version.js";
 import "./system-bars.js";
 import "./pull-refresh.js";
 import "./data-updates.js";
@@ -40,6 +41,11 @@ enhanceDateInputs();
 
 // "Tu" next to the signed-in account's own player, wherever it appears.
 initMeHighlight();
+
+// The site's version in the footer (js/version.js, bumped by the commit
+// hook) — which deploy is on screen.
+const versionEl = document.getElementById("site-version");
+if (versionEl) versionEl.textContent = `v${VERSION}`;
 
 // Every data-tooltip badge-like element on every page — player badges,
 // the banned-commander icon, an event's mtgtop8/Moxfield links — through the

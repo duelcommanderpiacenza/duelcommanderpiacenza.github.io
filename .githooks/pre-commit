@@ -1,0 +1,14 @@
+#!/bin/sh
+# The site's version (shown in the footer, js/version.js) bumped on every
+# commit: MAJOR.BUILD — BUILD the repo's commit count once this commit is in
+# (+1 on every commit, as many a day as there are), MAJOR kept as it is (raise
+# it by hand in js/version.js for a big release). Enabled once per clone with:
+#   git config core.hooksPath .githooks
+
+f=js/version.js
+current=$(sed -n 's/.*VERSION = "\(.*\)".*/\1/p' "$f" 2>/dev/null)
+major=${current%%.*}
+[ -n "$major" ] || major=1
+build=$(($(git rev-list --count HEAD 2>/dev/null || echo 0) + 1))
+printf '%s\n%s\n' "// Set by .githooks/pre-commit on every commit (MAJOR.BUILD) — only MAJOR by hand." "export const VERSION = \"$major.$build\";" > "$f"
+git add "$f"

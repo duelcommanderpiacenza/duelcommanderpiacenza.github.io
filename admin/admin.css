@@ -1782,6 +1782,13 @@ body.is-busy::before {
   padding: 14px 20px;
 }
 
+/* The site's version on the left, the theme button on the right. */
+.admin-footer .footer-version {
+  align-self: center;
+  margin: 0 auto 0 0;
+  color: var(--text-muted);
+}
+
 :root[data-theme="dark"] .login-card,
 :root[data-theme="dark"] .admin-form-card,
 :root[data-theme="dark"] .round-tab,
