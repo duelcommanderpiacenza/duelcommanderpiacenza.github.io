@@ -540,10 +540,9 @@ html:not(.nav-mobile) .admin-tab.is-active:hover {
 }
 
 /* A tab's count (js/tab-counts.js — "Utenti": pending link requests): a
-   small brand-red circle after its label. .admin-nav-count is the pill's
-   total on touch screens, placed in its corner further down. */
-.admin-tab-count,
-.admin-nav-count {
+   small brand-red circle after its label (touch screens: on its icon's
+   corner, further down). */
+.admin-tab-count {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -563,28 +562,27 @@ html:not(.nav-mobile) .admin-tab.is-active:hover {
   margin-left: 7px;
 }
 
-.admin-tab-count[hidden],
-.admin-nav-count[hidden] {
+.admin-tab-count[hidden] {
   display: none;
 }
 
-/* Touch screens: the public nav pill (styles.css html.nav-mobile
-   .nav-dropdown-trigger) in near-black — the current tab's name, a caret;
-   its list grows up out of it (the public pill's own keyframes) and
-   retracts back into it (.is-closing, js/admin-nav-dropdown.js), in the
-   page's own colour, the current tab a black chip. The pill slides away
-   while the page scrolls down (.is-scrolled-away). */
-.admin-nav-trigger {
-  display: none;
-}
-
+/* Touch screens: a tab bar at the bottom, like the public site's (css/6
+   "Tab bar", js/admin-nav-dropdown.js) — a solid capsule (white; dark mode
+   near-black) with every tab in view: the open one a red chip with its icon
+   and short name, the others their icon only; a count on its icon's
+   corner. It slides away while the page scrolls down (.is-scrolled-away).
+   The tabs' own labels (the computer's) hidden here. */
 html.nav-mobile .admin-tabs {
   position: fixed;
   top: auto;
   bottom: calc(16px + env(safe-area-inset-bottom));
   left: 0;
   right: 0;
+  z-index: 20;
   padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
   transition: bottom 450ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
@@ -593,150 +591,94 @@ html.nav-mobile .admin-tabs.is-scrolled-away {
 }
 
 html.nav-mobile .admin-tabs-inner {
-  display: none;
-  position: absolute;
-  z-index: 30;
-  bottom: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 2px;
   box-sizing: border-box;
-  width: 260px;
-  max-width: calc(100vw - 32px);
-  flex-direction: column;
-  flex-wrap: nowrap;
-  gap: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  /* No scrollbar (it showed while the rows slid in, as the public list
-     hides its own). */
-  scrollbar-width: none;
-  padding: 6px;
-  border: 1px solid var(--hairline);
-  border-radius: 32px;
-  background: var(--bg-cream-3);
-  box-shadow: var(--shadow-card-hover);
-}
-
-html.nav-mobile .admin-tabs-inner::-webkit-scrollbar {
-  display: none;
-}
-
-/* Growing up out of the pill (the public list's motion), clipped only on
-   its top — the edge being revealed: the clip reaches 40px past the other
-   three sides, so the list's shadow shows the whole way up, not only once
-   it's fully open. */
-html.nav-mobile .admin-tabs.is-open .admin-tabs-inner {
-  display: flex;
-  animation: admin-nav-panel-in 380ms cubic-bezier(0.2, 0, 0, 1) backwards;
-}
-
-@keyframes admin-nav-panel-in {
-  from {
-    clip-path: inset(calc(100% - 52px) -40px -40px -40px round 28px);
-    transform: translateX(-50%) translateY(10px);
-  }
-  to {
-    clip-path: inset(-40px -40px -40px -40px round 32px);
-    transform: translateX(-50%);
-  }
-}
-
-@keyframes admin-nav-panel-out {
-  from {
-    clip-path: inset(-40px -40px -40px -40px round 32px);
-    transform: translateX(-50%);
-  }
-  to {
-    clip-path: inset(calc(100% - 52px) -40px -40px -40px round 28px);
-    transform: translateX(-50%) translateY(10px);
-  }
-}
-
-html.nav-mobile .admin-tabs.is-open .admin-tabs-inner > * {
-  animation: nav-dropdown-item-in 380ms cubic-bezier(0.2, 0, 0, 1) backwards;
-}
-
-html.nav-mobile .admin-tabs.is-closing .admin-tabs-inner {
-  display: flex;
-  animation: admin-nav-panel-out 220ms cubic-bezier(0.3, 0, 0.8, 0.15) both;
+  width: min(460px, calc(100% - 24px));
+  margin: 0 auto;
+  padding: 5px;
+  border: 1px solid rgba(154, 28, 32, 0.12);
+  border-radius: var(--radius-pill);
+  background: #fff;
+  box-shadow: 0 -2px 10px rgba(40, 6, 9, 0.14), 0 4px 12px rgba(40, 6, 9, 0.2), 0 1px 3px rgba(40, 6, 9, 0.16);
 }
 
 html.nav-mobile .admin-tab {
+  flex: 1 1 0;
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  min-height: 54px;
-  padding: 14px 18px;
-  box-sizing: border-box;
-  color: var(--text-title);
-  font-size: 1.05rem;
-}
-
-html.nav-mobile .admin-tab.is-active {
-  background: #1a1a1a;
-  color: #fff;
-}
-
-html.nav-mobile .admin-nav-trigger {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  width: 220px;
-  margin: 0 auto;
-  min-height: 48px;
-  padding: 11px 18px;
-  border: none;
+  gap: 6px;
+  height: 48px;
+  padding: 0 4px;
+  border: 0;
   border-radius: var(--radius-pill);
-  background: #1a1a1a;
-  color: #fff;
-  font: inherit;
-  font-size: 1.02rem;
-  font-weight: 700;
-  cursor: pointer;
-  /* A tight shadow under it, a halo around (not pushed down to the
-     screen's edge) — as the public pill. */
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35), 0 -4px 28px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 0, 0, 0.12);
+  background: none;
+  color: var(--text-body);
+  font-size: 0.8rem;
+  font-weight: 800;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 200ms ease, color 200ms ease;
+}
+
+html.nav-mobile .admin-tab .admin-tab-label,
+html.nav-mobile .admin-tab .admin-tab-short {
+  display: none;
+}
+
+html.nav-mobile .admin-tab-icon-wrap {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+html.nav-mobile .admin-tab-icon {
+  width: 22px;
+  height: 22px;
   transition: transform 140ms ease;
 }
 
-html.nav-mobile .admin-nav-trigger:active {
-  transform: scale(0.96);
+html.nav-mobile .admin-tab:active .admin-tab-icon {
+  transform: scale(0.88);
 }
 
-@media (hover: hover) {
-  html.nav-mobile .admin-nav-trigger:hover {
-    background: #000;
-  }
-}
-
-/* The pending-requests total (js/tab-counts.js) in the pill's top-right
-   corner, whichever tab is open. */
-html.nav-mobile .admin-nav-count {
+/* The count on the icon's top-right corner, ringed in the bar's colour. */
+html.nav-mobile .admin-tab-icon-wrap .admin-tab-count {
   position: absolute;
-  top: -6px;
-  right: -4px;
-  min-width: 26px;
-  height: 26px;
-  border: 2px solid #fff;
-  font-size: 0.8rem;
+  top: -7px;
+  right: -10px;
+  min-width: 18px;
+  height: 18px;
+  margin: 0;
+  padding: 0 4px;
+  box-shadow: 0 0 0 2px #fff;
+  font-size: 0.66rem;
 }
 
-html.nav-mobile .admin-nav-caret {
-  flex-shrink: 0;
-  width: 0;
-  height: 0;
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-bottom: 7px solid #fff;
-  transition: transform 180ms ease;
+/* The open tab: its short name beside the icon, white on the red chip. */
+html.nav-mobile .admin-tab.is-active,
+html.nav-mobile .admin-tab.is-active:hover {
+  flex: 0 1 auto;
+  padding: 0 14px 0 12px;
+  background: var(--brand-red);
+  color: #fff;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--brand-red) 40%, transparent);
 }
 
-html.nav-mobile .admin-tabs.is-open .admin-nav-caret {
-  transform: rotate(180deg);
+html.nav-mobile .admin-tab.is-active .admin-tab-short {
+  display: inline;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  animation: tab-bar-label 260ms ease both;
+}
+
+html.nav-mobile .admin-tab.is-active .admin-tab-count {
+  box-shadow: 0 0 0 2px var(--brand-red);
+  background: #fff;
+  color: var(--brand-red);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -744,13 +686,12 @@ html.nav-mobile .admin-tabs.is-open .admin-nav-caret {
     transition: none;
   }
 
-  html.nav-mobile .admin-tabs.is-open .admin-tabs-inner,
-  html.nav-mobile .admin-tabs.is-open .admin-tabs-inner > * {
+  html.nav-mobile .admin-tab.is-active .admin-tab-short {
     animation: none;
   }
 }
 
-/* The pill slides away at the page's bottom (js/admin-nav-dropdown.js),
+/* The tab bar slides away at the page's bottom (js/admin-nav-dropdown.js),
    so the footer needs no room kept for it — just the home bar's space on
    notched phones, as the public footer. */
 html.nav-mobile .admin-footer {
@@ -1033,8 +974,7 @@ html.nav-mobile .admin-toast.is-leaving {
 }
 
 /* The pending link requests' count (Utenti) stays red: an alert. */
-.admin-tab-count,
-.admin-nav-count {
+.admin-tab-count {
   background: var(--status-danger);
 }
 
@@ -1854,33 +1794,23 @@ body.is-busy::before {
   background: #1e1517;
 }
 
-/* The dark pill: a lighter near-black with a soft light edge. */
-html[data-theme="dark"].nav-mobile .admin-nav-trigger {
-  border: 1.5px solid rgba(255, 255, 255, 0.22);
-  background: #2a2a2d;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45), 0 -4px 28px rgba(0, 0, 0, 0.55);
-}
-
-/* Without this, :root[data-theme="dark"] .admin-tabs above (meant for the
-   normal sticky top bar) wins on specificity over the mobile pill's own
-   background: none and reasserts a solid dark bar behind/around the
-   floating pill — same bug and same fix as the public site's .site-nav. */
+/* The tab bar in dark mode: the public bar's near-black, the inactive
+   icons near-white. The bar row itself bare (:root[data-theme="dark"]
+   .admin-tabs above is for the computer's sticky top bar). */
 html[data-theme="dark"].nav-mobile .admin-tabs {
   background: none;
 }
 
-/* The mobile dropdown panel's own solid color — same reasoning as the
-   public site's .cs-menu/.cd-popup dark overrides: it floats over
-   arbitrary content, so it needs a real color of its own, not a
-   translucent tint, to stay legible regardless of what's underneath. */
 html[data-theme="dark"].nav-mobile .admin-tabs-inner {
   border-color: rgba(255, 255, 255, 0.1);
+  background: #1e1517;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.45), 0 4px 14px rgba(0, 0, 0, 0.55), 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 
-/* A lighter gray than the light-mode #1a1a1a — against this panel's own
-   already-dark #241a1d background, solid near-black wouldn't read as a
-   distinct "this one's selected" highlight at all. */
-html[data-theme="dark"].nav-mobile .admin-tab.is-active {
-  background: #4a4a4a;
-  border-color: #4a4a4a;
+html[data-theme="dark"].nav-mobile .admin-tab:not(.is-active) {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+html[data-theme="dark"].nav-mobile .admin-tab-icon-wrap .admin-tab-count {
+  box-shadow: 0 0 0 2px #1e1517;
 }

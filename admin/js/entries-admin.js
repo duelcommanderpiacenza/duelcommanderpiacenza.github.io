@@ -76,7 +76,10 @@ export function initEntriesAdmin() {
       return;
     }
     try {
-      const entries = await EventEntries.listByEvent(currentEvent.id);
+      // By name, like the player picker (the database gives no order).
+      const entries = (await EventEntries.listByEvent(currentEvent.id)).sort((a, b) =>
+        (a.player?.name ?? "").localeCompare(b.player?.name ?? "", "it")
+      );
       currentEntries = entries;
       showCount(entries.length);
       updatePlayerOptions();

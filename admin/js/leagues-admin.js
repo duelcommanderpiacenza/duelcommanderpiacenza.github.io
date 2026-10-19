@@ -1,5 +1,5 @@
 import { Leagues, Events } from "../../js/db.js";
-import { renderTable, setMessage, statusToggleButton, onBusySubmit, runBusy } from "./crud-ui.js";
+import { renderTable, setMessage, statusToggleButton, onBusySubmit, runBusy, manageButton } from "./crud-ui.js";
 import { syncAutoBadges } from "./badges-sync.js";
 
 // The proactive close-before-open/create calls should normally prevent this
@@ -66,7 +66,7 @@ export function initLeaguesAdmin({ onOpenLeague }) {
           label: "",
           render: (l) => `
               <div class="row-actions">
-                <button type="button" class="btn-secondary" data-open="${l.id}">Gestisci &rarr;</button>
+                ${manageButton(l.id, "Gestisci eventi")}
               </div>`,
         },
       ],

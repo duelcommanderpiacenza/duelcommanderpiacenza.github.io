@@ -1,6 +1,6 @@
 import { Events } from "../../js/db.js";
 import { formatDate, formatTime, isHttpUrl } from "../../js/ui.js";
-import { renderTable, setMessage, statusToggleButton, onBusySubmit, runBusy } from "./crud-ui.js";
+import { renderTable, setMessage, statusToggleButton, onBusySubmit, runBusy, manageButton } from "./crud-ui.js";
 import { on } from "./bus.js";
 import { syncAutoBadges } from "./badges-sync.js";
 
@@ -48,7 +48,7 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
           label: "",
           render: (e) => `
               <div class="row-actions">
-                <button type="button" class="btn-secondary" data-open="${e.id}">Gestisci &rarr;</button>
+                ${manageButton(e.id, "Gestisci iscritti e partite")}
               </div>`,
         },
       ],

@@ -16,6 +16,12 @@ const DELETE_ICON_SVG = `<svg width="21" height="21" viewBox="0 0 24 24" fill="n
   <path d="M6 6l12 12"/>
 </svg>`;
 
+// "Gestisci" (a league's events, an event's entries and matches): a round
+// button like ✎ beside it, an arrow going into a box — opens the item.
+export function manageButton(id, label) {
+  return `<button type="button" class="icon-btn icon-btn-edit" data-open="${id}" aria-label="${label}" title="${label}"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"></path><path d="M14 8l4 4-4 4"></path><path d="M18 12H9"></path></svg></button>`;
+}
+
 /**
  * Renders an admin list — the public site's sub-card look (.history-panel /
  * .history-item, ../../styles.css), not a table: one card per row, which
