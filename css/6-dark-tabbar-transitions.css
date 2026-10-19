@@ -1069,6 +1069,67 @@ html.nav-mobile .tab-bar-link.is-current span {
   }
 }
 
+/* The data's freshness note (js/data-updates.js): a small solid capsule at
+   the top, centred, like the tab bar's — "Dati aggiornati" with its
+   "Aggiorna", or "Offline · dati dell'ultimo accesso" for a moment. */
+.data-note {
+  position: fixed;
+  top: calc(14px + env(safe-area-inset-top));
+  left: 50%;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100vw - 24px);
+  box-sizing: border-box;
+  padding: 6px 6px 6px 16px;
+  border: 1px solid rgba(154, 28, 32, 0.12);
+  border-radius: var(--radius-pill);
+  background: #fff;
+  color: var(--text-body);
+  font-size: 0.86rem;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(40, 6, 9, 0.2), 0 1px 3px rgba(40, 6, 9, 0.16);
+  transform: translateX(-50%);
+  animation: data-note-in 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.data-note:not(:has(button)) {
+  padding-right: 16px;
+}
+
+.data-note button {
+  padding: 7px 14px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--brand-red);
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+:root[data-theme="dark"] .data-note {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: #1e1517;
+  color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55), 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+@keyframes data-note-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .data-note {
+    animation: none;
+  }
+}
+
 /* "Torna all'inizio": above the bar (it filled the screen's width) on the
    right, no longer beside the old pill. */
 html.nav-mobile .back-to-top {

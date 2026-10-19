@@ -275,10 +275,11 @@ function whenLoaded(fn) {
 // swapped back in and its module mounted afresh — so its data fetched again
 // — like an in-app navigation to itself, without a full reload; a normal
 // reload for a page the router doesn't handle. Resolves once the new page
-// is mounted (its data may still be loading: body.is-loading).
-export async function refresh() {
+// is mounted (its data may still be loading: body.is-loading). keepScroll:
+// back where it was once the content is in (js/data-updates.js's redraw).
+export async function refresh({ keepScroll = false } = {}) {
   const url = new URL(location.href);
-  if (pageOf(url) && current) await go(url, { push: false });
+  if (pageOf(url) && current) await go(url, { push: false, restoreY: keepScroll ? window.scrollY || null : null });
   else location.reload();
 }
 

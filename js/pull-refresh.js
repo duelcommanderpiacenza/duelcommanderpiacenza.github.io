@@ -146,6 +146,8 @@ function init() {
     ptr.classList.add("is-refreshing");
     setTravel(THRESHOLD);
     try {
+      // Fresh from the network, not the last visit's copy (sw.js).
+      navigator.serviceWorker?.controller?.postMessage({ type: "fresh-data" });
       await refresh();
       await whenShown();
     } catch (err) {
