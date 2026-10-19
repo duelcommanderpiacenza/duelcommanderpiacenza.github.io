@@ -595,7 +595,7 @@ html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([
    (the header's 16px + safe area), the round buttons' 46px, and its left
    edge on the logo's — the header's side padding (20px; 16px up to 480px)
    and centred 1100px row, minus where the wrap starts (.page-main's: 20px;
-   16px up to 640px; a centred 1100px column). The header box, laid over
+   --page-pad-x up to 640px; a centred 1100px column). The header box, laid over
    the hero, lets taps through outside its own buttons, so the pill under it
    gets them. */
 html.app-header body:has(.page-main .detail-hero-back) {
@@ -605,7 +605,7 @@ html.app-header body:has(.page-main .detail-hero-back) {
 
 @media (max-width: 640px) {
   html.app-header body:has(.page-main .detail-hero-back) {
-    --page-x: 16px;
+    --page-x: var(--page-pad-x, 16px);
   }
 }
 

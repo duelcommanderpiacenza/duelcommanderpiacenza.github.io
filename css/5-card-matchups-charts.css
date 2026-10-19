@@ -3285,8 +3285,15 @@ html.nav-mobile .chart-carousel-arrow {
   flex-shrink: 0;
 }
 
+/* Phones: narrow side margins, the content as wide as it can be
+   (--page-pad-x — also what the edge-to-edge heroes cancel, and the hero
+   back pill's alignment). */
 @media (max-width: 640px) {
+  :root {
+    --page-pad-x: 6px;
+  }
+
   .page-main {
-    padding: 20px 16px 36px;
+    padding: 20px var(--page-pad-x) 36px;
   }
 }

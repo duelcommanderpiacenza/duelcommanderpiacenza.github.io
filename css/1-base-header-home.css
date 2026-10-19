@@ -359,8 +359,8 @@ html:not(.app-header) .sk-touch-only {
 
 @media (max-width: 640px) {
   .sk-hero {
-    margin-inline: -16px;
-    padding-inline: 16px;
+    margin-inline: calc(-1 * var(--page-pad-x, 16px));
+    padding-inline: var(--page-pad-x, 16px);
     border-radius: 0;
   }
 }
@@ -2511,19 +2511,20 @@ html.app-header .home-board > .home-panel:not(.is-current) {
   color: var(--text-title);
 }
 
-/* The next event's circle: its halo pulsing outwards; still where motion
-   is reduced. */
+/* The next event's circle: its halo pulsing outwards — 6px at most, the
+   phones' page margin (--page-pad-x), so it never reaches the screen's
+   edge; still where motion is reduced. */
 .home-timeline .is-next > .league-tl-node {
   animation: home-tl-node-pulse 1.6s ease-out infinite;
 }
 
 @keyframes home-tl-node-pulse {
   from {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--brand-red) 45%, transparent);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--brand-red) 55%, transparent);
   }
 
   to {
-    box-shadow: 0 0 0 12px color-mix(in srgb, var(--brand-red) 0%, transparent);
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--brand-red) 0%, transparent);
   }
 }
 

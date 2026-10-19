@@ -1369,11 +1369,11 @@ html.app-header .page-back-wrap {
   }
 
   /* The hero edge to edge, right under the red header: it cancels the
-     page's phone padding (.page-main: 20px top, 16px sides) — no rounded
+     page's phone padding (.page-main: 20px top, --page-pad-x sides) — no rounded
      corners or shadow there. Under "Il tuo giocatore" (not linked yet, the
      banner on top) it isn't pulled up — still edge to edge. */
   .profile-hero {
-    margin: -20px -16px 22px;
+    margin: -20px calc(-1 * var(--page-pad-x, 16px)) 22px;
     border-radius: 0;
     box-shadow: none;
   }
