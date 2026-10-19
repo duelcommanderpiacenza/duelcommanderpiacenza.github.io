@@ -243,8 +243,10 @@ create table matches ( -- one round pairing between two players, scored as a bes
   --   alter table matches add constraint matches_score_valid check (
   --     player1_wins >= 0 and draws >= 0 and player2_wins >= 0
   --     and (player1_wins + draws + player2_wins) <= 3);
+  -- A best-of-3 also means at most 2 wins each (migration 025).
   constraint matches_score_valid check (
     player1_wins >= 0 and draws >= 0 and player2_wins >= 0
+    and player1_wins <= 2 and player2_wins <= 2
     and (player1_wins + draws + player2_wins) <= 3
   )
 );

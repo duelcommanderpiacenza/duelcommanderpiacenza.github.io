@@ -34,6 +34,19 @@ export function initMatchesAdmin() {
   const cancelBtn = document.getElementById("matches-admin-cancel");
   const eventLeaderboardEl = document.getElementById("matches-event-leaderboard");
 
+  // A best-of-3 (see the check on save): each field's max follows the other
+  // two — wins at most 2 and what's left of 3 games, draws what's left — so
+  // the steppers can't reach a 2-2 or a 3-0. Re-run whenever the values are
+  // set from code too (edit, reset).
+  const scoreFields = [p1WinsField, drawsField, p2WinsField];
+  function limitScore() {
+    const [p1, d, p2] = scoreFields.map((f) => Math.max(0, parseInt(f.value, 10) || 0));
+    p1WinsField.max = String(Math.min(2, 3 - d - p2));
+    p2WinsField.max = String(Math.min(2, 3 - d - p1));
+    drawsField.max = String(3 - p1 - p2);
+  }
+  scoreFields.forEach((f) => f.addEventListener("input", limitScore));
+
   let currentEvent = null;
   let currentRound = 1;
   let allMatches = [];
@@ -366,6 +379,7 @@ export function initMatchesAdmin() {
       drawsField.value = row.draws;
       p2WinsField.value = row.player2_wins;
     }
+    limitScore();
   }
 
   // For a fresh match, default Giocatore 1/2 to the next two alphabetically
@@ -384,6 +398,7 @@ export function initMatchesAdmin() {
     p1WinsField.value = "0";
     drawsField.value = "0";
     p2WinsField.value = "0";
+    limitScore();
     setMessage(msgEl, "", false);
   }
 
@@ -454,9 +469,18 @@ export function initMatchesAdmin() {
       const total = p1Wins + draws + p2Wins;
       // 0-0-0 is a valid result (no games played, e.g. an intentional draw)
       // and scores as a draw — matchRoundOutcome treats equal game counts as
-      // one. Only more than a best-of-3's worth of games is rejected.
-      if (p1Wins < 0 || draws < 0 || p2Wins < 0 || total > 3) {
-        setMessage(msgEl, "Il totale delle partite giocate deve essere tra 0 e 3.", true);
+      // one. A best-of-3: at most 2 wins each (the second ends it), at most
+      // 3 games in all (the database checks the same — matches_score_valid).
+      if (p1Wins < 0 || draws < 0 || p2Wins < 0) {
+        setMessage(msgEl, "I valori non possono essere negativi.", true);
+        return;
+      }
+      if (p1Wins > 2 || p2Wins > 2) {
+        setMessage(msgEl, "Un giocatore può vincere al massimo 2 partite.", true);
+        return;
+      }
+      if (total > 3) {
+        setMessage(msgEl, "Il totale delle partite giocate non può superare 3.", true);
         return;
       }
       payload = {
