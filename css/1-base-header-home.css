@@ -1881,13 +1881,6 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
     flex-shrink: 0;
   }
 
-  /* .pwa-install-banner is also position: fixed, bottom: 16px, nearly
-     full-width — without this it would sit exactly on top of the tab bar
-     instead of stacking above it. */
-  html.nav-mobile .pwa-install-banner {
-    bottom: calc(78px + env(safe-area-inset-bottom));
-  }
-
   /* No room reserved for the tab bar: it slides away while
      scrolling down (js/nav-dropdown.js .is-scrolled-away), so at the
      page's bottom the footer is clear — just the home-bar space on notched
