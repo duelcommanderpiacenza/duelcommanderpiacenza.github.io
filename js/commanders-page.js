@@ -13,12 +13,14 @@ import { initBackToTop } from "./back-to-top.js";
 
 // Both charts are built from the *current filter's* data only (league /
 // event / date): Metashare = its 6 most played commanders + "Altri",
-// Winrate = its 7 highest winrates. Colors are assigned per render in that
+// Winrate = its 7 highest winrates (touch screens: 5 and 6). Colors are assigned per render in that
 // same order — the pie's commanders first, then any extra ones only the
 // winrate chart shows — so a commander has the same color in both charts.
 // Up to 6 + 7 distinct commanders, hence 13 hues; grey is only "Altri".
-const PIE_TOP_COUNT = 6;
-const WINRATE_TOP_COUNT = 7;
+// Touch screens one line fewer in each (the charts' carousel a bit shorter).
+const SHORTER = document.documentElement.classList.contains("nav-mobile") ? 1 : 0;
+const PIE_TOP_COUNT = 6 - SHORTER;
+const WINRATE_TOP_COUNT = 7 - SHORTER;
 const CHART_COLORS = [
   "#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300",
   "#8e5bd6", "#d6455d", "#00a3a3", "#b07b24", "#5c6bc0", "#c2185b", "#6d8f00",

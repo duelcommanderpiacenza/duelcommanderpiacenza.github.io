@@ -2874,6 +2874,17 @@ html.nav-mobile .chart-carousel-arrow {
   min-height: 300px;
 }
 
+/* Touch screens: its charts a line shorter (js/commanders-page.js), the
+   room kept for them — and their loading placeholder — to match, so the
+   list sits right under them. */
+html.nav-mobile #commanders-chart {
+  min-height: 265px;
+}
+
+html.nav-mobile main[data-page="commanders"] .sk-chart {
+  height: 265px;
+}
+
 #archetypes-chart {
   min-height: 220px;
 }
