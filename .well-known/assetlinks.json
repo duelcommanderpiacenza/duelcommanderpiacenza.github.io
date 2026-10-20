@@ -1,8 +1,0 @@
-[{
-      "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": {
-        "namespace": "android_app",
-        "package_name": "io.github.duelcommanderpiacenza.twa",
-        "sha256_cert_fingerprints": ["C4:34:B3:EF:A3:6F:F2:DA:46:C1:82:FE:FA:E8:07:A7:99:5F:F2:FE:4B:A2:8C:21:8D:11:F7:F4:23:CC:4A:71"]
-      }
-    }]
