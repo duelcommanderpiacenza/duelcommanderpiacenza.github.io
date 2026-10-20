@@ -2390,7 +2390,8 @@ html.app-header .home-board > .home-panel:not(.is-current) {
 :root[data-theme="dark"] .results-menu-btn {
   border-color: rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.06);
-  color: #ff8a8c;
+  /* A light shade of the page's red — a hero's colour on its page. */
+  color: color-mix(in srgb, var(--brand-red) 55%, #fff);
 }
 
 :root[data-theme="dark"] .results-menu-btn:hover,
@@ -2497,6 +2498,19 @@ html.app-header .home-board > .home-panel:not(.is-current) {
   flex-shrink: 0;
   margin-left: auto;
   white-space: nowrap;
+}
+
+/* league.html's list (the same look): a played event's players in its
+   line — the 👥 icon at the text's size. */
+.league-tl-players {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.league-tl-players svg {
+  width: 1.15em;
+  height: 1.15em;
 }
 
 /* The name first, the league under it — an upcoming event's time on the

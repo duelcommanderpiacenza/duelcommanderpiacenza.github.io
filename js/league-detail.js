@@ -18,6 +18,7 @@ import { initFollowButton } from "./follow-button.js";
 import { initTabs } from "./tabs.js";
 import { initBackToTop } from "./back-to-top.js";
 import { openInfoDialog } from "./info-dialog.js";
+import { nestedResultsMenu } from "./results-link.js";
 import { renderMetaCharts } from "./meta-charts.js";
 
 // How many leaderboard rows get the "top 8" highlight (styles.css .is-top8).
@@ -49,15 +50,18 @@ function leagueDateRange(league, events) {
   return { html: start === end ? start : `${start} – ${end}`, withStatus: false };
 }
 
-// "Eventi della lega" as a timeline (styles.css .league-timeline): oldest
-// first, one node on a vertical line per event — its day and month in the
-// circle (wide: the full date left of the line) — and its card beside it.
-//  - played (closed): its number in the season ("Evento 3"), its name, its
-//    players; the card a link to it; the line up to it red;
-//  - the next one (the soonest still open, today or later): solid red, a
-//    pulsing dot, its time and how far off it is; not a link (its page fills
-//    in once it's played);
-//  - later open ones: "In calendario", hollow;
+// "Eventi della lega" as a timeline (styles.css .league-timeline), looking
+// just like the Bacheca's (.home-timeline — its card layout and rules):
+// oldest first, one node on a vertical line per event — its day and month
+// in the circle (wide: the full date left of the line) — and its card
+// beside it, the name over a line of its own:
+//  - played (closed): "Evento 3 · 👥 players" under its name, "Liste" (its
+//    Moxfield / mtgtop8 links) on the right; the card a link to it; the
+//    line up to it red;
+//  - the next one (the soonest still open, today or later): solid red, its
+//    circle pulsing, its time at the bottom right; not a link (its page
+//    fills in once it's played);
+//  - later open ones: hollow, their time;
 //  - an open one whose day has passed (played, results not in yet):
 //    "Risultati in arrivo", right after the played ones. Visitors can't
 //    see those at all (events_public_read: closed, or dated today or
@@ -79,13 +83,8 @@ const TL_ICON = (body) =>
 const TL_USERS = TL_ICON(
   '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>'
 );
-const TL_CLOCK = TL_ICON('<circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path>');
 
 const byDate = (a, b) => (a.event_date ?? "9999").localeCompare(b.event_date ?? "9999");
-
-function daysFrom(today, iso) {
-  return Math.round((new Date(`${iso}T00:00:00`) - new Date(`${today}T00:00:00`)) / 86400000);
-}
 
 function timelineItemHtml({ ev, state, players }, number, today) {
   const date = ev?.event_date ? new Date(`${ev.event_date}T00:00:00`) : null;
@@ -97,25 +96,23 @@ function timelineItemHtml({ ev, state, players }, number, today) {
         .toLocaleDateString("it-IT", { weekday: "long" })
         .replace(".", "")}</small>`
     : "—";
-  const kicker = {
-    played: `Evento ${number}`,
-    next: '<span class="league-tl-pulse" aria-hidden="true"></span>Prossimo evento',
-    future: "In calendario",
-    pending: "Risultati in arrivo",
-  }[state];
-  let side = "";
-  if (state === "played") side = `${TL_USERS}${players}`;
-  else if (state === "next") {
-    const days = daysFrom(today, ev.event_date);
-    const when = days <= 0 ? "oggi" : days === 1 ? "domani" : `tra ${days} giorni`;
-    side = `${TL_CLOCK}${[ev.start_time ? `ore ${formatTime(ev.start_time)}` : "", when].filter(Boolean).join(" · ")}`;
-  } else if (state === "future" && ev.start_time) side = `ore ${formatTime(ev.start_time)}`;
+  const kicker =
+    state === "pending"
+      ? "Risultati in arrivo"
+      : `Evento ${number}${state === "played" ? ` · <span class="league-tl-players">${TL_USERS}${players}</span>` : ""}`;
+  // Played: "Liste" beside the text, centred; upcoming: the time on the
+  // line under the name, at the card's bottom right (as on the Bacheca).
+  const links = state === "played" ? nestedResultsMenu(ev.results_url, ev.decklists_url) : "";
+  const time =
+    (state === "next" || state === "future") && ev?.start_time
+      ? `<span class="league-tl-side">${formatTime(ev.start_time)}</span>`
+      : "";
   const body = `
           <span class="league-tl-text">
-            <span class="league-tl-k">${kicker}</span>
             <span class="league-tl-t">${ev ? cardName(ev) : `Evento ${number}`}</span>
+            <span class="league-tl-k-row"><span class="league-tl-k">${kicker}</span>${time}</span>
           </span>
-          ${side ? `<span class="league-tl-side">${side}</span>` : ""}`;
+          ${links ? `<span class="league-tl-side">${links}</span>` : ""}`;
   const card =
     state === "played"
       ? `<a class="league-tl-card" href="event.html?id=${ev.id}">${body}</a>`
@@ -142,7 +139,7 @@ function timelineHtml(allEvents, playersById, scheduled, today) {
     items.push({ ev, state: ev.id === nextId ? "next" : ev.event_date && ev.event_date < today ? "pending" : "future" });
   }
   if (!items.length) return "";
-  return `<ol class="league-timeline">${items.map((item, i) => timelineItemHtml(item, i + 1, today)).join("")}</ol>`;
+  return `<ol class="league-timeline home-timeline">${items.map((item, i) => timelineItemHtml(item, i + 1, today)).join("")}</ol>`;
 }
 
 // The Classifica's "?" (on touch screens, the same "?" above the list): how
