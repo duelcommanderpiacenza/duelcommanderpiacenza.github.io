@@ -32,6 +32,7 @@ function init() {
   // In-app navigation (js/router.js): the bar shows.
   document.addEventListener("app:navigate", () => {
     nav.classList.remove("is-scrolled-away");
+    document.documentElement.classList.remove("is-nav-away");
     lastY = 0;
   });
 
@@ -40,6 +41,7 @@ function init() {
   // down (the jump's own scroll event then sees no move).
   document.addEventListener("app:scroll-restored", () => {
     nav.classList.remove("is-scrolled-away");
+    document.documentElement.classList.remove("is-nav-away");
     lastY = window.scrollY;
   });
 
@@ -66,6 +68,10 @@ function init() {
         const atBottom = window.innerHeight + y >= document.documentElement.scrollHeight - 2;
         const away = y > lastY && (y > SHOW_NEAR_TOP || atBottom);
         nav.classList.toggle("is-scrolled-away", away);
+        // On <html> too, for what moves with the bar ("Torna all'inizio",
+        // styles.css) — a class there rather than a :has() on the bar, which
+        // made the browser re-check the whole page at each change.
+        document.documentElement.classList.toggle("is-nav-away", away);
         lastY = y;
       });
     },

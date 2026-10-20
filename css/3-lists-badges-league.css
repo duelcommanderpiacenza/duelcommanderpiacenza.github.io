@@ -46,8 +46,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ev-pulse {
-    animation: none;
+  .ev-pulse::after {
+    display: none;
   }
 }
 
@@ -340,6 +340,26 @@ img.badge-disc-glyph {
 
 .badge-status-open.status-chip::before {
   background: #22c55e;
+}
+
+/* "In corso"'s dot pulsing: a ring over it (where the dot sits: the chip's
+   11px padding, centred) growing and fading — transform + opacity, the
+   GPU's, not a box-shadow repainted every frame. */
+.badge-status-open.status-chip {
+  position: relative;
+}
+
+.badge-status-open.status-chip::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 11px;
+  width: 7px;
+  height: 7px;
+  margin-top: -3.5px;
+  border-radius: 50%;
+  background: rgba(34, 197, 94, 0.6);
+  pointer-events: none;
   animation: status-live 2s ease-out infinite;
 }
 
@@ -354,19 +374,16 @@ img.badge-disc-glyph {
 }
 
 @keyframes status-live {
-  0% {
-    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6);
-  }
-
   70%,
   100% {
-    box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+    opacity: 0;
+    transform: scale(2.7);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .badge-status-open.status-chip::before {
-    animation: none;
+  .badge-status-open.status-chip::after {
+    display: none;
   }
 }
 

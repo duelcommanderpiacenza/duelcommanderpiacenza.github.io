@@ -139,8 +139,14 @@ function initPinned(pinnedEl, nextEl, signal) {
   // shrunk, the tile cut to just around it (the band, the name's line, a
   // little room), and the ring's count moved to that line's right end
   // (--ring-dx / -dy), bigger, its circle gone.
+  // The sticky offset (read once, on measuring) and the last values written
+  // (written again only when they change: each write restyles the tile).
+  let stickTop = 0;
+  let last = { p: null, clip: null, stuck: null };
   function measure() {
     tile.style.setProperty("--p", "0");
+    stickTop = parseFloat(getComputedStyle(pinnedEl).top) || 0;
+    last = { p: null, clip: null, stuck: null };
     const k = Math.min(1, NAME_COMPACT / parseFloat(getComputedStyle(name).fontSize));
     const tr = tile.getBoundingClientRect();
     const nr = name.getBoundingClientRect();
@@ -169,16 +175,17 @@ function initPinned(pinnedEl, nextEl, signal) {
   let queued = false;
   function update() {
     queued = false;
-    const stickTop = parseFloat(getComputedStyle(pinnedEl).top) || 0;
     // Where the tile would be if it didn't stick (the next block's top,
     // minus the gap and the tile), and how far the page has scrolled past it.
     const naturalTop = nextEl ? nextEl.getBoundingClientRect().top - gap - H : stickTop;
     const past = Math.max(0, stickTop - naturalTop);
     const visible = Math.max(Hc, H - past);
     const p = H > Hc ? Math.min(1, past / (H - Hc)) : 0;
-    tile.style.setProperty("--p", p.toFixed(3));
-    tile.style.setProperty("--clip", `${(H - visible).toFixed(1)}px`);
-    pinnedEl.classList.toggle("is-stuck", past > 0);
+    const pText = p.toFixed(3);
+    const clipText = `${(H - visible).toFixed(1)}px`;
+    if (pText !== last.p) tile.style.setProperty("--p", (last.p = pText));
+    if (clipText !== last.clip) tile.style.setProperty("--clip", (last.clip = clipText));
+    if (past > 0 !== last.stuck) pinnedEl.classList.toggle("is-stuck", (last.stuck = past > 0));
   }
 
   const queue = () => {

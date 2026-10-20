@@ -2232,22 +2232,30 @@ html.nav-mobile .ev-board-pinned .ev-ring-label {
 }
 
 .ev-pulse {
+  position: relative;
   flex-shrink: 0;
   width: 7px;
   height: 7px;
   border-radius: 50%;
   background: #fff;
+}
+
+/* Its pulse: a ring growing out of it and fading (transform + opacity —
+   the GPU's, not a box-shadow repainted every frame). */
+.ev-pulse::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
   animation: ev-pulse 2s ease-out infinite;
 }
 
 @keyframes ev-pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
-  }
-
   70%,
   100% {
-    box-shadow: 0 0 0 6px rgba(255, 255, 255, 0);
+    opacity: 0;
+    transform: scale(2.7);
   }
 }
 

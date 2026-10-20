@@ -2533,24 +2533,35 @@ html.app-header .home-board > .home-panel:not(.is-current) {
 
 /* The next event's circle: its halo pulsing outwards — 6px at most, the
    phones' page margin (--page-pad-x), so it never reaches the screen's
-   edge; still where motion is reduced. */
+   edge. A ring behind the circle growing and fading (transform + opacity:
+   done by the GPU, nothing repainted per frame — an animated box-shadow
+   was, 60 times a second); still where motion is reduced. */
 .home-timeline .is-next > .league-tl-node {
+  box-shadow: none;
+}
+
+.home-timeline .is-next > .league-tl-node::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--brand-red) 55%, transparent);
   animation: home-tl-node-pulse 1.6s ease-out infinite;
 }
 
 @keyframes home-tl-node-pulse {
-  from {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--brand-red) 55%, transparent);
-  }
-
   to {
-    box-shadow: 0 0 0 6px color-mix(in srgb, var(--brand-red) 0%, transparent);
+    opacity: 0;
+    transform: scale(1.21);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .home-timeline .is-next > .league-tl-node {
+  .home-timeline .is-next > .league-tl-node::after {
     animation: none;
+    opacity: 0.35;
+    transform: scale(1.21);
   }
 }
 

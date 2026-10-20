@@ -57,36 +57,27 @@ function init() {
     chip.style.width = `${current.offsetWidth}px`;
   };
 
-  // The section for the page on screen: lit (its name shown), the others
-  // slide over to make room (FLIP) as the chip slides to it.
-  const sync = ({ animate }) => {
+  // The section for the page on screen: lit (its name shown), the chip
+  // straight under it — no sliding (the chip and the tabs used to glide to
+  // their new places: not needed, and work for the phone at every change).
+  const sync = () => {
     const active = document.body.dataset.activeNav;
     const tab = TABS.find((t) => t[4].includes(active))?.[0] ?? null;
     const current = links.find((a) => a.dataset.tab === tab) ?? null;
     if (current?.classList.contains("is-current") && !chip.hidden) return;
-    const before = animate && !reducedMotion() ? links.map((a) => a.getBoundingClientRect().left) : null;
     for (const a of links) {
       const on = a === current;
       a.classList.toggle("is-current", on);
       if (on) a.setAttribute("aria-current", "page");
       else a.removeAttribute("aria-current");
     }
-    if (before) {
-      links.forEach((a, i) => {
-        const dx = before[i] - a.getBoundingClientRect().left;
-        if (dx) a.animate([{ transform: `translateX(${dx}px)` }, { transform: "none" }], { duration: 320, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)" });
-      });
-    } else {
-      chip.style.transition = "none";
-    }
     placeChip(current);
-    if (!before) requestAnimationFrame(() => (chip.style.transition = ""));
   };
 
-  sync({ animate: false });
+  sync();
   // In-app navigation and back / forward (js/router.js sets the next page's
   // data-active-nav on <body>).
-  new MutationObserver(() => sync({ animate: true })).observe(document.body, {
+  new MutationObserver(sync).observe(document.body, {
     attributes: true,
     attributeFilter: ["data-active-nav"],
   });

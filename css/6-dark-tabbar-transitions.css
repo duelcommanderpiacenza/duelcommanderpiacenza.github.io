@@ -1053,7 +1053,7 @@ html.app-header .site-header.has-hero-accent .site-search-trigger {
    dark mode near-black) with five sections — Bacheca, Leghe, Meta,
    Giocatori, Social — the current one in a red chip with its name (the
    hero's colour on hero pages: .site-nav.has-hero-accent redefines the red),
-   the others icon only; the chip slides to the new section. It slides away
+   the others icon only; the chip jumps to the new section. It slides away
    scrolling down with the whole .site-nav (.is-scrolled-away, above).
    --------------------------------------------------------------------------- */
 html.nav-mobile .site-nav-inner {
@@ -1088,10 +1088,9 @@ html.nav-mobile .tab-bar {
   border-radius: var(--radius-pill);
   background: var(--brand-red);
   box-shadow: 0 4px 12px color-mix(in srgb, var(--brand-red) 40%, transparent);
-  transition:
-    left 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
-    width 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
-    background 450ms ease;
+  /* No sliding to the new section (js/tab-bar.js): only its colour eases
+     (a hero page's). */
+  transition: background 450ms ease;
 }
 
 .tab-bar-chip[hidden] {
@@ -1280,7 +1279,7 @@ html.nav-mobile .back-to-top:is(:hover, :focus-visible) {
 /* The bar slid away (scrolling down, .is-scrolled-away): the button drops
    into its place at the bottom, with the bar's own timing; back up with
    it. */
-html.nav-mobile:has(.site-nav.is-scrolled-away) .back-to-top {
+html.nav-mobile.is-nav-away .back-to-top {
   bottom: calc(16px + env(safe-area-inset-bottom) + var(--back-to-top-lift, 0px));
 }
 

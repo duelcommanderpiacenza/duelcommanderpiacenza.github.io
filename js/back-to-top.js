@@ -44,13 +44,17 @@ export function initBackToTop({ signal } = {}) {
 
   // At most one check per frame, however many scroll events arrive. While
   // hidden it's also out of the tab order (styles.css visibility).
+  // Written only when they change (each write makes the browser restyle).
   let frame = 0;
+  let lastVisible = null;
+  let lastLift = null;
   const update = () => {
     frame = 0;
-    button.classList.toggle("is-visible", window.scrollY > SHOW_AFTER);
+    const visible = window.scrollY > SHOW_AFTER;
+    if (visible !== lastVisible) button.classList.toggle("is-visible", (lastVisible = visible));
     const footerTop = footer?.getBoundingClientRect().top ?? Infinity;
-    const lift = Math.max(0, window.innerHeight - footerTop);
-    button.style.setProperty("--back-to-top-lift", `${Math.round(lift)}px`);
+    const lift = Math.round(Math.max(0, window.innerHeight - footerTop));
+    if (lift !== lastLift) button.style.setProperty("--back-to-top-lift", `${(lastLift = lift)}px`);
   };
   const queue = () => {
     if (!frame) frame = requestAnimationFrame(update);
