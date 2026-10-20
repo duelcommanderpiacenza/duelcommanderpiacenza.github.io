@@ -2527,6 +2527,14 @@ html.app-header .home-board > .home-panel:not(.is-current) {
   min-width: 0;
 }
 
+/* league.html's upcoming cards: just the name, centred in the card, the
+   time on its own at the bottom right — where the line under the name
+   would put it. */
+.home-timeline .league-tl-time {
+  align-self: flex-end;
+  margin-bottom: 9px;
+}
+
 .home-timeline .is-future .league-tl-t {
   color: var(--text-title);
 }

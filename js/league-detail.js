@@ -101,19 +101,18 @@ function timelineItemHtml({ ev, state, players }, number, today) {
       : state === "played"
         ? `<span class="league-tl-players">${TL_USERS}${players}</span>`
         : "";
-  // Played: "Liste" beside the text, centred; upcoming: the time on the
-  // line under the name, at the card's bottom right (as on the Bacheca).
+  // Played: "Liste" beside the text, centred; upcoming: nothing under the
+  // name, so the name alone, centred, and the time at the card's bottom
+  // right (.league-tl-time).
+  const upcoming = state === "next" || state === "future";
   const links = state === "played" ? nestedResultsMenu(ev.results_url, ev.decklists_url) : "";
-  const time =
-    (state === "next" || state === "future") && ev?.start_time
-      ? `<span class="league-tl-side">${formatTime(ev.start_time)}</span>`
-      : "";
+  const time = upcoming && ev?.start_time ? `<span class="league-tl-side league-tl-time">${formatTime(ev.start_time)}</span>` : "";
   const body = `
           <span class="league-tl-text">
             <span class="league-tl-t">${ev ? cardName(ev) : `Evento ${number}`}</span>
-            <span class="league-tl-k-row"><span class="league-tl-k">${kicker}</span>${time}</span>
+            ${upcoming ? "" : `<span class="league-tl-k">${kicker}</span>`}
           </span>
-          ${links ? `<span class="league-tl-side">${links}</span>` : ""}`;
+          ${links ? `<span class="league-tl-side">${links}</span>` : time}`;
   const card =
     state === "played"
       ? `<a class="league-tl-card" href="event.html?id=${ev.id}">${body}</a>`
