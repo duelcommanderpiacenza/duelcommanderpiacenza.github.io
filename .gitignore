@@ -1,0 +1,9 @@
+# The Android app's package (PWABuilder) — never in this public repo: it
+# holds the signing key, and anyone with it could publish fake updates of
+# the app. Keep it safe outside the repo.
+*.zip
+*.keystore
+*.jks
+*.apk
+*.aab
+signing-key-info.txt
