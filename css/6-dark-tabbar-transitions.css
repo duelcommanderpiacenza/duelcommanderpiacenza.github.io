@@ -1368,6 +1368,26 @@ html.nav-mobile .meta-row > .filter-toggle-btn {
   box-shadow: 0 0 0 2px #1e1517, var(--shadow-card);
 }
 
+/* The filters' button (every screen): not there while the page loads — it
+   fades in with the content (the switcher's row itself shows from the
+   first paint). */
+.meta-head .filter-toggle-btn {
+  transition: opacity 220ms ease, background 150ms ease;
+}
+
+body.is-loading .meta-head .filter-toggle-btn {
+  opacity: 0;
+  visibility: hidden;
+  transition: none;
+}
+
+/* …but not when coming from another Meta page (js/meta-filters.js): the
+   same button, already there, stays. */
+html.meta-filter-kept body.is-loading .meta-head .filter-toggle-btn {
+  opacity: 1;
+  visibility: visible;
+}
+
 html.nav-mobile .meta-head {
   display: contents;
 }

@@ -6,6 +6,14 @@
 
 const KEY = "metaFilters";
 
+// Moving from one Meta page to another (in-app navigation): the filters'
+// button already shown stays shown while the next page loads (styles.css
+// html.meta-filter-kept) — only the first arrival in the section fades it
+// in. Checked as the swap starts, the page being left still on screen.
+document.addEventListener("app:navigate", () => {
+  document.documentElement.classList.toggle("meta-filter-kept", Boolean(document.querySelector("main .meta-head .filter-toggle-btn")));
+});
+
 // { league, event, dateFrom } as last set, or null (nothing set yet this
 // session — the page's defaults then). dateFrom "" = the whole history.
 export function savedMetaFilters() {
