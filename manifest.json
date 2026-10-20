@@ -1,7 +1,10 @@
 {
+  "id": "./index.html",
   "name": "Duel Commander Piacenza",
   "short_name": "DC Piacenza",
   "description": "Classifiche, leghe ed eventi di Duel Commander Piacenza",
+  "lang": "it",
+  "dir": "ltr",
   "start_url": "index.html",
   "scope": ".",
   "display": "standalone",
@@ -32,5 +35,10 @@
       "type": "image/png",
       "purpose": "maskable"
     }
+  ],
+  "categories": [
+    "games",
+    "sports",
+    "entertainment"
   ]
 }

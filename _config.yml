@@ -1,0 +1,6 @@
+# GitHub Pages builds the site with Jekyll, which skips folders starting with
+# a dot. The Android app (a Trusted Web Activity) needs
+# /.well-known/assetlinks.json to be served, so it's included explicitly —
+# nothing else about how the site is built changes.
+include:
+  - .well-known
