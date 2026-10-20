@@ -46,11 +46,22 @@ function fetchEventsData(eventIds) {
   return fetchEventsResults(eventIds);
 }
 
+// A winrate counts (the Winrate chart, sorting by winrate) only with a real
+// sample: at least this share of the matches the most played commander has
+// in the same scope — relative, not a fixed number, so it scales from one
+// event to the whole history (like the auto badges' and the league
+// summary's thresholds). Below it a single lucky run would sit at the top
+// for good; those rows keep their place in the list, their winrate greyed
+// ("Pochi dati").
+const MIN_PLAYED_RATIO = 0.3;
+const minPlayed = (rows) => Math.max(1, Math.ceil(MIN_PLAYED_RATIO * Math.max(0, ...rows.map((r) => r.played ?? 0))));
+
 // Highest value first; a null winRate (no games played) always sorts last
-// rather than tying with an actual 0%.
+// rather than tying with an actual 0%. By winrate: those with enough
+// matches first.
 const SORTERS = {
   played: (a, b) => b.entries - a.entries,
-  winrate: (a, b) => (b.winRate ?? -1) - (a.winRate ?? -1),
+  winrate: (a, b) => Number(b.enough) - Number(a.enough) || (b.winRate ?? -1) - (a.winRate ?? -1),
   wins: (a, b) => b.wins - a.wins,
 };
 
@@ -179,7 +190,10 @@ export async function mount({ signal = new AbortController().signal } = {}) {
           { label: "Metashare", value: `${r.share.toFixed(1)}%${winrateTrendHtml(r.share, r.shareBefore, r.inLatest)}` },
           {
             label: "Winrate",
-            value: r.winRate === null ? "—" : `${r.winRate.toFixed(1)}%${winrateTrendHtml(r.winRate, r.winRateBefore, r.inLatest)}`,
+            value:
+              r.winRate === null
+                ? "—"
+                : `<span class="${r.enough ? "" : "wr-few"}"${r.enough ? "" : ' title="Pochi dati: troppe poche partite per un winrate affidabile"'}>${r.winRate.toFixed(1)}%</span>${winrateTrendHtml(r.winRate, r.winRateBefore, r.inLatest)}`,
             main: true,
           },
         ])}
@@ -281,12 +295,16 @@ export async function mount({ signal = new AbortController().signal } = {}) {
             wins: s.wins,
             draws: s.draws,
             losses: s.losses,
+            played: s.played,
             winRate: s.winRate,
             winRateBefore: winRateBefore.get(s.key) ?? null,
             inLatest: inLatest.has(s.key),
           };
         })
         .sort((a, b) => b.entries - a.entries || a.name.localeCompare(b.name));
+      // Enough matches for its winrate to count (MIN_PLAYED_RATIO).
+      const listMin = minPlayed(lastRows);
+      for (const r of lastRows) r.enough = r.played >= listMin;
 
       // The charts, unlike the table, don't split a commander by its
       // partner/background: "Thrasios / Tymna" and "Thrasios / Vial Smasher"
@@ -329,9 +347,12 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       // own winrate (0-100, independent of every other bar), not a share of
       // total wins. Ties go to whoever played more matches (a bigger sample
       // at the same rate), then alphabetically. A commander with no match
-      // played in scope (only a bye/drop) has no winrate and is left out.
+      // played in scope (only a bye/drop) has no winrate and is left out —
+      // and so is one with too few matches for it to count
+      // (MIN_PLAYED_RATIO).
+      const chartMin = minPlayed(commanderRows);
       const winsChartRows = commanderRows
-        .filter((r) => r.winRate !== null)
+        .filter((r) => r.winRate !== null && r.played >= chartMin)
         .sort((a, b) => b.winRate - a.winRate || b.played - a.played || a.name.localeCompare(b.name))
         .slice(0, WINRATE_TOP_COUNT)
         .map((r) => ({ label: r.name, value: r.winRate, color: colorFor(r.commanderId) }));
@@ -351,7 +372,9 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       lastChartHtml = `
         <div class="chart-grid">
           ${renderPieChart(chartRows, "Nessun dato per il grafico.", "Metashare")}
-          ${renderBarChart(winsChartRows, "Nessun dato per il grafico.", "Winrate")}
+          ${renderBarChart(winsChartRows, "Nessun dato per il grafico.", "Winrate", {
+            note: `min. ${chartMin} ${chartMin === 1 ? "partita" : "partite"}`,
+          })}
           ${renderBarChart(colorRows, "Nessun dato per il grafico.", "Colori più giocati", { spacious: true })}
         </div>`;
       chartEl.innerHTML = lastChartHtml;

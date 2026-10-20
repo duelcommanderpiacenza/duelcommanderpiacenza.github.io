@@ -215,3 +215,7 @@ starts right of it; player.html's card is centred the same way).
 ## Winrate trend
 
 - Comandanti and Giocatori lists: after the winrate (and Comandanti's metashare, the same rule — since 2026-10-19) a small **▲ (green) / ▼ (red) / = (grey)** — the winrate now vs. without the latest event in the current scope (filters included; `splitLatestEvent` + `winrateTrendHtml` in js/history-list.js), compared at the shown precision (one decimal). `=` also when that commander / player wasn't in the latest event or it was their first (nothing to compare); nothing for a "—" winrate. Hangs outside the number's box (`.wr-trend`, absolute) so the number stays centred in its column. Since 2026-10-19.
+
+## Winrate sample threshold (Comandanti)
+
+- Since 2026-10-20 (js/commanders-page.js `MIN_PLAYED_RATIO` = 0.3): a commander's winrate counts only with at least 30% of the matches of the most played commander in the same scope (filters included — relative, so it scales from one event to the whole history). Below it: left out of the Winrate chart, sorted after the others when sorting by winrate, its winrate greyed in the list (`.wr-few`, "Pochi dati" on hover). The chart groups by primary commander, the list by pairing: each computes its own threshold.

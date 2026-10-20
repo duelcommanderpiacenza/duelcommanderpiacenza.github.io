@@ -1166,6 +1166,12 @@ a.history-item.is-me {
   color: var(--brand-red-deep);
 }
 
+/* A winrate on too few matches to count (Comandanti — js/commanders-page.js
+   MIN_PLAYED_RATIO): greyed, "Pochi dati" on hover. */
+.history-stats .history-stat.is-main .history-stat-value .wr-few {
+  color: var(--text-muted);
+}
+
 /* A number's trend since the latest event — the winrate, Comandanti's
    metashare (js/history-list.js winrateTrendHtml): a small ▲ green / ▼ red / = grey hanging just after
    the number — outside its box, so the number stays centred in its column

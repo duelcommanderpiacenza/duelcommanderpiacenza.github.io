@@ -304,9 +304,12 @@ export async function hydrateBubbleArt(rootEl) {
  * @param {boolean} [options.spacious] - see below.
  * @param {string} [options.subtitle] - small muted line under the title.
  */
-export function renderBarChart(rows, emptyMessage, title, { spacious = false, subtitle = "" } = {}) {
+// `note`: a short aside in brackets on the title's own line (small, muted).
+export function renderBarChart(rows, emptyMessage, title, { spacious = false, subtitle = "", note = "" } = {}) {
   const titleHtml =
-    (title ? `<h2 class="pie-chart-title">${escapeHtml(title)}</h2>` : "") +
+    (title
+      ? `<h2 class="pie-chart-title">${escapeHtml(title)}${note ? ` <small class="pie-chart-title-note">(${escapeHtml(note)})</small>` : ""}</h2>`
+      : "") +
     (subtitle ? `<p class="pie-chart-subtitle">${escapeHtml(subtitle)}</p>` : "");
   if (rows.length === 0) {
     return `<div class="pie-chart-wrap">${titleHtml}<p class="page-empty">${emptyMessage}</p></div>`;

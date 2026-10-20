@@ -2496,6 +2496,14 @@ a.bubble:active {
   font-size: 1.1rem;
 }
 
+/* An aside on the title's line, in brackets (Comandanti's Winrate: the
+   matches needed to count). */
+.pie-chart-title-note {
+  color: var(--text-muted);
+  font-size: 0.62em;
+  font-weight: 700;
+}
+
 .pie-chart-body {
   display: flex;
   align-items: center;
