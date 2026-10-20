@@ -1981,6 +1981,14 @@ button.ev-tile {
    …" and the ring's circle fade, the name shrinks (--name-k), the ring's
    count moves beside it. The row lets taps through outside the tile's shown
    part. */
+/* The board's container (#events-board, itself an .ev-board) right after
+   it: not a second board — no separating line or room above it. */
+.ev-board-pinned + #events-board {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
 html.nav-mobile .ev-board-pinned {
   position: sticky;
   top: calc(8px + env(safe-area-inset-top));
