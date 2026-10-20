@@ -53,9 +53,9 @@ function leagueDateRange(league, events) {
 // "Eventi della lega" as a timeline (styles.css .league-timeline), looking
 // just like the Bacheca's (.home-timeline — its card layout and rules):
 // oldest first, one node on a vertical line per event — its day and month
-// in the circle (wide: the full date left of the line) — and its card
+// in the circle (wide: its weekday left of the line) — and its card
 // beside it, the name over a line of its own:
-//  - played (closed): "Evento 3 · 👥 players" under its name, "Liste" (its
+//  - played (closed): "👥 players" under its name, "Liste" (its
 //    Moxfield / mtgtop8 links) on the right; the card a link to it; the
 //    line up to it red;
 //  - the next one (the soonest still open, today or later): solid red, its
@@ -91,15 +91,16 @@ function timelineItemHtml({ ev, state, players }, number, today) {
   const node = date
     ? `<b>${String(date.getDate()).padStart(2, "0")}</b><span>${date.toLocaleDateString("it-IT", { month: "short" }).replace(".", "")}</span>`
     : "<b>?</b>";
-  const fullDate = date
-    ? `${date.toLocaleDateString("it-IT", { day: "numeric", month: "long" })}<small>${date
-        .toLocaleDateString("it-IT", { weekday: "long" })
-        .replace(".", "")}</small>`
-    : "—";
+  // Wide: just the weekday left of the line (the day and month are in the
+  // circle already).
+  const weekday = date ? date.toLocaleDateString("it-IT", { weekday: "long" }) : "";
+  const fullDate = weekday ? weekday.charAt(0).toUpperCase() + weekday.slice(1) : "—";
   const kicker =
     state === "pending"
       ? "Risultati in arrivo"
-      : `Evento ${number}${state === "played" ? ` · <span class="league-tl-players">${TL_USERS}${players}</span>` : ""}`;
+      : state === "played"
+        ? `<span class="league-tl-players">${TL_USERS}${players}</span>`
+        : "";
   // Played: "Liste" beside the text, centred; upcoming: the time on the
   // line under the name, at the card's bottom right (as on the Bacheca).
   const links = state === "played" ? nestedResultsMenu(ev.results_url, ev.decklists_url) : "";

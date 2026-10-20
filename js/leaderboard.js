@@ -41,7 +41,21 @@ export function matchRoundOutcome(m) {
 // Standard Magic tournament tiebreaker floor: a player's (or their
 // opponents') win percentage is never treated as less than this, so a
 // single bad round (or a weak opponent) doesn't disproportionately tank it.
-const MIN_WIN_PCT = 1 / 3;
+// 0.33 exactly, as the official rules and the tournament software use — not
+// 1/3, which left ties the software breaks (an opponent at 1/9 counting
+// 33.0% vs one at 3/9 counting 33.3%) for the alphabetical fallback.
+const MIN_WIN_PCT = 0.33;
+
+// Tiebreaker percentages are averages of floats, so two mathematically equal
+// ones can differ in their last bits depending on the order the opponents
+// were summed in (0.33 + 1/3 + 2/3 vs 1/3 + 0.33 + 2/3). Closer than this
+// counts as equal, so the next tiebreaker decides, not rounding noise.
+const PCT_EPSILON = 1e-9;
+
+// Descending order on a tiebreaker percentage; 0 when equal (see above).
+function comparePctDesc(a, b) {
+  return Math.abs(b - a) < PCT_EPSILON ? 0 : b - a;
+}
 
 // How many of an event's final standings count as a "top 8" finish.
 const TOP_FINISH_CUTOFF = 8;
@@ -247,10 +261,12 @@ export function computeEventLeaderboard(matches, entries) {
     const bManual = b.manualRank ?? Infinity;
     if (aManual !== bManual) return aManual - bManual;
 
-    if (b.opponentsMatchWinPct !== a.opponentsMatchWinPct) return b.opponentsMatchWinPct - a.opponentsMatchWinPct;
-    if (b.gameWinPct !== a.gameWinPct) return b.gameWinPct - a.gameWinPct;
-    if (b.opponentsGameWinPct !== a.opponentsGameWinPct) return b.opponentsGameWinPct - a.opponentsGameWinPct;
-    return (a.player?.name ?? "").localeCompare(b.player?.name ?? "");
+    return (
+      comparePctDesc(a.opponentsMatchWinPct, b.opponentsMatchWinPct) ||
+      comparePctDesc(a.gameWinPct, b.gameWinPct) ||
+      comparePctDesc(a.opponentsGameWinPct, b.opponentsGameWinPct) ||
+      (a.player?.name ?? "").localeCompare(b.player?.name ?? "")
+    );
   });
 
   // Read by js/auto-badges.js's top-8 streak badge — exposed here so it
@@ -392,7 +408,9 @@ export function compareLeagueStandings(a, b) {
     const diff = (b.placements[i] ?? 0) - (a.placements[i] ?? 0);
     if (diff !== 0) return diff;
   }
-  if (b.matchWinPct !== a.matchWinPct) return b.matchWinPct - a.matchWinPct;
-  if (b.gameWinPct !== a.gameWinPct) return b.gameWinPct - a.gameWinPct;
-  return b.opponentsGameWinPct - a.opponentsGameWinPct;
+  return (
+    comparePctDesc(a.matchWinPct, b.matchWinPct) ||
+    comparePctDesc(a.gameWinPct, b.gameWinPct) ||
+    comparePctDesc(a.opponentsGameWinPct, b.opponentsGameWinPct)
+  );
 }
