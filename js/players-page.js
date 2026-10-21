@@ -18,7 +18,7 @@ function renderRow(r) {
       </div>
       ${historyStatsHtml([
         { label: "Eventi", value: r.eventsPlayed },
-        { label: "Winrate", value: `${r.rate}${winrateTrendHtml(r.winRate, r.winRateBefore, r.inLatest)}`, main: true },
+        { label: "Winrate", value: `${r.rate}${winrateTrendHtml(r.winRate, r.winRateBefore, r.inLatest)}`, main: true, trend: true },
       ])}
     </a>`;
 }

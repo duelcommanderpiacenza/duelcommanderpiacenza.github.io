@@ -49,12 +49,14 @@ export function initScrollFade(el) {
 
 // The numbers on the right of a ranked list's sub-card (Comandanti,
 // Giocatori): one labelled value each, in fixed-width columns so they line up
-// down the list like a table's. `stats`: [{ label, value, main, title }] —
-// `main` (the winrate) in brand red, `title` an optional hover text.
+// down the list like a table's. `stats`: [{ label, value, main, trend, title }] —
+// `main` (the winrate) in brand red, `trend` a stat that can carry a
+// winrateTrendHtml arrow (its room kept on phones even when it has none, so
+// every row's columns match), `title` an optional hover text.
 export function historyStatsHtml(stats) {
   return `<div class="history-stats" style="--stat-count:${stats.length}">${stats
     .map(
-      (s) => `<div class="history-stat${s.main ? " is-main" : ""}"${s.title ? ` title="${escapeHtml(s.title)}"` : ""}>
+      (s) => `<div class="history-stat${s.main ? " is-main" : ""}${s.trend ? " has-trend" : ""}"${s.title ? ` title="${escapeHtml(s.title)}"` : ""}>
           <span class="history-stat-value">${s.value}</span>
           <span class="history-stat-label">${s.label}</span>
         </div>`
@@ -182,16 +184,24 @@ export function matchGroupsHtml(groups) {
 }
 
 // A number's trend since the latest event in scope — the winrate
-// (Comandanti, Giocatori), the metashare (Comandanti): ▲ up, ▼ down,
-// = unchanged — also when the commander / player wasn't in that event, or
-// it's their first (nothing before it to compare with). Compared as shown
-// (one decimal). Nothing for a value of "—".
+// (Comandanti, Giocatori), the metashare (Comandanti): a trend arrow in a
+// small tinted disc, ↗ up, ↘ down, → unchanged — also when the commander /
+// player wasn't in that event, or it's their first (nothing before it to
+// compare with). Compared as shown (one decimal). Nothing for a value of "—".
+const TREND_ICON = (path) =>
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
+const TREND_SYMBOLS = {
+  up: TREND_ICON('<path d="M7 17L17 7"/><path d="M8 7h9v9"/>'),
+  down: TREND_ICON('<path d="M7 7l10 10"/><path d="M17 8v9H8"/>'),
+  same: TREND_ICON('<path d="M5 12h14"/><path d="M13 6l6 6-6 6"/>'),
+};
+
 export function winrateTrendHtml(now, before, inLatest) {
   if (now === null) return "";
   const r = (x) => Math.round(x * 10);
   let kind = "same";
   if (inLatest && before !== null && r(now) !== r(before)) kind = r(now) > r(before) ? "up" : "down";
-  const symbol = { up: "▲", down: "▼", same: "=" }[kind];
+  const symbol = TREND_SYMBOLS[kind];
   const label = { up: "In crescita dall'ultimo evento", down: "In calo dall'ultimo evento", same: "Invariato dall'ultimo evento" }[kind];
   return `<span class="wr-trend is-${kind}" role="img" aria-label="${label}" title="${label}">${symbol}</span>`;
 }

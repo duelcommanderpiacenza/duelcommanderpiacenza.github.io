@@ -1190,43 +1190,81 @@ a.history-item.is-me {
 }
 
 /* A number's trend since the latest event — the winrate, Comandanti's
-   metashare (js/history-list.js winrateTrendHtml): a small ▲ green / ▼ red / = grey hanging just after
-   the number — outside its box, so the number stays centred in its column
+   metashare (js/history-list.js winrateTrendHtml): a trend arrow in a small
+   disc tinted in its colour — ↗ green, ↘ red, → grey — hanging just after
+   the number, outside its box, so the number stays centred in its column
    like the others. */
 .history-stats .history-stat-value:has(.wr-trend) {
   position: relative;
 }
 
 .wr-trend {
+  --trend: var(--text-muted);
   position: absolute;
   top: 50%;
   left: 100%;
-  margin-left: 3px;
-  font-size: 0.6em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35em;
+  height: 1.35em;
+  margin-left: 5px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--trend) 14%, transparent);
+  color: var(--trend);
+  font-size: 0.65em;
   line-height: 1;
   transform: translateY(-50%);
 }
 
+.wr-trend svg {
+  width: 0.95em;
+  height: 0.95em;
+}
+
 .wr-trend.is-up {
-  color: #1a9a5c;
+  --trend: #1a9a5c;
 }
 
 .wr-trend.is-down {
-  color: var(--brand-red);
-}
-
-.wr-trend.is-same {
-  color: var(--text-muted);
-  font-size: 0.7em;
-  font-weight: 800;
+  --trend: var(--brand-red);
 }
 
 :root[data-theme="dark"] .wr-trend.is-up {
-  color: #4cd38f;
+  --trend: #4cd38f;
 }
 
 :root[data-theme="dark"] .wr-trend.is-down {
-  color: #ff6b6e;
+  --trend: #ff6b6e;
+}
+
+/* In the Comandanti / Giocatori lists (a stat marked .has-trend): the arrow
+   as tall as the number and its label together, beside both — the pair and
+   the arrow centred in their column as one. Its room is part of the stat
+   (padding), so a column holding one is widened when needed (88px is less
+   than "METASHARE" + the arrow); every row has the same stats (.has-trend
+   even without an arrow), so the columns still line up down the list. */
+.history-ranked .history-stats:has(.has-trend) {
+  grid-template-columns: repeat(var(--stat-count), minmax(88px, auto));
+}
+
+.history-stats .history-stat.has-trend {
+  position: relative;
+  justify-self: center;
+  padding-right: 29px;
+}
+
+.history-stats .history-stat.has-trend .history-stat-value {
+  position: static;
+}
+
+.history-stats .has-trend .wr-trend {
+  left: auto;
+  right: 0;
+  width: 25px;
+  height: 25px;
+  margin: 0;
+  font-size: 16px;
 }
 
 /* Classifica (league.html, event.html): Punti — what the order is by —
@@ -1274,6 +1312,12 @@ a.history-item.is-me {
     grid-template-columns: repeat(var(--stat-count), minmax(0, 1fr));
     padding-top: 10px;
     border-top: 1px solid var(--table-row-line);
+  }
+
+  /* The room for a trend arrow (below) widens its column over the others
+     when needed — "METASHARE" alone nearly fills a quarter of the row. */
+  .history-ranked .history-stats:has(.has-trend) {
+    grid-template-columns: repeat(var(--stat-count), minmax(min-content, 1fr));
   }
 }
 

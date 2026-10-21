@@ -187,7 +187,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
         ${historyStatsHtml([
           { label: "Giocato", value: r.entries },
           { label: "Piloti", value: r.pilots },
-          { label: "Metashare", value: `${r.share.toFixed(1)}%${winrateTrendHtml(r.share, r.shareBefore, r.inLatest)}` },
+          { label: "Metashare", value: `${r.share.toFixed(1)}%${winrateTrendHtml(r.share, r.shareBefore, r.inLatest)}`, trend: true },
           {
             label: "Winrate",
             value:
@@ -195,6 +195,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
                 ? "—"
                 : `<span class="${r.enough ? "" : "wr-few"}"${r.enough ? "" : ' title="Pochi dati: troppe poche partite per un winrate affidabile"'}>${r.winRate.toFixed(1)}%</span>${winrateTrendHtml(r.winRate, r.winRateBefore, r.inLatest)}`,
             main: true,
+            trend: true,
           },
         ])}
       </a>`

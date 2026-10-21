@@ -214,7 +214,7 @@ starts right of it; player.html's card is centred the same way).
 
 ## Winrate trend
 
-- Comandanti and Giocatori lists: after the winrate (and Comandanti's metashare, the same rule — since 2026-10-19) a small **▲ (green) / ▼ (red) / = (grey)** — the winrate now vs. without the latest event in the current scope (filters included; `splitLatestEvent` + `winrateTrendHtml` in js/history-list.js), compared at the shown precision (one decimal). `=` also when that commander / player wasn't in the latest event or it was their first (nothing to compare); nothing for a "—" winrate. Hangs outside the number's box (`.wr-trend`, absolute) so the number stays centred in its column. Since 2026-10-19.
+- Comandanti and Giocatori lists: after the winrate (and Comandanti's metashare, the same rule — since 2026-10-19) a trend arrow in a small disc tinted in its colour (since 2026-10-21; it was ▲ / ▼ / =) — **↗ (green) / ↘ (red) / → (grey)** — the winrate now vs. without the latest event in the current scope (filters included; `splitLatestEvent` + `winrateTrendHtml` in js/history-list.js), compared at the shown precision (one decimal). `=` also when that commander / player wasn't in the latest event or it was their first (nothing to compare); nothing for a "—" winrate. Hangs outside the number's box (`.wr-trend`, absolute) so the number stays centred in its column. Since 2026-10-19.
 
 ## Winrate sample threshold (Comandanti)
 
