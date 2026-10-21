@@ -1,5 +1,5 @@
 import { Commanders, EventEntries } from "../../js/db.js";
-import { colorIdentityPips } from "../../js/ui.js";
+import { colorIdentityPips, commanderBadgesHtml } from "../../js/ui.js";
 import { renderTable, setMessage, onBusySubmit } from "./crud-ui.js";
 import { emit } from "./bus.js";
 
@@ -41,7 +41,12 @@ export function initCommandersAdmin() {
       [
         { key: "name", label: "Nome" },
         { key: "color_identity", label: "Colori", render: (r) => colorIdentityPips(r.color_identity) },
-        { key: "is_banned", label: "Bannato", render: (r) => (r.is_banned ? "⚠️" : "—") },
+        // Bannato (set here) and Nuovo (computed: badges-sync.js).
+        {
+          key: "is_banned",
+          label: "Badge",
+          render: (r) => commanderBadgesHtml({ banned: r.is_banned, isNew: r.is_new }) || "—",
+        },
       ],
       { onEdit, onDelete },
       { animate }

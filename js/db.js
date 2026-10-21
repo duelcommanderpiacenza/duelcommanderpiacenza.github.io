@@ -64,6 +64,12 @@ export const Commanders = {
   create: (row) => sb.from("commanders").insert(row).select().single().then(assertOk),
   update: (id, patch) => sb.from("commanders").update(patch).eq("id", id).select().single().then(assertOk),
   remove: (id) => sb.from("commanders").delete().eq("id", id).then(assertOk),
+  // The "Nuovo" badge's cache (migration 027, admin/js/badges-sync.js): exactly
+  // `ids` marked new afterwards — the others cleared first, then these set.
+  setNew: async (ids) => {
+    assertOk(await sb.from("commanders").update({ is_new: false }).eq("is_new", true).select("id"));
+    if (ids.length) assertOk(await sb.from("commanders").update({ is_new: true }).in("id", ids).select("id"));
+  },
 };
 
 // players has two FKs to badges (badge1_id/badge2_id — the manually

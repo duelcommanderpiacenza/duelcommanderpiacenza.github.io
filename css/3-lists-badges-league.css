@@ -150,25 +150,48 @@ a.is-me {
   cursor: default;
 }
 
-/* The ⚠️ "Bannato" icon (js/ui.js's bannedBadge): a tight line box raised
-   slightly off the baseline instead of .icon-badge's vertical-align:
-   middle — the ⚠️ glyph hangs below the text line, so middle left it
-   visibly low next to the name and the color pips. Only this one: the
-   player badges (mostly uploaded images, sized to the line) already sit
-   right with middle. */
-.icon-badge-banned {
-  line-height: 1;
-  vertical-align: 0.1em;
+/* The commander's badges after the name in commander.html's title (js/ui.js
+   commanderBadgesHtml): the size of player.html's title badges
+   (#player-title-badges, below) — from the same fixed base,
+   .detail-hero-title-badges' clamp(2rem, 4.5vw, 3rem): ¾ of it on phones,
+   ½ on a computer, a 3px / 2px ring, 12px from the name — not from the
+   title's own size, which js/page-title-fit.js shrinks to fit a long name.
+   Centred on the name's line like the player's (flex-centred beside it):
+   their wrapper is one line tall (1lh, the title's own line height — it
+   keeps the title's font), from the line's top, the discs centred in it. */
+#commander-title .commander-title-badges {
+  display: inline-flex;
+  align-items: center;
+  height: 1lh;
+  margin-left: 12px;
+  vertical-align: top;
 }
 
-/* The ⚠️ "Bannato" icon after the name in commander.html's title —
-   the table-sized 1rem reads as a speck next to the 1.9rem name, so it's
-   scaled with the title instead (em, so it also follows the mobile title
-   shrink, js/page-title-fit.js). */
 #commander-title .icon-badge {
-  font-size: 0.7em;
-  margin-left: 10px;
-  vertical-align: 0.2em;
+  font-size: calc(clamp(2rem, 4.5vw, 3rem) * 0.75);
+  margin-left: 0;
+}
+
+#commander-title .icon-badge + .icon-badge {
+  margin-left: 5px;
+}
+
+#commander-title .badge-disc {
+  border-width: 3px;
+}
+
+@media (min-width: 821px) {
+  #commander-title .icon-badge {
+    font-size: calc(clamp(2rem, 4.5vw, 3rem) * 0.5);
+  }
+
+  #commander-title .icon-badge + .icon-badge {
+    margin-left: 10px;
+  }
+
+  #commander-title .badge-disc {
+    border-width: 2px;
+  }
 }
 
 /* Same reasoning for the badges after the name in player.html's hero

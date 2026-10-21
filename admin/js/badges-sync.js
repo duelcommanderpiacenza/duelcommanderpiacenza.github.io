@@ -21,12 +21,15 @@
 // And a third: player_progress (js/card-progress.js — the numbers behind the
 // player card's cosmetics), from the same closed-event results, which are
 // downloaded once and shared by both.
+//
+// And a fourth: the commanders' "Nuovo" badge (commanders.is_new, migration
+// 027), from the same results and the events' dates.
 
 import { computeAutoBadgeAssignments, closedLeagueWinners } from "../../js/auto-badges.js";
 import { showToast } from "./toast.js";
 import { computeEventLeaderboard } from "../../js/leaderboard.js";
 import { computeCardProgress } from "../../js/card-progress.js";
-import { PlayerAutoBadges, EventStandings, PlayerProgress, Events, Leagues, fetchEventsResults } from "../../js/db.js";
+import { PlayerAutoBadges, EventStandings, PlayerProgress, Commanders, Events, Leagues, fetchEventsResults } from "../../js/db.js";
 
 async function syncBadgeAssignments() {
   const assignments = await computeAutoBadgeAssignments();
@@ -40,8 +43,54 @@ async function syncBadgeAssignments() {
 // Every *closed* event's entries + matches (this runs logged in, where open
 // events are visible too — those aren't published, so never cached).
 async function loadClosedResults() {
-  const closedIds = (await Events.list()).filter((ev) => !ev.is_open).map((ev) => ev.id);
-  return { closedIds, eventsData: await fetchEventsResults(closedIds) };
+  const closed = (await Events.list()).filter((ev) => !ev.is_open);
+  const closedIds = closed.map((ev) => ev.id);
+  return { closedIds, closedDates: closed.map((ev) => ev.event_date), eventsData: await fetchEventsResults(closedIds) };
+}
+
+// The commanders' "Nuovo" badge: those whose first appearance in a closed
+// event (as the commander or the partner) falls within NEW_COMMANDER_MONTHS
+// before the latest closed event — counted from that event, not from today,
+// so the badge holds still between events. And not within that long after
+// the very first recorded event: before then "first seen" only means "first
+// recorded" (the site's history starts somewhere), not new to the meta.
+const NEW_COMMANDER_MONTHS = 1;
+
+// YYYY-MM-DD `months` calendar months after (or, negative, before) `iso`.
+function shiftMonths(iso, months) {
+  const [y, m, d] = iso.split("-").map(Number);
+  const date = new Date(y, m - 1 + months, d);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+async function syncNewCommanders({ closedDates, eventsData }) {
+  const dates = closedDates.filter(Boolean).sort();
+  const latest = dates[dates.length - 1];
+  const ids = [];
+  if (latest) {
+    const windowStart = shiftMonths(latest, -NEW_COMMANDER_MONTHS);
+    const historyWarmUp = shiftMonths(dates[0], NEW_COMMANDER_MONTHS);
+    const fromIso = windowStart > historyWarmUp ? windowStart : historyWarmUp;
+    const firstSeen = new Map(); // commander id -> earliest date
+    eventsData.forEach(({ entries }, i) => {
+      const date = closedDates[i];
+      if (!date) return;
+      for (const e of entries) {
+        for (const id of [e.commander_id, e.partner_commander_id]) {
+          if (id && (!firstSeen.has(id) || date < firstSeen.get(id))) firstSeen.set(id, date);
+        }
+      }
+    });
+    for (const [id, date] of firstSeen) if (date >= fromIso) ids.push(id);
+  }
+  try {
+    await Commanders.setNew(ids);
+  } catch (err) {
+    // Migration 027 not run on this database yet (no is_new column:
+    // Postgres' 42703) — nothing to update; the other caches still are.
+    if (err?.code === "42703") return console.warn("commanders.is_new missing: run migration 027", err);
+    throw err;
+  }
 }
 
 // Final standings of every closed event, computed exactly as event.html
@@ -77,6 +126,7 @@ async function runSync() {
     syncBadgeAssignments(),
     closedResults.then(syncEventStandings),
     closedResults.then(syncPlayerProgress),
+    closedResults.then(syncNewCommanders),
   ]);
   const failed = results.find((r) => r.status === "rejected");
   if (failed) throw failed.reason;

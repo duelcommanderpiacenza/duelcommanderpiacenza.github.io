@@ -124,10 +124,22 @@ export function badgeDiscHtml(badge, size = null) {
   return `<span class="badge-disc"${size ? ` style="font-size:${size}"` : ""}>${glyph}</span>`;
 }
 
-// ⚠️ "Bannato" icon (tooltip via the site-wide js/floating-tooltip.js) —
-// Comandanti's table and commander.html's title.
-export function bannedBadge() {
-  return '<span class="icon-badge icon-badge-banned" data-tooltip="Bannato" aria-label="Bannato" tabindex="0">&#9888;&#65039;</span>';
+// A commander's badges — "Bannato" (commanders.is_banned) and "Nuovo"
+// (commanders.is_new, migration 027: first seen within the month before the
+// latest closed event, set by the admin's syncAutoBadges) — drawn like the
+// players' (the white disc with a red ring, badgeDiscHtml; the same hover
+// card, js/floating-tooltip.js), with the site's own icons
+// (icons/commanders/). Comandanti's list (a partner pair: either one) and
+// commander.html's title. `{ banned, isNew }`.
+const COMMANDER_BADGES = [
+  { key: "banned", name: "Bannato", description: "Bandito nel formato Duel Commander.", icon_url: "/icons/commanders/banned.svg" },
+  { key: "isNew", name: "Nuovo", description: "Giocato per la prima volta nell'ultimo mese.", icon_url: "/icons/commanders/new.svg" },
+];
+
+export function commanderBadgesHtml(flags) {
+  return COMMANDER_BADGES.filter((b) => flags[b.key])
+    .map((b) => `<span class="icon-badge" ${badgeTooltipAttrs(b)} tabindex="0">${badgeDiscHtml(b)}</span>`)
+    .join("");
 }
 
 // An archetype's coloured badge — on the public site a way to its page

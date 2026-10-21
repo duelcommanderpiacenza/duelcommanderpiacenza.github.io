@@ -131,8 +131,10 @@ const NO_LINK = { link: false };
 // by the outcome (a bye: "Bye" as a win; a drop: "Drop", neutral). `r`:
 // { round, opponent, oppCommander, oppPartner, isBye, isDrop, outcome
 // ("win"|"loss"|"draw"), scoreLabel }. Names unlinked, like the rest of the
-// sub-card.
-function matchRoundHtml(r) {
+// sub-card. `deckFirst` (commander.html): the opponent's deck on top, big,
+// their name under it, small — the other way round (the default, player.html)
+// the name first; an opponent with no deck recorded: the name alone.
+function matchRoundHtml(r, { deckFirst = false } = {}) {
   const [cls, score, label] = r.isBye
     ? ["is-win", "Bye", "Bye"]
     : r.isDrop
@@ -142,9 +144,11 @@ function matchRoundHtml(r) {
     ? '<span class="history-muted">Nessun avversario</span>'
     : r.isDrop
       ? '<span class="history-muted">Ritirato</span>'
-      : `<span class="history-opp-name">${playerLabel(r.opponent, NO_LINK)}</span>${
-          r.oppCommander ? `<span class="history-deck">${commanderPairLabel(r.oppCommander, r.oppPartner, NO_LINK)}</span>` : ""
-        }`;
+      : deckFirst && r.oppCommander
+        ? `<span class="history-opp-name">${commanderPairLabel(r.oppCommander, r.oppPartner, NO_LINK)}</span><span class="history-deck">${playerLabel(r.opponent, NO_LINK)}</span>`
+        : `<span class="history-opp-name">${playerLabel(r.opponent, NO_LINK)}</span>${
+            r.oppCommander ? `<span class="history-deck">${commanderPairLabel(r.oppCommander, r.oppPartner, NO_LINK)}</span>` : ""
+          }`;
   return `
         <li class="history-round">
           <span class="history-round-no">T${r.round ?? "?"}</span>
@@ -157,8 +161,9 @@ function matchRoundHtml(r) {
 // to its event's page (styles.css a.history-item): on top the event, a
 // second line (`subline`: markup without links — the deck played, or the
 // pilot) and the final position; the rounds in order below. `groups`:
-// [{ event, subline, position, rounds }].
-export function matchGroupsHtml(groups) {
+// [{ event, subline, position, rounds }]. `options`: matchRoundHtml's
+// (`deckFirst`).
+export function matchGroupsHtml(groups, options = {}) {
   if (!groups.length) return '<p class="page-empty">Nessuna partita registrata.</p>';
   return historyPanelHtml(
     groups
@@ -176,7 +181,7 @@ export function matchGroupsHtml(groups) {
           </div>
           ${historyPosHtml(g.position)}
         </div>
-        <ol class="history-rounds">${rounds.map(matchRoundHtml).join("")}</ol>
+        <ol class="history-rounds">${rounds.map((r) => matchRoundHtml(r, options)).join("")}</ol>
       ${close}`;
       })
       .join("")

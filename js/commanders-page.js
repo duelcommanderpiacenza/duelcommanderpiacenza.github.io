@@ -4,7 +4,7 @@ import { initScopeFilter } from "./scope-filter.js";
 import { renderPieChart, renderBarChart } from "./metagame-chart.js";
 import { initChartCarousel } from "./chart-carousel.js";
 import { attachHoverTooltips, fullTextIfTruncated } from "./floating-tooltip.js";
-import { commanderPairWithColors, bannedBadge, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
+import { commanderPairWithColors, commanderBadgesHtml, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
 import { savedMetaFilters, rememberMetaFilters, prefetchMetaResults, metaResults } from "./meta-filters.js";
@@ -187,7 +187,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       <a class="history-item history-ranked" href="${r.href}">
         <div class="history-main">
           <span class="history-title">${commanderPairWithColors(r.commander, r.partner, { link: false })}${
-            r.isBanned ? bannedBadge() : ""
+            commanderBadgesHtml({ banned: r.isBanned, isNew: r.isNew })
           }</span>
         </div>
         ${historyStatsHtml([
@@ -316,6 +316,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
             name,
             colorIdentity: (commander.color_identity ?? "") + (partner?.color_identity ?? ""),
             isBanned: commander.is_banned || (partner?.is_banned ?? false),
+            isNew: Boolean(commander.is_new || partner?.is_new),
             entries: s.entries,
             pilots: pilotsByKey.get(s.key)?.size ?? 0,
             share: totalEntries > 0 ? (s.entries / totalEntries) * 100 : 0,

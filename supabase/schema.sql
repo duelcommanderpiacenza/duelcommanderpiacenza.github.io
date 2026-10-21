@@ -81,7 +81,9 @@ create table commanders (
   id uuid primary key default gen_random_uuid(),
   name text not null unique,
   color_identity text not null default '', -- subset of the letters W U B R G, e.g. "BR"
-  is_banned boolean not null default false, -- shows a warning icon next to the commander on the public site
+  is_banned boolean not null default false, -- shows the "Bannato" badge next to the commander on the public site
+  is_new boolean not null default false, -- the "Nuovo" badge: first seen in a closed event within the month before
+    -- the latest closed one; a derived cache, set only by the admin's syncAutoBadges. Added by migration 027.
   created_at timestamptz not null default now()
 );
 

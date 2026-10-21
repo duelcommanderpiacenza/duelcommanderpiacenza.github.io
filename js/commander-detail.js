@@ -5,7 +5,7 @@ import { renderLineChart } from "./line-chart.js";
 import {
   escapeHtml,
   playerLabel,
-  bannedBadge,
+  commanderBadgesHtml,
   formatDate,
   showError,
   isoDateYearsAgo,
@@ -74,6 +74,14 @@ function selfScoreLabel(m, selfIsP1) {
 // In-app page (js/router.js): mounted by the router on this page's <main>
 // (data-page), on first load and after each in-app navigation; `signal`
 // aborts when the page is left.
+// The commander's badges after its name in the title, in a wrapper one text
+// line tall (styles.css .commander-title-badges) that centres them on the
+// name's line, like player.html's beside its name.
+function titleBadgesHtml(commander) {
+  const badges = commanderBadgesHtml({ banned: commander.is_banned, isNew: commander.is_new });
+  return badges ? `<span class="commander-title-badges">${badges}</span>` : "";
+}
+
 export async function mount({ signal = new AbortController().signal } = {}) {
   const id = getId();
   const titleEl = document.getElementById("commander-title");
@@ -135,7 +143,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     // The name (and the ⚠️ if banned) — no colour pips: the card image beside
     // it already shows the commander's colours.
     titleEl.innerHTML = `${escapeHtml(commander.name)}${
-      commander.is_banned ? bannedBadge() : ""
+      titleBadgesHtml(commander)
     }`;
     // On phones: a long name shrunk to one line.
     initTitleFit(titleEl, { signal });
@@ -349,14 +357,13 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       initScrollFade(playersEl);
       setHistoryCount("commander-players-count", playerList.length);
 
-      // A bye has no real opponent/commander matchup to show — the hero's
-      // numbers below skip it too, only for its own reason.
+      // Every round played with it, byes included ("Bye", no opponent — as on
+      // player.html), whether or not the hero's numbers below count them.
       // Event date (newest first) as the primary sort, then alphabetically by
       // the player who piloted this commander (groups a date's rows by player
       // instead of interleaving them round-by-round), then by round ascending
       // within that player's own rows on that date (turno 1 before turno 2).
       const matchRows = rows
-        .filter((r) => !r.isBye)
         .sort((a, b) => {
           const dateCompare = (b.event?.event_date ?? "").localeCompare(a.event?.event_date ?? "");
           if (dateCompare !== 0) return dateCompare;
@@ -381,7 +388,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
         matchGroups.get(key).rounds.push(r);
       }
       matchesEl.innerHTML = matchRows.length
-        ? matchGroupsHtml([...matchGroups.values()])
+        ? // The opponents' decks first, big, their names under them.
+          matchGroupsHtml([...matchGroups.values()], { deckFirst: true })
         : '<p class="page-empty">Nessuna partita registrata.</p>';
       initScrollFade(matchesEl);
       // Past 8 matches it scrolls; the Giocatori list beside it keeps its own
@@ -481,7 +489,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     // none — no new history entry), so a link or a reload shows the same.
     const picker = document.getElementById("commander-pairings");
     let current = "all";
-    const titleHtml = `${escapeHtml(commander.name)}${commander.is_banned ? bannedBadge() : ""}`;
+    const titleHtml = `${escapeHtml(commander.name)}${titleBadgesHtml(commander)}`;
     // What changes with a pairing picked slides in from the side of the arrow
     // used (styles.css .is-swapped-next / -prev: › from the right, ‹ from the
     // left) — not on the page's first render (updateUrl false).
