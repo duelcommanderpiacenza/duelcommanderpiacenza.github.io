@@ -467,11 +467,12 @@ export const EventEntries = {
     selectAllRows(() => sb.from("event_entries").select("event_id, player_id").order("id")),
   // Same as listByEvents, but paged past the row cap and deterministically
   // ordered — for fetchEventsResults below, which may span a whole league.
-  listByEventsForStandings: (eventIds) =>
+  // `columns`: its lighter selection, when given (fetchEventsResults' slim).
+  listByEventsForStandings: (eventIds, columns = `*, player:players(id,name,handle), ${COMMANDER_EMBED}`) =>
     selectAllRows(() =>
       sb
         .from("event_entries")
-        .select(`*, player:players(id,name,handle), ${COMMANDER_EMBED}`)
+        .select(columns)
         .in("event_id", eventIds)
         .order("id")
     ),
@@ -523,13 +524,15 @@ export const Matches = {
   // visitor can see (closed events), paged past the row cap: the Leghe &
   // Eventi page counts a league's matches from it (js/events-page.js).
   listEventIds: () => selectAllRows(() => sb.from("matches").select("event_id").order("id")),
-  listByEventsForStandings: (eventIds) =>
+  // `columns`: its lighter selection, when given (fetchEventsResults' slim).
+  listByEventsForStandings: (
+    eventIds,
+    columns = "*, player1:players!matches_player1_id_fkey(id,name,handle), player2:players!matches_player2_id_fkey(id,name,handle)"
+  ) =>
     selectAllRows(() =>
       sb
         .from("matches")
-        .select(
-          "*, player1:players!matches_player1_id_fkey(id,name,handle), player2:players!matches_player2_id_fkey(id,name,handle)"
-        )
+        .select(columns)
         .in("event_id", eventIds)
         .order("round")
         .order("created_at")
@@ -572,6 +575,16 @@ export const Matches = {
 
 const EVENT_IDS_PER_REQUEST = 100;
 
+// fetchEventsResults' `slim`: the entries' and matches' own columns only —
+// who played what, and the scores — no player embeds (each one a join per
+// row in the database), for the pages that name players from their own
+// Players.list() or not at all (Giocatori, the Meta pages). Enough for
+// leaderboard.js's isBye / isDrop / matchRoundOutcome and stats.js's
+// computeGroupedStats. `commanders` adds the entries' commander embeds
+// (name, colours) back — Comandanti's colours chart, Matchups' names.
+const SLIM_ENTRY_COLUMNS = "id, event_id, player_id, commander_id, partner_commander_id, archetype";
+const SLIM_MATCH_COLUMNS = "id, event_id, round, player1_id, player2_id, player1_wins, draws, player2_wins, is_drop";
+
 /**
  * Entries + matches for several events in two requests (rather than two per
  * event; two per 100 events for a very long list), grouped back per event in
@@ -580,32 +593,63 @@ const EVENT_IDS_PER_REQUEST = 100;
  * take. An event with no rows still gets its (empty) slot, so the array's
  * length always equals the number of events.
  * @param {string[]} eventIds
+ * @param {{slim?: boolean, commanders?: boolean}} [options] - slim: the lighter rows
+ *   (see SLIM_ENTRY_COLUMNS); commanders: with them, the entries' commanders too.
  */
-export async function fetchEventsResults(eventIds) {
+export async function fetchEventsResults(eventIds, { slim = false, commanders = false } = {}) {
   if (eventIds.length === 0) return [];
   // The ids travel in the request URL (`event_id=in.(…)`, ~37 chars each):
   // a whole-history scope (Giocatori/Comandanti/Archetipi's "Tutte le
   // leghe") grows every week, so it's split into chunks well under common
   // URL length limits rather than one ever-longer request.
+  const entryColumns = commanders ? `${SLIM_ENTRY_COLUMNS}, ${COMMANDER_EMBED}` : SLIM_ENTRY_COLUMNS;
   const chunks = [];
   for (let i = 0; i < eventIds.length; i += EVENT_IDS_PER_REQUEST) chunks.push(eventIds.slice(i, i + EVENT_IDS_PER_REQUEST));
   const [entryChunks, matchChunks] = await Promise.all([
-    Promise.all(chunks.map((ids) => EventEntries.listByEventsForStandings(ids))),
-    Promise.all(chunks.map((ids) => Matches.listByEventsForStandings(ids))),
+    Promise.all(chunks.map((ids) => EventEntries.listByEventsForStandings(ids, slim ? entryColumns : undefined))),
+    Promise.all(chunks.map((ids) => Matches.listByEventsForStandings(ids, slim ? SLIM_MATCH_COLUMNS : undefined))),
   ]);
-  const entries = entryChunks.flat();
-  const matches = matchChunks.flat();
-  const groupByEvent = (rows) => {
-    const byEvent = new Map();
-    for (const row of rows) {
-      if (!byEvent.has(row.event_id)) byEvent.set(row.event_id, []);
-      byEvent.get(row.event_id).push(row);
-    }
-    return byEvent;
-  };
-  const entriesByEvent = groupByEvent(entries);
-  const matchesByEvent = groupByEvent(matches);
+  const entriesByEvent = groupByEvent(entryChunks.flat());
+  const matchesByEvent = groupByEvent(matchChunks.flat());
   return eventIds.map((id) => ({ entries: entriesByEvent.get(id) ?? [], matches: matchesByEvent.get(id) ?? [] }));
+}
+
+function groupByEvent(rows) {
+  const byEvent = new Map();
+  for (const row of rows) {
+    if (!byEvent.has(row.event_id)) byEvent.set(row.event_id, []);
+    byEvent.get(row.event_id).push(row);
+  }
+  return byEvent;
+}
+
+/**
+ * Every closed event's entries + matches from `fromIso` (YYYY-MM-DD) on —
+ * every closed event's when null — filtered by the database on the event's
+ * date (an inner join, like EventEntries.listForChartsSince), so it needs no
+ * event ids first: started with a page's own first requests. Slim rows
+ * (fetchEventsResults' slim), each with a small `event` ({ event_date,
+ * is_open }) from the join. For the Meta pages' default scope
+ * (js/meta-filters.js prefetchMetaResults).
+ * @returns {Promise<{entriesByEvent: Map, matchesByEvent: Map}>} rows by event id.
+ */
+export async function fetchClosedResultsSince(fromIso, { commanders = false } = {}) {
+  const join = "event:events!inner(event_date,is_open)";
+  const entryColumns = `${commanders ? `${SLIM_ENTRY_COLUMNS}, ${COMMANDER_EMBED}` : SLIM_ENTRY_COLUMNS}, ${join}`;
+  const scoped = (query) => {
+    const closed = query.eq("event.is_open", false);
+    return fromIso ? closed.gte("event.event_date", fromIso) : closed;
+  };
+  const [entries, matches] = await Promise.all([
+    selectAllRows(() => scoped(sb.from("event_entries").select(entryColumns)).order("id")),
+    selectAllRows(() =>
+      scoped(sb.from("matches").select(`${SLIM_MATCH_COLUMNS}, ${join}`))
+        .order("round")
+        .order("created_at")
+        .order("id")
+    ),
+  ]);
+  return { entriesByEvent: groupByEvent(entries), matchesByEvent: groupByEvent(matches) };
 }
 
 // Precomputed auto-badge assignments (badges.auto_rule) — recomputed and

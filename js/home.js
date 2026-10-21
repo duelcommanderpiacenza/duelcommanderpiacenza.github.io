@@ -125,13 +125,14 @@ async function loadLeagueStandings(league) {
   // A still-open (or future) event has no results yet: only the closed ones
   // count as played. The league's total event count (open ones included,
   // even those hidden from visitors) for computeLeaguePoints's best-results
-  // cap and the progress.
-  const allEvents = await Events.listByLeague(league.id);
-  const closed = allEvents.filter((ev) => !ev.is_open);
-  const [eventsData, scheduledEvents] = await Promise.all([
-    fetchEventsResults(closed.map((ev) => ev.id)),
-    Leagues.eventCount(league.id, allEvents.length),
-  ]);
+  // cap and the progress. The league's events from the page's shared list
+  // of every event (the timeline's — already on its way, no request of its
+  // own); the count asked meanwhile, falling back to them (null until known).
+  const countRequest = Leagues.eventCount(league.id, null);
+  const leagueEvents = (await allEvents()).filter((ev) => ev.league_id === league.id);
+  const closed = leagueEvents.filter((ev) => !ev.is_open);
+  const [eventsData, count] = await Promise.all([fetchEventsResults(closed.map((ev) => ev.id)), countRequest]);
+  const scheduledEvents = count ?? leagueEvents.length;
   return {
     league,
     standings: computeLeaguePoints(eventsData, { scheduledEvents }),

@@ -607,6 +607,45 @@ html.app-header .sk-page.is-home > .sk-chart {
   }
 }
 
+/* A part of a page still loading after the page is shown (js/page-loading.js
+   sectionLoadingHtml / statTilesLoadingHtml): shimmering rows in a list's
+   place, a shimmering bar in a number tile's — on a hero, light on its
+   art. */
+.sk-section {
+  display: grid;
+  gap: 10px;
+}
+
+.sk-section i {
+  display: block;
+}
+
+.sk-section .sk,
+.sk-stat {
+  animation: sk-shimmer 1.6s ease-in-out infinite;
+}
+
+.sk-stat {
+  display: inline-block;
+  width: 2.4em;
+  height: 0.8em;
+  border-radius: 8px;
+  vertical-align: middle;
+}
+
+.profile-hero .sk,
+:root[data-theme="dark"] .profile-hero .sk {
+  --sk-base: rgba(255, 255, 255, 0.12);
+  --sk-shine: rgba(255, 255, 255, 0.26);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sk-section .sk,
+  .sk-stat {
+    animation: none;
+  }
+}
+
 /* Leghe & Eventi: the league's big tile, its next and latest event beside
    it (under it on phones, side by side), then the archive's tiles. */
 .sk-ev-board {

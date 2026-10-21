@@ -1,4 +1,4 @@
-import { Players, Events, fetchEventsResults } from "./db.js";
+import { Players, Events, Leagues, fetchEventsResults } from "./db.js";
 import { matchRoundOutcome, isBye, isDrop } from "./leaderboard.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { fetchTopAutoBadgesByPlayer, playerBadgesHtml } from "./player-badges.js";
@@ -24,9 +24,10 @@ function renderRow(r) {
 }
 
 // Entries + matches of every event in scope, batched (js/db.js) rather than
-// two requests per event — "Tutte le leghe" spans the whole history.
+// two requests per event — "Tutte le leghe" spans the whole history. Slim:
+// the records are counted by player id alone (names come from Players.list).
 function fetchEventsData(eventIds) {
-  return fetchEventsResults(eventIds);
+  return fetchEventsResults(eventIds, { slim: true });
 }
 
 // Each player's match record (wins / draws / losses) over `eventsData`: a
@@ -97,28 +98,39 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   // months"), not scoped to whatever this page's own filters are set to —
   // read once, globally, rather than re-fetched on every filter change.
   let autoBadgesByPlayer = new Map();
+  // The filters' leagues and events (js/scope-filter.js), loaded with the rest.
+  let allLeagues = [];
+  let allEvents = [];
 
+  // Everything before the stats in one round: the players, the events
+  // (dates; the filters' list too), the leagues and the automatic badges.
   try {
-    const [players, events] = await Promise.all([Players.list(), Events.list()]);
+    const [players, events, leagues, autoBadges] = await Promise.all([
+      Players.list(),
+      Events.list(),
+      Leagues.list(),
+      // Not fatal if this fails — the page still works with just the
+      // manually assigned badges.
+      fetchTopAutoBadgesByPlayer().catch((err) => {
+        console.error(err);
+        return new Map();
+      }),
+    ]);
+    if (signal.aborted) return;
     if (players.length === 0) {
       listEl.innerHTML = '<p class="page-empty">Nessun giocatore inserito ancora.</p>';
       hidePageLoading(signal);
       return;
     }
     allPlayers = players;
+    allLeagues = leagues;
+    allEvents = events;
+    autoBadgesByPlayer = autoBadges;
     eventDateById = new Map(events.map((e) => [e.id, e.event_date]));
   } catch (err) {
     showError(listEl, err);
     hidePageLoading(signal);
     return;
-  }
-
-  // Not fatal if this fails — the page still works with just the manually
-  // assigned badges, so it's kept out of the critical try/catch above.
-  try {
-    autoBadgesByPlayer = await fetchTopAutoBadgesByPlayer();
-  } catch (err) {
-    console.error(err);
   }
 
   // The date filter narrows whichever event ids the league/event scope
@@ -218,6 +230,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   initScopeFilter({
     leagueSelect,
     eventSelect,
+    leagues: allLeagues,
+    events: allEvents,
     onChange: (eventIds) => {
       lastScopeEventIds = eventIds;
       render(effectiveEventIds());

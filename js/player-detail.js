@@ -8,7 +8,7 @@ import {
   commanderPairLabel,
   showError,
 } from "./ui.js";
-import { hidePageLoading } from "./page-loading.js";
+import { hidePageLoading, sectionLoadingHtml } from "./page-loading.js";
 import { initTitleFit } from "./page-title-fit.js";
 import { renderCommanderCarousel, albumItems, commanderPairKey, openAlbumEffectsInfo } from "./commander-carousel.js";
 import { matchGroupsHtml, initScrollFade, setHistoryCount } from "./history-list.js";
@@ -97,14 +97,14 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   }
 
   try {
-    // Four independent requests (each needs only the id), all started at
+    // Seven independent requests (each needs only the id), all started at
     // once rather than one after another — then used in this order, so the
     // title still shows as soon as the player's own row arrives. The no-op
-    // catches only mark the badges and entries requests as handled, should
-    // the player request fail first and leave them never awaited; awaiting
-    // them below still throws as usual. The linked account's card, when
-    // there's one to show, is never fatal: the page works the same without
-    // it.
+    // catches only mark the badges, entries and matches requests as handled,
+    // should the player request fail first and leave them never awaited;
+    // awaiting them below still throws as usual. The linked account's card,
+    // when there's one to show, is never fatal: the page works the same
+    // without it.
     const playerRequest = Players.get(id);
     const autoBadgesRequest = PlayerAutoBadges.listByPlayer(id);
     const entriesRequest = EventEntries.listByPlayer(id);
@@ -118,8 +118,16 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       console.error(err);
       return null;
     });
+    // Storico partite's final positions (cached standings — never fatal: an
+    // event missing from them is computed below) and the player's matches.
+    const standingsRequest = EventStandings.listByPlayer(id).catch((err) => {
+      console.error(err);
+      return [];
+    });
+    const matchesRequest = Matches.listByPlayer(id);
     autoBadgesRequest.catch(() => {});
     entriesRequest.catch(() => {});
+    matchesRequest.catch(() => {});
 
     const player = await playerRequest;
     if (signal.aborted) return;
@@ -193,31 +201,10 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     // entries + matches, same as before the cache existed.
     const historyEventIds = [...new Set(entries.map((e) => e.event_id))];
     const standingByEvent = new Map(); // event id -> { position, wins, draws, losses }
-    try {
-      for (const row of await EventStandings.listByPlayer(id)) standingByEvent.set(row.event_id, row);
-    } catch (err) {
-      console.error(err);
-    }
+    for (const row of await standingsRequest) standingByEvent.set(row.event_id, row);
     const uncachedIds = historyEventIds.filter((eventId) => !standingByEvent.has(eventId));
-    if (uncachedIds.length) {
-      const [historyEntries, historyMatches] = await Promise.all([
-        EventEntries.listByEvents(uncachedIds),
-        Matches.listByEvents(uncachedIds),
-      ]);
-      for (const eventId of uncachedIds) {
-        const standings = computeEventLeaderboard(
-          historyMatches.filter((m) => m.event_id === eventId),
-          historyEntries.filter((e) => e.event_id === eventId)
-        );
-        const index = standings.findIndex((s) => s.player?.id === id);
-        if (index === -1) continue;
-        const s = standings[index];
-        standingByEvent.set(eventId, { position: index + 1, wins: s.wins, draws: s.draws, losses: s.losses });
-      }
-    }
-    const entryByEvent = new Map(entries.map((e) => [e.event_id, e]));
 
-    const { asP1, asP2 } = await Matches.listByPlayer(id);
+    const { asP1, asP2 } = await matchesRequest;
     if (signal.aborted) return;
     const rawMatches = [...asP1.map((m) => ({ m, viewerIsP1: true })), ...asP2.map((m) => ({ m, viewerIsP1: false }))];
     // Storico partite: newest first.
@@ -226,35 +213,39 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       return dateCompare !== 0 ? dateCompare : (b.m.round ?? 0) - (a.m.round ?? 0);
     });
 
-    const eventIds = [...new Set(rawMatches.map(({ m }) => m.event_id))];
-    const eventEntries = eventIds.length ? await EventEntries.listByEvents(eventIds) : [];
-    const entryByEventPlayer = new Map(eventEntries.map((e) => [`${e.event_id}_${e.player_id}`, e]));
-
-    const rows = rawMatches.map(({ m, viewerIsP1 }) => {
-      const opponent = viewerIsP1 ? m.player2 : m.player1;
-      const opponentId = viewerIsP1 ? m.player2_id : m.player1_id;
-      const myEntry = entryByEvent.get(m.event_id);
-      const oppEntry = entryByEventPlayer.get(`${m.event_id}_${opponentId}`);
-      return {
-        event: m.event,
-        round: m.round,
-        opponent,
-        isBye: isBye(m),
-        isDrop: isDrop(m),
-        outcome: matchOutcome(m, viewerIsP1),
-        scoreLabel: isBye(m) ? "Bye" : isDrop(m) ? "Drop" : viewerScoreLabel(m, viewerIsP1),
-        myCommander: myEntry?.commander ?? null,
-        myPartner: myEntry?.partner_commander ?? null,
-        oppCommander: oppEntry?.commander ?? null,
-        oppPartner: oppEntry?.partner_commander ?? null,
-      };
-    });
+    // One row per match. `entryByEventPlayer`: every entry of the events
+    // played, for the opponents' decks — empty before the second round.
+    const entryByEvent = new Map(entries.map((e) => [e.event_id, e]));
+    const buildRows = (entryByEventPlayer) =>
+      rawMatches.map(({ m, viewerIsP1 }) => {
+        const opponent = viewerIsP1 ? m.player2 : m.player1;
+        const opponentId = viewerIsP1 ? m.player2_id : m.player1_id;
+        const myEntry = entryByEvent.get(m.event_id);
+        const oppEntry = entryByEventPlayer.get(`${m.event_id}_${opponentId}`);
+        return {
+          event: m.event,
+          round: m.round,
+          opponent,
+          isBye: isBye(m),
+          isDrop: isDrop(m),
+          outcome: matchOutcome(m, viewerIsP1),
+          scoreLabel: isBye(m) ? "Bye" : isDrop(m) ? "Drop" : viewerScoreLabel(m, viewerIsP1),
+          myCommander: myEntry?.commander ?? null,
+          myPartner: myEntry?.partner_commander ?? null,
+          oppCommander: oppEntry?.commander ?? null,
+          oppPartner: oppEntry?.partner_commander ?? null,
+        };
+      });
+    // The numbers need only the player's own matches and entries: filled in
+    // now; Storico partite (the opponents' decks, the final positions) after
+    // the second round.
+    const ownRows = buildRows(new Map());
 
     // Album comandanti's Winrate tile: each pair's match record over the
     // player's whole history, counted like the hero's tiles — a drop is
     // skipped, a bye counts as a win.
     const recordsByPair = new Map();
-    for (const r of rows) {
+    for (const r of ownRows) {
       if (!r.myCommander || r.isDrop) continue;
       const key = commanderPairKey(r.myCommander, r.myPartner);
       if (!recordsByPair.has(key)) recordsByPair.set(key, { wins: 0, draws: 0, losses: 0 });
@@ -267,8 +258,36 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     // played match won, same as any other match win. Events: entries (an
     // event counts even if the player dropped before playing a round).
     const bucket = { wins: 0, draws: 0, losses: 0 };
-    for (const r of rows) if (!r.isDrop) tallyOutcome(bucket, r.outcome);
+    for (const r of ownRows) if (!r.isDrop) tallyOutcome(bucket, r.outcome);
     renderWinrateTiles(overallEl, bucket, { events: entries.length });
+
+    // The second (last) round, together: the entries of the events played
+    // (the opponents' decks), and — only for events missing from the cached
+    // standings — those events' full results, to compute the position. The
+    // page is shown meanwhile, Storico partite shimmering.
+    const eventIds = [...new Set(rawMatches.map(({ m }) => m.event_id))];
+    if (eventIds.length || uncachedIds.length) {
+      matchesEl.innerHTML = sectionLoadingHtml(5);
+      hidePageLoading(signal);
+    }
+    const [eventEntries, [historyEntries, historyMatches]] = await Promise.all([
+      eventIds.length ? EventEntries.listByEvents(eventIds) : [],
+      uncachedIds.length
+        ? Promise.all([EventEntries.listByEvents(uncachedIds), Matches.listByEvents(uncachedIds)])
+        : [[], []],
+    ]);
+    if (signal.aborted) return;
+    for (const eventId of uncachedIds) {
+      const standings = computeEventLeaderboard(
+        historyMatches.filter((m) => m.event_id === eventId),
+        historyEntries.filter((e) => e.event_id === eventId)
+      );
+      const index = standings.findIndex((s) => s.player?.id === id);
+      if (index === -1) continue;
+      const s = standings[index];
+      standingByEvent.set(eventId, { position: index + 1, wins: s.wins, draws: s.draws, losses: s.losses });
+    }
+    const rows = buildRows(new Map(eventEntries.map((e) => [`${e.event_id}_${e.player_id}`, e])));
 
     matchesEl.innerHTML = matchGroupsHtml(
       matchGroupsByEvent(rows, new Map([...standingByEvent].map(([eventId, s]) => [eventId, s.position])))

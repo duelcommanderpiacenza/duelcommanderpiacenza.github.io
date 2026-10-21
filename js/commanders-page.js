@@ -1,4 +1,4 @@
-import { Commanders, Events, fetchEventsResults } from "./db.js";
+import { Commanders, Events, Leagues } from "./db.js";
 import { computeGroupedStats, computeColorShares } from "./stats.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { renderPieChart, renderBarChart } from "./metagame-chart.js";
@@ -7,7 +7,7 @@ import { attachHoverTooltips, fullTextIfTruncated } from "./floating-tooltip.js"
 import { commanderPairWithColors, bannedBadge, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
-import { savedMetaFilters, rememberMetaFilters } from "./meta-filters.js";
+import { savedMetaFilters, rememberMetaFilters, prefetchMetaResults, metaResults } from "./meta-filters.js";
 import { historyPanelHtml, historyStatsHtml, winrateTrendHtml, splitLatestEvent } from "./history-list.js";
 import { initBackToTop } from "./back-to-top.js";
 
@@ -40,11 +40,9 @@ const MTG_COLOR_BARS = {
   C: { label: "Incolore", color: "#a8a39d" },
 };
 
-// Entries + matches of every event in scope, batched (js/db.js) rather than
-// two requests per event — "Tutte le leghe" spans the whole history.
-function fetchEventsData(eventIds) {
-  return fetchEventsResults(eventIds);
-}
+// Entries + matches of the events in scope (js/meta-filters.js metaResults):
+// slim, no player embeds — only the commanders (the colours chart).
+const RESULTS_OPTIONS = { commanders: true };
 
 // A winrate counts (the Winrate chart, sorting by winrate) only with a real
 // sample: at least this share of the matches the most played commander has
@@ -81,6 +79,9 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   // (Or the Meta section's shared filter, as last set on any of its pages.)
   const savedFilters = savedMetaFilters();
   dateFromInput.value = savedFilters ? savedFilters.dateFrom : isoDateYearsAgo(DEFAULT_DATE_FROM_YEARS);
+  // The results of the default scope, started now with the first requests
+  // (js/meta-filters.js prefetchMetaResults) — served from it below.
+  const resultsPrefetch = prefetchMetaResults(savedFilters, dateFromInput.value, RESULTS_OPTIONS);
   rememberMetaFilters({ leagueSelect, eventSelect, dateFromInput });
   initFilterToggle("commanders-filter-toggle", "commanders-filter-panel");
   const searchInput = document.getElementById("commanders-search");
@@ -105,10 +106,15 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   let lastScopeEventIds = [];
   let lastRows = [];
   let lastChartHtml = "";
+  // The filters' leagues and events (js/scope-filter.js), loaded with the rest.
+  let allLeagues = [];
+  let allEvents = [];
 
   try {
-    const [commanders, events] = await Promise.all([Commanders.list(), Events.list()]);
+    const [commanders, events, leagues] = await Promise.all([Commanders.list(), Events.list(), Leagues.list()]);
     allCommanders = commanders;
+    allLeagues = leagues;
+    allEvents = events;
     eventDateById = new Map(events.map((e) => [e.id, e.event_date]));
   } catch (err) {
     showError(chartEl, err);
@@ -217,7 +223,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     chartEl.innerHTML = '<p class="page-loading">Caricamento...</p>';
     tableEl.innerHTML = "";
     try {
-      const eventsData = await fetchEventsData(eventIds);
+      const eventsData = await metaResults(resultsPrefetch, eventIds, eventDateById, RESULTS_OPTIONS);
       const commandersById = new Map(allCommanders.map((c) => [c.id, c]));
 
       // Grouped by the commander + partner pairing — a commander played with
@@ -404,6 +410,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     leagueSelect,
     eventSelect,
     initial: savedFilters,
+    leagues: allLeagues,
+    events: allEvents,
     onChange: (eventIds) => {
       lastScopeEventIds = eventIds;
       render(effectiveEventIds());

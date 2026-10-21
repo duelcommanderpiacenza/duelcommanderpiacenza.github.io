@@ -50,8 +50,10 @@ const stat = (value, label) => `<div class="ev-stat"><b>${value}</b><span>${labe
 // players (null: the standalone events together). Counted by the database
 // (db.js EventCounts / LeaguePlayerCounts, migration 021) — a few hundred
 // rows instead of every entry and match ever; until those views exist, the
-// old way: every entry and match downloaded and counted here.
-async function loadCounts(events) {
+// old way: every entry and match downloaded and counted here. `eventsRequest`:
+// the page's Events.list() (a promise) — the counts don't wait for it, only
+// the old way needs it.
+async function loadCounts(eventsRequest) {
   try {
     const [eventRows, leagueRows] = await Promise.all([EventCounts.list(), LeaguePlayerCounts.list()]);
     const byEvent = new Map(eventRows.map((r) => [r.event_id, r]));
@@ -64,7 +66,11 @@ async function loadCounts(events) {
   } catch (err) {
     console.warn("event_counts views unavailable, counting from every entry (run migration 021):", err);
   }
-  const [entries, matchRows] = await Promise.all([EventEntries.listPlayersByEvent(), Matches.listEventIds()]);
+  const [entries, matchRows, events] = await Promise.all([
+    EventEntries.listPlayersByEvent(),
+    Matches.listEventIds(),
+    eventsRequest,
+  ]);
   const playersByEvent = new Map();
   for (const e of entries) {
     if (!playersByEvent.has(e.event_id)) playersByEvent.set(e.event_id, new Set());
@@ -348,12 +354,16 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   const archiveSectionEl = document.getElementById("events-archive-section");
   const archiveEl = document.getElementById("events-archive");
   try {
-    const [leagues, allEvents, upcoming] = await Promise.all([
+    // One round: the leagues, the events, the upcoming ones and the counts
+    // (which don't need the events — see loadCounts).
+    const eventsRequest = Events.list();
+    const [leagues, allEvents, upcoming, counter] = await Promise.all([
       Leagues.list(),
-      Events.list(),
+      eventsRequest,
       Events.listUpcoming().catch((err) => (console.error(err), [])),
+      loadCounts(eventsRequest),
     ]);
-    const counter = await loadCounts(allEvents);
+    if (signal.aborted) return;
     // A still-open event isn't published yet: only the next one is shown
     // (its own tile); everything else counts played (closed) events.
     const played = allEvents
@@ -383,8 +393,15 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     // (initPinned).
     const pin = document.documentElement.classList.contains("nav-mobile");
     let pinned = "";
-    for (const league of [mainLeague, topdeck].filter(Boolean)) {
-      const scheduled = await Leagues.eventCount(league.id, allEvents.filter((ev) => ev.league_id === league.id).length);
+    // Each board league's total event count (open ones included, even those
+    // hidden from visitors), both asked at once.
+    const boardLeagues = [mainLeague, topdeck].filter(Boolean);
+    const scheduledCounts = await Promise.all(
+      boardLeagues.map((league) => Leagues.eventCount(league.id, allEvents.filter((ev) => ev.league_id === league.id).length))
+    );
+    if (signal.aborted) return;
+    for (const [index, league] of boardLeagues.entries()) {
+      const scheduled = scheduledCounts[index];
       const attendance = league.events.reduce((sum, ev) => sum + counter.ofEvent(ev.id), 0);
       const big = currentTile(
         league,

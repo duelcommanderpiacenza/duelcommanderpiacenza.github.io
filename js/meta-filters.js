@@ -4,6 +4,8 @@
 // "metaFilters" — closing the app goes back to the default, the last
 // DEFAULT_DATE_FROM_YEARS years). Comandanti's colour filter stays its own.
 
+import { fetchClosedResultsSince, fetchEventsResults } from "./db.js";
+
 const KEY = "metaFilters";
 
 // Moving from one Meta page to another (in-app navigation): the filters'
@@ -40,4 +42,45 @@ export function rememberMetaFilters({ leagueSelect, eventSelect, dateFromInput }
       }
     }, 0);
   for (const el of [leagueSelect, eventSelect, dateFromInput]) el.addEventListener("change", save);
+}
+
+// --- The results, in the page's first round ----------------------------------
+//
+// A Meta page needs its events' entries + matches, and which events those
+// are depends on the filters — normally a second round after the events
+// and leagues. With no league or event picked (the default), the scope is
+// "every closed event from Dal on": the database can filter that itself
+// (db.js fetchClosedResultsSince), so it's started with the page's first
+// requests. Any later scope within it (a league, an event, a later Dal) is
+// then served from the same rows, without a request; one reaching earlier
+// than that Dal is fetched as before.
+
+// Started at mount, before the first await. null when a league or event is
+// picked to start with (that scope is small: fetched as before).
+// `commanders`: the entries' commanders too (fetchEventsResults'), the rows
+// always slim — the same options as the page's metaResults calls.
+export function prefetchMetaResults(savedFilters, dateFrom, { commanders = false } = {}) {
+  if (savedFilters?.league || savedFilters?.event) return null;
+  const from = dateFrom || null;
+  const request = fetchClosedResultsSince(from, { commanders });
+  // Marked as handled: a failure only means falling back (below).
+  request.catch((err) => console.error(err));
+  return { from, request };
+}
+
+// `eventIds`' results ([{ entries, matches }], fetchEventsResults' shape):
+// from the prefetched rows when every event is within them — closed (the
+// scope filter offers no other) and on or after their Dal — else fetched
+// (slim, `commanders` as given). `eventDateById`: the page's event dates.
+export async function metaResults(prefetch, eventIds, eventDateById, { commanders = false } = {}) {
+  const covered = (id) => !prefetch.from || (eventDateById.get(id) ?? "") >= prefetch.from;
+  if (prefetch && eventIds.every(covered)) {
+    try {
+      const { entriesByEvent, matchesByEvent } = await prefetch.request;
+      return eventIds.map((id) => ({ entries: entriesByEvent.get(id) ?? [], matches: matchesByEvent.get(id) ?? [] }));
+    } catch {
+      // Failed (already logged): fetched the usual way.
+    }
+  }
+  return fetchEventsResults(eventIds, { slim: true, commanders });
 }

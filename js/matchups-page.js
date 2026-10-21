@@ -7,14 +7,14 @@
 // scope — refetched only when a filter changes; picking decks just
 // re-renders the matrix from what's already loaded, instantly.
 
-import { Events, fetchEventsResults } from "./db.js";
+import { Events, Leagues } from "./db.js";
 import { isBye, isDrop, matchRoundOutcome } from "./leaderboard.js";
 import { escapeHtml, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { attachHoverTooltips, fullTextIfTruncated } from "./floating-tooltip.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { initFilterToggle } from "./filter-toggle.js";
-import { savedMetaFilters, rememberMetaFilters } from "./meta-filters.js";
+import { savedMetaFilters, rememberMetaFilters, prefetchMetaResults, metaResults } from "./meta-filters.js";
 import { openInfoDialog } from "./info-dialog.js";
 import { enableDragScroll, enableSnapDrag } from "./drag-scroll.js";
 
@@ -158,7 +158,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
 
   // Everything below is built from the events the league/event/"Dal"
   // filters leave in scope (default "Dal": 2 years ago, js/ui.js), fetched
-  // batched (js/db.js's fetchEventsResults) and rebuilt on every filter
+  // (js/meta-filters.js metaResults — the default scope's in the first
+  // round, any other batched as before) and rebuilt on every filter
   // change — decks offered, matrix values and the default "most played" top
   // 10 alike.
   function buildFromData(entries, matches) {
@@ -472,6 +473,11 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   // (Or the Meta section's shared filter, as last set on any of its pages.)
   const savedFilters = savedMetaFilters();
   dateFromInput.value = savedFilters ? savedFilters.dateFrom : isoDateYearsAgo(DEFAULT_DATE_FROM_YEARS);
+  // The results of the default scope, started now with the first requests
+  // (js/meta-filters.js prefetchMetaResults) — served from it below.
+  // Slim (js/db.js): no player embeds — only the commanders (their names).
+  const resultsOptions = { commanders: true };
+  const resultsPrefetch = prefetchMetaResults(savedFilters, dateFromInput.value, resultsOptions);
   rememberMetaFilters({ leagueSelect, eventSelect, dateFromInput });
   initFilterToggle("matchups-filter-toggle", "matchups-filter-panel");
   let eventDateById = new Map();
@@ -495,7 +501,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     const token = ++loadToken;
     matrixEl.innerHTML = '<p class="page-loading">Caricamento...</p>';
     try {
-      const eventsData = await fetchEventsResults(effectiveEventIds());
+      const eventsData = await metaResults(resultsPrefetch, effectiveEventIds(), eventDateById, resultsOptions);
       if (token !== loadToken || signal.aborted) return;
       buildFromData(
         eventsData.flatMap((d) => d.entries),
@@ -518,9 +524,14 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     }
   }
 
+  // The filters' leagues and events (js/scope-filter.js), loaded together.
+  let allLeagues = [];
+  let allEvents = [];
   try {
-    const events = await Events.list();
+    const [events, leagues] = await Promise.all([Events.list(), Leagues.list()]);
     if (signal.aborted) return;
+    allLeagues = leagues;
+    allEvents = events;
     eventDateById = new Map(events.map((e) => [e.id, e.event_date]));
   } catch (err) {
     showError(matrixEl, err);
@@ -535,6 +546,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     leagueSelect,
     eventSelect,
     initial: savedFilters,
+    leagues: allLeagues,
+    events: allEvents,
     onChange: (eventIds) => {
       lastScopeEventIds = eventIds;
       const done = load();

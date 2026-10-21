@@ -1,4 +1,4 @@
-import { Leagues, Events, fetchEventsResults } from "./db.js";
+import { Leagues, Events, EventCounts, fetchEventsResults } from "./db.js";
 import { computeLeaguePoints } from "./leaderboard.js";
 import { fetchPlayerBadgesRenderer } from "./player-badges.js";
 import { computeLeagueSummary, computeLeagueWrapped } from "./stats.js";
@@ -10,7 +10,7 @@ import {
   playerLabel,
   showError,
 } from "./ui.js";
-import { hidePageLoading } from "./page-loading.js";
+import { hidePageLoading, sectionLoadingHtml, statTilesLoadingHtml } from "./page-loading.js";
 import { initTitleFit } from "./page-title-fit.js";
 import { historyPanelHtml, historyStatsHtml, historyPosHtml } from "./history-list.js";
 import { createArtPainter } from "./player-card.js";
@@ -188,6 +188,20 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   }
 
   try {
+    // The league, its events and its total event count (open ones
+    // included, even those hidden from visitors) each need only the id:
+    // started together. The count falls back to the visible events' (null
+    // until they're known). The no-op catches only mark the two as handled,
+    // should the league request fail first; awaiting them still throws.
+    const eventsRequest = Events.listByLeague(id);
+    const countRequest = Leagues.eventCount(id, null);
+    // Each event's number of players (the database's event_counts view,
+    // as Leghe & Eventi's) — all Eventi needs besides the events, so a page
+    // opening on it is shown before the results (below). Null when the view
+    // isn't there (migration 021 not run): then it waits for the results.
+    const playerCountsRequest = EventCounts.list().catch((err) => (console.error(err), null));
+    eventsRequest.catch(() => {});
+    countRequest.catch(() => {});
     const league = await Leagues.get(id);
     if (signal.aborted) return;
     titleEl.textContent = league.name;
@@ -202,14 +216,15 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     } else if (!league.is_open) {
       tabs.select("league-leaderboard-section");
     }
-    // Started now, awaited only right before the leaderboard renders, so it
-    // loads alongside the league's events rather than after them.
+    // Started now (a Topdeck series has no leaderboard to need it), awaited
+    // only right before the leaderboard renders, so it loads alongside the
+    // league's results rather than after them.
     const badgesPromise = league.is_topdeck ? null : fetchPlayerBadgesRenderer();
 
     // A still-open (including future) event isn't published yet — it has no
     // entries/matches for RLS to even hand back, and would otherwise inflate
     // this league's own event count/grid before anything's actually happened.
-    const allEvents = await Events.listByLeague(id);
+    const allEvents = await eventsRequest;
     if (signal.aborted) return;
     const events = allEvents.filter((ev) => !ev.is_open);
 
@@ -223,16 +238,34 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     statusEl.hidden = dateRange.withStatus;
 
     const today = todayIso();
-    const [eventsData, scheduledEvents] = await Promise.all([
-      fetchEventsResults(events.map((ev) => ev.id)),
-      Leagues.eventCount(id, allEvents.length),
-    ]);
+    const resultsRequest = fetchEventsResults(events.map((ev) => ev.id));
+    resultsRequest.catch(() => {});
+    const count = await countRequest;
     if (signal.aborted) return;
+    const scheduledEvents = count ?? allEvents.length;
+    const renderTimeline = (playersById) => {
+      eventsEl.innerHTML =
+        timelineHtml(allEvents, playersById, scheduledEvents, today) ||
+        '<p class="page-empty">Nessun evento associato a questa lega.</p>';
+    };
 
-    const playersById = new Map(events.map((ev, i) => [ev.id, eventsData[i].entries.length]));
-    eventsEl.innerHTML =
-      timelineHtml(allEvents, playersById, scheduledEvents, today) ||
-      '<p class="page-empty">Nessun evento associato a questa lega.</p>';
+    // Opening on Eventi (an open league, a Topdeck series): shown now, with
+    // the players per event from their counts — the hero's numbers and art,
+    // Classifica and Meta shimmering until the results are in.
+    const playerCounts = league.is_open || league.is_topdeck ? await playerCountsRequest : null;
+    if (signal.aborted) return;
+    if (playerCounts) {
+      const countByEvent = new Map(playerCounts.map((r) => [r.event_id, r.players]));
+      renderTimeline(new Map(events.map((ev) => [ev.id, countByEvent.get(ev.id) ?? 0])));
+      if (events.length) statsEl.innerHTML = statTilesLoadingHtml(["Eventi", "Giocatori", "Presenza media", "Partite giocate"]);
+      if (!league.is_topdeck) leaderboardEl.innerHTML = sectionLoadingHtml(6);
+      document.getElementById("league-meta-charts").innerHTML = sectionLoadingHtml(4);
+      hidePageLoading(signal);
+    }
+
+    const eventsData = await resultsRequest;
+    if (signal.aborted) return;
+    if (!playerCounts) renderTimeline(new Map(events.map((ev, i) => [ev.id, eventsData[i].entries.length])));
 
     // Meta: the league's commanders and archetypes over its played events
     // (js/meta-charts.js, as event.html's).

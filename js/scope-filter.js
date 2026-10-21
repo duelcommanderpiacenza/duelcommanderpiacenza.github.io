@@ -9,8 +9,19 @@ import { escapeHtml, eventTitle } from "./ui.js";
 
 // `initial` ({ league, event }, optional — the Meta section's shared filter,
 // js/meta-filters.js): picked to start with, when still offered.
-export async function initScopeFilter({ leagueSelect, eventSelect, onChange, initial = null }) {
-  const [leagues, allEvents] = await Promise.all([Leagues.list(), Events.list()]);
+// `leagues` / `events` (optional): Leagues.list() / Events.list() already
+// loaded by the page — fetched together with its own first requests, so
+// its data isn't waiting on a second round just for the filter (and the
+// events not downloaded twice). Fetched here when not given.
+export async function initScopeFilter({
+  leagueSelect,
+  eventSelect,
+  onChange,
+  initial = null,
+  leagues: loadedLeagues = null,
+  events: loadedEvents = null,
+}) {
+  const [leagues, allEvents] = await Promise.all([loadedLeagues ?? Leagues.list(), loadedEvents ?? Events.list()]);
   // A still-open (including future) event has no stats to filter by yet —
   // offering it here would just be a selectable option that always shows
   // an empty result.

@@ -87,20 +87,58 @@ self.addEventListener("fetch", (event) => {
 // the stored copy only if that fails. Stored by path alone: a page's HTML
 // is the same whatever its ?id= (one copy per page, not one per player).
 async function networkFirst(event) {
-  const cache = await caches.open(SHELL_CACHE);
   const url = new URL(event.request.url);
   const key = url.origin + url.pathname;
   try {
     const response = await fetch(event.request);
-    if (response.ok && response.type === "basic") {
-      event.waitUntil(cache.put(key, response.clone()).catch(() => {}));
-    }
+    if (response.ok && response.type === "basic") queueShellCopy(event, key, response.clone());
     return response;
   } catch (err) {
-    const hit = await cache.match(key);
+    const hit = await (await caches.open(SHELL_CACHE)).match(key);
     if (hit) return hit;
     throw err;
   }
+}
+
+// The site's files' fresh copies stored a few seconds after the page
+// settles, not while it loads (a page asks for all its scripts at once —
+// the modulepreload lists — so the copies otherwise all queue up in the
+// cache alongside the page's own data reads), and an unchanged file (the
+// same ETag / Last-Modified as the stored copy) isn't written again at all
+// — not every file rewritten on every page load.
+const pendingShellCopies = new Map(); // key -> response
+let shellCopiesFlush = null;
+
+function queueShellCopy(event, key, response) {
+  pendingShellCopies.set(key, response);
+  if (!shellCopiesFlush) {
+    shellCopiesFlush = new Promise((resolve) =>
+      setTimeout(async () => {
+        const copies = [...pendingShellCopies];
+        pendingShellCopies.clear();
+        shellCopiesFlush = null;
+        try {
+          const cache = await caches.open(SHELL_CACHE);
+          for (const [copyKey, copy] of copies) {
+            const stored = await cache.match(copyKey);
+            if (stored && sameVersion(stored, copy)) continue;
+            await cache.put(copyKey, copy);
+          }
+        } catch {
+          // Storage full or unavailable: the next load tries again.
+        }
+        resolve();
+      }, 3000)
+    );
+  }
+  event.waitUntil(shellCopiesFlush);
+}
+
+function sameVersion(a, b) {
+  const etag = a.headers.get("ETag");
+  if (etag) return etag === b.headers.get("ETag");
+  const modified = a.headers.get("Last-Modified");
+  return Boolean(modified) && modified === b.headers.get("Last-Modified") && a.headers.get("Content-Length") === b.headers.get("Content-Length");
 }
 
 // Always fetched and stored as a CORS response, whatever the page asked
@@ -125,17 +163,36 @@ async function cachedImage(event) {
     event.waitUntil(
       cache
         .put(key, response.clone())
-        .then(() => trim(cache))
+        .then(() => scheduleTrim(IMAGE_CACHE, MAX_IMAGES))
         .catch(() => {})
     );
   }
   return response;
 }
 
-// Keys come back oldest first (insertion order).
-async function trim(cache) {
+// A cache cut back to its `max` newest entries — keys come back oldest first
+// (insertion order). At most once every couple of seconds per cache, not
+// after every response: a page loading dozens of images (the album, the
+// bubble charts) or several data requests at once would otherwise list the
+// whole cache once per response, all at the same time.
+async function trim(cache, max) {
   const keys = await cache.keys();
-  for (const request of keys.slice(0, Math.max(0, keys.length - MAX_IMAGES))) await cache.delete(request);
+  for (const request of keys.slice(0, Math.max(0, keys.length - max))) await cache.delete(request);
+}
+
+const trimTimers = new Map(); // cache name -> pending timer
+function scheduleTrim(name, max) {
+  if (trimTimers.has(name)) return;
+  trimTimers.set(
+    name,
+    setTimeout(() => {
+      trimTimers.delete(name);
+      caches
+        .open(name)
+        .then((cache) => trim(cache, max))
+        .catch(() => {});
+    }, 2000)
+  );
 }
 
 // --- Supabase data (DATA_CACHE, above) ---------------------------------------
@@ -151,7 +208,7 @@ async function staleWhileRevalidate(event) {
   if ((freshUntil.get(event.clientId) ?? 0) > Date.now()) {
     try {
       const response = await fetch(event.request);
-      if (response.ok) event.waitUntil(cache.put(key, response.clone()).then(() => trimData(cache)).catch(() => {}));
+      if (response.ok) event.waitUntil(cache.put(key, response.clone()).then(() => scheduleTrim(DATA_CACHE, MAX_DATA)).catch(() => {}));
       return response;
     } catch (err) {
       const stored = await cache.match(key);
@@ -162,18 +219,38 @@ async function staleWhileRevalidate(event) {
   const hit = await cache.match(key);
   // Read before the page gets the stored copy (its body can be read once).
   const hitText = hit ? hit.clone().text() : null;
-  const network = fetch(event.request).then(async (response) => {
-    if (response.ok) {
-      const fresh = response.clone();
-      const changed = hitText ? (await hitText) !== (await response.clone().text()) : false;
-      await cache.put(key, fresh);
-      await trimData(cache);
-      if (changed) client?.postMessage({ type: "data-updated" });
+  // The network's answer goes to the page as soon as it arrives (no stored
+  // copy) — storing it, comparing it with the stored one and trimming come
+  // after, kept alive by this promise (registered now, while the page's
+  // answer is still pending: waitUntil can't be called once it's settled).
+  let stored;
+  event.waitUntil(new Promise((resolve) => (stored = resolve)));
+  const network = fetch(event.request).then(
+    (response) => {
+      if (response.ok) {
+        const fresh = response.clone();
+        const compare = hitText ? response.clone().text() : null;
+        (async () => {
+          const changed = compare ? (await hitText) !== (await compare) : false;
+          await cache.put(key, fresh);
+          scheduleTrim(DATA_CACHE, MAX_DATA);
+          if (changed) client?.postMessage({ type: "data-updated" });
+        })()
+          .catch(() => {})
+          .finally(stored);
+      } else {
+        stored();
+      }
+      return response;
+    },
+    (err) => {
+      if (hit) client?.postMessage({ type: "data-offline" });
+      stored();
+      throw err;
     }
-    return response;
-  });
+  );
   if (!hit) return network;
-  event.waitUntil(network.catch(() => client?.postMessage({ type: "data-offline" })));
+  network.catch(() => {});
   return hit;
 }
 
@@ -195,9 +272,4 @@ function tokenUser(authorization) {
   } catch {
     return "anon";
   }
-}
-
-async function trimData(cache) {
-  const keys = await cache.keys();
-  for (const request of keys.slice(0, Math.max(0, keys.length - MAX_DATA))) await cache.delete(request);
 }

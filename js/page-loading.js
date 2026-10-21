@@ -72,3 +72,26 @@ export function watchPageLoading() {
     observer.disconnect();
   }).observe(document.body, { attributes: true, attributeFilter: ["class"] });
 }
+
+// --- Parts still loading once the page is shown ------------------------------
+//
+// A page whose first tab needs less than the rest (league.html's Eventi,
+// event.html's Giocatori, player.html's album and numbers) is shown as soon
+// as that's in; what's still coming keeps a shimmering placeholder of its own
+// (styles.css .sk-section / .sk-stat), like the Bacheca's charts.
+
+// A list's or a chart's place: `rows` shimmering rows.
+export function sectionLoadingHtml(rows = 3) {
+  return `<div class="sk-section" role="status" aria-label="Caricamento...">${'<i class="sk sk-row"></i>'.repeat(rows)}</div>`;
+}
+
+// The hero's number tiles (.profile-stats-tiles): their labels, a shimmering
+// bar for each value.
+export function statTilesLoadingHtml(labels) {
+  return labels
+    .map(
+      (label) =>
+        `<div class="stat-tile"><div class="stat-tile-label">${label}</div><div class="stat-tile-value"><i class="sk sk-stat" aria-label="Caricamento..."></i></div></div>`
+    )
+    .join("");
+}

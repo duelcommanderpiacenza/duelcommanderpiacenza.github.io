@@ -9,7 +9,7 @@ import {
   archetypeBadge,
   showError,
 } from "./ui.js";
-import { hidePageLoading } from "./page-loading.js";
+import { hidePageLoading, sectionLoadingHtml, statTilesLoadingHtml } from "./page-loading.js";
 import { nestedResultsMenu } from "./results-link.js";
 import { initTitleFit } from "./page-title-fit.js";
 import { historyPanelHtml, historyStatsHtml, historyPosHtml } from "./history-list.js";
@@ -100,11 +100,17 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   }
 
   try {
-    const [event, entries, matches] = await Promise.all([
-      Events.get(id),
-      EventEntries.listByEvent(id),
-      Matches.listByEvent(id),
-    ]);
+    // All three at once; the page is shown once the event and its entries
+    // are in (Giocatori, the first tab, and Meta need nothing else) — the
+    // matches (Classifica, Partite, the hero's art and its Turni / Partite)
+    // shimmer until they're in too, unless they're already there by then.
+    // The no-op catch only marks the matches request as handled, should
+    // another fail first; awaiting it below still throws.
+    const matchesRequest = Matches.listByEvent(id);
+    let matchesReady = false;
+    matchesRequest.then(() => (matchesReady = true), () => {});
+    const [event, entries] = await Promise.all([Events.get(id), EventEntries.listByEvent(id)]);
+    if (signal.aborted) return;
 
     titleEl.textContent = eventTitle(event);
     const resultsHtml = nestedResultsMenu(event.results_url, event.decklists_url);
@@ -141,9 +147,22 @@ export async function mount({ signal = new AbortController().signal } = {}) {
             { scroll: false }
           );
 
-    matchesEl.innerHTML = renderMatchesByRound(matches);
     renderMetaCharts(metaChartsEl, document.getElementById("event-meta-card"), entries);
 
+    const decks = new Set(entries.filter((e) => e.commander_id).map((e) => `${e.commander_id}_${e.partner_commander_id ?? ""}`));
+    if (!matchesReady) {
+      statsEl.innerHTML = statTilesLoadingHtml(["Giocatori", "Turni", "Partite", "Comandanti"]);
+      const [playersTile, , , decksTile] = statsEl.querySelectorAll(".stat-tile-value");
+      playersTile.textContent = entries.length;
+      decksTile.textContent = decks.size;
+      leaderboardEl.innerHTML = sectionLoadingHtml(6);
+      matchesEl.innerHTML = sectionLoadingHtml(4);
+      hidePageLoading(signal);
+    }
+
+    const matches = await matchesRequest;
+    if (signal.aborted) return;
+    matchesEl.innerHTML = renderMatchesByRound(matches);
     const standings = computeEventLeaderboard(matches, entries);
 
     // The hero: the numbers, and the winner's (first in the standings)
@@ -153,7 +172,6 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     const winnerEntry = winner ? entries.find((e) => e.player_id === winner.id) : null;
     const realMatches = matches.filter((m) => !isBye(m) && !isDrop(m));
     const rounds = new Set(matches.map((m) => m.round ?? 1)).size;
-    const decks = new Set(entries.filter((e) => e.commander_id).map((e) => `${e.commander_id}_${e.partner_commander_id ?? ""}`));
     statsEl.innerHTML = [
       ["Giocatori", entries.length],
       ["Turni", rounds],

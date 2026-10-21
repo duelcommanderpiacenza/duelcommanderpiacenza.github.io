@@ -3,7 +3,7 @@
 // played commander's art, the name, Winrate / Metashare / Mazzi / Piloti),
 // its usage over time, the commanders played as it, and how it fares
 // against the other archetypes (a diverging bar chart around 50%).
-import { Events, fetchEventsResults } from "./db.js";
+import { Events, fetchClosedResultsSince } from "./db.js";
 import { matchRoundOutcome, isBye, isDrop } from "./leaderboard.js";
 import { computeGroupedStats } from "./stats.js";
 import { ARCHETYPES } from "./metagame-chart.js";
@@ -84,12 +84,20 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   initTitleFit(titleEl, { signal });
 
   try {
-    // Every closed event (an open one isn't published yet), oldest first.
-    const events = (await Events.list())
+    // Every closed event (an open one isn't published yet), oldest first,
+    // and all their entries + matches — one round: the results filtered by
+    // the database (db.js fetchClosedResultsSince, every date), no event ids
+    // needed first. Slim rows with the commanders (no player embeds: none
+    // used here).
+    const [allEvents, { entriesByEvent, matchesByEvent }] = await Promise.all([
+      Events.list(),
+      fetchClosedResultsSince(null, { commanders: true }),
+    ]);
+    if (signal.aborted) return;
+    const events = allEvents
       .filter((ev) => !ev.is_open)
       .sort((a, b) => (a.event_date ?? "").localeCompare(b.event_date ?? ""));
-    const eventsData = await fetchEventsResults(events.map((ev) => ev.id));
-    if (signal.aborted) return;
+    const eventsData = events.map((ev) => ({ entries: entriesByEvent.get(ev.id) ?? [], matches: matchesByEvent.get(ev.id) ?? [] }));
 
     // The archetype's own numbers, and the whole field's deck count (for
     // its metashare): match-basis, byes and drops not counted

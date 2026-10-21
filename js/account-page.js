@@ -65,6 +65,7 @@ import { hidePageLoading } from "./page-loading.js";
 import { fetchPlayerBadgesRenderer } from "./player-badges.js";
 import { historyStatsHtml } from "./history-list.js";
 import { haptic } from "./haptics.js";
+import { rememberMyPlayer } from "./me-highlight.js";
 import {
   applyCardAccents,
   createArtPainter,
@@ -783,8 +784,13 @@ export function mount({ signal = new AbortController().signal } = {}) {
 
   // Linked: no claim card, the stats card instead (loaded by loadStats). Not
   // linked (no request, or one waiting): the claim card at the top.
-  async function loadClaim() {
-    const linked = await PlayerClaims.linkedPlayer(user.id);
+  // `linkedRequest`: the linked player's request, when already started
+  // (loadSignedIn).
+  async function loadClaim(linkedRequest = PlayerClaims.linkedPlayer(user.id)) {
+    const linked = await linkedRequest;
+    // The "Tu" pill's player (js/me-highlight.js) kept in step: this is where
+    // a link approved or removed by the admin shows first.
+    rememberMyPlayer(user.id, linked?.id ?? null);
     const pending = linked ? null : await PlayerClaims.mine(user.id);
     claim = { linked, pending };
     claimCard.hidden = Boolean(linked);
@@ -834,8 +840,21 @@ export function mount({ signal = new AbortController().signal } = {}) {
     return (outcome === "player1") === isPlayer1 ? "win" : "loss";
   }
 
-  async function loadStats(player) {
+  // Everything the linked player's parts need, in one round: the stats, the
+  // card's badges and cosmetics, "Invia la tua decklist"'s events and sends.
+  // `upcomingRequest`: Events.listUpcoming(), when already started
+  // (loadSignedIn).
+  async function loadStats(player, { upcomingRequest = null } = {}) {
     statsLink.href = `player.html?id=${player.id}`;
+    // The card's cosmetics: never fatal (a card without them).
+    const progressRequest = PlayerProgress.get(player.id).catch((err) => {
+      console.error(err);
+      return null;
+    });
+    // Handled by loadDecklistCard (a failure: no card); the no-op catch only
+    // marks it handled meanwhile.
+    const decklistRequest = Promise.all([upcomingRequest ?? Events.listUpcoming(), Decklists.sentEvents(player.id)]);
+    decklistRequest.catch(() => {});
     const [entries, { asP1, asP2 }, badgeSlots, autoBadgeRows] = await Promise.all([
       EventEntries.listByPlayer(player.id),
       Matches.listByPlayer(player.id),
@@ -906,14 +925,10 @@ export function mount({ signal = new AbortController().signal } = {}) {
     }, null);
     firstYear = firstDate ? firstDate.slice(0, 4) : null;
 
-    // The card's cosmetics: never fatal (a card without them).
-    cardProgress = await PlayerProgress.get(player.id).catch((err) => {
-      console.error(err);
-      return null;
-    });
+    cardProgress = await progressRequest;
 
     // "Invia la tua decklist" needs the same entries (the closed events played).
-    await loadDecklistCard(player, entries);
+    await loadDecklistCard(player, entries, decklistRequest);
   }
 
   // "?" next to "Le tue statistiche": how the card's effects are earned.
@@ -1048,14 +1063,15 @@ export function mount({ signal = new AbortController().signal } = {}) {
     sentDecklists.unshift({ event: ev, sentAt: new Date().toISOString(), isNew: true });
   }
 
-  async function loadDecklistCard(player, entries) {
+  // `request`: [upcoming events, the player's sends] (loadStats starts it).
+  async function loadDecklistCard(player, entries, request) {
     decklistCard.hidden = false;
     closeDecklistConfirm();
     setMessage(decklistMessageEl, "");
     let upcoming;
     let sent;
     try {
-      [upcoming, sent] = await Promise.all([Events.listUpcoming(), Decklists.sentEvents(player.id)]);
+      [upcoming, sent] = await request;
     } catch (err) {
       // E.g. migration 008 not run yet: no card rather than a broken one.
       console.error(err);
@@ -1310,10 +1326,11 @@ export function mount({ signal = new AbortController().signal } = {}) {
     followsEmptyEl.hidden = followsListEl.querySelector(".follow-row") !== null;
   }
 
-  async function loadFollows() {
+  // `request`: the account's follows, when already started (loadSignedIn).
+  async function loadFollows(request = Follows.mine(user.id)) {
     let follows;
     try {
-      follows = await Follows.mine(user.id);
+      follows = await request;
     } catch (err) {
       // E.g. migration 010 not run yet: no card rather than a broken one.
       console.error(err);
@@ -1523,17 +1540,26 @@ export function mount({ signal = new AbortController().signal } = {}) {
     albumCard.hidden = true;
     followsCard.hidden = true;
     setMessage(accountMessageEl, "");
+    // Two rounds: everything that needs only the account, at once — the
+    // profile, the linked player (or the claim), admin or not, the follows,
+    // the upcoming events (the decklist card's) — then, once the linked
+    // player is known, all of its parts together (loadStats). The no-op
+    // catches only mark the early ones handled until they're awaited.
+    const linkedRequest = PlayerClaims.linkedPlayer(user.id);
+    const followsRequest = Follows.mine(user.id);
+    const upcomingRequest = Events.listUpcoming();
+    for (const request of [linkedRequest, followsRequest, upcomingRequest]) request.catch(() => {});
     try {
       let isAdmin;
-      [profile, , isAdmin] = await Promise.all([Profiles.mine(user.id), loadClaim(), MyAccount.isAdmin()]);
+      [profile, , isAdmin] = await Promise.all([Profiles.mine(user.id), loadClaim(linkedRequest), MyAccount.isAdmin()]);
       // Admins can't delete their own account from here (nor in the database).
       accountDangerEl.hidden = isAdmin;
-      if (claim.linked) await loadStats(claim.linked);
+      if (claim.linked) await loadStats(claim.linked, { upcomingRequest });
     } catch (err) {
       console.error(err);
       setMessage(pageMessageEl(), "Impossibile caricare il profilo, ricarica la pagina.");
     }
-    await loadFollows();
+    await loadFollows(followsRequest);
     renderCard(savedValues());
     renderPublicSwitch();
     show("signed-in");

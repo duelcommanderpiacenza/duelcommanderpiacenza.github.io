@@ -1,4 +1,4 @@
-import { Events, fetchEventsResults } from "./db.js";
+import { Events, Leagues } from "./db.js";
 import { computeGroupedStats } from "./stats.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { renderPieChart, renderBarChart, ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
@@ -6,14 +6,12 @@ import { initChartCarousel } from "./chart-carousel.js";
 import { archetypeBadge, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
-import { savedMetaFilters, rememberMetaFilters } from "./meta-filters.js";
+import { savedMetaFilters, rememberMetaFilters, prefetchMetaResults, metaResults } from "./meta-filters.js";
 import { historyPanelHtml, historyStatsHtml } from "./history-list.js";
 
-// Entries + matches of every event in scope, batched (js/db.js) rather than
-// two requests per event — "Tutte le leghe" spans the whole history.
-function fetchEventsData(eventIds) {
-  return fetchEventsResults(eventIds);
-}
+// Entries + matches of the events in scope (js/meta-filters.js metaResults):
+// slim — the entries' archetypes and the scores are all it uses.
+const RESULTS_OPTIONS = { commanders: false };
 
 // In-app page (js/router.js): mounted by the router on this page's <main>
 // (data-page), on first load and after each in-app navigation; `signal`
@@ -31,14 +29,22 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   // (Or the Meta section's shared filter, as last set on any of its pages.)
   const savedFilters = savedMetaFilters();
   dateFromInput.value = savedFilters ? savedFilters.dateFrom : isoDateYearsAgo(DEFAULT_DATE_FROM_YEARS);
+  // The results of the default scope, started now with the first requests
+  // (js/meta-filters.js prefetchMetaResults) — served from it below.
+  const resultsPrefetch = prefetchMetaResults(savedFilters, dateFromInput.value, RESULTS_OPTIONS);
   rememberMetaFilters({ leagueSelect, eventSelect, dateFromInput });
   initFilterToggle("archetypes-filter-toggle", "archetypes-filter-panel");
 
   let eventDateById = new Map();
   let lastScopeEventIds = [];
+  // The filters' leagues and events (js/scope-filter.js), loaded together.
+  let allLeagues = [];
+  let allEvents = [];
   try {
-    const events = await Events.list();
+    const [events, leagues] = await Promise.all([Events.list(), Leagues.list()]);
     if (signal.aborted) return;
+    allLeagues = leagues;
+    allEvents = events;
     eventDateById = new Map(events.map((e) => [e.id, e.event_date]));
   } catch (err) {
     showError(chartEl, err);
@@ -61,7 +67,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     chartEl.innerHTML = '<p class="page-loading">Caricamento...</p>';
     tableEl.innerHTML = "";
     try {
-      const eventsData = await fetchEventsData(eventIds);
+      const eventsData = await metaResults(resultsPrefetch, eventIds, eventDateById, RESULTS_OPTIONS);
       if (signal.aborted) return;
       const stats = computeGroupedStats(
         eventsData,
@@ -152,6 +158,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     leagueSelect,
     eventSelect,
     initial: savedFilters,
+    leagues: allLeagues,
+    events: allEvents,
     onChange: (eventIds) => {
       lastScopeEventIds = eventIds;
       render(effectiveEventIds());

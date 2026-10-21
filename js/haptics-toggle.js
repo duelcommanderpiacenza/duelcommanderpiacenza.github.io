@@ -11,6 +11,7 @@
 
 import { sb } from "./supabase-client.js";
 import { UserSettings } from "./db.js";
+import { firstReadSinceSignIn, forgetSynced } from "./theme.js";
 import { haptic, hapticsSupported, hapticsEnabled, setHapticsEnabled } from "./haptics.js";
 
 const PHONE =
@@ -50,13 +51,20 @@ export function setupHapticsToggle() {
   });
 
   // Signed in: the account's saved choice (if any) wins over this
-  // browser's. Deferred: a Supabase call inside its own auth callback can
-  // stall the client.
+  // browser's — read once per sign-in (firstReadSinceSignIn, js/theme.js): after that
+  // this browser's copy is the choice (the button saves both), so a page
+  // load asks nothing. Deferred: a Supabase call inside its own auth
+  // callback can stall the client.
   sb.auth.onAuthStateChange((_event, session) => {
     const nextId = session?.user?.id ?? null;
     if (nextId === userId) return;
+    const previousId = userId;
     userId = nextId;
-    if (!userId) return;
+    if (!userId) {
+      if (previousId) forgetSynced("haptics", previousId);
+      return;
+    }
+    if (!firstReadSinceSignIn("haptics", nextId)) return;
     setTimeout(() => {
       UserSettings.haptics(nextId)
         .then((saved) => {
@@ -64,7 +72,10 @@ export function setupHapticsToggle() {
           setHapticsEnabled(saved);
           reflect();
         })
-        .catch((err) => console.error(err));
+        .catch((err) => {
+          console.error(err);
+          forgetSynced("haptics", nextId);
+        });
     }, 0);
   });
 

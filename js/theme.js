@@ -59,6 +59,33 @@ function applyMode(mode) {
   document.documentElement.dataset.theme = mode === "system" ? (darkQuery.matches ? "dark" : "light") : mode;
 }
 
+// An account's saved settings (user_settings: the theme, the vibration) are
+// read once per sign-in, not on every page load: true the first time for
+// `name` and that account (marked in localStorage "settingsRead:<name>:<user
+// id>"), false after — this browser's copy is the setting from then on, the
+// buttons saving both. Signing out (or a failed read) forgets it, so the
+// next sign-in reads the account's again (a choice made on another device
+// arrives then).
+const settingsReadKey = (name, userId) => `settingsRead:${name}:${userId}`;
+
+export function firstReadSinceSignIn(name, userId) {
+  try {
+    if (localStorage.getItem(settingsReadKey(name, userId))) return false;
+    localStorage.setItem(settingsReadKey(name, userId), "1");
+  } catch {
+    // Storage off: read every time, as before.
+  }
+  return true;
+}
+
+export function forgetSynced(name, userId) {
+  try {
+    localStorage.removeItem(settingsReadKey(name, userId));
+  } catch {
+    // Storage off: nothing kept.
+  }
+}
+
 export function setupThemeToggle() {
   const toggle = document.getElementById("theme-toggle");
   if (!toggle) return;
@@ -161,16 +188,23 @@ export function setupThemeToggle() {
   });
 
   // Signed in: the button becomes the menu, and the account's saved choice
-  // (if any) wins over this browser's — applied as soon as it's read. Not
-  // fatal if it can't be read (e.g. migration 019 not run yet): the menu
-  // still works, just for this browser.
+  // (if any) wins over this browser's — applied as soon as it's read. Read
+  // once per sign-in (firstReadSinceSignIn): after that this browser's copy is the
+  // choice — the menu saves both — so a page load asks nothing. Not fatal if
+  // it can't be read (e.g. migration 019 not run yet): the menu still
+  // works, just for this browser.
   sb.auth.onAuthStateChange((_event, session) => {
     const nextId = session?.user?.id ?? null;
     if (nextId === userId) return;
+    const previousId = userId;
     userId = nextId;
     closeMenu();
     reflect();
-    if (!userId) return;
+    if (!userId) {
+      if (previousId) forgetSynced("theme", previousId);
+      return;
+    }
+    if (!firstReadSinceSignIn("theme", nextId)) return;
     // Deferred: a Supabase call made inside its own auth callback can stall
     // the client.
     setTimeout(() => {
@@ -180,7 +214,10 @@ export function setupThemeToggle() {
           applyMode(saved);
           reflect();
         })
-        .catch((err) => console.error(err));
+        .catch((err) => {
+          console.error(err);
+          forgetSynced("theme", nextId);
+        });
     }, 0);
   });
 

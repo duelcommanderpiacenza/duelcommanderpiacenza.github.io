@@ -121,6 +121,15 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   }
 
   try {
+    // The commander, the entries that piloted it and every event (for the
+    // usage chart's zeros) each need only the id: started together. Every
+    // event isn't fatal — without them the chart just shows the dates it
+    // was played. The no-op catch only marks the entries request as
+    // handled, should the commander request fail first; awaiting it below
+    // still throws.
+    const playedEntriesRequest = EventEntries.listByCommander(id);
+    const allEventsRequest = Events.list().catch((err) => (console.error(err), []));
+    playedEntriesRequest.catch(() => {});
     const commander = await Commanders.get(id);
     if (signal.aborted) return;
     // The name (and the ⚠️ if banned) — no colour pips: the card image beside
@@ -166,7 +175,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
 
     // Every (event, player) pair that piloted this commander — as the main
     // commander or as someone's partner.
-    const playedEntries = await EventEntries.listByCommander(id);
+    const playedEntries = await playedEntriesRequest;
     if (signal.aborted) return;
 
     if (playedEntries.length === 0) {
@@ -179,12 +188,10 @@ export async function mount({ signal = new AbortController().signal } = {}) {
 
     const eventIds = [...new Set(playedEntries.map((e) => e.event_id))];
 
-    // Every event too (for the usage chart's zeros) — not fatal: without
-    // them the chart just shows the dates it was played.
     const [allEntries, matches, allEvents] = await Promise.all([
       EventEntries.listByEvents(eventIds),
       Matches.listByEvents(eventIds),
-      Events.list().catch((err) => (console.error(err), [])),
+      allEventsRequest,
     ]);
     if (signal.aborted) return;
     const entryByKey = new Map(allEntries.map((e) => [`${e.event_id}_${e.player_id}`, e]));
