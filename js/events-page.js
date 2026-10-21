@@ -119,91 +119,6 @@ function currentTile(league, played, scheduled, players, avg, matches) {
     </a>`;
 }
 
-// Touch screens: the main league's tile pinned to the top of the screen,
-// collapsing as the page scrolls — its bottom rising with the content (the
-// tile keeps its room in the page: nothing below moves; only less of it is
-// shown, clip-path), the stats and the ring fading, the name shrinking,
-// down to the band, the name and the events count (styles.css
-// .ev-board-pinned; back as the page scrolls back up). The tile sits in a
-// row of its own just before the board (a sticky element sticks only
-// within its parent: inside the board it would leave with it).
-function initPinned(pinnedEl, nextEl, signal) {
-  const tile = pinnedEl.querySelector(".ev-big");
-  const name = tile?.querySelector(".ev-tile-t");
-  if (!tile || !name) return;
-  const NAME_COMPACT = 20;
-  // Room above and below the name's line once collapsed.
-  const PAD = 11;
-  // The ring's count, collapsed: this much bigger, at the line's right end.
-  const COUNT_GROW = 1.35;
-  let H = 0;
-  let Hc = 0;
-  let gap = 0;
-
-  // Sizes, at rest (re-measured on resize): the tile's height; once
-  // collapsed, the name moved up right under the band (--name-shift) and
-  // shrunk, the tile cut to just around it (the band, the name's line, a
-  // little room), and the ring's count moved to that line's right end
-  // (--ring-dx / -dy), bigger, its circle gone.
-  // The sticky offset (read once, on measuring) and the last values written
-  // (written again only when they change: each write restyles the tile).
-  let stickTop = 0;
-  let last = { p: null, clip: null, stuck: null };
-  function measure() {
-    tile.style.setProperty("--p", "0");
-    stickTop = parseFloat(getComputedStyle(pinnedEl).top) || 0;
-    last = { p: null, clip: null, stuck: null };
-    const k = Math.min(1, NAME_COMPACT / parseFloat(getComputedStyle(name).fontSize));
-    const tr = tile.getBoundingClientRect();
-    const nr = name.getBoundingClientRect();
-    const band = tile.querySelector(".ev-tile-k")?.getBoundingClientRect();
-    const bandBottom = band ? band.bottom - tr.top : 0;
-    const lineTop = bandBottom + PAD;
-    H = tr.height;
-    Hc = Math.min(H, lineTop + nr.height * k + PAD);
-    gap = nextEl ? nextEl.getBoundingClientRect().top - tr.bottom : 18;
-    tile.style.setProperty("--name-k", String(k));
-    tile.style.setProperty("--name-shift", `${lineTop - (nr.top - tr.top)}px`);
-    const ring = tile.querySelector(".ev-ring");
-    const count = ring?.querySelector(".ev-ring-label > span");
-    if (ring && count) {
-      const rr = ring.getBoundingClientRect();
-      const cr = count.getBoundingClientRect();
-      const toX = tr.width - 16 - (cr.width * COUNT_GROW) / 2;
-      const toY = lineTop + (nr.height * k) / 2;
-      tile.style.setProperty("--ring-dx", `${toX - (rr.left + rr.width / 2 - tr.left)}px`);
-      tile.style.setProperty("--ring-dy", `${toY - (rr.top + rr.height / 2 - tr.top)}px`);
-      tile.style.setProperty("--count-grow", String(COUNT_GROW));
-    }
-    update();
-  }
-
-  let queued = false;
-  function update() {
-    queued = false;
-    // Where the tile would be if it didn't stick (the next block's top,
-    // minus the gap and the tile), and how far the page has scrolled past it.
-    const naturalTop = nextEl ? nextEl.getBoundingClientRect().top - gap - H : stickTop;
-    const past = Math.max(0, stickTop - naturalTop);
-    const visible = Math.max(Hc, H - past);
-    const p = H > Hc ? Math.min(1, past / (H - Hc)) : 0;
-    const pText = p.toFixed(3);
-    const clipText = `${(H - visible).toFixed(1)}px`;
-    if (pText !== last.p) tile.style.setProperty("--p", (last.p = pText));
-    if (clipText !== last.clip) tile.style.setProperty("--clip", (last.clip = clipText));
-    if (past > 0 !== last.stuck) pinnedEl.classList.toggle("is-stuck", (last.stuck = past > 0));
-  }
-
-  const queue = () => {
-    if (queued) return;
-    queued = true;
-    requestAnimationFrame(update);
-  };
-  window.addEventListener("scroll", queue, { passive: true, signal });
-  window.addEventListener("resize", () => requestAnimationFrame(measure), { signal });
-  measure();
-}
-
 // The ring of a league in progress: events played out of those scheduled
 // (the Topdeck series has none — no set number of events: its count is a
 // number among the others).
@@ -389,10 +304,6 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     // latest finished one — first, then the Topdeck series) — its tile, its
     // next event, its latest one.
     const groups = [];
-    // Touch screens: the main league's tile in a row of its own, pinned
-    // (initPinned).
-    const pin = document.documentElement.classList.contains("nav-mobile");
-    let pinned = "";
     // Each board league's total event count (open ones included, even those
     // hidden from visitors), both asked at once.
     const boardLeagues = [mainLeague, topdeck].filter(Boolean);
@@ -423,18 +334,11 @@ export async function mount({ signal = new AbortController().signal } = {}) {
         if (league.is_open) side.push(next ? nextTile(next) : soonTile(league));
         if (league.events[0]) side.push(latestTile(league.events[0], league.name, counter.ofEvent(league.events[0].id)));
       }
-      if (pin && !secondary && !pinned) {
-        pinned = `<div class="ev-board is-alone ev-board-pinned">${big}</div>`;
-        if (side.length) groups.push(groupHtml("", side, false));
-      } else {
-        groups.push(groupHtml(big, side, secondary));
-      }
+      groups.push(groupHtml(big, side, secondary));
     }
     boardEl.innerHTML = groups.join("");
-    if (pinned) boardEl.insertAdjacentHTML("beforebegin", pinned);
     const boardArea = boardEl.parentElement;
     fitBigNames(boardArea);
-    if (pinned) initPinned(boardEl.previousElementSibling, boardEl, signal);
     let fitTimer;
     window.addEventListener(
       "resize",

@@ -11,7 +11,7 @@ import { Leagues, Events, EventEntries, fetchEventsResults } from "./db.js";
 import { computeLeaguePoints } from "./leaderboard.js";
 import { renderBubbleChart, initBubbleChart, ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
 import { initChartCarousel } from "./chart-carousel.js";
-import { escapeHtml, formatTime, playerLabel, showError } from "./ui.js";
+import { escapeHtml, formatTime, isHttpUrl, playerLabel, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { nestedResultsMenu } from "./results-link.js";
 import { fetchPlayerBadgesRenderer } from "./player-badges.js";
@@ -41,6 +41,15 @@ function parseIsoDate(iso) {
   return new Date(y, m - 1, d);
 }
 
+// Local-time YYYY-MM-DD, directly comparable with an event_date string.
+function todayIso() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+// A map pin: an external event's Località (styles.css .league-tl-place).
+const PIN_ICON = ICON('<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z"></path><circle cx="12" cy="9.5" r="2.5"></circle>');
+
 // --- Eventi: the timeline ------------------------------------------------------------
 
 // One event on league.html's timeline (styles.css .league-timeline, the same
@@ -48,6 +57,13 @@ function parseIsoDate(iso) {
 // name over the league (or "Evento"; the next one's circle pulsing), and on the right: played → "Liste", a menu of its results links (the card a link to
 // the event); upcoming → its time alone, when set ("15:00"), down on the
 // league's line.
+// An external event (played somewhere else, migration 026 — styles.css
+// .home-timeline .is-external): the colours of ours, a ticket's shape; its
+// Località with a pin in place of the league; never a link (it has no
+// page); its right part, past the ticket's tear line, "Liste" once past
+// (it's only shown with a link) or its time while upcoming (.league-tl-time,
+// at the bottom); the very next event of all, external or not, the red
+// "next" one.
 function timelineItemHtml(ev, state) {
   const date = ev.event_date ? parseIsoDate(ev.event_date) : null;
   const node = date
@@ -56,25 +72,36 @@ function timelineItemHtml(ev, state) {
   const fullDate = date
     ? `${date.toLocaleDateString("it-IT", { day: "numeric", month: "long" })}<small>${date.toLocaleDateString("it-IT", { weekday: "long" })}</small>`
     : "—";
-  const league = ev.league ? escapeHtml(ev.league.name) : "Evento";
+  const league = ev.is_external
+    ? `<span class="league-tl-place">${PIN_ICON}${escapeHtml(ev.location || "Evento esterno")}</span>`
+    : ev.league
+      ? escapeHtml(ev.league.name)
+      : "Evento";
   const title = escapeHtml(ev.name || ev.league?.name || "Evento");
   // Played: "Liste" (its Moxfield / mtgtop8 links in a menu) beside the
   // text, centred; upcoming: the time on the league's line under the name
   // (its baseline), at the card's bottom right.
   const links = state === "played" ? nestedResultsMenu(ev.results_url, ev.decklists_url) : "";
-  const time = state !== "played" && ev.start_time ? `<span class="league-tl-side">${formatTime(ev.start_time)}</span>` : "";
+  const time = state !== "played" && ev.start_time ? formatTime(ev.start_time) : "";
+  // An external event's time in the ticket's stub (its own side part).
+  const lineTime = time && !ev.is_external ? `<span class="league-tl-side">${time}</span>` : "";
+  const stub = links
+    ? `<span class="league-tl-side">${links}</span>`
+    : time && ev.is_external
+      ? `<span class="league-tl-side league-tl-time">${time}</span>`
+      : "";
   const body = `
           <span class="league-tl-text">
             <span class="league-tl-t">${title}</span>
-            <span class="league-tl-k-row"><span class="league-tl-k">${league}</span>${time}</span>
+            <span class="league-tl-k-row"><span class="league-tl-k">${league}</span>${lineTime}</span>
           </span>
-          ${links ? `<span class="league-tl-side">${links}</span>` : ""}`;
+          ${stub}`;
   const card =
-    state === "played"
+    state === "played" && !ev.is_external
       ? `<a class="league-tl-card" href="event.html?id=${ev.id}">${body}</a>`
       : `<div class="league-tl-card">${body}</div>`;
   return `
-      <li class="league-tl-item is-${state}">
+      <li class="league-tl-item is-${state}${ev.is_external ? " is-external" : ""}">
         <span class="league-tl-date">${fullDate}</span>
         <span class="league-tl-node">${node}</span>
         ${card}
@@ -89,18 +116,33 @@ const once = (key, load) => {
 };
 const upcomingEvents = () => once("upcoming", () => Events.listUpcoming());
 const allEvents = () => once("events", () => Events.list());
+// Never fatal: the timeline just shows ours.
+const externalEvents = () => once("external", () => Events.listExternal().catch((err) => (console.error(err), [])));
 const openLeague = () => once("openLeague", () => Leagues.getOpen());
 const leagueStandings = (league) => once(`standings:${league.id}`, () => loadLeagueStandings(league));
 
 // The latest played events, "Oggi", the upcoming ones — in time order.
 async function renderTimeline(el) {
   try {
-    const [upcoming, all] = await Promise.all([upcomingEvents(), allEvents()]);
+    const [upcoming, all, external] = await Promise.all([upcomingEvents(), allEvents(), externalEvents()]);
+    // External events (played somewhere else) mixed in by date: the upcoming
+    // ones (today or later) among ours; a past one only with its mtgtop8 /
+    // Moxfield link, among the latest played.
+    const today = todayIso();
+    const when = (ev) => `${ev.event_date ?? ""}T${ev.start_time ?? ""}`;
+    const dated = external.filter((ev) => ev.event_date);
     // Soonest first, across every league / standalone; RLS lets a future
     // open event through (see events_public_read in supabase/schema.sql).
-    const next = upcoming.slice(0, UPCOMING_EVENTS_COUNT);
+    const next = [...upcoming, ...dated.filter((ev) => ev.event_date >= today)]
+      .sort((a, b) => when(a).localeCompare(when(b)))
+      .slice(0, UPCOMING_EVENTS_COUNT);
     // Events.list() is newest first; only the closed (published) ones.
-    const played = all.filter((ev) => !ev.is_open).slice(0, LATEST_EVENTS_COUNT);
+    const pastExternal = dated.filter(
+      (ev) => ev.event_date < today && (isHttpUrl(ev.results_url) || isHttpUrl(ev.decklists_url))
+    );
+    const played = [...all.filter((ev) => !ev.is_open), ...pastExternal]
+      .sort((a, b) => when(b).localeCompare(when(a)))
+      .slice(0, LATEST_EVENTS_COUNT);
     if (next.length === 0 && played.length === 0) {
       el.innerHTML = '<p class="page-empty">Nessun evento ancora.</p>';
       return;

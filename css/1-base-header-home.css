@@ -2624,6 +2624,76 @@ html.app-header .home-board > .home-panel:not(.is-current) {
   color: var(--text-muted);
 }
 
+/* External events (played somewhere else, js/home.js — migration 026): the
+   colours of ours (a played card, an upcoming outline, the red "next"), a
+   ticket's shape instead — a notch on each side, cut out of the card (a
+   mask: whatever is behind shows through), its edge drawn as a thin ring
+   in the card's border colour (--ring), and a dashed tear line before the
+   stub on the right (the time, or "Liste"); the Località with a pin
+   (.league-tl-place) in place of the league. No badge. The mask also cuts
+   off the card's outer shadow: a past one has its border only. */
+.home-timeline .is-external > .league-tl-card {
+  --notch: 8px;
+  --ring: var(--hairline);
+  --tear: var(--hairline);
+  padding-right: 14px;
+  box-shadow: none;
+  background-image:
+    radial-gradient(circle at 0 50%, transparent var(--notch), var(--ring) var(--notch), var(--ring) calc(var(--notch) + 1px), transparent calc(var(--notch) + 1.5px)),
+    radial-gradient(circle at 100% 50%, transparent var(--notch), var(--ring) var(--notch), var(--ring) calc(var(--notch) + 1px), transparent calc(var(--notch) + 1.5px));
+  -webkit-mask:
+    radial-gradient(circle at 0 50%, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) left / 51% 100% no-repeat,
+    radial-gradient(circle at 100% 50%, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) right / 51% 100% no-repeat;
+  mask:
+    radial-gradient(circle at 0 50%, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) left / 51% 100% no-repeat,
+    radial-gradient(circle at 100% 50%, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) right / 51% 100% no-repeat;
+}
+
+.home-timeline .is-external.is-future > .league-tl-card {
+  --ring: var(--tl-line);
+  --tear: var(--tl-line);
+}
+
+:root[data-theme="dark"] .home-timeline .is-external.is-played > .league-tl-card {
+  --ring: rgba(255, 255, 255, 0.1);
+  --tear: rgba(255, 255, 255, 0.16);
+}
+
+/* The red "next" one has no border: no ring either. */
+.home-timeline .is-external.is-next > .league-tl-card,
+:root[data-theme="dark"] .home-timeline .is-external.is-next > .league-tl-card {
+  --ring: transparent;
+  --tear: rgba(255, 255, 255, 0.55);
+}
+
+/* The tear line, then the stub: "Liste" centred, the time at the bottom. */
+.home-timeline .is-external .league-tl-side {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  margin: 0 0 0 auto;
+  padding: 0 2px 0 14px;
+  border-left: 2px dashed var(--tear);
+}
+
+.home-timeline .is-external .league-tl-side.league-tl-time {
+  align-items: flex-end;
+  padding-bottom: 9px;
+}
+
+.league-tl-place {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  max-width: 100%;
+}
+
+.league-tl-place svg {
+  flex-shrink: 0;
+  width: 1.15em;
+  height: 1.15em;
+}
+
 /* "Oggi": a small red dot on the line, the word, a rule to the right. */
 .league-tl-today {
   position: relative;

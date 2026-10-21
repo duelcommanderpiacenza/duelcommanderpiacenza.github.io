@@ -367,25 +367,46 @@ export const Leagues = {
     }),
 };
 
+// External events (migration 026: played somewhere else, only announced on
+// the Bacheca) are left out of list() and listUpcoming() — so out of every
+// page but the Bacheca, which reads them with listExternal() — and kept in
+// the admin's listStandalone(). On a database without the column yet
+// (migration 026 not run: Postgres' "undefined column", 42703) the query is
+// made again without that filter — there are no external events there.
+function notExternal(build) {
+  return build((query) => query.eq("is_external", false)).then((result) =>
+    result.error?.code === "42703" ? build((query) => query) : result
+  );
+}
+
 export const Events = {
   list: () =>
-    sb
-      .from("events")
-      .select("*, league:leagues(id,name,is_open,is_topdeck)")
-      .order("event_date", { ascending: false, nullsFirst: false })
-      .then(assertOk),
+    notExternal((scope) =>
+      scope(sb.from("events").select("*, league:leagues(id,name,is_open,is_topdeck)")).order("event_date", {
+        ascending: false,
+        nullsFirst: false,
+      })
+    ).then(assertOk),
   // The public Bacheca's "Prossimi eventi" card: soonest-first, across every
   // league/standalone, from today onward — only still-open events (a closed
   // one has already been played, however recent its date, so it belongs in
   // "Ultimi eventi" instead, not here).
   listUpcoming: () =>
+    notExternal((scope) =>
+      scope(sb.from("events").select("*, league:leagues(id,name,is_topdeck)"))
+        .eq("is_open", true)
+        .gte("event_date", todayLocalIso())
+        .order("event_date", { ascending: true })
+    ).then(assertOk),
+  // Every external event (the Bacheca's timeline picks the upcoming ones and
+  // the past ones with a link), newest first. None without migration 026.
+  listExternal: () =>
     sb
       .from("events")
-      .select("*, league:leagues(id,name,is_topdeck)")
-      .eq("is_open", true)
-      .gte("event_date", todayLocalIso())
-      .order("event_date", { ascending: true })
-      .then(assertOk),
+      .select("*")
+      .eq("is_external", true)
+      .order("event_date", { ascending: false, nullsFirst: false })
+      .then((result) => (result.error?.code === "42703" ? [] : assertOk(result))),
   listByLeague: (leagueId) =>
     sb
       .from("events")

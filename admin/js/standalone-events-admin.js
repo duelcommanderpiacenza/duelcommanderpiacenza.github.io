@@ -1,5 +1,5 @@
 import { Events } from "../../js/db.js";
-import { formatDate, formatTime, isHttpUrl } from "../../js/ui.js";
+import { escapeHtml, formatDate, formatTime, isHttpUrl } from "../../js/ui.js";
 import { renderTable, setMessage, statusToggleButton, onBusySubmit, runBusy, manageButton } from "./crud-ui.js";
 import { on } from "./bus.js";
 import { syncAutoBadges } from "./badges-sync.js";
@@ -9,6 +9,13 @@ import { syncAutoBadges } from "./badges-sync.js";
  * same shape as the per-league events list, just without a league to be
  * nested under. Drilling into "Gestisci iscritti/partite" hands the event
  * off to the same shared entries/matches flow the league pyramid uses.
+ *
+ * An external event ("Evento esterno", migration 026: played somewhere
+ * else, only announced on the public Bacheca) has a Località instead, and
+ * neither entries/matches nor an open/closed state — no Gestisci, no
+ * toggle; it stays open for good (events_external_open). Only a new event
+ * can be made external (an existing one may already have entries); an
+ * external one can be turned back into an ordinary one.
  */
 export function initStandaloneEventsAdmin({ onOpenEvent }) {
   const listEl = document.getElementById("standalone-events-admin-list");
@@ -20,6 +27,10 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
   const timeField = document.getElementById("standalone-events-admin-time");
   const resultsUrlField = document.getElementById("standalone-events-admin-results-url");
   const decklistsUrlField = document.getElementById("standalone-events-admin-decklists-url");
+  const externalField = document.getElementById("standalone-events-admin-external");
+  const externalHint = document.getElementById("standalone-events-admin-external-hint");
+  const locationWrap = document.getElementById("standalone-events-admin-location-field");
+  const locationField = document.getElementById("standalone-events-admin-location");
   const msgEl = document.getElementById("standalone-events-admin-message");
   const cancelBtn = document.getElementById("standalone-events-admin-cancel");
 
@@ -42,11 +53,21 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
         { key: "name", label: "Nome" },
         { key: "event_date", label: "Data", render: (r) => formatDate(r.event_date) },
         { key: "start_time", label: "Orario", render: (r) => formatTime(r.start_time) ?? "—" },
-        { key: "status", label: "Stato", render: (r) => statusToggleButton(r.is_open, r.id, "event") },
+        {
+          key: "status",
+          label: "Stato",
+          render: (r) =>
+            r.is_external
+              ? `<span class="admin-auto-chip">Esterno</span>${r.location ? ` ${escapeHtml(r.location)}` : ""}`
+              : statusToggleButton(r.is_open, r.id, "event"),
+        },
         {
           key: "manage",
           label: "",
-          render: (e) => `
+          render: (e) =>
+            e.is_external
+              ? ""
+              : `
               <div class="row-actions">
                 ${manageButton(e.id, "Gestisci iscritti e partite")}
               </div>`,
@@ -80,9 +101,22 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
     }
   }
 
+  // The Località field only for an external event; the checkbox only for a
+  // new event or an external one (see the top of the file).
+  function syncExternal(row = null) {
+    const canChange = !row || Boolean(row.is_external);
+    externalField.disabled = !canChange;
+    externalHint.textContent = canChange ? "" : "Solo un evento nuovo può essere esterno.";
+    locationWrap.hidden = !externalField.checked;
+  }
+  externalField.addEventListener("change", () => syncExternal(events.find((e) => e.id === idField.value) ?? null));
+
   function onEdit(row) {
     idField.value = row.id;
     nameField.value = row.name;
+    externalField.checked = Boolean(row.is_external);
+    locationField.value = row.location ?? "";
+    syncExternal(row);
     dateField.value = row.event_date ?? "";
     timeField.value = formatTime(row.start_time) ?? "";
     resultsUrlField.value = row.results_url ?? "";
@@ -92,6 +126,7 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
   function resetForm() {
     idField.value = "";
     form.reset();
+    syncExternal();
     setMessage(msgEl, "", false);
   }
 
@@ -111,12 +146,16 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
   }
 
   async function onDelete(row) {
-    if (!confirm(`Eliminare l'evento "${row.name}"? Verranno rimossi anche i suoi iscritti e partite.`)) return;
+    const question = row.is_external
+      ? `Eliminare l'evento esterno "${row.name}"?`
+      : `Eliminare l'evento "${row.name}"? Verranno rimossi anche i suoi iscritti e partite.`;
+    if (!confirm(question)) return;
     try {
       await Events.remove(row.id);
       // Cascades away all of this event's entries/matches — same
-      // fire-and-forget reasoning as onToggleOpen above.
-      syncAutoBadges().catch(console.error);
+      // fire-and-forget reasoning as onToggleOpen above. (An external one
+      // has none: nothing to recompute.)
+      if (!row.is_external) syncAutoBadges().catch(console.error);
       await refresh();
     } catch (err) {
       setMessage(msgEl, "Errore nell'eliminazione.", true);
@@ -141,6 +180,14 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
       league_id: null,
     };
     if (!payload.name) return;
+    // Sent only when it's (or was) external, so an ordinary event still saves
+    // on a database without migration 026. External: open for good.
+    const editing = events.find((e) => e.id === idField.value);
+    if (externalField.checked || editing?.is_external) {
+      payload.is_external = externalField.checked;
+      payload.location = externalField.checked ? locationField.value.trim() || null : null;
+      if (externalField.checked) payload.is_open = true;
+    }
     try {
       if (idField.value) await Events.update(idField.value, payload);
       else await Events.create(payload);

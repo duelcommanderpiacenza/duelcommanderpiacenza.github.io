@@ -88,12 +88,16 @@ Deno.serve(async (req) => {
 
   const { data: event } = await admin
     .from("events")
-    .select("id, name, event_date, is_open, league:leagues(name)")
+    // Every column (`*`): is_external (migration 026) is then simply absent
+    // on a database without it, instead of failing the query.
+    .select("*, league:leagues(name)")
     .eq("id", eventId)
     .maybeSingle();
   if (!event) return reply(404, { error: "event_not_found" });
 
-  // Upcoming (open, today or later), or closed with this player in it.
+  // Upcoming (open, today or later), or closed with this player in it —
+  // never an external event (played somewhere else, migration 026).
+  if (event.is_external) return reply(403, { error: "event_not_allowed" });
   let allowed = event.is_open && event.event_date >= todayInItaly();
   if (!event.is_open) {
     const { count } = await admin

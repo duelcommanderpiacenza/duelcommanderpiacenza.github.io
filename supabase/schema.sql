@@ -178,7 +178,12 @@ create table events (
   created_at timestamptz not null default now(),
   first_closed_at timestamptz, -- set the first time it's closed (its "Risultati online" announcement made then —
     -- events_notify_first_close below); never again, however often it's reopened. Added by migration 022.
+  is_external boolean not null default false, -- an event played somewhere else, only announced on the Bacheca:
+    -- standalone, no entries / matches, never closed (events_external_* below). Added by migration 026.
+  location text, -- an external event's "Località" (optional). Added by migration 026.
   constraint events_unique_name_per_league unique (league_id, name), -- same name OK across leagues, not within one
+  constraint events_external_standalone check (not is_external or league_id is null),
+  constraint events_external_open check (not is_external or is_open),
   constraint events_results_url_http check (results_url ~* '^https?://'),
   constraint events_decklists_url_http check (decklists_url ~* '^https?://')
 );
@@ -451,8 +456,10 @@ create policy "leagues_public_read" on leagues for select using (true);
 -- date/time/name "save the date" preview on the public Bacheca before it's
 -- actually been played — event_entries/matches stay gated to is_open =
 -- false regardless (see below), so no results ever leak early this way.
+-- An external event (migration 026) whatever its date: the Bacheca shows
+-- the past ones too (with their links); it's never closed.
 create policy "events_public_read" on events for select
-  using (is_open = false or event_date >= current_date or is_admin());
+  using (is_open = false or event_date >= current_date or is_external or is_admin());
 
 create policy "event_entries_public_read" on event_entries for select
   using (
