@@ -1520,10 +1520,6 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   text-shadow: none;
 }
 
-#event-results .results-links {
-  margin-left: 0;
-}
-
 /* "In corso" / "Conclusa" in the hero: the site's status chip
    (.status-chip, below with .badge-status) as see-through glass on the art
    — white text and edge, a slight blur; the dot keeps its colours. */
@@ -1593,8 +1589,8 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   text-shadow: inherit;
 }
 
-/* An event's external links (js/results-link.js) — Bacheca "Ultimi eventi"
-   rows and beside event.html's title: a round white Moxfield-logo button
+/* An event's external links (js/results-link.js) — Leghe & Eventi's
+   latest-event tiles: a round white Moxfield-logo button
    and a white pill with mtgtop8's wordmark (dark blue on transparent, only
    readable on white), both with the brand-red outline, side by side in
    .results-links (either one alone when the event has only that link).

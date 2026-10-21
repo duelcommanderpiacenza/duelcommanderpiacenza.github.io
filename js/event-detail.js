@@ -10,7 +10,7 @@ import {
   showError,
 } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
-import { resultsLink } from "./results-link.js";
+import { nestedResultsMenu } from "./results-link.js";
 import { initTitleFit } from "./page-title-fit.js";
 import { historyPanelHtml, historyStatsHtml, historyPosHtml } from "./history-list.js";
 import { createArtPainter } from "./player-card.js";
@@ -107,7 +107,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     ]);
 
     titleEl.textContent = eventTitle(event);
-    const resultsHtml = resultsLink(event.results_url, event.decklists_url);
+    const resultsHtml = nestedResultsMenu(event.results_url, event.decklists_url);
     resultsEl.innerHTML = resultsHtml;
     resultsEl.hidden = !resultsHtml;
     initTitleFit(titleEl, { signal });

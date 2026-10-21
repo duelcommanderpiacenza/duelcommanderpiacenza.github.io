@@ -1,17 +1,17 @@
-// An event's external links next to its name — event.html's title and
-// Leghe & Eventi's tiles (the Bacheca's rows: behind "Liste", below): its decklists on Moxfield
+// An event's external links: its decklists on Moxfield
 // (events.decklists_url) and its top decks on mtgtop8 (events.results_url),
-// both optional, set in the admin.
+// both optional, set in the admin. Leghe & Eventi's tiles show them as they
+// are; the Bacheca's and league.html's rows and event.html's title behind
+// one "Liste" button (below).
 //
 // Side by side in a .results-links wrapper: a round white button with the
 // Moxfield logo, then a white pill with mtgtop8's wordmark (top8.png) —
 // either one alone when the event only has that link, nothing with neither.
 //
-// Two shapes, because a Bacheca row is already one big <a> to the event
-// page — and an <a> nested inside another <a> isn't just invalid, the HTML
-// parser actively closes the outer link early, breaking the row's layout.
-// There each link is a <span role="link"> instead, opened by the delegated
-// handler below; event.html's title isn't inside a link, so it gets real <a>s.
+// A Leghe & Eventi tile is already one big <a> to the event page — and an
+// <a> nested inside another <a> isn't just invalid, the HTML parser
+// actively closes the outer link early, breaking the layout. So each link
+// is a <span role="link"> instead, opened by the delegated handler below.
 
 import { escapeHtml, isHttpUrl } from "./ui.js";
 
@@ -27,28 +27,18 @@ const TOP8_LOGO = '<img src="top8.png" alt="" width="243" height="55">';
 // (player badges / banned icon) — not a native `title`, which can't be
 // restyled and would pop up its own second tooltip on top of that one.
 // The logos are images with empty alt, so the aria-label names the link.
-function linkTag(nested, url, className, label, content) {
+function linkTag(url, className, label, content) {
   const attrs = `class="results-link ${className}" aria-label="${label}" data-tooltip="${label}"`;
-  return nested
-    ? `<span ${attrs} role="link" tabindex="0" data-ext-url="${escapeHtml(url)}">${content}</span>`
-    : `<a ${attrs} href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${content}</a>`;
-}
-
-function render(nested, resultsUrl, decklistsUrl) {
-  const links = [
-    isHttpUrl(decklistsUrl) ? linkTag(nested, decklistsUrl, "results-link-moxfield", MOXFIELD_LABEL, MOXFIELD_LOGO) : "",
-    isHttpUrl(resultsUrl) ? linkTag(nested, resultsUrl, "results-link-top8", TOP8_LABEL, TOP8_LOGO) : "",
-  ].join("");
-  return links ? `<span class="results-links">${links}</span>` : "";
-}
-
-export function resultsLink(resultsUrl, decklistsUrl) {
-  return render(false, resultsUrl, decklistsUrl);
+  return `<span ${attrs} role="link" tabindex="0" data-ext-url="${escapeHtml(url)}">${content}</span>`;
 }
 
 // For use inside an element that's already a link (see top of file).
 export function nestedResultsLink(resultsUrl, decklistsUrl) {
-  return render(true, resultsUrl, decklistsUrl);
+  const links = [
+    isHttpUrl(decklistsUrl) ? linkTag(decklistsUrl, "results-link-moxfield", MOXFIELD_LABEL, MOXFIELD_LOGO) : "",
+    isHttpUrl(resultsUrl) ? linkTag(resultsUrl, "results-link-top8", TOP8_LABEL, TOP8_LOGO) : "",
+  ].join("");
+  return links ? `<span class="results-links">${links}</span>` : "";
 }
 
 // Capture phase on document, so it runs before the enclosing <a>'s own
@@ -69,8 +59,9 @@ document.addEventListener("keydown", openNested, true);
 
 // --- "Liste": the links behind one button ------------------------------------
 //
-// The Bacheca's played events: one same "Liste" button on each (inside the
-// row's own link, so a <span role="button">), opening a small menu of the
+// The Bacheca's and league.html's played events, and event.html's title: one
+// same "Liste" button on each (a row's inside its own link, so a
+// <span role="button">), opening a small menu of the
 // links the event has — its decklists on Moxfield, its top decks on mtgtop8.
 // The menu is appended to <body> (real <a>s there, nothing nested; no
 // clipping ancestor) and positioned under the button, its right edge on
