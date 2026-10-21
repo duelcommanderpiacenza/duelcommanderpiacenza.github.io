@@ -964,23 +964,17 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   }
 }
 
+/* Holds the charts' own ‹ • › pill bar (.chart-carousel-nav, the same look
+   as on Comandanti — its 3-dot window from js renderDots), placed here:
+   centred, under the cards. */
 .cmd-carousel-nav {
   display: flex;
-  align-items: center;
   justify-content: center;
-  gap: 14px;
   margin-top: -8px;
 }
 
-/* 3-dot window (js renderDots): current card red, its neighbours a
-   lighter red — both from --brand-red, so on the hero-accent pages (player,
-   account) they take the hero's colour. */
-.cmd-carousel-dots .chart-carousel-dot {
-  background: color-mix(in srgb, var(--brand-red) 30%, transparent);
-}
-
-.cmd-carousel-dots .chart-carousel-dot.is-active {
-  background: var(--brand-red);
+.cmd-carousel-nav .chart-carousel-nav {
+  margin: 0;
 }
 
 /* Left-aligned at every width, like the page's own stat tiles above. */
@@ -1073,14 +1067,6 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
     color-mix(in srgb, var(--brand-red-deep) 14%, transparent) 50%,
     rgba(255, 255, 255, 0.04) 70%
   );
-}
-
-:root[data-theme="dark"] .cmd-carousel-dots .chart-carousel-dot {
-  background: rgba(255, 106, 110, 0.35);
-}
-
-:root[data-theme="dark"] .cmd-carousel-dots .chart-carousel-dot.is-active {
-  background: #ff6a6e;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1604,6 +1604,8 @@ html.nav-mobile .site-search-box::before {
 .nav-link:hover {
   background: #fff7f4;
   border-color: var(--hairline);
+  /* A pill, not a text link: no underline from the global a:hover. */
+  text-decoration: none;
 }
 
 /* Active-tab highlight driven entirely by matching <body data-active-nav>

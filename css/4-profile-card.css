@@ -448,18 +448,10 @@ main.has-hero-accent .line-chart-guide {
 }
 
 /* Dark mode: what the site paints in a fixed light red there follows the
-   colour's light shade instead — the Album's dots and loading shimmer, the
+   colour's light shade instead — the Album's loading shimmer, the
    commander card's placeholder, the stat tiles' numbers, the lists' hover
    tint and "Tu" rows (the boxless lists' id-scoped ones too), the decklist
    confirmation box. */
-:root[data-theme="dark"] main.has-hero-accent .cmd-carousel-dots .chart-carousel-dot {
-  background: color-mix(in srgb, var(--hero-accent-light) 35%, transparent);
-}
-
-:root[data-theme="dark"] main.has-hero-accent .cmd-carousel-dots .chart-carousel-dot.is-active {
-  background: var(--hero-accent-light);
-}
-
 :root[data-theme="dark"] main.has-hero-accent .commander-card-skeleton,
 :root[data-theme="dark"] main.has-hero-accent .cmd-carousel-slide.is-loading:not(.fx-rim) {
   background-image: linear-gradient(100deg, rgba(255, 255, 255, 0.04) 30%, color-mix(in srgb, var(--hero-accent-light) 14%, transparent) 50%, rgba(255, 255, 255, 0.04) 70%);

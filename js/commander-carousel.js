@@ -216,9 +216,11 @@ export function renderCommanderCarousel(el, items) {
           .join("")}
       </div>
       <div class="cmd-carousel-nav">
-        <button type="button" class="chart-carousel-arrow" data-dir="-1" aria-label="Commander precedente">${ARROW_PREV}</button>
-        <div class="chart-carousel-dots cmd-carousel-dots" aria-hidden="true"></div>
-        <button type="button" class="chart-carousel-arrow" data-dir="1" aria-label="Commander successivo">${ARROW_NEXT}</button>
+        <div class="chart-carousel-nav">
+          <button type="button" class="chart-carousel-arrow" data-dir="-1" aria-label="Commander precedente">${ARROW_PREV}</button>
+          <div class="chart-carousel-dots cmd-carousel-dots" aria-hidden="true"></div>
+          <button type="button" class="chart-carousel-arrow" data-dir="1" aria-label="Commander successivo">${ARROW_NEXT}</button>
+        </div>
       </div>
     </div>
     <div class="cmd-carousel-stats" aria-live="polite">
