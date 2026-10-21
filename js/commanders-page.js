@@ -8,7 +8,7 @@ import { commanderPairWithColors, bannedBadge, showError, isoDateYearsAgo, DEFAU
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
 import { savedMetaFilters, rememberMetaFilters, prefetchMetaResults, metaResults } from "./meta-filters.js";
-import { historyPanelHtml, historyStatsHtml, winrateTrendHtml, splitLatestEvent } from "./history-list.js";
+import { historyPanelHtml, historyStatsHtml, winrateTrendHtml, latestPresence } from "./history-list.js";
 import { initBackToTop } from "./back-to-top.js";
 
 // Both charts are built from the *current filter's* data only (league /
@@ -193,7 +193,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
         ${historyStatsHtml([
           { label: "Giocato", value: r.entries },
           { label: "Piloti", value: r.pilots },
-          { label: "Metashare", value: `${r.share.toFixed(1)}%${winrateTrendHtml(r.share, r.shareBefore, r.inLatest)}`, trend: true },
+          { label: "Metashare", value: `${r.share.toFixed(1)}%${winrateTrendHtml(r.share, r.shareBefore, true)}`, trend: true },
           {
             label: "Winrate",
             value:
@@ -248,15 +248,36 @@ export async function mount({ signal = new AbortController().signal } = {}) {
         commanderId: e.commander_id,
         partnerId: e.partner_commander_id ?? null,
       }));
-      // The winrate before the latest event in scope (its trend arrow), and
-      // who was in that event.
-      const { latest, before } = splitLatestEvent(eventIds, eventsData, eventDateById);
-      const statsBefore = computeGroupedStats(before, pairKey, () => ({}));
-      const winRateBefore = new Map(statsBefore.map((s) => [s.key, s.winRate]));
-      // The metashare before it too (its own arrow).
-      const totalBefore = statsBefore.reduce((sum, s) => sum + s.entries, 0);
-      const shareBefore = new Map(statsBefore.map((s) => [s.key, totalBefore > 0 ? (s.entries / totalBefore) * 100 : null]));
-      const inLatest = new Set((latest?.entries ?? []).map(pairKey));
+      // The trend arrows (results add up event by event: "before an event"
+      // = the numbers minus that event's own):
+      //  - Winrate: before the pairing's own latest event in scope
+      //    (latestPresence) — its first one there: nothing before (null).
+      //  - Metashare (its decks out of every deck in scope): global — before
+      //    the latest event in scope, whoever played in it: down when it had
+      //    a smaller slice of that event than its average, or wasn't in it;
+      //    up when bigger (from 0% if that was its first). With a single
+      //    event in scope: nothing before (null).
+      const latestOf = latestPresence(eventIds, eventsData, eventDateById, (d) => d.entries.map(pairKey));
+      const latestInScope = latestPresence(eventIds, eventsData, eventDateById, () => ["scope"]).get("scope");
+      const statsPerEvent = eventsData.map((d) => new Map(computeGroupedStats([d], pairKey, () => ({})).map((s) => [s.key, s])));
+      const decksPerEvent = statsPerEvent.map((byKey) => [...byKey.values()].reduce((sum, s) => sum + s.entries, 0));
+      const allDecks = decksPerEvent.reduce((sum, n) => sum + n, 0);
+      const decksBeforeLatest = latestInScope === undefined ? 0 : allDecks - decksPerEvent[latestInScope];
+      const winRateBefore = new Map();
+      const shareBefore = new Map();
+      for (const s of stats) {
+        const i = latestOf.get(s.key);
+        if (i !== undefined) {
+          const ev = statsPerEvent[i].get(s.key) ?? { wins: 0, draws: 0, losses: 0 };
+          const wins = s.wins - ev.wins;
+          const played = wins + (s.draws - ev.draws) + (s.losses - ev.losses);
+          winRateBefore.set(s.key, played > 0 ? (wins / played) * 100 : null);
+        }
+        if (decksBeforeLatest > 0) {
+          const inLatestEvent = statsPerEvent[latestInScope].get(s.key)?.entries ?? 0;
+          shareBefore.set(s.key, ((s.entries - inLatestEvent) / decksBeforeLatest) * 100);
+        }
+      }
       // How many different players piloted each pairing in scope.
       const pilotsByKey = new Map();
       for (const { entries } of eventsData) {
@@ -305,7 +326,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
             played: s.played,
             winRate: s.winRate,
             winRateBefore: winRateBefore.get(s.key) ?? null,
-            inLatest: inLatest.has(s.key),
+            inLatest: latestOf.has(s.key),
           };
         })
         .sort((a, b) => b.entries - a.entries || a.name.localeCompare(b.name));

@@ -183,11 +183,12 @@ export function matchGroupsHtml(groups) {
   );
 }
 
-// A number's trend since the latest event in scope — the winrate
-// (Comandanti, Giocatori), the metashare (Comandanti): a trend arrow in a
-// small tinted disc, ↗ up, ↘ down, → unchanged — also when the commander /
-// player wasn't in that event, or it's their first (nothing before it to
-// compare with). Compared as shown (one decimal). Nothing for a value of "—".
+// A number's trend — the winrate (Comandanti, Giocatori: since the
+// commander's / player's own latest event in scope, latestPresence), the
+// metashare (Comandanti: since the latest event in scope, whoever played):
+// a trend arrow in a small tinted disc, ↗ up, ↘ down, → unchanged — also
+// with nothing before to compare with (`before` null). Compared as shown
+// (one decimal). Nothing for a value of "—".
 const TREND_ICON = (path) =>
   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
 const TREND_SYMBOLS = {
@@ -206,17 +207,21 @@ export function winrateTrendHtml(now, before, inLatest) {
   return `<span class="wr-trend is-${kind}" role="img" aria-label="${label}" title="${label}">${symbol}</span>`;
 }
 
-// The latest event (by date) among `eventIds`, and `eventsData` (one item per
-// id, same order — js/db.js fetchEventsResults) without it: what the
-// numbers were before it.
-export function splitLatestEvent(eventIds, eventsData, eventDateById) {
-  let latest = -1;
-  eventIds.forEach((id, i) => {
-    const d = eventDateById.get(id) ?? "";
-    if (latest === -1 || d >= (eventDateById.get(eventIds[latest]) ?? "")) latest = i;
+// The trend arrows' "before": for each player / commander pair, the latest
+// event (by date; a tie: the later one listed) among `eventIds` — the
+// filters' scope, nothing outside it — that it was in, as an index into
+// `eventsData` (one item per id, same order — js/db.js fetchEventsResults).
+// Its numbers without that one event are what they were before it (results
+// add up event by event, so callers subtract that event's own). `keysOf(data)`:
+// the keys present in one event's data. A key in no event isn't in the map.
+export function latestPresence(eventIds, eventsData, eventDateById, keysOf) {
+  const latest = new Map(); // key -> event index
+  const dateOf = (i) => eventDateById.get(eventIds[i]) ?? "";
+  eventsData.forEach((data, i) => {
+    for (const key of keysOf(data)) {
+      const seen = latest.get(key);
+      if (seen === undefined || dateOf(i) >= dateOf(seen)) latest.set(key, i);
+    }
   });
-  return {
-    latest: latest === -1 ? null : eventsData[latest],
-    before: eventsData.filter((_, i) => i !== latest),
-  };
+  return latest;
 }

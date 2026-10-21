@@ -5,7 +5,7 @@ import { fetchTopAutoBadgesByPlayer, playerBadgesHtml } from "./player-badges.js
 import { escapeHtml, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
-import { historyPanelHtml, historyStatsHtml, winrateTrendHtml, splitLatestEvent } from "./history-list.js";
+import { historyPanelHtml, historyStatsHtml, winrateTrendHtml, latestPresence } from "./history-list.js";
 import { initBackToTop } from "./back-to-top.js";
 
 // One sub-card per player (js/history-list.js), the whole card a link to
@@ -178,14 +178,20 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       }
 
       const recordByPlayer = playerRecords(eventsData);
-      // The winrate before the latest event in scope (its trend arrow), and
-      // who played in that event.
-      const { latest, before } = splitLatestEvent(eventIds, eventsData, eventDateById);
-      const recordBefore = playerRecords(before);
-      const inLatest = new Set((latest?.entries ?? []).map((e) => e.player_id));
+      // The trend arrow: the winrate before the player's own latest event in
+      // scope — the whole record minus that event's.
+      const latestOf = latestPresence(eventIds, eventsData, eventDateById, (d) => d.entries.map((e) => e.player_id));
+      const recordsPerEvent = eventsData.map((d) => playerRecords([d]));
       const rateOf = (record) => {
         const played = record ? record.wins + record.draws + record.losses : 0;
         return played > 0 ? (record.wins / played) * 100 : null;
+      };
+      const rateBefore = (id) => {
+        const i = latestOf.get(id);
+        const all = recordByPlayer.get(id);
+        if (i === undefined || !all) return null;
+        const ev = recordsPerEvent[i].get(id) ?? { wins: 0, draws: 0, losses: 0 };
+        return rateOf({ wins: all.wins - ev.wins, draws: all.draws - ev.draws, losses: all.losses - ev.losses });
       };
 
       lastRows = allPlayers.map((p) => {
@@ -204,8 +210,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
           draws: record.draws,
           losses: record.losses,
           winRate,
-          winRateBefore: rateOf(recordBefore.get(p.id)),
-          inLatest: inLatest.has(p.id),
+          winRateBefore: rateBefore(p.id),
+          inLatest: latestOf.has(p.id),
           rate: winRate === null ? "—" : `${winRate.toFixed(1)}%`,
         };
       });
