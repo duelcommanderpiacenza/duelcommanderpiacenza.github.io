@@ -13,7 +13,7 @@
 
 import { Leagues, Events, EventEntries, Matches, EventCounts, LeaguePlayerCounts } from "./db.js";
 import { escapeHtml, formatDate, formatTime, eventTitle, showError } from "./ui.js";
-import { nestedResultsLink } from "./results-link.js";
+import { nestedResultsMenu } from "./results-link.js";
 import { hidePageLoading } from "./page-loading.js";
 import { openInfoDialog } from "./info-dialog.js";
 
@@ -178,7 +178,7 @@ function latestTile(ev, leagueName, players) {
         </div>
         <div class="ev-event-side">
           <span class="ev-event-players">${USERS}${players}</span>
-          ${nestedResultsLink(ev.results_url, ev.decklists_url)}
+          ${nestedResultsMenu(ev.results_url, ev.decklists_url)}
         </div>
       </div>
     </a>`;
