@@ -1,410 +1,158 @@
 // social.html: the latest videos and Moxfield decks, from decks.json /
-// videos.json (repo files refreshed daily by a GitHub Actions cron).
+// videos.json (repo files refreshed daily by a GitHub Actions cron —
+// scripts/update-latest-*.mjs). Two sections behind the site's segmented
+// control (js/tabs.js, like event.html's): Video — a grid of thumbnails, the
+// matchup big over its series and date; Mazzi — the site's sub-card list
+// (js/history-list.js), the commander big over the event and the pilot, the
+// finishing position as the round chip. Every card opens the video / deck
+// on YouTube / Moxfield, in a new tab.
 import { hidePageLoading } from "./page-loading.js";
+import { initTabs } from "./tabs.js";
+import { escapeHtml, formatDate } from "./ui.js";
+import { historyPanelHtml, historyPosHtml } from "./history-list.js";
 
-function buildDeckBadge(deck) {
-  if (deck.name.startsWith("[PRIMER]")) {
-    return "Primer";
-  }
+// Added in the last day: a small "Nuovo" chip.
+const RECENT_MS = 24 * 60 * 60 * 1000;
+const isRecent = (iso) => {
+  const t = new Date(iso ?? "").getTime();
+  return !Number.isNaN(t) && Date.now() - t <= RECENT_MS;
+};
+const NEW_CHIP = '<span class="social-new">Nuovo</span>';
+const dateOf = (iso) => (iso ? formatDate(iso.slice(0, 10)) : "");
 
-  return "Deck";
+// --- Video ---------------------------------------------------------------------
+
+// "Duel Commander MTGO // Brigid VS Nissa // Commander Anatomy" → the matchup
+// as the title; the series (and "MTGO" when the first part says so) as the
+// line under it. Any other title: as it is.
+function videoParts(title) {
+  const parts = (title ?? "").split("//").map((p) => p.trim()).filter(Boolean);
+  if (parts.length < 3) return { title: title ?? "", meta: [] };
+  const platform = parts[0].replace(/^Duel Commander/i, "").trim();
+  return { title: parts[1], meta: [platform, parts.slice(2).join(" · ")].filter(Boolean) };
 }
 
-function buildVideoBadge(video) {
-  return video.category || "Others";
+function videoCardHtml(video) {
+  const { title, meta } = videoParts(video.title);
+  const line = [...meta, dateOf(video.publishedAtUtc)].filter(Boolean).map(escapeHtml).join(" · ");
+  return `
+    <a class="social-video" href="${escapeHtml(video.url)}" target="_blank" rel="noopener noreferrer">
+      <span class="social-video-thumb"><img src="${escapeHtml(video.thumbnailUrl)}" alt="" loading="lazy"></span>
+      <span class="social-video-text">
+        <span class="social-video-title">${escapeHtml(title)}${isRecent(video.publishedAtUtc) ? NEW_CHIP : ""}</span>
+        <span class="social-video-meta">${line}</span>
+      </span>
+    </a>`;
 }
 
-function isRecent(value) {
-  if (!value) {
-    return false;
-  }
-
-  const timestamp = new Date(value).getTime();
-  if (Number.isNaN(timestamp)) {
-    return false;
-  }
-
-  return Date.now() - timestamp <= 24 * 60 * 60 * 1000;
+// The filter chips above a list (Tutti, then one per kind — always all of
+// them, even a kind with nothing yet: its own empty line then), redrawing
+// it on a tap. `kindOf(row)`: the row's kind key; `kinds`: [{ key, label,
+// empty }] in order.
+function renderWithChips({ rows, chipsEl, listEl, kinds, kindOf, draw, emptyAll }) {
+  listEl.className = "";
+  let current = "";
+  const chip = (key, label) =>
+    `<button type="button" class="social-chip${key === current ? " is-active" : ""}" data-kind="${key}">${escapeHtml(label)}</button>`;
+  const redraw = () => {
+    chipsEl.innerHTML = `<div class="social-chips">${chip("", "Tutti")}${kinds.map((k) => chip(k.key, k.label)).join("")}</div>`;
+    const shown = current ? rows.filter((r) => kindOf(r) === current) : rows;
+    const empty = current ? kinds.find((k) => k.key === current).empty : emptyAll;
+    listEl.innerHTML = shown.length ? draw(shown) : `<p class="page-empty">${empty}</p>`;
+  };
+  chipsEl.addEventListener("click", (e) => {
+    const button = e.target.closest("[data-kind]");
+    if (!button) return;
+    current = button.dataset.kind;
+    redraw();
+  });
+  redraw();
 }
 
-function buildPlaceholderLabel(deck) {
-  const source = deck.commanderName || deck.name;
-  const words = source
-    .replace(/\[[^\]]+\]/g, " ")
-    .split(/[^A-Za-z0-9]+/)
-    .filter(Boolean);
+// Gameplay (the matches played live) or Commander Anatomy (the MTGO
+// series) — from the title: every video's YouTube category is "Gameplay".
+const VIDEO_KINDS = [
+  { key: "gameplay", label: "IRL Gameplay", empty: "Nessun video di gameplay dal vivo ancora." },
+  { key: "anatomy", label: "Commander Anatomy", empty: "Nessun episodio di Commander Anatomy ancora." },
+];
+const videoKind = (video) => (/commander anatomy/i.test(video.title ?? "") ? "anatomy" : "gameplay");
 
-  return (words[0] || "Deck").slice(0, 2).toUpperCase();
-}
-
-function formatVideoDate(value) {
-  if (!value) {
-    return "";
-  }
-
-  return new Date(value).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric"
+function renderVideos(videos) {
+  renderWithChips({
+    rows: videos,
+    chipsEl: document.getElementById("video-filters-slot"),
+    listEl: document.getElementById("videos"),
+    kinds: VIDEO_KINDS,
+    kindOf: videoKind,
+    draw: (shown) => `<div class="social-video-grid">${shown.map(videoCardHtml).join("")}</div>`,
+    emptyAll: "Nessun video ancora.",
   });
 }
 
-function createExpandButton(label, onClick) {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "expand-button";
-  button.textContent = label;
-  button.addEventListener("click", onClick);
-  return button;
+// --- Mazzi ----------------------------------------------------------------------
+
+// "W26 2/7 - Rank 01/29 - DC - Silver Chariot 🤺 (Sancho182)" → the event
+// ("Tappa 2/7"), the position (1, of 29) and the pilot (the last bracket); a
+// "[PRIMER]" deck is a primer. Any other name: shown as it is under the
+// commander.
+function deckParts(deck) {
+  const name = deck.name ?? "";
+  if (/^\[PRIMER\]/i.test(name)) return { meta: ["Primer"], position: null };
+  const m = name.match(/^\s*[A-Z]\d{2}\s+(\d+\/\d+)\s*-\s*Rank\s+(\d+)\s*\/\s*(\d+)\s*-?\s*(.*)$/i);
+  if (!m) return { meta: [name], position: null };
+  const pilot = m[4].match(/\(([^()]+)\)\s*$/)?.[1] ?? null;
+  return { meta: [`Tappa ${m[1]}`, pilot].filter(Boolean), position: Number(m[2]), of: Number(m[3]) };
 }
 
-function createSectionLink(label, url) {
-  const link = document.createElement("a");
-  link.className = "section-link";
-  link.href = url;
-  link.target = "_blank";
-  link.rel = "noopener noreferrer";
-  link.textContent = label;
-  return link;
-}
-
-function createDeckCard(deck) {
-  const article = document.createElement("a");
-  article.className = "deck card-link";
-  article.href = deck.url;
-  article.target = "_blank";
-  article.rel = "noopener noreferrer";
-  const recent = isRecent(deck.createdAtUtc);
-
-  const badge = buildDeckBadge(deck);
-  const commanderName = deck.commanderName || "Unknown commander";
-
-  if (recent) {
-    article.classList.add("is-new-deck");
-  }
-
-  const media = deck.previewImageUrl
-    ? `
-      <div class="deck-visual deck-preview">
-        <img src="${deck.previewImageUrl}" alt="Commander art for ${commanderName}" loading="lazy">
+function deckRowHtml(deck) {
+  const { meta, position, of } = deckParts(deck);
+  const art = deck.previewImageUrl
+    ? `<img src="${escapeHtml(deck.previewImageUrl)}" alt="" loading="lazy">`
+    : `<span>${escapeHtml((deck.commanderName || "?").slice(0, 1))}</span>`;
+  return `
+    <a class="history-item social-deck" href="${escapeHtml(deck.url)}" target="_blank" rel="noopener noreferrer">
+      <span class="social-deck-art">${art}</span>
+      <div class="history-main">
+        <span class="history-title">${escapeHtml(deck.commanderName || deck.name)}${isRecent(deck.updatedAtUtc) ? NEW_CHIP : ""}</span>
+        <span class="history-meta">${meta.map(escapeHtml).join(" · ")}</span>
       </div>
-    `
-    : `
-      <div class="deck-visual deck-placeholder" aria-hidden="true">
-        <span class="deck-placeholder-mark">${buildPlaceholderLabel(deck)}</span>
-        <span class="deck-placeholder-format">${badge}</span>
-      </div>
-    `;
-
-  article.innerHTML = `
-    ${media}
-    <div class="deck-body">
-      <div class="deck-topline">
-        <span class="deck-badge">${badge}</span>
-        ${recent ? '<span class="new-badge new-badge-deck">Just Added</span>' : ""}
-      </div>
-      <div class="deck-title">${deck.name}</div>
-      <div class="deck-commander">
-        <span class="deck-commander-label">Commander</span>
-        <span class="deck-commander-value">${commanderName}</span>
-      </div>
-    </div>
-  `;
-
-  return article;
+      <span class="social-deck-side">
+        ${position ? `<span title="${position}° su ${of}">${historyPosHtml(position)}</span>` : ""}
+        <span class="social-deck-date">${escapeHtml(dateOf(deck.updatedAtUtc))}</span>
+      </span>
+    </a>`;
 }
 
-function getFilteredDecks(decks, selectedFilter) {
-  if (selectedFilter === "All") {
-    return decks;
-  }
+// A tournament's decklist or a primer (a name starting with "[PRIMER]").
+const DECK_KINDS = [
+  { key: "tournament", label: "Tornei", empty: "Nessuna lista da torneo ancora." },
+  { key: "primer", label: "Primer", empty: "Nessun primer ancora." },
+];
+const deckKind = (deck) => (/^\[PRIMER\]/i.test(deck.name ?? "") ? "primer" : "tournament");
 
-  return decks.filter((deck) => buildDeckBadge(deck) === selectedFilter);
-}
-
-function renderDecks(container, decks, selectedFilter) {
-  container.innerHTML = "";
-
-  const filteredDecks = getFilteredDecks(decks, selectedFilter);
-  const previewCount = 2;
-  let isExpanded = false;
-
-  if (filteredDecks.length === 0) {
-    container.className = "";
-    container.textContent = "No decks found for this filter.";
-    return;
-  }
-
-  const list = document.createElement("div");
-  list.className = "decks-grid";
-  container.className = "";
-  container.appendChild(list);
-
-  function paint() {
-    list.innerHTML = "";
-
-    const visibleDecks = isExpanded
-      ? filteredDecks
-      : filteredDecks.slice(0, previewCount);
-
-    visibleDecks.forEach((deck) => {
-      list.appendChild(createDeckCard(deck));
-    });
-  }
-
-  paint();
-
-  const actions = document.createElement("div");
-  actions.className = "section-actions";
-
-  if (filteredDecks.length > previewCount) {
-    const toggleButton = createExpandButton("Show more", () => {
-      isExpanded = !isExpanded;
-      toggleButton.textContent = isExpanded ? "Show less" : "Show more";
-      paint();
-    });
-
-    actions.appendChild(toggleButton);
-  }
-
-  actions.appendChild(
-    createSectionLink(
-      "Open Moxfield",
-      "https://moxfield.com/users/Duel_Commander_Piacenza"
-    )
-  );
-
-  container.appendChild(actions);
-}
-
-function renderFilters(container, decks) {
-  const filterLabels = ["All", ...new Set(decks.map((deck) => buildDeckBadge(deck)))];
-  const filtersSlot = document.getElementById("deck-filters-slot");
-  const wrapper = document.createElement("div");
-  wrapper.className = "deck-filters";
-
-  let selectedFilter = "All";
-
-  filterLabels.forEach((label, index) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "deck-filter";
-    if (index === 0) {
-      button.classList.add("is-active");
-    }
-
-    button.dataset.filter = label;
-    button.textContent = label;
-
-    button.addEventListener("click", () => {
-      selectedFilter = label;
-
-      wrapper.querySelectorAll(".deck-filter").forEach((item) => {
-        item.classList.toggle("is-active", item === button);
-      });
-
-      renderDecks(container, decks, selectedFilter);
-    });
-
-    wrapper.appendChild(button);
+function renderDecks(decks) {
+  renderWithChips({
+    rows: decks,
+    chipsEl: document.getElementById("deck-filters-slot"),
+    listEl: document.getElementById("decks"),
+    kinds: DECK_KINDS,
+    kindOf: deckKind,
+    draw: (shown) => historyPanelHtml(shown.map(deckRowHtml).join(""), { scroll: false }),
+    emptyAll: "Nessun mazzo ancora.",
   });
-
-  if (filtersSlot) {
-    filtersSlot.innerHTML = "";
-    filtersSlot.appendChild(wrapper);
-  } else {
-    container.before(wrapper);
-  }
-
-  renderDecks(container, decks, selectedFilter);
 }
 
-function getFilteredVideos(videos, selectedFilter) {
-  if (selectedFilter === "All") {
-    return videos;
-  }
+// --- Loading --------------------------------------------------------------------
 
-  return videos.filter((video) => buildVideoBadge(video) === selectedFilter);
-}
-
-function createVideoCard(video) {
-  const article = document.createElement("a");
-  article.className = "video-card card-link";
-  article.href = video.url;
-  article.target = "_blank";
-  article.rel = "noopener noreferrer";
-  const badge = buildVideoBadge(video);
-  const recent = isRecent(video.publishedAtUtc);
-
-  if (recent) {
-    article.classList.add("is-new-video");
-  }
-
-  article.innerHTML = `
-    <div class="video-thumb">
-      <img src="${video.thumbnailUrl}" alt="Thumbnail for ${video.title}" loading="lazy">
-    </div>
-    <div class="video-body">
-      <div class="video-topline">
-        <span class="video-badge">${badge}</span>
-        ${recent ? '<span class="new-badge new-badge-video">Just Added</span>' : ""}
-      </div>
-      <div class="video-title">${video.title}</div>
-      <div class="video-date">${formatVideoDate(video.publishedAtUtc)}</div>
-    </div>
-  `;
-
-  return article;
-}
-
-function renderVideos(container, videos) {
-  container.innerHTML = "";
-
-  if (!Array.isArray(videos) || videos.length === 0) {
-    container.className = "";
-    container.textContent = "No videos available yet.";
-    return;
-  }
-
-  renderVideoFilters(container, videos);
-}
-
-function renderVideoList(container, videos, selectedFilter) {
-  container.innerHTML = "";
-  const previewCount = 2;
-  let isExpanded = false;
-
-  const filteredVideos = getFilteredVideos(videos, selectedFilter);
-
-  if (filteredVideos.length === 0) {
-    container.className = "";
-    container.textContent = "No videos found for this filter.";
-    return;
-  }
-
-  const list = document.createElement("div");
-  list.className = "videos-grid";
-  container.className = "";
-  container.appendChild(list);
-
-  function paint() {
-    list.innerHTML = "";
-
-    const visibleVideos = isExpanded
-      ? filteredVideos
-      : filteredVideos.slice(0, previewCount);
-    visibleVideos.forEach((video) => {
-      list.appendChild(createVideoCard(video));
-    });
-  }
-
-  paint();
-
-  const actions = document.createElement("div");
-  actions.className = "section-actions";
-
-  if (filteredVideos.length > previewCount) {
-    const toggleButton = createExpandButton("Show more", () => {
-      isExpanded = !isExpanded;
-      toggleButton.textContent = isExpanded ? "Show less" : "Show more";
-      paint();
-    });
-
-    actions.appendChild(toggleButton);
-  }
-
-  actions.appendChild(
-    createSectionLink(
-      "Open YouTube",
-      "https://www.youtube.com/@DuelCommanderPiacenza"
-    )
-  );
-
-  container.appendChild(actions);
-}
-
-function renderVideoFilters(container, videos) {
-  const filterLabels = ["All", ...new Set(videos.map((video) => buildVideoBadge(video)))];
-  const filtersSlot = document.getElementById("video-filters-slot");
-  const wrapper = document.createElement("div");
-  wrapper.className = "video-filters";
-
-  let selectedFilter = "All";
-
-  filterLabels.forEach((label, index) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "video-filter";
-    if (index === 0) {
-      button.classList.add("is-active");
-    }
-
-    button.dataset.filter = label;
-    button.textContent = label;
-
-    button.addEventListener("click", () => {
-      selectedFilter = label;
-
-      wrapper.querySelectorAll(".video-filter").forEach((item) => {
-        item.classList.toggle("is-active", item === button);
-      });
-
-      renderVideoList(container, videos, selectedFilter);
-    });
-
-    wrapper.appendChild(button);
-  });
-
-  if (filtersSlot) {
-    filtersSlot.innerHTML = "";
-    filtersSlot.appendChild(wrapper);
-  }
-
-  renderVideoList(container, videos, selectedFilter);
-}
-
-async function loadDecks() {
-  const container = document.getElementById("decks");
-
+async function load(file, render, elId, what) {
   try {
-    const res = await fetch("decks.json");
-    const decks = await res.json();
-
-    if (!Array.isArray(decks) || decks.length === 0) {
-      container.className = "";
-      container.textContent = "No decks available yet.";
-      return;
-    }
-
-    const filtersSlot = document.getElementById("deck-filters-slot");
-    if (filtersSlot) {
-      filtersSlot.innerHTML = "";
-    }
-
-    renderFilters(container, decks);
-  } catch (e) {
-    container.className = "";
-    container.innerHTML = "Failed to load decks.";
-    console.error(e);
-  }
-}
-
-async function loadVideos() {
-  const container = document.getElementById("videos");
-
-  try {
-    const res = await fetch("videos.json");
-    const videos = await res.json();
-    const filtersSlot = document.getElementById("video-filters-slot");
-    if (filtersSlot) {
-      filtersSlot.innerHTML = "";
-    }
-
-    renderVideos(container, videos);
-  } catch (e) {
-    container.className = "";
-    container.innerHTML = "Failed to load videos.";
-    console.error(e);
+    const rows = await (await fetch(file)).json();
+    render(Array.isArray(rows) ? rows : []);
+  } catch (err) {
+    console.error(err);
+    const el = document.getElementById(elId);
+    el.className = "";
+    el.innerHTML = `<p class="page-empty">Impossibile caricare ${what}.</p>`;
   }
 }
 
@@ -413,26 +161,17 @@ async function loadVideos() {
 // `signal` aborts when the page is left. Opened straight from a file://
 // path, the two JSON files can't be fetched: a note instead.
 export function mount({ signal = new AbortController().signal } = {}) {
+  initTabs(document.querySelector(".social-tabs"));
   if (window.location.protocol === "file:") {
-    const decksContainer = document.getElementById("decks");
-    const videosContainer = document.getElementById("videos");
-
-    if (decksContainer) {
-      decksContainer.innerHTML = `
-        Local preview cannot load <code>decks.json</code> from <code>file://</code>.
-        Open this site through a small local web server instead.
-      `;
+    for (const id of ["videos", "decks"]) {
+      document.getElementById(id).innerHTML =
+        '<p class="page-empty">Apri il sito da un piccolo server locale: da <code>file://</code> i dati non si caricano.</p>';
     }
-
-    if (videosContainer) {
-      videosContainer.innerHTML = `
-        Local preview cannot load <code>videos.json</code> from <code>file://</code>.
-        Open this site through a small local web server instead.
-      `;
-    }
-
     hidePageLoading(signal);
     return;
   }
-  return Promise.allSettled([loadDecks(), loadVideos()]).then(() => hidePageLoading(signal));
+  return Promise.allSettled([
+    load("videos.json", renderVideos, "videos", "i video"),
+    load("decks.json", renderDecks, "decks", "i mazzi"),
+  ]).then(() => hidePageLoading(signal));
 }

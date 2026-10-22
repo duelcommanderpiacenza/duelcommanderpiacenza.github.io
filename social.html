@@ -67,6 +67,8 @@
   <link rel="modulepreload" href="js/card-progress.js">
   <link rel="modulepreload" href="js/leaderboard.js">
   <link rel="modulepreload" href="js/moxfield.js">
+  <link rel="modulepreload" href="js/tabs.js">
+  <link rel="modulepreload" href="js/history-list.js">
   <!-- /preload:modules -->
 </head>
 
@@ -123,50 +125,63 @@
 </nav>
 <!-- /shell:nav -->
 
-<div class="social-strip" aria-label="Social links">
-  <a class="social-link" href="https://moxfield.com/users/Duel_Commander_Piacenza" target="_blank" rel="noopener noreferrer" aria-label="Moxfield">
-    <img src="moxfield.png" alt="Moxfield">
-  </a>
-  <a class="social-link" href="https://www.youtube.com/@DuelCommanderPiacenza" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
-    <img src="youtube.svg" alt="YouTube">
-  </a>
-  <a class="social-link" href="https://www.facebook.com/profile.php?id=61573570860576" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-    <img src="facebook.svg" alt="Facebook">
-  </a>
-  <a class="social-link" href="https://www.instagram.com/duelcommanderpiacenza/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-    <img src="instagram.svg" alt="Instagram">
-  </a>
-  <a class="social-link" href="https://t.me/+CXf6gbl0H4Y1YzM0" target="_blank" rel="noopener noreferrer" aria-label="Telegram">
-    <img src="telegram.svg" alt="Telegram">
-  </a>
-</div>
-
 <main class="page-main" data-page="social">
+
+  <!-- The page's point: where to follow Duel Commander Piacenza — the
+       Telegram group as the big invite, the other four as buttons
+       (styles.css .social-links). Outside the loading region: shown at once. -->
+  <nav class="social-links" aria-label="Seguici">
+    <a class="social-links-main" href="https://t.me/+CXf6gbl0H4Y1YzM0" target="_blank" rel="noopener noreferrer">
+      <span class="social-links-main-logo"><img src="telegram.svg" alt=""></span>
+      <span class="social-links-main-text">
+        <b>Entra nel gruppo Telegram</b>
+        <span>La community di Duel Commander Piacenza</span>
+        <span class="social-links-cta">Entra</span>
+      </span>
+    </a>
+    <div class="social-links-rest">
+      <a class="social-link-btn" href="https://www.youtube.com/@DuelCommanderPiacenza" target="_blank" rel="noopener noreferrer"><img src="youtube.svg" alt="">YouTube</a>
+      <a class="social-link-btn" href="https://www.instagram.com/duelcommanderpiacenza/" target="_blank" rel="noopener noreferrer"><img src="instagram.svg" alt="">Instagram</a>
+      <a class="social-link-btn" href="https://moxfield.com/users/Duel_Commander_Piacenza" target="_blank" rel="noopener noreferrer"><img src="moxfield.png" alt="">Moxfield</a>
+      <a class="social-link-btn" href="https://www.facebook.com/profile.php?id=61573570860576" target="_blank" rel="noopener noreferrer"><img src="facebook.svg" alt="">Facebook</a>
+    </div>
+  </nav>
 
   <div class="page-loading-region">
     <div id="page-loading-overlay" class="page-loading-overlay">
-      <div class="sk-page is-cards" aria-hidden="true">
-        <i class="sk sk-card"></i>
-        <i class="sk sk-card"></i>
+      <div class="sk-page" aria-hidden="true">
+        <i class="sk sk-tabs"></i>
+        <i class="sk sk-row"></i>
+        <i class="sk sk-row"></i>
+        <i class="sk sk-row"></i>
       </div>
       <p>Caricamento...</p>
     </div>
 
-    <div class="overview-grid">
-      <section class="card overview-card">
-        <div class="section-heading">
-          <h2>Ultimi Video</h2>
+    <!-- Video | Mazzi: on a computer side by side, each with its heading;
+         on touch screens one at a time behind the site's segmented control
+         (js/tabs.js, js/moxfield.js), like the Bacheca's sections. -->
+    <nav class="profile-tabs social-tabs" role="tablist" aria-label="Sezioni social">
+      <button type="button" class="profile-tab" role="tab" id="social-tab-videos" data-tab="social-panel-videos" aria-controls="social-panel-videos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3"></rect><path d="m10 9 5 3-5 3Z"></path></svg><span>Video</span></button>
+      <button type="button" class="profile-tab" role="tab" id="social-tab-decks" data-tab="social-panel-decks" aria-controls="social-panel-decks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="3" width="12" height="16" rx="2"></rect><path d="M8 6H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2"></path></svg><span>Mazzi</span></button>
+    </nav>
+
+    <div class="profile-panels social-panels">
+      <section class="profile-panel" id="social-panel-videos" role="tabpanel" aria-labelledby="social-tab-videos">
+        <div class="social-panel-head">
+          <h2 class="social-panel-label">Video</h2>
           <div id="video-filters-slot"></div>
         </div>
-        <div id="videos">Caricamento video...</div>
+        <div id="videos" class="page-loading">Caricamento...</div>
+        <p class="social-more"><a class="section-link" href="https://www.youtube.com/@DuelCommanderPiacenza" target="_blank" rel="noopener noreferrer"><img src="youtube.svg" alt="" width="20" height="20">Tutti i video su YouTube</a></p>
       </section>
-
-      <section class="card overview-card">
-        <div class="section-heading">
-          <h2>Ultimi Decks</h2>
+      <section class="profile-panel" id="social-panel-decks" role="tabpanel" aria-labelledby="social-tab-decks">
+        <div class="social-panel-head">
+          <h2 class="social-panel-label">Mazzi</h2>
           <div id="deck-filters-slot"></div>
         </div>
-        <div id="decks">Caricamento decks...</div>
+        <div id="decks" class="page-loading">Caricamento...</div>
+        <p class="social-more"><a class="section-link" href="https://moxfield.com/users/Duel_Commander_Piacenza" target="_blank" rel="noopener noreferrer"><img src="moxfield.png" alt="" width="20" height="20">Tutti i mazzi su Moxfield</a></p>
       </section>
     </div>
   </div>
