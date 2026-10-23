@@ -416,6 +416,20 @@ html.app-header .sk-hero {
   justify-content: center;
 }
 
+/* A player card's placeholder (account.html's; player.html's,
+   .has-player-card from js/player-detail.js): landscape, 2:1, in the wider
+   400px column, up to 440px wide in one column (the real card's,
+   css/4-profile-card.css). commander.html's Magic card keeps the above. */
+.sk-hero.has-player-card,
+.sk-page.is-account .sk-hero.has-card {
+  grid-template-columns: 400px minmax(0, 1fr);
+}
+
+.sk-hero.has-player-card .sk-hero-card,
+.sk-page.is-account .sk-hero.has-card .sk-hero-card {
+  aspect-ratio: 2 / 1;
+}
+
 .sk-hero.has-card .sk-hero-chips {
   margin-top: 12px;
 }
@@ -465,6 +479,18 @@ html.app-header .sk-hero {
 
   .sk-page.is-account .sk-hero.has-card .sk-hero-card {
     max-width: 260px;
+  }
+}
+
+@media (max-width: 820px) {
+  .sk-hero.has-player-card,
+  .sk-page.is-account .sk-hero.has-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sk-hero.has-player-card .sk-hero-card,
+  .sk-page.is-account .sk-hero.has-card .sk-hero-card {
+    max-width: 440px;
   }
 }
 

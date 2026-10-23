@@ -36,8 +36,12 @@ function countUp(el) {
     const s = x.toFixed(fraction.length);
     return `${separator === "," ? s.replace(".", ",") : s}${suffix}`;
   };
-  // Its final width kept from the start, so nothing beside it moves.
-  el.style.minWidth = `${el.getBoundingClientRect().width}px`;
+  // Its final size kept from the start — the box's own (border-box: a
+  // value drawn as a pill, the winrate's, has padding and a border), so
+  // neither it nor anything beside it moves.
+  const box = el.getBoundingClientRect();
+  el.style.boxSizing = "border-box";
+  el.style.minWidth = `${box.width}px`;
   running.add(el);
   el.textContent = format(0);
   const start = performance.now();
@@ -49,13 +53,17 @@ function countUp(el) {
     done = true;
     el.textContent = text;
     el.style.minWidth = "";
+    el.style.boxSizing = "";
     // After the observer has seen this last change.
     queueMicrotask(() => running.delete(el));
   };
   setTimeout(finish, DURATION + 150);
   const step = (now) => {
     if (done) return;
-    const t = Math.min(1, (now - start) / DURATION);
+    // Clamped at 0 too: a frame's timestamp can be a little before `start`
+    // (taken just before the first frame), which made the first number
+    // negative — a "-15%" for a frame, its minus sign widening the box.
+    const t = Math.min(1, Math.max(0, (now - start) / DURATION));
     if (t < 1 && el.isConnected) {
       el.textContent = format(target * (1 - (1 - t) ** 3));
       requestAnimationFrame(step);

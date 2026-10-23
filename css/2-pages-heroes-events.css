@@ -614,9 +614,20 @@ html:not(.app-header) .league-tabs {
   color: var(--text-title);
 }
 
+/* Landscape like the real card (2:1, since 2026-10-23): as wide as its
+   column allows, 104px at most; its corners rounded to its size. */
 .player-card.pc-preview {
-  width: 64px;
+  width: 100%;
+  max-width: 104px;
   animation: none;
+}
+
+.pc-preview .pc-frame {
+  border-radius: calc(8px + var(--rim));
+}
+
+.pc-preview .pc-surface {
+  border-radius: 8px;
 }
 
 .pc-preview .pc-art {
@@ -627,7 +638,7 @@ html:not(.app-header) .league-tabs {
    so the name (and the Podio bar behind it) sits where it does on a real
    card. */
 .pc-preview .pc-panel {
-  height: 34cqw;
+  height: 9cqw;
   padding: 0;
   border: none;
   background: none;
@@ -638,8 +649,8 @@ html:not(.app-header) .league-tabs {
 /* The seal and the stars, real size, would be a few px here: bigger in
    the previews so they read. */
 .pc-preview .pc-fx-seal {
-  width: 22cqw;
-  height: 12cqw;
+  width: 20cqw;
+  height: 11cqw;
 }
 
 /* Centred in the preview's foot (on a 64px card the left edge is only a
@@ -653,11 +664,11 @@ html:not(.app-header) .league-tabs {
 }
 
 .pc-preview .pc-fx-star {
-  font-size: 13cqw;
+  font-size: 12cqw;
 }
 
 .pc-preview .pc-fx-star-count {
-  font-size: 10cqw;
+  font-size: 9cqw;
 }
 
 /* A small card's shadow, not the full-size card's (scoped to the list to

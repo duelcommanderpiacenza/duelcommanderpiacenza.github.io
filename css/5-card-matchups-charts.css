@@ -808,7 +808,7 @@ a.history-item:hover .follow-name {
 @media (max-width: 820px) {
   .player-card {
     margin: 0 auto;
-    max-width: 300px;
+    max-width: 440px;
   }
 }
 
