@@ -49,6 +49,7 @@
   <link rel="modulepreload" href="js/header-news.js">
   <link rel="modulepreload" href="js/me-highlight.js">
   <link rel="modulepreload" href="js/count-up.js">
+  <link rel="modulepreload" href="js/hero-sheet.js">
   <link rel="modulepreload" href="js/floating-tooltip.js">
   <link rel="modulepreload" href="js/page-loading.js">
   <link rel="modulepreload" href="js/router.js">
@@ -355,6 +356,9 @@
         </div>
       </section>
 
+      <!-- Phones / tablets: the page's content as a sheet sliding up over the hero (styles.css .hero-sheet; on a computer it's no box at all). -->
+      <div class="hero-sheet">
+
       <!-- One section at a time; a tab only for a section that's shown. -->
       <nav class="profile-tabs" role="tablist" aria-label="Sezioni del profilo">
         <button type="button" class="profile-tab" role="tab" data-tab="profile-album"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="11" height="16" rx="2"></rect><path d="M17 6.5l3 .8a1.5 1.5 0 0 1 1 1.8l-2.9 10.7a1.5 1.5 0 0 1-1.8 1"></path></svg><span>Album</span></button>
@@ -497,6 +501,7 @@
             </div>
           </div>
         </section>
+      </div>
       </div>
     </div>
   </div>

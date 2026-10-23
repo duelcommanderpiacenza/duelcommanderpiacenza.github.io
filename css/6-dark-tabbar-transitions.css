@@ -2217,3 +2217,96 @@ html.is-page-transition.app-header:not(.is-bar-logo-stay) body:not(:has(.page-ma
   }
 }
 
+
+/* ---------------------------------------------------------------------------
+   The hero pages on touch screens (player, league, event, commander,
+   archetype, account — option C, "Foglio", of a mockup, 2026-10-23): the
+   page's content after the hero is one sheet (.hero-sheet, a wrapper in each
+   page's markup) in the page's colour with rounded top corners, laid 26px
+   over the hero's bottom. The page scrolls, hero and all — but the hero
+   (one that fits on the screen, .is-parallax from js/hero-sheet.js) at
+   half speed, its content fading, so the sheet slides up over it: a
+   scroll-driven animation over the first --hero-h of scroll (where it isn't
+   supported, or with reduced motion, everything just scrolls). The header
+   row (back pill, search, account) scrolls normally — it's outside the
+   hero. (Tried and dropped: a sticky hero the sheet covered wholly, then
+   one keeping its header row and name on top.) On a computer the wrapper
+   is no box at all (display: contents) — the layout as before. */
+.hero-sheet {
+  display: contents;
+}
+
+html.app-header .hero-sheet {
+  --sheet-bleed: var(--page-pad-x, 16px);
+  position: relative;
+  z-index: 1;
+  display: flow-root;
+  margin: -26px calc(-1 * var(--sheet-bleed)) 0;
+  padding: 22px var(--sheet-bleed) 0;
+  border-radius: 26px 26px 0 0;
+  background: var(--bg-cream-1);
+  box-shadow: 0 -6px 16px rgba(20, 8, 10, 0.14);
+}
+
+html.app-header[data-theme="dark"] .hero-sheet {
+  box-shadow: 0 -6px 16px rgba(0, 0, 0, 0.45);
+}
+
+@media (min-width: 641px) {
+  html.app-header .hero-sheet {
+    --sheet-bleed: var(--hero-bleed);
+  }
+}
+
+/* Phones: down through the page's bottom padding too (.page-main's 36px),
+   so no strip of the page's own background shows between it and the
+   footer. */
+@media (max-width: 640px) {
+  html.app-header .hero-sheet {
+    margin-bottom: -36px;
+    padding-bottom: 36px;
+  }
+}
+
+/* The hero meets the sheet: no gap under it, and room at its bottom for the
+   sheet's rounded edge (26px) so nothing of it ends up under the sheet. */
+html.app-header body:has(.hero-sheet) .profile-hero {
+  margin-bottom: 0;
+}
+
+html.app-header :is(.detail-hero-wrap:has(+ .hero-sheet) .profile-hero, .profile-hero:has(+ .hero-sheet)) .profile-hero-inner {
+  padding-bottom: 50px;
+}
+
+@keyframes hero-parallax {
+  to {
+    transform: translateY(calc(var(--hero-h, 400px) / 2));
+  }
+}
+
+@keyframes hero-parallax-fade {
+  to {
+    opacity: 0.3;
+  }
+}
+
+@supports (animation-timeline: scroll()) {
+  html.app-header .profile-hero.is-parallax {
+    animation: hero-parallax linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 var(--hero-h, 400px);
+  }
+
+  html.app-header .profile-hero.is-parallax .profile-hero-inner {
+    animation: hero-parallax-fade linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 var(--hero-h, 400px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.app-header .profile-hero.is-parallax,
+  html.app-header .profile-hero.is-parallax .profile-hero-inner {
+    animation: none;
+  }
+}

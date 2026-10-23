@@ -49,6 +49,7 @@
   <link rel="modulepreload" href="js/header-news.js">
   <link rel="modulepreload" href="js/me-highlight.js">
   <link rel="modulepreload" href="js/count-up.js">
+  <link rel="modulepreload" href="js/hero-sheet.js">
   <link rel="modulepreload" href="js/floating-tooltip.js">
   <link rel="modulepreload" href="js/page-loading.js">
   <link rel="modulepreload" href="js/router.js">
@@ -210,6 +211,9 @@
       </section>
     </div>
 
+    <!-- Phones / tablets: the page's content as a sheet sliding up over the hero (styles.css .hero-sheet; on a computer it's no box at all). -->
+    <div class="hero-sheet">
+
     <div id="commander-decks-chart" class="page-loading" style="margin-top:20px;">Caricamento...</div>
 
     <!-- Desktop: Giocatori left, Storico partite right, each as tall as its
@@ -231,6 +235,7 @@
         <h2>Storico partite <span class="history-count" id="commander-matches-count"></span></h2>
         <div id="commander-matches" class="page-loading">Caricamento...</div>
       </section>
+    </div>
     </div>
   </div>
 </main>

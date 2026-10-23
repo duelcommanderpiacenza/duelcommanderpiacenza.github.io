@@ -49,6 +49,7 @@
   <link rel="modulepreload" href="js/header-news.js">
   <link rel="modulepreload" href="js/me-highlight.js">
   <link rel="modulepreload" href="js/count-up.js">
+  <link rel="modulepreload" href="js/hero-sheet.js">
   <link rel="modulepreload" href="js/floating-tooltip.js">
   <link rel="modulepreload" href="js/page-loading.js">
   <link rel="modulepreload" href="js/router.js">
@@ -193,6 +194,9 @@
       </section>
     </div>
 
+    <!-- Phones / tablets: the page's content as a sheet sliding up over the hero (styles.css .hero-sheet; on a computer it's no box at all). -->
+    <div class="hero-sheet">
+
     <!-- The league recap (js/player-league-recap.js): the league in progress,
          else the latest finished one, for this player — hidden until known,
          and when there's no league. -->
@@ -210,6 +214,7 @@
         <h2>Storico partite <span class="history-count" id="player-matches-count"></span></h2>
         <div id="player-matches" class="page-loading">Caricamento...</div>
       </section>
+    </div>
     </div>
   </div>
 </main>

@@ -49,6 +49,7 @@
   <link rel="modulepreload" href="js/header-news.js">
   <link rel="modulepreload" href="js/me-highlight.js">
   <link rel="modulepreload" href="js/count-up.js">
+  <link rel="modulepreload" href="js/hero-sheet.js">
   <link rel="modulepreload" href="js/floating-tooltip.js">
   <link rel="modulepreload" href="js/page-loading.js">
   <link rel="modulepreload" href="js/router.js">
@@ -178,6 +179,9 @@
       </section>
     </div>
 
+    <!-- Phones / tablets: the page's content as a sheet sliding up over the hero (styles.css .hero-sheet; on a computer it's no box at all). -->
+    <div class="hero-sheet">
+
     <!-- Two chart cards on one row (js/chart-carousel.js, like Comandanti's):
          "Utilizzo" over 2/3 of it, "Contro gli altri archetipi" (a diverging
          bar chart around 50%) over 1/3; narrower: one per view, swiped. -->
@@ -187,6 +191,7 @@
       <h2>Comandanti <span class="history-count" id="archetype-commanders-count"></span></h2>
       <div id="archetype-commanders" class="page-loading">Caricamento...</div>
     </section>
+    </div>
   </div>
 </main>
 
