@@ -1886,6 +1886,78 @@ a.history-item.is-me-row:hover {
   color: #fff;
 }
 
+/* League standings (league.html, the Bacheca) while the league runs: the
+   change since its latest event as a small badge on the position chip's
+   bottom-right corner, like a notification count (js/history-list.js
+   leaguePosHtml) — solid, the trend arrows' icons (.wr-trend's): ↗ N green,
+   ↘ N red, → grey unchanged, + grey for a newcomer. One fixed size whatever
+   it holds, so every row's badge is the same. Instead of a ring in the
+   card's colour (the rows have many: top 8, "Tu", hover, the hero's tints)
+   the chip is cut out round it — a 2px gap the row shows through (a mask:
+   the badge's pill shape, 2px larger, subtracted; the badge is the chip's
+   sibling, or the mask would cut it too). The chip keeps its width, so the
+   names line up; pushed off the name by the badge's overhang. Fixed green /
+   red, never the hero's colour. */
+.pos-with-change {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  margin-right: 20px;
+}
+
+.history-pos.has-change {
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='21'%3E%3Crect width='36' height='21' rx='10.5'/%3E%3C/svg%3E") right -21px bottom -4px / 36px 21px no-repeat, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='21'%3E%3Crect width='36' height='21' rx='10.5'/%3E%3C/svg%3E") right -21px bottom -4px / 36px 21px no-repeat, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.pos-badge {
+  --trend: var(--text-muted);
+  position: absolute;
+  right: -19px;
+  bottom: -2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  width: 32px;
+  height: 17px;
+  border-radius: var(--radius-pill);
+  background: var(--trend);
+  color: #fff;
+  font-size: 0.66rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.pos-badge svg {
+  flex: none;
+  width: 9px;
+  height: 9px;
+}
+
+.pos-badge.is-up {
+  --trend: #1a9a5c;
+}
+
+.pos-badge.is-down {
+  --trend: #dc181c;
+}
+
+:root[data-theme="dark"] .pos-badge {
+  color: #1a1214;
+}
+
+:root[data-theme="dark"] .pos-badge.is-up {
+  --trend: #4cd38f;
+}
+
+:root[data-theme="dark"] .pos-badge.is-down {
+  --trend: #ff6b6e;
+}
+
 .history-match-head .history-deck {
   margin-top: 4px;
 }

@@ -393,6 +393,32 @@ export function computeLeaguePoints(eventsData, { leagueClosed = false, schedule
 }
 
 /**
+ * Each player's league position before the league's latest closed event
+ * (by date, then start time) — for the standings' ▲ / ▼ since then
+ * (js/history-list.js leaguePosHtml). Computed as the league stood
+ * then: still open (no full-attendance bonus), the same X. Null with fewer
+ * than two events: nothing before to compare with.
+ *
+ * @param {Array<{matches: Array, entries: Array}>} eventsData - as computeLeaguePoints's.
+ * @param {Array<{event_date: string, start_time?: string}>} events - the events eventsData is for, same order.
+ * @param {{scheduledEvents?: number}} [options] - as computeLeaguePoints's.
+ * @returns {Map<string, number>|null} player id → position (1-based).
+ */
+export function previousLeaguePositions(eventsData, events, { scheduledEvents = 0 } = {}) {
+  if (eventsData.length < 2) return null;
+  const when = (ev) => `${ev?.event_date ?? ""}T${ev?.start_time ?? ""}`;
+  let latest = 0;
+  events.forEach((ev, i) => {
+    if (when(ev) > when(events[latest])) latest = i;
+  });
+  const before = computeLeaguePoints(
+    eventsData.filter((_, i) => i !== latest),
+    { scheduledEvents }
+  );
+  return new Map(before.map((s, i) => [s.player?.id, i + 1]));
+}
+
+/**
  * League standings order: points desc, then the tiebreakers — most 1st
  * places across the league's events (every event, including one left out
  * by the best-results cap), then most 2nd places, and so on; then own

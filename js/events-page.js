@@ -16,6 +16,7 @@ import { escapeHtml, formatDate, formatTime, eventTitle, showError } from "./ui.
 import { nestedResultsMenu } from "./results-link.js";
 import { hidePageLoading } from "./page-loading.js";
 import { openInfoDialog } from "./info-dialog.js";
+import { countdownHtml, startCountdowns } from "./countdown.js";
 
 const svg = (body, cls = "ev-ico") =>
   `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
@@ -35,13 +36,6 @@ const weekday = (iso) => capitalize(toDate(iso).toLocaleDateString("it-IT", { we
 // styles.css), day and short month.
 const shortDate = (iso) =>
   `<span class="ev-date-wd">${toDate(iso).toLocaleDateString("it-IT", { weekday: "short" }).replace(".", "")} </span>${dayMonth(iso)}`;
-// "oggi" / "domani" / "tra N giorni".
-const fromToday = (iso) => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const days = Math.round((toDate(iso) - today) / 86400000);
-  return days <= 0 ? "oggi" : days === 1 ? "domani" : `tra ${days} giorni`;
-};
 const year = (iso) => toDate(iso).getFullYear();
 const fmtAvg = (n) => n.toLocaleString("it-IT", { maximumFractionDigits: 1 });
 const stat = (value, label) => `<div class="ev-stat"><b>${value}</b><span>${label}</span></div>`;
@@ -133,13 +127,14 @@ function ringHtml(played, total, share, ring) {
       </span>`;
 }
 
-// The next event: red — "Prossimo evento · tra N giorni", its date (with the
+// The next event: red — "Prossimo evento · tra N giorni" (js/countdown.js:
+// down to the hours on the day, then "in corso"), its date (with the
 // weekday) and name (an unnamed one by its league's) on the left, its start
 // time big on the right. A link to its league when it has one (the event's
 // own page fills in once it's played).
 function nextTile(ev) {
   const inner = `
-      <span class="ev-tile-k"><span class="ev-pulse"></span>Prossimo evento<span class="ev-k-when"> · ${fromToday(ev.event_date)}</span></span>
+      <span class="ev-tile-k"><span class="ev-pulse"></span>Prossimo evento<span class="ev-k-when"> · ${countdownHtml(ev)}</span></span>
       <div class="ev-event-row">
         <div class="ev-event-main">
           <div class="ev-date">${shortDate(ev.event_date)}</div>
@@ -268,6 +263,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   const boardEl = document.getElementById("events-board");
   const archiveSectionEl = document.getElementById("events-archive-section");
   const archiveEl = document.getElementById("events-archive");
+  startCountdowns(signal);
   try {
     // One round: the leagues, the events, the upcoming ones and the counts
     // (which don't need the events — see loadCounts).

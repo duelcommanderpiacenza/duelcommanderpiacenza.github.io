@@ -124,6 +124,31 @@ export function historyPosHtml(position) {
   }</span>`;
 }
 
+// A league position with its change since the league's latest event —
+// league.html's Classifica and the Bacheca's, while the league is open;
+// `before` from js/leaderboard.js's previousLeaguePositions: the usual
+// position chip with a small badge on its bottom-right corner, like a
+// notification count, with the trend arrows' icons (winrateTrendHtml's): ↗ N
+// up, ↘ N down, → the same, + for a first result in that event. Just
+// historyPosHtml's chip when there's nothing to compare with (`before` null).
+export function leaguePosHtml(position, before, playerId) {
+  if (!before) return historyPosHtml(position);
+  const was = before.get(playerId);
+  const diff = was === undefined ? null : was - position;
+  const n = Math.abs(diff ?? 0);
+  const kind = diff === null ? "new" : diff > 0 ? "up" : diff < 0 ? "down" : "same";
+  const label = {
+    new: "Nuovo in classifica dall'ultimo evento",
+    same: "Stessa posizione dell'ultimo evento",
+    up: `Su di ${n} ${n === 1 ? "posizione" : "posizioni"} dall'ultimo evento`,
+    down: `Giù di ${n} ${n === 1 ? "posizione" : "posizioni"} dall'ultimo evento`,
+  }[kind];
+  const icon = kind === "new" ? TREND_ICON('<path d="M12 6v12"/><path d="M6 12h12"/>') : TREND_SYMBOLS[kind];
+  return `<span class="pos-with-change"><span class="history-pos has-change${position === 1 ? " is-first" : ""}">${position}°</span><span class="pos-badge is-${kind}" role="img" aria-label="${label}" title="${label}">${icon}${
+    kind === "up" || kind === "down" ? n : ""
+  }</span></span>`;
+}
+
 const OUTCOME_LABEL = { win: "Vittoria", loss: "Sconfitta", draw: "Pareggio" };
 const NO_LINK = { link: false };
 

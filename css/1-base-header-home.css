@@ -2188,9 +2188,9 @@ main {
 }
 
 .dashboard-standing .history-pos {
-  min-width: 30px;
-  height: 30px;
-  font-size: 0.8rem;
+  min-width: 34px;
+  height: 34px;
+  font-size: 0.85rem;
 }
 
 /* The name (+ handle) comes first: always shown whole — cut with an

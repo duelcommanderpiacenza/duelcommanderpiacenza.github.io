@@ -8,7 +8,7 @@
 // the others.
 
 import { Leagues, Events, EventEntries, fetchEventsResults } from "./db.js";
-import { computeLeaguePoints } from "./leaderboard.js";
+import { computeLeaguePoints, previousLeaguePositions } from "./leaderboard.js";
 import { renderBubbleChart, initBubbleChart, ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
 import { initChartCarousel } from "./chart-carousel.js";
 import { escapeHtml, formatTime, isHttpUrl, playerLabel, showError } from "./ui.js";
@@ -16,6 +16,7 @@ import { hidePageLoading } from "./page-loading.js";
 import { nestedResultsMenu } from "./results-link.js";
 import { fetchPlayerBadgesRenderer } from "./player-badges.js";
 import { initTabs } from "./tabs.js";
+import { leaguePosHtml } from "./history-list.js";
 
 // The timeline: how many upcoming events above "Oggi", played ones below.
 const UPCOMING_EVENTS_COUNT = 3;
@@ -178,6 +179,9 @@ async function loadLeagueStandings(league) {
   return {
     league,
     standings: computeLeaguePoints(eventsData, { scheduledEvents }),
+    // Each player's place before the league's latest event (the ▲ / ▼),
+    // only shown while it runs.
+    before: previousLeaguePositions(eventsData, closed, { scheduledEvents }),
     played: closed.length,
     scheduled: Math.max(scheduledEvents, closed.length),
   };
@@ -207,10 +211,11 @@ function leagueProgressHtml(played, scheduled) {
 // The league's name (a link to league.html) — "Conclusa" when it's over —
 // and "Classifica completa"; its progress; the top LEAGUE_PREVIEW_COUNT as
 // sub-cards like league.html's Classifica, each a link to the player:
-// position chip, name + badges, points; a finished league's winner in gold
+// position chip (while the league runs, with its change since the latest
+// event — leaguePosHtml), name + badges, points; a finished league's winner in gold
 // with a trophy. The name is plain text inside (a link can't hold another);
 // .history-name is where js/me-highlight.js puts "Tu".
-function standingsHtml({ league, standings: allStandings, played, scheduled }, badgesFor, finished) {
+function standingsHtml({ league, standings: allStandings, before, played, scheduled }, badgesFor, finished) {
   const href = `league.html?id=${league.id}`;
   const standings = allStandings.slice(0, LEAGUE_PREVIEW_COUNT);
   const head = `
@@ -228,7 +233,11 @@ function standingsHtml({ league, standings: allStandings, played, scheduled }, b
             const winner = finished && i === 0;
             const inner = `
             <div class="history-lead">
-              <span class="history-pos${i === 0 ? " is-first" : ""}${winner ? " is-winner" : ""}">${winner ? "🏆" : `${i + 1}°`}</span>
+              ${
+                finished
+                  ? `<span class="history-pos${i === 0 ? " is-first" : ""}${winner ? " is-winner" : ""}">${winner ? "🏆" : `${i + 1}°`}</span>`
+                  : leaguePosHtml(i + 1, before, s.player?.id)
+              }
               <span class="dashboard-standings-name">
                 <span class="dashboard-standings-name-text history-name">${playerLabel(s.player, { link: false })}</span><span class="dashboard-standings-badges">${badgesFor(s.player)}</span>
               </span>

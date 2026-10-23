@@ -1,5 +1,5 @@
 import { Leagues, Events, EventCounts, fetchEventsResults } from "./db.js";
-import { computeLeaguePoints } from "./leaderboard.js";
+import { computeLeaguePoints, previousLeaguePositions } from "./leaderboard.js";
 import { fetchPlayerBadgesRenderer } from "./player-badges.js";
 import { computeLeagueSummary, computeLeagueWrapped } from "./stats.js";
 import {
@@ -12,7 +12,7 @@ import {
 } from "./ui.js";
 import { hidePageLoading, sectionLoadingHtml, statTilesLoadingHtml } from "./page-loading.js";
 import { initTitleFit } from "./page-title-fit.js";
-import { historyPanelHtml, historyStatsHtml, historyPosHtml } from "./history-list.js";
+import { historyPanelHtml, historyStatsHtml, leaguePosHtml } from "./history-list.js";
 import { createArtPainter } from "./player-card.js";
 import { initFollowButton } from "./follow-button.js";
 import { initTabs } from "./tabs.js";
@@ -309,6 +309,9 @@ export async function mount({ signal = new AbortController().signal } = {}) {
 
     if (league.is_topdeck) return;
 
+    // While the league runs: each player's place before its latest event,
+    // for the change shown in the position chip (leaguePosHtml).
+    const before = league.is_open ? previousLeaguePositions(eventsData, events, { scheduledEvents }) : null;
     const badgesFor = await badgesPromise;
     if (signal.aborted) return;
     // One sub-card per player (js/history-list.js), the whole card a link to
@@ -323,7 +326,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
               .map((s, i) => {
                 const inner = `
                 <div class="history-lead">
-                  ${historyPosHtml(i + 1)}
+                  ${leaguePosHtml(i + 1, before, s.player?.id)}
                   <div class="history-main">
                     <span class="history-title"><span class="history-name">${playerLabel(s.player, { link: false })}</span>${badgesFor(s.player)}</span>
                   </div>
