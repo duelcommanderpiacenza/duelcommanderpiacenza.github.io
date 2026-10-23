@@ -4,6 +4,7 @@
 
 import { renderBubbleChart, initBubbleChart, ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
 import { initChartCarousel } from "./chart-carousel.js";
+import { archetypeIcon } from "./archetype-icons.js";
 
 // Meta: how many commanders the chart shows as bubbles (the rest "Altri",
 // in the legend only), in the Comandanti page's hue order.
@@ -46,6 +47,7 @@ export function renderMetaCharts(el, cardEl, entries) {
     share: (byArchetype.get(a) / total) * 100,
     color: ARCHETYPE_COLORS[a],
     href: `archetype.html?id=${a}`,
+    icon: archetypeIcon(a, "bubble-icon"),
   })).sort((a, b) => b.share - a.share);
 
   const subtitle = `${total} ${total === 1 ? "mazzo" : "mazzi"}`;

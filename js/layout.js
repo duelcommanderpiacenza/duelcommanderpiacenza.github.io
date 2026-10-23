@@ -23,6 +23,7 @@ import "./top-bar.js";
 import "./header-account.js";
 import "./header-news.js";
 import { initMeHighlight } from "./me-highlight.js";
+import "./count-up.js";
 import { attachHoverTooltips, showFloatingTooltip } from "./floating-tooltip.js";
 import { watchPageLoading } from "./page-loading.js";
 import { navigate } from "./router.js";

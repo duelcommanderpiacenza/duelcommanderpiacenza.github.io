@@ -17,6 +17,7 @@ import { nestedResultsMenu } from "./results-link.js";
 import { fetchPlayerBadgesRenderer } from "./player-badges.js";
 import { initTabs } from "./tabs.js";
 import { leaguePosHtml } from "./history-list.js";
+import { archetypeIcon } from "./archetype-icons.js";
 
 // The timeline: how many upcoming events above "Oggi", played ones below.
 const UPCOMING_EVENTS_COUNT = 3;
@@ -351,6 +352,7 @@ async function renderCommandersSection(el) {
       share: (archetypeCounts.get(a) / total) * 100,
       color: ARCHETYPE_COLORS[a],
       href: `archetype.html?id=${a}`,
+      icon: archetypeIcon(a, "bubble-icon"),
     })).sort((a, b) => b.share - a.share);
 
     // The same whole-block carousel as the Comandanti/Archetipi charts

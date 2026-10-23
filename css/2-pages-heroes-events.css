@@ -1559,6 +1559,13 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   display: none;
 }
 
+/* No pulsing ring in the hero at all (the "In corso" chip's ::after, its
+   live dot's halo): after the dates it outlived the hidden dot, a green
+   dot blinking on its own. */
+.league-hero-meta .badge-status-open.status-chip::after {
+  display: none;
+}
+
 /* The dates holding the chip ("12 set 2026 – ● In corso"): on one line,
    centred on each other. */
 #league-dates:not([hidden]) {

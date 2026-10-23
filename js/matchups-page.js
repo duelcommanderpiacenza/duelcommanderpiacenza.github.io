@@ -99,6 +99,50 @@ function initHelpToggle() {
 const CORNER_HELP =
   '<button type="button" class="help-toggle-btn matchups-help-corner" data-matchups-help aria-haspopup="dialog" aria-label="Come si legge la matrice">?</button>';
 
+// The crosshair: the cell pointed at (the mouse) — or tapped (touch
+// screens: a tap on another cell moves it, on the same one or anywhere
+// outside the table clears it) — lights its row and its column, names and
+// results, and fades every other result, so both commanders can be followed
+// across the grid. A row's / a column's name alone lights just that row /
+// column. Every cell and name carries its row / column (data-r, data-c);
+// the classes: .has-crosshair on the table, .is-cross on what's lit, the
+// cell itself also .is-cross-cell (styles.css).
+function wireCrosshair(container, signal) {
+  let lit = null; // "row,col" (either may be empty), null when off
+  let litTable = null;
+  let lastPointer = "mouse";
+  const keyOf = (el) => (el ? `${el.dataset.r ?? ""},${el.dataset.c ?? ""}` : null);
+  const light = (target) => {
+    const table = container.querySelector(".matchups-table");
+    const key = keyOf(target);
+    if (!table || (key === lit && table === litTable)) return;
+    lit = key;
+    litTable = table;
+    table.classList.toggle("has-crosshair", Boolean(target));
+    const r = target?.dataset.r ?? "";
+    const c = target?.dataset.c ?? "";
+    for (const el of table.querySelectorAll("[data-r], [data-c]")) {
+      const inRow = r !== "" && el.dataset.r === r;
+      const inCol = c !== "" && el.dataset.c === c;
+      el.classList.toggle("is-cross", inRow || inCol);
+      el.classList.toggle("is-cross-cell", inRow && inCol);
+    }
+  };
+  const cellOf = (e) => e.target.closest?.(".matchups-table [data-r], .matchups-table [data-c]") ?? null;
+  document.addEventListener("pointerdown", (e) => (lastPointer = e.pointerType), { signal });
+  container.addEventListener("pointerover", (e) => e.pointerType === "mouse" && light(cellOf(e)), { signal });
+  container.addEventListener("pointerleave", (e) => e.pointerType === "mouse" && light(null), { signal });
+  document.addEventListener(
+    "click",
+    (e) => {
+      if (lastPointer === "mouse") return;
+      const cell = container.contains(e.target) ? cellOf(e) : null;
+      light(cell && keyOf(cell) === lit ? null : cell);
+    },
+    { signal }
+  );
+}
+
 // In-app page (js/router.js): mounted by the router on this page's <main>
 // (data-page), on first load and after each in-app navigation; `signal`
 // aborts when the page is left.
@@ -141,6 +185,10 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     },
     { signal }
   );
+
+  // The crosshair: its listeners on the matrix's container, which outlives
+  // every redraw of the table.
+  wireCrosshair(matrixEl, signal);
 
   attachHoverTooltips(matrixEl, ".matchups-row-header, .matchups-col-header", (cell) => {
     const text = cell.querySelector(".matchups-row-header-text, .matchups-col-header-text");
@@ -266,25 +314,26 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       <thead>
         <tr>
           <th class="matchups-corner-header"></th>
-          ${rows.map((c) => `<th class="matchups-col-header" data-tooltip="${escapeHtml(c.name)}"><span class="matchups-col-header-text">${escapeHtml(c.name)}</span></th>`).join("")}
+          ${rows.map((c, ci) => `<th class="matchups-col-header" data-c="${ci}" data-tooltip="${escapeHtml(c.name)}"><span class="matchups-col-header-text">${escapeHtml(c.name)}</span></th>`).join("")}
         </tr>
       </thead>
       <tbody>
         ${rows
           .map(
-            (rowCmd) => `
+            (rowCmd, ri) => `
           <tr>
-            <th class="matchups-row-header" data-tooltip="${escapeHtml(rowCmd.name)}"><span class="matchups-row-header-text">${escapeHtml(rowCmd.name)}</span></th>
+            <th class="matchups-row-header" data-r="${ri}" data-tooltip="${escapeHtml(rowCmd.name)}"><span class="matchups-row-header-text">${escapeHtml(rowCmd.name)}</span></th>
             ${rows
-              .map((colCmd) => {
+              .map((colCmd, ci) => {
+                const at = `data-r="${ri}" data-c="${ci}"`;
                 // The diagonal (a deck against itself): an even tile, 50% —
                 // by definition — with no record under it.
                 if (rowCmd.id === colCmd.id) {
-                  return '<td class="matchups-cell is-even matchups-cell-mirror" style="--heat:0;" title="Stesso comandante" aria-label="Stesso comandante: 50%"><span class="matchups-cell-pct">50%</span></td>';
+                  return `<td class="matchups-cell is-even matchups-cell-mirror" ${at} style="--heat:0;" title="Stesso comandante" aria-label="Stesso comandante: 50%"><span class="matchups-cell-pct">50%</span></td>`;
                 }
                 const cell = computeCell(rowCmd.id, colCmd.id);
                 if (!cell || cell.total === 0) {
-                  return '<td class="matchups-cell matchups-cell-empty">&mdash;</td>';
+                  return `<td class="matchups-cell matchups-cell-empty" ${at}>&mdash;</td>`;
                 }
                 const pct = (cell.wins / cell.total) * 100;
                 const { side, heat } = heatAttrs(pct);
@@ -296,7 +345,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
                 // for neither side, so without it two mirror cells (e.g. 50%
                 // vs 0%) looked contradictory. Under the percentage, like a
                 // list's number over its label.
-                return `<td class="matchups-cell ${side}" style="--heat:${heat};" title="${escapeHtml(title)}"><span class="matchups-cell-pct">${pct.toFixed(0)}%</span><span class="matchups-cell-count">${cell.wins}-${cell.losses}-${cell.draws}</span></td>`;
+                return `<td class="matchups-cell ${side}" ${at} style="--heat:${heat};" title="${escapeHtml(title)}"><span class="matchups-cell-pct">${pct.toFixed(0)}%</span><span class="matchups-cell-count">${cell.wins}-${cell.losses}-${cell.draws}</span></td>`;
               })
               .join("")}
           </tr>`

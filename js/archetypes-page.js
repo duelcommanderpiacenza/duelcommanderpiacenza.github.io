@@ -8,6 +8,7 @@ import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
 import { savedMetaFilters, rememberMetaFilters, prefetchMetaResults, metaResults } from "./meta-filters.js";
 import { historyPanelHtml, historyStatsHtml } from "./history-list.js";
+import { archetypeIcon } from "./archetype-icons.js";
 
 // Entries + matches of the events in scope (js/meta-filters.js metaResults):
 // slim — the entries' archetypes and the scores are all it uses.
@@ -92,7 +93,12 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       }).sort((a, b) => b.entries - a.entries);
 
       const chartHtml = renderPieChart(
-        rows.map((r) => ({ label: r.archetype, share: r.share, color: ARCHETYPE_COLORS[r.archetype] })),
+        rows.map((r) => ({
+          label: r.archetype,
+          share: r.share,
+          color: ARCHETYPE_COLORS[r.archetype],
+          icon: archetypeIcon(r.archetype),
+        })),
         "Nessun dato per il grafico.",
         "Metashare"
       );
@@ -111,6 +117,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
             label: r.archetype,
             value: r.winRate,
             color: ARCHETYPE_COLORS[r.archetype],
+            icon: archetypeIcon(r.archetype),
           }))
           .sort((a, b) => (b.value ?? -1) - (a.value ?? -1)),
         "Nessun dato per il grafico.",

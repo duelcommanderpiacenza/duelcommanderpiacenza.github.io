@@ -17,6 +17,14 @@ export const ARCHETYPE_COLORS = {
   midrange: "#e0752b",
 };
 
+// A legend row's colour swatch — a row with an `icon` (an archetype's): a
+// small disc in its colour with the icon in white; else the plain square.
+function legendSwatch(r) {
+  return r.icon
+    ? `<span class="pie-legend-swatch has-icon" style="background:${r.color};">${r.icon}</span>`
+    : `<span class="pie-legend-swatch" style="background:${r.color};"></span>`;
+}
+
 /**
  * @param {Array<{label: string, share: number, color: string}>} rows - share is 0-100, sums to ~100.
  * @param {string} emptyMessage
@@ -47,7 +55,7 @@ export function renderPieChart(rows, emptyMessage, title, { subtitle = "", foote
     .map(
       (r, i) => `
     <span class="pie-legend-item" style="animation-delay:${i * 60}ms;">
-      <span class="pie-legend-swatch" style="background:${r.color};"></span>
+      ${legendSwatch(r)}
       <span class="pie-legend-label">${escapeHtml(r.label)}</span>
       <strong class="pie-legend-pct">${r.share.toFixed(1)}%</strong>
     </span>`
@@ -78,9 +86,10 @@ export function renderPieChart(rows, emptyMessage, title, { subtitle = "", foote
  * name on hover, and its coloured ring matches its legend row); all of them in
  * the donut's own legend below. A row with `href` is a link (the commander page),
  * one with `card` gets that card's art (without: filled with its colour —
- * the archetypes); one with `bubble: false` ("Altri")
- * is in the legend only.
- * @param {Array<{label: string, share: number, color: string, href?: string, card?: string, bubble?: boolean}>} rows
+ * the archetypes); one with `icon` (an archetype's, js/archetype-icons.js)
+ * shows it over its % and in its legend swatch; one with `bubble: false`
+ * ("Altri") is in the legend only.
+ * @param {Array<{label: string, share: number, color: string, href?: string, card?: string, icon?: string, bubble?: boolean}>} rows
  * @param {string} emptyMessage
  * @param {string} [title]
  * @param {{subtitle?: string, footer?: string}} [options] - as renderPieChart's.
@@ -147,7 +156,7 @@ export function renderBubbleChart(rows, emptyMessage, title, { subtitle = "", fo
         ((2 * p.r) / W) * 100
       )};--bubble-color:${p.color};--enter-delay:${i * 90}ms;${drift(i)}`;
       const inner = `${p.card ? `<span class="bubble-art" data-card="${escapeHtml(p.card)}"></span>` : ""}
-        <span class="bubble-label"><strong>${Math.round(p.share)}%</strong></span>`;
+        <span class="bubble-label">${p.icon ?? ""}<strong>${Math.round(p.share)}%</strong></span>`;
       const label = `${escapeHtml(p.label)}: ${p.share.toFixed(1)}%`;
       const key = `data-bubble="${escapeHtml(p.label)}"`;
       // No art (an archetype): filled with its colour instead.
@@ -168,7 +177,7 @@ export function renderBubbleChart(rows, emptyMessage, title, { subtitle = "", fo
       ${
         r.card
           ? `<span class="pie-legend-swatch bubble-legend-swatch" data-card="${escapeHtml(r.card)}" style="--bubble-color:${r.color};"></span>`
-          : `<span class="pie-legend-swatch" style="background:${r.color};"></span>`
+          : legendSwatch(r)
       }
       <span class="pie-legend-label">${escapeHtml(r.label)}</span>
       <strong class="pie-legend-pct">${r.share.toFixed(1)}%</strong>
@@ -297,7 +306,8 @@ export async function hydrateBubbleArt(rootEl) {
  * 100 like the pie chart above) — a null value (no games played yet in the
  * current scope) shows as "—" with an empty track instead of a misleading
  * 0% bar.
- * @param {Array<{label: string, value: number|null, color: string}>} rows
+ * @param {Array<{label: string, value: number|null, color: string, icon?: string}>} rows - `icon`: an
+ *   archetype's (js/archetype-icons.js), before the label in a disc of its colour (the legends' look).
  * @param {string} emptyMessage
  * @param {string} [title] - shown inside the box itself, above the bars.
  * @param {object} [options]
@@ -320,7 +330,7 @@ export function renderBarChart(rows, emptyMessage, title, { spacious = false, su
     .map(
       (r, i) => `
     <div class="bar-chart-row" style="animation-delay:${i * 60}ms;">
-      <span class="bar-chart-label">${escapeHtml(r.label)}</span>
+      <span class="bar-chart-label">${r.icon ? `<span class="bar-chart-icon" style="background:${r.color};">${r.icon}</span>` : ""}<span class="bar-chart-label-text">${escapeHtml(r.label)}</span></span>
       <div class="bar-chart-track">
         ${r.value === null ? "" : `<div class="bar-chart-fill" style="width:${barWidth(r.value)}%; background:${r.color};"></div>`}
       </div>

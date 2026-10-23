@@ -3686,3 +3686,95 @@ html.nav-mobile .social-chips {
   }
 }
 
+/* The archetypes' icons in the meta charts (js/archetype-icons.js, a row's
+   `icon` in js/metagame-chart.js): over the % in a solid bubble (white, a
+   size set by the bubble's width like its %); in the legends and before a
+   bar's label a small disc in the archetype's colour with the icon in
+   white (in place of the square swatch) — the label column a little wider
+   for it. */
+.bubble-label .bubble-icon {
+  width: max(12px, 24cqw);
+  height: max(12px, 24cqw);
+  margin-bottom: 2cqw;
+}
+
+.pie-legend-swatch.has-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  color: #fff;
+}
+
+.pie-legend-swatch.has-icon svg {
+  width: 12px;
+  height: 12px;
+}
+
+@container (max-width: 559px) {
+  :is(#commanders-chart, #archetypes-chart) .pie-legend-swatch.has-icon {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.bar-chart-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.bar-chart-label-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bar-chart-row:has(.bar-chart-icon) {
+  grid-template-columns: 136px 1fr 48px;
+}
+
+.bar-chart-icon {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  color: #fff;
+}
+
+.bar-chart-icon svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* The matrix's crosshair (js/matchups-page.js wireCrosshair — the mouse
+   over a cell, or a tap on touch screens): the lit row's and column's names
+   in the accent (a stronger tint, a red edge, red text), the cell itself
+   ringed, every other result faded. */
+.matchups-cell {
+  transition: opacity 150ms ease;
+}
+
+.matchups-table.has-crosshair .matchups-cell:not(.is-cross) {
+  opacity: 0.28;
+}
+
+.matchups-table :is(.matchups-row-header, .matchups-col-header).is-cross {
+  --mx-head: color-mix(in srgb, var(--brand-red) 22%, var(--mx-bg));
+  --mx-head-line: var(--brand-red);
+  color: var(--brand-red-deep);
+}
+
+:root[data-theme="dark"] .matchups-table :is(.matchups-row-header, .matchups-col-header).is-cross {
+  --mx-head: color-mix(in srgb, #ff6e6e 26%, var(--mx-bg));
+  --mx-head-line: #ff6e6e;
+  color: #ffd6d6;
+}
+
+.matchups-cell.is-cross-cell {
+  outline: 2px solid var(--text-title);
+  outline-offset: 1px;
+}

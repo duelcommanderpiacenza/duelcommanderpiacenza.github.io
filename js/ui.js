@@ -1,4 +1,5 @@
 // Small shared render helpers used across the public pages and the admin app.
+import { archetypeIcon } from "./archetype-icons.js";
 
 export function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (c) => ({
@@ -150,9 +151,11 @@ export function commanderBadgesHtml(flags) {
 export function archetypeBadge(archetype, { link = true } = {}) {
   if (!archetype) return "";
   const name = escapeHtml(archetype);
+  // Its icon before the name (js/archetype-icons.js).
+  const icon = archetypeIcon(archetype, "badge-archetype-icon");
   return link
-    ? `<span class="badge-archetype badge-archetype-${name}" data-archetype="${name}" role="link" tabindex="0" title="Vai all'archetipo">${name}</span>`
-    : `<span class="badge-archetype badge-archetype-${name}">${name}</span>`;
+    ? `<span class="badge-archetype badge-archetype-${name}" data-archetype="${name}" role="link" tabindex="0" title="Vai all'archetipo">${icon}${name}</span>`
+    : `<span class="badge-archetype badge-archetype-${name}">${icon}${name}</span>`;
 }
 
 const COLOR_ORDER = ["W", "U", "B", "R", "G"];

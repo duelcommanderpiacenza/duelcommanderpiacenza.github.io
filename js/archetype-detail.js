@@ -7,6 +7,7 @@ import { Events, fetchClosedResultsSince } from "./db.js";
 import { matchRoundOutcome, isBye, isDrop } from "./leaderboard.js";
 import { computeGroupedStats } from "./stats.js";
 import { ARCHETYPES } from "./metagame-chart.js";
+import { archetypeIcon } from "./archetype-icons.js";
 import { commanderPairWithColors, archetypeBadge, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initTitleFit } from "./page-title-fit.js";
@@ -80,6 +81,11 @@ export async function mount({ signal = new AbortController().signal } = {}) {
 
   const name = capitalize(archetype);
   titleEl.textContent = name;
+  // Its icon in a disc of its colour before the name (js/archetype-icons.js).
+  titleEl.insertAdjacentHTML(
+    "beforebegin",
+    `<span class="archetype-hero-icon badge-archetype-${archetype}">${archetypeIcon(archetype)}</span>`
+  );
   document.title = `${name} - Duel Commander Piacenza`;
   initTitleFit(titleEl, { signal });
 
