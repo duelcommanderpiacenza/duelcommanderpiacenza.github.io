@@ -11,7 +11,7 @@
 // Checks everything itself, never the browser's word: a signed-in account,
 // not blocked, linked to a player; an event that is upcoming (open, today
 // or later) or closed with that player in it; fewer than MAX_SENDS lists
-// sent by this player for it (supabase/migrations/008-009's
+// sent by this player for it (migrations 008-009's
 // decklist_submissions — the only thing kept: *that* it was sent, never the
 // list). The subject is built here from the database: "<Event name> -
 // <dd/mm/yyyy> - <Player name>" (a second send's body starts by saying it

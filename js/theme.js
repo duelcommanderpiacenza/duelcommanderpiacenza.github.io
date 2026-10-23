@@ -8,7 +8,7 @@
 // Signed out, the button just switches light ↔ dark (kept in this browser).
 // Signed in, it opens a small menu — Chiaro / Scuro / Segui il sistema — and
 // the choice is remembered for the account too (js/db.js UserSettings,
-// supabase/migrations/019), applied on any device it signs in on. The
+// migration 019), applied on any device it signs in on. The
 // button shows the current choice as a line icon: sun, moon, or a screen.
 
 import { sb } from "./supabase-client.js";

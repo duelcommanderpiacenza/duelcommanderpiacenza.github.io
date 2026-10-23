@@ -1,7 +1,7 @@
 // The "☆ Segui" / "★ Seguito" button on player.html, commander.html and
 // league.html, on its own line right below the name: a signed-in account
 // follows that player, commander or league (js/db.js's Follows,
-// supabase/migrations/010, leagues 018) — they then show in its
+// migration 010, leagues 018) — they then show in its
 // "Seguiti" card on account.html. Nothing at all when signed out; nothing if
 // the follows can't be read (e.g. migration 010 not run yet).
 import { sb } from "./supabase-client.js";

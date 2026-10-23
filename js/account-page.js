@@ -17,7 +17,7 @@
 //    the card without changing its layout (each value turns into its own
 //    field / toggles / text, plus the background card search and "Mostra foto", live
 //    preview) and becomes ✓ to save, with ✕ (or Esc) to cancel — saved to
-//    the account's own row in `profiles` (supabase/migrations/004-006);
+//    the account's own row in `profiles` (migrations 004-006);
 //    under it, once linked, the switch showing it on the player page too
 //    (js/player-detail.js, migration 007);
 //  - on the right: "Le tue statistiche" once linked (the player page's own
@@ -79,7 +79,7 @@ import {
 const ACCOUNT_URL = new URL("account.html", window.location.href).href;
 const COLOR_ORDER = ["W", "U", "B", "R", "G"];
 // One line, at most this many characters — also enforced by the database
-// (supabase/migrations/012).
+// (migration 012).
 const DESCRIPTION_MAX = 50;
 
 // Google's script (loadGoogleScript, in mount): added to the document once,
@@ -200,7 +200,7 @@ export function mount({ signal = new AbortController().signal } = {}) {
     return {
       colors: profile?.fav_colors ?? "",
       // A card saved before the background could be any card: its favourite
-      // commander's (supabase/migrations/014_fav_card.sql).
+      // commander's (migration 014).
       card: profile?.fav_card ?? profile?.fav_commander?.name ?? null,
       print: (profile?.fav_card && profile?.fav_card_print) || null,
       description: profile?.description ?? "",
@@ -737,7 +737,7 @@ export function mount({ signal = new AbortController().signal } = {}) {
 
   // The switch under the card: whether player.html shows this card too
   // (profiles.show_on_player_page, read there through
-  // supabase/migrations/007's public_player_card()). Only while linked to a
+  // migration 007's public_player_card()). Only while linked to a
   // player (no player page otherwise), and usable only once the card has
   // been saved at least once — before that there's no profile at all, and
   // nothing to show; on by default from the first save. Saved right away.
@@ -768,7 +768,7 @@ export function mount({ signal = new AbortController().signal } = {}) {
 
   // --- Il tuo giocatore -------------------------------------------------------------
 
-  // request_player_claim()'s error codes (supabase/migrations/002_player_claims.sql).
+  // request_player_claim()'s error codes (migration 002).
   const CLAIM_ERROR_TEXT = {
     not_signed_in: "Sessione scaduta: accedi di nuovo e riprova.",
     already_linked: "Il tuo account è già collegato a un giocatore.",
@@ -970,7 +970,7 @@ export function mount({ signal = new AbortController().signal } = {}) {
   // For an upcoming event (open, today or later) or a closed one the player
   // is in, emailed to the organisers by the send-decklist Edge Function
   // (js/db.js's Decklists) — never stored, only *that* it was sent: two per
-  // player and event (supabase/migrations/008-009). The function checks it
+  // player and event (migrations 008-009). The function checks it
   // all again; this only offers the events that qualify, shows the ones
   // already sent, and asks for confirmation before each send.
   const decklistCard = document.getElementById("profile-decklist");
@@ -1717,7 +1717,7 @@ export function mount({ signal = new AbortController().signal } = {}) {
     // The SIGNED_OUT event switches back to the login view.
   });
 
-  // Deletes the login account for good (supabase/migrations/006's
+  // Deletes the login account for good (migration 006's
   // delete_my_account()): its card and pending request go with it, its
   // player is unlinked and kept. Signing in with Google again later creates a
   // new, empty account.

@@ -5,7 +5,7 @@
 // on; its icon is a vibrating phone, struck through when off.
 //
 // Kept in this browser; signed in, also for the account (js/db.js
-// UserSettings, supabase/migrations/024) — the account's saved choice wins
+// UserSettings, migration 024) — the account's saved choice wins
 // on sign-in, on any device, like the theme (js/theme.js). Not fatal if it
 // can't be read or saved (024 not run yet): the switch still works here.
 

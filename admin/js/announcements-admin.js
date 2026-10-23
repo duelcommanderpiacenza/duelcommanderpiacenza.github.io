@@ -9,7 +9,7 @@ import { renderTable, setMessage, onBusySubmit } from "./crud-ui.js";
  * announcement up to and including that day, then hides it (the row itself
  * stays here, marked "scaduto", until deleted). No pinning.
  * The automatic ones (an event's "Risultati online", made when it's first
- * closed — supabase/migrations/022, announcements.event_id) are listed too,
+ * closed — migration 022, announcements.event_id) are listed too,
  * marked "Automatico", to be deleted if something's wrong — not edited.
  */
 export function initAnnouncementsAdmin() {

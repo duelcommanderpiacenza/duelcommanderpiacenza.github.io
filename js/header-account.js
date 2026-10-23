@@ -32,7 +32,7 @@ sb.auth.onAuthStateChange((_event, session) => {
 });
 
 // Signed in: the account's last visit, for the admin's "Ultimo accesso"
-// (supabase/migrations/020 touch_last_seen) — at most every
+// (migration 020 touch_last_seen) — at most every
 // LAST_SEEN_EVERY_MS per browser, not on every page. Deferred out of the
 // auth callback (a Supabase call inside it can stall the client); never
 // fatal (e.g. migration 020 not run yet).

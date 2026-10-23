@@ -125,7 +125,7 @@ export const Players = {
   remove: (id) => sb.from("players").delete().eq("id", id).then(assertOk),
 };
 
-// Player login (supabase/migrations/002_player_claims.sql): the account ↔
+// Player login (migration 002): the account ↔
 // player link (players.user_id, written only by the admin) and a signed-in
 // user's own pending request to be linked (player_claims — RLS shows a user
 // only their own; the admin sees all, hence the user_id filter).
@@ -147,7 +147,7 @@ export const PlayerClaims = {
   cancel: () => sb.rpc("cancel_player_claim").then(assertOk),
 };
 
-// A signed-in account's own profile (supabase/migrations/004_profiles.sql):
+// A signed-in account's own profile (migration 004):
 // one row per account, readable/writable only by its owner (and readable by
 // the admin). fav_colors is a WUBRG-ordered string, '' for none.
 const PROFILE_SELECT = "*, fav_commander:commanders(id, name, color_identity)";
@@ -163,7 +163,7 @@ export const Profiles = {
       .then(assertOk),
 };
 
-// The signed-in account's own settings (supabase/migrations/019's
+// The signed-in account's own settings (migration 019's
 // user_settings — private, its own row only): the theme picked from the
 // footer's button (js/theme.js) and the vibration switch
 // (js/haptics-toggle.js), remembered across devices.
@@ -181,7 +181,7 @@ export const UserSettings = {
       .from("user_settings")
       .upsert({ user_id: userId, theme, updated_at: new Date().toISOString() })
       .then(assertOk),
-  // The vibration switch (js/haptics-toggle.js, supabase/migrations/024):
+  // The vibration switch (js/haptics-toggle.js, migration 024):
   // true / false, null = never chosen.
   haptics: (userId) =>
     sb
@@ -199,7 +199,7 @@ export const UserSettings = {
 };
 
 // A player's card on their public page (player.html): the linked account's
-// profile, through supabase/migrations/007's public_player_card() — null
+// profile, through migration 007's public_player_card() — null
 // when there's none to show (not linked, never saved, hidden by its owner,
 // blocked account).
 export const PlayerCards = {
@@ -211,7 +211,7 @@ export const PlayerCards = {
 };
 
 // Decklists sent by email (account.html): sentEvents() — the events a player
-// already sent one for (supabase/migrations/008's decklist_submissions, the
+// already sent one for (migration 008's decklist_submissions, the
 // list itself is never stored); send() — the send-decklist Edge Function
 // (supabase/functions/send-decklist), which checks and emails it. send()
 // throws an Error whose message is the function's error code
@@ -237,8 +237,8 @@ export const Decklists = {
   },
 };
 
-// The players, commanders and leagues an account follows (supabase/
-// migrations/010's follows, leagues since 018 — private, each account reads
+// The players, commanders and leagues an account follows (migration
+// 010's follows, leagues since 018 — private, each account reads
 // and writes only its own): the ★ button on player.html / commander.html /
 // league.html (js/follow-button.js) and account.html's "Seguiti" card. kind:
 // "player", "commander" or "league".
@@ -292,7 +292,7 @@ export const Follows = {
 };
 
 // The signed-in user's own login account (account.html's "Account" card).
-// remove(): supabase/migrations/006's delete_my_account() — refused for an
+// remove(): migration 006's delete_my_account() — refused for an
 // admin (admin_account); its profile and pending request go with it, its
 // player is unlinked and kept.
 export const MyAccount = {
@@ -300,7 +300,7 @@ export const MyAccount = {
   remove: () => sb.rpc("delete_my_account").then(assertOk),
 };
 
-// The admin's user management (supabase/migrations/003_admin_users.sql):
+// The admin's user management (migration 003):
 // login accounts live in Supabase Auth, out of the API's reach, so it's all
 // admin-only database functions (each checks is_admin()). Errors come back
 // with a code as their message (see the migration).
@@ -508,8 +508,8 @@ export const EventEntries = {
   remove: (id) => sb.from("event_entries").delete().eq("id", id).then(assertOk),
 };
 
-// Leghe & Eventi's numbers, counted by the database (supabase/migrations/
-// 021_event_counts.sql) instead of downloading every entry and match: per
+// Leghe & Eventi's numbers, counted by the database (migration
+// 021) instead of downloading every entry and match: per
 // event its players and matches; per league its distinct players
 // (league_id null = the standalone events). RLS applies as for the tables
 // (visitors: closed events only). Throw if the views aren't there yet —
@@ -712,7 +712,7 @@ export const PlayerAutoBadges = {
   },
 };
 
-// A player's progress (supabase/migrations/011): the numbers behind the
+// A player's progress (migration 011): the numbers behind the
 // player card's cosmetics (js/card-cosmetics.js). get() → the row or null
 // (no results yet, or the table not created on this DB — callers treat a
 // failure the same: a card without cosmetics). replaceAll(): the admin's

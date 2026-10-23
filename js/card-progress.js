@@ -2,7 +2,7 @@
 // (js/card-cosmetics.js): events played, matches won, top 8s in big events,
 // distinct commanders, real leagues won. Pure computation, no DOM: run by
 // the admin's sync (admin/js/badges-sync.js) over every closed event, which
-// stores the result in player_progress (supabase/migrations/011), so the
+// stores the result in player_progress (migration 011), so the
 // public pages just read a player's one row.
 
 import { computeEventLeaderboard, isBye, isDrop, matchRoundOutcome } from "./leaderboard.js";

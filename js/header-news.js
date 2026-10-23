@@ -8,7 +8,7 @@
 // the unread ones marked "Nuovo"). The red
 // badge on the bell counts the ones this browser hasn't opened yet (their ids
 // in localStorage "seenNews"), and goes once the bell is clicked.
-// An event's own one (made when it's first closed — supabase/migrations/
+// An event's own one (made when it's first closed — migration
 // 022: announcements.event_id) gets a button to the event's page;
 // following it closes the pop-up.
 

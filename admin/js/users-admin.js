@@ -10,8 +10,8 @@ import { setTabCount } from "./tab-counts.js";
  * Pending link requests on top (approve / reject); below, every account with
  * its linked player, an Attivo/Bloccato toggle and delete, and a form to
  * link an account to any player directly or unlink it. Everything goes
- * through the admin-only functions of supabase/migrations/003_admin_users.sql
- * (js/db.js's AdminUsers).
+ * through the admin-only database functions of migration 003 (in
+ * supabase/schema.sql; js/db.js's AdminUsers).
  */
 
 // The functions' error codes (raised as the error message).

@@ -260,7 +260,7 @@ export function cardBadgesHtml(badges) {
 // --- Links on the card (Instagram, Moxfield, Archidekt) ---------------------------
 
 // The owner's usernames on those sites (profiles.instagram / moxfield /
-// archidekt, supabase/migrations/010). Only the username is ever stored —
+// archidekt, migration 010). Only the username is ever stored —
 // the database allows nothing else — and the links are built here. In edit
 // mode a pasted profile link is accepted too, but only from that site's own
 // address (hosts below): its username is taken out of it.

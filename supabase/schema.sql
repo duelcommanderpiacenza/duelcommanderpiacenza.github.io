@@ -45,7 +45,7 @@ create type deck_archetype as enum ('aggro', 'control', 'combo', 'tempo', 'midra
 -- enough, since players can sign up too — every admin-only policy below
 -- checks is_admin(). RLS on with no policies: nobody reads or writes it
 -- through the API, only is_admin() (security definer) and the SQL editor.
--- Added by supabase/migrations/001_admins.sql. After a fresh setup, add the
+-- Added by migration 001. After a fresh setup, add the
 -- admin account(s):
 --   insert into admins (user_id) select id from auth.users where email = 'admin@example.com';
 create table admins (
@@ -386,7 +386,7 @@ create policy "event_standings_public_read" on event_standings for select
 -- pairs, names of the real leagues won) — a pure derived cache like
 -- event_standings: computed by js/card-progress.js and fully replaced by
 -- admin/js/badges-sync.js on every event/league/badge change. Public read
--- (it only summarises public results). supabase/migrations/011_player_progress.sql.
+-- (it only summarises public results). migration 011.
 create table player_progress (
   player_id uuid primary key references players(id) on delete cascade,
   events_played integer not null default 0,
@@ -482,7 +482,7 @@ create policy "player_badges_auto_public_read" on player_badges_auto for select 
 -- the admin approves or rejects. Pending requests live here — at most one
 -- per account and one per player. Users read only their own and write only
 -- through the two functions below, which check every rule first. Added by
--- supabase/migrations/002_player_claims.sql.
+-- migration 002.
 -- ---------------------------------------------------------------------------
 
 create table player_claims (
@@ -546,12 +546,12 @@ grant execute on function cancel_player_claim() to authenticated;
 -- accounts live in auth.users, out of the API's reach, so it's all these
 -- admin-only functions — each checks is_admin() first and raises not_admin
 -- otherwise. Errors are codes admin/js/users-admin.js translates. Added by
--- supabase/migrations/003_admin_users.sql.
+-- migration 003.
 -- ---------------------------------------------------------------------------
 
 -- Each signed-in account's last visit to the site (admin_list_users()'s
 -- last_seen_at, the Utenti tab's "Ultimo accesso"). Added by
--- supabase/migrations/020_last_seen.sql.
+-- migration 020.
 create table user_activity (
   user_id uuid primary key references auth.users(id) on delete cascade,
   last_seen_at timestamptz not null default now()
@@ -739,12 +739,12 @@ grant execute on function admin_delete_user(uuid) to authenticated;
 -- row per account, not per player, so it's there before any player claim is
 -- approved and stays with the person if the admin moves the link. Only its
 -- owner writes it; the owner and the admin read it. Added by
--- supabase/migrations/004_profiles.sql.
+-- migration 004.
 -- ---------------------------------------------------------------------------
 
 create table profiles (
   user_id uuid primary key references auth.users(id) on delete cascade,
-  -- One line, at most 50 characters, since supabase/migrations/012_description_one_line.sql
+  -- One line, at most 50 characters, since migration 012
   -- (140 since 006, 500 before).
   description text check (char_length(description) <= 50 and description !~ '[\r\n]'),
   -- Favourite colors as a WUBRG-ordered string ('' = none, 'UB', 'WUBRG'…);
@@ -752,24 +752,24 @@ create table profiles (
   fav_colors text not null default '' check (fav_colors ~ '^W?U?B?R?G?$'),
   fav_commander_id uuid references commanders(id) on delete set null,
   -- The card whose art is the card's background (any Magic card, by name —
-  -- looked up on Scryfall), since supabase/migrations/014_fav_card.sql;
+  -- looked up on Scryfall), since migration 014;
   -- fav_commander_id above is the older favourite commander, no longer
   -- written (cleared on save), only a fallback for cards saved before 014.
   fav_card text check (char_length(fav_card) between 1 and 200),
   -- Which printing's art (a Scryfall card id), picked on account.html's
   -- "Versione"; null = Scryfall's default printing of fav_card. Added by
-  -- supabase/migrations/015_fav_card_print.sql.
+  -- migration 015.
   fav_card_print uuid,
   -- (fav_archetype, the favourite archetype, dropped by
-  -- supabase/migrations/013_drop_fav_archetype.sql.)
+  -- migration 013.)
   -- Whether the player card shows the Google picture (false: the initial).
-  -- Added by supabase/migrations/005_profile_show_avatar.sql.
+  -- Added by migration 005.
   show_avatar boolean not null default true,
   -- Whether the card is shown on the player's page (public_player_card()
-  -- below). Added by supabase/migrations/007_public_player_card.sql.
+  -- below). Added by migration 007.
   show_on_player_page boolean not null default true,
   -- The owner's usernames, shown as links on the card (the site builds the
-  -- links). Added by supabase/migrations/010_card_links_follows.sql.
+  -- links). Added by migration 010.
   instagram text check (instagram ~ '^[A-Za-z0-9._]{1,30}$'),
   moxfield text check (moxfield ~ '^[A-Za-z0-9_-]{1,40}$'),
   archidekt text check (archidekt ~ '^[A-Za-z0-9_.-]{1,40}$'),
@@ -794,7 +794,7 @@ create policy "profiles_update_own" on profiles for update
 -- owner hides it, or the account is blocked. The Google picture only when
 -- shown on the card; has_picture tells "hidden by the owner" (no circle)
 -- from "no Google picture" (the initial). Added by
--- supabase/migrations/007_public_player_card.sql; the card's links since
+-- migration 007; the card's links since
 -- 010; no archetype since 013; commander_name is the background card's
 -- name since 014 (fav_card, else the old favourite commander's), with its
 -- printing (card_print) since 015.
@@ -839,7 +839,7 @@ grant execute on function public_player_card(uuid) to anon, authenticated;
 -- Player login: a user deletes their own login account (account.html). Its
 -- profile and pending request go with it, its player is unlinked (and kept).
 -- Not for admin accounts. Added by
--- supabase/migrations/006_short_description_delete_account.sql.
+-- migration 006.
 -- ---------------------------------------------------------------------------
 
 -- Errors are codes js/account-page.js translates: not_signed_in, admin_account.
@@ -865,7 +865,7 @@ grant execute on function delete_my_account() to authenticated;
 -- only *that* a player sent one for an event, never the list — up to two
 -- per player and event (attempt 1, 2; 009); the admin deletes a row to allow
 -- another. Written only by the function (service role). Added by
--- supabase/migrations/008_decklist_submissions.sql.
+-- migration 008.
 -- ---------------------------------------------------------------------------
 
 create table decklist_submissions (
@@ -874,7 +874,7 @@ create table decklist_submissions (
   -- The account that sent it (the link can move to another account later).
   user_id uuid references auth.users(id) on delete set null,
   sent_at timestamptz not null default now(),
-  -- 1st or 2nd send for that event (supabase/migrations/009).
+  -- 1st or 2nd send for that event (migration 009).
   attempt smallint not null default 1 check (attempt between 1 and 2),
   primary key (player_id, event_id, attempt)
 );
@@ -894,7 +894,7 @@ create policy "decklist_submissions_admin_delete" on decklist_submissions for de
 -- The players, commanders and leagues an account follows (account.html's
 -- "Seguiti", the ★ button on player.html / commander.html / league.html).
 -- Private: each account reads and writes only its own. Added by
--- supabase/migrations/010_card_links_follows.sql (leagues: 018).
+-- migration 010 (leagues: 018).
 -- ---------------------------------------------------------------------------
 
 create table follows (
@@ -931,7 +931,7 @@ create policy "follows_delete_own" on follows for delete
 -- vibration switch (js/haptics-toggle.js, Android phones). null = never
 -- chosen (the browser's own choice stays). Private: each account its own
 -- row. Not a profiles column: a profiles row means "saved a player card".
--- Added by supabase/migrations/019_user_settings.sql; haptics, and theme
+-- Added by migration 019; haptics, and theme
 -- nullable, by 024_haptics_setting.sql.
 -- ---------------------------------------------------------------------------
 
@@ -959,7 +959,7 @@ create policy "user_settings_update_own" on user_settings for update
 -- matches, per league its distinct players (league_id null = the standalone
 -- events) — read instead of every entry and match. security_invoker: the
 -- tables' RLS applies as for a direct query (visitors: closed events only).
--- Added by supabase/migrations/021_event_counts.sql.
+-- Added by migration 021.
 -- ---------------------------------------------------------------------------
 
 create view event_counts with (security_invoker = true) as
