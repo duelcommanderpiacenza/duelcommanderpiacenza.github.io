@@ -15,6 +15,7 @@ import { matchGroupsHtml, initScrollFade, setHistoryCount } from "./history-list
 import { renderPublicPlayerCard, createArtPainter } from "./player-card.js";
 import { initFollowButton } from "./follow-button.js";
 import { initBackToTop } from "./back-to-top.js";
+import { renderPlayerLeagueRecap } from "./player-league-recap.js";
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
@@ -95,6 +96,10 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     hidePageLoading(signal);
     return;
   }
+
+  // The league recap under the hero: its own requests, alongside the rest,
+  // never holding the page up (not awaited; never throws).
+  renderPlayerLeagueRecap(document.getElementById("player-league-recap"), id, { signal });
 
   try {
     // Seven independent requests (each needs only the id), all started at

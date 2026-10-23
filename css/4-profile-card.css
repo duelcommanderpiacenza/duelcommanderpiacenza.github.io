@@ -2769,3 +2769,316 @@ html.nav-mobile .pc-link-field .pc-link {
   opacity: 0.6;
   cursor: progress;
 }
+
+/* ---------------------------------------------------------------------------
+   player.html's league recap (js/player-league-recap.js), right after the
+   hero — option A ("Essenziale") of its mockup: a plain card, no band, lots
+   of room. The league's name with "Vai alla lega ›" as a pill in the
+   page's accent (the hero's colour: --brand-red is redefined there); one
+   main row: the position big in the accent with its movement pill
+   (.pos-move, js/history-list.js positionMoveHtml), the points after a thin
+   divider, Migliore / V-S-P / Winrate at the right end; under it a small
+   pill per stage, scrolling sideways (edges fading while there's more, a
+   mouse can drag it). Narrow (a size container, under 600px): the position
+   and points, then the three numbers centred under a hairline. */
+.league-recap {
+  margin: 0 0 26px;
+  container-type: inline-size;
+}
+
+.league-recap-card {
+  padding: 18px 22px;
+  border: 1px solid rgba(120, 100, 104, 0.2);
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(40, 20, 22, 0.06);
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+:root[data-theme="dark"] .league-recap-card {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+}
+
+.league-recap-card.is-loading {
+  animation: none;
+}
+
+.league-recap-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.league-recap-name {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-title);
+  font-size: 1.05rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.league-recap-link {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid color-mix(in srgb, var(--brand-red) 30%, transparent);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--brand-red) 10%, transparent);
+  color: var(--brand-red-deep);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 150ms ease;
+}
+
+.league-recap-link:hover {
+  background: color-mix(in srgb, var(--brand-red) 18%, transparent);
+  color: var(--brand-red-deep);
+  text-decoration: none;
+}
+
+.league-recap-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 28px;
+  margin: 16px 0 18px;
+}
+
+.league-recap-headline {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.league-recap-pos {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.league-recap-pos b {
+  color: var(--brand-red-deep);
+  font-size: 2.6rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.league-recap-points {
+  padding-left: 18px;
+  border-left: 1px solid rgba(120, 100, 104, 0.22);
+  color: var(--text-muted);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+:root[data-theme="dark"] .league-recap-points {
+  border-left-color: rgba(255, 255, 255, 0.14);
+}
+
+.league-recap-points b {
+  color: var(--text-title);
+  font-size: 1.6rem;
+}
+
+.league-recap-stats {
+  display: flex;
+  gap: 30px;
+}
+
+.league-recap-stat {
+  display: grid;
+  gap: 3px;
+}
+
+.league-recap-k {
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.league-recap-v {
+  color: var(--text-title);
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+/* The movement since the latest event, beside the big number: a tinted
+   pill with the trend arrows' icons (js/history-list.js positionMoveHtml).
+   Fixed green / red, never the hero's colour. */
+.pos-move {
+  --trend: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 8px 3px 6px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--trend) 14%, transparent);
+  color: var(--trend);
+  font-size: 0.78rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.pos-move svg {
+  width: 12px;
+  height: 12px;
+}
+
+.pos-move:is(.is-same, .is-new) {
+  padding: 3px 6px;
+}
+
+.pos-move.is-up {
+  --trend: #148a50;
+}
+
+.pos-move.is-down {
+  --trend: #c8161b;
+}
+
+:root[data-theme="dark"] .pos-move.is-up {
+  --trend: #4cd38f;
+}
+
+:root[data-theme="dark"] .pos-move.is-down {
+  --trend: #ff6b6e;
+}
+
+/* The stages: small pills — "T1" over the position; a missed one "ass.",
+   one still to play "—", both just outlined (the latter faded). */
+.league-recap-stages {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+  list-style: none;
+  scrollbar-width: none;
+}
+
+.league-recap-stages::-webkit-scrollbar {
+  display: none;
+}
+
+.league-recap-stage {
+  display: grid;
+  flex: none;
+  justify-items: center;
+  gap: 2px;
+  width: 48px;
+  padding: 6px 0;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--brand-red) 11%, transparent);
+}
+
+.league-recap-stage span {
+  color: var(--text-muted);
+  font-size: 0.6rem;
+  font-weight: 800;
+}
+
+.league-recap-stage b {
+  color: var(--text-title);
+  font-size: 0.9rem;
+}
+
+.league-recap-stage.is-first b {
+  color: var(--brand-red-deep);
+}
+
+.league-recap-stage:is(.is-missed, .is-future) {
+  background: none;
+  box-shadow: inset 0 0 0 1px rgba(120, 100, 104, 0.22);
+}
+
+:root[data-theme="dark"] .league-recap-stage:is(.is-missed, .is-future) {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+
+.league-recap-stage:is(.is-missed, .is-future) b {
+  color: var(--text-muted);
+}
+
+.league-recap-stage.is-future {
+  opacity: 0.55;
+}
+
+/* More stages that way (js/drag-scroll.js enableDragScroll): that edge
+   fades out — the hint there's more to slide —, and on a computer the row
+   can be dragged (as badges.html's holders). */
+.league-recap-stages.fade-right {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+}
+
+.league-recap-stages.fade-left {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 40px);
+  mask-image: linear-gradient(to right, transparent, #000 40px);
+}
+
+.league-recap-stages.fade-left.fade-right {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent);
+}
+
+.league-recap-stages.is-scrollable {
+  cursor: grab;
+  user-select: none;
+}
+
+.league-recap-stages.is-dragging {
+  cursor: grabbing;
+}
+
+/* Not in the league: one line, the link on the right. */
+.league-recap-empty {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  color: var(--text-body);
+}
+
+@container (max-width: 600px) {
+  .league-recap-card {
+    padding: 16px;
+  }
+
+  .league-recap-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    margin: 14px 0;
+  }
+
+  .league-recap-stats {
+    justify-content: space-between;
+    padding-top: 12px;
+    border-top: 1px solid rgba(120, 100, 104, 0.2);
+  }
+
+  :root[data-theme="dark"] .league-recap-stats {
+    border-top-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .league-recap-stat {
+    justify-items: center;
+  }
+}

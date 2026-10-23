@@ -74,6 +74,7 @@
   <link rel="modulepreload" href="js/history-list.js">
   <link rel="modulepreload" href="js/follow-button.js">
   <link rel="modulepreload" href="js/back-to-top.js">
+  <link rel="modulepreload" href="js/player-league-recap.js">
   <!-- /preload:modules -->
 </head>
 <body data-active-nav="players" class="is-loading">
@@ -191,6 +192,11 @@
         </div>
       </section>
     </div>
+
+    <!-- The league recap (js/player-league-recap.js): the league in progress,
+         else the latest finished one, for this player — hidden until known,
+         and when there's no league. -->
+    <section class="league-recap" id="player-league-recap" aria-label="Lega" hidden></section>
 
     <!-- Desktop: Album comandanti left, Storico partite (a scrolling list of
          sub-cards, exactly as tall as the album beside it) right; phones:

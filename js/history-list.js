@@ -149,6 +149,28 @@ export function leaguePosHtml(position, before, playerId) {
   }</span></span>`;
 }
 
+// The same change as a pill of its own, beside a big position number
+// (player.html's league recap): ↗ N green, ↘ N red, → grey the same, +
+// grey a newcomer, in a tint of its colour. "" with nothing to compare
+// with (`before` null).
+export function positionMoveHtml(position, before, playerId) {
+  if (!before) return "";
+  const was = before.get(playerId);
+  const diff = was === undefined ? null : was - position;
+  const n = Math.abs(diff ?? 0);
+  const kind = diff === null ? "new" : diff > 0 ? "up" : diff < 0 ? "down" : "same";
+  const label = {
+    new: "Nuovo in classifica dall'ultimo evento",
+    same: "Stessa posizione dell'ultimo evento",
+    up: `Su di ${n} ${n === 1 ? "posizione" : "posizioni"} dall'ultimo evento`,
+    down: `Giù di ${n} ${n === 1 ? "posizione" : "posizioni"} dall'ultimo evento`,
+  }[kind];
+  const icon = kind === "new" ? TREND_ICON('<path d="M12 6v12"/><path d="M6 12h12"/>') : TREND_SYMBOLS[kind];
+  return `<span class="pos-move is-${kind}" role="img" aria-label="${label}" title="${label}">${icon}${
+    kind === "up" || kind === "down" ? n : ""
+  }</span>`;
+}
+
 const OUTCOME_LABEL = { win: "Vittoria", loss: "Sconfitta", draw: "Pareggio" };
 const NO_LINK = { link: false };
 

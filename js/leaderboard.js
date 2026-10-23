@@ -333,7 +333,7 @@ export function computeLeaguePoints(eventsData, { leagueClosed = false, schedule
   const countedResults = Math.max(Math.max(scheduledEvents, totalEvents) - DISCARDED_RESULTS, 1);
   const byPlayer = new Map();
 
-  for (const { matches, entries } of eventsData) {
+  eventsData.forEach(({ matches, entries }, eventIndex) => {
     const standings = computeEventLeaderboard(matches, entries);
     standings.forEach((row, index) => {
       const id = row.player?.id;
@@ -344,21 +344,22 @@ export function computeLeaguePoints(eventsData, { leagueClosed = false, schedule
       score += row.bonusPoints;
 
       if (!byPlayer.has(id)) {
-        byPlayer.set(id, { player: row.player, eventScores: [], placements: [], wins: 0, draws: 0, losses: 0 });
+        byPlayer.set(id, { player: row.player, eventScores: [], results: [], placements: [], wins: 0, draws: 0, losses: 0 });
       }
       const agg = byPlayer.get(id);
       agg.eventScores.push(score);
+      agg.results[eventIndex] = { position: index + 1, score };
       agg.placements[index] = (agg.placements[index] ?? 0) + 1;
       agg.wins += row.wins;
       agg.draws += row.draws;
       agg.losses += row.losses;
     });
-  }
+  });
 
   // Tiebreakers over every match of this league's events only.
   const tiebreakers = buildTiebreakers(eventsData.flatMap(({ matches }) => matches));
 
-  const results = Array.from(byPlayer.values()).map(({ player, eventScores, placements, wins, draws, losses }) => {
+  const results = Array.from(byPlayer.values()).map(({ player, eventScores, results: eventResults, placements, wins, draws, losses }) => {
     const bestScores = [...eventScores].sort((a, b) => b - a).slice(0, countedResults);
     const fullAttendance = totalEvents > 0 && eventScores.length === totalEvents;
     const attendanceBonus = leagueClosed && fullAttendance ? FULL_ATTENDANCE_BONUS : 0;
@@ -381,6 +382,10 @@ export function computeLeaguePoints(eventsData, { leagueClosed = false, schedule
       // placements[i] = how many of the league's events this player
       // finished in position i+1 (sparse: a missing index means 0).
       placements,
+      // results[i] = { position, score } in eventsData[i] (sparse: a
+      // missing index, an event this player didn't play) — the score
+      // before the best-results cap (player.html's league recap).
+      results: eventResults,
       matchWinPct: tiebreakers.matchWinPct(player.id),
       gameWinPct: tiebreakers.gameWinPct(player.id),
       opponentsGameWinPct: tiebreakers.opponentsGameWinPct(player.id),
