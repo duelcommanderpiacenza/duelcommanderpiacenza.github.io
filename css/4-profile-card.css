@@ -226,11 +226,11 @@ body.has-hero-accent {
    no hero to colour it): a neutral warm grey instead of the site's red, so
    the page arriving and then taking the colour (js/player-card.js
    applyHeroTone) is a soft blend from grey, not a jump from red. On <body>,
-   so the header, the nav pill, the content and "Torna all'inizio" all
-   inherit it; the colour's own rules (main / .site-nav .has-hero-accent)
-   then take over, and once <main> has it this no longer applies. The
-   desktop bar (its gradient's own variables), the dark pill and button's
-   fixed red-browns, and the hero's own starting background follow suit. */
+   so the header, the nav pill and the content all inherit it; the colour's
+   own rules (main / .site-nav .has-hero-accent) then take over, and once
+   <main> has it this no longer applies. The desktop bar (its gradient's own
+   variables), the dark pill's fixed red-brown, and the hero's own starting
+   background follow suit. */
 body:has(main[data-accent-from-hero]:not(.has-hero-accent)):not(:has([data-view="login"]:not([hidden]))) {
   --brand-red: #5b5552;
   --brand-red-deep: #45403e;
@@ -246,15 +246,6 @@ body:has(main[data-accent-from-hero]:not(.has-hero-accent)):not(:has([data-view=
 html:not(.nav-mobile) body:has(main[data-accent-from-hero]:not(.has-hero-accent)):not(:has([data-view="login"]:not([hidden]))) .site-header:not(.site-header--admin) {
   --bar-c1: #1d1b1a;
   --bar-c2: #4a4542;
-}
-
-:root[data-theme="dark"] body:has(main[data-accent-from-hero]:not(.has-hero-accent)):not(:has([data-view="login"]:not([hidden]))) .back-to-top:not(.has-hero-accent) {
-  border-color: rgba(255, 255, 255, 0.3);
-  background: #3a3634;
-}
-
-:root[data-theme="dark"] body:has(main[data-accent-from-hero]:not(.has-hero-accent)):not(:has([data-view="login"]:not([hidden]))) .back-to-top:not(.has-hero-accent) {
-  color: #ece6e2;
 }
 
 body.has-hero-accent footer {

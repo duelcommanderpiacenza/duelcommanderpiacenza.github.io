@@ -1,6 +1,7 @@
-// A round white "back to the top" button (styles.css .back-to-top), fixed in
-// the bottom-right corner — on touch screens just above the floating nav
-// pill — shown only once the page is scrolled down past SHOW_AFTER px.
+// A round white "back to the top" button (styles.css .back-to-top, the tab
+// bar's look on every screen), fixed in the bottom-right corner — on touch
+// screens just above the tab bar — shown only once the page is scrolled
+// down past SHOW_AFTER px.
 // Used by the long list pages (Comandanti, Giocatori, an archetype's page).
 
 const SHOW_AFTER = 400;
@@ -18,17 +19,6 @@ export function initBackToTop({ signal } = {}) {
   button.title = "Torna all'inizio";
   button.innerHTML = ARROW_UP;
   document.body.appendChild(button);
-
-  // A page coloured by its hero, the colour already known: the button in it
-  // too (js/player-card.js applyHeroTone paints it when the colour comes
-  // later).
-  const accentMain = document.querySelector("main.has-hero-accent");
-  if (accentMain) {
-    for (const v of ["--hero-accent", "--hero-accent-deep", "--hero-accent-deep-2", "--hero-accent-light"]) {
-      button.style.setProperty(v, accentMain.style.getPropertyValue(v));
-    }
-    button.classList.add("has-hero-accent");
-  }
 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   button.addEventListener("click", () => {

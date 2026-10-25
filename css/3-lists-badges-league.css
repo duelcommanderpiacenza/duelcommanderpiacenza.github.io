@@ -1395,8 +1395,7 @@ a.history-item.is-me {
 
 /* Pull to refresh, installed app only (js/pull-refresh.js): a white disc
    with a red refresh arrow, hidden above the top edge, sliding down with
-   the pull (--ptr-y) — "Torna all'inizio"'s look; its red ring fills as it
-   goes (--ptr-p, 0–1) and the arrow turns with it. Armed (.is-armed): the ring
+   the pull (--ptr-y); its red ring fills as it goes (--ptr-p, 0–1) and the arrow turns with it. Armed (.is-armed): the ring
    full, a little pop. Refreshing: held there, a red arc spinning round.
    Above the header (25) and the nav (20). */
 .ptr {
@@ -1500,10 +1499,13 @@ body.has-hero-accent .ptr {
 }
 
 /* "Torna all'inizio" (js/back-to-top.js, Comandanti / Giocatori): a round
-   white button with a brand-red ring and arrow (the .results-link look),
-   fixed bottom-right, fading/rising in once the page is scrolled down —
-   visibility too, so while hidden it's neither clickable nor tabbable. On
-   touch screens just above the tab bar, on the right (the "Tab bar" rules). */
+   button styled like the touch tab bar — a solid white disc (dark mode the
+   bar's near-black) with the bar's faint edge and lifted shadow, the arrow
+   in the body text colour; the same on every screen, and never in a hero's
+   colour. Fixed bottom-right, fading/rising in once the page is scrolled
+   down — visibility too, so while hidden it's neither clickable nor
+   tabbable. On touch screens just above the tab bar, on the right (the "Tab
+   bar" rules). */
 .back-to-top {
   position: fixed;
   right: 24px;
@@ -1515,19 +1517,19 @@ body.has-hero-accent .ptr {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 46px;
-  height: 46px;
+  width: 50px;
+  height: 50px;
   padding: 0;
-  border: 2px solid var(--brand-red);
+  border: 1px solid rgba(154, 28, 32, 0.12);
   border-radius: 50%;
   background: #fff;
-  color: var(--brand-red);
-  box-shadow: var(--shadow-card-hover);
+  color: var(--text-body);
+  box-shadow: 0 -2px 10px rgba(40, 6, 9, 0.14), 0 4px 12px rgba(40, 6, 9, 0.2), 0 1px 3px rgba(40, 6, 9, 0.16);
   cursor: pointer;
   opacity: 0;
   visibility: hidden;
   transform: translateY(12px) scale(0.9);
-  transition: opacity 200ms ease, transform 200ms ease, visibility 0s linear 200ms, background 150ms ease;
+  transition: opacity 200ms ease, transform 200ms ease, visibility 0s linear 200ms;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -1535,12 +1537,7 @@ body.has-hero-accent .ptr {
   opacity: 1;
   visibility: visible;
   transform: none;
-  transition: opacity 200ms ease, transform 200ms ease, visibility 0s, background 150ms ease;
-}
-
-.back-to-top:hover,
-.back-to-top:focus-visible {
-  background: #fbe3e3;
+  transition: opacity 200ms ease, transform 200ms ease, visibility 0s;
 }
 
 .back-to-top:focus-visible {
@@ -1548,42 +1545,11 @@ body.has-hero-accent .ptr {
   outline-offset: 3px;
 }
 
-/* Dark mode: like the dark touch nav pill beside it — the warm red-brown,
-   a bright red ring, a light arrow. */
 :root[data-theme="dark"] .back-to-top {
-  border-color: rgba(255, 110, 110, 0.75);
-  background: #4a1a1f;
-  color: #ffd2d4;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5), 0 10px 26px rgba(0, 0, 0, 0.55);
-}
-
-:root[data-theme="dark"] .back-to-top:hover,
-:root[data-theme="dark"] .back-to-top:focus-visible {
-  background: #5a2026;
-}
-
-/* A page coloured by its hero (js/player-card.js applyHeroTone,
-   js/back-to-top.js): the button in that colour — ring and arrow, a pale
-   tint of it on hover; dark mode like the touch nav pill beside it (a deep
-   shade of the colour, a light-shade ring, a pale arrow). */
-.back-to-top.has-hero-accent {
-  --brand-red: var(--hero-accent);
-}
-
-.back-to-top.has-hero-accent:hover,
-.back-to-top.has-hero-accent:focus-visible {
-  background: color-mix(in srgb, var(--hero-accent) 13%, #fff);
-}
-
-:root[data-theme="dark"] .back-to-top.has-hero-accent {
-  border-color: color-mix(in srgb, var(--hero-accent-light) 75%, transparent);
-  background: color-mix(in srgb, var(--hero-accent) 42%, #1c0f11);
-  color: color-mix(in srgb, var(--hero-accent-light) 45%, #fff);
-}
-
-:root[data-theme="dark"] .back-to-top.has-hero-accent:hover,
-:root[data-theme="dark"] .back-to-top.has-hero-accent:focus-visible {
-  background: color-mix(in srgb, var(--hero-accent) 55%, #1c0f11);
+  border-color: rgba(255, 255, 255, 0.1);
+  background: #1e1517;
+  color: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.45), 0 4px 14px rgba(0, 0, 0, 0.55), 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 
 .back-to-top svg {
