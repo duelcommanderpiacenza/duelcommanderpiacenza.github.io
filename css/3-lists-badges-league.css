@@ -2,22 +2,33 @@
    original order: the parts are loaded in this order (partials/head.html,
    admin/index.html) and must stay so — later rules win ties. */
 
-/* Dark mode: the league's tile like the other dark tiles, a red edge; the
-   band as in light mode; the ring's track and the rule light. */
-:root[data-theme="dark"] .ev-big {
+/* Dark mode: the main league's card like the other dark tiles, a red
+   edge, the cover as in light mode; its events' hairlines light, the
+   calendar sheets and the next event's red a shade lighter. */
+:root[data-theme="dark"] .ev-tile.ev-league {
   border-color: rgba(255, 110, 110, 0.3);
 }
 
-:root[data-theme="dark"] .ev-ring-track {
-  stroke: rgba(255, 255, 255, 0.12);
+:root[data-theme="dark"] .ev-slot + .ev-slot {
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
-:root[data-theme="dark"] .ev-big .ev-stats {
-  border-top-color: rgba(255, 255, 255, 0.12);
+:root[data-theme="dark"] a.ev-slot:hover {
+  background: rgba(255, 255, 255, 0.04);
 }
 
-:root[data-theme="dark"] .ev-next {
+:root[data-theme="dark"] .ev-cal {
+  background: rgba(255, 110, 110, 0.14);
+  color: #ff9a9d;
+}
+
+:root[data-theme="dark"] .ev-slot.is-next .ev-cal {
   background: var(--brand-red);
+  color: #fff;
+}
+
+:root[data-theme="dark"] :is(.ev-slot.is-next .ev-tile-k, .ev-slot-time) {
+  color: #ff8a8d;
 }
 
 :root[data-theme="dark"] .ev-archive .ev-tile {

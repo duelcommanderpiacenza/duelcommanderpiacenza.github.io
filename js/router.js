@@ -123,7 +123,16 @@ function syncBackButton() {
   const svg = btn.querySelector("svg");
   const label = document.createElement("span");
   label.className = "detail-hero-back-label";
-  label.textContent = back.label;
+  // Any "&" ("Leghe & Eventi") in the nav's own ampersand (styles.css .amp).
+  back.label.split("&").forEach((part, i) => {
+    if (i) {
+      const amp = document.createElement("span");
+      amp.className = "amp";
+      amp.textContent = "&";
+      label.append(amp);
+    }
+    label.append(part);
+  });
   btn.replaceChildren(...(svg ? [svg] : []), label);
 }
 

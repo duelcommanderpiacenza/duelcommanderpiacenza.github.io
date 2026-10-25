@@ -1679,131 +1679,14 @@ html.nav-mobile .results-links {
   font-weight: 700;
 }
 
-/* Leghe & Eventi (events.html, js/events-page.js): a board of tiles —
-   4 columns (2 below 820px), the rows 118px. The league in progress big
-   (2×2, dark with a red glow, a progress ring), the next event solid red,
-   the others white with a firm edge like the site's lists; the concluded
-   leagues below in a grid of uniform tiles (as many as there are). */
+/* Leghe & Eventi (events.html, js/events-page.js): the board — the main
+   league as one card (a red cover over its next and latest event), the
+   Topdeck series in progress under it as a plain tile — then the concluded
+   leagues in a grid of uniform tiles (as many as there are). */
 #events-board {
   display: flex;
   flex-direction: column;
   gap: 18px;
-}
-
-/* One league in progress per board: its big tile (2×2) on the left, its
-   next and latest event stacked on the right (2 columns each; one alone
-   two rows tall; with neither, the big tile the whole row). Phones /
-   narrower: the big tile on top, the two events side by side under it. */
-.ev-board {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  grid-auto-rows: 118px;
-  gap: 14px;
-}
-
-.ev-board > .ev-tile:not(.ev-big) {
-  grid-column: span 2;
-}
-
-.ev-board > .ev-tall {
-  grid-row: span 2;
-}
-
-.ev-board.is-alone > .ev-big {
-  grid-column: 1 / -1;
-}
-
-/* A computer: the league's tile wider (~60%), its next / latest event in
-   the narrower column beside it, one over the other — fuller than at half
-   the row each, where a date and a name left them mostly empty. The
-   Topdeck series' board below in the same columns (its tile as wide as the
-   league's). */
-@media (min-width: 821px) {
-  .ev-board {
-    grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
-  }
-
-  /* (.ev-tile.ev-big: over the Topdeck board's own span 2, later in the
-     file.) */
-  .ev-board > .ev-big,
-  .ev-board.is-secondary.is-alone > .ev-tile.ev-big {
-    grid-column: 1;
-  }
-
-  .ev-board > .ev-tile:not(.ev-big) {
-    grid-column: 2;
-  }
-
-  .ev-board.is-alone:not(.is-secondary) > .ev-big {
-    grid-column: 1 / -1;
-  }
-}
-
-/* Inside the next / latest event tiles (a computer): the date and name on
-   the left, on the right the start time (big) or the players and the
-   results links — under them when there isn't room beside. */
-.ev-event-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 8px 14px;
-}
-
-.ev-event-main {
-  min-width: 0;
-}
-
-.ev-event-side {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: 10px;
-}
-
-.ev-event-time {
-  font-size: 1.9rem;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.ev-event-players {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  font-weight: 800;
-}
-
-.ev-event-side .results-links {
-  margin-left: 0;
-}
-
-/* Phones (the board's two narrow tiles side by side): only the date and
-   the name, as before — no weekday, no "tra N giorni", no time, players or
-   links (too crowded at half the screen). */
-@media (max-width: 820px) {
-  .ev-board .ev-date-wd,
-  .ev-board .ev-k-when,
-  .ev-board .ev-event-side {
-    display: none;
-  }
-}
-
-@media (max-width: 820px) {
-  .ev-board {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .ev-board > .ev-tile:not(.ev-big) {
-    grid-column: span 1;
-  }
-
-  .ev-board > .ev-tall {
-    grid-column: 1 / -1;
-    grid-row: span 1;
-  }
 }
 
 .ev-tile {
@@ -1882,29 +1765,6 @@ button.ev-tile {
   height: 14px;
 }
 
-.ev-date {
-  font-size: 2rem;
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: -0.01em;
-}
-
-/* The next / latest event's name, under its date (a size down there, so
-   date, name and the line under them fit the tile). */
-.ev-event-name {
-  margin-top: 4px;
-  overflow: hidden;
-  font-size: 1.12rem;
-  font-weight: 800;
-  line-height: 1.2;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.ev-tile:has(.ev-event-name) .ev-date {
-  font-size: 1.6rem;
-}
-
 /* Numbers in a row: each a big number over a small label. */
 .ev-stats {
   display: flex;
@@ -1941,86 +1801,88 @@ button.ev-tile {
   text-transform: uppercase;
 }
 
-/* The league in progress: a light tile like the others, set apart by its
-   label on a red band across the top (the top bar's gradient), its
-   numbers in red under a rule,
-   the ring with events played on the right. */
-.ev-big {
-  grid-column: span 2;
-  grid-row: span 2;
-  border: 1px solid rgba(220, 24, 28, 0.28);
-  background: #fff;
-  color: var(--text-title);
+/* The main league (option C, "Copertina", of a mockup, 2026-10-26): one
+   card — on top a red cover (its label, name, numbers and ring in white,
+   a link to the league), under it its next and latest event side by side
+   (stacked from 820px down), a hairline between them. */
+.ev-tile.ev-league {
+  justify-content: flex-start;
+  padding: 0;
+  border-color: rgba(220, 24, 28, 0.28);
 }
 
-.ev-big > * {
+.ev-league-cover {
   position: relative;
-}
-
-/* "Lega in corso" / "Serie Topdeck in corso": the band, edge to edge over
-   the tile's padding. Not on the secondary board's tile (the Topdeck series
-   under a league: a step down, its label plain). */
-.ev-big .ev-tile-k {
-  font-size: 0.88rem;
-  letter-spacing: 0.14em;
-}
-
-.ev-board:not(.is-secondary) > .ev-big .ev-tile-k {
-  margin: -16px -16px 0;
-  padding: 10px 16px;
-  background: linear-gradient(135deg, #7e0c13, #dc181c);
-  color: #fff;
-  font-size: 0.78rem;
-}
-
-.ev-board:not(.is-secondary) > .ev-big .ev-name-block {
-  margin-top: 14px;
-}
-
-.ev-board:not(.is-secondary) > .ev-big .ev-stat b {
-  color: var(--brand-red-deep);
-}
-
-.ev-name-block {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 22px 20px;
+  overflow: hidden;
+  background: radial-gradient(120% 140% at 100% 0%, #e0262a 0%, #a10f17 55%, #6e0a10 100%);
+  color: #fff;
+  text-decoration: none;
+  transition: filter 160ms ease;
+}
+
+.ev-league-cover:hover {
+  filter: brightness(1.08);
+  text-decoration: none;
+}
+
+.ev-league-cover:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: -6px;
+}
+
+/* A soft light in its bottom-right corner, behind the ring. */
+.ev-league-cover::after {
+  content: "";
+  position: absolute;
+  right: -60px;
+  bottom: -80px;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0) 70%);
+  pointer-events: none;
+}
+
+.ev-league-text {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.ev-league-cover .ev-tile-k {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
 }
 
 /* One line, fitted to its room by js/events-page.js (fitBigNames), "…" if
    it still doesn't fit at the smallest size. */
-.ev-big .ev-tile-t {
-  max-width: calc(100% - 170px);
-  font-size: 1.7rem;
+.ev-league-cover .ev-tile-t {
+  margin-top: 8px;
+  font-size: 2rem;
+  line-height: 1.1;
 }
 
-.ev-since {
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  font-weight: 700;
+.ev-league-cover .ev-stats {
+  margin-top: 16px;
 }
 
-.ev-big .ev-stats {
-  max-width: calc(100% - 170px);
-  padding-top: 14px;
-  border-top: 1px solid rgba(154, 28, 32, 0.14);
+.ev-league-cover .ev-stat span {
+  opacity: 0.75;
 }
 
-/* No ring (the Topdeck series, with no set number of events): the name and
-   the numbers have the tile's whole width. */
-.ev-big.no-ring .ev-tile-t,
-.ev-big.no-ring .ev-stats {
-  max-width: none;
-}
-
-/* Centred in the tile under the band (half its ~37px lower). */
+/* The ring: events played out of those scheduled, white on the cover. */
 .ev-ring {
-  position: absolute;
-  top: 50%;
-  right: 22px;
-  width: 140px;
-  height: 140px;
-  margin-top: -52px;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 132px;
+  height: 132px;
 }
 
 .ev-ring svg {
@@ -2035,11 +1897,11 @@ button.ev-tile {
 }
 
 .ev-ring-track {
-  stroke: rgba(220, 24, 28, 0.12);
+  stroke: rgba(255, 255, 255, 0.2);
 }
 
 .ev-ring-fill {
-  stroke: var(--brand-red);
+  stroke: #fff;
   stroke-linecap: round;
 }
 
@@ -2056,100 +1918,135 @@ button.ev-tile {
 
 .ev-ring-label small {
   display: block;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.75);
   font-size: 0.66rem;
   letter-spacing: 0.08em;
 }
 
-/* Phones: kept to the two rows of the board (not taller) — the name and
-   the numbers a size down, the ring small in the top-right corner. */
-@media (max-width: 480px) {
-  .ev-big {
-    padding: 14px 16px;
-  }
-
-  .ev-board:not(.is-secondary) > .ev-big .ev-tile-k {
-    margin-top: -14px;
-  }
-
-  .ev-name-block {
-    gap: 3px;
-  }
-
-  /* Its size fitted to the name by js/events-page.js (fitBigNames: up to
-     28px when there's room on one line). */
-  .ev-big .ev-tile-t {
-    max-width: calc(100% - 90px);
-    font-size: 1.2rem;
-  }
-
-  .ev-since {
-    font-size: 0.74rem;
-  }
-
-  .ev-big .ev-stats {
-    max-width: none;
-    gap: 8px 20px;
-    padding-top: 12px;
-  }
-
-  .ev-big .ev-stat b {
-    font-size: 1.4rem;
-  }
-
-  .ev-big .ev-stat b .ev-ico {
-    width: 18px;
-    height: 18px;
-  }
-
-  .ev-big .ev-stat span {
-    font-size: 0.64rem;
-    letter-spacing: 0.07em;
-  }
-
-  /* In the top-right corner under the band. */
-  .ev-ring {
-    top: 48px;
-    right: 12px;
-    width: 76px;
-    height: 76px;
-    margin: 0;
-  }
-
-  .ev-ring-label {
-    font-size: 0.95rem;
-  }
-
-  .ev-ring-label small {
-    font-size: 0.52rem;
-  }
+/* Its events: each its date as a small calendar sheet, its label, name and
+   a line under it, and on the right the start time (big, red) or the
+   players and the results links. One alone takes the whole width. */
+.ev-league-foot {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-/* "Prossimamente" (no next event scheduled yet) in the date's place: a
-   size down, on one line — smaller still where the tile is half the
-   screen (narrower than 820px). */
-.ev-tile.ev-next.is-soon .ev-date {
+.ev-slot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px 20px;
+  color: var(--text-title);
+  text-decoration: none;
+  transition: background 150ms ease;
+}
+
+.ev-slot:only-child {
+  grid-column: 1 / -1;
+}
+
+.ev-slot + .ev-slot {
+  border-left: 1px solid rgba(154, 28, 32, 0.14);
+}
+
+a.ev-slot:hover {
+  background: rgba(220, 24, 28, 0.04);
+  text-decoration: none;
+}
+
+.ev-slot:focus-visible {
+  outline: 3px solid var(--brand-red);
+  outline-offset: -3px;
+}
+
+.ev-cal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 52px;
+  height: 56px;
+  border-radius: 12px;
+  background: rgba(220, 24, 28, 0.08);
+  color: var(--brand-red-deep);
+  line-height: 1;
+}
+
+.ev-cal small {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.ev-cal b {
+  margin-top: 3px;
+  font-size: 1.45rem;
+  font-weight: 800;
+}
+
+.ev-cal b:only-child {
+  margin-top: 0;
+}
+
+.ev-slot-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ev-slot-name {
+  margin-top: 3px;
   overflow: hidden;
-  font-size: 1.4rem;
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1.15;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-@media (max-width: 820px) {
-  .ev-tile.ev-next.is-soon .ev-date {
-    font-size: 1.1rem;
-  }
+.ev-slot-sub {
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
 }
 
-/* The next event: solid red, the date big, a pulsing white dot. */
-.ev-next {
-  border: 0;
+.ev-slot-side {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.ev-slot-time {
+  color: var(--brand-red);
+  font-size: 1.7rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.ev-slot-players {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+/* The next event: its label red with a pulsing dot, its calendar sheet
+   solid red. */
+.ev-slot.is-next .ev-tile-k {
+  color: var(--brand-red);
+}
+
+.ev-slot.is-next .ev-cal {
   background: var(--brand-red);
   color: #fff;
-}
-
-.ev-next .ev-tile-k {
-  color: rgba(255, 255, 255, 0.85);
 }
 
 .ev-pulse {
@@ -2158,7 +2055,7 @@ button.ev-tile {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--brand-red);
 }
 
 /* Its pulse: a ring growing out of it and fading (transform + opacity —
@@ -2168,7 +2065,7 @@ button.ev-tile {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(220, 24, 28, 0.6);
   animation: ev-pulse 2s ease-out infinite;
 }
 
@@ -2180,34 +2077,74 @@ button.ev-tile {
   }
 }
 
-/* The Topdeck series in progress: a secondary group, under the league's —
-   just its own tile, one row (no event tiles of its own), everything a
-   step down: light (not the league's dark one with the red glow), the
-   name smaller and no "dal …", the numbers smaller, no ring. */
-.ev-board.is-secondary {
-  grid-auto-rows: 150px;
+@media (max-width: 820px) {
+  .ev-league-foot {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ev-slot {
+    padding: 12px 16px;
+  }
+
+  .ev-slot + .ev-slot {
+    border-top: 1px solid rgba(154, 28, 32, 0.14);
+    border-left: 0;
+  }
+
+  .ev-slot-time {
+    font-size: 1.35rem;
+  }
 }
 
+/* Phones: the cover a size down, the ring small in its top-right corner;
+   the name fitted by js/events-page.js (fitBigNames: up to 28px when
+   there's room on one line). */
+@media (max-width: 480px) {
+  .ev-league-cover {
+    align-items: flex-start;
+    padding: 16px 16px 18px;
+  }
+
+  .ev-league-cover .ev-tile-t {
+    font-size: 1.2rem;
+  }
+
+  .ev-league-cover .ev-stats {
+    gap: 8px 20px;
+  }
+
+  .ev-league-cover .ev-stat b {
+    font-size: 1.4rem;
+  }
+
+  .ev-league-cover .ev-stat span {
+    font-size: 0.64rem;
+    letter-spacing: 0.07em;
+  }
+
+  .ev-ring {
+    width: 76px;
+    height: 76px;
+  }
+
+  .ev-ring-label {
+    font-size: 0.95rem;
+  }
+
+  .ev-ring-label small {
+    font-size: 0.52rem;
+  }
+}
+
+/* The Topdeck series in progress, under the main league: a plain tile, a
+   step down — its label on a band across the top, thin, a light red tint
+   with a red hairline under it, the text dark red (not the cover's red);
+   its name and numbers smaller; no ring (no set number of events: its
+   events played a number among the others). As wide as the card above. */
 .ev-board.is-secondary > .ev-big {
-  grid-row: span 1;
-  border: 1px solid rgba(154, 28, 32, 0.18);
-  background: #fff;
-  color: var(--text-title);
+  min-height: 150px;
 }
 
-.ev-board.is-secondary > .ev-big::before {
-  display: none;
-}
-
-/* As wide as the league's tile above it (half the row on desktop), not the
-   whole row. */
-.ev-board.is-secondary.is-alone > .ev-big {
-  grid-column: span 2;
-}
-
-/* Its label ("Serie Topdeck in corso") on a band across the top too, like
-   the league's, but a step down: thinner, a light red tint with a red
-   hairline under it, the text dark red — not the league's solid red. */
 .ev-board.is-secondary .ev-big .ev-tile-k {
   margin: -16px -16px 0;
   padding: 6px 16px;
@@ -2215,6 +2152,7 @@ button.ev-tile {
   background: color-mix(in srgb, var(--brand-red) 13%, #fff);
   color: var(--brand-red-deep);
   font-size: 0.7rem;
+  letter-spacing: 0.14em;
 }
 
 :root[data-theme="dark"] .ev-board.is-secondary .ev-big .ev-tile-k {
@@ -2222,31 +2160,13 @@ button.ev-tile {
   background: rgba(220, 24, 28, 0.2);
 }
 
-.ev-board.is-secondary .ev-big .ev-name-block {
-  margin-top: 10px;
-}
-
-@media (max-width: 480px) {
-  .ev-board.is-secondary .ev-big .ev-tile-k {
-    margin-top: -14px;
-  }
-}
-
-/* No ring here (no set number of events): the name and the numbers have
-   the tile's whole width. */
 .ev-board.is-secondary .ev-big .ev-tile-t {
-  max-width: none;
+  margin-top: 10px;
   font-size: 1.3rem;
 }
 
-.ev-board.is-secondary .ev-since {
-  display: none;
-}
-
 .ev-board.is-secondary .ev-big .ev-stats {
-  max-width: none;
-  padding-top: 0;
-  border-top: 0;
+  margin-top: 12px;
 }
 
 .ev-board.is-secondary .ev-big .ev-stat b {
@@ -2260,24 +2180,6 @@ button.ev-tile {
 
 .ev-board.is-secondary .ev-big .ev-stat span {
   font-size: 0.6rem;
-}
-
-@media (max-width: 820px) {
-  .ev-board.is-secondary > .ev-big {
-    grid-column: 1 / -1;
-  }
-
-  /* Stacked, the series' tile read as one more of the league's: the two
-     boards set apart — more room between them, a line across. */
-  .ev-board + .ev-board {
-    margin-top: 10px;
-    padding-top: 28px;
-    border-top: 1px solid var(--hairline);
-  }
-}
-
-:root[data-theme="dark"] .ev-board + .ev-board {
-  border-top-color: rgba(255, 255, 255, 0.12);
 }
 
 :root[data-theme="dark"] .ev-board.is-secondary > .ev-big {

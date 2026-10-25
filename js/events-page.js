@@ -1,10 +1,11 @@
 // The "Leghe & Eventi" tab, a board of tiles:
-//  - a group per league in progress (the real league, then the Topdeck
-//    series): its tile, big and dark — its name, since when, players /
-//    average attendance / matches played, a ring with events played out of
-//    those scheduled, a link to its page — and beside it its next event
-//    (red: how soon, the date and name, the time big) and its latest one
-//    (date, name, players, the results links);
+//  - the league in progress as one card: on top a red cover — its name,
+//    players / average attendance / matches played, a ring with events
+//    played out of those scheduled, a link to its page — and under it its
+//    next event (the date as a small calendar sheet, the name, the weekday
+//    and how soon, the time big) and its latest one (date, name, players,
+//    the results links);
+//  - the Topdeck series in progress under it, a plain tile (its numbers);
 //  - then "Leghe concluse": one uniform tile per concluded league (the year,
 //    the name, events and players — a link to its page), newest first, with
 //    the standalone events' tile among them by the date of their latest one
@@ -32,10 +33,11 @@ const dayMonth = (iso) => {
   return `${String(d.getDate()).padStart(2, "0")} ${d.toLocaleDateString("it-IT", { month: "short" }).replace(".", "")}`;
 };
 const weekday = (iso) => capitalize(toDate(iso).toLocaleDateString("it-IT", { weekday: "long" }));
-// "dom 25 ott" — short weekday (in its own span: phones leave it out,
-// styles.css), day and short month.
-const shortDate = (iso) =>
-  `<span class="ev-date-wd">${toDate(iso).toLocaleDateString("it-IT", { weekday: "short" }).replace(".", "")} </span>${dayMonth(iso)}`;
+// A date as a small calendar sheet: the short month over the day.
+const calendarHtml = (iso) => {
+  const d = toDate(iso);
+  return `<span class="ev-cal"><small>${d.toLocaleDateString("it-IT", { month: "short" }).replace(".", "")}</small><b>${d.getDate()}</b></span>`;
+};
 const year = (iso) => toDate(iso).getFullYear();
 const fmtAvg = (n) => n.toLocaleString("it-IT", { maximumFractionDigits: 1 });
 const stat = (value, label) => `<div class="ev-stat"><b>${value}</b><span>${label}</span></div>`;
@@ -88,107 +90,125 @@ async function loadCounts(eventsRequest) {
   };
 }
 
-// A league in progress (the real league, or the Topdeck series): big, its
-// label on a red band across the top (styles.css .ev-big), a progress ring
-// on the right.
-function currentTile(league, played, scheduled, players, avg, matches) {
-  const total = Math.max(scheduled, played);
-  const ring = 2 * Math.PI * 46;
-  const share = total ? played / total : 0;
-  const since = league.events.length ? `dal ${formatDate(league.events[league.events.length - 1].event_date)}` : "";
+// What a league on the board is: in progress (the real league or the
+// Topdeck series), or the latest finished one keeping the main place.
+const boardLabel = (league) => (league.is_topdeck ? "Serie Topdeck in corso" : league.is_open ? "Lega in corso" : "Ultima lega");
+
+// Its numbers: players, average attendance, matches (the Topdeck series,
+// with no set number of events, also its events played).
+function statsHtml(league, { played, players, avg, matches }) {
   return `
-    <a class="ev-tile ev-big${league.is_topdeck ? " no-ring" : ""}" href="league.html?id=${league.id}">
-      <span class="ev-tile-k">${league.is_topdeck ? "Serie Topdeck in corso" : league.is_open ? "Lega in corso" : "Ultima lega"}</span>
-      <div class="ev-name-block">
-        <div class="ev-tile-t">${escapeHtml(league.name)}</div>
-        ${since ? `<div class="ev-since">${since}</div>` : ""}
-      </div>
       <div class="ev-stats">
         ${stat(`${USERS}${players}`, "Giocatori")}
         ${stat(played ? `${USERS}${fmtAvg(avg)}` : "—", "Media")}
         ${stat(matches, "Partite")}
         ${league.is_topdeck ? stat(played, "Eventi") : ""}
-      </div>
-      ${league.is_topdeck ? "" : ringHtml(played, total, share, ring)}
-    </a>`;
-}
-
-// The ring of a league in progress: events played out of those scheduled
-// (the Topdeck series has none — no set number of events: its count is a
-// number among the others).
-function ringHtml(played, total, share, ring) {
-  return `
-      <span class="ev-ring" aria-label="${played} eventi giocati${total ? ` su ${total}` : ""}">
-        <svg viewBox="0 0 110 110" aria-hidden="true">
-          <circle cx="55" cy="55" r="46" class="ev-ring-track"></circle>
-          <circle cx="55" cy="55" r="46" class="ev-ring-fill" stroke-dasharray="${(ring * share).toFixed(1)} ${ring.toFixed(1)}"></circle>
-        </svg>
-        <span class="ev-ring-label"><span>${played}${total ? `/${total}` : ""}<small>EVENTI</small></span></span>
-      </span>`;
-}
-
-// The next event: red — "Prossimo evento · tra N giorni" (js/countdown.js:
-// down to the hours on the day, then "in corso"), its date (with the
-// weekday) and name (an unnamed one by its league's) on the left, its start
-// time big on the right. A link to its league when it has one (the event's
-// own page fills in once it's played).
-function nextTile(ev) {
-  const inner = `
-      <span class="ev-tile-k"><span class="ev-pulse"></span>Prossimo evento<span class="ev-k-when"> · ${countdownHtml(ev)}</span></span>
-      <div class="ev-event-row">
-        <div class="ev-event-main">
-          <div class="ev-date">${shortDate(ev.event_date)}</div>
-          <div class="ev-event-name">${escapeHtml(ev.name || ev.league?.name || "Evento")}</div>
-        </div>
-        ${ev.start_time ? `<div class="ev-event-side"><span class="ev-event-time">${formatTime(ev.start_time)}</span></div>` : ""}
       </div>`;
-  return ev.league
-    ? `<a class="ev-tile ev-next" href="league.html?id=${ev.league.id}">${inner}</a>`
-    : `<div class="ev-tile ev-next">${inner}</div>`;
 }
 
-// The latest event: its date, its name (an unnamed one by its league's).
-// A league in progress with no next event scheduled yet: the same tile,
-// "Prossimamente" in place of the date. A link to the league.
-function soonTile(league) {
+// The board's main league (in progress, or the latest finished one; the
+// Topdeck series when there's no real league) as one card: a red cover —
+// its label, name, numbers and (not the Topdeck series) the ring, a link
+// to the league — and under it its events (`slots`: the next and the
+// latest, side by side; stacked on phones).
+function mainCardHtml(league, numbers, slots) {
+  const total = Math.max(numbers.scheduled, numbers.played);
   return `
-    <a class="ev-tile ev-next is-soon" href="league.html?id=${league.id}">
-      <span class="ev-tile-k"><span class="ev-pulse"></span>Prossimo evento</span>
-      <div>
-        <div class="ev-date">Prossimamente</div>
-      </div>
+    <div class="ev-tile ev-league">
+      <a class="ev-league-cover" href="league.html?id=${league.id}">
+        <div class="ev-league-text">
+          <span class="ev-tile-k">${boardLabel(league)}</span>
+          <div class="ev-tile-t">${escapeHtml(league.name)}</div>
+          ${statsHtml(league, numbers)}
+        </div>
+        ${league.is_topdeck ? "" : ringHtml(numbers.played, total)}
+      </a>
+      ${slots.length ? `<div class="ev-league-foot">${slots.join("")}</div>` : ""}
+    </div>`;
+}
+
+// The Topdeck series under the main league: a plain tile, its label on a
+// light band, its name and numbers (styles.css .ev-board.is-secondary). A
+// link to it.
+function secondaryTile(league, numbers) {
+  return `
+    <a class="ev-tile ev-big" href="league.html?id=${league.id}">
+      <span class="ev-tile-k">${boardLabel(league)}</span>
+      <div class="ev-tile-t">${escapeHtml(league.name)}</div>
+      ${statsHtml(league, numbers)}
     </a>`;
 }
 
-// The latest event: its date and name on the left, its players and the
-// Moxfield / Top 8 links (js/results-link.js) on the right. A link to it.
-function latestTile(ev, leagueName, players) {
+// The ring of the main league: events played out of those scheduled (the
+// Topdeck series has none — no set number of events: its count is a
+// number among the others).
+function ringHtml(played, total) {
+  const ring = 2 * Math.PI * 46;
+  const share = total ? played / total : 0;
   return `
-    <a class="ev-tile" href="event.html?id=${ev.id}">
-      <span class="ev-tile-k">Ultimo evento</span>
-      <div class="ev-event-row">
-        <div class="ev-event-main">
-          <div class="ev-date">${shortDate(ev.event_date)}</div>
-          <div class="ev-event-name">${escapeHtml(ev.name || leagueName || weekday(ev.event_date))}</div>
-        </div>
-        <div class="ev-event-side">
-          <span class="ev-event-players">${USERS}${players}</span>
-          ${nestedResultsMenu(ev.results_url, ev.decklists_url)}
-        </div>
-      </div>
-    </a>`;
+        <span class="ev-ring" aria-label="${played} eventi giocati${total ? ` su ${total}` : ""}">
+          <svg viewBox="0 0 110 110" aria-hidden="true">
+            <circle cx="55" cy="55" r="46" class="ev-ring-track"></circle>
+            <circle cx="55" cy="55" r="46" class="ev-ring-fill" stroke-dasharray="${(ring * share).toFixed(1)} ${ring.toFixed(1)}"></circle>
+          </svg>
+          <span class="ev-ring-label"><span>${played}${total ? `/${total}` : ""}<small>EVENTI</small></span></span>
+        </span>`;
 }
 
-// One league in progress as its own group: its big tile on the left, its
-// next event (or "Prossimamente", when none is scheduled yet) and latest
-// event beside it (the next one alone, before any is played, fills the
-// space). The real league is the main group (two
-// rows, dark); the Topdeck series a secondary one (`secondary`: one row,
-// light — styles.css .ev-board.is-secondary), under it.
-function groupHtml(bigHtml, sideTiles, secondary = false) {
-  const side = sideTiles.length === 1 ? sideTiles[0].replace('class="ev-tile', 'class="ev-tile ev-tall') : sideTiles.join("");
-  const cls = ["ev-board", sideTiles.length ? "" : "is-alone", secondary ? "is-secondary" : ""].filter(Boolean).join(" ");
-  return `<div class="${cls}">${bigHtml}${side}</div>`;
+// One event under the cover: its calendar sheet, then its label, name and
+// a line under it, and on the right `side` (the time, or the players and
+// results links).
+function slotHtml({ cls = "", href, cal, label, name, sub = "", side = "" }) {
+  const inner = `
+        ${cal}
+        <span class="ev-slot-main">
+          <span class="ev-tile-k">${label}</span>
+          <span class="ev-slot-name">${name}</span>
+          ${sub ? `<span class="ev-slot-sub">${sub}</span>` : ""}
+        </span>
+        ${side ? `<span class="ev-slot-side">${side}</span>` : ""}`;
+  return href ? `<a class="ev-slot${cls}" href="${href}">${inner}</a>` : `<div class="ev-slot${cls}">${inner}</div>`;
+}
+
+// The next event: a pulsing dot, its name (an unnamed one by its league's),
+// the weekday and how soon (js/countdown.js: down to the hours on the day,
+// then "in corso"), the start time big on the right. A link to its league
+// (the event's own page fills in once it's played).
+function nextSlot(ev) {
+  return slotHtml({
+    cls: " is-next",
+    href: ev.league ? `league.html?id=${ev.league.id}` : "",
+    cal: calendarHtml(ev.event_date),
+    label: '<span class="ev-pulse"></span>Prossimo evento',
+    name: escapeHtml(ev.name || ev.league?.name || "Evento"),
+    sub: `${weekday(ev.event_date)} · ${countdownHtml(ev)}`,
+    side: ev.start_time ? `<span class="ev-slot-time">${formatTime(ev.start_time)}</span>` : "",
+  });
+}
+
+// A league in progress with no next event scheduled yet: the same slot,
+// "Prossimamente", a "?" for its date. A link to the league.
+function soonSlot(league) {
+  return slotHtml({
+    cls: " is-next",
+    href: `league.html?id=${league.id}`,
+    cal: '<span class="ev-cal"><b>?</b></span>',
+    label: '<span class="ev-pulse"></span>Prossimo evento',
+    name: "Prossimamente",
+  });
+}
+
+// The latest event: its name and weekday, its players and the Moxfield /
+// Top 8 links (js/results-link.js) on the right. A link to it.
+function latestSlot(ev, leagueName, players) {
+  return slotHtml({
+    href: `event.html?id=${ev.id}`,
+    cal: calendarHtml(ev.event_date),
+    label: "Ultimo evento",
+    name: escapeHtml(ev.name || leagueName || weekday(ev.event_date)),
+    sub: weekday(ev.event_date),
+    side: `<span class="ev-slot-players">${USERS}${players}</span>${nestedResultsMenu(ev.results_url, ev.decklists_url)}`,
+  });
 }
 
 function closedTile(league, players) {
@@ -236,7 +256,7 @@ function openStandaloneList(events, counter) {
   });
 }
 
-// A league in progress's name on one line, as big as its room allows: from
+// A board league's name on one line, as big as its room allows: from
 // the tile's own size (the stylesheet's — bigger on desktop; on phones the
 // main league's from NAME_MAX_PHONE) down to NAME_MIN px, the largest that
 // fits beside the ring; still too long at that, it ends in "…". Redone on
@@ -245,7 +265,7 @@ const NAME_MAX_PHONE = 28;
 const NAME_MIN = 15;
 
 function fitBigNames(root) {
-  for (const el of root.querySelectorAll(".ev-big .ev-tile-t")) {
+  for (const el of root.querySelectorAll(":is(.ev-league, .ev-big) .ev-tile-t")) {
     el.style.fontSize = "";
     const main = !el.closest(".is-secondary");
     const start = main && window.innerWidth <= 480 ? NAME_MAX_PHONE : parseFloat(getComputedStyle(el).fontSize);
@@ -308,29 +328,29 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     );
     if (signal.aborted) return;
     for (const [index, league] of boardLeagues.entries()) {
-      const scheduled = scheduledCounts[index];
+      const played = league.events.length;
       const attendance = league.events.reduce((sum, ev) => sum + counter.ofEvent(ev.id), 0);
-      const big = currentTile(
-        league,
-        league.events.length,
-        scheduled,
-        counter.ofLeague(league.id),
-        league.events.length ? attendance / league.events.length : 0,
-        league.events.reduce((sum, ev) => sum + counter.matchesOf(ev.id), 0)
-      );
+      const numbers = {
+        played,
+        scheduled: scheduledCounts[index],
+        players: counter.ofLeague(league.id),
+        avg: played ? attendance / played : 0,
+        matches: league.events.reduce((sum, ev) => sum + counter.matchesOf(ev.id), 0),
+      };
       // Secondary: the Topdeck series while the main place has a real league
-      // (in progress, or the latest finished one) — just its own tile (one
-      // row), no event tiles. With no real league at all the series takes
-      // that place: the main look, its next / latest event beside it.
-      const secondary = league.is_topdeck && Boolean(mainLeague);
-      const side = [];
-      if (!secondary) {
-        const next = upcoming.find((ev) => ev.league?.id === league.id);
-        // A finished league: no next event to wait for.
-        if (league.is_open) side.push(next ? nextTile(next) : soonTile(league));
-        if (league.events[0]) side.push(latestTile(league.events[0], league.name, counter.ofEvent(league.events[0].id)));
+      // (in progress, or the latest finished one) — just its own tile, no
+      // events. With no real league at all the series takes that place: the
+      // main card, its next / latest event under the cover.
+      if (league.is_topdeck && mainLeague) {
+        groups.push(`<div class="ev-board is-secondary">${secondaryTile(league, numbers)}</div>`);
+        continue;
       }
-      groups.push(groupHtml(big, side, secondary));
+      const slots = [];
+      const next = upcoming.find((ev) => ev.league?.id === league.id);
+      // A finished league: no next event to wait for.
+      if (league.is_open) slots.push(next ? nextSlot(next) : soonSlot(league));
+      if (league.events[0]) slots.push(latestSlot(league.events[0], league.name, counter.ofEvent(league.events[0].id)));
+      groups.push(`<div class="ev-board">${mainCardHtml(league, numbers, slots)}</div>`);
     }
     boardEl.innerHTML = groups.join("");
     const boardArea = boardEl.parentElement;
