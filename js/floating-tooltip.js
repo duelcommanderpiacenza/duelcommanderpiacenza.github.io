@@ -86,8 +86,12 @@ export function showFloatingTooltip(anchor, text) {
   const margin = 8;
   const centeredLeft = anchorRect.left + anchorRect.width / 2 - tipRect.width / 2;
   const left = Math.max(margin, Math.min(centeredLeft, window.innerWidth - tipRect.width - margin));
-  // Always opens upward, same as the badge tooltip it mirrors.
-  const top = anchorRect.top - tipRect.height - 10;
+  // Opens upward — or, with no room above it (near the screen's top), under
+  // the element, its arrow pointing up (.is-below).
+  const above = anchorRect.top - tipRect.height - 10;
+  const below = above < margin;
+  const top = below ? anchorRect.bottom + 10 : above;
+  tip.classList.toggle("is-below", below);
 
   // The arrow needs its own position, separate from the tooltip box's —
   // clamping the tooltip to stay on-screen can shift it away from

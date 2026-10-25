@@ -2070,6 +2070,11 @@ html.nav-mobile .matchups-matrix-scroll::-webkit-scrollbar {
   transition: opacity 150ms ease, transform 150ms ease;
 }
 
+/* Opened under the element (no room above it): it rises from above. */
+.floating-tooltip.is-below {
+  transform: translateY(-4px);
+}
+
 .floating-tooltip.is-visible {
   opacity: 1;
   transform: none;
@@ -2078,7 +2083,8 @@ html.nav-mobile .matchups-matrix-scroll::-webkit-scrollbar {
 /* Positioned via inline `left` in js/floating-tooltip.js — the tooltip box
    itself can get shifted off-center (clamped to stay on-screen), so the
    arrow needs to track the actual anchor instead of staying fixed at the
-   tooltip's own midpoint. Points down (the tooltip always opens above). */
+   tooltip's own midpoint. Points down (the tooltip above the element), or
+   up when it opened under it (.is-below). */
 .floating-tooltip-arrow {
   position: absolute;
   bottom: -5px;
@@ -2111,6 +2117,18 @@ html.nav-mobile .matchups-matrix-scroll::-webkit-scrollbar {
   border-left-width: 6px;
   border-right-width: 6px;
   border-top: 6px solid #fff;
+}
+
+.is-below .floating-tooltip-arrow {
+  top: -5px;
+  bottom: auto;
+  border-top: 0;
+  border-bottom: 5px solid var(--brand-red);
+}
+
+.badge-tip.is-below .floating-tooltip-arrow {
+  top: -6px;
+  border-bottom: 6px solid #fff;
 }
 
 .badge-tip-head {

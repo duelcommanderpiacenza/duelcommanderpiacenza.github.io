@@ -79,6 +79,10 @@
   border-top-color: #241b1d;
 }
 
+:root[data-theme="dark"] .badge-tip.is-below .floating-tooltip-arrow {
+  border-bottom-color: #241b1d;
+}
+
 /* Without this, the generic dark-mode rule above (3 classes) wins on
    specificity over .dashboard-card-commanders .pie-chart-wrap's own
    background: none (2 classes) regardless of source order, giving the
