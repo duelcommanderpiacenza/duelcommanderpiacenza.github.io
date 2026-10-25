@@ -15,7 +15,7 @@ import { computeEventLeaderboard, computeLeaguePoints, isBye, isDrop, matchRound
 export const TOP8_STREAK_COUNT = 3;
 // A top-8 in a tiny event isn't the same achievement as a top-8 in a full
 // one — only events with at least this many entrants count toward the
-// streak at all.
+// streak at all (a smaller one neither adds to it nor breaks it).
 export const TOP8_STREAK_MIN_ENTRANTS = 20;
 // How many auto badges show per player — applied by js/players-page.js at
 // display time (sliced off the front of the priority-sorted array this
@@ -99,9 +99,9 @@ function monthsAgoIso(months) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-// Every player who top-8'd in each of their last 3 attended events (any
-// league/standalone, however long ago — no time limit), provided each of
-// those 3 events had at least TOP8_STREAK_MIN_ENTRANTS entrants.
+// Every player who top-8'd in each of their last 3 attended events with at
+// least TOP8_STREAK_MIN_ENTRANTS entrants (any league/standalone, however
+// long ago — no time limit); smaller events are skipped, not a break.
 async function top8StreakPlayerIds(closedIds) {
   const [events, allEntries, allMatches] = await Promise.all([
     Events.list(),
@@ -139,12 +139,12 @@ async function top8StreakPlayerIds(closedIds) {
 
   const qualifying = [];
   for (const [playerId, playerEvents] of eventsByPlayer) {
-    const latest = [...playerEvents].sort((a, b) => (a.event_date < b.event_date ? 1 : -1)).slice(0, TOP8_STREAK_COUNT);
+    const latest = playerEvents
+      .filter((ev) => (entriesByEvent.get(ev.id)?.length ?? 0) >= TOP8_STREAK_MIN_ENTRANTS)
+      .sort((a, b) => (a.event_date < b.event_date ? 1 : -1))
+      .slice(0, TOP8_STREAK_COUNT);
     if (latest.length < TOP8_STREAK_COUNT) continue;
-    const allTop8 = latest.every((ev) => {
-      if ((entriesByEvent.get(ev.id)?.length ?? 0) < TOP8_STREAK_MIN_ENTRANTS) return false;
-      return standingsFor(ev.id).find((row) => row.player?.id === playerId)?.isTop8;
-    });
+    const allTop8 = latest.every((ev) => standingsFor(ev.id).find((row) => row.player?.id === playerId)?.isTop8);
     if (allTop8) qualifying.push(playerId);
   }
   return qualifying;
