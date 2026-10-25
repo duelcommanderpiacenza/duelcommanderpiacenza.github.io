@@ -2200,13 +2200,16 @@ html.is-page-transition.app-header:not(.is-bar-logo-stay) body:not(:has(.page-ma
    page's content after the hero is one sheet (.hero-sheet, a wrapper in each
    page's markup) in the page's colour with rounded top corners, laid 26px
    over the hero's bottom. The page scrolls, hero and all — but the hero
-   (one that fits on the screen, .is-parallax from js/hero-sheet.js) at
-   half speed, its content fading, so the sheet slides up over it: a
-   scroll-driven animation over the first --hero-h of scroll (where it isn't
+   (one that fits on the screen, .is-parallax from js/hero-sheet.js) at half
+   speed, so the sheet slides up over it, a little like a phone's app
+   drawer over the wallpaper: the whole hero — art, name, card, numbers —
+   blurring and darkening more and more — a scroll-driven animation over the first --hero-h
+   of scroll, after which the sheet covers it wholly (where it isn't
    supported, or with reduced motion, everything just scrolls). The header
    row (back pill, search, account) scrolls normally — it's outside the
-   hero. (Tried and dropped: a sticky hero the sheet covered wholly, then
-   one keeping its header row and name on top.) On a computer the wrapper
+   hero. (Tried and dropped: the half speed with the content only fading;
+   the hero standing still, blurring; one keeping its header row and name
+   on top.) On a computer the wrapper
    is no box at all (display: contents) — the layout as before. */
 .hero-sheet {
   display: contents;
@@ -2254,15 +2257,28 @@ html.app-header :is(.detail-hero-wrap:has(+ .hero-sheet) .profile-hero, .profile
   padding-bottom: 50px;
 }
 
+/* The art a little further out than its usual 40px, for the stronger
+   blur's soft edge to stay outside the hero too. */
+html.app-header .profile-hero.is-parallax .profile-hero-art {
+  inset: -90px;
+}
+
 @keyframes hero-parallax {
   to {
     transform: translateY(calc(var(--hero-h, 400px) / 2));
   }
 }
 
+@keyframes hero-parallax-blur {
+  to {
+    filter: blur(64px) saturate(1.3) brightness(0.55);
+  }
+}
+
 @keyframes hero-parallax-fade {
   to {
-    opacity: 0.3;
+    opacity: 0.55;
+    filter: blur(14px);
   }
 }
 
@@ -2273,15 +2289,24 @@ html.app-header :is(.detail-hero-wrap:has(+ .hero-sheet) .profile-hero, .profile
     animation-range: 0 var(--hero-h, 400px);
   }
 
+  html.app-header .profile-hero.is-parallax .profile-hero-art.is-loaded {
+    animation: hero-parallax-blur linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 var(--hero-h, 400px);
+  }
+
+  /* Blurred faster than the art, already well blurred by the time the
+     sheet reaches the text. */
   html.app-header .profile-hero.is-parallax .profile-hero-inner {
     animation: hero-parallax-fade linear both;
     animation-timeline: scroll(root);
-    animation-range: 0 var(--hero-h, 400px);
+    animation-range: 0 calc(var(--hero-h, 400px) * 0.6);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   html.app-header .profile-hero.is-parallax,
+  html.app-header .profile-hero.is-parallax .profile-hero-art.is-loaded,
   html.app-header .profile-hero.is-parallax .profile-hero-inner {
     animation: none;
   }

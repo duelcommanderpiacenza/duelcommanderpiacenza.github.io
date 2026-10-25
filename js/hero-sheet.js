@@ -1,7 +1,7 @@
 // The hero pages on touch screens (styles.css "The hero pages on touch
 // screens"): the hero scrolls at half speed while the content's sheet
-// (.hero-sheet) scrolls at full speed, so the sheet slides up over it — a
-// parallax done by CSS (a scroll-driven animation on .profile-hero.is-parallax).
+// (.hero-sheet) scrolls at full speed, so the sheet slides up over it, the
+// hero blurring more and more — done by CSS (a scroll-driven animation on .profile-hero.is-parallax).
 // This only switches it on — for a hero that fits on the screen (a taller one,
 // the profile in edit mode, would get its bottom covered before it's seen) —
 // and gives the CSS the hero's height (--hero-h: the scroll over which it
