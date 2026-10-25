@@ -72,6 +72,7 @@ import {
   cardArtUrl,
   cardBadgesHtml,
   cardLinksHtml,
+  fitCardDescription,
   parseCardLink,
   CARD_LINK_SITES,
 } from "./player-card.js";
@@ -250,6 +251,7 @@ export function mount({ signal = new AbortController().signal } = {}) {
 
     // The links: what's saved (the edit fields are only read on save).
     linksEl.innerHTML = cardLinksHtml(savedValues());
+    fitCardDescription(cardEl);
 
     // The player's (not the account's) first event and badges, once linked.
     sinceEl.textContent = claim.linked && firstYear ? `Dal ${firstYear}` : "";

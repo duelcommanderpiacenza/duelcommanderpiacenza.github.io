@@ -326,6 +326,39 @@ export function cardLinksHtml(links) {
     .join("");
 }
 
+// The description outside edit mode (styles.css .pc-description, the
+// strip's room beside the links): a short one bigger, as big as still fits
+// on one line, up to DESC_MAX_CQW — about the links' height, so the strip
+// doesn't grow; one that doesn't fit on one line even at the usual size
+// keeps it (DESC_MIN_CQW, two lines at most). In cqw like everything on
+// the card, so the result holds at any card size; re-fitted when the card
+// is resized (fonts arriving, edit mode closing) — call it again when the
+// text or the links change.
+const DESC_MIN_CQW = 2.2;
+const DESC_MAX_CQW = 3.4;
+const descFitted = new WeakSet();
+
+export function fitCardDescription(cardEl) {
+  if (!descFitted.has(cardEl)) {
+    descFitted.add(cardEl);
+    new ResizeObserver(() => fitCardDescription(cardEl)).observe(cardEl);
+    document.fonts?.ready.then(() => fitCardDescription(cardEl));
+  }
+  const descEl = cardEl.querySelector(".pc-description");
+  if (!descEl) return;
+  descEl.style.removeProperty("--pc-desc-size");
+  if (cardEl.classList.contains("is-editing") || !descEl.getClientRects().length) return;
+  // The room it has, then for a moment its own one-line width (no clamp,
+  // no wrapping, out of the flex sharing).
+  const room = descEl.clientWidth;
+  descEl.style.cssText += "; display: block; flex: none; width: max-content; white-space: nowrap";
+  const natural = descEl.clientWidth;
+  for (const prop of ["display", "flex", "width", "white-space"]) descEl.style.removeProperty(prop);
+  if (!natural || natural > room) return;
+  const size = Math.min(DESC_MAX_CQW, (DESC_MIN_CQW * room * 0.97) / natural);
+  if (size > DESC_MIN_CQW) descEl.style.setProperty("--pc-desc-size", `${size.toFixed(2)}cqw`);
+}
+
 // player.html's card, view only: the same layout as account.html's card
 // outside edit mode — the links, then the description, on the panel tinted
 // in the favourite colours. `card` is db.js's PlayerCards.get() row, `name` the
@@ -374,6 +407,7 @@ export function renderPublicPlayerCard(containerEl, card, { name, since, badges 
   const cardEl = containerEl.firstElementChild;
   applyCardAccents(cardEl, card.fav_colors);
   applyCardCosmetics(cardEl, progress);
+  fitCardDescription(cardEl);
   createArtPainter(cardEl.querySelector(".pc-art"))(card.commander_name, card.card_print ?? null);
   return cardEl;
 }

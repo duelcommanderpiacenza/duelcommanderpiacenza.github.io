@@ -1947,8 +1947,14 @@ html.nav-mobile .player-card.is-editing .pc-art-space {
   flex-wrap: nowrap;
 }
 
+/* The words take all the room beside the links; a short one bigger, as
+   big as still fits on one line (--pc-desc-size, js/player-card.js
+   fitCardDescription). */
 .player-card:not(.is-editing) .pc-description {
-  font-size: 2.2cqw;
+  flex: 1 1 0;
+  min-width: 0;
+  font-size: var(--pc-desc-size, 2.2cqw);
+  text-align: start;
   -webkit-line-clamp: 2;
   line-clamp: 2;
 }
