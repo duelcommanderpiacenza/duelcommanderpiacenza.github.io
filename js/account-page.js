@@ -65,6 +65,7 @@ import { hidePageLoading } from "./page-loading.js";
 import { fetchPlayerBadgesRenderer } from "./player-badges.js";
 import { historyStatsHtml } from "./history-list.js";
 import { haptic } from "./haptics.js";
+import { mountSettings } from "./settings-panel.js";
 import { rememberMyPlayer } from "./me-highlight.js";
 import {
   applyCardAccents,
@@ -451,9 +452,22 @@ export function mount({ signal = new AbortController().signal } = {}) {
     { signal }
   );
 
+  // Impostazioni: the theme and the vibration — in the tab when signed in,
+  // in a card under the sign-in (touch screens) when not.
+  mountSettings({
+    controlsEl: document.getElementById("profile-settings"),
+    aboutEl: document.getElementById("profile-settings-about"),
+    signal,
+  });
+  mountSettings({
+    controlsEl: document.getElementById("login-settings"),
+    aboutEl: document.getElementById("login-settings-about"),
+    signal,
+  });
+
   // --- The sections, one at a time behind tabs -------------------------------------
 
-  // Album comandanti, Seguiti, Decklist, Account: a tab each, only for a
+  // Album comandanti, Seguiti, Decklist, Impostazioni: a tab each, only for a
   // section that's shown (styles.css hides the others' tabs) — a pill bar on
   // desktop, a full-width segmented control on phones. Until the user picks
   // one, the first section shown is the open one (the album once linked);

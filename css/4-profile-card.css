@@ -2817,10 +2817,11 @@ html.nav-mobile .pc-link-field .pc-link {
 
 /* Brand red, like the site's other small floating controls; ✎ outside edit
    mode, ✓ in it. */
-/* account.html: "?" on the card's top-left corner (the effects' explanation,
-   js/card-cosmetics.js) — the site's red foil help button (its colours with
-   .help-toggle-btn's), a white ring so it reads on the dark hero. Only in edit mode (with ✓ and ✕ on the
-   other corner), and only once linked. */
+/* account.html: "?" on the card's top-left corner (the effects'
+   explanation, js/card-cosmetics.js) — the site's red foil help button (its
+   colours with .help-toggle-btn's), a white ring so it reads on the dark
+   hero. In and out of edit mode (✎, or ✓ and ✕, on the other corner), once
+   linked. */
 .pc-help-btn {
   position: absolute;
   top: -10px;
@@ -2846,13 +2847,15 @@ html.nav-mobile .pc-link-field .pc-link {
   transform: scale(1.08);
 }
 
+/* Its badges start after it, not under it (account.html's card only — the
+   "?" and the badges both come once linked). */
+#player-card .pc-badges {
+  left: max(2.88cqw, 32px);
+}
+
 .pc-help-btn:focus-visible {
   outline: 3px solid rgba(255, 255, 255, 0.6);
   outline-offset: 2px;
-}
-
-.player-card:not(.is-editing) .pc-help-btn {
-  display: none;
 }
 
 .pc-edit-btn {

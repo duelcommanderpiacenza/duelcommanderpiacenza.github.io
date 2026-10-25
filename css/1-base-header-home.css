@@ -1957,20 +1957,18 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
     flex-shrink: 0;
   }
 
-  /* No room reserved for the tab bar: it slides away while
-     scrolling down (js/nav-dropdown.js .is-scrolled-away), so at the
-     page's bottom the footer is clear — just the home-bar space on notched
-     phones. */
+  /* No footer on touch screens — a web page's, not an app's: its switches
+     and small print are in the Profilo page's "Impostazioni"
+     (js/settings-panel.js). */
   html.nav-mobile footer {
-    padding-bottom: calc(18px + env(safe-area-inset-bottom));
+    display: none;
   }
 
-  /* A page shorter than the screen would leave its footer under the tab bar
+  /* A page shorter than the screen would leave its bottom under the tab bar
      (which never slides away without scrolling): every page at least a
      screen tall (the large viewport — browser bars hidden — so it never
-     peeks in), the footer just below the screen's edge, shown by scrolling
-     down to it, which slides the bar away (js/nav-dropdown.js, at the
-     bottom however little the page scrolls). */
+     peeks in), so it scrolls down to its end, which slides the bar away
+     (js/nav-dropdown.js, at the bottom however little the page scrolls). */
   html.nav-mobile .page-main {
     min-height: 100vh;
     min-height: 100lvh;

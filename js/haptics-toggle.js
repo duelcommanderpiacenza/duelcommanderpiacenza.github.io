@@ -2,7 +2,10 @@
 // place of its empty .footer-spacer, mirroring the theme button on the
 // right), only where vibration works (js/haptics.js hapticsSupported —
 // Android phones). A tap turns it on / off, with a short buzz when turned
-// on; its icon is a vibrating phone, struck through when off.
+// on; its icon is a vibrating phone, struck through when off. On touch
+// screens the footer is hidden: the same choice is made in the Profilo
+// page's "Impostazioni" (js/settings-panel.js, chooseHaptics) —
+// "haptics:change" keeps the two in step.
 //
 // Kept in this browser; signed in, also for the account (js/db.js
 // UserSettings, migration 024) — the account's saved choice wins
@@ -20,6 +23,18 @@ const icon = (on) =>
   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${PHONE}${
     on ? "" : '<path d="M3 3l18 18"></path>'
   }</svg>`;
+
+// The account signed in (null: none), for saving the choice to it.
+let accountId = null;
+
+// A choice made (the footer's button, the settings): kept in this
+// browser and, signed in, for the account; a buzz when turned on.
+export function chooseHaptics(on) {
+  setHapticsEnabled(on);
+  if (on) haptic("confirm");
+  if (accountId) UserSettings.saveHaptics(accountId, on).catch((err) => console.error(err));
+  document.dispatchEvent(new Event("haptics:change"));
+}
 
 export function setupHapticsToggle() {
   if (!hapticsSupported()) return;
@@ -42,13 +57,8 @@ export function setupHapticsToggle() {
     button.setAttribute("aria-label", "Vibrazione");
   }
 
-  button.addEventListener("click", () => {
-    const on = !hapticsEnabled();
-    setHapticsEnabled(on);
-    reflect();
-    if (on) haptic("confirm");
-    if (userId) UserSettings.saveHaptics(userId, on).catch((err) => console.error(err));
-  });
+  button.addEventListener("click", () => chooseHaptics(!hapticsEnabled()));
+  document.addEventListener("haptics:change", reflect);
 
   // Signed in: the account's saved choice (if any) wins over this
   // browser's — read once per sign-in (firstReadSinceSignIn, js/theme.js): after that
@@ -60,6 +70,7 @@ export function setupHapticsToggle() {
     if (nextId === userId) return;
     const previousId = userId;
     userId = nextId;
+    accountId = nextId;
     if (!userId) {
       if (previousId) forgetSynced("haptics", previousId);
       return;
@@ -70,7 +81,7 @@ export function setupHapticsToggle() {
         .then((saved) => {
           if (saved === null || saved === hapticsEnabled() || userId !== nextId) return;
           setHapticsEnabled(saved);
-          reflect();
+          document.dispatchEvent(new Event("haptics:change"));
         })
         .catch((err) => {
           console.error(err);

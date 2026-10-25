@@ -42,7 +42,8 @@ export function initBackToTop({ signal } = {}) {
     frame = 0;
     const visible = window.scrollY > SHOW_AFTER;
     if (visible !== lastVisible) button.classList.toggle("is-visible", (lastVisible = visible));
-    const footerTop = footer?.getBoundingClientRect().top ?? Infinity;
+    // (Touch screens hide the footer: nothing to clear.)
+    const footerTop = footer?.getClientRects().length ? footer.getBoundingClientRect().top : Infinity;
     const lift = Math.round(Math.max(0, window.innerHeight - footerTop));
     if (lift !== lastLift) button.style.setProperty("--back-to-top-lift", `${(lastLift = lift)}px`);
   };

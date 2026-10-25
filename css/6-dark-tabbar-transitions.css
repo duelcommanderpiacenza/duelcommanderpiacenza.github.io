@@ -1645,6 +1645,24 @@ html.is-page-transition:not(.app-header) .site-header-brand {
   }
 }
 
+/* ---------------------------------------------------------------------------
+   Theme switch (js/theme.js switchTheme): light ↔ dark chosen by a tap, the
+   old colours fade into the new ones — the whole screen as one picture (no
+   part of the page keeps its own transition name meanwhile: the header's
+   and footer's, always set), cross-faded.
+   --------------------------------------------------------------------------- */
+html.is-theme-transition * {
+  view-transition-name: none !important;
+}
+
+html.is-theme-transition::view-transition-old(root) {
+  animation: page-fade-out 320ms ease both;
+}
+
+html.is-theme-transition::view-transition-new(root) {
+  animation: page-fade-through-in 320ms ease both;
+}
+
 /* Comandanti / Matchups / Archetipi — one section, "Meta": moving between
    them, its title line (the filters' button on it) and the segmented
    control stay still, swapped at once, while the rest of the page fades
@@ -2310,4 +2328,196 @@ html.app-header .profile-hero.is-parallax .profile-hero-art {
   html.app-header .profile-hero.is-parallax .profile-hero-inner {
     animation: none;
   }
+}
+
+/* The settings on account.html (js/settings-panel.js): in the
+   "Impostazioni" tab, and on touch screens in a card under the sign-in.
+   The theme as a three-way segmented control, the vibration (Android) as
+   a switch in a row, then (touch screens only — there's no footer there)
+   the footer's small print. */
+.settings-group + .settings-group {
+  margin-top: 16px;
+}
+
+/* (p.: over .profile-card p's margin, in the tab.) */
+p.settings-label {
+  margin: 0 0 8px 4px;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* "Account", over the login row in the tab: the next group. */
+p.settings-account-label {
+  margin-top: 22px;
+}
+
+/* The theme: three segments, the chosen one a white pill on the track
+   (dark mode: lifted a shade), its icon and label in red. */
+.settings-seg {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  max-width: 460px;
+  padding: 4px;
+  border-radius: 16px;
+  background: rgba(154, 28, 32, 0.07);
+}
+
+.settings-seg button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+
+.settings-seg button svg {
+  width: 22px;
+  height: 22px;
+}
+
+.settings-seg button[aria-checked="true"] {
+  background: #fff;
+  color: var(--brand-red-deep);
+  box-shadow: 0 1px 2px rgba(40, 6, 9, 0.1), 0 3px 10px rgba(40, 6, 9, 0.1);
+}
+
+.settings-seg button:focus-visible,
+.settings-switch:focus-visible {
+  outline: 2px solid var(--brand-red);
+  outline-offset: 2px;
+}
+
+/* The vibration: a row — its icon, name and a line — and an on / off
+   switch (red track when on). */
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 460px;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  border: 1px solid var(--hairline);
+  border-radius: 18px;
+}
+
+.settings-row-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--brand-red) 10%, transparent);
+  color: var(--brand-red-deep);
+}
+
+.settings-row-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.settings-row-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  color: var(--text-title);
+  font-weight: 800;
+}
+
+.settings-row-text small {
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.settings-switch {
+  position: relative;
+  flex-shrink: 0;
+  width: 50px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 30px;
+  background: rgba(154, 28, 32, 0.18);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 180ms ease;
+}
+
+.settings-switch span {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(40, 6, 9, 0.3);
+  transition: transform 200ms cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+.settings-switch[aria-checked="true"] {
+  background: var(--brand-red);
+}
+
+.settings-switch[aria-checked="true"] span {
+  transform: translateX(20px);
+}
+
+/* The footer's small print, at the card's bottom: centred, faint. */
+.settings-about {
+  margin-top: 22px;
+  padding-top: 14px;
+  border-top: 1px solid var(--hairline);
+  color: var(--text-muted-2);
+  font-size: 0.85rem;
+}
+
+.settings-about .footer-center > :first-child {
+  font-size: 0.85rem;
+}
+
+/* A computer has the footer: no small print here, and no settings card
+   for signed-out visitors (the footer's button switches the theme). */
+html:not(.nav-mobile) :is(.settings-about, .account-settings) {
+  display: none;
+}
+
+:root[data-theme="dark"] .settings-row-icon {
+  background: rgba(255, 110, 110, 0.14);
+  color: #ff9a9d;
+}
+
+:root[data-theme="dark"] .settings-seg {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+:root[data-theme="dark"] .settings-seg button[aria-checked="true"] {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ff9a9d;
+  box-shadow: none;
+}
+
+:root[data-theme="dark"] .settings-switch {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+:root[data-theme="dark"] .settings-switch[aria-checked="true"] {
+  background: var(--brand-red);
 }

@@ -4,6 +4,9 @@
 // no flash of the wrong theme on navigation); this module wires up the
 // footer's round theme button. Shared by both js/layout.js (public pages)
 // and admin/js/app.js (admin has no nav, so doesn't load layout.js at all).
+// On touch screens the footer is hidden and the choice is made in the
+// Profilo page's "Impostazioni" instead (js/settings-panel.js: themeMode /
+// chooseTheme).
 //
 // Signed out, the button just switches light ↔ dark (kept in this browser).
 // Signed in, it opens a small menu — Chiaro / Scuro / Segui il sistema — and
@@ -20,7 +23,7 @@ const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
 const svg = (body) =>
   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
 
-const ICONS = {
+export const THEME_ICONS = {
   light: svg(
     '<circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path>'
   ),
@@ -29,6 +32,7 @@ const ICONS = {
     '<rect x="2" y="3" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line>'
   ),
 };
+const ICONS = THEME_ICONS;
 const CHECK = svg('<path d="M20 6 9 17l-5-5"></path>');
 
 const MODES = [
@@ -49,6 +53,36 @@ function storedMode() {
   }
 }
 
+// The account signed in (null: none), for saving the choice to it.
+let accountId = null;
+
+// The current choice ("light", "dark" or "system").
+export const themeMode = storedMode;
+
+// A choice made (the footer's menu, the settings): applied, kept in
+// this browser and, signed in, for the account; "theme:change" tells the
+// other controls showing it. `byTap`: chosen by a tap (the colours fade
+// across — switchTheme).
+export function chooseTheme(mode, byTap = false) {
+  switchTheme(mode, byTap);
+  if (accountId) UserSettings.saveTheme(accountId, mode).catch((err) => console.error(err));
+}
+
+// A choice made by a tap (`byTap`): when it changes what's on screen, the
+// old colours fade into the new ones — a view transition of the whole
+// screen (styles.css "Theme switch"). Where the browser has no view
+// transitions, with reduced motion, or with nothing to change: at once.
+function switchTheme(mode, byTap) {
+  const root = document.documentElement;
+  const next = mode === "system" ? (darkQuery.matches ? "dark" : "light") : mode;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!byTap || !document.startViewTransition || reduceMotion || next === root.dataset.theme) return applyMode(mode);
+  root.classList.add("is-theme-transition");
+  document
+    .startViewTransition(() => applyMode(mode))
+    .finished.finally(() => root.classList.remove("is-theme-transition"));
+}
+
 function applyMode(mode) {
   try {
     if (mode === "system") localStorage.removeItem(THEME_KEY);
@@ -57,6 +91,7 @@ function applyMode(mode) {
     // Private browsing / storage disabled — the theme just won't persist.
   }
   document.documentElement.dataset.theme = mode === "system" ? (darkQuery.matches ? "dark" : "light") : mode;
+  document.dispatchEvent(new Event("theme:change"));
 }
 
 // An account's saved settings (user_settings: the theme, the vibration) are
@@ -155,12 +190,9 @@ export function setupThemeToggle() {
     menu.addEventListener("click", (e) => {
       const option = e.target.closest(".theme-menu-option");
       if (!option) return;
-      const mode = option.dataset.mode;
-      applyMode(mode);
-      reflect();
+      chooseTheme(option.dataset.mode, true);
       closeMenu();
       toggle.focus();
-      if (userId) UserSettings.saveTheme(userId, mode).catch((err) => console.error(err));
     });
     document.addEventListener("pointerdown", onOutside, true);
     document.addEventListener("keydown", onKey, true);
@@ -175,16 +207,18 @@ export function setupThemeToggle() {
       else openMenu();
       return;
     }
-    applyMode(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
-    reflect();
+    switchTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark", true);
   });
+
+  // Every change, wherever it's made (this button, the settings, the
+  // account's saved choice), shown on the button.
+  document.addEventListener("theme:change", reflect);
 
   // Following the device: its own switch between light and dark applies
   // right away, not only on the next page load.
   darkQuery.addEventListener("change", () => {
     if (storedMode() !== "system") return;
     applyMode("system");
-    reflect();
   });
 
   // Signed in: the button becomes the menu, and the account's saved choice
@@ -198,6 +232,7 @@ export function setupThemeToggle() {
     if (nextId === userId) return;
     const previousId = userId;
     userId = nextId;
+    accountId = nextId;
     closeMenu();
     reflect();
     if (!userId) {
@@ -212,7 +247,6 @@ export function setupThemeToggle() {
         .then((saved) => {
           if (!saved || saved === storedMode() || userId !== nextId) return;
           applyMode(saved);
-          reflect();
         })
         .catch((err) => {
           console.error(err);

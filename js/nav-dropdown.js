@@ -63,8 +63,7 @@ function init() {
         if (Math.abs(y - lastY) < SCROLL_SLACK) return;
         // Reaching the bottom while scrolling down hides it too, however
         // little the page scrolls (a short page — styles.css makes it a screen
-        // tall, the footer just below — would otherwise keep it over the
-        // footer).
+        // tall — would otherwise keep it over the page's end).
         const atBottom = window.innerHeight + y >= document.documentElement.scrollHeight - 2;
         const away = y > lastY && (y > SHOW_NEAR_TOP || atBottom);
         nav.classList.toggle("is-scrolled-away", away);

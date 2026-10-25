@@ -73,6 +73,7 @@
   <link rel="modulepreload" href="js/commander-carousel.js">
   <link rel="modulepreload" href="js/player-badges.js">
   <link rel="modulepreload" href="js/history-list.js">
+  <link rel="modulepreload" href="js/settings-panel.js">
   <link rel="modulepreload" href="js/auto-badges.js">
   <!-- /preload:modules -->
 </head>
@@ -169,12 +170,20 @@
       <p class="form-message" data-message></p>
     </section>
 
+    <!-- Non connesso, touch screens (no footer there): the settings and the
+         footer's small print in their own card (js/settings-panel.js). -->
+    <section class="card account-card account-settings" data-view="login" hidden>
+      <h2>Impostazioni</h2>
+      <div class="settings-controls" id="login-settings"></div>
+      <div class="settings-about" id="login-settings-about"></div>
+    </section>
+
 
     <!-- Connesso: a hero on top — the player card (+ its switch) on the
          blurred art of the background card, the name, the numbers once
          linked, quick actions — under "Il tuo giocatore" (on
          top until linked), then the sections one at a time behind tabs: Album
-         comandanti, Seguiti, Decklist, Account (a pill bar on desktop, a
+         comandanti, Seguiti, Decklist, Impostazioni (a pill bar on desktop, a
          full-width segmented control on phones). js/account-page.js. -->
     <div class="profile" data-view="signed-in" hidden>
       <!-- Il tuo giocatore: first on the page, above the hero, inviting the
@@ -364,7 +373,7 @@
         <button type="button" class="profile-tab" role="tab" data-tab="profile-album"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="11" height="16" rx="2"></rect><path d="M17 6.5l3 .8a1.5 1.5 0 0 1 1 1.8l-2.9 10.7a1.5 1.5 0 0 1-1.8 1"></path></svg><span>Album</span></button>
         <button type="button" class="profile-tab" role="tab" data-tab="profile-follows"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7Z"></path></svg><span>Seguiti</span></button>
         <button type="button" class="profile-tab" role="tab" data-tab="profile-decklist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="3" width="13" height="17" rx="2"></rect><path d="M4 7v12a2 2 0 0 0 2 2h9"></path><path d="M11 8h5M11 12h5M11 16h3"></path></svg><span>Decklist</span></button>
-        <button type="button" class="profile-tab" role="tab" data-tab="profile-account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"></path></svg><span>Account</span></button>
+        <button type="button" class="profile-tab" role="tab" data-tab="profile-account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.2 2h-.4a2 2 0 0 0-2 2v.2a2 2 0 0 1-1 1.7l-.4.3a2 2 0 0 1-2 0l-.2-.1a2 2 0 0 0-2.7.7l-.2.4a2 2 0 0 0 .7 2.7l.2.1a2 2 0 0 1 1 1.7v.6a2 2 0 0 1-1 1.7l-.2.1a2 2 0 0 0-.7 2.7l.2.4a2 2 0 0 0 2.7.7l.2-.1a2 2 0 0 1 2 0l.4.3a2 2 0 0 1 1 1.7v.2a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.2a2 2 0 0 1 1-1.7l.4-.3a2 2 0 0 1 2 0l.2.1a2 2 0 0 0 2.7-.7l.2-.4a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.7v-.6a2 2 0 0 1 1-1.7l.2-.1a2 2 0 0 0 .7-2.7l-.2-.4a2 2 0 0 0-2.7-.7l-.2.1a2 2 0 0 1-2 0l-.4-.3a2 2 0 0 1-1-1.7V4a2 2 0 0 0-2-2Z"></path><circle cx="12" cy="12" r="3"></circle></svg><span>Impostazioni</span></button>
       </nav>
 
       <div class="profile-panels">
@@ -458,11 +467,15 @@
           </div>
         </section>
 
-        <!-- Account: the Google login and signing out, deleting the
-             account (not offered to admin accounts). Its old collapsible
-             header is hidden in the tab (always open there). -->
+        <!-- Impostazioni: the theme and the vibration (js/settings-panel.js),
+             then the account — the Google login and signing out, deleting
+             the account (not offered to admin accounts; its old collapsible
+             header is hidden in the tab, always open there) — then, on
+             touch screens (no footer there), the footer's small print. -->
         <section class="card profile-card profile-account profile-panel" id="profile-account">
-          <h3 class="profile-panel-title">Account</h3>
+          <h3 class="profile-panel-title">Impostazioni</h3>
+          <div class="settings-controls" id="profile-settings"></div>
+          <p class="settings-label settings-account-label">Account</p>
           <button type="button" class="decklist-toggle" id="account-toggle" aria-expanded="false" aria-controls="account-body">
             <span class="decklist-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"></path></svg>
@@ -500,6 +513,7 @@
               </div>
             </div>
           </div>
+          <div class="settings-about" id="profile-settings-about"></div>
         </section>
       </div>
       </div>
