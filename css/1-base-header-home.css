@@ -2170,16 +2170,32 @@ main {
   background: color-mix(in srgb, #dc181c 4%, #fff);
 }
 
-/* "Classifica completa" under the top 8 (js/home.js), a small list icon
-   before it: the rest of the ranking, on league.html — under the preview
-   rather than beside the name, so a long league name keeps the whole row
-   on any screen. */
-.dashboard-league-more {
-  gap: 8px;
-  margin-top: 12px;
+/* "Classifica completa" under the top 8 (js/home.js), centred, a small
+   list icon before it: the rest of the ranking, on league.html (and the
+   Eventi's "Tutti gli eventi" under the timeline, a calendar before it). Beside the
+   league's name, "Regolamento" (js/league-rules.js — the scoring rules'
+   pop-up), a book before it: the same pill, a button. */
+.dashboard-league-more-row {
+  display: flex;
+  justify-content: center;
+  margin: 14px 0 0;
 }
 
-.dashboard-league-more svg {
+.dashboard-league-more,
+.dashboard-league-rules {
+  gap: 8px;
+}
+
+.dashboard-league-rules {
+  flex-shrink: 0;
+  margin-left: auto;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.dashboard-league-more svg,
+.dashboard-league-rules svg {
   flex-shrink: 0;
   width: 18px;
   height: 18px;
@@ -2782,13 +2798,9 @@ html.app-header .home-board > .home-panel:not(.is-current) {
   }
 }
 
-/* "Tutti gli eventi": in the heading on a computer, under the timeline on
-   touch screens (no heading there). */
-.home-events-more {
-  margin-top: 18px;
-}
-
-html:not(.app-header) .home-events-more,
+/* "Eventi"'s heading: a computer only (on touch screens the tab names it).
+   "Tutti gli eventi" under the timeline, on every screen, like the
+   Classifica's "Classifica completa" (.dashboard-league-more-row). */
 html.app-header .home-events-head {
   display: none;
 }

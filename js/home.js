@@ -18,6 +18,7 @@ import { fetchPlayerBadgesRenderer } from "./player-badges.js";
 import { initTabs } from "./tabs.js";
 import { leaguePosHtml } from "./history-list.js";
 import { archetypeIcon } from "./archetype-icons.js";
+import { openLeagueRules, RULES_ICON } from "./league-rules.js";
 
 // The timeline: how many upcoming events above "Oggi", played ones below.
 const UPCOMING_EVENTS_COUNT = 3;
@@ -210,8 +211,9 @@ function leagueProgressHtml(played, scheduled) {
 }
 
 // The league's name (a link to league.html) — "Conclusa" when it's over —
-// and "Classifica completa"; its progress; the top LEAGUE_PREVIEW_COUNT as
-// sub-cards like league.html's Classifica, each a link to the player:
+// and "Regolamento" (js/league-rules.js) on its right; its progress; the top
+// LEAGUE_PREVIEW_COUNT as sub-cards like league.html's Classifica, each a
+// link to the player, then "Classifica completa" under them:
 // position chip (while the league runs, with its change since the latest
 // event — leaguePosHtml), name + badges, points; a finished league's winner in gold
 // with a trophy. The name is plain text inside (a link can't hold another);
@@ -223,7 +225,7 @@ function standingsHtml({ league, standings: allStandings, before, played, schedu
       <div class="home-panel-head">
         <a class="home-panel-title" href="${href}">${escapeHtml(league.name)}</a>
         ${finished ? '<span class="home-finished-chip">Conclusa</span>' : ""}
-        ${standings.length ? `<a class="section-link dashboard-league-more" href="${href}">${LIST_ICON}<span>Classifica completa</span></a>` : ""}
+        <button type="button" class="section-link dashboard-league-rules" data-league-rules aria-haspopup="dialog">${RULES_ICON}<span>Regolamento</span></button>
       </div>
       ${leagueProgressHtml(played, scheduled)}`;
   if (standings.length === 0) return `${head}<p class="page-empty">Nessun dato per la classifica.</p>`;
@@ -252,7 +254,8 @@ function standingsHtml({ league, standings: allStandings, before, played, schedu
         <li>${s.player?.id ? `<a class="${cls}" href="player.html?id=${s.player.id}">${inner}</a>` : `<div class="${cls}">${inner}</div>`}</li>`;
           })
           .join("")}
-      </ol>`;
+      </ol>
+      <p class="dashboard-league-more-row"><a class="section-link dashboard-league-more" href="${href}">${LIST_ICON}<span>Classifica completa</span></a></p>`;
 }
 
 // The league in progress (a Topdeck series has no standings — its events
@@ -272,6 +275,7 @@ async function renderStandings(el) {
     }
     const [data, badgesFor] = await Promise.all([leagueStandings(league), fetchPlayerBadgesRenderer()]);
     el.innerHTML = standingsHtml(data, badgesFor, finished);
+    el.querySelector("[data-league-rules]")?.addEventListener("click", openLeagueRules);
   } catch (err) {
     showError(el, err);
   }

@@ -247,86 +247,238 @@
   gap: 10px;
 }
 
-/* league.html's Classifica: its scoring "?" on the switcher's corner
-   (below — the panels have no titles). */
-.help-toggle-btn.league-help-corner {
+/* league.html's "Regolamento" (js/league-rules.js — how the standings are
+   scored; not for a Topdeck series): a full button in the hero's colour
+   (--hero-btn, like the back pill), a book before the label and a chevron
+   after it. On a computer at the right end of the numbers' line; up to
+   820px (the hero one centred column) above the numbers, centred. */
+.league-rules-btn {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 7px;
+  min-height: 42px;
+  box-sizing: border-box;
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: var(--radius-pill);
+  background: var(--hero-btn, #4a4345);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  color: #fff;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 800;
+  text-shadow: none;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.league-rules-btn:hover {
+  background: var(--hero-btn-hover, #383233);
+}
+
+.league-rules-btn:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.7);
+  outline-offset: 2px;
+}
+
+.league-rules-btn[hidden] {
   display: none;
 }
 
-/* On the Eventi / Classifica / Meta switcher's top-right corner (every screen),
-   like the player card's "?" — shown, popping in, only while Classifica is
-   open (placed against the switcher, sticky — so already positioned). */
-/* (On a computer the switcher is a plain pill bar — placed against it.) */
-html:not(.app-header) .league-tabs {
-  position: relative;
+.league-rules-btn svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
 }
 
-.league-tabs:has(#league-tab-leaderboard.is-active) .help-toggle-btn.league-help-corner {
-  position: absolute;
-  /* Out over the corner, but within the 8px the switcher keeps from the
-     screen's top while stuck — so it's never cut there; 3px on the right
-     (the phone's page margin is only 6px — its ring stays on screen). */
-  top: -5px;
-  right: -3px;
-  z-index: 2;
-  display: inline-flex;
-  box-shadow: 0 0 0 2px #fff, var(--shadow-card);
-  animation: league-help-pop 320ms cubic-bezier(0.2, 0.9, 0.3, 1.4) both;
+.league-rules-btn .league-rules-chevron {
+  width: 16px;
+  height: 16px;
+  margin-left: -2px;
+  opacity: 0.8;
 }
 
-@keyframes league-help-pop {
-  from {
-    opacity: 0;
-    transform: scale(0.3);
+.league-hero .profile-hero-stats:has(> .league-rules-btn:not([hidden])) {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.league-hero .profile-hero-stats > .league-rules-btn {
+  margin-left: auto;
+}
+
+@media (max-width: 820px) {
+  .league-hero .profile-hero-stats:has(> .league-rules-btn:not([hidden])) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .league-hero .profile-hero-stats > .league-rules-btn {
+    order: -1;
+    align-self: center;
+    margin-left: 0;
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .league-tabs .help-toggle-btn.league-help-corner {
-    animation: none;
-  }
-}
-
-/* Its pop-up (js/league-detail.js initLeagueHelp): a small heading per
-   rule, and the points by position as a row of little tiles. */
-#league-help-dialog h4 {
-  margin: 16px 0 6px;
-  color: var(--text-title);
-  font-size: 0.95rem;
+/* The rules' pop-up (js/league-rules.js): a small label over each part;
+   the match points as chips; the league points by position as a ladder —
+   red columns as tall as their points, lighter down the ladder, the places
+   under them on a base line; the three special rules as cards, each its
+   number big on a red tile (the "−1" on a dark one). */
+.league-rules-label {
+  margin: 0 0 6px;
+  color: var(--text-muted);
+  font-size: 0.7rem;
   font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
-#league-help-dialog h4:first-child {
-  margin-top: 0;
+.league-rules-match {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
 }
 
-.league-help-points {
+.league-rules-match li {
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(154, 28, 32, 0.07);
+  color: var(--text-body);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.league-rules-match b {
+  color: var(--brand-red-deep);
+}
+
+.league-rules-ladder {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 6px;
-  margin: 10px 0;
+  margin: 12px 0 18px;
 }
 
-.league-help-points > div {
-  padding: 6px 2px;
-  border: 1px solid color-mix(in srgb, var(--brand-red) 18%, transparent);
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--brand-red) 5%, transparent);
+.league-rules-step {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Each column's room, 150px (the tallest's), the bar sitting on its base
+   line; the place under it. */
+.league-rules-col {
+  display: flex;
+  align-items: flex-end;
+  height: 150px;
+  border-bottom: 2px solid rgba(154, 28, 32, 0.15);
+}
+
+.league-rules-bar {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+  padding-top: 8px;
+  border-radius: 12px 12px 0 0;
+  background: linear-gradient(180deg, #e0262a, #a10f17);
+  color: #fff;
+}
+
+.league-rules-bar b {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.league-rules-step:nth-child(3) .league-rules-bar {
+  background: linear-gradient(180deg, #ef6b6e, #c0333a);
+}
+
+.league-rules-step:nth-child(4) .league-rules-bar {
+  background: linear-gradient(180deg, #f39a9c, #d75a60);
+}
+
+.league-rules-step:nth-child(5) .league-rules-bar {
+  background: linear-gradient(180deg, #f7c4c5, #e88e92);
+  color: #6e0a10;
+}
+
+.league-rules-place {
+  padding-top: 6px;
+  color: var(--text-title);
+  font-size: 0.78rem;
+  font-weight: 800;
   text-align: center;
-}
-
-.league-help-points dt {
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  font-weight: 700;
   white-space: nowrap;
 }
 
-.league-help-points dd {
-  margin: 2px 0 0;
-  color: var(--brand-red);
-  font-size: 1.05rem;
+.league-rules-bonuses {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.league-rules-bonuses li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+}
+
+.league-rules-num {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: var(--brand-red);
+  color: #fff;
+  font-size: 1.15rem;
   font-weight: 800;
+}
+
+.league-rules-num.is-minus {
+  background: #3a3634;
+}
+
+.league-rules-bonuses li > span:last-child {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.league-rules-bonuses b {
+  display: block;
+  color: var(--text-title);
+  font-size: 0.95rem;
+}
+
+:root[data-theme="dark"] .league-rules-match li {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+:root[data-theme="dark"] .league-rules-match b {
+  color: #ff9a9d;
+}
+
+:root[data-theme="dark"] .league-rules-col {
+  border-bottom-color: rgba(255, 255, 255, 0.14);
+}
+
+:root[data-theme="dark"] .league-rules-num.is-minus {
+  background: rgba(255, 255, 255, 0.16);
 }
 
 /* Small explanation pop-up (a <dialog> sharing .ecal-dialog's box). */

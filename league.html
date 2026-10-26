@@ -77,6 +77,7 @@
   <link rel="modulepreload" href="js/follow-button.js">
   <link rel="modulepreload" href="js/tabs.js">
   <link rel="modulepreload" href="js/back-to-top.js">
+  <link rel="modulepreload" href="js/league-rules.js">
   <link rel="modulepreload" href="js/results-link.js">
   <link rel="modulepreload" href="js/meta-charts.js">
   <link rel="modulepreload" href="js/auto-badges.js">
@@ -170,8 +171,13 @@
                 <span id="league-dates" hidden></span>
               </div>
             </div>
+            <!-- The numbers, and "Regolamento" (how the standings are scored,
+                 js/league-rules.js): on a computer at the right end of their
+                 line, up to 820px above them, centred; not for a Topdeck
+                 series (no standings). -->
             <div class="profile-hero-stats">
               <div class="profile-stats-tiles" id="league-stats"></div>
+              <button type="button" class="league-rules-btn" id="league-rules" aria-haspopup="dialog" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"></path><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"></path></svg>Regolamento<svg class="league-rules-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></button>
             </div>
           </div>
         </div>
@@ -190,9 +196,6 @@
       <button type="button" class="profile-tab" role="tab" id="league-tab-events" data-tab="league-events-section" aria-controls="league-events-section"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M3 10h18"></path></svg><span>Eventi</span></button>
       <button type="button" class="profile-tab" role="tab" id="league-tab-leaderboard" data-tab="league-leaderboard-section" aria-controls="league-leaderboard-section"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4"></path><path d="M7 4h10v5a5 5 0 0 1-10 0Z"></path><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"></path></svg><span>Classifica</span></button>
       <button type="button" class="profile-tab" role="tab" id="league-tab-meta" data-tab="league-meta-section" aria-controls="league-meta-section"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12A9 9 0 1 1 12 3v9Z"></path><path d="M15 3.5A9 9 0 0 1 20.5 9H15Z"></path></svg><span>Meta</span></button>
-      <!-- The scoring "?" on the switcher's top-right corner, popping in
-           while Classifica is open (styles .league-help-corner). -->
-      <button type="button" class="help-toggle-btn league-help-corner" data-league-help aria-haspopup="dialog" aria-label="Come si calcola la classifica">?</button>
     </nav>
     <div class="league-lists">
       <section id="league-events-section" role="tabpanel" aria-labelledby="league-tab-events">
@@ -213,23 +216,6 @@
     </div>
     </div>
   </div>
-  <!-- The "?" pop-up's text (LEAGUE_RULES.md, simplified for players). -->
-  <template id="league-help-text">
-    <h4>Ogni evento</h4>
-    <p>Si gioca a punti partita (vittoria 3, pareggio 1, sconfitta 0; il bye vale una vittoria). La posizione finale vale punti lega:</p>
-    <dl class="league-help-points">
-      <div><dt>1°</dt><dd>20</dd></div>
-      <div><dt>2°</dt><dd>17</dd></div>
-      <div><dt>3°–4°</dt><dd>14</dd></div>
-      <div><dt>5°–8°</dt><dd>11</dd></div>
-      <div><dt>dal 9°</dt><dd>5</dd></div>
-    </dl>
-    <p><strong>+2</strong> a chi chiude l&rsquo;evento imbattuto.</p>
-    <h4>Il peggiore non conta</h4>
-    <p>Il tuo risultato peggiore della lega viene scartato: anche con una giornata storta resti in corsa per la classifica.</p>
-    <h4>Presenza completa</h4>
-    <p><strong>+5</strong> a chi ha giocato tutti gli eventi, assegnati quando la lega è conclusa.</p>
-  </template>
 </main>
 
 <!-- shell:footer -->
