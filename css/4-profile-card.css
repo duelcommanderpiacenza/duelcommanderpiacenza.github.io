@@ -2847,12 +2847,6 @@ html.nav-mobile .pc-link-field .pc-link {
   transform: scale(1.08);
 }
 
-/* Its badges start after it, not under it (account.html's card only — the
-   "?" and the badges both come once linked). */
-#player-card .pc-badges {
-  left: max(2.88cqw, 32px);
-}
-
 .pc-help-btn:focus-visible {
   outline: 3px solid rgba(255, 255, 255, 0.6);
   outline-offset: 2px;

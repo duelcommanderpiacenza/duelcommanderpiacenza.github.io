@@ -45,8 +45,6 @@ import {
   PlayerClaims,
   Profiles,
   MyAccount,
-  Players,
-  PlayerAutoBadges,
   Events,
   Decklists,
   Follows,
@@ -60,7 +58,7 @@ import { matchRoundOutcome, isDrop, isBye, computeLeaguePoints } from "./leaderb
 import { tallyOutcome, winRatePct } from "./winrate.js";
 import { applyCardCosmetics, openCardEffectsInfo } from "./card-cosmetics.js";
 import { renderCommanderCarousel, albumItems, commanderPairKey, openAlbumEffectsInfo } from "./commander-carousel.js";
-import { escapeHtml, uniqueBadges, eventTitle, formatDate } from "./ui.js";
+import { escapeHtml, eventTitle, formatDate } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { fetchPlayerBadgesRenderer } from "./player-badges.js";
 import { historyStatsHtml } from "./history-list.js";
@@ -71,7 +69,6 @@ import {
   applyCardAccents,
   createArtPainter,
   cardArtUrl,
-  cardBadgesHtml,
   cardLinksHtml,
   fitCardDescription,
   parseCardLink,
@@ -108,7 +105,6 @@ export function mount({ signal = new AbortController().signal } = {}) {
   const heroNameEl = document.getElementById("profile-hero-name");
   const bioEl = document.getElementById("profile-bio");
   const sinceEl = document.getElementById("pc-since");
-  const badgesEl = document.getElementById("pc-badges");
   const linksEl = document.getElementById("pc-links");
   const editToggleBtn = document.getElementById("profile-edit-toggle");
   const editCancelBtn = document.getElementById("profile-edit-cancel");
@@ -173,7 +169,6 @@ export function mount({ signal = new AbortController().signal } = {}) {
   // The linked player's progress row (player_progress): the card's cosmetics
   // (js/card-cosmetics.js). null: none (not linked, no results, no table).
   let cardProgress = null;
-  let playerBadges = [];
 
   // --- Helpers ------------------------------------------------------------------
 
@@ -256,7 +251,6 @@ export function mount({ signal = new AbortController().signal } = {}) {
 
     // The player's (not the account's) first event and badges, once linked.
     sinceEl.textContent = claim.linked && firstYear ? `Dal ${firstYear}` : "";
-    badgesEl.innerHTML = claim.linked ? cardBadgesHtml(playerBadges) : "";
 
     // After "Dal …" above (the stars go after it); taken off and put back on
     // every redraw.
@@ -871,28 +865,9 @@ export function mount({ signal = new AbortController().signal } = {}) {
     // marks it handled meanwhile.
     const decklistRequest = Promise.all([upcomingRequest ?? Events.listUpcoming(), Decklists.sentEvents(player.id)]);
     decklistRequest.catch(() => {});
-    const [entries, { asP1, asP2 }, badgeSlots, autoBadgeRows] = await Promise.all([
+    const [entries, { asP1, asP2 }] = await Promise.all([
       EventEntries.listByPlayer(player.id),
       Matches.listByPlayer(player.id),
-      // The card's badges, same as next to the name on the player page: the
-      // two manual slots (Players' badge embed), then the automatic ones by
-      // priority. Not fatal: the card just shows none.
-      Players.get(player.id).catch((err) => {
-        console.error(err);
-        return {};
-      }),
-      PlayerAutoBadges.listByPlayer(player.id).catch((err) => {
-        console.error(err);
-        return [];
-      }),
-    ]);
-    playerBadges = uniqueBadges([
-      badgeSlots.badge1,
-      badgeSlots.badge2,
-      ...autoBadgeRows
-        .map((r) => r.badge)
-        .filter(Boolean)
-        .sort((a, b) => b.priority - a.priority),
     ]);
 
     const bucket = { wins: 0, draws: 0, losses: 0 };
@@ -1549,7 +1524,6 @@ export function mount({ signal = new AbortController().signal } = {}) {
     profile = null;
     firstYear = null;
     cardProgress = null;
-    playerBadges = [];
     setEditing(false, { animate: false });
     accountDangerEl.hidden = true;
     decklistCard.hidden = true;
