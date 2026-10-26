@@ -2292,9 +2292,17 @@ a.ev-slot:hover {
    step down — its label on a band across the top, thin, a light red tint
    with a red hairline under it, the text dark red (not the cover's red);
    its name and numbers smaller; no ring (no set number of events: its
-   events played a number among the others). As wide as the card above. */
+   events played a number among the others). On a computer half the
+   card above's width (its right edge on the card's events' divider); up to
+   820px the whole width. */
 .ev-board.is-secondary > .ev-big {
   min-height: 150px;
+}
+
+@media (min-width: 821px) {
+  .ev-board.is-secondary > .ev-big {
+    width: 50%;
+  }
 }
 
 .ev-board.is-secondary .ev-big .ev-tile-k {

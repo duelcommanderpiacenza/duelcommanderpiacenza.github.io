@@ -690,6 +690,14 @@ html.app-header .sk-page.is-home > .sk-chart {
   height: 256px;
 }
 
+/* The Topdeck series' tile: half the card's width on a computer, like the
+   real one (styles.css .ev-board.is-secondary). */
+@media (min-width: 821px) {
+  .sk-ev-board > .sk:not(.sk-ev-big) {
+    width: 50%;
+  }
+}
+
 .sk-ev-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
