@@ -130,8 +130,9 @@
 
 <main class="page-main" data-page="social">
 
-  <!-- The page's point: where to follow Duel Commander Piacenza — the
-       Telegram group as the big invite, the other four as buttons
+  <!-- The page's point: where to follow Duel Commander Piacenza — one
+       card: the Telegram group as the invite (its logo, two lines, a red
+       "Entra"), the other four as tiles in a row (a round logo, the name)
        (styles.css .social-links). Outside the loading region: shown at once. -->
   <nav class="social-links" aria-label="Seguici">
     <a class="social-links-main" href="https://t.me/+CXf6gbl0H4Y1YzM0" target="_blank" rel="noopener noreferrer">
@@ -139,14 +140,14 @@
       <span class="social-links-main-text">
         <b>Entra nel gruppo Telegram</b>
         <span>La community di Duel Commander Piacenza</span>
-        <span class="social-links-cta">Entra</span>
       </span>
+      <span class="social-links-cta">Entra</span>
     </a>
     <div class="social-links-rest">
-      <a class="social-link-btn" href="https://www.youtube.com/@DuelCommanderPiacenza" target="_blank" rel="noopener noreferrer"><img src="youtube.svg" alt="">YouTube</a>
-      <a class="social-link-btn" href="https://www.instagram.com/duelcommanderpiacenza/" target="_blank" rel="noopener noreferrer"><img src="instagram.svg" alt="">Instagram</a>
-      <a class="social-link-btn" href="https://moxfield.com/users/Duel_Commander_Piacenza" target="_blank" rel="noopener noreferrer"><img src="moxfield.png" alt="">Moxfield</a>
-      <a class="social-link-btn" href="https://www.facebook.com/profile.php?id=61573570860576" target="_blank" rel="noopener noreferrer"><img src="facebook.svg" alt="">Facebook</a>
+      <a class="social-link-btn" href="https://www.youtube.com/@DuelCommanderPiacenza" target="_blank" rel="noopener noreferrer"><span class="social-link-icon"><img src="youtube.svg" alt=""></span>YouTube</a>
+      <a class="social-link-btn" href="https://www.instagram.com/duelcommanderpiacenza/" target="_blank" rel="noopener noreferrer"><span class="social-link-icon"><img src="instagram.svg" alt=""></span>Instagram</a>
+      <a class="social-link-btn" href="https://moxfield.com/users/Duel_Commander_Piacenza" target="_blank" rel="noopener noreferrer"><span class="social-link-icon"><img src="moxfield.png" alt=""></span>Moxfield</a>
+      <a class="social-link-btn" href="https://www.facebook.com/profile.php?id=61573570860576" target="_blank" rel="noopener noreferrer"><span class="social-link-icon"><img src="facebook.svg" alt=""></span>Facebook</a>
     </div>
   </nav>
 
@@ -161,28 +162,31 @@
       <p>Caricamento...</p>
     </div>
 
-    <!-- Video | Mazzi: on a computer side by side, each with its heading;
-         on touch screens one at a time behind the site's segmented control
-         (js/tabs.js, js/moxfield.js), like the Bacheca's sections. -->
-    <nav class="profile-tabs social-tabs" role="tablist" aria-label="Sezioni social">
-      <button type="button" class="profile-tab" role="tab" id="social-tab-videos" data-tab="social-panel-videos" aria-controls="social-panel-videos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3"></rect><path d="m10 9 5 3-5 3Z"></path></svg><span>Video</span></button>
-      <button type="button" class="profile-tab" role="tab" id="social-tab-decks" data-tab="social-panel-decks" aria-controls="social-panel-decks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="3" width="12" height="16" rx="2"></rect><path d="M8 6H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2"></path></svg><span>Mazzi</span></button>
-    </nav>
+    <!-- Video | Mazzi: one at a time behind the tabs on every screen — the
+         site's pill bar on a computer, its segmented control on touch screens
+         (js/tabs.js, js/moxfield.js); the headings for screen readers. -->
+    <!-- The tabs and, on a computer, the open section's filters on the same
+         row, at its right (styles.css .social-bar; on touch screens the row
+         dissolves — the tabs stay sticky, the filters full width under them). -->
+    <div class="social-bar">
+      <nav class="profile-tabs social-tabs" role="tablist" aria-label="Sezioni social">
+        <button type="button" class="profile-tab" role="tab" id="social-tab-videos" data-tab="social-panel-videos" aria-controls="social-panel-videos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3"></rect><path d="m10 9 5 3-5 3Z"></path></svg><span>Video</span></button>
+        <button type="button" class="profile-tab" role="tab" id="social-tab-decks" data-tab="social-panel-decks" aria-controls="social-panel-decks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="3" width="12" height="16" rx="2"></rect><path d="M8 6H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2"></path></svg><span>Mazzi</span></button>
+      </nav>
+      <div class="social-filters">
+        <div id="video-filters-slot"></div>
+        <div id="deck-filters-slot"></div>
+      </div>
+    </div>
 
     <div class="profile-panels social-panels">
       <section class="profile-panel" id="social-panel-videos" role="tabpanel" aria-labelledby="social-tab-videos">
-        <div class="social-panel-head">
-          <h2 class="social-panel-label">Video</h2>
-          <div id="video-filters-slot"></div>
-        </div>
+        <h2 class="social-panel-label">Video</h2>
         <div id="videos" class="page-loading">Caricamento...</div>
         <p class="social-more"><a class="section-link" href="https://www.youtube.com/@DuelCommanderPiacenza" target="_blank" rel="noopener noreferrer"><img src="youtube.svg" alt="" width="20" height="20">Tutti i video su YouTube</a></p>
       </section>
       <section class="profile-panel" id="social-panel-decks" role="tabpanel" aria-labelledby="social-tab-decks">
-        <div class="social-panel-head">
-          <h2 class="social-panel-label">Mazzi</h2>
-          <div id="deck-filters-slot"></div>
-        </div>
+        <h2 class="social-panel-label">Mazzi</h2>
         <div id="decks" class="page-loading">Caricamento...</div>
         <p class="social-more"><a class="section-link" href="https://moxfield.com/users/Duel_Commander_Piacenza" target="_blank" rel="noopener noreferrer"><img src="moxfield.png" alt="" width="20" height="20">Tutti i mazzi su Moxfield</a></p>
       </section>

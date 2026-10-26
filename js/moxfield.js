@@ -45,7 +45,8 @@ function videoCardHtml(video) {
     </a>`;
 }
 
-// The filter chips above a list (Tutti, then one per kind — always all of
+// The filters above a list, a small segmented control (styles.css
+// .social-chips; Tutti, then one per kind — always all of
 // them, even a kind with nothing yet: its own empty line then), redrawing
 // it on a tap. `kindOf(row)`: the row's kind key; `kinds`: [{ key, label,
 // empty }] in order.
@@ -53,7 +54,7 @@ function renderWithChips({ rows, chipsEl, listEl, kinds, kindOf, draw, emptyAll 
   listEl.className = "";
   let current = "";
   const chip = (key, label) =>
-    `<button type="button" class="social-chip${key === current ? " is-active" : ""}" data-kind="${key}">${escapeHtml(label)}</button>`;
+    `<button type="button" class="social-chip${key === current ? " is-active" : ""}" aria-pressed="${key === current}" data-kind="${key}">${escapeHtml(label)}</button>`;
   const redraw = () => {
     chipsEl.innerHTML = `<div class="social-chips">${chip("", "Tutti")}${kinds.map((k) => chip(k.key, k.label)).join("")}</div>`;
     const shown = current ? rows.filter((r) => kindOf(r) === current) : rows;

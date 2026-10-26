@@ -3348,64 +3348,75 @@ html.nav-mobile main[data-page="commanders"] .sk-chart {
    sub-card list (#decks), the commander's art on the left, the commander
    big over the event and the pilot, the position chip and the date on the
    right. A small "Nuovo" chip on what came in the last day. */
-/* The links to the social services, the page's point (social.html): the
-   Telegram group as the big invite (its blue, a white disc with the logo,
-   "Entra"), the other four as white buttons — YouTube and Instagram, then
-   Moxfield and Facebook. On a computer the invite on the left, the four in
-   a 2×2 beside it; on phones the invite on top, the 2×2 under it. */
+/* The links to the social services, the page's point (social.html): one
+   card in the site's look (white, a red hairline edge, the dark tiles' in
+   dark mode) — the Telegram group as the invite (its own round logo, the
+   name and a line, a red "Entra" on the right), then the other four as
+   equal tiles in a row (a round logo, the name under it), a hairline
+   between the two parts. A computer: the invite on the left, the tiles
+   beside it; 820px down: the tiles under it. */
 .social-links {
   display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-  gap: 14px;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
   margin-bottom: 26px;
+  overflow: hidden;
+  border: 1px solid var(--hairline);
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: var(--shadow-card);
 }
 
 .social-links-main,
 .social-links-main:hover {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 18px;
+  gap: 16px;
   padding: 20px 22px;
-  border-radius: 22px;
-  background: linear-gradient(135deg, #1b8ec4, #2aabee);
-  box-shadow: 0 10px 24px rgba(34, 158, 217, 0.3);
-  color: #fff;
+  color: var(--text-title);
   text-decoration: none;
 }
 
-.social-links-main-logo {
-  display: grid;
-  place-items: center;
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: #fff;
+.social-links-main,
+.social-link-btn {
+  transition: background 150ms ease;
+}
+
+.social-links-main:hover,
+.social-link-btn:hover {
+  background: rgba(220, 24, 28, 0.04);
 }
 
 .social-links-main-logo img {
-  width: 34px;
-  height: 34px;
+  display: block;
+  width: 52px;
+  height: 52px;
 }
 
 .social-links-main-text {
   display: grid;
-  justify-items: start;
-  gap: 2px;
+  gap: 3px;
+  min-width: 0;
 }
 
 .social-links-main-text b {
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   line-height: 1.2;
 }
 
-.social-links-cta {
-  margin-top: 8px;
-  padding: 6px 16px;
-  border-radius: var(--radius-pill);
-  background: #fff;
-  color: #1b8ec4;
+.social-links-main-text span {
+  color: var(--text-muted);
   font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.social-links-cta {
+  padding: 9px 18px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-red);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--brand-red) 30%, transparent);
+  color: #fff;
+  font-size: 0.88rem;
   font-weight: 800;
   transition: transform 160ms ease;
 }
@@ -3416,144 +3427,207 @@ html.nav-mobile main[data-page="commanders"] .sk-chart {
 
 .social-links-rest {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-left: 1px solid var(--hairline);
 }
 
 .social-link-btn,
 .social-link-btn:hover {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  border: 1px solid var(--hairline);
-  border-radius: 16px;
-  background: #fff;
-  box-shadow: var(--shadow-card);
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 14px 4px;
   color: var(--text-title);
+  font-size: 0.8rem;
   font-weight: 800;
   text-decoration: none;
 }
 
-.social-link-btn:hover {
-  border-color: var(--hairline-hover);
+.social-link-icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border: 1px solid var(--hairline);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(40, 6, 9, 0.06);
 }
 
-:root[data-theme="dark"] .social-link-btn {
-  border-color: rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.social-link-btn img {
-  flex-shrink: 0;
-  width: 26px;
-  height: 26px;
+.social-link-icon img {
+  width: 24px;
+  height: 24px;
   object-fit: contain;
+}
+
+:root[data-theme="dark"] .social-links {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+:root[data-theme="dark"] .social-links-rest {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme="dark"] .social-link-icon {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: none;
+}
+
+:root[data-theme="dark"] :is(.social-links-main, .social-link-btn):hover {
+  background: rgba(255, 255, 255, 0.04);
 }
 
 @media (max-width: 820px) {
   .social-links {
-    grid-template-columns: 1fr;
-    gap: 10px;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .social-links-main,
+  .social-links-main:hover {
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .social-links-main-logo img {
+    width: 46px;
+    height: 46px;
+  }
+
+  .social-links-main-text b {
+    font-size: 1.02rem;
+  }
+
+  .social-links-main-text span {
+    font-size: 0.8rem;
+  }
+
+  .social-links-cta {
+    padding: 8px 14px;
+  }
+
+  .social-links-rest {
+    border-top: 1px solid var(--hairline);
+    border-left: 0;
+  }
+
+  .social-link-btn,
+  .social-link-btn:hover {
+    padding: 12px 4px 14px;
   }
 }
 
-.social-panels {
-  margin-top: 18px;
-}
-
-/* A computer: no tabs — Video and Mazzi side by side (both shown, whatever
-   the tabs' state), each under its own heading, like the Bacheca's Eventi |
-   Classifica; the videos two to a row in their half. Touch screens
-   (html.app-header): the segmented control, one at a time, no headings. */
-html:not(.app-header) .social-tabs {
-  display: none;
-}
-
-html:not(.app-header) .social-panels {
-  display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
-  align-items: start;
-  gap: 32px;
-  margin-top: 0;
-}
-
-html:not(.app-header) .social-panels > .profile-panel {
-  display: block;
-}
-
-html:not(.app-header) .social-video-grid {
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-}
-
-/* A section's heading and its filter chips on one line when there's room
-   (a computer), the chips wrapping under it when not. */
-.social-panel-head {
+/* Video | Mazzi: one at a time behind the tabs on every screen (since
+   2026-10-26 — a computer used to show the two side by side under their
+   headings): the site's pill bar on a computer, the segmented control on
+   touch screens; the tabs name them, the headings are for screen readers
+   only. A computer: the open section's filters on the tabs' row, at its
+   right (.social-bar); touch screens: the row dissolves (display:
+   contents — the tabs stay sticky against the page), the filters full
+   width under the tabs. */
+.social-bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 8px 16px;
-  margin-bottom: 16px;
+  gap: 12px 20px;
+  margin-bottom: 18px;
 }
 
-.social-panel-head .social-chips {
-  margin-bottom: 0;
-}
-
-html:not(.app-header) .social-panel-head .social-chips {
-  width: auto;
-}
-
-.social-panel-label {
+.social-bar > .social-tabs {
   margin: 0;
-  color: var(--text-title);
-  font-size: 1.3rem;
 }
 
-html.app-header .social-panel-label {
+html.app-header .social-bar {
+  display: contents;
+}
+
+html.app-header .social-bar > .social-tabs {
+  margin-bottom: 18px;
+}
+
+/* Only the open section's filters. */
+.social-bar:has(~ .social-panels #social-panel-videos:not(.is-current)) #video-filters-slot,
+.social-bar:has(~ .social-panels #social-panel-decks:not(.is-current)) #deck-filters-slot {
   display: none;
 }
 
-@media (max-width: 900px) {
-  html:not(.app-header) .social-panels {
-    grid-template-columns: minmax(0, 1fr);
-  }
+html:not(.app-header) .social-filters .social-chips {
+  width: auto;
+  margin-bottom: 0;
 }
 
+.social-panel-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* The filters (js/moxfield.js): a small segmented control — a tinted
+   track, the chosen one a raised white pill with red text (like account's
+   Tema) — a quieter step under the Video | Mazzi control. Each as wide as
+   its label; on touch screens the track the whole width. */
 .social-chips {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  /* The whole row (its slot is a flex row too — an old Social rule): so
-     centring the chips below centres them on the page, not in a box only
-     as wide as they are. */
+  gap: 4px;
   width: 100%;
+  box-sizing: border-box;
   margin-bottom: 16px;
+  padding: 4px;
+  border-radius: 14px;
+  background: rgba(154, 28, 32, 0.07);
 }
 
 .social-chip {
-  padding: 6px 14px;
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius-pill);
-  background: #fff;
-  color: var(--brand-red-deep);
+  flex: 1 1 auto;
+  padding: 7px 14px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--text-muted);
   font: inherit;
   font-size: 0.82rem;
   font-weight: 800;
+  white-space: nowrap;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+
+.social-chip:hover {
+  color: var(--brand-red-deep);
 }
 
 .social-chip.is-active {
-  border-color: transparent;
-  background: var(--brand-red);
-  color: #fff;
+  background: #fff;
+  color: var(--brand-red-deep);
+  box-shadow: 0 1px 2px rgba(40, 6, 9, 0.1), 0 3px 10px rgba(40, 6, 9, 0.1);
 }
 
-:root[data-theme="dark"] .social-chip:not(.is-active) {
-  border-color: rgba(255, 255, 255, 0.12);
+.social-chip:focus-visible {
+  outline: 2px solid var(--brand-red);
+  outline-offset: 2px;
+}
+
+:root[data-theme="dark"] .social-chips {
   background: rgba(255, 255, 255, 0.06);
-  color: color-mix(in srgb, var(--brand-red) 55%, #fff);
+}
+
+:root[data-theme="dark"] .social-chip.is-active {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ff9a9d;
+  box-shadow: none;
+}
+
+:root[data-theme="dark"] .social-chip:hover {
+  color: #ff9a9d;
 }
 
 .social-video-grid {
@@ -3679,18 +3753,6 @@ html.app-header .social-panel-label {
   width: 20px;
   height: 20px;
   object-fit: contain;
-}
-
-/* Touch screens and narrow windows: the filter chips centred, like the
-   segmented control above. */
-html.nav-mobile .social-chips {
-  justify-content: center;
-}
-
-@media (max-width: 820px) {
-  .social-chips {
-    justify-content: center;
-  }
 }
 
 @media (max-width: 640px) {
