@@ -24,14 +24,12 @@ const IMAGE_CACHE = "scryfall-images-v1";
 const SHELL_CACHE = "site-shell-v1";
 // At most this many images (~50–150 KB each); the oldest go first.
 const MAX_IMAGES = 300;
-// Supabase's data (its REST reads, GET /rest/v1/…): the network asked first,
-// but waited for only NETWORK_WAIT — answered in time, the page gets the
-// fresh copy (stored for next time) and nothing needs redrawing; slower,
-// the copy stored last time answers (and the page still fills in offline),
-// the network's fresh copy replacing it behind: when that differs the page
-// is told ("data-updated": it redraws, or offers to — js/data-updates.js),
-// when the network fails it's told it's seeing the last visit's
-// ("data-offline"). Stored per account (the signed-in user's
+// Supabase's data (its REST reads, GET /rest/v1/…): stale-while-revalidate —
+// the copy stored last time answers at once (no wait, and the page still
+// fills in offline), the network's fresh copy replaces it behind; when it
+// differs the page is told ("data-updated": it redraws, or offers to —
+// js/data-updates.js), when the network fails it's told it's seeing the
+// last visit's ("data-offline"). Stored per account (the signed-in user's
 // id from the request's token; "anon" signed out — row-level security gives
 // each different rows) and per Accept / Prefer header (a single row and a
 // list of the same address differ). Never stored (ALWAYS_FRESH): the
@@ -43,7 +41,6 @@ const MAX_IMAGES = 300;
 // "fresh-data" message) takes the network first for a few seconds.
 const DATA_CACHE = "supabase-data-v1";
 const MAX_DATA = 400;
-const NETWORK_WAIT = 800;
 const ALWAYS_FRESH = ["profiles", "user_settings", "follows", "decklist_submissions", "player_claims", "user_activity", "admins", "announcements"];
 const FRESH_FOR = 5000;
 const freshUntil = new Map(); // client id -> time
@@ -220,8 +217,6 @@ async function staleWhileRevalidate(event) {
     }
   }
   const hit = await cache.match(key);
-  // The page got the network's own answer (in time): nothing to tell it.
-  let servedFresh = false;
   // Read before the page gets the stored copy (its body can be read once).
   const hitText = hit ? hit.clone().text() : null;
   // The network's answer goes to the page as soon as it arrives (no stored
@@ -239,7 +234,7 @@ async function staleWhileRevalidate(event) {
           const changed = compare ? (await hitText) !== (await compare) : false;
           await cache.put(key, fresh);
           scheduleTrim(DATA_CACHE, MAX_DATA);
-          if (changed && !servedFresh) client?.postMessage({ type: "data-updated" });
+          if (changed) client?.postMessage({ type: "data-updated" });
         })()
           .catch(() => {})
           .finally(stored);
@@ -256,19 +251,6 @@ async function staleWhileRevalidate(event) {
   );
   if (!hit) return network;
   network.catch(() => {});
-  // A stored copy: the network's answer if it comes within NETWORK_WAIT (and
-  // is good), else the stored one now.
-  const inTime = await Promise.race([
-    network.then(
-      (response) => (response.ok ? response : null),
-      () => null
-    ),
-    new Promise((resolve) => setTimeout(() => resolve(null), NETWORK_WAIT)),
-  ]);
-  if (inTime) {
-    servedFresh = true;
-    return inTime;
-  }
   return hit;
 }
 
