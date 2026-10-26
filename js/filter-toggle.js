@@ -19,19 +19,19 @@
 // switches it back on immediately, before the collapse animation starts,
 // so the content still clips away as it shrinks.
 //
-// Active-filter dot: the button gets .has-active-filters (a white dot on
-// its top right, styles.css) whenever any filter inside the panel is set —
+// Filters set: the button gets .has-active-filters (a light red fill and
+// edge — styles.css) whenever any filter inside the panel is set —
 // a select or date with a value, a checked checkbox — so a filter hidden in
 // the collapsed panel (e.g. the default "Dal" date) never goes unnoticed.
 // Kept in sync from the panel's own (bubbling) change events; a page that
 // sets a filter from code calls the returned refresh() instead.
 
-// The dot pops on (styles.css) only the first time it shows in a visit:
-// moving to another page whose filters are set too (the Meta section's
-// shared filter, js/meta-filters.js) shows it already there — until a
-// filter is changed by hand there, which pops it again. (This module stays
-// loaded across in-app navigations, so the flag lasts the visit.)
-let dotShown = false;
+// It pops (styles.css) only the first time it's marked in a visit: moving
+// to another page whose filters are set too (the Meta section's shared
+// filter, js/meta-filters.js) shows it already marked — until a filter is
+// changed by hand there, which pops it again. (This module stays loaded
+// across in-app navigations, so the flag lasts the visit.)
+let activeShown = false;
 
 export function initFilterToggle(buttonId, panelId) {
   const btn = document.getElementById(buttonId);
@@ -39,13 +39,13 @@ export function initFilterToggle(buttonId, panelId) {
   const clip = panel?.querySelector(".filter-panel-clip");
   if (!btn || !panel || !clip) return { refresh() {} };
 
-  btn.classList.toggle("no-dot-pop", dotShown);
+  btn.classList.toggle("no-active-pop", activeShown);
   function refresh(e) {
     const active = [...panel.querySelectorAll('select, input[type="date"], input[type="checkbox"]')].some((el) =>
       el.type === "checkbox" ? el.checked : el.value !== ""
     );
-    if (e?.isTrusted) btn.classList.remove("no-dot-pop");
-    if (active) dotShown = true;
+    if (e?.isTrusted) btn.classList.remove("no-active-pop");
+    if (active) activeShown = true;
     btn.classList.toggle("has-active-filters", active);
     btn.setAttribute("aria-label", active ? "Filtri (attivi)" : "Filtri");
   }

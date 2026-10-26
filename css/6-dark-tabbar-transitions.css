@@ -1294,7 +1294,8 @@ html.nav-mobile .back-to-top.is-visible {
    in the grid's columns).
    Touch screens: the wrapper steps aside (display: contents), the row the
    sticky part (the control inside it can't stick past the row's own box),
-   the filters' button on its top-right corner. */
+   the filters' button beside the switcher on its right, on the same line
+   (since 2026-10-26 — before, out over the switcher's top-right corner). */
 .meta-row > .meta-tabs {
   margin: 0;
 }
@@ -1328,23 +1329,13 @@ html:not(.nav-mobile) .meta-head .filter-toggle-btn {
   margin-left: 0;
 }
 
-/* Touch screens: the filters' button on the switcher's top-right corner,
-   like league.html's "?" — out over it (3px on the right: the phone's page
-   margin is only 6px — its ring stays on screen), within the 8px the row
-   keeps from the screen's top while stuck. */
+/* Touch screens: the filters' button beside the switcher, on its right,
+   centred on it — finger-sized; it sticks with it (the row is the sticky
+   part). */
 html.nav-mobile .meta-row > .filter-toggle-btn {
-  position: absolute;
-  top: -5px;
-  right: -3px;
-  z-index: 2;
-  width: 34px;
-  height: 34px;
+  width: 46px;
+  height: 46px;
   margin: 0;
-  box-shadow: 0 0 0 2px #fff, var(--shadow-card);
-}
-
-:root[data-theme="dark"].nav-mobile .meta-row > .filter-toggle-btn {
-  box-shadow: 0 0 0 2px #1e1517, var(--shadow-card);
 }
 
 /* The filters' button (every screen): not there while the page loads — it
@@ -1376,7 +1367,9 @@ html.nav-mobile .meta-row {
   position: sticky;
   top: calc(8px + env(safe-area-inset-top));
   z-index: 10;
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* Every sticky segmented control on touch screens (.profile-tabs — Bacheca,
@@ -1457,6 +1450,17 @@ html.nav-mobile :is(.profile-tabs:not(.meta-tabs), .meta-row) .profile-tab.is-ac
 
 html.nav-mobile .meta-row > .meta-tabs {
   position: static;
+  /* (A flex item now: its z-index from the sticky controls' rule would
+     apply even unpositioned, lifting it and its band over the button.) */
+  z-index: auto;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Its shadow while stuck (the open tab's ::after, placed against the row):
+   under the switcher only, not the button beside it (46px + the 8px gap). */
+html.nav-mobile .meta-row > .meta-tabs .profile-tab.is-active::after {
+  right: 54px;
 }
 
 /* The page's own <h1>: for screen readers only; Matchups' "?" in the

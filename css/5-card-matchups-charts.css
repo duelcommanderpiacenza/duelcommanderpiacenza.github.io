@@ -1262,13 +1262,16 @@ a.history-item:hover .follow-name {
   justify-content: center;
   width: 40px;
   height: 40px;
-  border: none;
+  box-sizing: border-box;
+  /* White, quiet (since 2026-10-26 — it was solid red): the site's light
+     round button, a hairline edge, the funnel in red. */
+  border: 1px solid var(--hairline);
   border-radius: 50%;
-  background: var(--brand-red);
-  color: #fff;
+  background: #fff;
+  color: var(--brand-red-deep);
   cursor: pointer;
   box-shadow: var(--shadow-card);
-  transition: background 150ms ease;
+  transition: background 150ms ease, border-color 150ms ease;
   /* No entrance and not hidden while loading: on Comandanti / Archetipi /
      Matchups / Giocatori it sits on the title's line, outside
      .page-loading-region — there from the first paint, like the title (its
@@ -1277,56 +1280,72 @@ a.history-item:hover .follow-name {
 
 .filter-toggle-btn:hover,
 .filter-toggle-btn.is-open {
-  background: var(--brand-red-deep-2);
+  border-color: var(--hairline-hover);
+  background: #fff7f4;
 }
 
-/* At least one filter in the panel is set (js/filter-toggle.js) — a white
-   dot on the circle's top right, ringed in the button's own red so it
-   reads as sitting on the edge rather than floating off it. */
+/* Open: the funnel in the brighter red. */
+.filter-toggle-btn.is-open {
+  color: var(--brand-red);
+}
+
+:root[data-theme="dark"] .filter-toggle-btn {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: #2a1f22;
+  color: #ff9a9d;
+}
+
+:root[data-theme="dark"] .filter-toggle-btn:hover,
+:root[data-theme="dark"] .filter-toggle-btn.is-open {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: #34262a;
+}
+
+/* At least one filter in the panel is set (js/filter-toggle.js) — as the
+   "Dal" date is by default: quietly marked, a light red fill and a red
+   edge, the funnel in the brighter red (since 2026-10-26: no more dot on
+   its corner; solid red was tried and dropped — too loud for the default
+   state), with a little pop the first time in a visit. */
 .filter-toggle-btn {
   position: relative;
 }
 
-.filter-toggle-btn.has-active-filters::after {
-  content: "";
-  position: absolute;
-  top: 1px;
-  right: 1px;
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 0 0 2px var(--brand-red);
-  pointer-events: none;
+.filter-toggle-btn.has-active-filters {
+  border-color: color-mix(in srgb, var(--brand-red) 45%, transparent);
+  background: #fdecec;
+  color: var(--brand-red);
+  animation: filter-active-in 320ms cubic-bezier(0.2, 0.9, 0.3, 1.5) both;
 }
 
-/* The dot pops on when it appears (the filters read once the page's first
-   data is back, or a filter just set): from nothing, a small overshoot. */
-.filter-toggle-btn.has-active-filters::after {
-  animation: filter-dot-in 320ms cubic-bezier(0.2, 0.9, 0.3, 1.5) both;
+.filter-toggle-btn.has-active-filters:is(:hover, .is-open) {
+  background: #fbe0e0;
 }
 
-@keyframes filter-dot-in {
+:root[data-theme="dark"] .filter-toggle-btn.has-active-filters {
+  border-color: rgba(255, 110, 110, 0.45);
+  background: #3a2226;
+  color: #ff9a9d;
+}
+
+:root[data-theme="dark"] .filter-toggle-btn.has-active-filters:is(:hover, .is-open) {
+  background: #44282c;
+}
+
+@keyframes filter-active-in {
   from {
-    opacity: 0;
-    transform: scale(0);
+    transform: scale(0.8);
   }
 }
 
-/* Already shown earlier in the visit (js/filter-toggle.js): just there. */
-.filter-toggle-btn.no-dot-pop.has-active-filters::after {
+/* Already shown earlier in the visit (js/filter-toggle.js): just marked. */
+.filter-toggle-btn.no-active-pop.has-active-filters {
   animation: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .filter-toggle-btn.has-active-filters::after {
+  .filter-toggle-btn.has-active-filters {
     animation: none;
   }
-}
-
-.filter-toggle-btn.has-active-filters:hover::after,
-.filter-toggle-btn.has-active-filters.is-open::after {
-  box-shadow: 0 0 0 2px var(--brand-red-deep-2);
 }
 
 .filter-toggle-btn svg {
