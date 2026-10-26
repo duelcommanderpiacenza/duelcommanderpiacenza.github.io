@@ -2,10 +2,8 @@
 // answered from the last visit's copy at once, the fresh one fetched behind
 // it):
 //
-// * "data-updated" — something on screen changed meanwhile (the network
-//   slower than the service worker waits for — usually it answers in time
-//   and the page gets the fresh data straight away). Just arrived on the
-//   page (the first few seconds) and not touched yet: the page redraws
+// * "data-updated" — something on screen changed meanwhile. Just arrived on
+//   the page (the first few seconds) and not touched yet: the page redraws
 //   itself in place, quietly (router.refresh quiet — the old screen kept
 //   until the new one is drawn, then a short cross-fade; no splash, no
 //   animations again). Later, already being used (a tap, a key, a scroll),
