@@ -2888,11 +2888,15 @@ html.is-recap-open {
   background: rgba(255, 255, 255, 0.14);
 }
 
+/* The confetti fall the screen's whole height (cqh: the slide's, whatever
+   the phone — a fixed distance stopped them in a line across a taller one),
+   fading out at the bottom. */
 .recap-confetti {
   position: absolute;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
+  container-type: size;
 }
 
 .recap-confetti i {
@@ -2914,9 +2918,13 @@ html.is-recap-open {
     transform: translateY(0) rotate(0);
   }
 
-  100% {
+  85% {
     opacity: 0.9;
-    transform: translateY(760px) rotate(540deg);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(calc(100cqh + 20px)) rotate(540deg);
   }
 }
 

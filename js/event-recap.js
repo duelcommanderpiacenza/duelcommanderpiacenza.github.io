@@ -192,12 +192,30 @@ const CONFETTI = Array.from({ length: 34 }, (_, i) => {
   return `<i style="left:${(i * 37) % 100}%;background:${colors[i % 5]};animation-delay:${(i % 9) * 0.18}s"></i>`;
 }).join("");
 
+// The archetypes' screen's headline, by how far ahead the most played is
+// (`archetypes` sorted, most decks first): tied → "Pari: A e B" (or more);
+// within a deck, or the second with 85%+ of the first → "Testa a testa: A e
+// B"; 1.5× the second and 3+ decks more → "Ha dominato A"; else "Il più
+// giocato: A".
+function archetypeHeadline(archetypes) {
+  const name = (a) => `<span class="recap-cap">${a}</span>`;
+  const and = (list) => (list.length > 1 ? `${list.slice(0, -1).join(", ")} e ${list.at(-1)}` : list[0]);
+  const [first, second] = archetypes;
+  if (!first || first.n === 0) return "Nessun archetipo";
+  if (!second || second.n === 0) return `Ha dominato ${name(first.a)}`;
+  const tied = archetypes.filter((x) => x.n === first.n);
+  if (tied.length > 1) return `Pari: ${and(tied.map((x) => name(x.a)))}`;
+  if (first.n - second.n <= 1 || second.n >= first.n * 0.85) return `Testa a testa: ${name(first.a)} e ${name(second.a)}`;
+  if (first.n >= second.n * 1.5 && first.n - second.n >= 3) return `Ha dominato ${name(first.a)}`;
+  return `Il più giocato: ${name(first.a)}`;
+}
+
 // The archetypes' screen (event and season alike).
 function archetypesSlide(archetypes, kicker) {
   const maxArch = Math.max(1, ...archetypes.map((x) => x.n));
   return `<section class="recap-slide"><div class="recap-bg is-dark"></div>
       <p class="recap-k" ${at(0)}>${kicker}</p>
-      <h2 class="recap-big is-small" ${at(1)}>Ha dominato <span class="recap-cap">${archetypes[0].a}</span></h2>
+      <h2 class="recap-big is-small" ${at(1)}>${archetypeHeadline(archetypes)}</h2>
       <div class="recap-bars">${archetypes
         .map(
           (x, i) =>
