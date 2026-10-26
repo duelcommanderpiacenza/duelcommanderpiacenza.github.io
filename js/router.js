@@ -121,22 +121,32 @@ function currentPageLabel() {
 function syncBackButton() {
   const back = history.state?.back;
   const btn = document.querySelector("main .detail-hero-back");
-  if (!btn || !back?.href || !back.label) return;
-  btn.href = back.href;
-  btn.dataset.historyBack = "";
-  btn.setAttribute("aria-label", `Torna a ${back.label}`);
+  if (!btn) return;
+  const hasBack = Boolean(back?.href && back.label);
+  if (hasBack) {
+    btn.href = back.href;
+    btn.dataset.historyBack = "";
+    btn.setAttribute("aria-label", `Torna a ${back.label}`);
+  }
+  // Its text in one label either way (landed here directly too: the page's
+  // own "Leghe & Eventi") — loose in the pill, its words and the "&" were
+  // separate flex items, each parted by the pill's icon gap.
+  const text = hasBack ? back.label : btn.textContent.trim();
   const svg = btn.querySelector("svg");
   const label = document.createElement("span");
   label.className = "detail-hero-back-label";
-  // Any "&" ("Leghe & Eventi") in the nav's own ampersand (styles.css .amp).
-  back.label.split("&").forEach((part, i) => {
+  // Any "&" ("Leghe & Eventi") in the nav's own ampersand (styles.css .amp),
+  // drawn as in the nav's tab: no spaces around it, only its own margin (the
+  // tab is a flex box — its words and the "&" separate items, the spaces
+  // between them dropped).
+  text.split("&").forEach((part, i, parts) => {
     if (i) {
       const amp = document.createElement("span");
       amp.className = "amp";
       amp.textContent = "&";
       label.append(amp);
     }
-    label.append(part);
+    label.append(parts.length > 1 ? part.trim() : part);
   });
   btn.replaceChildren(...(svg ? [svg] : []), label);
 }

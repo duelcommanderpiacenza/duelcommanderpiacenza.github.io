@@ -1670,6 +1670,12 @@ html.nav-mobile .site-search-box::before {
   margin: 0 2px;
 }
 
+/* In the heroes' back pill ("‹ Leghe & Eventi"): the same "&" as the nav's
+   tab beside it — its weight, not the pill's heavier text's. */
+.detail-hero-back .amp {
+  font-weight: 700;
+}
+
 .nav-link {
   display: inline-flex;
   align-items: center;
