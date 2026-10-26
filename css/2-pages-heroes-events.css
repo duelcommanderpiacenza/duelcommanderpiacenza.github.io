@@ -323,7 +323,7 @@
 }
 
 /* The rules' pop-up (js/league-rules.js): a small label over each part;
-   the match points as chips; the league points by position as a ladder —
+   the league points by position as a ladder —
    red columns as tall as their points, lighter down the ladder, the places
    under them on a base line; the three special rules as cards, each its
    number big on a red tile (the "−1" on a dark one). */
@@ -334,28 +334,6 @@
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-}
-
-.league-rules-match {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 0 0 16px;
-  padding: 0;
-  list-style: none;
-}
-
-.league-rules-match li {
-  padding: 4px 10px;
-  border-radius: var(--radius-pill);
-  background: rgba(154, 28, 32, 0.07);
-  color: var(--text-body);
-  font-size: 0.8rem;
-  font-weight: 700;
-}
-
-.league-rules-match b {
-  color: var(--brand-red-deep);
 }
 
 .league-rules-ladder {
@@ -462,14 +440,6 @@
   display: block;
   color: var(--text-title);
   font-size: 0.95rem;
-}
-
-:root[data-theme="dark"] .league-rules-match li {
-  background: rgba(255, 255, 255, 0.07);
-}
-
-:root[data-theme="dark"] .league-rules-match b {
-  color: #ff9a9d;
 }
 
 :root[data-theme="dark"] .league-rules-col {

@@ -9,8 +9,8 @@ import { openInfoDialog } from "./info-dialog.js";
 export const RULES_ICON =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"></path><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"></path></svg>';
 
-// Option A ("Scala e bonus", of a mockup, 2026-10-26): the match points as
-// chips; the league points by position as a ladder of red columns (as tall
+// Option A ("Scala e bonus", of a mockup, 2026-10-26; its match points'
+// chips removed the same day): the league points by position as a ladder of red columns (as tall
 // as their points); the three special rules as cards, each with its number
 // big (+2, −1, +5). Styles: css/2 "The rules' pop-up".
 const LADDER = [
@@ -27,10 +27,6 @@ const BONUSES = [
 ];
 
 const RULES_HTML = `
-  <p class="league-rules-label">Punti partita</p>
-  <ul class="league-rules-match">
-    <li>Vittoria <b>3</b></li><li>Pareggio <b>1</b></li><li>Sconfitta <b>0</b></li><li>Bye <b>3</b></li>
-  </ul>
   <p class="league-rules-label">Punti lega per posizione</p>
   <div class="league-rules-ladder" role="list">
     ${LADDER.map(
