@@ -145,6 +145,10 @@
   <div class="page-loading-region">
     <div id="page-loading-overlay" class="page-loading-overlay">
       <div class="sk-page is-home" aria-hidden="true">
+        <i class="sk sk-recap" hidden></i>
+        <!-- A recap card likely (js/home.js recapLikely — the same guess,
+             here before the first paint): its placeholder shown. -->
+        <script>try{var h=JSON.parse(localStorage.getItem("homeRecapHint")||"null"),d=new Date(),t=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"),w=new Date(d.getTime()-7*864e5),c=w.getFullYear()+"-"+String(w.getMonth()+1).padStart(2,"0")+"-"+String(w.getDate()).padStart(2,"0");if(h&&((h.until&&t<=h.until)||(h.next&&h.next<=t&&h.next>=c)))document.currentScript.previousElementSibling.hidden=false}catch(e){}</script>
         <i class="sk sk-tabs sk-touch-only"></i>
         <div class="sk-cols">
           <div class="sk-col">

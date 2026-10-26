@@ -7,7 +7,8 @@
 // as a foil card, confetti), the top 8, the unbeaten (no losses AND a real
 // match won — a bye isn't one, only draws isn't a result to celebrate), the
 // commander of the day (the most played; a tie: the best placed), the
-// archetypes, and the end (the next event, "Condividi il recap").
+// archetypes, and the end ("Ci vediamo al prossimo evento!", the next event — the
+// same league's, else the soonest of any kind — and "Condividi il recap").
 // Opened by the Bacheca's recap card (js/home.js) and by a shared link
 // (event.html?id=…&recap=1, js/event-detail.js). Styles: css/6 "Event recap".
 
@@ -26,6 +27,11 @@ const SHIELD =
 
 const commanderOf = (entry) =>
   entry ? `${entry.commander?.name ?? "—"}${entry.partner_commander ? ` / ${entry.partner_commander.name}` : ""}` : "—";
+// The archetypes' colours on the recap's dark screens: their own, but
+// Combo's near-black (#2a2226) — invisible there — a light grey instead, its
+// icon dark (.recap-bar.is-light).
+const RECAP_LIGHT = { combo: "#d8cfd1" };
+
 const longDate = (iso) => new Date(`${iso}T00:00:00`).toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" });
 
 // --- The data (once per event per visit) ---------------------------------------
@@ -76,7 +82,12 @@ export function loadRecapData(eventId) {
         topCount: topEntries.length,
         topBest: topEntries.length ? bestOf(topEntries) : null,
         archetypes: ARCHETYPES.map((a) => ({ a, n: entries.filter((e) => e.archetype === a).length })).sort((x, y) => y.n - x.n),
-        next: upcoming.find((u) => u.event_date >= ev.event_date && u.id !== ev.id) ?? null,
+        // The end's next event: the same league's next one, else (a league
+        // over, a standalone event) the soonest upcoming one of any kind.
+        next: (() => {
+          const later = upcoming.filter((u) => u.event_date >= ev.event_date && u.id !== ev.id);
+          return (ev.league_id && later.find((u) => u.league_id === ev.league_id)) || later[0] || null;
+        })(),
       };
     })();
     cache.set(eventId, request);
@@ -162,21 +173,20 @@ function slidesHtml(data) {
       <div class="recap-bars">${data.archetypes
         .map(
           (x, i) =>
-            `<div class="recap-bar" style="--c:${ARCHETYPE_COLORS[x.a]};--d:${i}"><span class="recap-bar-ic">${archetypeIcon(x.a, "")}</span><div><small>${x.a}</small><div class="recap-bar-tr"><i style="--w:${(x.n / maxArch) * 100}%"></i></div></div><b>${x.n}</b></div>`
+            `<div class="recap-bar${RECAP_LIGHT[x.a] ? " is-light" : ""}" style="--c:${RECAP_LIGHT[x.a] ?? ARCHETYPE_COLORS[x.a]};--d:${i}"><span class="recap-bar-ic">${archetypeIcon(x.a, "")}</span><div><small>${x.a}</small><div class="recap-bar-tr"><i style="--w:${(x.n / maxArch) * 100}%"></i></div></div><b>${x.n}</b></div>`
         )
         .join("")}</div></section>`);
   const next = data.next;
   slides.push(`<section class="recap-slide is-center"><div class="recap-bg is-red"></div>
-      <p class="recap-k" ${at(0)}>Fine del recap</p>
-      <h2 class="recap-big" ${at(1)}>Ci vediamo al prossimo!</h2>
+      <h2 class="recap-big" ${at(0)}>Ci vediamo al prossimo evento!</h2>
       ${
         next
-          ? `<div class="recap-next" ${at(2)}><span class="recap-k">Prossimo evento</span><b>${escapeHtml(next.name || next.league?.name || "Evento")}</b><span>${escapeHtml(
+          ? `<div class="recap-next" ${at(1)}><b>${escapeHtml(next.name || next.league?.name || "Evento")}</b><span>${escapeHtml(
               longDate(next.event_date)
             )}${next.start_time ? ` · ${next.start_time.slice(0, 5)}` : ""}</span></div>`
           : ""
       }
-      <button type="button" class="recap-share" ${at(3)}>Condividi il recap</button></section>`);
+      <button type="button" class="recap-share" ${at(2)}>Condividi il recap</button></section>`);
   return slides.join("");
 }
 

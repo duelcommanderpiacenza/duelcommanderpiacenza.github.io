@@ -596,6 +596,19 @@ html.app-header .sk-cols > .sk-col + .sk-col {
   margin-top: 16px;
 }
 
+/* The recap card's place (js/home.js recapLikely — only when one is likely),
+   as tall as the card, above everything. */
+.sk-page.is-home .sk-recap {
+  display: block;
+  height: 88px;
+  margin-bottom: 18px;
+  border-radius: 20px;
+}
+
+.sk-page.is-home .sk-recap[hidden] {
+  display: none;
+}
+
 /* Touch screens: the segmented control, then Eventi alone (no heading of
    its own there). */
 html.app-header .sk-page.is-home .sk-tabs {

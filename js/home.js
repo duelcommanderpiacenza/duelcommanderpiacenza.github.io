@@ -403,6 +403,32 @@ const RECAP_DAYS = 7;
 const PLAY_ICON =
   '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"></path></svg>';
 
+// Whether a recap card is likely before anything loads — for the loading
+// skeleton's card placeholder (.sk-recap; index.html's inline script makes
+// the same guess before the first paint): what the last visit saw, kept in
+// localStorage "homeRecapHint" — the last day its recap card was due
+// ("until"), and the next event's date then ("next"), which may have been
+// played since (within RECAP_DAYS).
+const HINT_KEY = "homeRecapHint";
+
+function recapLikely() {
+  try {
+    const hint = JSON.parse(localStorage.getItem(HINT_KEY) || "null");
+    const today = isoDaysAgo(0);
+    return Boolean(hint && ((hint.until && today <= hint.until) || (hint.next && hint.next <= today && hint.next >= isoDaysAgo(RECAP_DAYS))));
+  } catch {
+    return false;
+  }
+}
+
+function rememberRecapHint(until, next) {
+  try {
+    localStorage.setItem(HINT_KEY, JSON.stringify({ until, next }));
+  } catch {
+    // No storage: no guess next time.
+  }
+}
+
 function isoDaysAgo(days) {
   const d = new Date();
   d.setDate(d.getDate() - days);
@@ -412,10 +438,19 @@ function isoDaysAgo(days) {
 async function renderRecapCard(el, signal) {
   try {
     const cutoff = isoDaysAgo(RECAP_DAYS);
-    const ev = (await allEvents())
+    const [events, upcoming] = await Promise.all([allEvents(), upcomingEvents().catch(() => [])]);
+    const ev = events
       .filter((e) => !e.is_open && e.event_date && e.event_date >= cutoff)
       .sort((a, b) => b.event_date.localeCompare(a.event_date))[0];
-    if (!ev) return;
+    // For the next visit's loading skeleton (recapLikely).
+    const next = upcoming[0]?.event_date ?? null;
+    if (!ev) {
+      rememberRecapHint(null, next);
+      return;
+    }
+    const until = new Date(`${ev.event_date}T00:00:00`);
+    until.setDate(until.getDate() + RECAP_DAYS);
+    rememberRecapHint(`${until.getFullYear()}-${String(until.getMonth() + 1).padStart(2, "0")}-${String(until.getDate()).padStart(2, "0")}`, next);
     const data = await loadRecapData(ev.id);
     if (signal.aborted || !data.winner) return;
     el.innerHTML = `
@@ -444,6 +479,10 @@ async function renderRecapCard(el, signal) {
 
 export function mount({ signal = new AbortController().signal } = {}) {
   shared = new Map();
+  // The skeleton's recap placeholder (in-app navigation: the inline script
+  // in index.html doesn't run then).
+  const skRecap = document.querySelector(".sk-page.is-home .sk-recap");
+  if (skRecap) skRecap.hidden = !recapLikely();
   initTabs(document.querySelector(".home-tabs"));
   renderCommandersSection(document.getElementById("dashboard-commanders-content"));
   return Promise.allSettled([

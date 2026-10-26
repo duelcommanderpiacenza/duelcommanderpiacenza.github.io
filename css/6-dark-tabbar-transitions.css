@@ -3050,6 +3050,11 @@ html.is-recap-open {
   color: #fff;
 }
 
+/* A light colour (Combo's, js/event-recap.js RECAP_LIGHT): its icon dark. */
+.recap-bar.is-light .recap-bar-ic svg {
+  color: #2a2226;
+}
+
 .recap-bar small {
   display: block;
   font-size: 0.7rem;
@@ -3099,7 +3104,6 @@ html.is-recap-open {
 
 .recap-next b {
   display: block;
-  margin-top: 4px;
   font-size: 1.4rem;
 }
 
