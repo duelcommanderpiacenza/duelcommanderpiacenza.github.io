@@ -1,5 +1,93 @@
 [
   {
+    "id": "0RPbDW",
+    "publicId": "8XahAaR2dnmhjkfi8XMuCQ",
+    "name": "W26 3/7 - Rank 01/23 Glarb (Gibbonz33)",
+    "url": "https://moxfield.com/decks/8XahAaR2dnmhjkfi8XMuCQ",
+    "commanderName": "Glarb, Calamity's Augur",
+    "updatedAtUtc": "2026-10-26T06:48:19.540Z",
+    "createdAtUtc": "2026-10-26T06:41:38.470Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/ffc70b2d-5a3a-49ea-97db-175a62248302?format=image&version=art_crop"
+  },
+  {
+    "id": "wovNq4",
+    "publicId": "vm3-ZwfFe0OojMydPuLQ3A",
+    "name": "W26 3/7 - Rank 04/23 Elminster",
+    "url": "https://moxfield.com/decks/vm3-ZwfFe0OojMydPuLQ3A",
+    "commanderName": "Elminster",
+    "updatedAtUtc": "2026-10-26T06:46:59.663Z",
+    "createdAtUtc": "2026-10-26T06:46:59.603Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/4eac2b49-6cb6-4ff4-8fac-2ba669326640?format=image&version=art_crop"
+  },
+  {
+    "id": "W9yvZl",
+    "publicId": "9HahAWj_QHqM44CrJjoO3g",
+    "name": "W26 3/7 - Rank 08/23 DC - Phlage (michele__f)",
+    "url": "https://moxfield.com/decks/9HahAWj_QHqM44CrJjoO3g",
+    "commanderName": "Phlage, Titan of Fire's Fury",
+    "updatedAtUtc": "2026-10-26T06:45:34.077Z",
+    "createdAtUtc": "2026-10-26T06:45:30.090Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/e419cd0b-2449-4cc5-9ead-b9e45e271700?format=image&version=art_crop"
+  },
+  {
+    "id": "xo8N5g",
+    "publicId": "9HahAXiBcHKt-XFxmfpOVQ",
+    "name": "W26 3/7 - Rank 07/23 ellie partner beta  (stantuffodado88)",
+    "url": "https://moxfield.com/decks/9HahAXiBcHKt-XFxmfpOVQ",
+    "commanderName": "Ellie, Vengeful Hunter",
+    "updatedAtUtc": "2026-10-26T06:45:01.123Z",
+    "createdAtUtc": "2026-10-26T06:44:57.850Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/dd0b3ace-91aa-46b7-8265-b8bc22dff5f7?format=image&version=art_crop"
+  },
+  {
+    "id": "XBDvq1",
+    "publicId": "9HahAW4BvX2oJ8IuS5LR1g",
+    "name": "W26 3/7 - Rank 06/23 Aragorn (Rinnen)",
+    "url": "https://moxfield.com/decks/9HahAW4BvX2oJ8IuS5LR1g",
+    "commanderName": "Aragorn, King of Gondor",
+    "updatedAtUtc": "2026-10-26T06:44:27.860Z",
+    "createdAtUtc": "2026-10-26T06:44:25.070Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/1c7ac04c-8510-468b-aa6f-f249bde9ff87?format=image&version=art_crop"
+  },
+  {
+    "id": "6w0Ajw",
+    "publicId": "83ahASBaDnS1VkA6hoe5Qg",
+    "name": "W26 3/7 - Rank 05/23 Aang, Swift Savior  (DrPain)",
+    "url": "https://moxfield.com/decks/83ahASBaDnS1VkA6hoe5Qg",
+    "commanderName": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+    "updatedAtUtc": "2026-10-26T06:43:45.750Z",
+    "createdAtUtc": "2026-10-26T06:43:42.240Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/de89fec4-f5c8-4513-8504-ac9bafb44054?format=image&version=art_crop"
+  },
+  {
+    "id": "AjK53R",
+    "publicId": "8nahATDDInmNCkIBhTvn4g",
+    "name": "W26 3/7 - Rank 03/23 [DC] Light-Paws v19.6 (lex_luthor)",
+    "url": "https://moxfield.com/decks/8nahATDDInmNCkIBhTvn4g",
+    "commanderName": "Light-Paws, Emperor's Voice",
+    "updatedAtUtc": "2026-10-26T06:43:06.730Z",
+    "createdAtUtc": "2026-10-26T06:43:03.600Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/39555a72-a57b-45ee-9222-ce3b9e8de126?format=image&version=art_crop"
+  },
+  {
+    "id": "9XOdl4",
+    "publicId": "8nahAWQUS36l7fbfDTCHtw",
+    "name": "W26 3/7 - Rank 02/23 EllieS 2.0 (Cannonalpha)",
+    "url": "https://moxfield.com/decks/8nahAWQUS36l7fbfDTCHtw",
+    "commanderName": "Ellie, Vengeful Hunter",
+    "updatedAtUtc": "2026-10-26T06:42:24.047Z",
+    "createdAtUtc": "2026-10-26T06:42:18.853Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/dd0b3ace-91aa-46b7-8265-b8bc22dff5f7?format=image&version=art_crop"
+  },
+  {
     "id": "woqRj4",
     "publicId": "6SqhARhyLnW9uFXwiG1GMQ",
     "name": "W26 2/7 - Rank 01/29 quintorius (ricc41)",
@@ -20,93 +108,5 @@
     "createdAtUtc": "2026-10-11T07:46:19.897Z",
     "format": "duelCommander",
     "previewImageUrl": "https://api.scryfall.com/cards/4eac2b49-6cb6-4ff4-8fac-2ba669326640?format=image&version=art_crop"
-  },
-  {
-    "id": "BB8e4R",
-    "publicId": "9imhARXq3HuWYaIBo1M9EA",
-    "name": "W26 2/7 - Rank 03/29 Aragorn (Rinnen)",
-    "url": "https://moxfield.com/decks/9imhARXq3HuWYaIBo1M9EA",
-    "commanderName": "Aragorn, King of Gondor",
-    "updatedAtUtc": "2026-10-11T08:03:57.943Z",
-    "createdAtUtc": "2026-10-11T07:56:50.070Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/1c7ac04c-8510-468b-aa6f-f249bde9ff87?format=image&version=art_crop"
-  },
-  {
-    "id": "PoZ6qq",
-    "publicId": "9CmhAcWFSnK0oijLfOchxQ",
-    "name": "W26 2/7 - Rank 08/29 DC - Phlage (michele__f)",
-    "url": "https://moxfield.com/decks/9CmhAcWFSnK0oijLfOchxQ",
-    "commanderName": "Phlage, Titan of Fire's Fury",
-    "updatedAtUtc": "2026-10-11T07:54:18.563Z",
-    "createdAtUtc": "2026-10-11T07:54:13.317Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/e419cd0b-2449-4cc5-9ead-b9e45e271700?format=image&version=art_crop"
-  },
-  {
-    "id": "xoql5y",
-    "publicId": "8ymhAfClDnWSgCRtM4U9dQ",
-    "name": "W26 2/7 - Rank 06/29 [DC] Magda 1.0 (lord78)",
-    "url": "https://moxfield.com/decks/8ymhAfClDnWSgCRtM4U9dQ",
-    "commanderName": "Magda, Brazen Outlaw",
-    "updatedAtUtc": "2026-10-11T07:53:20.390Z",
-    "createdAtUtc": "2026-10-11T07:53:16.017Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/ab551f0e-7a9c-4c99-b199-042ab018dd9a?format=image&version=art_crop"
-  },
-  {
-    "id": "QOZ6q4",
-    "publicId": "8imhAeTN5n-8JEX_BNdI8A",
-    "name": "W26 2/7 - Rank 05/29 {DC} Made in Heaven 🪽 (Sancho182)",
-    "url": "https://moxfield.com/decks/8imhAeTN5n-8JEX_BNdI8A",
-    "commanderName": "Atraxa, Grand Unifier",
-    "updatedAtUtc": "2026-10-11T07:52:25.667Z",
-    "createdAtUtc": "2026-10-11T07:52:20.707Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/4a1f905f-1d55-4d02-9d24-e58070793d3f?format=image&version=art_crop"
-  },
-  {
-    "id": "ZbZNlN",
-    "publicId": "u35T8y2XF0W1fNEQTkk3fw",
-    "name": "W26 2/7 - Rank 04/29 Najeela, the Blade-Blossom",
-    "url": "https://moxfield.com/decks/u35T8y2XF0W1fNEQTkk3fw",
-    "commanderName": "Najeela, the Blade-Blossom",
-    "updatedAtUtc": "2026-10-11T07:50:00.580Z",
-    "createdAtUtc": "2026-10-11T07:50:00.537Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/2cb1d1da-6077-46b5-8c63-39882b8016f2?format=image&version=art_crop"
-  },
-  {
-    "id": "0RnNBb",
-    "publicId": "7SmhAYfkhniLJud91wBQkA",
-    "name": "W26 2/7 - Rank 02/29 Glarb (Gibbonz33)",
-    "url": "https://moxfield.com/decks/7SmhAYfkhniLJud91wBQkA",
-    "commanderName": "Glarb, Calamity's Augur",
-    "updatedAtUtc": "2026-10-11T07:47:04.917Z",
-    "createdAtUtc": "2026-10-11T07:46:58.823Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/ffc70b2d-5a3a-49ea-97db-175a62248302?format=image&version=art_crop"
-  },
-  {
-    "id": "woXnWm",
-    "publicId": "JOKgAYk1E3-1mrHMr6Z7aA",
-    "name": "W26 1/7 - Rank 01/23 - DC - Silver Chariot 🤺 (Sancho182)",
-    "url": "https://moxfield.com/decks/JOKgAYk1E3-1mrHMr6Z7aA",
-    "commanderName": "Cloud, Midgar Mercenary",
-    "updatedAtUtc": "2026-09-27T09:28:10.210Z",
-    "createdAtUtc": "2026-09-27T09:13:38.953Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/b9be30cf-a49b-4358-836f-40441ee92519?format=image&version=art_crop"
-  },
-  {
-    "id": "nr8XgA",
-    "publicId": "IOKgAUWO_Xa0ToudocoeTA",
-    "name": "W26 1/7 - Rank 06/23 - DC - Phlage (michele__f)",
-    "url": "https://moxfield.com/decks/IOKgAUWO_Xa0ToudocoeTA",
-    "commanderName": "Phlage, Titan of Fire's Fury",
-    "updatedAtUtc": "2026-09-27T09:23:49.867Z",
-    "createdAtUtc": "2026-09-27T09:09:39.527Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/e419cd0b-2449-4cc5-9ead-b9e45e271700?format=image&version=art_crop"
   }
 ]
