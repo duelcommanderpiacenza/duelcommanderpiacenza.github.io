@@ -113,6 +113,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     if (signal.aborted) return;
 
     titleEl.textContent = eventTitle(event);
+    document.title = `${eventTitle(event)} - Duel Commander Piacenza`;
     const resultsHtml = nestedResultsMenu(event.results_url, event.decklists_url);
     resultsEl.innerHTML = resultsHtml;
     resultsEl.hidden = !resultsHtml;

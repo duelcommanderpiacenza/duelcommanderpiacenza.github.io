@@ -205,6 +205,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     const league = await Leagues.get(id);
     if (signal.aborted) return;
     titleEl.textContent = league.name;
+    document.title = `${league.name} - Duel Commander Piacenza`;
     initTitleFit(titleEl, { signal });
 
     // A Topdeck series is just a bucket of events, with no points leaderboard:

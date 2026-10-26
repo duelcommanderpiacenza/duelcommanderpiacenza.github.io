@@ -145,6 +145,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     titleEl.innerHTML = `${escapeHtml(commander.name)}${
       titleBadgesHtml(commander)
     }`;
+    document.title = `${commander.name} - Duel Commander Piacenza`;
     // On phones: a long name shrunk to one line.
     initTitleFit(titleEl, { signal });
     // The hero's backdrop: the commander's own art.
