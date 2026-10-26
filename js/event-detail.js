@@ -123,10 +123,14 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     resultsEl.hidden = !resultsHtml;
     // The hero's buttons: "Recap" for a played event with entrants, "Liste"
     // beside it (above).
+    // (Either missing from an old copy of the page: nothing.)
     const recapBtn = document.getElementById("event-recap");
-    recapBtn.hidden = event.is_open || entries.length === 0;
-    recapBtn.onclick = () => openEventRecap(id);
-    document.getElementById("event-actions").hidden = recapBtn.hidden && resultsEl.hidden;
+    const actionsEl = document.getElementById("event-actions");
+    if (recapBtn && actionsEl) {
+      recapBtn.hidden = event.is_open || entries.length === 0;
+      recapBtn.onclick = () => openEventRecap(id);
+      actionsEl.hidden = recapBtn.hidden && resultsEl.hidden;
+    }
     initTitleFit(titleEl, { signal });
     metaEl.innerHTML = `${formatDate(event.event_date)}${
       event.league

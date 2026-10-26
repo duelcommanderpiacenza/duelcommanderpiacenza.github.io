@@ -299,28 +299,27 @@
   opacity: 0.8;
 }
 
-.league-hero .profile-hero-stats:has(> .league-rules-btn:not([hidden])) {
-  display: flex;
-  align-items: center;
-  gap: 20px;
+/* Beside "Recap" (a closed league), "Regolamento" white — an event's
+   "Liste" look (.results-menu-btn's colours, the hero buttons' size). */
+.league-rules-btn.is-light {
+  border-color: var(--hairline);
+  background: #fff;
+  color: var(--brand-red-deep);
 }
 
-.league-hero .profile-hero-stats > .league-rules-btn {
-  margin-left: auto;
+.league-rules-btn.is-light:hover {
+  border-color: var(--hairline-hover);
+  background: #fff7f4;
 }
 
-@media (max-width: 820px) {
-  .league-hero .profile-hero-stats:has(> .league-rules-btn:not([hidden])) {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 16px;
-  }
+:root[data-theme="dark"] .league-rules-btn.is-light {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: color-mix(in srgb, var(--brand-red) 55%, #fff);
+}
 
-  .league-hero .profile-hero-stats > .league-rules-btn {
-    order: -1;
-    align-self: center;
-    margin-left: 0;
-  }
+:root[data-theme="dark"] .league-rules-btn.is-light:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 /* The rules' pop-up (js/league-rules.js): a small label over each part;
@@ -1683,57 +1682,58 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   text-shadow: none;
 }
 
-/* event.html's hero buttons (.event-hero-actions): "Recap" (the league's
-   "Regolamento" look — .league-rules-btn: the hero's colour) and "Liste"
-   at its right, as tall as it, its text the same size. On a computer at
-   the right end of the numbers' line; up to 820px above the numbers,
-   centred (as league.html's "Regolamento"). */
-.event-hero-actions {
+/* The heroes' buttons (.hero-actions): event.html's "Recap" and "Liste",
+   league.html's "Recap" (a closed league) and "Regolamento" — the first
+   in the hero's colour (.league-rules-btn), the other white, as tall, its
+   text the same size. On a computer at the right end of the numbers' line;
+   up to 820px above the numbers, centred. */
+.hero-actions {
   display: flex;
   flex: none;
   align-items: center;
   gap: 10px;
 }
 
-.event-hero-actions[hidden] {
+.hero-actions[hidden] {
   display: none;
 }
 
-.event-hero-actions .results-menu-btn {
+.hero-actions .results-menu-btn {
   height: 42px;
   padding: 0 16px;
   font-size: 0.95rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
-.event-hero-actions .results-menu-btn svg {
+.hero-actions .results-menu-btn svg {
   width: 18px;
   height: 18px;
 }
 
-.event-hero .profile-hero-stats:has(> .event-hero-actions:not([hidden])) {
+:is(.event-hero, .league-hero) .profile-hero-stats:has(> .hero-actions:not([hidden])) {
   display: flex;
   align-items: center;
   gap: 20px;
 }
 
-.event-hero .profile-hero-stats > .event-hero-actions {
+:is(.event-hero, .league-hero) .profile-hero-stats > .hero-actions {
   margin-left: auto;
 }
 
 @media (max-width: 820px) {
-  .event-hero .profile-hero-stats:has(> .event-hero-actions:not([hidden])) {
+  :is(.event-hero, .league-hero) .profile-hero-stats:has(> .hero-actions:not([hidden])) {
     flex-direction: column;
     align-items: stretch;
     gap: 16px;
   }
 
-  .event-hero .profile-hero-stats > .event-hero-actions {
+  :is(.event-hero, .league-hero) .profile-hero-stats > .hero-actions {
     order: -1;
     align-self: center;
     margin-left: 0;
   }
 }
+
 
 /* "In corso" / "Conclusa" in the hero: the site's status chip
    (.status-chip, below with .badge-status) as see-through glass on the art

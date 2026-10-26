@@ -78,6 +78,7 @@
   <link rel="modulepreload" href="js/tabs.js">
   <link rel="modulepreload" href="js/back-to-top.js">
   <link rel="modulepreload" href="js/league-rules.js">
+  <link rel="modulepreload" href="js/event-recap.js">
   <link rel="modulepreload" href="js/results-link.js">
   <link rel="modulepreload" href="js/meta-charts.js">
   <link rel="modulepreload" href="js/auto-badges.js">
@@ -171,13 +172,18 @@
                 <span id="league-dates" hidden></span>
               </div>
             </div>
-            <!-- The numbers, and "Regolamento" (how the standings are scored,
-                 js/league-rules.js): on a computer at the right end of their
-                 line, up to 820px above them, centred; not for a Topdeck
-                 series (no standings). -->
+            <!-- The numbers, then the hero's buttons: "Recap" (a closed
+                 league's season in stories, js/event-recap.js) and
+                 "Regolamento" (how the standings are scored, js/league-rules.js;
+                 white beside "Recap") — on a computer at the right end of the
+                 numbers' line, up to 820px above them, centred; none for a
+                 Topdeck series (no standings). -->
             <div class="profile-hero-stats">
               <div class="profile-stats-tiles" id="league-stats"></div>
-              <button type="button" class="league-rules-btn" id="league-rules" aria-haspopup="dialog" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"></path><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"></path></svg>Regolamento<svg class="league-rules-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></button>
+              <div class="hero-actions" id="league-actions" hidden>
+                <button type="button" class="league-rules-btn" id="league-recap" aria-haspopup="dialog" hidden><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"></path></svg>Recap</button>
+                <button type="button" class="league-rules-btn" id="league-rules" aria-haspopup="dialog" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"></path><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"></path></svg>Regolamento<svg class="league-rules-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></button>
+              </div>
             </div>
           </div>
         </div>

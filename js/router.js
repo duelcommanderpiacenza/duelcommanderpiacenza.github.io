@@ -54,13 +54,18 @@ let navToken = 0;
 // Kept per file, not per address: a page's HTML is the same whatever its
 // ?id= (its module reads the id), so however long the session and however
 // many players / events are opened, it's one copy per page at most.
+// Always checked with the server (cache: "no-cache" — a quick 304 when
+// unchanged), never the browser's own stored copy as it is: an old page's
+// HTML with the new scripts (just after a deploy; locally, files edited)
+// lacked elements the new module looks for — the page's "errore nel
+// caricamento".
 const htmlCache = new Map();
 function fetchPage(url) {
   const key = url.pathname;
   if (!htmlCache.has(key)) {
     htmlCache.set(
       key,
-      fetch(key, { credentials: "same-origin" }).then((res) => {
+      fetch(key, { credentials: "same-origin", cache: "no-cache" }).then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.text();
       })

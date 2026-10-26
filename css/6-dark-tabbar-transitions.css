@@ -3094,6 +3094,44 @@ html.is-recap-open {
   text-align: right;
 }
 
+/* The season's records: a card each — what, who, the number big. */
+.recap-records {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.recap-record {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "k n" "who n";
+  align-items: center;
+  gap: 2px 12px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.recap-record .recap-k {
+  grid-area: k;
+}
+
+.recap-record b {
+  grid-area: who;
+  overflow: hidden;
+  font-size: 1.15rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recap-record-n {
+  grid-area: n;
+  color: #ffd25a;
+  font-size: 2rem;
+  font-weight: 800;
+}
+
 .recap-next {
   margin-top: 26px;
   padding: 16px;

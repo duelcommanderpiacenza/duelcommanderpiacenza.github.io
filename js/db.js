@@ -421,7 +421,7 @@ export const Events = {
       .order("event_date", { ascending: false, nullsFirst: false })
       .then(assertOk),
   get: (id) =>
-    sb.from("events").select("*, league:leagues(id,name)").eq("id", id).single().then(assertOk),
+    sb.from("events").select("*, league:leagues(id,name,is_topdeck)").eq("id", id).single().then(assertOk),
   // Standalone events aren't part of any league (league_id is null).
   listStandalone: () =>
     sb

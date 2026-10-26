@@ -19,7 +19,7 @@ import { initTabs } from "./tabs.js";
 import { leaguePosHtml } from "./history-list.js";
 import { archetypeIcon } from "./archetype-icons.js";
 import { openLeagueRules, RULES_ICON } from "./league-rules.js";
-import { loadRecapData, openEventRecap, recapSeen } from "./event-recap.js";
+import { loadRecapData, loadSeasonData, openEventRecap, openSeasonRecap, recapSeen, seasonRecapSeen } from "./event-recap.js";
 import { createArtPainter } from "./player-card.js";
 
 // The timeline: how many upcoming events above "Oggi", played ones below.
@@ -394,7 +394,8 @@ async function renderCommandersSection(el) {
 // placeholder (index.html .home-charts-sk) until its charts are in.
 // --- Recap -------------------------------------------------------------------------
 
-// The latest event played in the last RECAP_DAYS days: a card on top (its
+// The latest event played in the last RECAP_DAYS days (or a season just
+// over — SEASON_DAYS, below): a card on top (its
 // winner's commander art in a turning red-gold ring — grey once watched,
 // js/event-recap.js recapSeen —, "Nuovo · Recap", the event, who won with
 // what; the whole card a button) opening its recap's stories. Nothing when there's none
@@ -435,40 +436,93 @@ function isoDaysAgo(days) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+// A season just over takes the card's place: a closed league (not a Topdeck
+// series) whose last event was within SEASON_DAYS — its season recap
+// instead of that event's (js/event-recap.js openSeasonRecap).
+const SEASON_DAYS = 14;
+
+const plusDays = (iso, days) => {
+  const d = new Date(`${iso}T00:00:00`);
+  d.setDate(d.getDate() + days);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
+// The latest closed real league whose last played event is on or after
+// `cutoff`: { id, last } — or null.
+function recentSeason(events, cutoff) {
+  const lastByLeague = new Map();
+  for (const e of events) {
+    if (e.is_open || !e.event_date || !e.league || e.league.is_open || e.league.is_topdeck) continue;
+    if ((lastByLeague.get(e.league_id) ?? "") < e.event_date) lastByLeague.set(e.league_id, e.event_date);
+  }
+  const [id, last] = [...lastByLeague.entries()].filter(([, d]) => d >= cutoff).sort((a, b) => b[1].localeCompare(a[1]))[0] ?? [];
+  return id ? { id, last } : null;
+}
+
+function recapEntryHtml({ seen, kicker, title, line }) {
+  return `
+      <button type="button" class="recap-entry${seen ? " is-seen" : ""}">
+        <span class="recap-ring"><span class="recap-ring-art"></span><span class="recap-ring-play">${PLAY_ICON}</span></span>
+        <span class="recap-entry-text">
+          <span class="recap-entry-k">${kicker}</span>
+          <b>${escapeHtml(title)}</b>
+          <span>${line}</span>
+        </span>
+      </button>`;
+}
+
 async function renderRecapCard(el, signal) {
   try {
-    const cutoff = isoDaysAgo(RECAP_DAYS);
     const [events, upcoming] = await Promise.all([allEvents(), upcomingEvents().catch(() => [])]);
-    const ev = events
-      .filter((e) => !e.is_open && e.event_date && e.event_date >= cutoff)
-      .sort((a, b) => b.event_date.localeCompare(a.event_date))[0];
     // For the next visit's loading skeleton (recapLikely).
     const next = upcoming[0]?.event_date ?? null;
-    if (!ev) {
+    const season = recentSeason(events, isoDaysAgo(SEASON_DAYS));
+    const ev = season
+      ? null
+      : events
+          .filter((e) => !e.is_open && e.event_date && e.event_date >= isoDaysAgo(RECAP_DAYS))
+          .sort((a, b) => b.event_date.localeCompare(a.event_date))[0];
+    if (!season && !ev) {
       rememberRecapHint(null, next);
       return;
     }
-    const until = new Date(`${ev.event_date}T00:00:00`);
-    until.setDate(until.getDate() + RECAP_DAYS);
-    rememberRecapHint(`${until.getFullYear()}-${String(until.getMonth() + 1).padStart(2, "0")}-${String(until.getDate()).padStart(2, "0")}`, next);
-    const data = await loadRecapData(ev.id);
-    if (signal.aborted || !data.winner) return;
-    el.innerHTML = `
-      <button type="button" class="recap-entry${recapSeen(ev.id) ? " is-seen" : ""}">
-        <span class="recap-ring"><span class="recap-ring-art"></span><span class="recap-ring-play">${PLAY_ICON}</span></span>
-        <span class="recap-entry-text">
-          <span class="recap-entry-k">Nuovo · Recap</span>
-          <b>${escapeHtml(data.name)}</b>
-          <span>Vince ${escapeHtml(data.winner.player?.name)} con ${escapeHtml(data.winnerCommander)}</span>
-        </span>
-      </button>`;
+    rememberRecapHint(season ? plusDays(season.last, SEASON_DAYS) : plusDays(ev.event_date, RECAP_DAYS), next);
+
+    let art;
+    let seenId;
+    let open;
+    if (season) {
+      const data = await loadSeasonData(season.id);
+      if (signal.aborted || !data.champion) return;
+      el.innerHTML = recapEntryHtml({
+        seen: seasonRecapSeen(season.id),
+        kicker: "Nuovo · Recap della stagione",
+        title: data.name,
+        line: `Campione ${escapeHtml(data.champion.player?.name)} con ${escapeHtml(data.championCommander)}`,
+      });
+      art = data.championCommander;
+      seenId = `league:${season.id}`;
+      open = () => openSeasonRecap(season.id);
+    } else {
+      const data = await loadRecapData(ev.id);
+      if (signal.aborted || !data.winner) return;
+      el.innerHTML = recapEntryHtml({
+        seen: recapSeen(ev.id),
+        kicker: "Nuovo · Recap",
+        title: data.name,
+        line: `Vince ${escapeHtml(data.winner.player?.name)} con ${escapeHtml(data.winnerCommander)}`,
+      });
+      art = data.winnerCommander;
+      seenId = ev.id;
+      open = () => openEventRecap(ev.id);
+    }
     el.hidden = false;
-    createArtPainter(el.querySelector(".recap-ring-art"))(data.winnerCommander.split(" / ")[0]);
-    el.querySelector(".recap-entry").addEventListener("click", () => openEventRecap(ev.id));
+    createArtPainter(el.querySelector(".recap-ring-art"))(art.split(" / ")[0]);
+    el.querySelector(".recap-entry").addEventListener("click", open);
     document.addEventListener(
       "recap:seen",
       (e) => {
-        if (e.detail === ev.id) el.querySelector(".recap-entry")?.classList.add("is-seen");
+        if (e.detail === seenId) el.querySelector(".recap-entry")?.classList.add("is-seen");
       },
       { signal }
     );

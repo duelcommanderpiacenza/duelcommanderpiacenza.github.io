@@ -18,6 +18,7 @@ import { initFollowButton } from "./follow-button.js";
 import { initTabs } from "./tabs.js";
 import { initBackToTop } from "./back-to-top.js";
 import { openLeagueRules } from "./league-rules.js";
+import { openSeasonRecap } from "./event-recap.js";
 import { nestedResultsMenu } from "./results-link.js";
 import { renderMetaCharts } from "./meta-charts.js";
 
@@ -165,6 +166,11 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   // be a Topdeck series): how the standings are scored.
   const rulesBtn = document.getElementById("league-rules");
   rulesBtn.addEventListener("click", openLeagueRules);
+  // "Recap" beside it, a closed league's season in stories (js/event-recap.js).
+  // (Missing from an old copy of the page: nothing — a stand-in so the rest
+  // reads the same.)
+  const recapBtn = document.getElementById("league-recap") ?? document.createElement("button");
+  recapBtn.addEventListener("click", () => openSeasonRecap(id));
 
   // The ★ on the hero's edge, for signed-in accounts (not awaited: it never
   // holds up the page).
@@ -197,6 +203,14 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     document.title = `${league.name} - Duel Commander Piacenza`;
     initTitleFit(titleEl, { signal });
     rulesBtn.hidden = league.is_topdeck;
+    recapBtn.hidden = league.is_topdeck || league.is_open;
+    // Beside "Recap" (the hero's colour), "Regolamento" white — like an
+    // event's "Liste".
+    rulesBtn.classList.toggle("is-light", !recapBtn.hidden);
+    const actionsEl = document.getElementById("league-actions");
+    if (actionsEl) actionsEl.hidden = league.is_topdeck;
+    // A shared season recap link (league.html?id=…&recap=1): opened at once.
+    if (!recapBtn.hidden && new URLSearchParams(location.search).get("recap") === "1") openSeasonRecap(id);
 
     // A Topdeck series is just a bucket of events, with no points leaderboard:
     // no Classifica tab (Eventi and Meta). A closed league opens on its
