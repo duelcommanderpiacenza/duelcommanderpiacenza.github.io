@@ -7,7 +7,7 @@ import { archetypeBadge, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } f
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
 import { savedMetaFilters, rememberMetaFilters, prefetchMetaResults, metaResults } from "./meta-filters.js";
-import { historyPanelHtml, historyStatsHtml } from "./history-list.js";
+import { historyPanelHtml, historyStatsHtml, winrateTrendHtml, latestPresence } from "./history-list.js";
 import { archetypeIcon } from "./archetype-icons.js";
 
 // Entries + matches of the events in scope (js/meta-filters.js metaResults):
@@ -70,13 +70,38 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     try {
       const eventsData = await metaResults(resultsPrefetch, eventIds, eventDateById, RESULTS_OPTIONS);
       if (signal.aborted) return;
-      const stats = computeGroupedStats(
-        eventsData,
-        (e) => e.archetype,
-        (e) => ({ name: e.archetype })
-      );
+      const keyOf = (e) => e.archetype;
+      const stats = computeGroupedStats(eventsData, keyOf, (e) => ({ name: e.archetype }));
       const byKey = new Map(stats.map((s) => [s.key, s]));
       const totalEntries = stats.reduce((sum, s) => sum + s.entries, 0);
+
+      // The trend arrows, as on Comandanti (js/commanders-page.js — results
+      // add up event by event: "before an event" = the numbers minus that
+      // event's own):
+      //  - Winrate: before the archetype's own latest event in scope
+      //    (latestPresence) — its first one there: nothing before (null).
+      //  - Metashare: before the latest event in scope, whoever played in
+      //    it — down when the archetype had a smaller slice of it than its
+      //    average (or none), up when bigger. A single event: nothing before.
+      const latestOf = latestPresence(eventIds, eventsData, eventDateById, (d) => d.entries.map(keyOf));
+      const latestInScope = latestPresence(eventIds, eventsData, eventDateById, () => ["scope"]).get("scope");
+      const statsPerEvent = eventsData.map((d) => new Map(computeGroupedStats([d], keyOf, () => ({})).map((s) => [s.key, s])));
+      const decksPerEvent = statsPerEvent.map((byArchetype) => [...byArchetype.values()].reduce((sum, s) => sum + s.entries, 0));
+      const decksBeforeLatest = latestInScope === undefined ? 0 : totalEntries - decksPerEvent[latestInScope];
+      const winRateBefore = (a) => {
+        const s = byKey.get(a);
+        const i = latestOf.get(a);
+        if (!s || i === undefined) return null;
+        const ev = statsPerEvent[i].get(a) ?? { wins: 0, draws: 0, losses: 0 };
+        const wins = s.wins - ev.wins;
+        const played = wins + (s.draws - ev.draws) + (s.losses - ev.losses);
+        return played > 0 ? (wins / played) * 100 : null;
+      };
+      const shareBefore = (a, entries) => {
+        if (decksBeforeLatest <= 0) return null;
+        const inLatestEvent = statsPerEvent[latestInScope].get(a)?.entries ?? 0;
+        return ((entries - inLatestEvent) / decksBeforeLatest) * 100;
+      };
 
       const rows = ARCHETYPES.map((a) => {
         const s = byKey.get(a);
@@ -85,10 +110,13 @@ export async function mount({ signal = new AbortController().signal } = {}) {
           archetype: a,
           entries,
           share: totalEntries > 0 ? (entries / totalEntries) * 100 : 0,
+          shareBefore: shareBefore(a, entries),
           wins: s?.wins ?? 0,
           draws: s?.draws ?? 0,
           losses: s?.losses ?? 0,
           winRate: s?.winRate ?? null,
+          winRateBefore: winRateBefore(a),
+          inLatest: latestOf.has(a),
         };
       }).sort((a, b) => b.entries - a.entries);
 
@@ -134,7 +162,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
 
       // One sub-card per archetype, like the Comandanti list
       // (js/history-list.js), the whole card a link to its page
-      // (archetype.html): the badge, then Metashare / V-S-P / Winrate.
+      // (archetype.html): the badge, then Metashare / Winrate, each with its
+      // trend arrow (since the latest event, as on Comandanti).
       tableEl.innerHTML = historyPanelHtml(
         rows
           .map(
@@ -142,9 +171,13 @@ export async function mount({ signal = new AbortController().signal } = {}) {
           <a class="history-item history-ranked" href="archetype.html?id=${r.archetype}">
             <div class="history-main">${archetypeBadge(r.archetype)}</div>
             ${historyStatsHtml([
-              { label: "Metashare", value: `${r.share.toFixed(1)}%` },
-              { label: "V-S-P", value: `${r.wins}-${r.losses}-${r.draws}` },
-              { label: "Winrate", value: r.winRate === null ? "—" : `${r.winRate.toFixed(1)}%`, main: true },
+              { label: "Metashare", value: `${r.share.toFixed(1)}%${winrateTrendHtml(r.share, r.shareBefore, true)}`, trend: true },
+              {
+                label: "Winrate",
+                value: r.winRate === null ? "—" : `${r.winRate.toFixed(1)}%${winrateTrendHtml(r.winRate, r.winRateBefore, r.inLatest)}`,
+                main: true,
+                trend: true,
+              },
             ])}
           </a>`
           )
