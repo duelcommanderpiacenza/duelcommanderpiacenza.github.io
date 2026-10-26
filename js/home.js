@@ -19,6 +19,8 @@ import { initTabs } from "./tabs.js";
 import { leaguePosHtml } from "./history-list.js";
 import { archetypeIcon } from "./archetype-icons.js";
 import { openLeagueRules, RULES_ICON } from "./league-rules.js";
+import { loadRecapData, openEventRecap, recapSeen } from "./event-recap.js";
+import { createArtPainter } from "./player-card.js";
 
 // The timeline: how many upcoming events above "Oggi", played ones below.
 const UPCOMING_EVENTS_COUNT = 3;
@@ -390,6 +392,56 @@ async function renderCommandersSection(el) {
 // Classifica have settled (success or already-shown error); Più giocati —
 // the slowest, its data and the commanders' art — keeps its own shimmering
 // placeholder (index.html .home-charts-sk) until its charts are in.
+// --- Recap -------------------------------------------------------------------------
+
+// The latest event played in the last RECAP_DAYS days: a card on top (its
+// winner's commander art in a turning red-gold ring — grey once watched,
+// js/event-recap.js recapSeen —, "Nuovo · Recap", the event, who won with
+// what; the whole card a button) opening its recap's stories. Nothing when there's none
+// (or it can't be read).
+const RECAP_DAYS = 7;
+const PLAY_ICON =
+  '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"></path></svg>';
+
+function isoDaysAgo(days) {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+async function renderRecapCard(el, signal) {
+  try {
+    const cutoff = isoDaysAgo(RECAP_DAYS);
+    const ev = (await allEvents())
+      .filter((e) => !e.is_open && e.event_date && e.event_date >= cutoff)
+      .sort((a, b) => b.event_date.localeCompare(a.event_date))[0];
+    if (!ev) return;
+    const data = await loadRecapData(ev.id);
+    if (signal.aborted || !data.winner) return;
+    el.innerHTML = `
+      <button type="button" class="recap-entry${recapSeen(ev.id) ? " is-seen" : ""}">
+        <span class="recap-ring"><span class="recap-ring-art"></span><span class="recap-ring-play">${PLAY_ICON}</span></span>
+        <span class="recap-entry-text">
+          <span class="recap-entry-k">Nuovo · Recap</span>
+          <b>${escapeHtml(data.name)}</b>
+          <span>Vince ${escapeHtml(data.winner.player?.name)} con ${escapeHtml(data.winnerCommander)}</span>
+        </span>
+      </button>`;
+    el.hidden = false;
+    createArtPainter(el.querySelector(".recap-ring-art"))(data.winnerCommander.split(" / ")[0]);
+    el.querySelector(".recap-entry").addEventListener("click", () => openEventRecap(ev.id));
+    document.addEventListener(
+      "recap:seen",
+      (e) => {
+        if (e.detail === ev.id) el.querySelector(".recap-entry")?.classList.add("is-seen");
+      },
+      { signal }
+    );
+  } catch (err) {
+    console.error(err);
+  }
+}
+
 export function mount({ signal = new AbortController().signal } = {}) {
   shared = new Map();
   initTabs(document.querySelector(".home-tabs"));
@@ -397,5 +449,6 @@ export function mount({ signal = new AbortController().signal } = {}) {
   return Promise.allSettled([
     renderTimeline(document.getElementById("home-timeline")),
     renderStandings(document.getElementById("dashboard-leagues-content")),
+    renderRecapCard(document.getElementById("home-recap"), signal),
   ]).then(() => hidePageLoading(signal));
 }

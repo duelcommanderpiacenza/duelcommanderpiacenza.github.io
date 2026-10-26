@@ -1683,6 +1683,58 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   text-shadow: none;
 }
 
+/* event.html's hero buttons (.event-hero-actions): "Recap" (the league's
+   "Regolamento" look — .league-rules-btn: the hero's colour) and "Liste"
+   at its right, as tall as it, its text the same size. On a computer at
+   the right end of the numbers' line; up to 820px above the numbers,
+   centred (as league.html's "Regolamento"). */
+.event-hero-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+}
+
+.event-hero-actions[hidden] {
+  display: none;
+}
+
+.event-hero-actions .results-menu-btn {
+  height: 42px;
+  padding: 0 16px;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.event-hero-actions .results-menu-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.event-hero .profile-hero-stats:has(> .event-hero-actions:not([hidden])) {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.event-hero .profile-hero-stats > .event-hero-actions {
+  margin-left: auto;
+}
+
+@media (max-width: 820px) {
+  .event-hero .profile-hero-stats:has(> .event-hero-actions:not([hidden])) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .event-hero .profile-hero-stats > .event-hero-actions {
+    order: -1;
+    align-self: center;
+    margin-left: 0;
+  }
+}
+
 /* "In corso" / "Conclusa" in the hero: the site's status chip
    (.status-chip, below with .badge-status) as see-through glass on the art
    — white text and edge, a slight blur; the dot keeps its colours. */

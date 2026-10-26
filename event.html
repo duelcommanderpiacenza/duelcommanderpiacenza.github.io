@@ -71,6 +71,7 @@
   <link rel="modulepreload" href="js/leaderboard.js">
   <link rel="modulepreload" href="js/event-detail.js">
   <link rel="modulepreload" href="js/results-link.js">
+  <link rel="modulepreload" href="js/event-recap.js">
   <link rel="modulepreload" href="js/page-title-fit.js">
   <link rel="modulepreload" href="js/history-list.js">
   <link rel="modulepreload" href="js/tabs.js">
@@ -171,18 +172,24 @@
         <div class="profile-hero-inner">
           <div class="profile-hero-text">
             <div class="profile-hero-heading">
-              <!-- The results / decklist links right after the name, on the
-                   next line when there's no room beside it. -->
               <div class="event-hero-title-row">
                 <h1 class="profile-hero-name" id="event-title">Caricamento...</h1>
-                <span id="event-results" hidden></span>
               </div>
               <div class="league-hero-meta event-hero-meta">
                 <span id="event-meta"></span>
               </div>
             </div>
+            <!-- The numbers, then the hero's buttons: "Recap" (the event's
+                 stories, js/event-recap.js — a played event) and "Liste" (its
+                 Moxfield / mtgtop8 links, when set) at its right — on a
+                 computer at the right end of the numbers' line, up to 820px
+                 above them, centred. -->
             <div class="profile-hero-stats">
               <div class="profile-stats-tiles" id="event-stats"></div>
+              <div class="event-hero-actions" id="event-actions" hidden>
+                <button type="button" class="league-rules-btn" id="event-recap" aria-haspopup="dialog" hidden><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"></path></svg>Recap</button>
+                <span id="event-results" hidden></span>
+              </div>
             </div>
           </div>
         </div>

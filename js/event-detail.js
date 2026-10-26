@@ -11,6 +11,7 @@ import {
 } from "./ui.js";
 import { hidePageLoading, sectionLoadingHtml, statTilesLoadingHtml } from "./page-loading.js";
 import { nestedResultsMenu } from "./results-link.js";
+import { openEventRecap } from "./event-recap.js";
 import { initTitleFit } from "./page-title-fit.js";
 import { historyPanelHtml, historyStatsHtml, historyPosHtml } from "./history-list.js";
 import { createArtPainter } from "./player-card.js";
@@ -114,9 +115,18 @@ export async function mount({ signal = new AbortController().signal } = {}) {
 
     titleEl.textContent = eventTitle(event);
     document.title = `${eventTitle(event)} - Duel Commander Piacenza`;
+    // A shared recap link (js/event-recap.js "Condividi il recap"):
+    // event.html?id=…&recap=1 opens the event's recap straight away.
+    if (!event.is_open && new URLSearchParams(location.search).get("recap") === "1") openEventRecap(id);
     const resultsHtml = nestedResultsMenu(event.results_url, event.decklists_url);
     resultsEl.innerHTML = resultsHtml;
     resultsEl.hidden = !resultsHtml;
+    // The hero's buttons: "Recap" for a played event with entrants, "Liste"
+    // beside it (above).
+    const recapBtn = document.getElementById("event-recap");
+    recapBtn.hidden = event.is_open || entries.length === 0;
+    recapBtn.onclick = () => openEventRecap(id);
+    document.getElementById("event-actions").hidden = recapBtn.hidden && resultsEl.hidden;
     initTitleFit(titleEl, { signal });
     metaEl.innerHTML = `${formatDate(event.event_date)}${
       event.league

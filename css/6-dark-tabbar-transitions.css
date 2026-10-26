@@ -2553,3 +2553,742 @@ html:not(.nav-mobile) :is(.settings-about, .account-settings) {
 :root[data-theme="dark"] .settings-switch[aria-checked="true"] {
   background: var(--brand-red);
 }
+
+/* ---------------------------------------------------------------------------
+   Event recap (js/event-recap.js): an event's stories, over the page — the
+   whole screen on a phone, a phone-sized panel over a dark backdrop on a
+   computer. Bars across the top fill as each screen plays; a tap on the
+   right goes on, on the left back (invisible .recap-nav halves over it),
+   holding pauses. Each screen's [data-in] items rise in, staggered (--d).
+   And the Bacheca's card opening it (.recap-entry, js/home.js), for a week
+   after an event: the winner's commander art in a turning red-gold ring
+   (grey once watched), the event, who won — the whole card the button.
+   --------------------------------------------------------------------------- */
+html.is-recap-open {
+  overflow: hidden;
+}
+
+.recap {
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+}
+
+.recap::backdrop {
+  background: rgba(10, 4, 6, 0.86);
+}
+
+.recap[open] {
+  display: grid;
+  place-items: center;
+}
+
+.recap-st {
+  position: relative;
+  width: min(400px, 100vw);
+  height: min(711px, 100dvh);
+  overflow: hidden;
+  border-radius: 26px;
+  background: #2a1215;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+  font-family: var(--font-main);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+@media (max-width: 500px) {
+  .recap-st {
+    width: 100vw;
+    height: 100dvh;
+    border-radius: 0;
+  }
+}
+
+.recap-progress {
+  position: absolute;
+  z-index: 6;
+  top: calc(12px + env(safe-area-inset-top));
+  right: 12px;
+  left: 12px;
+  display: flex;
+  gap: 4px;
+}
+
+.recap-progress i {
+  flex: 1;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.recap-progress b {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: #fff;
+}
+
+.recap-head {
+  position: absolute;
+  z-index: 6;
+  top: calc(22px + env(safe-area-inset-top));
+  right: 10px;
+  left: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.recap-head img {
+  width: 26px;
+  height: 26px;
+  box-sizing: border-box;
+  padding: 2px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.recap-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recap-close {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #fff;
+  font: inherit;
+  font-size: 1.6rem;
+  line-height: 1;
+  opacity: 0.85;
+  cursor: pointer;
+}
+
+.recap-nav {
+  position: absolute;
+  z-index: 4;
+  top: 0;
+  bottom: 0;
+  width: 35%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.recap-nav.is-prev {
+  left: 0;
+}
+
+.recap-nav.is-next {
+  right: 0;
+  width: 65%;
+}
+
+.recap-nav:focus-visible {
+  outline: none;
+}
+
+.recap-slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: calc(76px + env(safe-area-inset-top)) 26px calc(40px + env(safe-area-inset-bottom));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms ease;
+}
+
+.recap-slide.is-on {
+  opacity: 1;
+}
+
+.recap-slide.is-center {
+  text-align: center;
+}
+
+.recap-slide > :not(.recap-bg, .recap-confetti) {
+  position: relative;
+}
+
+.recap-bg {
+  position: absolute;
+  inset: -30px;
+  background-position: center 30%;
+  background-size: cover;
+  filter: blur(18px) brightness(0.45) saturate(1.2);
+  transform: scale(1.1);
+}
+
+.recap-bg.is-red {
+  background: radial-gradient(120% 90% at 100% 0%, #e0262a, #8a0d14 55%, #3a070b);
+  filter: none;
+}
+
+.recap-bg.is-dark {
+  background: radial-gradient(120% 90% at 0% 100%, #4a1a1f, #1d1416 70%);
+  filter: none;
+}
+
+.recap-k {
+  margin: 0;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  opacity: 0.8;
+  text-transform: uppercase;
+}
+
+.recap-big {
+  margin: 6px 0 0;
+  color: #fff;
+  font-size: 2.6rem;
+  font-weight: 800;
+  line-height: 1.04;
+  overflow-wrap: anywhere;
+}
+
+.recap-big.is-small {
+  font-size: 1.9rem;
+}
+
+.recap-mid {
+  margin: 4px 0 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  opacity: 0.9;
+}
+
+.recap-cap {
+  text-transform: capitalize;
+}
+
+.recap-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 30px;
+}
+
+.recap-tiles div {
+  padding: 12px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  text-align: center;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.recap-tiles b {
+  display: block;
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.recap-tiles span {
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  opacity: 0.8;
+  text-transform: uppercase;
+}
+
+.recap-tap {
+  margin: 34px 0 0;
+  font-size: 0.8rem;
+  opacity: 0.6;
+  text-align: center;
+}
+
+.recap-slide [data-in] {
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+.recap-slide.is-on [data-in] {
+  animation: recap-rise 520ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+  animation-delay: calc(var(--d, 0) * 110ms + 150ms);
+}
+
+@keyframes recap-rise {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The winner's (and the day's) commander: its art as a foil card. */
+.recap-card-art {
+  position: relative;
+  width: 78%;
+  aspect-ratio: 5 / 3.7;
+  margin: 18px auto 0;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #3a3634 center 25% / cover;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55), 0 0 0 3px rgba(255, 214, 90, 0.9);
+}
+
+.recap-card-art::after {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  background: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, 0.55) 50%, transparent 60%);
+  animation: recap-sheen 2.8s ease-in-out infinite;
+}
+
+@keyframes recap-sheen {
+  from {
+    transform: translateX(-60%);
+  }
+
+  to {
+    transform: translateX(60%);
+  }
+}
+
+.recap-trophy {
+  font-size: 2.2rem;
+}
+
+.recap-pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 18px;
+  font-weight: 800;
+}
+
+.recap-pills span {
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.recap-confetti {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.recap-confetti i {
+  position: absolute;
+  top: -10px;
+  width: 8px;
+  height: 12px;
+  border-radius: 2px;
+  opacity: 0;
+}
+
+.recap-slide.is-on .recap-confetti i {
+  animation: recap-fall 2.6s linear both;
+}
+
+@keyframes recap-fall {
+  0% {
+    opacity: 1;
+    transform: translateY(0) rotate(0);
+  }
+
+  100% {
+    opacity: 0.9;
+    transform: translateY(760px) rotate(540deg);
+  }
+}
+
+.recap-list {
+  display: grid;
+  gap: 7px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recap-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.recap-pos {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.recap-list li:nth-child(1) .recap-pos {
+  background: #f2c14e;
+  color: #3a2a00;
+}
+
+.recap-list li:nth-child(2) .recap-pos {
+  background: #cfd6de;
+  color: #2a2f35;
+}
+
+.recap-list li:nth-child(3) .recap-pos {
+  background: #d9905a;
+  color: #3a1d08;
+}
+
+.recap-who {
+  flex: 1;
+  min-width: 0;
+}
+
+.recap-who b,
+.recap-who small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recap-who b {
+  font-size: 0.92rem;
+}
+
+.recap-who small {
+  font-size: 0.72rem;
+  opacity: 0.7;
+}
+
+.recap-pts {
+  font-size: 0.85rem;
+  font-weight: 800;
+  opacity: 0.9;
+}
+
+.recap-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.recap-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.14);
+  font-weight: 800;
+}
+
+.recap-chip svg {
+  width: 18px;
+  height: 18px;
+  color: #ffd25a;
+}
+
+.recap-chip small {
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+.recap-bars {
+  display: grid;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.recap-bar {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.recap-bar-ic {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--c);
+}
+
+.recap-bar-ic svg {
+  width: 16px;
+  height: 16px;
+  color: #fff;
+}
+
+.recap-bar small {
+  display: block;
+  font-size: 0.7rem;
+  opacity: 0.75;
+  text-transform: capitalize;
+}
+
+.recap-bar-tr {
+  height: 14px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.recap-bar-tr i {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--c);
+}
+
+.recap-slide.is-on .recap-bar-tr i {
+  animation: recap-grow 900ms cubic-bezier(0.2, 0.9, 0.3, 1) both;
+  animation-delay: calc(var(--d) * 120ms + 300ms);
+}
+
+@keyframes recap-grow {
+  to {
+    width: var(--w);
+  }
+}
+
+.recap-bar > b {
+  min-width: 34px;
+  font-size: 0.9rem;
+  text-align: right;
+}
+
+.recap-next {
+  margin-top: 26px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.recap-next b {
+  display: block;
+  margin-top: 4px;
+  font-size: 1.4rem;
+}
+
+.recap-share {
+  z-index: 6;
+  align-self: center;
+  margin-top: 30px;
+  padding: 12px 22px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: #fff;
+  color: #a10f17;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.recap-slide.is-on .recap-share {
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recap-slide,
+  .recap-slide.is-on [data-in],
+  .recap-slide.is-on .recap-bar-tr i,
+  .recap-card-art::after,
+  .recap-slide.is-on .recap-confetti i {
+    animation: none;
+    transition: none;
+  }
+
+  .recap-slide [data-in] {
+    opacity: 1;
+    transform: none;
+  }
+
+  .recap-bar-tr i {
+    width: var(--w);
+  }
+
+  .recap-confetti {
+    display: none;
+  }
+}
+
+/* The Bacheca's card. */
+.home-recap {
+  margin: 0 0 18px;
+}
+
+.recap-entry {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 16px;
+  border: 1px solid rgba(220, 24, 28, 0.28);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: var(--shadow-card);
+  color: var(--text-title);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.recap-entry:hover {
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-1px);
+}
+
+.recap-entry:focus-visible {
+  outline: 3px solid var(--brand-red);
+  outline-offset: 3px;
+}
+
+.recap-ring {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+}
+
+.recap-ring::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(#dc181c, #ff7a45, #ffd25a, #dc181c);
+  animation: recap-spin 6s linear infinite;
+}
+
+.recap-entry.is-seen .recap-ring::before {
+  background: rgba(154, 28, 32, 0.22);
+  animation: none;
+}
+
+@keyframes recap-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+.recap-ring-art {
+  position: relative;
+  width: 55px;
+  height: 55px;
+  box-sizing: border-box;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: #3a3634 center 25% / cover;
+}
+
+.recap-ring-play {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--brand-red);
+  box-shadow: 0 0 0 2px #fff;
+  color: #fff;
+}
+
+.recap-ring-play svg {
+  width: 11px;
+  height: 11px;
+  margin-left: 1px;
+}
+
+.recap-entry-text {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.recap-entry-k {
+  color: var(--brand-red);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.recap-entry-text b {
+  font-size: 1.1rem;
+}
+
+.recap-entry-text > span:last-child {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recap-entry.is-seen .recap-entry-k {
+  color: var(--text-muted);
+}
+
+:root[data-theme="dark"] .recap-entry {
+  border-color: rgba(255, 110, 110, 0.3);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+:root[data-theme="dark"] .recap-ring-art {
+  border-color: #1e1517;
+}
+
+:root[data-theme="dark"] .recap-ring-play {
+  box-shadow: 0 0 0 2px #1e1517;
+}
+
+:root[data-theme="dark"] .recap-entry.is-seen .recap-ring::before {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recap-ring::before {
+    animation: none;
+  }
+}
