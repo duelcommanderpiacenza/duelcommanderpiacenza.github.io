@@ -149,8 +149,9 @@ function syncBarBackButton() {
 }
 
 // Leaves the current page for `url` (already a supported page). `restoreY`
-// comes from a history back/forward.
-async function go(url, { push = true, restoreY = null } = {}) {
+// comes from a history back/forward. `quiet`: the page redrawn with fresh
+// data (js/data-updates.js) — see the quiet branch below.
+async function go(url, { push = true, restoreY = null, quiet = false } = {}) {
   const token = ++navToken;
   const page = pageOf(url);
   let doc;
@@ -239,6 +240,31 @@ async function go(url, { push = true, restoreY = null } = {}) {
     document.dispatchEvent(new CustomEvent("app:scroll-restored"));
   };
 
+  // A quiet redraw (fresh data for the page on screen): the old screen kept
+  // frozen while the new one is mounted and its data drawn (from the cache
+  // the service worker just refreshed — quick), then a short cross-fade —
+  // no loading splash, no entrance animations or counting numbers again
+  // (html.is-quiet-refresh, styles.css "Quiet redraw"; js/count-up.js), the
+  // scroll where it was. QUIET_MAX_WAIT at most: the browser gives up on a
+  // transition whose update takes too long.
+  if (quiet && document.startViewTransition) {
+    const root = document.documentElement;
+    root.classList.add("is-quiet-refresh");
+    const transition = document.startViewTransition(async () => {
+      swap();
+      await mountNew();
+      await new Promise((resolve) => {
+        whenLoaded(resolve);
+        setTimeout(resolve, QUIET_MAX_WAIT);
+      });
+      if (restoreY) restoreScroll();
+    });
+    transition.ready.catch(() => {});
+    transition.finished.catch(() => {}).then(() => root.classList.remove("is-quiet-refresh"));
+    await transition.updateCallbackDone.catch(() => {});
+    return;
+  }
+
   // The slide (styles.css "Page transitions"): the header's controls and the
   // nav get their view-transition names (to stay still) only while it runs
   // (html.is-page-transition) — a name changes how an element stacks, not
@@ -285,10 +311,13 @@ function whenLoaded(fn) {
 // — like an in-app navigation to itself, without a full reload; a normal
 // reload for a page the router doesn't handle. Resolves once the new page
 // is mounted (its data may still be loading: body.is-loading). keepScroll:
-// back where it was once the content is in (js/data-updates.js's redraw).
-export async function refresh({ keepScroll = false } = {}) {
+// back where it was once the content is in (js/data-updates.js's redraw);
+// quiet: without the loading splash or the transition (go's quiet branch).
+const QUIET_MAX_WAIT = 3000;
+
+export async function refresh({ keepScroll = false, quiet = false } = {}) {
   const url = new URL(location.href);
-  if (pageOf(url) && current) await go(url, { push: false, restoreY: keepScroll ? window.scrollY || null : null });
+  if (pageOf(url) && current) await go(url, { push: false, restoreY: keepScroll ? window.scrollY || null : null, quiet });
   else location.reload();
 }
 

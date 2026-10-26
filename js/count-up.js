@@ -31,7 +31,8 @@ function countUp(el) {
 
   const [, whole, separator = ".", fraction = "", suffix = ""] = match;
   const target = Number(`${whole}.${fraction || 0}`);
-  if (reducedMotion.matches || target === 0) return;
+  // (Nor in a quiet redraw — js/router.js: the same numbers, fresh data.)
+  if (reducedMotion.matches || target === 0 || document.documentElement.classList.contains("is-quiet-refresh")) return;
   const format = (x) => {
     const s = x.toFixed(fraction.length);
     return `${separator === "," ? s.replace(".", ",") : s}${suffix}`;

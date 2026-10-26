@@ -1650,6 +1650,30 @@ html.is-page-transition:not(.app-header) .site-header-brand {
 }
 
 /* ---------------------------------------------------------------------------
+   Quiet redraw (js/router.js go's quiet branch, js/data-updates.js): the
+   page on screen redrawn with fresh data — the whole screen as one picture
+   (no part keeps its own transition name), cross-faded quickly once the new
+   one is drawn; meanwhile every animation jumps to its end (the tiles'
+   entrance, the timeline's…: nothing plays again — an endless one carries
+   on afterwards).
+   --------------------------------------------------------------------------- */
+html.is-quiet-refresh *,
+html.is-quiet-refresh *::before,
+html.is-quiet-refresh *::after {
+  view-transition-name: none !important;
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+}
+
+html.is-quiet-refresh::view-transition-old(root) {
+  animation: page-fade-out 200ms ease both;
+}
+
+html.is-quiet-refresh::view-transition-new(root) {
+  animation: page-fade-through-in 200ms ease both;
+}
+
+/* ---------------------------------------------------------------------------
    Theme switch (js/theme.js switchTheme): light ↔ dark chosen by a tap, the
    old colours fade into the new ones — the whole screen as one picture (no
    part of the page keeps its own transition name meanwhile: the header's

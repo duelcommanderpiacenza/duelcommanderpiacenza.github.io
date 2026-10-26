@@ -2,11 +2,16 @@
 // answered from the last visit's copy at once, the fresh one fetched behind
 // it):
 //
-// * "data-updated" — something on screen changed meanwhile. Just arrived on
-//   the page (the first few seconds) and not touched yet: the page redraws
-//   itself in place (router.refresh — its data now the fresh copy). Later,
-//   or already being used (a tap, a key, a scroll): a small note offers it
-//   instead ("Dati aggiornati · Aggiorna") — nothing moving under a finger.
+// * "data-updated" — something on screen changed meanwhile (the network
+//   slower than the service worker waits for — usually it answers in time
+//   and the page gets the fresh data straight away). Just arrived on the
+//   page (the first few seconds) and not touched yet: the page redraws
+//   itself in place, quietly (router.refresh quiet — the old screen kept
+//   until the new one is drawn, then a short cross-fade; no splash, no
+//   animations again). Later, already being used (a tap, a key, a scroll),
+//   or where that quiet swap isn't possible (no view transitions, reduced
+//   motion): a small note offers it instead ("Dati aggiornati · Aggiorna")
+//   — nothing moving under a finger.
 // * "data-offline" — the network failed: a short note that what's shown is
 //   from the last visit.
 //
@@ -47,8 +52,11 @@ function showNote(text, action) {
   document.body.append(note);
 }
 
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
 function onUpdated() {
-  if (!touched && performance.now() - shownAt < REDRAW_WINDOW) refresh({ keepScroll: true });
+  const quietPossible = Boolean(document.startViewTransition) && !reduceMotion.matches;
+  if (quietPossible && !touched && performance.now() - shownAt < REDRAW_WINDOW) refresh({ keepScroll: true, quiet: true });
   else showNote("Dati aggiornati", "Aggiorna");
 }
 
