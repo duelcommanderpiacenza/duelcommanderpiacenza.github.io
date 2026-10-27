@@ -2,8 +2,9 @@
 // full-screen on a phone (a phone-sized panel over a dark backdrop on a
 // computer), one screen at a time — bars across the top fill as each plays
 // (RECAP_STEP), a tap on the right goes on, on the left back, holding pauses;
-// the arrow keys too. The screens: the cover (the event, players / rounds /
-// matches, on the winner's commander art), the winner (their commander's art
+// the arrow keys too; it closes once the last screen's time is over (or on
+// a tap on the right there). The screens: the cover (the event, players /
+// rounds / matches, on the winner's commander art), the winner (their commander's art
 // as a foil card, confetti), the top 8, the unbeaten (no losses AND a real
 // match won — a bye isn't one, only draws isn't a result to celebrate), the
 // commander of the day (the most played; a tie: the best placed), the
@@ -29,6 +30,106 @@ import { createArtPainter } from "./player-card.js";
 import { escapeHtml } from "./ui.js";
 
 const RECAP_STEP = 6500;
+
+// The recap's music: one of these, at random, each time a recap opens —
+// royalty-free tracks in audio/ (their licences: audio/README.md). Empty:
+// no music, no sound button. On by default, at MUSIC_VOLUME, fading in and
+// out; the speaker button beside × mutes / unmutes it, remembered in this
+// browser (localStorage "recapMuted"). A recap opened without a tap first (a
+// shared link) can't start sound: then it starts muted, the button there to
+// turn it on.
+const RECAP_TRACKS = Array.from({ length: 7 }, (_, i) => `audio/recap-${i + 1}.mp3`);
+const MUSIC_VOLUME = 0.45;
+const MUTE_KEY = "recapMuted";
+
+const SOUND_ON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"></path><path d="M15.5 8.5a5 5 0 0 1 0 7"></path><path d="M18.5 5.5a9 9 0 0 1 0 13"></path></svg>';
+const SOUND_OFF =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"></path><path d="m22 9-6 6"></path><path d="m16 9 6 6"></path></svg>';
+
+const mutedPref = () => {
+  try {
+    return localStorage.getItem(MUTE_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
+
+// One track for one recap: start / pause / resume / stop (fading out) /
+// toggle; `onState(muted)` tells the button. Null without tracks.
+function createMusic(onState) {
+  if (!RECAP_TRACKS.length) return null;
+  const audio = new Audio(RECAP_TRACKS[Math.floor(Math.random() * RECAP_TRACKS.length)]);
+  audio.loop = true;
+  audio.preload = "auto";
+  audio.volume = 0;
+  let muted = mutedPref();
+  let fadeTimer = 0;
+  let stopped = false;
+
+  const fadeTo = (target, ms, then) => {
+    clearInterval(fadeTimer);
+    const from = audio.volume;
+    const steps = Math.max(1, Math.round(ms / 40));
+    let i = 0;
+    fadeTimer = setInterval(() => {
+      i += 1;
+      audio.volume = Math.min(1, Math.max(0, from + ((target - from) * i) / steps));
+      if (i >= steps) {
+        clearInterval(fadeTimer);
+        then?.();
+      }
+    }, 40);
+  };
+
+  const play = () =>
+    audio.play().then(
+      () => fadeTo(MUSIC_VOLUME, 900),
+      () => {
+        // No tap first (a shared link): muted until the button is pressed.
+        muted = true;
+        onState(true);
+      }
+    );
+
+  return {
+    get muted() {
+      return muted;
+    },
+    start() {
+      onState(muted);
+      if (!muted) play();
+    },
+    pause() {
+      if (!muted && !stopped) audio.pause();
+    },
+    resume() {
+      if (!muted && !stopped) audio.play().catch(() => {});
+    },
+    toggle() {
+      muted = !muted;
+      try {
+        localStorage.setItem(MUTE_KEY, muted ? "1" : "0");
+      } catch {
+        // No storage: just for this recap.
+      }
+      onState(muted);
+      if (muted) fadeTo(0, 250, () => audio.pause());
+      else play();
+    },
+    stop() {
+      stopped = true;
+      fadeTo(0, 500, () => {
+        audio.pause();
+        audio.removeAttribute("src");
+        audio.load();
+      });
+    },
+    onError(fn) {
+      audio.addEventListener("error", fn, { once: true });
+    },
+  };
+}
 // A Topdeck series' event: no top 8 — its best, the players with at least
 // this many points ("I migliori").
 const TOPDECK_MIN_POINTS = 6;
@@ -409,7 +510,7 @@ async function openStories({ label, load, slides: slidesOf, seenKey, seenId, sha
   dialog.innerHTML = `
     <div class="recap-st">
       <div class="recap-progress" aria-hidden="true"></div>
-      <div class="recap-head"><img src="dc_pc.svg" alt=""><b class="recap-title">Recap</b><button type="button" class="recap-close" aria-label="Chiudi">×</button></div>
+      <div class="recap-head"><img src="dc_pc.svg" alt=""><b class="recap-title">Recap</b><button type="button" class="recap-sound" hidden></button><button type="button" class="recap-close" aria-label="Chiudi">×</button></div>
       <div class="recap-slides"><section class="recap-slide is-on is-center"><div class="recap-bg is-red"></div><p class="recap-mid">Caricamento…</p></section></div>
       <button type="button" class="recap-nav is-prev" aria-label="Indietro"></button>
       <button type="button" class="recap-nav is-next" aria-label="Avanti"></button>
@@ -428,8 +529,20 @@ async function openStories({ label, load, slides: slidesOf, seenKey, seenId, sha
   const controller = new AbortController();
   const { signal } = controller;
 
+  // The music (none without tracks): its button shows its state.
+  const soundBtn = dialog.querySelector(".recap-sound");
+  const music = createMusic((muted) => {
+    soundBtn.hidden = false;
+    soundBtn.innerHTML = muted ? SOUND_OFF : SOUND_ON;
+    soundBtn.setAttribute("aria-label", muted ? "Attiva la musica" : "Disattiva la musica");
+    soundBtn.classList.toggle("is-muted", muted);
+  });
+  music?.onError(() => (soundBtn.hidden = true));
+  soundBtn.addEventListener("click", () => music?.toggle());
+
   function close() {
     if (!dialog.isConnected) return;
+    music?.stop();
     controller.abort();
     cancelAnimationFrame(frame);
     dialog.close();
@@ -457,7 +570,14 @@ async function openStories({ label, load, slides: slidesOf, seenKey, seenId, sha
     if (!paused && slides.length) {
       const progress = Math.min(1, (elapsed + now - startedAt) / RECAP_STEP);
       fills[index].style.width = `${progress * 100}%`;
-      if (progress >= 1 && index < slides.length - 1) show(index + 1);
+      // The next screen; after the last one's time, the recap closes.
+      if (progress >= 1) {
+        if (index < slides.length - 1) show(index + 1);
+        else {
+          close();
+          return;
+        }
+      }
     }
     frame = requestAnimationFrame(tick);
   }
@@ -483,7 +603,22 @@ async function openStories({ label, load, slides: slidesOf, seenKey, seenId, sha
     if (e.target === dialog) close();
   });
   document.addEventListener("app:navigate", close, { signal });
-  document.addEventListener("visibilitychange", () => (document.hidden ? pause() : resume()), { signal });
+  document.addEventListener(
+    "visibilitychange",
+    () => {
+      if (document.hidden) {
+        pause();
+        music?.pause();
+      } else {
+        resume();
+        music?.resume();
+      }
+    },
+    { signal }
+  );
+  // Started at once, in the opening tap's own turn (browsers allow sound
+  // only right after a user's gesture) — not after the data's wait.
+  music?.start();
 
   try {
     const data = await load();
@@ -507,7 +642,7 @@ async function openStories({ label, load, slides: slidesOf, seenKey, seenId, sha
     const stage = dialog.querySelector(".recap-st");
     let downAt = 0;
     stage.addEventListener("pointerdown", (e) => {
-      if (e.target.closest(".recap-close, .recap-share")) return;
+      if (e.target.closest(".recap-close, .recap-share, .recap-sound")) return;
       downAt = performance.now();
       pause();
     });
@@ -518,7 +653,10 @@ async function openStories({ label, load, slides: slidesOf, seenKey, seenId, sha
       resume();
       if (held) return;
       if (e.target.closest(".recap-nav.is-prev")) show(index - 1);
-      else if (e.target.closest(".recap-nav.is-next")) show(index + 1);
+      else if (e.target.closest(".recap-nav.is-next")) {
+        if (index < slides.length - 1) show(index + 1);
+        else close();
+      }
     });
     stage.addEventListener("pointercancel", () => {
       downAt = 0;

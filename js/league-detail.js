@@ -213,12 +213,15 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     if (!recapBtn.hidden && new URLSearchParams(location.search).get("recap") === "1") openSeasonRecap(id);
 
     // A Topdeck series is just a bucket of events, with no points leaderboard:
-    // no Classifica tab (Eventi and Meta). A closed league opens on its
-    // Classifica — its final standings — an open one on its Eventi.
+    // no Classifica tab (Eventi and Meta). A closed league: its Classifica —
+    // its final standings — the first tab and the open one (Classifica /
+    // Eventi / Meta); an open one keeps Eventi / Classifica / Meta, on Eventi.
     if (league.is_topdeck) {
       leaderboardSectionEl.hidden = true;
       document.getElementById("league-tab-leaderboard").hidden = true;
     } else if (!league.is_open) {
+      const leaderboardTab = document.getElementById("league-tab-leaderboard");
+      leaderboardTab.parentElement.prepend(leaderboardTab);
       tabs.select("league-leaderboard-section");
     }
     // Started now (a Topdeck series has no leaderboard to need it), awaited

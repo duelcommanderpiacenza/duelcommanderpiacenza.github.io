@@ -22,9 +22,11 @@ import { openLeagueRules, RULES_ICON } from "./league-rules.js";
 import { loadRecapData, loadSeasonData, openEventRecap, openSeasonRecap, recapSeen, seasonRecapSeen } from "./event-recap.js";
 import { createArtPainter } from "./player-card.js";
 
-// The timeline: how many upcoming events above "Oggi", played ones below.
-const UPCOMING_EVENTS_COUNT = 3;
-const LATEST_EVENTS_COUNT = 3;
+// The timeline: how many played events above "Oggi", upcoming ones below
+// (2 and 4 since 2026-10-27 — was 3 and 3; still 6 rows, like the loading
+// skeleton's).
+const UPCOMING_EVENTS_COUNT = 4;
+const LATEST_EVENTS_COUNT = 2;
 // How many of the league's standings the Classifica shows.
 const LEAGUE_PREVIEW_COUNT = 8;
 const TOP_COMMANDERS_COUNT = 6;

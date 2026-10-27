@@ -91,7 +91,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   const statsEl = document.getElementById("event-stats");
   const metaChartsEl = document.getElementById("event-meta-charts");
 
-  // Giocatori / Classifica / Partite / Meta: one panel at a time, Giocatori first.
+  // Classifica / Giocatori / Partite / Meta: one panel at a time, Classifica
+  // first (since 2026-10-27).
   initTabs(document.querySelector(".event-tabs"));
 
   if (!id) {
@@ -102,9 +103,10 @@ export async function mount({ signal = new AbortController().signal } = {}) {
 
   try {
     // All three at once; the page is shown once the event and its entries
-    // are in (Giocatori, the first tab, and Meta need nothing else) — the
-    // matches (Classifica, Partite, the hero's art and its Turni / Partite)
-    // shimmer until they're in too, unless they're already there by then.
+    // are in (Giocatori and Meta need nothing else) — the matches
+    // (Classifica, the first tab, Partite, the hero's art and its Turni /
+    // Partite) shimmer until they're in too, unless they're already there by
+    // then (they're asked at the same time: usually a moment).
     // The no-op catch only marks the matches request as handled, should
     // another fail first; awaiting it below still throws.
     const matchesRequest = Matches.listByEvent(id);
