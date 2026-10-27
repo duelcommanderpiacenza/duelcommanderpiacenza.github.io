@@ -2507,11 +2507,12 @@ html.app-header .home-board > .home-panel:not(.is-current) {
   position: fixed;
   z-index: 60;
   display: grid;
-  min-width: 160px;
-  padding: 6px;
+  gap: 2px;
+  min-width: 210px;
+  padding: 8px;
   box-sizing: border-box;
   border: 1px solid var(--hairline);
-  border-radius: 14px;
+  border-radius: 18px;
   background: #fff;
   box-shadow: var(--shadow-card-hover);
   opacity: 0;
@@ -2538,11 +2539,11 @@ html.app-header .home-board > .home-panel:not(.is-current) {
 .results-menu-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  border-radius: 10px;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
   color: var(--text-title);
-  font-size: 0.86rem;
+  font-size: 1rem;
   font-weight: 700;
   text-decoration: none;
 }
@@ -2558,8 +2559,8 @@ html.app-header .home-board > .home-panel:not(.is-current) {
   display: grid;
   place-items: center;
   flex: none;
-  width: 56px;
-  height: 28px;
+  width: 70px;
+  height: 36px;
   box-sizing: border-box;
   border: 1px solid var(--hairline);
   border-radius: var(--radius-pill);
@@ -2567,13 +2568,13 @@ html.app-header .home-board > .home-panel:not(.is-current) {
 }
 
 .is-moxfield .results-menu-logo img {
-  width: 18px;
-  height: 18px;
+  width: 23px;
+  height: 23px;
 }
 
 .is-top8 .results-menu-logo img {
   width: auto;
-  height: 11px;
+  height: 14px;
 }
 
 /* Every event the same: one row as tall as its date's circle — the circle
