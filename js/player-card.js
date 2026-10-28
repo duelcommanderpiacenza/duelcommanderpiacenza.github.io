@@ -384,7 +384,9 @@ export function renderPublicPlayerCard(containerEl, card, { name, since, badges 
             ${description ? `<p class="pc-description">${escapeHtml(description)}</p>` : ""}
           </div>`
       : "";
-  containerEl.innerHTML = `<article class="player-card" aria-label="La carta di ${escapeHtml(name)}">
+  // No description: the name comes down to the bottom row (styles.css
+  // .player-card.no-description).
+  containerEl.innerHTML = `<article class="player-card${description ? "" : " no-description"}" aria-label="La carta di ${escapeHtml(name)}">
     <div class="pc-frame">
       <div class="pc-surface">
         <div class="pc-art" aria-hidden="true"></div>

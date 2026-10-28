@@ -1990,6 +1990,24 @@ html.nav-mobile .player-card.is-editing .pc-art-space {
   height: 4.6cqw;
 }
 
+/* No description (player.html's card — account.html's own always has its
+   "premi ✎" line): the name comes down into the bottom row, beside the foot
+   — and the links, if any, between them — rather than over an empty strip. */
+.player-card.no-description .pc-content {
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "space space"
+    "name foot";
+  align-items: end;
+}
+
+.player-card.no-description .pc-content:has(.pc-panel) {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "space space space"
+    "name panel foot";
+}
+
 .player-card.is-editing .pc-content {
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr) auto auto auto;
