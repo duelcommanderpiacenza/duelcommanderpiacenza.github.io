@@ -629,7 +629,8 @@ end $$;
 
 -- Approves an account's pending request: links it to the requested player,
 -- removing that player's link to any other account and this account's link
--- to any other player (one each way).
+-- to any other player (one each way) — and gives it a default card if it
+-- has none (give_default_card, below with profiles; migration 028).
 create or replace function admin_approve_claim(p_user_id uuid) returns void
 language plpgsql security definer set search_path = public as $$
 declare
@@ -645,6 +646,7 @@ begin
   delete from player_claims where user_id = p_user_id;
   update players set user_id = null where user_id = p_user_id or id = v_player_id;
   update players set user_id = p_user_id where id = v_player_id;
+  perform give_default_card(p_user_id, v_player_id);
 end $$;
 
 create or replace function admin_reject_claim(p_user_id uuid) returns void
@@ -676,6 +678,7 @@ begin
   update players set user_id = null where user_id = p_user_id or id = p_player_id;
   if p_player_id is not null then
     update players set user_id = p_user_id where id = p_player_id;
+    perform give_default_card(p_user_id, p_player_id);
   end if;
 end $$;
 
@@ -787,6 +790,46 @@ create policy "profiles_insert_own" on profiles for insert
 create policy "profiles_update_own" on profiles for update
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
+
+-- A default card for an account just linked to its player (called by
+-- admin_approve_claim / admin_set_user_player), if it has none: the
+-- background is the player's most played commander (closed events, either
+-- seat; ties: the most recently played, then by name), no photo, shown on
+-- the player's page. Set once, never recomputed — from then on an ordinary
+-- card. None for a player with no results. Added by migration 028 (which
+-- also gave one to the accounts already linked).
+create or replace function give_default_card(p_user_id uuid, p_player_id uuid) returns void
+language plpgsql security definer set search_path = public as $$
+declare
+  v_name text;
+begin
+  if exists (select 1 from profiles where user_id = p_user_id) then
+    return;
+  end if;
+  select c.name into v_name
+  from (
+    select ee.commander_id as commander_id, e.event_date
+    from event_entries ee join events e on e.id = ee.event_id
+    where ee.player_id = p_player_id and not e.is_open
+    union all
+    select ee.partner_commander_id, e.event_date
+    from event_entries ee join events e on e.id = ee.event_id
+    where ee.player_id = p_player_id and not e.is_open and ee.partner_commander_id is not null
+  ) played
+  join commanders c on c.id = played.commander_id
+  group by c.id, c.name
+  order by count(*) desc, max(played.event_date) desc nulls last, c.name
+  limit 1;
+  if v_name is null then
+    return;
+  end if;
+  insert into profiles (user_id, fav_card, show_avatar)
+  values (p_user_id, v_name, false)
+  on conflict (user_id) do nothing;
+end $$;
+
+-- Only for the functions below (they run as its owner), never called directly.
+revoke execute on function give_default_card(uuid, uuid) from public, anon, authenticated;
 
 -- The card of the account linked to a player, for everyone (player.html) —
 -- profiles itself stays private. Nothing when the player isn't linked, the
@@ -930,7 +973,8 @@ create policy "follows_delete_own" on follows for delete
 -- 'system'), picked from the footer's theme button (js/theme.js), and the
 -- vibration switch (js/haptics-toggle.js, Android phones). null = never
 -- chosen (the browser's own choice stays). Private: each account its own
--- row. Not a profiles column: a profiles row means "saved a player card".
+-- row. Not a profiles column: a profiles row means "has a player card"
+-- (saved, or the default one given at linking — give_default_card).
 -- Added by migration 019; haptics, and theme
 -- nullable, by 024_haptics_setting.sql.
 -- ---------------------------------------------------------------------------
