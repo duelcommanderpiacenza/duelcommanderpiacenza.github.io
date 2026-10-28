@@ -1,9 +1,10 @@
 """Copies the shared page shell into every public page.
 
 The parts every public page has in common — the start of <head> (the theme /
-touch script before first paint), the header, the nav and the footer — are
-written once, in partials/<name>.html, and copied into each page between
-its markers:
+touch script before first paint, the stylesheets, the icons and meta tags),
+the header, the nav and the footer (with the closing scripts) — are written
+once, in partials/<name>.html, and copied into each page between its
+markers:
 
     <!-- shell:<name> ... -->
     …the partial's content…
@@ -17,8 +18,12 @@ and broke the page transitions). Edit the partial, then run:
     python scripts/sync-shell.py --check  # only report pages out of sync
                                           # (exit code 1 if any)
 
-Per-page differences stay outside the markers (<title>, body's
-data-active-nav, <main>).
+Per-page differences stay outside the markers (<title>, the description,
+body's data-active-nav, <main>).
+
+A partial can hold another one's markers (head.html holds theme.html, which
+admin/index.html uses on its own too): the partials are synced first, then
+the pages here and in admin/.
 """
 import glob
 import os
@@ -49,8 +54,13 @@ def sync(page, check):
 
 def main():
     check = "--check" in sys.argv
-    pages = sorted(p for p in glob.glob("*.html") if MARKER.search(open(p, encoding="utf-8").read().replace("\r\n", "\n")))
-    changed = [p for p in pages if sync(p, check)]
+    def marked(paths):
+        return sorted(p for p in paths if MARKER.search(open(p, encoding="utf-8").read().replace("\r\n", "\n")))
+
+    # The partials first, so the pages get their filled-in content.
+    changed = [p for p in marked(glob.glob("partials/*.html")) if sync(p, check)]
+    pages = marked(glob.glob("*.html") + glob.glob("admin/*.html"))
+    changed += [p for p in pages if sync(p, check)]
     if check:
         print("out of sync: " + ", ".join(changed) if changed else f"all {len(pages)} pages in sync")
         sys.exit(1 if changed else 0)

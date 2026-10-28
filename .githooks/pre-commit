@@ -4,6 +4,15 @@
 # (+1 on every commit, as many a day as there are), MAJOR kept as it is (raise
 # it by hand in js/version.js for a big release). Enabled once per clone with:
 #   git config core.hooksPath .githooks
+#
+# First, the pages checked against their shared parts (scripts/sync-shell.py)
+# and their modulepreload lists (scripts/sync-preload.py): a page out of sync
+# stops the commit — run the script without --check, then commit again.
+
+if command -v python >/dev/null 2>&1; then
+  python scripts/sync-shell.py --check || exit 1
+  python scripts/sync-preload.py --check || exit 1
+fi
 
 f=js/version.js
 current=$(sed -n 's/.*VERSION = "\(.*\)".*/\1/p' "$f" 2>/dev/null)

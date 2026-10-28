@@ -2,6 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
+  <!-- shell:theme (partials/theme.html — scripts/sync-shell.py) -->
   <script>
     (function () {
       try {
@@ -10,11 +11,11 @@
           t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
         }
         document.documentElement.dataset.theme = t;
-        if (navigator.maxTouchPoints > 0) document.documentElement.classList.add("nav-mobile");
-        if (navigator.maxTouchPoints > 0) document.documentElement.classList.add("app-header");
+        if (navigator.maxTouchPoints > 0) document.documentElement.classList.add("nav-mobile", "app-header");
       } catch (e) {}
     })();
   </script>
+  <!-- /shell:theme -->
   <title>Admin - Duel Commander Piacenza</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="robots" content="noindex, nofollow">

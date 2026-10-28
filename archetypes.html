@@ -3,6 +3,7 @@
 <head>
   <!-- shell:head (partials/head.html — scripts/sync-shell.py) -->
   <meta charset="UTF-8">
+  <!-- shell:theme (partials/theme.html — scripts/sync-shell.py) -->
   <script>
     (function () {
       try {
@@ -11,11 +12,11 @@
           t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
         }
         document.documentElement.dataset.theme = t;
-        if (navigator.maxTouchPoints > 0) document.documentElement.classList.add("nav-mobile");
-        if (navigator.maxTouchPoints > 0) document.documentElement.classList.add("app-header");
+        if (navigator.maxTouchPoints > 0) document.documentElement.classList.add("nav-mobile", "app-header");
       } catch (e) {}
     })();
   </script>
+  <!-- /shell:theme -->
   <!-- The stylesheet, in six parts loaded in this order (css/). -->
   <link rel="stylesheet" href="css/1-base-header-home.css">
   <link rel="stylesheet" href="css/2-pages-heroes-events.css">
@@ -23,9 +24,6 @@
   <link rel="stylesheet" href="css/4-profile-card.css">
   <link rel="stylesheet" href="css/5-card-matchups-charts.css">
   <link rel="stylesheet" href="css/6-dark-tabbar-transitions.css">
-  <!-- /shell:head -->
-  <title>Archetipi - Duel Commander Piacenza</title>
-  <meta name="description" content="Gli archetipi giocati negli eventi di Duel Commander Piacenza: aggro, control, combo, tempo e midrange.">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <link rel="icon" type="image/png" sizes="96x96" href="favicon-96.png">
   <link rel="icon" type="image/svg+xml" href="dc_pc.svg">
@@ -35,6 +33,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <!-- /shell:head -->
+  <title>Archetipi - Duel Commander Piacenza</title>
+  <meta name="description" content="Gli archetipi giocati negli eventi di Duel Commander Piacenza: aggro, control, combo, tempo e midrange.">
   <!-- preload:modules -->
   <link rel="modulepreload" href="js/layout.js">
   <link rel="modulepreload" href="js/theme.js">
@@ -217,10 +218,10 @@
   </div>
   <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="false" aria-label="Cambia tema"></button>
 </footer>
-<!-- /shell:footer -->
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script type="module" src="js/layout.js"></script>
+<!-- /shell:footer -->
 
 </body>
 </html>
