@@ -423,10 +423,6 @@ main.has-hero-accent .line-chart-guide {
   background: color-mix(in srgb, var(--hero-accent-light) 21%, transparent);
 }
 
-:root[data-theme="dark"] main.has-hero-accent .decklist-confirm-box {
-  background: color-mix(in srgb, var(--hero-accent-light) 10%, transparent);
-}
-
 /* Dark mode: those lists' cards and the Album's stat tiles tinted with the
    colour's light shade (not the default reddish surface). */
 :root[data-theme="dark"] main.has-hero-accent :is(#player-matches, #commander-matches, #commander-players) .history-item,
@@ -620,12 +616,6 @@ main.has-hero-accent .profile-tab:not(.is-active):hover {
 
 .profile-panel:not(.is-current) {
   display: none;
-}
-
-.profile-panel-subtitle {
-  margin: -8px 0 16px;
-  color: var(--text-muted);
-  font-size: 0.88rem;
 }
 
 /* "Invia la tua decklist" / Account in a tab: always open — their old

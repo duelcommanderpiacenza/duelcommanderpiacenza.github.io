@@ -933,19 +933,16 @@ export function mount({ signal = new AbortController().signal } = {}) {
   // is in, emailed to the organisers by the send-decklist Edge Function
   // (js/db.js's Decklists) — never stored, only *that* it was sent: two per
   // player and event (migrations 008-009). The function checks it
-  // all again; this only offers the events that qualify, shows the ones
-  // already sent, and asks for confirmation before each send.
+  // all again; this only offers the events that qualify and shows the ones
+  // already sent; a send goes straight away (no confirmation, by choice).
   const decklistCard = document.getElementById("profile-decklist");
   const decklistNoneEl = document.getElementById("decklist-none");
   const decklistForm = document.getElementById("decklist-form");
   const decklistEventSelect = document.getElementById("decklist-event");
   const decklistText = document.getElementById("decklist-text");
   const decklistMeter = document.getElementById("decklist-meter");
-  const decklistConfirm = document.getElementById("decklist-confirm");
-  const decklistConfirmText = document.getElementById("decklist-confirm-text");
-  const decklistConfirmSend = document.getElementById("decklist-confirm-send");
-  const decklistConfirmCancel = document.getElementById("decklist-confirm-cancel");
-  const decklistActions = document.getElementById("decklist-actions");
+  const decklistSubmit = document.getElementById("decklist-submit");
+  const decklistSubmitLabel = decklistSubmit.querySelector(".decklist-submit-label");
   const decklistMessageEl = document.getElementById("decklist-message");
   const decklistSentBox = document.getElementById("decklist-sent");
   const decklistSentList = document.getElementById("decklist-sent-list");
@@ -1028,7 +1025,6 @@ export function mount({ signal = new AbortController().signal } = {}) {
   // `request`: [upcoming events, the player's sends] (loadStats starts it).
   async function loadDecklistCard(player, entries, request) {
     decklistCard.hidden = false;
-    closeDecklistConfirm();
     setMessage(decklistMessageEl, "");
     let upcoming;
     let sent;
@@ -1140,48 +1136,19 @@ export function mount({ signal = new AbortController().signal } = {}) {
     decklistMeter.classList.toggle("is-full", cards === 100);
   }
 
-  // The warning before sending slides open in place of the send button.
-  function openDecklistConfirm(ev) {
-    // First send: one more possible; second: the last, replacing the first.
-    const last = (decklistSendCount.get(ev.id) ?? 0) + 1 >= DECKLIST_MAX_SENDS;
-    decklistConfirmText.innerHTML = `Inviare la decklist per <strong>${escapeHtml(eventTitle(ev))}</strong> del ${formatDate(
-      ev.event_date
-    )}? ${
-      last
-        ? "È il tuo <strong>ultimo invio</strong> per questo evento: sostituirà la lista che hai già mandato."
-        : "Potrai inviarne <strong>al massimo due</strong> per questo evento: la seconda sostituirà la prima."
-    }`;
-    decklistConfirm.classList.add("is-open");
-    decklistConfirm.inert = false;
-    decklistActions.hidden = true;
-    decklistConfirmSend.focus({ preventScroll: true });
-  }
-
-  function closeDecklistConfirm() {
-    decklistConfirm.classList.remove("is-open");
-    decklistConfirm.inert = true;
-    decklistActions.hidden = false;
-  }
-
+  // Sending: the button says so and pulses, and can't be pressed twice.
   function setDecklistSending(sending) {
-    decklistConfirmSend.disabled = sending;
-    decklistConfirmCancel.disabled = sending;
-    decklistConfirmSend.classList.toggle("is-sending", sending);
-    decklistConfirmSend.textContent = sending ? "Invio in corso…" : "Conferma e invia";
+    decklistSubmit.disabled = sending;
+    decklistSubmit.classList.toggle("is-sending", sending);
+    decklistSubmitLabel.textContent = sending ? "Invio in corso…" : "Invia decklist";
   }
 
-  decklistText.addEventListener("input", () => {
-    updateDecklistMeter();
-    // Changed after the warning: it's for the old text, so it goes.
-    if (decklistConfirm.classList.contains("is-open")) closeDecklistConfirm();
-  });
-  decklistEventSelect.addEventListener("change", () => {
-    if (decklistConfirm.classList.contains("is-open")) closeDecklistConfirm();
-  });
-  decklistConfirmCancel.addEventListener("click", closeDecklistConfirm);
+  decklistText.addEventListener("input", updateDecklistMeter);
 
-  decklistForm.addEventListener("submit", (e) => {
+  // Sent straight away — no confirmation step (since 2026-10-28).
+  decklistForm.addEventListener("submit", async (e) => {
     e.preventDefault();
+    if (decklistSubmit.disabled) return;
     setMessage(decklistMessageEl, "");
     // Checked here, not with `required`: the native <select> is hidden behind
     // js/custom-select.js's skin, where the browser can't show its warning.
@@ -1194,22 +1161,12 @@ export function mount({ signal = new AbortController().signal } = {}) {
       setMessage(decklistMessageEl, "Incolla la decklist o un link.");
       return;
     }
-    openDecklistConfirm(ev);
-  });
-
-  decklistConfirmSend.addEventListener("click", async () => {
-    const ev = decklistEvents.get(decklistEventSelect.value);
-    if (!ev) {
-      closeDecklistConfirm();
-      return;
-    }
     setDecklistSending(true);
     try {
       await Decklists.send(ev.id, decklistText.value);
     } catch (err) {
       console.error(err);
       setDecklistSending(false);
-      closeDecklistConfirm();
       const known = DECKLIST_ERROR_TEXT[err?.message];
       if (known) {
         setMessage(decklistMessageEl, known);
@@ -1226,7 +1183,6 @@ export function mount({ signal = new AbortController().signal } = {}) {
       return;
     }
     setDecklistSending(false);
-    closeDecklistConfirm();
     recordDecklistSend(ev, (decklistSendCount.get(ev.id) ?? 0) + 1);
     decklistText.value = "";
     updateDecklistMeter();

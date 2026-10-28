@@ -144,8 +144,8 @@ html.nav-mobile .pc-cancel-btn svg {
    tile, the title, Leghe & Eventi's red round arrow — is the button that
    opens / closes the rest, with the same grid-rows collapse. Inside: the
    list in a monospaced box with a live count in its corner (green at a
-   full 100-card deck); the warning before sending sliding open in place of
-   the button; the events already sent as green chips, a new one popping
+   full 100-card deck); the send button (sent straight away, pulsing while
+   it goes — no confirmation step since 2026-10-28); the events already sent as green chips, a new one popping
    in. */
 .decklist-toggle {
   display: flex;
@@ -274,6 +274,14 @@ html.nav-mobile .pc-cancel-btn svg {
   transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 
+/* Phones: half as tall (4 lines instead of 9) — still draggable taller. */
+@media (max-width: 640px) {
+  .decklist-form textarea {
+    height: calc(6em + 48px);
+    min-height: calc(6em + 48px);
+  }
+}
+
 .decklist-form textarea:focus {
   outline: none;
   border-color: var(--brand-red);
@@ -308,48 +316,7 @@ html.nav-mobile .pc-cancel-btn svg {
   content: " ✓";
 }
 
-/* The warning: slides open in place of the send button. */
-.decklist-confirm {
-  display: grid;
-  grid-template-rows: 0fr;
-  opacity: 0;
-  transition: grid-template-rows 260ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 200ms ease;
-}
-
-.decklist-confirm.is-open {
-  grid-template-rows: 1fr;
-  opacity: 1;
-}
-
-.decklist-confirm-clip {
-  min-height: 0;
-  overflow: hidden;
-}
-
-.decklist-confirm-box {
-  margin-top: 4px;
-  padding: 14px 16px;
-  border-left: 4px solid var(--brand-red);
-  border-radius: 12px;
-  background: rgba(220, 24, 28, 0.06);
-}
-
-.decklist-confirm-box p {
-  margin: 0 0 12px;
-  line-height: 1.5;
-}
-
-.decklist-confirm-box .form-actions {
-  flex-wrap: wrap;
-  margin-top: 0;
-}
-
-.decklist-actions[hidden] {
-  display: none;
-}
-
-.decklist-submit,
-#decklist-confirm-send {
+.decklist-submit {
   gap: 8px;
 }
 
@@ -364,7 +331,7 @@ html.nav-mobile .pc-cancel-btn svg {
 }
 
 /* Sending: the button pulses while the email goes out. */
-#decklist-confirm-send.is-sending {
+.decklist-submit.is-sending {
   animation: decklist-sending 1s ease-in-out infinite;
   cursor: progress;
 }
@@ -460,24 +427,19 @@ html.nav-mobile .pc-cancel-btn svg {
   background: rgba(255, 255, 255, 0.05);
 }
 
-:root[data-theme="dark"] .decklist-confirm-box {
-  background: rgba(255, 110, 110, 0.1);
-}
-
 :root[data-theme="dark"] .decklist-sent-chip {
   background: rgba(60, 190, 110, 0.14);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .decklist-body,
-  .decklist-confirm,
   .decklist-form textarea,
   .decklist-meter,
   .decklist-submit svg {
     transition: none;
   }
 
-  #decklist-confirm-send.is-sending,
+  .decklist-submit.is-sending,
   .decklist-sent-chip.is-new {
     animation: none;
   }

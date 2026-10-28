@@ -378,7 +378,6 @@
              event). js/account-page.js. -->
         <section class="card profile-card profile-decklist profile-panel" id="profile-decklist" hidden>
           <h3 class="profile-panel-title">Invia la tua decklist</h3>
-          <p class="profile-panel-subtitle">Per i prossimi 2 eventi o gli ultimi 2 che hai giocato</p>
           <!-- In its tab the section is always open: this header (the
                collapsible one it had) is hidden, the title above shows. -->
           <button type="button" class="decklist-toggle" id="decklist-toggle" aria-expanded="false" aria-controls="decklist-body">
@@ -411,23 +410,10 @@
                     </div>
                   </div>
 
-                  <!-- The warning before sending: slides open in place of the button. -->
-                  <div class="decklist-confirm" id="decklist-confirm" inert>
-                    <div class="decklist-confirm-clip">
-                      <div class="decklist-confirm-box">
-                        <p id="decklist-confirm-text"></p>
-                        <div class="form-actions">
-                          <button type="button" class="btn-secondary" id="decklist-confirm-cancel">Annulla</button>
-                          <button type="button" class="btn-primary" id="decklist-confirm-send">Conferma e invia</button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
                   <div class="form-actions decklist-actions" id="decklist-actions">
                     <button type="submit" class="btn-primary decklist-submit" id="decklist-submit">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"></path><path d="M22 2 15 22l-4-9-9-4Z"></path></svg>
-                      Invia decklist
+                      <span class="decklist-submit-label">Invia decklist</span>
                     </button>
                   </div>
                 </form>
