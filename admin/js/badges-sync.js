@@ -27,6 +27,7 @@
 
 import { computeAutoBadgeAssignments, closedLeagueWinners } from "../../js/auto-badges.js";
 import { showToast } from "./toast.js";
+import { localIso } from "../../js/ui.js";
 import { computeEventLeaderboard } from "../../js/leaderboard.js";
 import { computeCardProgress } from "../../js/card-progress.js";
 import { PlayerAutoBadges, EventStandings, PlayerProgress, Commanders, Events, Leagues, fetchEventsResults } from "../../js/db.js";
@@ -60,7 +61,7 @@ const NEW_COMMANDER_MONTHS = 1;
 function shiftMonths(iso, months) {
   const [y, m, d] = iso.split("-").map(Number);
   const date = new Date(y, m - 1 + months, d);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  return localIso(date);
 }
 
 async function syncNewCommanders({ closedDates, eventsData }) {

@@ -8,7 +8,7 @@ import { matchRoundOutcome, isBye, isDrop } from "./leaderboard.js";
 import { computeGroupedStats } from "./stats.js";
 import { ARCHETYPES } from "./metagame-chart.js";
 import { archetypeIcon } from "./archetype-icons.js";
-import { commanderPairWithColors, archetypeBadge, showError } from "./ui.js";
+import { capitalize, commanderPairWithColors, archetypeBadge, showError, statTileHtml } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initTitleFit } from "./page-title-fit.js";
 import { historyPanelHtml, historyStatsHtml, setHistoryCount } from "./history-list.js";
@@ -19,12 +19,7 @@ import { createArtPainter } from "./player-card.js";
 
 const NO_LINK = { link: false };
 
-const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 const pct = (n) => (n === null ? "—" : `${n.toFixed(1)}%`);
-
-function statTile(label, value) {
-  return `<div class="stat-tile"><div class="stat-tile-label">${label}</div><div class="stat-tile-value">${value}</div></div>`;
-}
 
 // Contro gli altri archetipi as a diverging bar chart: one row per other
 // archetype, a bar from the 50% axis in the middle — right and green the
@@ -133,10 +128,10 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     // The hero.
     const pilots = new Set(decks.map((e) => e.player_id));
     statsEl.innerHTML = [
-      statTile("Winrate", pct(own?.winRate ?? null)),
-      statTile("Metashare", pct(share)),
-      statTile("Mazzi", decks.length),
-      statTile("Piloti", pilots.size),
+      statTileHtml("Winrate", pct(own?.winRate ?? null)),
+      statTileHtml("Metashare", pct(share)),
+      statTileHtml("Mazzi", decks.length),
+      statTileHtml("Piloti", pilots.size),
     ].join("");
 
     // Utilizzo: its share of each event's decks (%), from its first

@@ -16,13 +16,71 @@ export function escapeHtml(value) {
 // grows (the filter button's dot shows it's set; "Cancella" clears it).
 export const DEFAULT_DATE_FROM_YEARS = 2;
 
-// Local calendar date `years` years before today, as YYYY-MM-DD (the value
-// format of an <input type="date">) — local, not toISOString()'s UTC, same
-// reasoning as js/db.js's todayLocalIso.
+// A date (today by default) as its local calendar day, YYYY-MM-DD — an
+// event_date string's and an <input type="date">'s format, directly
+// comparable with them. Local, not toISOString()'s UTC: east of UTC (Italy)
+// that still reports yesterday for the first hours after midnight, which let
+// a same-day event keep passing an `event_date >= today` filter.
+export function localIso(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+// One number tile (.stat-tile): a small label over the big value. `label`
+// and `value` go in as HTML.
+export function statTileHtml(label, value) {
+  return `<div class="stat-tile"><div class="stat-tile-label">${label}</div><div class="stat-tile-value">${value}</div></div>`;
+}
+
+// A request that's never fatal: its error logged, `fallback` instead.
+export function softFail(promise, fallback) {
+  return promise.catch((err) => {
+    console.error(err);
+    return fallback;
+  });
+}
+
+// "lunedì" -> "Lunedì".
+export const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+// Scryfall's collection endpoint takes up to this many cards per request —
+// one request for many cards instead of one each (Scryfall asks clients to
+// keep to ~10 requests a second).
+const SCRYFALL_BATCH = 75;
+
+// Lowercased card name -> image URL of Scryfall's `size` ("normal",
+// "art_crop", …; the front face's for a double-faced card). Keyed by both the
+// full name and each face's own, since a double-faced commander may be stored
+// under its front face's name ("A") while Scryfall's full name is "A // B".
+// Never rejects — a card not found is just missing from the map.
+export async function scryfallImages(names, size = "normal") {
+  const images = new Map();
+  for (let i = 0; i < names.length; i += SCRYFALL_BATCH) {
+    try {
+      const res = await fetch("https://api.scryfall.com/cards/collection", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ identifiers: names.slice(i, i + SCRYFALL_BATCH).map((name) => ({ name })) }),
+      });
+      if (!res.ok) continue;
+      for (const card of (await res.json()).data ?? []) {
+        const url = (card.image_uris ?? card.card_faces?.[0]?.image_uris)?.[size];
+        if (!url) continue;
+        for (const name of [card.name, ...(card.card_faces ?? []).map((f) => f.name)]) {
+          images.set(name.toLowerCase(), url);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  return images;
+}
+
+// Local calendar date `years` years before today, as YYYY-MM-DD.
 export function isoDateYearsAgo(years) {
   const d = new Date();
   d.setFullYear(d.getFullYear() - years);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  return localIso(d);
 }
 
 export function formatDate(value) {

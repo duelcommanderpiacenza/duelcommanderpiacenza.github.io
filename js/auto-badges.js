@@ -11,6 +11,7 @@
 
 import { Badges, Leagues, Events, EventEntries, Matches, fetchEventsResults } from "./db.js";
 import { computeEventLeaderboard, computeLeaguePoints, isBye, isDrop, matchRoundOutcome } from "./leaderboard.js";
+import { localIso } from "./ui.js";
 
 export const TOP8_STREAK_COUNT = 3;
 // A top-8 in a tiny event isn't the same achievement as a top-8 in a full
@@ -96,7 +97,7 @@ async function leagueRankPlayerId(leagues, rule) {
 function monthsAgoIso(months) {
   const d = new Date();
   d.setMonth(d.getMonth() - months);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  return localIso(d);
 }
 
 // Every player who top-8'd in each of their last 3 attended events with at

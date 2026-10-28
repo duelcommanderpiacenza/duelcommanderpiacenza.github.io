@@ -1,12 +1,13 @@
 import { Players, EventEntries, Matches, PlayerAutoBadges, EventStandings, PlayerCards, PlayerProgress } from "./db.js";
-import { matchRoundOutcome, isBye, isDrop, computeEventLeaderboard } from "./leaderboard.js";
-import { tallyOutcome, renderWinrateTiles } from "./winrate.js";
+import { isBye, isDrop, computeEventLeaderboard } from "./leaderboard.js";
+import { tallyOutcome, renderWinrateTiles, outcomeFor, scoreLabelFor } from "./winrate.js";
 import {
   badgeDiscHtml,
   badgeTooltipAttrs,
   uniqueBadges,
   commanderPairLabel,
   showError,
+  softFail,
 } from "./ui.js";
 import { hidePageLoading, sectionLoadingHtml } from "./page-loading.js";
 import { initTitleFit } from "./page-title-fit.js";
@@ -16,23 +17,6 @@ import { renderPublicPlayerCard, createArtPainter } from "./player-card.js";
 import { initBackToTop } from "./back-to-top.js";
 import { renderPlayerLeagueRecap } from "./player-league-recap.js";
 import { cardHint, rememberCard, applyCardPlaceholder } from "./card-hints.js";
-
-function getId() {
-  return new URLSearchParams(window.location.search).get("id");
-}
-
-function matchOutcome(m, viewerIsP1) {
-  const outcome = matchRoundOutcome(m);
-  if (outcome === "draw") return "draw";
-  if ((outcome === "player1" && viewerIsP1) || (outcome === "player2" && !viewerIsP1)) return "win";
-  return "loss";
-}
-
-// The score is shown from the viewer's own point of view (their wins first),
-// rather than the raw player1/player2 orientation used elsewhere.
-function viewerScoreLabel(m, viewerIsP1) {
-  return viewerIsP1 ? `${m.player1_wins}-${m.player2_wins}-${m.draws}` : `${m.player2_wins}-${m.player1_wins}-${m.draws}`;
-}
 
 // Manual (badge1/badge2) and auto badges together — the auto ones are a
 // plain read of PlayerAutoBadges, precomputed by admin/js/badges-sync.js
@@ -75,7 +59,7 @@ function matchGroupsByEvent(rows, positionByEvent) {
 // (data-page), on first load and after each in-app navigation; `signal`
 // aborts when the page is left.
 export async function mount({ signal = new AbortController().signal } = {}) {
-  const id = getId();
+  const id = new URLSearchParams(window.location.search).get("id");
   const titleEl = document.getElementById("player-title");
   const commandersEl = document.getElementById("player-commanders");
   document.getElementById("album-help").addEventListener("click", openAlbumEffectsInfo);
@@ -110,22 +94,13 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     const playerRequest = Players.get(id);
     const autoBadgesRequest = PlayerAutoBadges.listByPlayer(id);
     const entriesRequest = EventEntries.listByPlayer(id);
-    const cardRequest = PlayerCards.get(id).catch((err) => {
-      console.error(err);
-      return null;
-    });
+    const cardRequest = softFail(PlayerCards.get(id), null);
     // The card's cosmetics (js/card-cosmetics.js) — never fatal either: no
     // progress just means a card without them.
-    const progressRequest = PlayerProgress.get(id).catch((err) => {
-      console.error(err);
-      return null;
-    });
+    const progressRequest = softFail(PlayerProgress.get(id), null);
     // Storico partite's final positions (cached standings — never fatal: an
     // event missing from them is computed below) and the player's matches.
-    const standingsRequest = EventStandings.listByPlayer(id).catch((err) => {
-      console.error(err);
-      return [];
-    });
+    const standingsRequest = softFail(EventStandings.listByPlayer(id), []);
     const matchesRequest = Matches.listByPlayer(id);
     autoBadgesRequest.catch(() => {});
     entriesRequest.catch(() => {});
@@ -241,8 +216,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
           opponent,
           isBye: isBye(m),
           isDrop: isDrop(m),
-          outcome: matchOutcome(m, viewerIsP1),
-          scoreLabel: isBye(m) ? "Bye" : isDrop(m) ? "Drop" : viewerScoreLabel(m, viewerIsP1),
+          outcome: outcomeFor(m, viewerIsP1),
+          scoreLabel: isBye(m) ? "Bye" : isDrop(m) ? "Drop" : scoreLabelFor(m, viewerIsP1),
           myCommander: myEntry?.commander ?? null,
           myPartner: myEntry?.partner_commander ?? null,
           oppCommander: oppEntry?.commander ?? null,

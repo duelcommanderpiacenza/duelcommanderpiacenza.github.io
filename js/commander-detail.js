@@ -1,6 +1,6 @@
 import { Commanders, EventEntries, Matches, Events } from "./db.js";
-import { matchRoundOutcome, isBye, isDrop, computeEventLeaderboard } from "./leaderboard.js";
-import { tallyOutcome, renderWinrateTiles } from "./winrate.js";
+import { isBye, isDrop, computeEventLeaderboard } from "./leaderboard.js";
+import { tallyOutcome, renderWinrateTiles, outcomeFor, scoreLabelFor } from "./winrate.js";
 import { renderLineChart } from "./line-chart.js";
 import {
   escapeHtml,
@@ -24,10 +24,6 @@ import { initTitleFit, fitTitleToOneLine } from "./page-title-fit.js";
 import { createArtPainter } from "./player-card.js";
 import { initTabs } from "./tabs.js";
 import { initBackToTop } from "./back-to-top.js";
-
-function getId() {
-  return new URLSearchParams(window.location.search).get("id");
-}
 
 // A real JSON lookup rather than Scryfall's simpler image-redirect
 // shortcut (.../cards/named?...&format=image) — that one only ever gives
@@ -58,18 +54,6 @@ function scryfallCardImages(card) {
   return card.image_uris ? [card.image_uris.normal] : [];
 }
 
-function outcomeFor(m, selfIsP1) {
-  const outcome = matchRoundOutcome(m);
-  if (outcome === "draw") return "draw";
-  if ((outcome === "player1" && selfIsP1) || (outcome === "player2" && !selfIsP1)) return "win";
-  return "loss";
-}
-
-// The score is shown from this commander's own point of view (its wins first).
-function selfScoreLabel(m, selfIsP1) {
-  return selfIsP1 ? `${m.player1_wins}-${m.player2_wins}-${m.draws}` : `${m.player2_wins}-${m.player1_wins}-${m.draws}`;
-}
-
 // In-app page (js/router.js): mounted by the router on this page's <main>
 // (data-page), on first load and after each in-app navigation; `signal`
 // aborts when the page is left.
@@ -82,7 +66,7 @@ function titleBadgesHtml(commander) {
 }
 
 export async function mount({ signal = new AbortController().signal } = {}) {
-  const id = getId();
+  const id = new URLSearchParams(window.location.search).get("id");
   const titleEl = document.getElementById("commander-title");
   const cardFigureEl = document.getElementById("commander-card-figure");
   const cardFlipperEl = document.getElementById("commander-card-flipper");
@@ -297,7 +281,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
             isBye: isBye(m),
             isDrop: isDrop(m),
             outcome: outcomeFor(m, true),
-            scoreLabel: isBye(m) ? "Bye" : isDrop(m) ? "Drop" : selfScoreLabel(m, true),
+            scoreLabel: isBye(m) ? "Bye" : isDrop(m) ? "Drop" : scoreLabelFor(m, true),
             oppCommander: oppEntry?.commander ?? null,
             oppPartner: oppEntry?.partner_commander ?? null,
           });
@@ -313,7 +297,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
             self: m.player2,
             opponent: m.player1,
             outcome: outcomeFor(m, false),
-            scoreLabel: selfScoreLabel(m, false),
+            scoreLabel: scoreLabelFor(m, false),
             oppCommander: oppEntry?.commander ?? null,
             oppPartner: oppEntry?.partner_commander ?? null,
           });

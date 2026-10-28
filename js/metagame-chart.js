@@ -1,6 +1,6 @@
 // Metagame share as a donut chart with a side legend, reused by the
 // Commanders and Archetypes pages and the Bacheca.
-import { escapeHtml } from "./ui.js";
+import { escapeHtml, scryfallImages } from "./ui.js";
 
 export const ARCHETYPES = ["aggro", "control", "combo", "tempo", "midrange"];
 
@@ -269,25 +269,7 @@ export function initBubbleChart(rootEl) {
 async function hydrateBubbleArt(rootEl) {
   const arts = [...rootEl.querySelectorAll(".bubble-art[data-card], .bubble-legend-swatch[data-card]")];
   if (!arts.length) return;
-  const names = [...new Set(arts.map((el) => el.dataset.card))];
-  const urls = new Map();
-  try {
-    const res = await fetch("https://api.scryfall.com/cards/collection", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({ identifiers: names.slice(0, 75).map((name) => ({ name })) }),
-    });
-    if (res.ok) {
-      for (const card of (await res.json()).data ?? []) {
-        const url = (card.image_uris ?? card.card_faces?.[0]?.image_uris)?.art_crop;
-        if (!url) continue;
-        for (const name of [card.name, ...(card.card_faces ?? []).map((f) => f.name)]) urls.set(name.toLowerCase(), url);
-      }
-    }
-  } catch (err) {
-    console.error(err);
-    return;
-  }
+  const urls = await scryfallImages([...new Set(arts.map((el) => el.dataset.card))], "art_crop");
   for (const el of arts) {
     const url = urls.get(el.dataset.card.toLowerCase());
     if (!url) continue;

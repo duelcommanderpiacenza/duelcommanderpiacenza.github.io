@@ -11,7 +11,7 @@ import { Leagues, Events, EventEntries, fetchEventsResults } from "./db.js";
 import { computeLeaguePoints, previousLeaguePositions } from "./leaderboard.js";
 import { renderBubbleChart, initBubbleChart, ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
 import { initChartCarousel } from "./chart-carousel.js";
-import { escapeHtml, formatTime, isHttpUrl, playerLabel, showError } from "./ui.js";
+import { escapeHtml, formatTime, isHttpUrl, localIso, playerLabel, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { nestedResultsMenu } from "./results-link.js";
 import { fetchPlayerBadgesRenderer } from "./player-badges.js";
@@ -49,11 +49,6 @@ function parseIsoDate(iso) {
   return new Date(y, m - 1, d);
 }
 
-// Local-time YYYY-MM-DD, directly comparable with an event_date string.
-function todayIso() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
 
 // A map pin: an external event's Località (styles.css .league-tl-place).
 const PIN_ICON = ICON('<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z"></path><circle cx="12" cy="9.5" r="2.5"></circle>');
@@ -136,7 +131,7 @@ async function renderTimeline(el) {
     // External events (played somewhere else) mixed in by date: the upcoming
     // ones (today or later) among ours; a past one only with its mtgtop8 /
     // Moxfield link, among the latest played.
-    const today = todayIso();
+    const today = localIso();
     const when = (ev) => `${ev.event_date ?? ""}T${ev.start_time ?? ""}`;
     const dated = external.filter((ev) => ev.event_date);
     // Soonest first, across every league / standalone; RLS lets a future
@@ -314,7 +309,7 @@ async function renderCommandersSection(el) {
   try {
     const cutoff = new Date();
     cutoff.setMonth(cutoff.getMonth() - TOP_COMMANDERS_WINDOW_MONTHS);
-    const cutoffIso = `${cutoff.getFullYear()}-${String(cutoff.getMonth() + 1).padStart(2, "0")}-${String(cutoff.getDate()).padStart(2, "0")}`;
+    const cutoffIso = localIso(cutoff);
     // Only the window's entries, already date-filtered by the database —
     // kept in this browser for a few minutes (chartEntries), the charts'
     // slowest part, since they change only when an event is published.
@@ -436,7 +431,7 @@ function rememberRecapHint(until, next) {
 function isoDaysAgo(days) {
   const d = new Date();
   d.setDate(d.getDate() - days);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  return localIso(d);
 }
 
 // A season just over: a closed league (not a Topdeck series) whose last
@@ -447,7 +442,7 @@ const SEASON_DAYS = 14;
 const plusDays = (iso, days) => {
   const d = new Date(`${iso}T00:00:00`);
   d.setDate(d.getDate() + days);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  return localIso(d);
 };
 
 // The closed real leagues whose last played event is on or after `cutoff`:

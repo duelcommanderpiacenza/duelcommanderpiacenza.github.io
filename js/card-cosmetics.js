@@ -19,6 +19,7 @@
 //
 import { openInfoDialog } from "./info-dialog.js";
 import { BIG_EVENT_MIN_PLAYERS } from "./card-progress.js";
+import { escapeHtml } from "./ui.js";
 
 // A family's thresholds, lowest first: tier n (1-based) = the n-th reached.
 const CARD_COSMETICS = {
@@ -32,10 +33,6 @@ function cosmeticTier(family, progress) {
   const { stat, thresholds } = CARD_COSMETICS[family];
   const value = progress?.[stat] ?? 0;
   return thresholds.filter((threshold) => value >= threshold).length;
-}
-
-function escapeAttr(text) {
-  return String(text).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 }
 
 /**
@@ -81,7 +78,7 @@ export function applyCardCosmetics(cardEl, progress) {
     // lists the leagues).
     sinceEl.insertAdjacentHTML(
       "beforeend",
-      `<span class="pc-fx pc-fx-stars"><span class="pc-fx-star" title="Campione: ${escapeAttr(leagues.join(", "))}">★<span class="pc-fx-star-count">${leagues.length}</span></span></span>`
+      `<span class="pc-fx pc-fx-stars"><span class="pc-fx-star" title="Campione: ${escapeHtml(leagues.join(", "))}">★<span class="pc-fx-star-count">${leagues.length}</span></span></span>`
     );
   }
 }
@@ -143,7 +140,7 @@ function tiersHtml(tiers) {
     .map(
       (t) => `
       <li>
-        ${previewCardHtml(`data-progress="${escapeAttr(JSON.stringify(t.progress))}"`)}
+        ${previewCardHtml(`data-progress="${escapeHtml(JSON.stringify(t.progress))}"`)}
         <span><strong>${t.name}</strong>${t.count}</span>
       </li>`
     )

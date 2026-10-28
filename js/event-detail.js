@@ -8,6 +8,7 @@ import {
   commanderPairWithColors,
   archetypeBadge,
   showError,
+  statTileHtml,
 } from "./ui.js";
 import { hidePageLoading, sectionLoadingHtml, statTilesLoadingHtml } from "./page-loading.js";
 import { nestedResultsMenu } from "./results-link.js";
@@ -17,10 +18,6 @@ import { historyPanelHtml, historyStatsHtml, historyPosHtml } from "./history-li
 import { createArtPainter } from "./player-card.js";
 import { initTabs } from "./tabs.js";
 import { renderMetaCharts } from "./meta-charts.js";
-
-function getId() {
-  return new URLSearchParams(window.location.search).get("id");
-}
 
 function matchResultScore(m) {
   return `${m.player1_wins}-${m.player2_wins}-${m.draws}`;
@@ -81,7 +78,7 @@ function renderMatchesByRound(matches) {
 // (data-page), on first load and after each in-app navigation; `signal`
 // aborts when the page is left.
 export async function mount({ signal = new AbortController().signal } = {}) {
-  const id = getId();
+  const id = new URLSearchParams(window.location.search).get("id");
   const titleEl = document.getElementById("event-title");
   const metaEl = document.getElementById("event-meta");
   const resultsEl = document.getElementById("event-results");
@@ -195,10 +192,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       ["Partite", realMatches.length],
       ["Comandanti", decks.size],
     ]
-      .map(
-        ([label, value]) =>
-          `<div class="stat-tile"><div class="stat-tile-label">${label}</div><div class="stat-tile-value">${value}</div></div>`
-      )
+      .map(([label, value]) => statTileHtml(label, value))
       .join("");
     const usage = new Map();
     for (const e of entries) if (e.commander?.name) usage.set(e.commander.name, (usage.get(e.commander.name) ?? 0) + 1);

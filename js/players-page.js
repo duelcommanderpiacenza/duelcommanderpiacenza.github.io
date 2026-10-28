@@ -2,7 +2,7 @@ import { Players, Events, Leagues, fetchEventsResults } from "./db.js";
 import { matchRoundOutcome, isBye, isDrop } from "./leaderboard.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { fetchTopAutoBadgesByPlayer, playerBadgesHtml } from "./player-badges.js";
-import { escapeHtml, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
+import { escapeHtml, showError, softFail, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
 import { historyPanelHtml, historyStatsHtml, winrateTrendHtml, latestPresence } from "./history-list.js";
@@ -111,10 +111,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       Leagues.list(),
       // Not fatal if this fails — the page still works with just the
       // manually assigned badges.
-      fetchTopAutoBadgesByPlayer().catch((err) => {
-        console.error(err);
-        return new Map();
-      }),
+      softFail(fetchTopAutoBadgesByPlayer(), new Map()),
     ]);
     if (signal.aborted) return;
     if (players.length === 0) {

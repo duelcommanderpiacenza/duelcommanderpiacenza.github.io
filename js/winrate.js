@@ -8,8 +8,25 @@
 // Winrate figure are now two views of the exact same match-level tally,
 // not two different statistics.
 
+import { matchRoundOutcome } from "./leaderboard.js";
+import { statTileHtml } from "./ui.js";
+
 export function winRatePct(wins, played) {
   return played > 0 ? ((wins / played) * 100).toFixed(1) : null;
+}
+
+// A match's outcome ("win" | "draw" | "loss") from one side's point of view:
+// `isP1`, that side is the match's player1.
+export function outcomeFor(m, isP1) {
+  const outcome = matchRoundOutcome(m);
+  if (outcome === "draw") return "draw";
+  return (outcome === "player1") === isP1 ? "win" : "loss";
+}
+
+// The score from one side's point of view (its wins first), not the raw
+// player1/player2 order: "2-1-0".
+export function scoreLabelFor(m, isP1) {
+  return isP1 ? `${m.player1_wins}-${m.player2_wins}-${m.draws}` : `${m.player2_wins}-${m.player1_wins}-${m.draws}`;
 }
 
 export function tallyOutcome(bucket, outcome) {
@@ -27,10 +44,10 @@ export function renderWinrateTiles(el, bucket, { events = null } = {}) {
     rate === null
       ? '<p class="page-empty">Non ci sono ancora dati sufficienti.</p>'
       : `
-    <div class="stat-tile"><div class="stat-tile-label">Winrate</div><div class="stat-tile-value">${rate}%</div></div>
-    ${events === null ? "" : `<div class="stat-tile"><div class="stat-tile-label">Eventi</div><div class="stat-tile-value">${events}</div></div>`}
-    <div class="stat-tile"><div class="stat-tile-label">Vittorie</div><div class="stat-tile-value">${bucket.wins}</div></div>
-    <div class="stat-tile"><div class="stat-tile-label">Pareggi</div><div class="stat-tile-value">${bucket.draws}</div></div>
-    <div class="stat-tile"><div class="stat-tile-label">Sconfitte</div><div class="stat-tile-value">${bucket.losses}</div></div>
+    ${statTileHtml("Winrate", `${rate}%`)}
+    ${events === null ? "" : statTileHtml("Eventi", events)}
+    ${statTileHtml("Vittorie", bucket.wins)}
+    ${statTileHtml("Pareggi", bucket.draws)}
+    ${statTileHtml("Sconfitte", bucket.losses)}
   `;
 }

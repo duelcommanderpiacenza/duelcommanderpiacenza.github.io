@@ -12,44 +12,10 @@
 // (js/drag-scroll.js's enableSnapDrag: glides to the next card in the
 // drag's direction on release, like the chart carousel) move it too.
 
-import { escapeHtml, commanderPairWithColors, formatDate } from "./ui.js";
+import { escapeHtml, commanderPairWithColors, formatDate, scryfallImages } from "./ui.js";
 import { winRatePct } from "./winrate.js";
 import { enableSnapDrag } from "./drag-scroll.js";
 import { openInfoDialog } from "./info-dialog.js";
-
-// Scryfall's collection endpoint takes up to this many cards per request —
-// one request for a whole player's commanders instead of one each (and
-// Scryfall asks clients to keep to ~10 requests a second).
-const SCRYFALL_BATCH = 75;
-
-// Lowercased card name -> front image URL ("normal" size, same as
-// commander.html's card). Keyed by both the full name and each face's own,
-// since a double-faced commander may be stored under its front face's name
-// ("A") while Scryfall's full name is "A // B". Only the front face is ever
-// used. Never rejects — a missing image just leaves the card's placeholder.
-async function fetchCardImages(names) {
-  const images = new Map();
-  for (let i = 0; i < names.length; i += SCRYFALL_BATCH) {
-    try {
-      const res = await fetch("https://api.scryfall.com/cards/collection", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ identifiers: names.slice(i, i + SCRYFALL_BATCH).map((name) => ({ name })) }),
-      });
-      if (!res.ok) continue;
-      for (const card of (await res.json()).data ?? []) {
-        const url = card.image_uris?.normal ?? card.card_faces?.[0]?.image_uris?.normal;
-        if (!url) continue;
-        for (const name of [card.name, ...(card.card_faces ?? []).map((f) => f.name)]) {
-          images.set(name.toLowerCase(), url);
-        }
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  }
-  return images;
-}
 
 // One album item per "deck": the exact commander + partner pair (so "X / Y"
 // and "X / Z" are two cards) — the key the records map (setRecords) uses
@@ -514,7 +480,7 @@ export function renderCommanderCarousel(el, items) {
   setActive(0);
   applyDepth();
 
-  fetchCardImages([...new Set(items.map((c) => c.commander.name))]).then((images) => {
+  scryfallImages([...new Set(items.map((c) => c.commander.name))]).then((images) => {
     imageUrls = items.map((c) => images.get(c.commander.name.toLowerCase()) ?? null);
     loadNextImages();
   });

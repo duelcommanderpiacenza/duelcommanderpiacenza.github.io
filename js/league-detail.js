@@ -3,12 +3,15 @@ import { computeLeaguePoints, previousLeaguePositions } from "./leaderboard.js";
 import { fetchPlayerBadgesRenderer } from "./player-badges.js";
 import { computeLeagueSummary, computeLeagueWrapped } from "./stats.js";
 import {
+  capitalize,
   escapeHtml,
   formatDate,
   formatTime,
   leagueStatusBadge,
+  localIso,
   playerLabel,
   showError,
+  statTileHtml,
 } from "./ui.js";
 import { hidePageLoading, sectionLoadingHtml, statTilesLoadingHtml } from "./page-loading.js";
 import { initTitleFit } from "./page-title-fit.js";
@@ -24,15 +27,6 @@ import { renderMetaCharts } from "./meta-charts.js";
 // How many leaderboard rows get the "top 8" highlight (styles.css .is-top8).
 const LEAGUE_TOP_HIGHLIGHT = 8;
 
-function getId() {
-  return new URLSearchParams(window.location.search).get("id");
-}
-
-// Local-time YYYY-MM-DD, directly comparable with an event_date string.
-function todayIso() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
 
 // The hero's dates, as HTML: "12 set 2026 – 30 nov 2026", first event's date
 // to the last one's, once the league is closed; while it's running, the
@@ -44,7 +38,7 @@ function leagueDateRange(league, events) {
   const dates = events.map((ev) => ev.event_date).filter(Boolean).sort();
   if (dates.length === 0) return { html: "", withStatus: false };
   const start = escapeHtml(formatDate(dates[0]));
-  if (dates[0] > todayIso()) return { html: `Inizia il ${start}`, withStatus: false };
+  if (dates[0] > localIso()) return { html: `Inizia il ${start}`, withStatus: false };
   if (league.is_open) return { html: `${start} – ${leagueStatusBadge(true)}`, withStatus: true };
   const end = escapeHtml(formatDate(dates[dates.length - 1]));
   return { html: start === end ? start : `${start} – ${end}`, withStatus: false };
@@ -75,7 +69,7 @@ const cardName = (ev) => {
   const d = new Date(`${ev.event_date}T00:00:00`);
   if (!ev.event_date || Number.isNaN(d.getTime())) return "Evento";
   const day = d.toLocaleDateString("it-IT", { weekday: "long" });
-  return day.charAt(0).toUpperCase() + day.slice(1);
+  return capitalize(day);
 };
 
 const TL_ICON = (body) =>
@@ -94,7 +88,7 @@ function timelineItemHtml({ ev, state, players }, number, today) {
   // Wide: just the weekday left of the line (the day and month are in the
   // circle already).
   const weekday = date ? date.toLocaleDateString("it-IT", { weekday: "long" }) : "";
-  const fullDate = weekday ? weekday.charAt(0).toUpperCase() + weekday.slice(1) : "—";
+  const fullDate = weekday ? capitalize(weekday) : "—";
   const kicker =
     state === "pending"
       ? "Risultati in arrivo"
@@ -146,7 +140,7 @@ function timelineHtml(allEvents, playersById, scheduled, today) {
 // (data-page), on first load and after each in-app navigation; `signal`
 // aborts when the page is left.
 export async function mount({ signal = new AbortController().signal } = {}) {
-  const id = getId();
+  const id = new URLSearchParams(window.location.search).get("id");
   const titleEl = document.getElementById("league-title");
   const statusEl = document.getElementById("league-status");
   const datesEl = document.getElementById("league-dates");
@@ -240,7 +234,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     statusEl.innerHTML = leagueStatusBadge(league.is_open);
     statusEl.hidden = dateRange.withStatus;
 
-    const today = todayIso();
+    const today = localIso();
     const resultsRequest = fetchEventsResults(events.map((ev) => ev.id));
     resultsRequest.catch(() => {});
     const count = await countRequest;
@@ -290,10 +284,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       ["Presenza media", summary.avgPlayersPerEvent.toFixed(1)],
       ["Partite giocate", summary.totalMatches],
     ]
-      .map(
-        ([label, value]) =>
-          `<div class="stat-tile"><div class="stat-tile-label">${label}</div><div class="stat-tile-value">${value}</div></div>`
-      )
+      .map(([label, value]) => statTileHtml(label, value))
       .join("");
 
     // Computed for Topdeck series too (no leaderboard shown for those) — the

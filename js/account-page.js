@@ -52,10 +52,10 @@ import {
   Matches,
   PlayerProgress,
 } from "./db.js";
-import { matchRoundOutcome, isDrop } from "./leaderboard.js";
-import { tallyOutcome, winRatePct } from "./winrate.js";
+import { isDrop } from "./leaderboard.js";
+import { tallyOutcome, winRatePct, outcomeFor } from "./winrate.js";
 import { applyCardCosmetics, openCardEffectsInfo } from "./card-cosmetics.js";
-import { escapeHtml, eventTitle, formatDate } from "./ui.js";
+import { escapeHtml, eventTitle, formatDate, softFail, statTileHtml } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { haptic } from "./haptics.js";
 import { mountSettings } from "./settings-panel.js";
@@ -833,11 +833,6 @@ export function mount({ signal = new AbortController().signal } = {}) {
   // player's whole history: match-basis winrate, a bye counts as a win, a drop
   // isn't a match at all; "Eventi" counts entries (an event counts even if the
   // player dropped before playing).
-  function matchOutcome(m, isPlayer1) {
-    const outcome = matchRoundOutcome(m);
-    if (outcome === "draw") return "draw";
-    return (outcome === "player1") === isPlayer1 ? "win" : "loss";
-  }
 
   // Everything the linked player's parts need, in one round: the stats, the
   // card's badges and cosmetics, "Invia la tua decklist"'s events and sends.
@@ -846,10 +841,7 @@ export function mount({ signal = new AbortController().signal } = {}) {
   async function loadStats(player, { upcomingRequest = null } = {}) {
     statsLink.href = `player.html?id=${player.id}`;
     // The card's cosmetics: never fatal (a card without them).
-    const progressRequest = PlayerProgress.get(player.id).catch((err) => {
-      console.error(err);
-      return null;
-    });
+    const progressRequest = softFail(PlayerProgress.get(player.id), null);
     // Handled by loadDecklistCard (a failure: no card); the no-op catch only
     // marks it handled meanwhile.
     const decklistRequest = Promise.all([upcomingRequest ?? Events.listUpcoming(), Decklists.sentEvents(player.id)]);
@@ -860,8 +852,8 @@ export function mount({ signal = new AbortController().signal } = {}) {
     ]);
 
     const bucket = { wins: 0, draws: 0, losses: 0 };
-    for (const m of asP1) if (!isDrop(m)) tallyOutcome(bucket, matchOutcome(m, true));
-    for (const m of asP2) if (!isDrop(m)) tallyOutcome(bucket, matchOutcome(m, false));
+    for (const m of asP1) if (!isDrop(m)) tallyOutcome(bucket, outcomeFor(m, true));
+    for (const m of asP2) if (!isDrop(m)) tallyOutcome(bucket, outcomeFor(m, false));
 
     // The hero's numbers: Winrate, Leghe (the leagues, open or closed, with at
     // least one closed event played), Eventi — the player page's tiles' look
@@ -872,12 +864,10 @@ export function mount({ signal = new AbortController().signal } = {}) {
     const leagueIds = new Set(
       entries.filter((e) => e.event && !e.event.is_open && e.event.league).map((e) => e.event.league.id)
     );
-    const tile = (label, value) =>
-      `<div class="stat-tile"><div class="stat-tile-label">${label}</div><div class="stat-tile-value">${value}</div></div>`;
     statsTilesEl.innerHTML =
       rate === null
         ? '<p class="page-empty">Non ci sono ancora dati sufficienti.</p>'
-        : tile("Winrate", `${rate}%`) + tile("Leghe", leagueIds.size) + tile("Eventi", entries.length);
+        : statTileHtml("Winrate", `${rate}%`) + statTileHtml("Leghe", leagueIds.size) + statTileHtml("Eventi", entries.length);
 
     // The player card's "Dal …": the year of the player's first event.
     const firstDate = entries.reduce((min, e) => {

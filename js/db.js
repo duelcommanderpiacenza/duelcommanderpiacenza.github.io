@@ -3,6 +3,7 @@
 
 import { sb } from "./supabase-client.js";
 import { rememberLinkedPlayers } from "./card-hints.js";
+import { localIso } from "./ui.js";
 
 function assertOk({ data, error }) {
   if (error) throw error;
@@ -24,16 +25,6 @@ async function selectAllRows(buildQuery) {
   }
 }
 
-// Local calendar date, not `new Date().toISOString()` (UTC-based) — for a
-// visitor east of UTC (e.g. Italy), toISOString() still reports yesterday's
-// date for the first couple hours after local midnight, which let a
-// same-day-or-earlier event keep passing an `event_date >= today` filter
-// well past its own date. Same reasoning js/custom-date.js already avoids
-// UTC-based date math for.
-function todayLocalIso() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
 
 // event_entries has two FKs to commanders (commander_id, partner_commander_id
 // — an optional partner/background pairing), so PostgREST needs the
@@ -50,7 +41,7 @@ export const Announcements = {
   // in the query so it keeps working even on a DB without that column yet
   // (a row lacking expires_on just counts as never expiring).
   listActive: async () => {
-    const today = todayLocalIso();
+    const today = localIso();
     const rows = await Announcements.list();
     return rows.filter((a) => !a.expires_on || a.expires_on >= today);
   },
@@ -359,7 +350,7 @@ export const Events = {
     notExternal((scope) =>
       scope(sb.from("events").select("*, league:leagues(id,name,is_topdeck)"))
         .eq("is_open", true)
-        .gte("event_date", todayLocalIso())
+        .gte("event_date", localIso())
         .order("event_date", { ascending: true })
     ).then(assertOk),
   // Every external event (the Bacheca's timeline picks the upcoming ones and

@@ -1,5 +1,5 @@
 import { Announcements } from "../../js/db.js";
-import { formatDate, escapeHtml } from "../../js/ui.js";
+import { formatDate, escapeHtml, localIso } from "../../js/ui.js";
 import { renderTable, setMessage, onBusySubmit } from "./crud-ui.js";
 
 /**
@@ -60,7 +60,7 @@ export function initAnnouncementsAdmin() {
   function isExpired(row) {
     if (!row.expires_on) return false;
     const d = new Date();
-    const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const today = localIso(d);
     return row.expires_on < today;
   }
 

@@ -19,7 +19,7 @@
 import { Events, Commanders, fetchEventsResults } from "./db.js";
 import { computeGroupedStats } from "./stats.js";
 import { ARCHETYPES } from "./metagame-chart.js";
-import { escapeHtml } from "./ui.js";
+import { capitalize, escapeHtml, localIso } from "./ui.js";
 import { openStories, at, archetypesSlide } from "./event-recap.js";
 
 const VIDEO_HOURS = 48;
@@ -37,8 +37,6 @@ const seen = (key) => {
     return false;
   }
 };
-const capital = (s) => s.charAt(0).toUpperCase() + s.slice(1);
-const isoDate = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
 // --- Nuovo video ---------------------------------------------------------------------
 
@@ -98,7 +96,7 @@ async function dueVideos() {
       const seenKey = `storySeen:video:${video.id}`;
       return {
         date: video.publishedAtUtc.slice(0, 10),
-        until: isoDate(new Date(new Date(video.publishedAtUtc).getTime() + VIDEO_HOURS * 3600 * 1000)),
+        until: localIso(new Date(new Date(video.publishedAtUtc).getTime() + VIDEO_HOURS * 3600 * 1000)),
         seenId: `video:${video.id}`,
         seen: seen(seenKey),
         kicker: "Nuovo video",
@@ -150,7 +148,7 @@ async function duePrimers() {
       const seenKey = `storySeen:primer:${deck.id}`;
       return {
         date: deck.createdAtUtc.slice(0, 10),
-        until: isoDate(new Date(new Date(deck.createdAtUtc).getTime() + PRIMER_HOURS * 3600 * 1000)),
+        until: localIso(new Date(new Date(deck.createdAtUtc).getTime() + PRIMER_HOURS * 3600 * 1000)),
         seenId: `primer:${deck.id}`,
         seen: seen(seenKey),
         kicker: "Nuovo primer",
@@ -205,7 +203,7 @@ function metaSlides(m) {
   const slides = [
     `<section class="recap-slide"><div class="recap-bg" data-art="${escapeHtml(first?.first ?? "")}"></div>
       <p class="recap-k" ${at(0)}>Il meta del mese</p>
-      <h2 class="recap-big" ${at(1)}>${capital(m.month)}</h2>
+      <h2 class="recap-big" ${at(1)}>${capitalize(m.month)}</h2>
       <div class="recap-tiles" ${at(3)}><div><b>${m.events}</b><span>eventi</span></div><div><b>${m.decks}</b><span>mazzi</span></div><div><b>${m.stats.length}</b><span>comandanti</span></div></div>
       <p class="recap-tap" ${at(5)}>Tocca per continuare ›</p></section>`,
   ];
@@ -246,8 +244,8 @@ async function dueMeta() {
   if (today.getDate() > META_DAYS) return [];
   const start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
   const end = new Date(today.getFullYear(), today.getMonth(), 0);
-  const from = isoDate(start);
-  const to = isoDate(end);
+  const from = localIso(start);
+  const to = localIso(end);
   const month = MONTHS[start.getMonth()];
   const meta = await loadMeta(from, to, month);
   if (!meta.events) return [];
@@ -256,13 +254,13 @@ async function dueMeta() {
   return [
     {
       // In the row's chronology: the day it comes out, the month's 1st.
-      date: isoDate(new Date(today.getFullYear(), today.getMonth(), 1)),
-      until: isoDate(new Date(today.getFullYear(), today.getMonth(), META_DAYS)),
+      date: localIso(new Date(today.getFullYear(), today.getMonth(), 1)),
+      until: localIso(new Date(today.getFullYear(), today.getMonth(), META_DAYS)),
       seenId: `meta:${key}`,
       seen: seen(seenKey),
       kicker: "Il meta del mese",
       short: "Meta",
-      title: capital(month),
+      title: capitalize(month),
       art: meta.top[0]?.first ?? "",
       open: () =>
         openStories({
