@@ -48,7 +48,6 @@ const ICONS = {
   userCheck: '<circle cx="10" cy="8" r="5"/><path d="M2 21a8 8 0 0 1 13.29-6"/><path d="m16 19 2 2 4-4"/>',
   idCard: '<rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6.17 15a3 3 0 0 1 5.66 0"/><path d="M16 10h2M16 14h2"/>',
   fileText: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8M16 13H8M16 17H8"/>',
-  star: '<path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/>',
   sealCheck: '<path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/>',
 };
 
@@ -100,7 +99,6 @@ export const ACHIEVEMENTS = [
   { key: "collegato", name: "Collegato", group: "sito", source: "site", icon: "userCheck", desc: "Account collegato al giocatore.", hint: "Il tuo account e il tuo giocatore, insieme." },
   { key: "carta_creata", name: "Carta creata", group: "sito", source: "site", icon: "idCard", desc: "Carta giocatore salvata.", hint: "La tua carta ti aspetta." },
   { key: "prima_decklist", name: "Prima decklist", group: "sito", source: "site", icon: "fileText", desc: "Una decklist inviata dal sito.", hint: "Condividi la tua lista." },
-  { key: "seguace", name: "Seguace", group: "sito", source: "site", icon: "star", desc: "5 tra giocatori, comandanti e leghe seguiti.", hint: "Tieni d'occhio chi ti interessa." },
 ].map((a) => ({ source: "results", ...a }));
 
 // The last one, on its own above the groups: every other one at its last level.

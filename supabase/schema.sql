@@ -983,7 +983,7 @@ grant select on event_counts, league_player_counts to anon, authenticated;
 -- Achievements ("Obiettivi"; js/achievements.js). player_achievements: the
 -- ones earned by playing — a derived cache like player_progress, computed by
 -- js/achievement-progress.js and fully replaced by the admin's sync, public
--- read. account_achievements: the four earned on the site, written only by
+-- read. account_achievements: the three earned on the site, written only by
 -- my_achievements(). achievements_seen: the unlocks already shown to an
 -- account (js/achievement-toast.js). Added by migration 028.
 -- ---------------------------------------------------------------------------
@@ -1009,7 +1009,7 @@ create policy "player_achievements_public_read" on player_achievements for selec
 
 create table account_achievements (
   user_id uuid not null references auth.users(id) on delete cascade,
-  key text not null check (key in ('collegato', 'carta_creata', 'prima_decklist', 'seguace')),
+  key text not null check (key in ('collegato', 'carta_creata', 'prima_decklist')),
   unlocked_at timestamptz not null default now(),
   primary key (user_id, key)
 );
@@ -1032,7 +1032,7 @@ create policy "achievements_seen_insert_own" on achievements_seen for insert wit
 -- The signed-in account's achievements, in one call (js/achievement-toast.js,
 -- account.html's "Obiettivi"): first the site ones whose fact is there now
 -- are recorded (dated by the fact when it has a date — the first decklist
--- sent, the 5th follow — else now), then returned:
+-- sent — else now), then returned:
 --   kind 'player' — the linked player's player_achievements rows;
 --   kind 'site'   — the account's site ones (level 1);
 --   kind 'seen'   — every (key, level) already shown to this account.
@@ -1059,10 +1059,6 @@ begin
   select min(d.sent_at) into t from decklist_submissions d where d.user_id = uid;
   if t is not null then
     insert into account_achievements (user_id, key, unlocked_at) values (uid, 'prima_decklist', t) on conflict do nothing;
-  end if;
-  select f.created_at into t from follows f where f.user_id = uid order by f.created_at offset 4 limit 1;
-  if t is not null then
-    insert into account_achievements (user_id, key, unlocked_at) values (uid, 'seguace', t) on conflict do nothing;
   end if;
 
   return query
