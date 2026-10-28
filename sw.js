@@ -41,7 +41,7 @@ const MAX_IMAGES = 300;
 // "fresh-data" message) takes the network first for a few seconds.
 const DATA_CACHE = "supabase-data-v1";
 const MAX_DATA = 400;
-const ALWAYS_FRESH = ["profiles", "user_settings", "follows", "decklist_submissions", "player_claims", "user_activity", "admins", "announcements"];
+const ALWAYS_FRESH = ["profiles", "user_settings", "decklist_submissions", "player_claims", "user_activity", "admins", "announcements"];
 const FRESH_FOR = 5000;
 const freshUntil = new Map(); // client id -> time
 

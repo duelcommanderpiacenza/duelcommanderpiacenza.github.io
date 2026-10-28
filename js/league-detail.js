@@ -14,7 +14,6 @@ import { hidePageLoading, sectionLoadingHtml, statTilesLoadingHtml } from "./pag
 import { initTitleFit } from "./page-title-fit.js";
 import { historyPanelHtml, historyStatsHtml, leaguePosHtml } from "./history-list.js";
 import { createArtPainter } from "./player-card.js";
-import { initFollowButton } from "./follow-button.js";
 import { initTabs } from "./tabs.js";
 import { initBackToTop } from "./back-to-top.js";
 import { openLeagueRules } from "./league-rules.js";
@@ -171,10 +170,6 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   // reads the same.)
   const recapBtn = document.getElementById("league-recap") ?? document.createElement("button");
   recapBtn.addEventListener("click", () => openSeasonRecap(id));
-
-  // The ★ on the hero's edge, for signed-in accounts (not awaited: it never
-  // holds up the page).
-  if (id) initFollowButton(titleEl, "league", id, { signal });
 
   if (!id) {
     titleEl.textContent = "Lega non trovata";

@@ -369,52 +369,6 @@ main.has-hero-accent :is(#player-matches, #commander-matches, #commander-players
   background: color-mix(in srgb, var(--hero-accent-light) 10%, transparent);
 }
 
-/* Seguiti (account.html): its rows' tint, edge and hover, and the ★ to
-   unfollow (ring, star, hover) in it too. */
-main.has-hero-accent #follows-list .history-item {
-  border-color: color-mix(in srgb, var(--hero-accent) 16%, transparent);
-  background: color-mix(in srgb, var(--hero-accent) 6%, transparent);
-}
-
-main.has-hero-accent #follows-list a.history-item:hover {
-  border-color: color-mix(in srgb, var(--hero-accent) 30%, transparent);
-  background: color-mix(in srgb, var(--hero-accent) 10%, transparent);
-}
-
-main.has-hero-accent .follow-remove {
-  border-color: color-mix(in srgb, var(--hero-accent) 55%, transparent);
-  color: var(--hero-accent);
-}
-
-main.has-hero-accent .follow-remove:hover {
-  border-color: var(--hero-accent);
-  background: color-mix(in srgb, var(--hero-accent) 12%, #fff);
-}
-
-main.has-hero-accent .follow-remove:focus-visible {
-  outline-color: color-mix(in srgb, var(--hero-accent) 45%, transparent);
-}
-
-:root[data-theme="dark"] main.has-hero-accent #follows-list .history-item {
-  border-color: rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.06);
-}
-
-:root[data-theme="dark"] main.has-hero-accent #follows-list a.history-item:hover {
-  border-color: color-mix(in srgb, var(--hero-accent-light) 30%, transparent);
-  background: color-mix(in srgb, var(--hero-accent-light) 10%, transparent);
-}
-
-:root[data-theme="dark"] main.has-hero-accent .follow-remove {
-  border-color: color-mix(in srgb, var(--hero-accent-light) 55%, transparent);
-  color: var(--hero-accent-light);
-}
-
-:root[data-theme="dark"] main.has-hero-accent .follow-remove:hover {
-  border-color: var(--hero-accent-light);
-  background: color-mix(in srgb, var(--hero-accent-light) 16%, transparent);
-}
-
 /* commander.html's Utilizzo chart: its area and hover guide (fixed red
    tints) in it too — the line, the dot and the first number already follow
    the red variables. */
@@ -655,7 +609,6 @@ main.has-hero-accent .profile-tab:not(.is-active):hover {
 }
 
 .profile:has(#profile-album[hidden]) [data-tab="profile-album"],
-.profile:has(#profile-follows[hidden]) [data-tab="profile-follows"],
 .profile:has(#profile-decklist[hidden]) [data-tab="profile-decklist"] {
   display: none;
 }
@@ -784,9 +737,8 @@ main.has-hero-accent .profile-tab:not(.is-active):hover {
   transform: translateY(-50%);
 }
 
-/* Solid (no transparency), in the followed ★'s colours
-   (.detail-hero-wrap .follow-btn.is-following): flat brand red, white
-   border — on every screen; a deeper red on hover. */
+/* Solid (no transparency): the hero's colour (--hero-btn), white border —
+   on every screen; a deeper shade on hover. */
 .detail-hero-back {
   border-color: #fff;
   background: var(--hero-btn);
@@ -1157,57 +1109,6 @@ html.app-header .page-back-wrap {
    page. */
 .detail-hero .player-card {
   animation: commander-card-in 450ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-
-/* The follow button in the detail heroes: the star alone (its name in
-   aria-label, js/follow-button.js), round, 32px (smaller than the name beside it) — not
-   following: a hollow star in the hero's reds, like the back pill;
-   following: a white filled star on brand red. Before the name, on its
-   line (.detail-hero-title-row), on every screen. */
-.detail-hero-wrap .follow-btn {
-  justify-content: center;
-  box-sizing: border-box;
-  flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: 1px solid color-mix(in srgb, var(--hero-btn) 40%, #fff);
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--hero-btn) 55%, #1c1012);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-  color: #fff;
-  font-size: 1rem;
-  text-shadow: none;
-}
-
-/* Hover only with a real pointer (a tap would leave it stuck on), and not
-   right after a click until the pointer leaves (.is-fresh, js/follow-button.js)
-   — else the new state showed in its darker hover colour at once. */
-@media (hover: hover) {
-  .detail-hero-wrap .follow-btn:not(.is-fresh):hover {
-    border-color: color-mix(in srgb, var(--hero-btn) 20%, #fff);
-    background: color-mix(in srgb, var(--hero-btn) 40%, #1c1012);
-  }
-}
-
-/* Following: flat brand red. Both states flat colours (no gradients) — the
-   button's background transition can't fade a gradient into a colour: it
-   drops the gradient at once and fades in from transparent, the button
-   blinking out and back in. Colour to colour fades smoothly. */
-.detail-hero-wrap .follow-btn.is-following {
-  border-color: #fff;
-  background: var(--hero-btn);
-  color: #fff;
-}
-
-@media (hover: hover) {
-  .detail-hero-wrap .follow-btn.is-following:not(.is-fresh):hover {
-    background: var(--hero-btn-hover);
-  }
-}
-
-.detail-hero-wrap .follow-btn-text {
-  display: none;
 }
 
 /* Phones: the detail heroes' numbers (4-5 of them) on one row — equal

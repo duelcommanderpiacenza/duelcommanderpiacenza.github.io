@@ -754,11 +754,9 @@ html.app-header body:has(.page-main .detail-hero-back) .site-header :is(.site-se
   pointer-events: auto;
 }
 
-/* Every detail hero with a follow star (player, commander, league; any
-   width): the star before the name, always on one line with it
-   (js/follow-button.js wraps the two) — the name shrinks into the room left
-   (js/page-title-fit.js) rather than wrapping under the star. Left-aligned
-   like the hero's text on a computer, centred from 820px down. */
+/* Every detail hero's name line (player, commander, league; any width):
+   the name fitted to it (js/page-title-fit.js). Left-aligned like the
+   hero's text on a computer, centred from 820px down. */
 .detail-hero-title-row {
   display: flex;
   flex-wrap: nowrap;
@@ -808,11 +806,6 @@ html.app-header body:has(.page-main .detail-hero-back) .site-header :is(.site-se
 
 .detail-hero-title-badges:empty {
   display: none;
-}
-
-.detail-hero-title-row > .follow-btn-row {
-  flex: 0 0 auto;
-  margin: 0;
 }
 
 html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .profile-hero::before {

@@ -47,21 +47,16 @@ import {
   MyAccount,
   Events,
   Decklists,
-  Follows,
-  Leagues,
-  fetchEventsResults,
   EventEntries,
   Matches,
   PlayerProgress,
 } from "./db.js";
-import { matchRoundOutcome, isDrop, isBye, computeLeaguePoints } from "./leaderboard.js";
+import { matchRoundOutcome, isDrop } from "./leaderboard.js";
 import { tallyOutcome, winRatePct } from "./winrate.js";
 import { applyCardCosmetics, openCardEffectsInfo } from "./card-cosmetics.js";
 import { renderCommanderCarousel, albumItems, commanderPairKey, openAlbumEffectsInfo } from "./commander-carousel.js";
 import { escapeHtml, eventTitle, formatDate } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
-import { fetchPlayerBadgesRenderer } from "./player-badges.js";
-import { historyStatsHtml } from "./history-list.js";
 import { haptic } from "./haptics.js";
 import { mountSettings } from "./settings-panel.js";
 import { rememberMyPlayer } from "./me-highlight.js";
@@ -461,7 +456,7 @@ export function mount({ signal = new AbortController().signal } = {}) {
 
   // --- The sections, one at a time behind tabs -------------------------------------
 
-  // Album comandanti, Seguiti, Decklist, Impostazioni: a tab each, only for a
+  // Album comandanti, Decklist, Impostazioni: a tab each, only for a
   // section that's shown (styles.css hides the others' tabs) — a pill bar on
   // desktop, a full-width segmented control on phones. Until the user picks
   // one, the first section shown is the open one (the album once linked);
@@ -1263,258 +1258,6 @@ export function mount({ signal = new AbortController().signal } = {}) {
     setMessage(decklistMessageEl, `Decklist inviata per ${eventTitle(ev)}.`, "ok");
   });
 
-  // --- Seguiti -----------------------------------------------------------------------------
-
-  // The players, commanders and leagues this account follows (★ on their
-  // pages, js/follow-button.js), newest follow first, in three groups (each
-  // only when it has someone, with its count). One sub-card each, like the
-  // Comandanti / Giocatori pages' lists (js/history-list.js), the whole card a
-  // link to the player's / commander's / league's page: the name (a player's badges after it), a
-  // small line with the last event, the numbers on the right (below on
-  // phones). The only part that doesn't lead there: a filled ★ in a circle to
-  // unfollow (hollow on hover — the same star as on their pages), beside the
-  // link rather than inside it (a link can't hold a button), placed over the
-  // card's right edge. Any signed-in account — following needs no linked
-  // player.
-  const followsCard = document.getElementById("profile-follows");
-  const followsListEl = document.getElementById("follows-list");
-  const followsEmptyEl = document.getElementById("follows-empty");
-
-  function followRowHtml(kind, target) {
-    const href = `${kind}.html?id=${target.id}`;
-    const name = kind === "player" ? playerLabel(target) : target.name;
-    return `<li class="follow-row" data-kind="${kind}" data-id="${target.id}">
-      <a class="history-item follow-card" href="${href}">
-        <div class="history-main">
-          <span class="follow-title">
-            <span class="follow-name">${escapeHtml(name)}</span>${kind === "player" ? '<span class="follow-badges"></span>' : ""}
-          </span>
-          <span class="history-deck follow-meta"></span>
-        </div>
-        <div class="follow-stats"></div>
-      </a>
-      <button type="button" class="follow-remove" aria-label="Non seguire più ${escapeHtml(name)}" title="Non seguire più">
-        <span class="follow-remove-star" aria-hidden="true"></span>
-      </button>
-    </li>`;
-  }
-
-  function followGroupHtml(title, kind, targets) {
-    if (!targets.length) return "";
-    return `<li class="follow-group">
-      <p class="follow-group-title">${title} <span class="history-count">${targets.length}</span></p>
-      <ul class="follow-group-list">${targets.map((t) => followRowHtml(kind, t)).join("")}</ul>
-    </li>`;
-  }
-
-  function updateFollowsEmpty() {
-    // A group whose last row went goes too; the others recount.
-    for (const group of followsListEl.querySelectorAll(".follow-group")) {
-      const rows = group.querySelectorAll(".follow-row").length;
-      if (!rows) group.remove();
-      else group.querySelector(".history-count").textContent = String(rows);
-    }
-    followsEmptyEl.hidden = followsListEl.querySelector(".follow-row") !== null;
-  }
-
-  // `request`: the account's follows, when already started (loadSignedIn).
-  async function loadFollows(request = Follows.mine(user.id)) {
-    let follows;
-    try {
-      follows = await request;
-    } catch (err) {
-      // E.g. migration 010 not run yet: no card rather than a broken one.
-      console.error(err);
-      followsCard.hidden = true;
-      return;
-    }
-    followsListEl.innerHTML =
-      followGroupHtml("Giocatori", "player", follows.map((f) => f.player).filter(Boolean)) +
-      followGroupHtml("Comandanti", "commander", follows.map((f) => f.commander).filter(Boolean)) +
-      followGroupHtml("Leghe", "league", follows.map((f) => f.league).filter(Boolean));
-    updateFollowsEmpty();
-    followsCard.hidden = false;
-    // The numbers next to each name come after, without holding up the page.
-    fillFollowStats(follows).catch((err) => console.error(err));
-  }
-
-  // --- Seguiti: the numbers of each sub-card ---
-
-  // Filled in after the list shows (labelled numbers, js/history-list.js
-  // historyStatsHtml — the full text on hover — and the small line below the
-  // name):
-  //  - a player: its badges right after the name (the same icons as in the
-  //    lists, js/player-badges.js); Winrate (its cached standings — closed
-  //    events, counted like the player page's), its placement in the last
-  //    event (the event on the line below), and — while a league is open — its
-  //    position in that league's standings (a real league, not a Topdeck
-  //    series; computed like the Bacheca's, js/home.js), "—" when not in them;
-  //  - a commander: Winrate counted like commander.html's (a bye or a drop
-  //    isn't a match it played) and how many events it was played in; the
-  //    latest of them, and who played it, on the line below;
-  //  - a league: how many of its events were played (closed ones, as on
-  //    league.html); "In corso" / "Conclusa" and the latest event below.
-  const winrate = ({ wins, draws, losses }) => {
-    const played = wins + draws + losses;
-    return played ? `${Math.round((wins / played) * 100)}%` : null;
-  };
-
-  function setFollowStats(kind, id, { stats, meta }) {
-    const row = followsListEl.querySelector(`.follow-row[data-kind="${kind}"][data-id="${id}"]`);
-    if (!row) return;
-    const slot = row.querySelector(".follow-stats");
-    slot.innerHTML = historyStatsHtml(stats);
-    slot.classList.add("is-ready");
-    if (meta) row.querySelector(".follow-meta").textContent = meta;
-  }
-
-  const latestEvent = (rows) =>
-    rows.reduce((best, row) => (!best || (row.event?.event_date ?? "") > (best.event?.event_date ?? "") ? row : best), null);
-
-  async function openLeagueStandings() {
-    const league = await Leagues.getOpen();
-    if (!league) return null;
-    const allEvents = await Events.listByLeague(league.id);
-    const [eventsData, scheduledEvents] = await Promise.all([
-      fetchEventsResults(allEvents.filter((ev) => !ev.is_open).map((ev) => ev.id)),
-      Leagues.eventCount(league.id, allEvents.length),
-    ]);
-    return { league, standings: computeLeaguePoints(eventsData, { scheduledEvents }) };
-  }
-
-  async function fillPlayerStats(playerIds) {
-    const [results, open, badgesFor] = await Promise.all([
-      Follows.playerResults(playerIds),
-      openLeagueStandings().catch((err) => (console.error(err), null)),
-      // Never rejects: without them the names just have no badges.
-      fetchPlayerBadgesRenderer(),
-    ]);
-    for (const id of playerIds) {
-      const badgesSlot = followsListEl.querySelector(`.follow-row[data-kind="player"][data-id="${id}"] .follow-badges`);
-      if (badgesSlot) badgesSlot.innerHTML = badgesFor({ id });
-      const rows = results.filter((r) => r.player_id === id);
-      const totals = rows.reduce(
-        (t, r) => ({ wins: t.wins + r.wins, draws: t.draws + r.draws, losses: t.losses + r.losses }),
-        { wins: 0, draws: 0, losses: 0 }
-      );
-      const latest = latestEvent(rows);
-      const stats = [
-        { label: "Winrate", value: winrate(totals) ?? "—", main: true, title: "Winrate su tutti gli eventi" },
-        {
-          label: "Ultimo",
-          value: latest ? `${latest.position}°` : "—",
-          title: latest ? `Ultimo evento: ${eventTitle(latest.event)}, ${formatDate(latest.event.event_date)}` : "",
-        },
-      ];
-      if (open) {
-        const index = open.standings.findIndex((row) => row.player?.id === id);
-        stats.push({
-          label: "Lega",
-          value: index >= 0 ? `${index + 1}°` : "—",
-          title: index >= 0 ? `${open.league.name}: ${index + 1}° in classifica` : `Non in classifica in ${open.league.name}`,
-        });
-      }
-      setFollowStats("player", id, {
-        stats,
-        meta: latest ? `Ultimo evento: ${eventTitle(latest.event)}` : "",
-      });
-    }
-  }
-
-  async function fillCommanderStats(commanderIds) {
-    const appearances = await Follows.commanderAppearances(commanderIds);
-    const eventIds = [...new Set(appearances.map((a) => a.event.id))];
-    const results = await fetchEventsResults(eventIds);
-    const plays = (entry, id) => entry && (entry.commander_id === id || entry.partner_commander_id === id);
-    for (const id of commanderIds) {
-      const mine = appearances.filter((a) => a.commander_id === id || a.partner_commander_id === id);
-      if (!mine.length) continue;
-      const bucket = { wins: 0, draws: 0, losses: 0 };
-      for (const { entries, matches } of results) {
-        const entryByPlayer = new Map(entries.map((e) => [e.player_id, e]));
-        for (const m of matches) {
-          if (isBye(m) || isDrop(m)) continue;
-          const outcome = matchRoundOutcome(m);
-          // Each side that piloted it (both, in a mirror) counts.
-          for (const [playerId, side] of [
-            [m.player1_id, "player1"],
-            [m.player2_id, "player2"],
-          ]) {
-            if (!plays(entryByPlayer.get(playerId), id)) continue;
-            tallyOutcome(bucket, outcome === "draw" ? "draw" : outcome === side ? "win" : "loss");
-          }
-        }
-      }
-      const latest = latestEvent(mine);
-      setFollowStats("commander", id, {
-        stats: [
-          { label: "Winrate", value: winrate(bucket) ?? "—", main: true, title: "Winrate su tutti gli eventi" },
-          { label: "Eventi", value: mine.length, title: `Giocato in ${mine.length} ${mine.length === 1 ? "evento" : "eventi"}` },
-        ],
-        meta: `Ultimo evento: ${eventTitle(latest.event)}${latest.player?.name ? ` · ${latest.player.name}` : ""}`,
-      });
-    }
-  }
-
-  async function fillLeagueStats(leagues) {
-    await Promise.all(
-      leagues.map(async (league) => {
-        const played = (await Events.listByLeague(league.id)).filter((ev) => !ev.is_open);
-        const latest = played.reduce(
-          (best, ev) => (!best || (ev.event_date ?? "") > (best.event_date ?? "") ? ev : best),
-          null
-        );
-        setFollowStats("league", league.id, {
-          stats: [
-            {
-              label: "Eventi",
-              value: played.length,
-              main: true,
-              title: `${played.length} ${played.length === 1 ? "evento giocato" : "eventi giocati"}`,
-            },
-          ],
-          meta: `${league.is_open ? "In corso" : "Conclusa"}${latest ? ` · Ultimo evento: ${eventTitle(latest)}` : ""}`,
-        });
-      })
-    );
-  }
-
-  async function fillFollowStats(follows) {
-    const playerIds = follows.filter((f) => f.player).map((f) => f.player.id);
-    const commanderIds = follows.filter((f) => f.commander).map((f) => f.commander.id);
-    const leagues = follows.map((f) => f.league).filter(Boolean);
-    await Promise.all([
-      playerIds.length ? fillPlayerStats(playerIds) : null,
-      commanderIds.length ? fillCommanderStats(commanderIds) : null,
-      leagues.length ? fillLeagueStats(leagues) : null,
-    ]);
-  }
-
-  // ★: unfollowed, and the row slides away (or just goes, with reduced motion).
-  followsListEl.addEventListener("click", async (e) => {
-    const button = e.target.closest(".follow-remove");
-    if (!button) return;
-    const row = button.closest(".follow-row");
-    button.disabled = true;
-    try {
-      await Follows.unfollow(user.id, row.dataset.kind, row.dataset.id);
-    } catch (err) {
-      console.error(err);
-      button.disabled = false;
-      return;
-    }
-    const remove = () => {
-      row.remove();
-      updateFollowsEmpty();
-    };
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      remove();
-      return;
-    }
-    row.classList.add("is-leaving");
-    row.addEventListener("animationend", remove, { once: true });
-  });
-
   // --- Loading the signed-in view -----------------------------------------------------
 
   // Also kept by id, for the card's live preview of a commander picked in
@@ -1528,17 +1271,15 @@ export function mount({ signal = new AbortController().signal } = {}) {
     accountDangerEl.hidden = true;
     decklistCard.hidden = true;
     albumCard.hidden = true;
-    followsCard.hidden = true;
     setMessage(accountMessageEl, "");
     // Two rounds: everything that needs only the account, at once — the
-    // profile, the linked player (or the claim), admin or not, the follows,
+    // profile, the linked player (or the claim), admin or not,
     // the upcoming events (the decklist card's) — then, once the linked
     // player is known, all of its parts together (loadStats). The no-op
     // catches only mark the early ones handled until they're awaited.
     const linkedRequest = PlayerClaims.linkedPlayer(user.id);
-    const followsRequest = Follows.mine(user.id);
     const upcomingRequest = Events.listUpcoming();
-    for (const request of [linkedRequest, followsRequest, upcomingRequest]) request.catch(() => {});
+    for (const request of [linkedRequest, upcomingRequest]) request.catch(() => {});
     try {
       let isAdmin;
       [profile, , isAdmin] = await Promise.all([Profiles.mine(user.id), loadClaim(linkedRequest), MyAccount.isAdmin()]);
@@ -1549,7 +1290,6 @@ export function mount({ signal = new AbortController().signal } = {}) {
       console.error(err);
       setMessage(pageMessageEl(), "Impossibile caricare il profilo, ricarica la pagina.");
     }
-    await loadFollows(followsRequest);
     renderCard(savedValues());
     renderPublicSwitch();
     show("signed-in");

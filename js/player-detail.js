@@ -13,7 +13,6 @@ import { initTitleFit } from "./page-title-fit.js";
 import { renderCommanderCarousel, albumItems, commanderPairKey, openAlbumEffectsInfo } from "./commander-carousel.js";
 import { matchGroupsHtml, initScrollFade, setHistoryCount } from "./history-list.js";
 import { renderPublicPlayerCard, createArtPainter } from "./player-card.js";
-import { initFollowButton } from "./follow-button.js";
 import { initBackToTop } from "./back-to-top.js";
 import { renderPlayerLeagueRecap } from "./player-league-recap.js";
 
@@ -85,9 +84,6 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   // background art, else the player's most played commander's.
   const paintHeroArt = createArtPainter(document.getElementById("player-hero-art"));
 
-  // "☆ Segui" right below the name, for signed-in accounts (not awaited: it
-  // never holds up the page).
-  if (id) initFollowButton(titleEl, "player", id, { signal });
   // Storico partite is the whole list on phones (no scrolling inside).
   initBackToTop({ signal });
 

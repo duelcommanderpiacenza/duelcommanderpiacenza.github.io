@@ -4,7 +4,7 @@
 # js/supabase-client.js) sees the real data. Live is only read.
 #
 # Copied: the site's own tables below. Not copied: anything tied to a login
-# account (admins, profiles, player_claims, follows, user_settings,
+# account (admins, profiles, player_claims, user_settings,
 # user_activity, decklist_submissions) — the two projects have separate
 # accounts, so those rows would point nowhere; for the same reason every
 # player's account link (players.user_id) is cleared in dev (link dev

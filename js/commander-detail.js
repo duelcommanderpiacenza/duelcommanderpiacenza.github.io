@@ -21,7 +21,6 @@ import {
 } from "./history-list.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initTitleFit, fitTitleToOneLine } from "./page-title-fit.js";
-import { initFollowButton } from "./follow-button.js";
 import { createArtPainter } from "./player-card.js";
 import { initTabs } from "./tabs.js";
 import { initBackToTop } from "./back-to-top.js";
@@ -101,10 +100,6 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   // a long page, hence the back-to-top button.
   initTabs(document.querySelector(".commander-tabs"));
   initBackToTop({ signal });
-
-  // "☆ Segui" right below the name, for signed-in accounts (not awaited: it
-  // never holds up the page).
-  if (id) initFollowButton(titleEl, "commander", id, { signal });
 
   if (!id) {
     titleEl.textContent = "Commander non trovato";

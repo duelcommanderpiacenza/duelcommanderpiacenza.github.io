@@ -1,7 +1,6 @@
 // The site's lists of sub-cards — player.html's and commander.html's
 // "Storico partite", commander.html's "Giocatori", the Comandanti and
-// Giocatori pages' lists, and account.html's "Seguiti" (its numbers only,
-// historyStatsHtml): a card (.history-panel) holding sub-cards
+// Giocatori pages' lists: a card (.history-panel) holding sub-cards
 // (.history-item) that scrolls inside instead of paginating, its top/bottom
 // edge fading while there's more that way. Matches are grouped one sub-card
 // per event (per event + pilot on commander.html), its rounds as rows. Looks:
