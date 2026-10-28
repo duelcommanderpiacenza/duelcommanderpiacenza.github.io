@@ -1659,7 +1659,9 @@ html.is-page-transition:not(.app-header) .site-header-brand {
    (no part keeps its own transition name), cross-faded quickly once the new
    one is drawn; meanwhile every animation jumps to its end (the tiles'
    entrance, the timeline's…: nothing plays again — an endless one carries
-   on afterwards).
+   on afterwards), and every transition too (the splash's fade-out, an
+   art's fade-in: the new screen's picture is taken with them done, not
+   half-way).
    --------------------------------------------------------------------------- */
 html.is-quiet-refresh *,
 html.is-quiet-refresh *::before,
@@ -1667,14 +1669,23 @@ html.is-quiet-refresh *::after {
   view-transition-name: none !important;
   animation-duration: 0s !important;
   animation-delay: 0s !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
 }
 
+/* plus-lighter: a true cross-fade, the screen covered all the way through.
+   Our own `animation` replaces the browser's, which also set it — without,
+   both halves are half see-through midway and the bare page background
+   shows through (a light flash over a dark hero). Same for the theme
+   switch below. */
 html.is-quiet-refresh::view-transition-old(root) {
   animation: page-fade-out 200ms ease both;
+  mix-blend-mode: plus-lighter;
 }
 
 html.is-quiet-refresh::view-transition-new(root) {
   animation: page-fade-through-in 200ms ease both;
+  mix-blend-mode: plus-lighter;
 }
 
 /* ---------------------------------------------------------------------------
@@ -1689,10 +1700,12 @@ html.is-theme-transition * {
 
 html.is-theme-transition::view-transition-old(root) {
   animation: page-fade-out 320ms ease both;
+  mix-blend-mode: plus-lighter;
 }
 
 html.is-theme-transition::view-transition-new(root) {
   animation: page-fade-through-in 320ms ease both;
+  mix-blend-mode: plus-lighter;
 }
 
 /* Comandanti / Matchups / Archetipi — one section, "Meta": moving between

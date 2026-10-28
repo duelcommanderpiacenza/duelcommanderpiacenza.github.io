@@ -19,7 +19,10 @@ export function hidePageLoading(signal) {
   const el = document.getElementById("page-loading-overlay");
   if (!el) return;
   el.classList.add("is-hidden");
-  el.addEventListener("transitionend", () => el.remove(), { once: true });
+  // No fade (reduced motion, a quiet redraw — js/router.js): no
+  // transitionend either, so gone at once.
+  if (!parseFloat(getComputedStyle(el).transitionDuration)) el.remove();
+  else el.addEventListener("transitionend", () => el.remove(), { once: true });
 }
 
 // A safety net for the splash, started on every page by js/layout.js (not

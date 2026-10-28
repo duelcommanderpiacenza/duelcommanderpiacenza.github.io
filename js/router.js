@@ -266,12 +266,12 @@ async function go(url, { push = true, restoreY = null, quiet = false } = {}) {
     const root = document.documentElement;
     root.classList.add("is-quiet-refresh");
     const transition = document.startViewTransition(async () => {
+      const deadline = performance.now() + QUIET_MAX_WAIT;
+      const oldMain = document.querySelector("main");
       swap();
+      carryPaintedArt(oldMain, newMain);
       await mountNew();
-      await new Promise((resolve) => {
-        whenLoaded(resolve);
-        setTimeout(resolve, QUIET_MAX_WAIT);
-      });
+      await whenDrawn(newMain, deadline);
       if (restoreY) restoreScroll();
     });
     transition.ready.catch(() => {});
@@ -309,6 +309,61 @@ async function go(url, { push = true, restoreY = null, quiet = false } = {}) {
   await mountNew();
 
   if (restoreY) whenLoaded(restoreScroll);
+}
+
+// A quiet redraw's new screen is pictured once it's whole, not half-built
+// (seen as a flash: the page, a bare version of it, the page again). The
+// art already painted on the old screen (the hero's, the player card's —
+// js/player-card.js createArtPainter) and the hero's colour are carried
+// over to the same places in the new one: the painter skips an art already
+// shown, so they don't start again from nothing and fade back in (a
+// different art, or none, still replaces them).
+const PAINTED = [".detail-hero-wrap", ".profile-hero", ".profile-hero-art", ".pc-art"];
+
+function carryPaintedArt(oldMain, newMain) {
+  const carry = (from, to) => {
+    if (!from || !to) return;
+    const style = from.getAttribute("style");
+    if (style) to.setAttribute("style", style);
+    if (from.dataset.url) to.dataset.url = from.dataset.url;
+    for (const cls of ["is-loaded", "has-hero-accent"]) if (from.classList.contains(cls)) to.classList.add(cls);
+  };
+  carry(oldMain, newMain);
+  for (const selector of PAINTED) {
+    const to = newMain.querySelectorAll(selector);
+    oldMain.querySelectorAll(selector).forEach((from, i) => carry(from, to[i]));
+  }
+}
+
+// Resolves once `main` is drawn: its splash gone, no part still on its
+// shimmering placeholder (.sk — the splash's own aside), the images in view
+// decoded — or at `deadline` whatever its state.
+function whenDrawn(main, deadline) {
+  const drawn = () =>
+    !document.body.classList.contains("is-loading") && !main.querySelector(".sk:not(.page-loading-overlay .sk)");
+  return new Promise((resolve) => {
+    const observer = new MutationObserver(() => drawn() && finish());
+    const timer = setTimeout(finish, Math.max(0, deadline - performance.now()));
+    let done = false;
+    function finish() {
+      if (done) return;
+      done = true;
+      observer.disconnect();
+      clearTimeout(timer);
+      const inView = [...main.querySelectorAll("img")].filter((img) => {
+        const r = img.getBoundingClientRect();
+        return r.bottom > 0 && r.top < window.innerHeight && r.width > 0;
+      });
+      const left = Math.max(0, deadline - performance.now());
+      Promise.race([
+        Promise.allSettled(inView.map((img) => img.decode())),
+        new Promise((r) => setTimeout(r, left)),
+      ]).then(() => resolve());
+    }
+    if (drawn()) return finish();
+    observer.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+    observer.observe(main, { childList: true, subtree: true });
+  });
 }
 
 function whenLoaded(fn) {
