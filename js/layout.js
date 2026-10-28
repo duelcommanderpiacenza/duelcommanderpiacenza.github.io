@@ -50,12 +50,12 @@ const versionEl = document.getElementById("site-version");
 if (versionEl) versionEl.textContent = `v${VERSION}`;
 
 // Every data-tooltip badge-like element on every page — player badges,
-// the banned-commander icon, an event's mtgtop8/Moxfield links — through the
+// the banned-commander icon — through the
 // one shared tooltip (js/floating-tooltip.js), delegated on the whole body so
 // it covers markup rendered later too.
 attachHoverTooltips(
   document.body,
-  ".icon-badge[data-tooltip], .results-link[data-tooltip]",
+  ".icon-badge[data-tooltip]",
   (el) => el.dataset.tooltip
 );
 

@@ -1,8 +1,7 @@
-// Mobile (≤640px) page-title fitting for the detail pages (commander,
-// league, event): shrink a long <h1> to fit one line instead of wrapping,
-// and keep the back button beside it vertically centered on it. (Anything
-// beside a title is a sibling of the <h1>, not inside it — only the name
-// itself is ever fitted.)
+// Page-title fitting: a long <h1> shrunk to fit one line instead of
+// wrapping — a detail hero's name at every width, any other title on phones
+// (≤640px). (Anything beside a title is a sibling of the <h1>, not inside
+// it — only the name itself is ever fitted.)
 
 const MOBILE_MAX_WIDTH = 640;
 const MIN_FONT_SIZE = 17;
@@ -18,9 +17,7 @@ const MIN_FONT_SIZE = 17;
 // to. Desktop is untouched (plenty of width there) and a name still too
 // long even at the floor size is left to wrap, same as before.
 // A hero's name (.profile-hero-name: player, commander, league, event,
-// archetype) is fitted at every width — on one line with the follow star
-// before it (.detail-hero-title-row), shrinking into whatever room the star
-// leaves.
+// archetype) is fitted at every width, on its line (.detail-hero-title-row).
 export function fitTitleToOneLine(titleEl) {
   titleEl.style.fontSize = "";
   if (window.innerWidth > MOBILE_MAX_WIDTH && !titleEl.classList.contains("profile-hero-name")) return;
@@ -36,37 +33,10 @@ export function fitTitleToOneLine(titleEl) {
   titleEl.style.fontSize = `${Math.max(MIN_FONT_SIZE, Math.floor((baseFontSize * availableWidth) / naturalWidth))}px`;
 }
 
-// .page-heading-row's mobile align-items: flex-start (styles.css) lines the
-// back button's TOP up with the title's top — needed on commander.html so
-// the button anchors to the name rather than the (taller, stacked-below-it-
-// on-mobile) card image further down .page-heading. That's fine as long as
-// the title's own line box happens to be close to the button's 44px height,
-// but fitTitleToOneLine above can shrink it well below that, leaving the
-// button's vertical *center* well below the now-smaller text's center
-// instead of level with it. Nudges the button down/up by exactly the
-// difference so its center lines up with the title's actual rendered
-// height, whatever that ends up being, instead of relying on a fixed CSS
-// alignment that only happened to look right at the original font size.
-export function alignBackButtonToTitle(titleEl) {
-  const linkEl = document.querySelector(".page-heading-row .breadcrumb-link");
-  if (!linkEl) return;
-  if (window.innerWidth > MOBILE_MAX_WIDTH) {
-    linkEl.style.marginTop = "";
-    return;
-  }
-  const titleRect = titleEl.getBoundingClientRect();
-  const blockHeight = titleRect.bottom - titleRect.top;
-  const linkHeight = linkEl.getBoundingClientRect().height;
-  linkEl.style.marginTop = `${Math.round((blockHeight - linkHeight) / 2)}px`;
-}
-
 // Fits the title now and again on every resize/rotation.
 // `signal` (js/router.js mount): stops with the page.
 export function initTitleFit(titleEl, { signal } = {}) {
-  const fit = () => {
-    fitTitleToOneLine(titleEl);
-    alignBackButtonToTitle(titleEl);
-  };
+  const fit = () => fitTitleToOneLine(titleEl);
   fit();
   window.addEventListener("resize", fit, { signal });
 }

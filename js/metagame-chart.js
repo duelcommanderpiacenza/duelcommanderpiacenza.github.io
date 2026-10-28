@@ -266,7 +266,7 @@ export function initBubbleChart(rootEl) {
 // The bubbles' art (Scryfall's art crop of each card, one batch request for
 // all of them), faded in as it arrives; a bubble whose card isn't found keeps
 // its colour. Never rejects.
-export async function hydrateBubbleArt(rootEl) {
+async function hydrateBubbleArt(rootEl) {
   const arts = [...rootEl.querySelectorAll(".bubble-art[data-card], .bubble-legend-swatch[data-card]")];
   if (!arts.length) return;
   const names = [...new Set(arts.map((el) => el.dataset.card))];

@@ -229,7 +229,7 @@ function moveMenuFocus(menu, delta) {
   next.focus();
 }
 
-export function enhanceSelect(select) {
+function enhanceSelect(select) {
   if (ENHANCED.has(select) || !select.parentNode) return;
   ENHANCED.add(select);
 

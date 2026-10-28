@@ -711,7 +711,6 @@ html.app-header .commander-lists .history-scroll,
   }
 }
 
-
 /* league.html's events as a timeline (js/league-detail.js timelineHtml):
    a vertical line, one round node per event (its day and month), its card
    beside it — the stretch already played red, the next event solid red
@@ -920,33 +919,6 @@ a.league-tl-card:hover {
 
 :is(.is-future, .is-pending) .league-tl-t {
   color: var(--text-muted);
-}
-
-.league-tl-pulse {
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  margin-right: 6px;
-  border-radius: 50%;
-  background: currentColor;
-  vertical-align: 1px;
-  animation: league-tl-pulse 1.6s ease-out infinite;
-}
-
-@keyframes league-tl-pulse {
-  from {
-    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
-  }
-
-  to {
-    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .league-tl-pulse {
-    animation: none;
-  }
 }
 
 @container (min-width: 620px) {

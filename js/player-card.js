@@ -244,7 +244,7 @@ export function createArtPainter(artEl) {
 // priority — the caller's uniqueBadges list). Drawn here rather than with
 // the site's own badge icons, to suit the dark card; .icon-badge +
 // data-tooltip still give them the site-wide hover text (js/layout.js).
-export function cardBadgesHtml(badges) {
+function cardBadgesHtml(badges) {
   return badges
     .map((b) => {
       const glyph = b.icon_url

@@ -139,58 +139,11 @@ html.nav-mobile .pc-cancel-btn svg {
 }
 
 /* ---- account.html "Invia la tua decklist" (js/account-page.js) ----
-   In the column beside the player card, between the stats and Account
-   (Account always last). Closed at first: its header — a brand-red icon
-   tile, the title, Leghe & Eventi's red round arrow — is the button that
-   opens / closes the rest, with the same grid-rows collapse. Inside: the
-   list in a monospaced box with a live count in its corner (green at a
-   full 100-card deck); the send button (sent straight away, pulsing while
-   it goes — no confirmation step since 2026-10-28); the events already sent as green chips, a new one popping
-   in. */
-.decklist-toggle {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.decklist-toggle:focus-visible {
-  outline: 3px solid rgba(220, 24, 28, 0.45);
-  outline-offset: 6px;
-  border-radius: 14px;
-}
-
-.decklist-toggle-text {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.decklist-title {
-  color: var(--text-title);
-  font-size: 1.17rem;
-  font-weight: 800;
-}
-
-.decklist-subtitle {
-  color: var(--text-muted);
-  font-size: 0.88rem;
-}
-
-/* Leghe & Eventi's arrow: up when open, down when closed. */
-.decklist-toggle:hover .league-group-toggle-icon {
-  background: var(--brand-red-deep-2);
-}
+   The profile's Decklist tab (and the Impostazioni tab's Account part, the
+   same .decklist-body): the list in a monospaced box with a live count in
+   its corner (green at a full 100-card deck); the send button (sent
+   straight away, pulsing while it goes); the events already sent as green
+   chips, a new one popping in. */
 
 /* minmax(0, 1fr): the one column never wider than the card — by default a
    grid column grows to its widest unbreakable content (Account's email, kept
@@ -199,25 +152,6 @@ html.nav-mobile .pc-cancel-btn svg {
 .decklist-body {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: 1fr;
-  opacity: 1;
-  transition: grid-template-rows 300ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 240ms ease;
-}
-
-/* Clips the content while it slides (min-height: 0, so the row can really
-   shrink); lifted once fully open (.is-open, js), so the event list's
-   dropdown can open past the card's edge. */
-.decklist-body-clip {
-  min-height: 0;
-  overflow: hidden;
-}
-
-.decklist-body-clip.is-open {
-  overflow: visible;
-}
-
-.decklist-body-inner {
-  padding-top: 18px;
 }
 
 .decklist-hint {
@@ -230,25 +164,6 @@ html.nav-mobile .pc-cancel-btn svg {
 .card.profile-decklist:has(.cs-wrap.is-open) {
   position: relative;
   z-index: 30;
-}
-
-.decklist-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 46px;
-  height: 46px;
-  border-radius: 14px;
-  /* In the page's colour (a hero's on account.html), glow included. */
-  background: linear-gradient(135deg, var(--brand-red), color-mix(in srgb, var(--brand-red) 68%, #000));
-  color: #fff;
-  box-shadow: 0 8px 18px color-mix(in srgb, var(--brand-red) 30%, transparent);
-}
-
-.decklist-icon svg {
-  width: 24px;
-  height: 24px;
 }
 
 .decklist-form .field {
@@ -432,7 +347,6 @@ html.nav-mobile .pc-cancel-btn svg {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .decklist-body,
   .decklist-form textarea,
   .decklist-meter,
   .decklist-submit svg {
@@ -442,19 +356,6 @@ html.nav-mobile .pc-cancel-btn svg {
   .decklist-submit.is-sending,
   .decklist-sent-chip.is-new {
     animation: none;
-  }
-}
-
-@media (max-width: 480px) {
-  .decklist-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-  }
-
-  .decklist-icon svg {
-    width: 21px;
-    height: 21px;
   }
 }
 
@@ -2970,36 +2871,6 @@ html.nav-mobile main[data-page="commanders"] .sk-chart {
 
 :root[data-theme="dark"] .line-chart-guide {
   border-left-color: rgba(255, 106, 110, 0.5);
-}
-
-/* Archetipi page's multi-series chart (js/line-chart.js's
-   renderMultiLineChart) — each <path>/<circle> sets its own stroke/fill
-   inline (per-archetype color), so unlike the single-series chart there's
-   no shared color rule to override here, just the legend identifying which
-   line is which. */
-.line-chart-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 18px;
-  margin-top: 14px;
-  justify-content: center;
-}
-
-.line-chart-legend-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.85rem;
-  color: var(--text-body);
-  text-transform: capitalize;
-}
-
-.line-chart-legend-swatch {
-  width: 12px;
-  height: 12px;
-  border-radius: 3px;
-  display: inline-block;
-  flex-shrink: 0;
 }
 
 /* Phones: narrow side margins, the content as wide as it can be

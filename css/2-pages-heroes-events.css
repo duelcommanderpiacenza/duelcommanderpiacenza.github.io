@@ -1189,7 +1189,6 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   .cmd-carousel-nav {
     width: var(--cmd-card-w);
   }
-
 }
 
 :root[data-theme="dark"] .cmd-carousel-slide.is-loading:not(.fx-rim) {
@@ -1371,7 +1370,6 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
 }
 
 @media (max-width: 640px) {
-
   /* No longer floating beside anything at this width — an in-flow block
      below the name, centred on the page like player.html's card: auto
      margins centre it in .page-heading, which starts right of the back
@@ -1493,8 +1491,7 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   }
 }
 
-.page-heading-row .page-heading,
-.page-heading-row .page-heading-text {
+.page-heading-row .page-heading {
   flex: 1;
   min-width: 0;
   margin-bottom: 0;
@@ -1502,22 +1499,6 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
 
 .page-heading-row .page-subtitle {
   margin: 4px 0 0;
-}
-
-@media (min-width: 641px) {
-
-  .page-heading-text > .page-heading {
-    grid-column: 1;
-    grid-row: 1;
-  }
-
-  /* Across both columns: in the first alone, a subtitle longer than the
-     title (event.html's "date · Lega: …") widened that column and pushed
-     the pill (results links, "In corso") away from the title's end. */
-  .page-heading-text > .page-subtitle {
-    grid-column: 1 / -1;
-    grid-row: 2;
-  }
 }
 
 /* Round icon-only back button — the destination ("Tutti i comandanti" etc.)
@@ -1704,7 +1685,6 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   }
 }
 
-
 /* "In corso" / "Conclusa" in the hero: the site's status chip
    (.status-chip, below with .badge-status) as see-through glass on the art
    — white text and edge, a slight blur; the dot keeps its colours. */
@@ -1779,69 +1759,6 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   background: none;
   box-shadow: none;
   text-shadow: inherit;
-}
-
-/* An event's external links (js/results-link.js) — Leghe & Eventi's
-   latest-event tiles: a round white Moxfield-logo button
-   and a white pill with mtgtop8's wordmark (dark blue on transparent, only
-   readable on white), both with the brand-red outline, side by side in
-   .results-links (either one alone when the event has only that link).
-   32px tall, 36px on touch devices (an easier tap target). */
-.results-links {
-  --results-link-h: 32px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-left: 0.5em;
-  vertical-align: middle;
-}
-
-html.nav-mobile .results-links {
-  --results-link-h: 36px;
-}
-
-.results-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: var(--results-link-h);
-  box-sizing: border-box;
-  border: 2px solid var(--brand-red);
-  border-radius: var(--radius-pill);
-  background: #fff;
-  cursor: pointer;
-  text-decoration: none;
-  transition: background 150ms ease;
-}
-
-/* Hover: color only, no lift (same as the badges). */
-.results-link:hover,
-.results-link:focus-visible {
-  background: #fbe3e3;
-  text-decoration: none;
-}
-
-.results-link img {
-  display: block;
-}
-
-.results-link-moxfield {
-  width: var(--results-link-h);
-}
-
-.results-link-moxfield img {
-  width: calc(var(--results-link-h) - 11px);
-  height: calc(var(--results-link-h) - 11px);
-}
-
-.results-link-top8 {
-  padding: 0 6px;
-}
-
-/* ~11px tall → ~49px wide (the wordmark is 243×55). */
-.results-link-top8 img {
-  width: auto;
-  height: calc(var(--results-link-h) * 0.35);
 }
 
 /* A player's handle shown inline next to their name (leaderboards, match

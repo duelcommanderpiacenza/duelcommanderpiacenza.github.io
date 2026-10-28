@@ -104,7 +104,6 @@ export function mount({ signal = new AbortController().signal } = {}) {
   const editCancelBtn = document.getElementById("profile-edit-cancel");
   const emailEl = document.getElementById("account-email");
   // The same email in the Account section's header (shown while it's closed).
-  const emailSummaryEl = document.getElementById("account-email-summary");
 
   // The card's edit mode: each value's editable twin, in its place.
   const profileForm = document.getElementById("profile-form");
@@ -216,7 +215,6 @@ export function mount({ signal = new AbortController().signal } = {}) {
     nameEl.textContent = displayName;
     heroNameEl.textContent = displayName;
     emailEl.textContent = user.email;
-    emailSummaryEl.textContent = user.email;
 
     // The Google picture. Hidden by the owner: outside edit mode no avatar
     // circle at all, leaving the commander art in view (.hides-avatar); in
@@ -946,20 +944,6 @@ export function mount({ signal = new AbortController().signal } = {}) {
   const decklistMessageEl = document.getElementById("decklist-message");
   const decklistSentBox = document.getElementById("decklist-sent");
   const decklistSentList = document.getElementById("decklist-sent-list");
-  const decklistBody = document.getElementById("decklist-body");
-  const decklistBodyClip = document.getElementById("decklist-body-clip");
-
-  // "Invia la tua decklist" and Account, each in its own tab, are always
-  // open: their old collapsible header is hidden (styles.css .profile-panel),
-  // the body lets go of its inert and its clip — so the event list's dropdown
-  // isn't cut off at the card's edge (CLAUDE.md gotcha #13).
-  for (const [body, clip] of [
-    [decklistBody, decklistBodyClip],
-    [document.getElementById("account-body"), document.getElementById("account-body-clip")],
-  ]) {
-    body.inert = false;
-    clip.classList.add("is-open");
-  }
 
   // The send-decklist function's error codes.
   const DECKLIST_ERROR_TEXT = {

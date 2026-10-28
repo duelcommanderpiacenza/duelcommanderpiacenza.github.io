@@ -63,8 +63,6 @@
 :root[data-theme="dark"] .stat-tile,
 :root[data-theme="dark"] .history-panel,
 :root[data-theme="dark"] .pie-chart-wrap,
-:root[data-theme="dark"] .deck,
-:root[data-theme="dark"] .video-card,
 :root[data-theme="dark"] .filter-panel-body {
   background: rgba(255, 255, 255, 0.045);
 }
@@ -193,12 +191,7 @@
 :root[data-theme="dark"] .btn-secondary,
 :root[data-theme="dark"] .btn-danger,
 :root[data-theme="dark"] .icon-btn-edit,
-:root[data-theme="dark"] .expand-button,
-:root[data-theme="dark"] .section-link,
-:root[data-theme="dark"] .deck-filter,
-:root[data-theme="dark"] .video-filter,
-:root[data-theme="dark"] .social-strip,
-:root[data-theme="dark"] .social-link {
+:root[data-theme="dark"] .section-link {
   background: rgba(255, 255, 255, 0.06);
 }
 
@@ -210,7 +203,6 @@
 :root[data-theme="dark"] .btn-secondary:hover,
 :root[data-theme="dark"] .btn-danger:hover,
 :root[data-theme="dark"] .icon-btn-edit:hover,
-:root[data-theme="dark"] .expand-button:hover,
 :root[data-theme="dark"] .section-link:hover,
 :root[data-theme="dark"] .cd-nav:hover,
 :root[data-theme="dark"] .cd-footer-btn:hover,
@@ -257,18 +249,8 @@ html[data-theme="dark"].nav-mobile .site-search-field {
 :root[data-theme="dark"] .cd-popup,
 :root[data-theme="dark"] .ecal-dialog,
 :root[data-theme="dark"] .matchups-dropdown,
-:root[data-theme="dark"] .nav-submenu,
 html[data-theme="dark"]:not(.nav-mobile) .site-search-results {
   background: #241a1d;
-}
-
-:root[data-theme="dark"] .nav-sublink {
-  color: var(--text-body);
-}
-
-:root[data-theme="dark"] .nav-sublink:hover,
-:root[data-theme="dark"] .nav-sublink:focus-visible {
-  background: rgba(255, 255, 255, 0.1);
 }
 
 :root[data-theme="dark"] .matchups-dropdown-item:hover,
@@ -292,20 +274,6 @@ html[data-theme="dark"]:not(.nav-mobile) .site-search-results {
 :root[data-theme="dark"] .btn-danger,
 :root[data-theme="dark"] .form-message.is-error {
   color: #ff8a80;
-}
-
-:root[data-theme="dark"] .deck-title,
-:root[data-theme="dark"] .video-title {
-  color: var(--text-title);
-}
-
-:root[data-theme="dark"] .deck-commander-label,
-:root[data-theme="dark"] .video-date {
-  color: var(--text-muted);
-}
-
-:root[data-theme="dark"] .deck-commander-value {
-  color: var(--text-value);
 }
 
 :root[data-theme="dark"] .color-pip {
@@ -815,8 +783,7 @@ html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([
   right: 0;
   left: 0;
   z-index: 1;
-  height: calc(var(--hero-header-h) + 40px);
-  background: linear-gradient(rgba(10, 5, 6, 0.55), rgba(10, 5, 6, 0));
+  
   pointer-events: none;
 }
 
@@ -898,29 +865,6 @@ html.app-header :is(body:not(:has(.page-main .profile-hero)), body:has(.profile-
   background: rgba(255, 255, 255, 0.08);
   box-shadow: none;
   color: #fff;
-}
-
-/* Touch screens, dark mode: the Moxfield / Top 8 buttons a dark glass, not
-   white blobs — the Top 8 wordmark (dark blue, made for white) inverted
-   to a light one, hue kept; the Moxfield logo brightened. */
-:root[data-theme="dark"].nav-mobile .results-link {
-  border-color: rgba(255, 110, 110, 0.6);
-  background: rgba(255, 255, 255, 0.08);
-}
-
-:root[data-theme="dark"].nav-mobile .results-link:hover,
-:root[data-theme="dark"].nav-mobile .results-link:focus-visible {
-  background: rgba(255, 255, 255, 0.14);
-}
-
-:root[data-theme="dark"].nav-mobile .results-link-top8 img {
-  filter: invert(1) hue-rotate(180deg);
-}
-
-/* The Moxfield logo's dark purple swirl brightened, so it doesn't sink into
-   the dark glass. */
-:root[data-theme="dark"].nav-mobile .results-link-moxfield img {
-  filter: brightness(1.7) saturate(1.15);
 }
 
 /* Phones and tablets, every page: the logo in brand red — the logo as a
@@ -1392,7 +1336,7 @@ html.nav-mobile :is(.profile-tabs:not(.meta-tabs), .meta-row) .profile-tab.is-ac
   width: 100vw;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 200ms ease;
+  
 }
 
 /* The band: from the screen's top down to the control's bottom edge, the
@@ -2264,7 +2208,6 @@ html.is-page-transition.app-header:not(.is-bar-logo-stay) body:not(:has(.page-ma
     opacity: 0;
   }
 }
-
 
 /* ---------------------------------------------------------------------------
    The hero pages on touch screens (player, league, event, commander,

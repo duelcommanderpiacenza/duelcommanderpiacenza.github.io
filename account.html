@@ -176,7 +176,6 @@
       <div class="settings-about" id="login-settings-about"></div>
     </section>
 
-
     <!-- Connesso: a hero on top — the player card (+ its switch) on the
          blurred art of the background card, the name, the numbers once
          linked, quick actions — under "Il tuo giocatore" (on
@@ -378,20 +377,7 @@
              event). js/account-page.js. -->
         <section class="card profile-card profile-decklist profile-panel" id="profile-decklist" hidden>
           <h3 class="profile-panel-title">Invia la tua decklist</h3>
-          <!-- In its tab the section is always open: this header (the
-               collapsible one it had) is hidden, the title above shows. -->
-          <button type="button" class="decklist-toggle" id="decklist-toggle" aria-expanded="false" aria-controls="decklist-body">
-            <span class="decklist-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="3" width="13" height="17" rx="2"></rect><path d="M4 7v12a2 2 0 0 0 2 2h9"></path><path d="M11 8h5M11 12h5M11 16h3"></path></svg>
-            </span>
-            <span class="decklist-toggle-text">
-              <span class="decklist-title">Invia la tua decklist</span>
-              <span class="decklist-subtitle">Per i prossimi 2 eventi o gli ultimi 2 che hai giocato</span>
-            </span>
-            <span class="league-group-toggle-icon" aria-hidden="true"></span>
-          </button>
-
-          <div class="decklist-body" id="decklist-body" inert>
+          <div class="decklist-body" id="decklist-body">
             <div class="decklist-body-clip" id="decklist-body-clip">
               <div class="decklist-body-inner">
                 <p class="account-hint decklist-hint">La lista arriva agli organizzatori via email e non viene salvata sul sito. Puoi inviarne al massimo due per evento: la seconda sostituisce la prima.</p>
@@ -438,18 +424,8 @@
           <h3 class="profile-panel-title">Impostazioni</h3>
           <div class="settings-controls" id="profile-settings"></div>
           <p class="settings-label settings-account-label">Account</p>
-          <button type="button" class="decklist-toggle" id="account-toggle" aria-expanded="false" aria-controls="account-body">
-            <span class="decklist-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"></path></svg>
-            </span>
-            <span class="decklist-toggle-text">
-              <span class="decklist-title">Account</span>
-              <span class="decklist-subtitle" id="account-email-summary"></span>
-            </span>
-            <span class="league-group-toggle-icon" aria-hidden="true"></span>
-          </button>
 
-          <div class="decklist-body" id="account-body" inert>
+          <div class="decklist-body" id="account-body">
             <div class="decklist-body-clip" id="account-body-clip">
               <div class="decklist-body-inner">
                 <div class="account-login-row">

@@ -95,7 +95,7 @@ function closeAllExcept(except) {
   });
 }
 
-export function enhanceDateInput(input) {
+function enhanceDateInput(input) {
   if (ENHANCED.has(input) || !input.parentNode) return;
   ENHANCED.add(input);
 

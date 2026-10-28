@@ -115,7 +115,7 @@ export function showFloatingTooltip(anchor, text) {
   requestAnimationFrame(() => tip.classList.add("is-visible"));
 }
 
-export function hideFloatingTooltip() {
+function hideFloatingTooltip() {
   clearTimeout(hideTimer);
   tooltipEl?.remove();
   tooltipEl = null;

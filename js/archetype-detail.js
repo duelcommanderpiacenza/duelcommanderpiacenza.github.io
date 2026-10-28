@@ -200,7 +200,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
         if (!bucket) continue;
         const outcome = matchRoundOutcome(m);
         if (outcome === ourSide) bucket.wins += 1;
-        else if (outcome === "draw" || !outcome) bucket.draws += 1;
+        else if (outcome === "draw") bucket.draws += 1;
         else bucket.losses += 1;
       }
     }

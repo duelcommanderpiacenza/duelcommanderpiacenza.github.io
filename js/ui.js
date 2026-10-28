@@ -61,7 +61,7 @@ export function playerLabel(player, { link = true } = {}) {
   return player.handle ? `${linked} <span class="player-handle">(${escapeHtml(player.handle)})</span>` : linked;
 }
 
-export function commanderLabel(commander, { link = true } = {}) {
+function commanderLabel(commander, { link = true } = {}) {
   if (!commander) return "—";
   const name = escapeHtml(commander.name);
   return link && commander.id ? `<a href="commander.html?id=${commander.id}">${name}</a>` : name;

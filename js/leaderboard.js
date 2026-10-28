@@ -432,7 +432,7 @@ export function previousLeaguePositions(eventsData, events, { scheduledEvents = 
  * come from finishing positions rather than directly from match results.
  * 0 means genuinely tied (only the alphabetical fallback would separate them).
  */
-export function compareLeagueStandings(a, b) {
+function compareLeagueStandings(a, b) {
   if (b.points !== a.points) return b.points - a.points;
   const positions = Math.max(a.placements.length, b.placements.length);
   for (let i = 0; i < positions; i++) {

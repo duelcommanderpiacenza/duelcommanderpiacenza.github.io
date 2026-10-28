@@ -101,7 +101,7 @@ export function albumItems(entries) {
 // Winrate tile: a bye is a win, a drop isn't a match). Each family shows its
 // highest tier reached; the two stack. Thresholds lowest first; the "?"
 // explanation is built from this same table.
-export const ALBUM_EFFECTS = {
+const ALBUM_EFFECTS = {
   rim: {
     title: "Eventi giocati",
     text: "Il bordo della carta, per gli eventi giocati con quel comandante",

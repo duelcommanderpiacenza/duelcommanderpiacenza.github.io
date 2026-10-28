@@ -618,16 +618,6 @@ main.has-hero-accent .profile-tab:not(.is-active):hover {
   display: none;
 }
 
-/* "Invia la tua decklist" / Account in a tab: always open — their old
-   collapsible header hidden, no gap above the content. */
-.profile-panel .decklist-toggle {
-  display: none;
-}
-
-.profile-panel .decklist-body-inner {
-  padding-top: 0;
-}
-
 /* player.html / commander.html: the same hero (.detail-hero on top of
    .profile-hero — js/player-detail.js, js/commander-detail.js). No card
    (none to show, or no image): the text alone, the whole width. */
@@ -639,8 +629,9 @@ main.has-hero-accent .profile-tab:not(.is-active):hover {
   display: none;
 }
 
-/* Back to the list ("‹ Giocatori" / "‹ Comandanti"): a dark pill, readable
-   on any art (dark ground, light border), beside the hero rather than in it
+/* Back to the list ("‹ Giocatori" / "‹ Comandanti"): a pill in the hero's
+   colour (--hero-btn, from its art; a deeper shade on hover) with a white
+   border, readable on any art, beside the hero rather than in it
    (.detail-hero-wrap; the hero clips what's inside it). Desktop: on the
    hero's top edge — half on it, half on the page — centred over the card's
    column (its 32px padding + half its 280px), at the left padding without a
@@ -662,10 +653,11 @@ main.has-hero-accent .profile-tab:not(.is-active):hover {
   width: fit-content;
   min-height: 40px;
   box-sizing: border-box;
+  max-width: 176px;
   padding: 6px 16px 6px 10px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border: 1px solid #fff;
   border-radius: var(--radius-pill);
-  background: rgba(12, 7, 8, 0.62);
+  background: var(--hero-btn);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
   color: #fff;
   font-size: 0.95rem;
@@ -676,8 +668,7 @@ main.has-hero-accent .profile-tab:not(.is-active):hover {
 }
 
 .detail-hero-back:hover {
-  border-color: rgba(255, 255, 255, 0.8);
-  background: rgba(12, 7, 8, 0.82);
+  background: var(--hero-btn-hover);
   color: #fff;
   text-decoration: none;
 }
@@ -689,13 +680,8 @@ main.has-hero-accent .profile-tab:not(.is-active):hover {
 }
 
 /* The page the visitor came from (js/router.js syncBackButton): a player's
-   or an event's name can be long — cut with an ellipsis. Desktop: centred at
-   96px, so at most 176px keeps it inside the hero's left edge; up to 820px
-   (in the top-left corner) clear of the follow star on the right. */
-.detail-hero-back {
-  max-width: 176px;
-}
-
+   or an event's name can be long — cut with an ellipsis (the pill at most
+   176px: centred at 96px on a computer, inside the hero's left edge). */
 .detail-hero-back-label {
   min-width: 0;
   overflow: hidden;
@@ -706,18 +692,6 @@ main.has-hero-accent .profile-tab:not(.is-active):hover {
 .detail-hero-wrap:has(.is-no-card) .detail-hero-back {
   left: 32px;
   transform: translateY(-50%);
-}
-
-/* Solid (no transparency): the hero's colour (--hero-btn), white border —
-   on every screen; a deeper shade on hover. */
-.detail-hero-back {
-  border-color: #fff;
-  background: var(--hero-btn);
-}
-
-.detail-hero-back:hover {
-  border-color: #fff;
-  background: var(--hero-btn-hover);
 }
 
 /* The back pill on a page without a hero (badges.html): the site's red
@@ -1313,7 +1287,7 @@ html.nav-mobile .profile-tabs {
   grid-auto-flow: column;
   gap: 4px;
   width: auto;
-  overflow: hidden;
+  
   border-radius: 18px;
 }
 
@@ -1491,9 +1465,6 @@ html.nav-mobile .profile-tab svg {
 /* The art itself a touch punchier: more contrast and colour. */
 .pc-art.is-loaded {
   filter: contrast(1.1) saturate(1.15);
-}
-
-.pc-art.is-loaded {
   animation: pc-art-in 600ms ease;
 }
 
@@ -1565,10 +1536,10 @@ img.pc-badge-glyph {
 .pc-content {
   position: relative;
   z-index: 1;
-  display: flex;
+  
   flex: 1;
   flex-direction: column;
-  gap: 1.92cqw;
+  
   min-width: 0;
   padding: 2.88cqw;
 }
@@ -1619,8 +1590,7 @@ html.nav-mobile .player-card.is-editing .pc-art-space {
   justify-content: center;
   flex-shrink: 0;
   box-sizing: border-box;
-  width: 9.6cqw;
-  height: 9.6cqw;
+  
   overflow: hidden;
   /* The ring in the favourite colours (--pc-avatar-ring, js/player-card.js
      applyCardAccents: one solid, several blended round; white without),
@@ -1657,7 +1627,7 @@ html.nav-mobile .player-card.is-editing .pc-art-space {
 .pc-name {
   margin: 0;
   color: #fff;
-  font-size: 3.84cqw;
+  
   font-weight: 800;
   line-height: 1.15;
   /* No box behind it: a tight shadow plus a wide one keep it readable on
@@ -1741,12 +1711,9 @@ html.nav-mobile .player-card.is-editing .pc-art-space {
 /* Its own strip under the panel, with room around it: "Dal …" (+ the
    Campione star), the seal in the middle, the logo on the right. */
 .pc-foot {
-  display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 1.92cqw;
-  min-height: 5.76cqw;
-  margin-top: 0.64cqw;
+  
+  
   padding-inline: 0.64cqw;
 }
 
@@ -1760,8 +1727,7 @@ html.nav-mobile .player-card.is-editing .pc-art-space {
 
 .pc-logo {
   flex-shrink: 0;
-  width: 5.44cqw;
-  height: 5.44cqw;
+  
   object-fit: contain;
   filter: brightness(0) invert(1);
   opacity: 0.7;

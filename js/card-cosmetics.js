@@ -21,14 +21,14 @@ import { openInfoDialog } from "./info-dialog.js";
 import { BIG_EVENT_MIN_PLAYERS } from "./card-progress.js";
 
 // A family's thresholds, lowest first: tier n (1-based) = the n-th reached.
-export const CARD_COSMETICS = {
+const CARD_COSMETICS = {
   rim: { stat: "events_played", thresholds: [10, 25, 50, 100] },
   art: { stat: "matches_won", thresholds: [25, 50, 100, 150] },
   podium: { stat: "big_top8s", thresholds: [3, 10, 20] },
   seal: { stat: "commanders", thresholds: [5, 10, 20] },
 };
 
-export function cosmeticTier(family, progress) {
+function cosmeticTier(family, progress) {
   const { stat, thresholds } = CARD_COSMETICS[family];
   const value = progress?.[stat] ?? 0;
   return thresholds.filter((threshold) => value >= threshold).length;

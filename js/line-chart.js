@@ -64,17 +64,6 @@ function windowToMaxSpan(points) {
   return points.filter((p) => new Date(p.date).getTime() >= cutoffTime);
 }
 
-// Same cap as windowToMaxSpan, for renderMultiLineChart's shared date axis
-// (every series is aligned to the same `dates` array, so the cutoff only
-// needs to be found once against that shared list rather than per series).
-function windowDatesToMaxSpan(dates) {
-  if (dates.length === 0) return dates;
-  const cutoff = new Date(dates[dates.length - 1]);
-  cutoff.setFullYear(cutoff.getFullYear() - MAX_SPAN_YEARS);
-  const cutoffTime = cutoff.getTime();
-  return dates.filter((d) => new Date(d).getTime() >= cutoffTime);
-}
-
 // "Nice" calendar tick marks (the 1st of a month) rather than the exact
 // dates data happens to exist on — reads as a real timeline (e.g. "2026-06")
 // instead of an arbitrary sampling of whichever event dates were picked.
@@ -303,109 +292,6 @@ export function renderLineChart(rawPoints, emptyMessage, title, { percent = fals
         ${xLabels}
         ${hits}
       </div>
-    </div>
-  `;
-}
-
-/**
- * Several smooth lines sharing one time axis (e.g. one per archetype) —
- * every series is expected to already carry a value (0 if none) for each
- * entry of the shared `dates` array, so all of them plot against the exact
- * same x positions rather than each interpolating over its own gaps.
- * @param {string[]} dates - ISO dates, ascending, shared by every series.
- * @param {Array<{label: string, color: string, values: number[]}>} series - one `values` entry per date, aligned by index.
- * @param {string} emptyMessage
- * @param {string} [title]
- */
-export function renderMultiLineChart(dates, series, emptyMessage, title) {
-  const titleHtml = title ? `<h2 class="pie-chart-title">${escapeHtml(title)}</h2>` : "";
-  if (dates.length === 0) {
-    return `<div class="pie-chart-wrap line-chart-wrap">${titleHtml}<p class="page-empty">${emptyMessage}</p></div>`;
-  }
-
-  const windowedDates = windowDatesToMaxSpan(dates);
-  const startIndex = dates.length - windowedDates.length;
-  const windowedSeries = series.map((s) => ({ ...s, values: s.values.slice(startIndex) }));
-
-  const innerWidth = WIDTH - PAD_LEFT - PAD_RIGHT;
-  const innerHeight = HEIGHT - PAD_TOP - PAD_BOTTOM;
-
-  const yMax = Math.max(Math.ceil(Math.max(0, ...windowedSeries.flatMap((s) => s.values))), 1);
-
-  const times = windowedDates.map((d) => new Date(d).getTime());
-  const minTime = times[0];
-  const maxTime = times[times.length - 1];
-  const timeSpan = maxTime - minTime || 1;
-
-  const xAt = (i) =>
-    windowedDates.length === 1 ? PAD_LEFT + innerWidth / 2 : PAD_LEFT + ((times[i] - minTime) / timeSpan) * innerWidth;
-  const yAt = (value) => PAD_TOP + innerHeight - (value / yMax) * innerHeight;
-
-  const seriesCoords = windowedSeries.map((s) => ({
-    ...s,
-    coords: s.values.map((v, i) => [xAt(i), yAt(v)]),
-  }));
-
-  // Capped to yMax itself (not a flat 4) — yMax is a small whole number
-  // (a deck-count axis rarely exceeds single digits), so 4 evenly-spaced
-  // steps rounded to whole numbers could land on the same integer twice
-  // (e.g. yMax=2 rounds to 0, 1, 1, 2, 2). Capping the step count keeps
-  // the raw step size at 1 or more, so every rounded label is distinct.
-  const GRID_STEPS = Math.min(4, yMax);
-  const gridLines = Array.from({ length: GRID_STEPS + 1 }, (_, i) => {
-    const y = PAD_TOP + innerHeight - (i / GRID_STEPS) * innerHeight;
-    const value = Math.round((i / GRID_STEPS) * yMax);
-    return `<line class="line-chart-grid" x1="${PAD_LEFT}" y1="${y}" x2="${WIDTH - PAD_RIGHT}" y2="${y}"></line>
-      <text class="line-chart-axis-label" x="${PAD_LEFT - 8}" y="${y}" text-anchor="end" dominant-baseline="middle">${value}</text>`;
-  }).join("");
-
-  const ticks = monthTicks(minTime, maxTime);
-  const xLabels = ticks
-    .map((tick, i) => {
-      const x = PAD_LEFT + ((tick.getTime() - minTime) / timeSpan) * innerWidth;
-      const anchor = i === 0 ? "start" : i === ticks.length - 1 ? "end" : "middle";
-      return `<text class="line-chart-axis-label" x="${x.toFixed(2)}" y="${HEIGHT - PAD_BOTTOM + 20}" text-anchor="${anchor}">${formatMonthTick(tick)}</text>`;
-    })
-    .join("");
-
-  // No area fill here (unlike the single-series chart) — five overlapping
-  // translucent fills would just muddy each other rather than read as
-  // separate trends the way five clean strokes do.
-  const lines = seriesCoords
-    .map((s) => `<path class="line-chart-line" style="stroke:${s.color};" d="${smoothPath(s.coords)}"></path>`)
-    .join("");
-
-  const dots = seriesCoords
-    .map((s) =>
-      s.coords
-        .map(
-          ([x, y], i) =>
-            `<circle class="line-chart-dot" style="fill:${s.color};" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="3"><title>${escapeHtml(s.label)} — ${escapeHtml(formatDate(windowedDates[i]))}: ${s.values[i]}</title></circle>`
-        )
-        .join("")
-    )
-    .join("");
-
-  const legend = `
-    <div class="line-chart-legend">
-      ${series
-        .map(
-          (s) =>
-            `<span class="line-chart-legend-item"><span class="line-chart-legend-swatch" style="background:${s.color};"></span>${escapeHtml(s.label)}</span>`
-        )
-        .join("")}
-    </div>`;
-
-  return `
-    <div class="pie-chart-wrap line-chart-wrap">
-      ${titleHtml}
-      <svg class="line-chart" viewBox="0 0 ${WIDTH} ${HEIGHT}" role="img" aria-label="${escapeHtml(title ?? "Grafico")}">
-        ${gridLines}
-        ${lines}
-        ${dots}
-        ${xLabels}
-      </svg>
-      ${legend}
     </div>
   `;
 }
