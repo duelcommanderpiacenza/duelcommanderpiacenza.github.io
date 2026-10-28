@@ -763,9 +763,8 @@ html.nav-mobile .pc-cancel-btn svg {
    page's filters (league/event/date/color-identity) — keeps the page's
    own results visible without permanently reserving a whole extra row (or
    two) of vertical space for filters most visits never touch. Same
-   collapse mechanics (grid-template-rows: 1fr/0fr) as .league-group
-   elsewhere, reused here under its own class names since
-   the trigger is a small icon button, not a whole clickable header row. */
+   the usual collapse mechanics (grid-template-rows: 1fr/0fr), the
+   trigger a small icon button. */
 .filter-toggle-line {
   display: flex;
   /* Not center — .field is a label-above-input column, so centering
@@ -1179,7 +1178,7 @@ html.nav-mobile .help-toggle-btn {
   grid-template-rows: 0fr;
 }
 
-/* Same reasoning as .league-group-body-clip elsewhere: the clipping
+/* The clipping
    boundary has to sit on a wrapper *inside* the collapsing grid row, not
    the row itself — an element's own margin/padding is never clipped away
    by its own overflow, only by an ancestor's. */
@@ -1601,9 +1600,8 @@ html.nav-mobile .matchups-matrix-scroll::-webkit-scrollbar {
 /* The ellipsis truncation lives on this inner span rather than the <th>
    itself — overflow: hidden here would otherwise also clip the <th>'s own
    ::before/::after tooltip below, since they're positioned children of
-   whichever element declares them (same fix as .league-group-body-clip
-   elsewhere: keep the clipping boundary off the element that also needs
-   to render content outside its own box). */
+   whichever element declares them (keep the clipping boundary off the
+   element that also needs to render content outside its own box). */
 .matchups-row-header-text,
 .matchups-col-header-text {
   display: block;

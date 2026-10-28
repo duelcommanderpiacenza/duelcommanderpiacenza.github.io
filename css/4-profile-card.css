@@ -168,7 +168,7 @@
   border-radius: 0.28em;
   /* The hero buttons' colour (--hero-btn: taken from the hero's art,
      neutral grey before it loads — js/player-card.js heroTone), like the
-     back pill and the followed ★, a white edge — drawn as an inset shadow,
+     back pill, a white edge — drawn as an inset shadow,
      not a border, so the box stays the size the other numbers line up
      with. */
   background: var(--hero-btn);
@@ -472,8 +472,7 @@ main.has-hero-accent .commander-card-flip-btn {
   scrollbar-color: color-mix(in srgb, var(--hero-accent-light) 40%, transparent) transparent;
 }
 
-/* The heroes' buttons — the back pill, the follow star, account's quick
-   actions — in a colour taken from the hero's art (js/player-card.js
+/* The heroes' buttons — the back pill, account's quick actions — in a colour taken from the hero's art (js/player-card.js
    heroTone, set inline on .detail-hero-wrap / account's .profile-hero);
    a neutral dark grey until then (no red flash before the art's colour
    arrives), and without art. */

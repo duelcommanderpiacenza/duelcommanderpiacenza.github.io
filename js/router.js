@@ -12,7 +12,7 @@
 // <script type="module"> is then not in its HTML — this file mounts it, on
 // first load and after every in-app navigation alike). `signal` aborts when
 // the page is left: listeners on window/document and helpers that outlive
-// <main> (back-to-top, tooltips, title fit, follow button) are tied to it.
+// <main> (back-to-top, tooltips, title fit) are tied to it.
 // Links to pages not listed yet just load normally.
 
 import { watchPageLoading } from "./page-loading.js";

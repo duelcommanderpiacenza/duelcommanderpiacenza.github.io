@@ -65,7 +65,7 @@ function fetchCardArt(name, printId = null) {
   return artCache.get(key);
 }
 
-// A hero's buttons (back pill, follow star, account's quick actions) take
+// A hero's buttons (back pill, account's quick actions) take
 // their colour from the hero's art (styles.css --hero-btn / --hero-btn-hover,
 // brand red by default): the art shrunk to 24×24, each pixel weighted by how
 // saturated it is (so the art's colour wins over its greys and blacks),
@@ -121,8 +121,8 @@ function rgbToHue(r, g, b) {
 }
 
 // The tone on the element holding the hero's buttons: .detail-hero-wrap
-// (player / commander / league: the back pill and the star sit beside the
-// hero, in its wrap), else the hero itself (account.html).
+// (player / commander / league: the back pill sits beside the hero, in its
+// wrap), else the hero itself (account.html).
 // On a page whose <main> asks for it (data-accent-from-hero: player.html,
 // account.html), the same tone becomes the page's accent too — the site's
 // red variables redefined on <main> (styles.css main[data-accent-from-hero]),

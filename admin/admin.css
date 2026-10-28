@@ -763,8 +763,8 @@ html.nav-mobile #login-view {
   }
 }
 
-/* A grid item's default min-width is `auto`, which lets a wide table (with
-   .data-table-wrap's own overflow-x:auto) force the whole grid — and with
+/* A grid item's default min-width is `auto`, which lets a wide table (even
+   inside its own overflow-x: auto wrapper) force the whole grid — and with
    it the page — wider than the container instead of scrolling inside its
    own column. That's what pushed the list column past the title bar's
    buttons above it (same container, so they should otherwise share a right

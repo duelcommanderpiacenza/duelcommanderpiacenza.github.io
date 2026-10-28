@@ -62,35 +62,6 @@
   }
 }
 
-/* Purely a visual indicator now — the whole card is the actual click
-   target — so it's a plain span, not its own focusable button. A solid red
-   circle (darkening slightly on the card's own hover) makes it read as a
-   clear, deliberate control rather than a small stray triangle. */
-.league-group-toggle-icon {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--brand-red);
-  transition: background 180ms ease;
-}
-
-.league-group-toggle-icon::before {
-  content: "";
-  width: 0;
-  height: 0;
-  border-left: 7px solid transparent;
-  border-right: 7px solid transparent;
-  /* Points up at rest (expanded — "click collapses it"), flips to point
-     down once collapsed ("click expands it downward"), the conventional
-     accordion-chevron direction. */
-  border-bottom: 8px solid #fff;
-  transition: transform 180ms ease;
-}
-
 /* Round red position chip (the old Bacheca standings preview's look),
    one color for every position; min-width + padding only so a 3-digit
    rank would stretch it into a pill instead of overflowing. */
@@ -2115,8 +2086,8 @@ a.history-item.is-me-row:hover {
 /* .checkbox-inline's own display:flex above beats the browser's default
    [hidden] { display: none; } rule at equal specificity (author rules win
    ties regardless of source order) — without this, a plain `hidden`
-   attribute silently does nothing (same bug pattern as .field[hidden] and
-   .icon-swatch-row[hidden] elsewhere in this file). */
+   attribute silently does nothing (same bug pattern as .field[hidden]
+   above). */
 .checkbox-inline[hidden] {
   display: none;
 }

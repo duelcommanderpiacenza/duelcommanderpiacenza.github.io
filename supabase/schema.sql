@@ -3,31 +3,23 @@
 -- This file is checked into the repo as documentation of the DB schema;
 -- it is NOT auto-deployed by anything.
 --
--- This version replaces the earlier schema: the standalone "decks" catalog
--- is gone (a deck is now just "player + commander + archetype" recorded
--- directly on the entry, with an optional partner/background commander), an
--- event may belong to a league or stand alone (league_id nullable), an
--- event's name only needs to be unique within its own league (or among
--- standalone events), a match now records a best-of-3 game score
--- (player1_wins/draws/player2_wins) instead of a single win/loss/draw result
--- and can be a bye (player2_id null, an automatic win for player1) or a drop
--- (player2_id null, is_drop true — the player left the event, excluded from
--- every calculation instead of scored as a win), a league
--- row can be flagged as a "Topdeck" series (is_topdeck) — the same shape,
--- just without a points leaderboard; at most one league and, separately, at
--- most one Topdeck can be open at a time (one of each together is fine),
--- and an entry can carry a manual_rank tiebreak override for its event's
--- standings.
--- Re-running this drops and recreates every table, so it wipes existing
--- rows — expected while there's only test data.
+-- The whole schema from scratch, for a NEW project (it drops and recreates
+-- every table: never run it on a database with real data). A change to an
+-- existing database goes through supabase/migrations/ (see its README) and
+-- is then folded in here. The "Added after the initial schema; on an
+-- existing DB run just …" notes below are history from before that process.
 
 create extension if not exists pgcrypto;
 
+drop table if exists user_settings cascade;
+drop table if exists decklist_submissions cascade;
+drop table if exists user_activity cascade;
+drop table if exists event_standings cascade;
+drop table if exists player_badges_auto cascade;
 drop table if exists player_progress cascade;
 drop table if exists announcements cascade;
 drop table if exists matches cascade;
 drop table if exists event_entries cascade;
-drop table if exists decks cascade;
 drop table if exists events cascade;
 drop table if exists leagues cascade;
 drop table if exists player_claims cascade;
@@ -37,7 +29,6 @@ drop table if exists profiles cascade;
 drop table if exists commanders cascade;
 drop table if exists admins cascade;
 drop type if exists deck_archetype;
-drop type if exists match_result;
 
 create type deck_archetype as enum ('aggro', 'control', 'combo', 'tempo', 'midrange');
 

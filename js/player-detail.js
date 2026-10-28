@@ -167,7 +167,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     }
     const playerBadges = uniqueBadges([player.badge1, player.badge2, ...autoBadges]);
     // The badges beside the name, not in it (#player-title-badges): the
-    // name alone is fitted to its line with the follow star, the badges
+    // name alone is fitted to its line, the badges
     // going to the next line together when they don't fit beside it.
     titleEl.textContent = nameLabel;
     document.title = `${nameLabel} - Duel Commander Piacenza`;

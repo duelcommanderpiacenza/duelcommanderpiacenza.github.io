@@ -86,7 +86,7 @@ export function applyCardCosmetics(cardEl, progress) {
   }
 }
 
-// --- The "?" explanation (account.html, next to "Le tue statistiche") ---
+// --- The "?" explanation (account.html, on the card's corner) ---
 
 // What each family's tiers are called and counted in, for the pop-up — its
 // thresholds come from CARD_COSMETICS above, so the two never disagree.

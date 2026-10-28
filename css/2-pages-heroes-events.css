@@ -148,18 +148,8 @@
   margin: 0;
 }
 
-/* Commander detail page's Scryfall card art. Positioned relative to
-   .page-heading (made position: relative above) rather than sitting in
-   the Winrate row as a normal flex sibling — that way its top is pinned
-   to the title's own top for free via top: 0, no JS needed for that part.
-   Its height is set explicitly in JS instead (js/commander-detail.js's
-   syncCardImageLayout) to reach exactly down to the stat tiles' bottom —
-   two separate elements with no clean CSS-only way to span between them.
-   That same function also reads the image's own resulting width back and
-   sets it as .commander-top-row-main's padding-right, below, so the stat
-   tiles can grow to fill the space right up to the card's real edge. It's
-   allowed to visually extend past .page-heading's own bottom edge into
-   the Winrate row below since nothing here clips overflow. */
+/* Commander detail page's Scryfall card art, pinned to its container's
+   top-right corner (in the hero: css/4-profile-card.css .detail-hero-card). */
 .commander-card-figure {
   position: absolute;
   top: 0;
@@ -170,9 +160,7 @@
 /* Card-shaped loading placeholder, shown from first paint in exactly the
    spot and size the card will take (same positioning as
    .commander-card-figure; Scryfall "normal" image proportions, 488×680), so
-   nothing around it moves when the real card replaces it — its height is
-   set by the same js/commander-detail.js syncCardImageLayout as the card's,
-   280px until then. A soft brand-red shimmer sweeps across while waiting.
+   nothing around it moves when the real card replaces it. A soft brand-red shimmer sweeps across while waiting.
    js hides it once the card is revealed, or drops it if there's no image. */
 .commander-card-skeleton {
   position: absolute;
@@ -1345,7 +1333,7 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   transition: background 150ms ease, transform 150ms ease;
 }
 
-/* Same fix as .field[hidden]/.icon-swatch-row[hidden] elsewhere — this
+/* Same fix as .field[hidden] elsewhere — this
    rule's own display: flex above has the same specificity as the browser
    default [hidden] { display: none; }, but author styles always beat
    user-agent ones regardless of specificity, so without this override the
@@ -1762,7 +1750,7 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
 }
 
 /* A player's handle shown inline next to their name (leaderboards, match
-   lists) — same muted tone as .entity-card-meta, but kept in whatever
+   lists) — the muted tone of the small meta labels, but kept in whatever
    case it was actually entered in admin, not forced uppercase. */
 .player-handle {
   color: var(--text-muted);

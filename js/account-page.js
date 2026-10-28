@@ -20,10 +20,11 @@
 //    the account's own row in `profiles` (migrations 004-006);
 //    under it, once linked, the switch showing it on the player page too
 //    (js/player-detail.js, migration 007);
-//  - on the right: "Le tue statistiche" once linked (the player page's own
+//  - beside the card, once linked: the hero's numbers (the player page's own
 //    winrate tiles over the whole history plus the leagues played as one
-//    more tile, link to the player page) and "Account" (the Google email,
-//    "Esci", and — not for admins — "Elimina account").
+//    more tile) and the link to the player page; "Account" (the Google
+//    email, "Esci", and — not for admins — "Elimina account") in the
+//    Impostazioni tab.
 //
 // Google only for players, no email/password: Supabase never has to send a
 // confirmation or reset email (its built-in sender only reaches the project
@@ -126,7 +127,7 @@ export function mount({ signal = new AbortController().signal } = {}) {
   const claimSelect = document.getElementById("account-claim-player");
   const pendingPlayerEl = document.getElementById("account-pending-player");
 
-  // "Le tue statistiche" (once linked)
+  // The hero's numbers (once linked)
   const statsCard = document.getElementById("profile-stats");
   const statsLink = document.getElementById("profile-stats-link");
   const statsTilesEl = document.getElementById("profile-stats-tiles");
@@ -826,7 +827,7 @@ export function mount({ signal = new AbortController().signal } = {}) {
     setMessage(claimMessageEl, okText, "ok");
   }
 
-  // --- Le tue statistiche --------------------------------------------------------------
+  // --- The hero's numbers -----------------------------------------------------------
 
   // Same figures as the player page's own tiles (js/player-detail.js), over the
   // player's whole history: match-basis winrate, a bye counts as a win, a drop
@@ -891,7 +892,7 @@ export function mount({ signal = new AbortController().signal } = {}) {
     await loadDecklistCard(player, entries, decklistRequest);
   }
 
-  // "?" next to "Le tue statistiche": how the card's effects are earned.
+  // "?" on the card's corner: how the card's effects are earned.
   document.getElementById("card-effects-help").addEventListener("click", openCardEffectsInfo);
 
   document.getElementById("account-claim-form").addEventListener("submit", async (e) => {

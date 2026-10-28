@@ -1,9 +1,9 @@
 // The site's small explanation pop-up, opened by a round "?" (.help-toggle-
-// btn): a native modal <dialog> (Escape/backdrop close for free, same as the
-// Bacheca's events calendar, whose .ecal-dialog look it shares) with a
-// title, a × and the given content (styles.css .info-dialog). Used by
-// player.html's "Carte speciali" (js/commander-carousel.js) and Matchups'
-// "how to read the matrix" (js/matchups-page.js).
+// btn): a native modal <dialog> (Escape/backdrop close for free; the
+// .ecal-dialog box) with a title, a × and the given content (styles.css
+// .info-dialog). Used by the album's and the card's "?"
+// (js/commander-carousel.js, js/card-cosmetics.js), Matchups' "how to read
+// the matrix", the events' and leagues' pop-ups and the header's news.
 //
 // Built once per id, on first use, then just reopened. Every way out (×,
 // backdrop click, Escape) plays the exit animation (.info-dialog.is-closing)

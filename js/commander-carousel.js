@@ -53,7 +53,7 @@ async function fetchCardImages(names) {
 
 // One album item per "deck": the exact commander + partner pair (so "X / Y"
 // and "X / Z" are two cards) — the key the records map (setRecords) uses
-// too. Shared by player.html and account.html.
+// too.
 export function commanderPairKey(commander, partner) {
   return `${commander.id}_${partner?.id ?? ""}`;
 }
@@ -146,8 +146,8 @@ function applyAlbumFoil(cardEl, wins) {
   );
 }
 
-// The "?" beside the "Album comandanti" heading (player.html, account.html,
-// wired by each page) opens this (js/info-dialog.js's shared pop-up): per
+// The "?" beside the "Album comandanti" heading (player.html, wired by the
+// page) opens this (js/info-dialog.js's shared pop-up): per
 // family its line and one small live preview per tier (a blank album card
 // dressed by the same code) with what it takes.
 export function openAlbumEffectsInfo() {

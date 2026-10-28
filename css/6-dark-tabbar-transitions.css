@@ -641,7 +641,7 @@ html.nav-mobile .pwa-install-banner {
    commander / league / event / archetype / account): the red header
    transparent, laid over the page (absolute — out of the flow), and the hero running up to the very top
    behind it: its content pushed down by the header's height
-   (--hero-header-h), the back pill and follow star too; a dark shade at
+   (--hero-header-h), the back pill too; a dark shade at
    the hero's top keeps the header's logo, title and buttons readable on
    any art. Not while account.html's "Il tuo giocatore" banner sits above
    its hero (the header would lie over the banner). */
@@ -675,8 +675,7 @@ html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([
 /* The detail heroes' back pill: up in the header's own row, where the logo
    is (hidden on those pages) — the app-bar pattern, back on the left, search
    and account on the right — instead of a second row of controls in the
-   hero's corners (the follow star is beside the name there,
-   .detail-hero-title-row). Still in the hero's wrap (its colour, its label
+   hero's corners. Still in the hero's wrap (its colour, its label
    from js/router.js), lined up with the header's row: the same top
    (the header's 16px + safe area), the round buttons' 46px, and its left
    edge on the logo's — the header's side padding (20px; 16px up to 480px)

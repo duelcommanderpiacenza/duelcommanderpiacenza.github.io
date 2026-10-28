@@ -2,8 +2,8 @@
 // whose browser can vibrate (navigator.vibrate: Chrome, Samsung Internet,
 // Firefox; iOS has no web vibration at all, and a computer's Chrome has the
 // function but nothing to vibrate). "tick": a tab switched, a tab bar section
-// opened, pull-to-refresh armed; "confirm": a slightly fuller double tap,
-// for a follow. The browser may refuse until the visitor has tapped the page
+// opened, pull-to-refresh armed; "confirm": a slightly fuller double tap
+// (the vibration switch turned on). The browser may refuse until the visitor has tapped the page
 // once — harmless, it's just skipped.
 //
 // On by default; the footer's switch (js/haptics-toggle.js) turns it off —

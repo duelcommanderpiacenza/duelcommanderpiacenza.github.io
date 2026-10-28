@@ -1,7 +1,12 @@
 # Player login — plan and progress
 
-Branch: `player-login`. Work in progress, not on the live site yet. Update the
-**Status** column and each step's checklist as work gets done.
+> **Historical record.** Player login has been live since 2026-10-05
+> (`player-login` merged into `main`). This file is the plan and the
+> decisions as they were made; it isn't kept up to date. Migration files it
+> names were deleted once applied (see `supabase/migrations/README.md`), and
+> some features it describes were removed later — following (2026-10-28,
+> migration 029), the commander album on the profile. For how things work
+> now, see `CLAUDE.md`.
 
 ## What we're building
 
