@@ -608,13 +608,12 @@ main.has-hero-accent .profile-tab:not(.is-active):hover {
   background: color-mix(in srgb, var(--hero-accent-light) 14%, transparent);
 }
 
-.profile:has(#profile-album[hidden]) [data-tab="profile-album"],
 .profile:has(#profile-decklist[hidden]) [data-tab="profile-decklist"] {
   display: none;
 }
 
-/* The panels: only the open one; a size container, so the album puts its
-   stats beside the cards only with room enough. */
+/* The panels: only the open one; a size container, for what's inside to
+   fit itself to the panel's width. */
 .profile-panels {
   container-type: inline-size;
 }
@@ -637,24 +636,6 @@ main.has-hero-accent .profile-tab:not(.is-active):hover {
 
 .profile-panel .decklist-body-inner {
   padding-top: 0;
-}
-
-@container (min-width: 700px) {
-  .profile-album .cmd-carousel {
-    flex-direction: row;
-    align-items: center;
-    gap: 32px;
-  }
-
-  .profile-album .cmd-carousel-main {
-    flex: 0 0 calc(var(--cmd-card-w) * 1.7);
-    width: auto;
-  }
-
-  .profile-album .cmd-carousel-stats {
-    flex: 1;
-    min-width: 0;
-  }
 }
 
 /* player.html / commander.html: the same hero (.detail-hero on top of

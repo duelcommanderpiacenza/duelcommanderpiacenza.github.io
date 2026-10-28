@@ -54,7 +54,6 @@ import {
 import { matchRoundOutcome, isDrop } from "./leaderboard.js";
 import { tallyOutcome, winRatePct } from "./winrate.js";
 import { applyCardCosmetics, openCardEffectsInfo } from "./card-cosmetics.js";
-import { renderCommanderCarousel, albumItems, commanderPairKey, openAlbumEffectsInfo } from "./commander-carousel.js";
 import { escapeHtml, eventTitle, formatDate } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { haptic } from "./haptics.js";
@@ -130,9 +129,6 @@ export function mount({ signal = new AbortController().signal } = {}) {
 
   // "Le tue statistiche" (once linked)
   const statsCard = document.getElementById("profile-stats");
-  const albumCard = document.getElementById("profile-album");
-  const albumEl = document.getElementById("profile-album-carousel");
-  document.getElementById("album-help").addEventListener("click", openAlbumEffectsInfo);
   const statsLink = document.getElementById("profile-stats-link");
   const statsTilesEl = document.getElementById("profile-stats-tiles");
   const publicWrapEl = document.getElementById("profile-public-wrap");
@@ -456,10 +452,10 @@ export function mount({ signal = new AbortController().signal } = {}) {
 
   // --- The sections, one at a time behind tabs -------------------------------------
 
-  // Album comandanti, Decklist, Impostazioni: a tab each, only for a
-  // section that's shown (styles.css hides the others' tabs) — a pill bar on
-  // desktop, a full-width segmented control on phones. Until the user picks
-  // one, the first section shown is the open one (the album once linked);
+  // Decklist, Impostazioni: a tab each, only for a section that's shown
+  // (styles.css hides the others' tabs) — a pill bar on desktop, a
+  // full-width segmented control on phones. Until the user picks one, the
+  // first section shown is the open one (the decklist once linked);
   // when the open one goes (e.g. no decklist to send any more), the first
   // still shown takes over.
   const tabButtons = [...document.querySelectorAll(".profile-tab")];
@@ -800,7 +796,6 @@ export function mount({ signal = new AbortController().signal } = {}) {
     claim = { linked, pending };
     claimCard.hidden = Boolean(linked);
     statsCard.hidden = !linked;
-    albumCard.hidden = !linked;
     // Shown by loadDecklistCard once linked.
     if (!linked) decklistCard.hidden = true;
     if (linked) return;
@@ -884,25 +879,6 @@ export function mount({ signal = new AbortController().signal } = {}) {
       rate === null
         ? '<p class="page-empty">Non ci sono ancora dati sufficienti.</p>'
         : tile("Winrate", `${rate}%`) + tile("Leghe", leagueIds.size) + tile("Eventi", entries.length);
-
-    // Album comandanti: player.html's carousel, from the same entries and
-    // matches — the frame of each card from its events, its foil from the
-    // matches won with it, counted like player.html (a drop skipped, a bye a
-    // win).
-    const carousel = renderCommanderCarousel(albumEl, albumItems(entries));
-    const pairByEvent = new Map(
-      entries.filter((e) => e.commander).map((e) => [e.event_id, commanderPairKey(e.commander, e.partner_commander)])
-    );
-    const records = new Map();
-    const tallyPair = (m, isPlayer1) => {
-      const key = pairByEvent.get(m.event_id);
-      if (!key || isDrop(m)) return;
-      if (!records.has(key)) records.set(key, { wins: 0, draws: 0, losses: 0 });
-      tallyOutcome(records.get(key), matchOutcome(m, isPlayer1));
-    };
-    for (const m of asP1) tallyPair(m, true);
-    for (const m of asP2) tallyPair(m, false);
-    carousel.setRecords(records);
 
     // The player card's "Dal …": the year of the player's first event.
     const firstDate = entries.reduce((min, e) => {
@@ -1270,7 +1246,6 @@ export function mount({ signal = new AbortController().signal } = {}) {
     setEditing(false, { animate: false });
     accountDangerEl.hidden = true;
     decklistCard.hidden = true;
-    albumCard.hidden = true;
     setMessage(accountMessageEl, "");
     // Two rounds: everything that needs only the account, at once — the
     // profile, the linked player (or the claim), admin or not,
