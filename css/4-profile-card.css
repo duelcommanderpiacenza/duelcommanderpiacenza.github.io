@@ -3162,16 +3162,6 @@ html.nav-mobile .pc-link-field .pc-link {
   cursor: grabbing;
 }
 
-/* Not in the league: one line, the link on the right. */
-.league-recap-empty {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px 16px;
-  color: var(--text-body);
-}
-
 @container (max-width: 600px) {
   .league-recap-card {
     padding: 16px;

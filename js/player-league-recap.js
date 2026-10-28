@@ -7,8 +7,8 @@
 // league runs — js/history-list.js positionMoveHtml; a finished league's
 // winner a 🏆), the points after a thin divider, Migliore / V-S-P / Winrate
 // at the right; under it a small pill per stage (its position, "ass." if
-// missed, "—" still to play). Not in the league: one line with the link.
-// No league at all: nothing (the section stays hidden). No event dates, no
+// missed, "—" still to play). Not in the league, or no league at all:
+// nothing (the section stays hidden). No event dates, no
 // gap to 1st, no attendance counter (by choice).
 import { Leagues, Events, fetchEventsResults } from "./db.js";
 import { computeLeaguePoints, previousLeaguePositions } from "./leaderboard.js";
@@ -44,17 +44,14 @@ export async function renderPlayerLeagueRecap(el, playerId, { signal }) {
     const open = league.is_open;
     const standings = computeLeaguePoints(eventsData, { leagueClosed: !open, scheduledEvents: scheduled });
     const index = standings.findIndex((s) => s.player?.id === playerId);
-    const link = `<a class="league-recap-link" href="league.html?id=${league.id}">Vai alla lega <span aria-hidden="true">›</span></a>`;
-    const name = `<span class="league-recap-name">${escapeHtml(league.name)}</span>`;
-
     if (index < 0) {
-      el.innerHTML = `
-        <div class="league-recap-card league-recap-empty">
-          <span>${name} · ${open ? "non ha ancora giocato in questa lega" : "non ha giocato in questa lega"}</span>
-          ${link}
-        </div>`;
+      // Never played in it: nothing, like with no league at all.
+      el.hidden = true;
+      el.innerHTML = "";
       return;
     }
+    const link = `<a class="league-recap-link" href="league.html?id=${league.id}">Vai alla lega <span aria-hidden="true">›</span></a>`;
+    const name = `<span class="league-recap-name">${escapeHtml(league.name)}</span>`;
 
     const me = standings[index];
     const position = index + 1;
