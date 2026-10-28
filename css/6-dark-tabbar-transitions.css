@@ -3395,7 +3395,21 @@ html.is-recap-open {
   cursor: pointer;
 }
 
-.recap-slide.is-on .recap-share {
+/* The event's / league's page, under "Condividi": a quieter outline pill. */
+.recap-go {
+  z-index: 6;
+  align-self: center;
+  margin-top: 12px;
+  padding: 10px 20px;
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
+  border-radius: var(--radius-pill);
+  color: #fff;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.recap-slide.is-on .recap-share,
+.recap-slide.is-on .recap-go {
   pointer-events: auto;
 }
 

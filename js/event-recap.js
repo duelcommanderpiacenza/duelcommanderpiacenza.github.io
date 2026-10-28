@@ -325,8 +325,10 @@ export function archetypesSlide(archetypes, kicker) {
         .join("")}</div></section>`;
 }
 
-// The last screen: `title`, the next event (when there is one), "Condividi".
-function endSlide(title, next) {
+// The last screen: `title`, the next event (when there is one), "Condividi",
+// and the event's / league's page (`page`: { href, label } — none when the
+// recap was opened there; tapping it navigates, which closes the recap).
+function endSlide(title, next, page) {
   return `<section class="recap-slide is-center"><div class="recap-bg is-red"></div>
       <h2 class="recap-big" ${at(0)}>${title}</h2>
       ${
@@ -336,7 +338,8 @@ function endSlide(title, next) {
             )}${next.start_time ? ` · ${next.start_time.slice(0, 5)}` : ""}</span></div>`
           : ""
       }
-      <button type="button" class="recap-share" ${at(2)}>Condividi il recap</button></section>`;
+      <button type="button" class="recap-share" ${at(2)}>Condividi il recap</button>
+      ${page ? `<a class="recap-go" href="${page.href}" ${at(3)}>${page.label}</a>` : ""}</section>`;
 }
 
 // A list of the best (an event's top 8, a Topdeck event's best, a league's
@@ -354,7 +357,7 @@ function topEightSlide(kicker, rows, lineOf) {
         .join("")}</ol></section>`;
 }
 
-function eventSlidesHtml(data) {
+function eventSlidesHtml(data, page) {
   const { ev, name, rows, entryOf, winner } = data;
   const league = ev.league?.name && ev.league.name !== name ? `${escapeHtml(ev.league.name)} · ` : "";
   const slides = [
@@ -405,11 +408,11 @@ function eventSlidesHtml(data) {
       <div class="recap-pills" ${at(3)}><span>${data.topCount} ${data.topCount === 1 ? "mazzo" : "mazzi"}</span><span>miglior risultato: ${data.topBest}°</span></div></section>`);
   }
   slides.push(archetypesSlide(data.archetypes, "Gli archetipi"));
-  slides.push(endSlide("Ci vediamo al prossimo evento!", data.next));
+  slides.push(endSlide("Ci vediamo al prossimo evento!", data.next, page));
   return slides.join("");
 }
 
-function seasonSlidesHtml(data) {
+function seasonSlidesHtml(data, page) {
   const shortDate = (iso) => new Date(`${iso}T00:00:00`).toLocaleDateString("it-IT", { day: "numeric", month: "long" });
   const slides = [
     `<section class="recap-slide"><div class="recap-bg" data-art="${escapeHtml(data.championCommander)}"></div>
@@ -470,7 +473,7 @@ function seasonSlidesHtml(data) {
       }</span></div></section>`);
   }
   slides.push(archetypesSlide(data.archetypes, "Gli archetipi della stagione"));
-  slides.push(endSlide("Ci vediamo alla prossima stagione!", data.next));
+  slides.push(endSlide("Ci vediamo alla prossima stagione!", data.next, page));
   return slides.join("");
 }
 
@@ -478,11 +481,20 @@ function seasonSlidesHtml(data) {
 
 let open = null; // { dialog, close }
 
+// The end screen's link to `href` — none when that page is the one open.
+function pageLink(href, label) {
+  const target = new URL(href, location.href);
+  const here = location.pathname.split("/").pop() || "index.html";
+  const same = target.pathname.split("/").pop() === here && target.searchParams.get("id") === new URLSearchParams(location.search).get("id");
+  return same ? null : { href, label };
+}
+
 export function openEventRecap(eventId) {
+  const page = pageLink(`event.html?id=${eventId}`, "Vai all'evento");
   return openStories({
     label: "Recap dell'evento",
     load: () => loadRecapData(eventId),
-    slides: eventSlidesHtml,
+    slides: (data) => eventSlidesHtml(data, page),
     seenKey: EVENT_SEEN(eventId),
     seenId: eventId,
     shareUrl: `event.html?id=${eventId}&recap=1`,
@@ -490,10 +502,11 @@ export function openEventRecap(eventId) {
 }
 
 export function openSeasonRecap(leagueId) {
+  const page = pageLink(`league.html?id=${leagueId}`, "Vai alla lega");
   return openStories({
     label: "Recap della stagione",
     load: () => loadSeasonData(leagueId),
-    slides: seasonSlidesHtml,
+    slides: (data) => seasonSlidesHtml(data, page),
     seenKey: SEASON_SEEN(leagueId),
     seenId: `league:${leagueId}`,
     shareUrl: `league.html?id=${leagueId}&recap=1`,
