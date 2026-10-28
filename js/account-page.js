@@ -53,7 +53,9 @@ import {
   EventEntries,
   Matches,
   PlayerProgress,
+  Achievements,
 } from "./db.js";
+import { achievementState, achievementsListHtml } from "./achievements.js";
 import { matchRoundOutcome, isDrop, isBye, computeLeaguePoints } from "./leaderboard.js";
 import { tallyOutcome, winRatePct } from "./winrate.js";
 import { applyCardCosmetics, openCardEffectsInfo } from "./card-cosmetics.js";
@@ -1529,6 +1531,7 @@ export function mount({ signal = new AbortController().signal } = {}) {
     decklistCard.hidden = true;
     albumCard.hidden = true;
     followsCard.hidden = true;
+    achievementsCard.hidden = true;
     setMessage(accountMessageEl, "");
     // Two rounds: everything that needs only the account, at once — the
     // profile, the linked player (or the claim), admin or not, the follows,
@@ -1538,7 +1541,8 @@ export function mount({ signal = new AbortController().signal } = {}) {
     const linkedRequest = PlayerClaims.linkedPlayer(user.id);
     const followsRequest = Follows.mine(user.id);
     const upcomingRequest = Events.listUpcoming();
-    for (const request of [linkedRequest, followsRequest, upcomingRequest]) request.catch(() => {});
+    const achievementsRequest = Achievements.mine();
+    for (const request of [linkedRequest, followsRequest, upcomingRequest, achievementsRequest]) request.catch(() => {});
     try {
       let isAdmin;
       [profile, , isAdmin] = await Promise.all([Profiles.mine(user.id), loadClaim(linkedRequest), MyAccount.isAdmin()]);
@@ -1550,9 +1554,32 @@ export function mount({ signal = new AbortController().signal } = {}) {
       setMessage(pageMessageEl(), "Impossibile caricare il profilo, ricarica la pagina.");
     }
     await loadFollows(followsRequest);
+    await loadAchievements(achievementsRequest);
     renderCard(savedValues());
     renderPublicSwitch();
     show("signed-in");
+    // From the "Obiettivo sbloccato" bar (js/achievement-toast.js): its tab.
+    if (window.location.hash === "#obiettivi" && !achievementsCard.hidden) {
+      tabChosen = true;
+      selectTab("profile-achievements");
+    }
+  }
+
+  // --- Obiettivi -----------------------------------------------------------------------
+
+  // The account's achievements (my_achievements(): its linked player's, its
+  // site ones, the ones already shown — the last not needed here). Never
+  // fatal: the tab just stays hidden.
+  const achievementsCard = document.getElementById("profile-achievements");
+  async function loadAchievements(request) {
+    try {
+      const rows = await request;
+      const of = (kind) => rows.filter((r) => r.kind === kind);
+      document.getElementById("profile-achievements-list").innerHTML = achievementsListHtml(achievementState(of("player"), of("site")));
+      achievementsCard.hidden = false;
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   // --- Auth ---------------------------------------------------------------------------

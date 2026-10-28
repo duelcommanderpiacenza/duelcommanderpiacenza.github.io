@@ -1,4 +1,4 @@
-import { Players, EventEntries, Matches, PlayerAutoBadges, EventStandings, PlayerCards, PlayerProgress } from "./db.js";
+import { Players, EventEntries, Matches, PlayerAutoBadges, EventStandings, PlayerCards, PlayerProgress, PlayerAchievements, Achievements } from "./db.js";
 import { matchRoundOutcome, isBye, isDrop, computeEventLeaderboard } from "./leaderboard.js";
 import { tallyOutcome, renderWinrateTiles } from "./winrate.js";
 import {
@@ -16,6 +16,8 @@ import { renderPublicPlayerCard, createArtPainter } from "./player-card.js";
 import { initFollowButton } from "./follow-button.js";
 import { initBackToTop } from "./back-to-top.js";
 import { renderPlayerLeagueRecap } from "./player-league-recap.js";
+import { achievementState, achievementsTileHtml, achievementsListHtml, achievementsCountText } from "./achievements.js";
+import { openInfoDialog } from "./info-dialog.js";
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
@@ -130,6 +132,13 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       return [];
     });
     const matchesRequest = Matches.listByPlayer(id);
+    // The achievements (the hero's "Obiettivi" tile): the ones earned by
+    // playing, and the site ones of the linked account — never fatal: no
+    // tile without them.
+    const achievementsRequest = Promise.all([PlayerAchievements.listByPlayer(id), Achievements.siteOf(id)]).catch((err) => {
+      console.error(err);
+      return null;
+    });
     autoBadgesRequest.catch(() => {});
     entriesRequest.catch(() => {});
     matchesRequest.catch(() => {});
@@ -266,6 +275,23 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     const bucket = { wins: 0, draws: 0, losses: 0 };
     for (const r of ownRows) if (!r.isDrop) tallyOutcome(bucket, r.outcome);
     renderWinrateTiles(overallEl, bucket, { events: entries.length });
+
+    // After the numbers (never first: the first is the winrate's pill), the
+    // achievements: "Obiettivi N/30", opening the whole list.
+    const achievementRows = await achievementsRequest;
+    if (signal.aborted) return;
+    if (achievementRows && overallEl.querySelector(".stat-tile")) {
+      const state = achievementState(...achievementRows);
+      overallEl.insertAdjacentHTML("beforeend", achievementsTileHtml(state));
+      overallEl.querySelector(".ach-tile").addEventListener("click", () =>
+        openInfoDialog({
+          id: "achievements-dialog",
+          title: `Obiettivi di ${player.name}`,
+          subtitle: achievementsCountText(state),
+          bodyHtml: achievementsListHtml(state),
+        })
+      );
+    }
 
     // The second (last) round, together: the entries of the events played
     // (the opponents' decks), and — only for events missing from the cached

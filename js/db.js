@@ -756,3 +756,35 @@ export const EventStandings = {
     }
   },
 };
+
+// A player's achievements earned by playing (migration 028's
+// player_achievements, computed by js/achievement-progress.js): one row per
+// achievement reached — its level, its count (for the progress toward the
+// next level) and the date of the event that reached it. replaceAll(): the
+// admin's full rebuild (admin/js/badges-sync.js), like PlayerProgress.
+export const PlayerAchievements = {
+  listByPlayer: (playerId) =>
+    sb.from("player_achievements").select("key, level, value, unlocked_at").eq("player_id", playerId).then(assertOk),
+  replaceAll: async (rows) => {
+    assertOk(await sb.from("player_achievements").delete().neq("player_id", "00000000-0000-0000-0000-000000000000"));
+    for (let i = 0; i < rows.length; i += 500) {
+      assertOk(await sb.from("player_achievements").insert(rows.slice(i, i + 500)));
+    }
+  },
+};
+
+// The rest of the achievements (migration 028): mine() — the signed-in
+// account's, in one call (its linked player's, its site ones — recorded
+// first if newly earned — and the ones already shown: rows of kind
+// "player" / "site" / "seen"); siteOf() — the site ones of the account
+// linked to a player (player.html), key and date; markSeen() — the unlocks
+// just shown, so they're never shown again (on any device).
+export const Achievements = {
+  mine: () => sb.rpc("my_achievements").then(assertOk),
+  siteOf: (playerId) => sb.rpc("site_achievements_of", { p_player_id: playerId }).then(assertOk),
+  markSeen: async (userId, items) => {
+    if (!items.length) return;
+    const rows = items.map(({ key, level }) => ({ user_id: userId, key, level }));
+    assertOk(await sb.from("achievements_seen").upsert(rows, { onConflict: "user_id,key,level", ignoreDuplicates: true }));
+  },
+};

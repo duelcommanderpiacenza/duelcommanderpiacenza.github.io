@@ -32,6 +32,7 @@ import { VERSION } from "./version.js";
 import "./system-bars.js";
 import "./pull-refresh.js";
 import "./data-updates.js";
+import "./achievement-toast.js";
 
 // Never stuck on "Caricamento...": a reload offered when loading takes too
 // long or fails (js/page-loading.js).

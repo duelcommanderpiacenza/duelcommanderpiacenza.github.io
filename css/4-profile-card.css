@@ -655,6 +655,7 @@ main.has-hero-accent .profile-tab:not(.is-active):hover {
 }
 
 .profile:has(#profile-album[hidden]) [data-tab="profile-album"],
+.profile:has(#profile-achievements[hidden]) [data-tab="profile-achievements"],
 .profile:has(#profile-follows[hidden]) [data-tab="profile-follows"],
 .profile:has(#profile-decklist[hidden]) [data-tab="profile-decklist"] {
   display: none;
@@ -3186,5 +3187,333 @@ html.nav-mobile .pc-link-field .pc-link {
 
   .league-recap-stat {
     justify-items: center;
+  }
+}
+
+/* ==========================================================================
+   Achievements ("Obiettivi", js/achievements.js) — the profile's tab
+   (account.html), player.html's list (a pop-up from the hero's "Obiettivi"
+   tile), and their medals. Each row: the medal on the left, name (+ the
+   level's roman numeral), description, date on the right, and for a tiered
+   one not at its last level a bar toward the next. A locked one: dashed,
+   faded, its hint in italics.
+   ========================================================================== */
+
+/* The medal: flat, like the site's other icon discs (archetype.html's
+   title) — one solid colour, the white line icon. The level's colour: I
+   bronze, II silver, III gold, IV mythic; a single one the brand red;
+   Seriamente 1.0 dark with a gold icon and edge; locked grey + a padlock. */
+.ach-medal {
+  --ach-m: var(--brand-red);
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--ach-m);
+  color: #fff;
+}
+
+.ach-medal svg {
+  width: 24px;
+  height: 24px;
+}
+
+.ach-medal.is-single { --ach-m: #dc181c; }
+.ach-medal.is-lv1 { --ach-m: #b8743f; }
+.ach-medal.is-lv2 { --ach-m: #8e98a6; }
+.ach-medal.is-lv3 { --ach-m: #d29a1c; }
+.ach-medal.is-lv4 { --ach-m: #e8590c; }
+
+.ach-medal.is-final {
+  --ach-m: #2a1215;
+  box-shadow: inset 0 0 0 2px #d29a1c;
+  color: #ffd25a;
+}
+
+.ach-medal.is-locked {
+  --ach-m: #ece4e4;
+  color: var(--text-muted);
+}
+
+.ach-medal.is-locked svg {
+  opacity: 0.75;
+}
+
+.ach-medal.is-locked::after {
+  content: "";
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--bg-cream-1) no-repeat center / 12px
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%239c7981" stroke-width="2.6" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>');
+}
+
+:root[data-theme="dark"] .ach-medal.is-locked {
+  --ach-m: #2c2325;
+}
+
+.ach-tier {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+/* The summary on top: the count, a bar, the latest unlocked. */
+.ach-summary {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 20px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #7e0c13, #dc181c);
+  box-shadow: var(--shadow-card);
+  color: #fff;
+}
+
+.ach-summary-n {
+  font-size: 2.4rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.ach-summary-n small {
+  font-size: 1.1rem;
+  opacity: 0.75;
+}
+
+.ach-summary-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.ach-summary-text b {
+  display: block;
+  font-size: 1.05rem;
+}
+
+.ach-summary-bar {
+  height: 8px;
+  margin: 8px 0 4px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.ach-summary-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #ffd25a;
+}
+
+.ach-summary-text span {
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+.ach-final {
+  margin-top: 14px;
+}
+
+.ach-group {
+  margin-top: 24px;
+}
+
+.ach-group > h3 {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 10px;
+  color: var(--text-title);
+  font-size: 1.05rem;
+}
+
+.ach-group > h3 small {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+/* Two rows side by side where there's room (a size container: the
+   profile's panel or the pop-up), one under 520px. */
+.ach-list {
+  container-type: inline-size;
+}
+
+.ach-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@container (max-width: 520px) {
+  .ach-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ach-summary-n {
+    font-size: 2rem;
+  }
+}
+
+.ach-row {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: var(--shadow-card);
+}
+
+:root[data-theme="dark"] .ach-row {
+  background: #1e1517;
+}
+
+.ach-row .ach-medal {
+  grid-row: 1 / span 2;
+  align-self: start;
+}
+
+.ach-text b {
+  display: block;
+  color: var(--text-title);
+  font-size: 1rem;
+}
+
+.ach-text b .ach-tier {
+  color: var(--brand-red-deep);
+}
+
+:root[data-theme="dark"] .ach-text b .ach-tier {
+  color: #ff8a8d;
+}
+
+.ach-text > span {
+  display: block;
+  color: var(--text-body);
+  font-size: 0.84rem;
+}
+
+.ach-date {
+  align-self: start;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ach-progress {
+  display: grid;
+  grid-column: 2 / -1;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.ach-progress i {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 9px;
+  background: rgba(154, 28, 32, 0.1);
+}
+
+.ach-progress i b {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--brand-red);
+}
+
+.ach-row.is-locked {
+  border-style: dashed;
+  background: transparent;
+  box-shadow: none;
+}
+
+.ach-row.is-locked .ach-text b {
+  color: var(--text-muted);
+}
+
+.ach-row.is-locked .ach-text > span {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* player.html's hero: the "Obiettivi" tile, the last of the numbers — a
+   button (it opens the list), "N/30" with a thin gold bar under it and a
+   gold "›" after the label; a soft highlight on hover. Never first (the
+   first tile is the winrate's pill). */
+.profile-hero button.stat-tile.ach-tile {
+  margin: -8px;
+  padding: 8px;
+  border-radius: 14px;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.profile-hero button.stat-tile.ach-tile:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.ach-tile .stat-tile-value small {
+  font-size: 0.55em;
+  opacity: 0.7;
+}
+
+.ach-tile .stat-tile-label::after {
+  content: " ›";
+  color: #ffd25a;
+}
+
+/* align-self: the phone hero centres its numbers, which would shrink the bar
+   to nothing. */
+.ach-tile-bar {
+  display: block;
+  align-self: stretch;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.ach-tile-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #ffd25a;
+}
+
+/* player.html's list: the shared pop-up (js/info-dialog.js), wider; the
+   whole screen on a phone. */
+#achievements-dialog {
+  width: min(680px, calc(100vw - 48px));
+}
+
+@media (max-width: 640px) {
+  #achievements-dialog {
+    box-sizing: border-box;
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    border-radius: 0;
   }
 }

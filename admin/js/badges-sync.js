@@ -24,12 +24,18 @@
 //
 // And a fourth: the commanders' "Nuovo" badge (commanders.is_new, migration
 // 027), from the same results and the events' dates.
+//
+// And a fifth: the achievements earned by playing (player_achievements,
+// migration 028 — js/achievement-progress.js), from the same results, the
+// events' dates and leagues. If the table doesn't exist yet on this DB, only
+// this step fails.
 
 import { computeAutoBadgeAssignments, closedLeagueWinners } from "../../js/auto-badges.js";
 import { showToast } from "./toast.js";
 import { computeEventLeaderboard } from "../../js/leaderboard.js";
 import { computeCardProgress } from "../../js/card-progress.js";
-import { PlayerAutoBadges, EventStandings, PlayerProgress, Commanders, Events, Leagues, fetchEventsResults } from "../../js/db.js";
+import { computeAchievements } from "../../js/achievement-progress.js";
+import { PlayerAutoBadges, EventStandings, PlayerProgress, PlayerAchievements, Commanders, Events, Leagues, fetchEventsResults } from "../../js/db.js";
 
 async function syncBadgeAssignments() {
   const assignments = await computeAutoBadgeAssignments();
@@ -45,7 +51,7 @@ async function syncBadgeAssignments() {
 async function loadClosedResults() {
   const closed = (await Events.list()).filter((ev) => !ev.is_open);
   const closedIds = closed.map((ev) => ev.id);
-  return { closedIds, closedDates: closed.map((ev) => ev.event_date), eventsData: await fetchEventsResults(closedIds) };
+  return { closed, closedIds, closedDates: closed.map((ev) => ev.event_date), eventsData: await fetchEventsResults(closedIds) };
 }
 
 // The commanders' "Nuovo" badge: those whose first appearance in a closed
@@ -120,6 +126,18 @@ async function syncPlayerProgress({ eventsData }) {
   await PlayerProgress.replaceAll(computeCardProgress(eventsData, leagueWinners));
 }
 
+// Every player's achievements earned by playing — dated by the event that
+// reached each level. Each real league's total event count first (its
+// best-results cap, as on league.html).
+async function syncPlayerAchievements({ closed, eventsData }) {
+  const leagueIds = [...new Set(closed.filter((ev) => ev.league_id && ev.league && !ev.league.is_topdeck).map((ev) => ev.league_id))];
+  const counts = await Promise.all(
+    leagueIds.map((id) => Leagues.eventCount(id, closed.filter((ev) => ev.league_id === id).length))
+  );
+  const scheduledByLeague = new Map(leagueIds.map((id, i) => [id, counts[i]]));
+  await PlayerAchievements.replaceAll(computeAchievements(closed, eventsData, scheduledByLeague));
+}
+
 async function runSync() {
   const closedResults = loadClosedResults();
   const results = await Promise.allSettled([
@@ -127,6 +145,7 @@ async function runSync() {
     closedResults.then(syncEventStandings),
     closedResults.then(syncPlayerProgress),
     closedResults.then(syncNewCommanders),
+    closedResults.then(syncPlayerAchievements),
   ]);
   const failed = results.find((r) => r.status === "rejected");
   if (failed) throw failed.reason;
