@@ -2560,9 +2560,9 @@ html:not(.nav-mobile) :is(.settings-about, .account-settings) {
    computer. Bars across the top fill as each screen plays; a tap on the
    right goes on, on the left back (invisible .recap-nav halves over it),
    holding pauses. Each screen's [data-in] items rise in, staggered (--d).
-   And the Bacheca's card opening it (.recap-entry, js/home.js), for a week
-   after an event: the winner's commander art in a turning red-gold ring
-   (grey once watched), the event, who won — the whole card the button.
+   And the Bacheca's story bubbles opening them (.recap-bubble,
+   js/home.js), for a week after an event (two after a season): the
+   winner's commander art in a turning red-gold ring (grey once watched).
    --------------------------------------------------------------------------- */
 html.is-recap-open {
   overflow: hidden;
@@ -3228,37 +3228,9 @@ html.is-recap-open {
   }
 }
 
-/* The Bacheca's card. */
+/* The Bacheca's recaps (story bubbles, below). */
 .home-recap {
   margin: 0 0 18px;
-}
-
-.recap-entry {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 12px 16px;
-  border: 1px solid rgba(220, 24, 28, 0.28);
-  border-radius: 20px;
-  background: #fff;
-  box-shadow: var(--shadow-card);
-  color: var(--text-title);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: transform 160ms ease, box-shadow 160ms ease;
-}
-
-.recap-entry:hover {
-  box-shadow: var(--shadow-card-hover);
-  transform: translateY(-1px);
-}
-
-.recap-entry:focus-visible {
-  outline: 3px solid var(--brand-red);
-  outline-offset: 3px;
 }
 
 .recap-ring {
@@ -3278,11 +3250,6 @@ html.is-recap-open {
   border-radius: 50%;
   background: conic-gradient(#dc181c, #ff7a45, #ffd25a, #dc181c);
   animation: recap-spin 6s linear infinite;
-}
-
-.recap-entry.is-seen .recap-ring::before {
-  background: rgba(154, 28, 32, 0.22);
-  animation: none;
 }
 
 @keyframes recap-spin {
@@ -3321,43 +3288,6 @@ html.is-recap-open {
   margin-left: 1px;
 }
 
-.recap-entry-text {
-  display: grid;
-  flex: 1;
-  gap: 2px;
-  min-width: 0;
-}
-
-.recap-entry-k {
-  color: var(--brand-red);
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.recap-entry-text b {
-  font-size: 1.1rem;
-}
-
-.recap-entry-text > span:last-child {
-  overflow: hidden;
-  color: var(--text-muted);
-  font-size: 0.82rem;
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.recap-entry.is-seen .recap-entry-k {
-  color: var(--text-muted);
-}
-
-:root[data-theme="dark"] .recap-entry {
-  border-color: rgba(255, 110, 110, 0.3);
-  background: rgba(255, 255, 255, 0.06);
-}
-
 :root[data-theme="dark"] .recap-ring-art {
   border-color: #1e1517;
 }
@@ -3366,7 +3296,86 @@ html.is-recap-open {
   box-shadow: 0 0 0 2px #1e1517;
 }
 
-:root[data-theme="dark"] .recap-entry.is-seen .recap-ring::before {
+/* The recaps due (js/home.js recapBubblesHtml), one or several: a row of
+   compact bubbles — a social app's stories: the ring with the
+   art, "Recap" / "Stagione" and the name under it; scrolling sideways when
+   they don't fit. */
+.recap-bubbles {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding: 2px 2px 4px;
+  scrollbar-width: none;
+}
+
+.recap-bubbles::-webkit-scrollbar {
+  display: none;
+}
+
+.recap-bubble {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 84px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-title);
+  font: inherit;
+  cursor: pointer;
+}
+
+.recap-bubble .recap-ring {
+  width: 70px;
+  height: 70px;
+  margin-bottom: 4px;
+}
+
+.recap-bubble .recap-ring-art {
+  width: 63px;
+  height: 63px;
+}
+
+.recap-bubble small {
+  color: var(--brand-red);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* The name on up to two lines ("Topdeck 27/10" whole, not cut). */
+.recap-bubble b {
+  display: -webkit-box;
+  width: 100%;
+  overflow: hidden;
+  font-size: 0.78rem;
+  line-height: 1.2;
+  text-align: center;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.recap-bubble.is-seen .recap-ring::before {
+  background: rgba(154, 28, 32, 0.22);
+  animation: none;
+}
+
+.recap-bubble.is-seen small {
+  color: var(--text-muted);
+}
+
+.recap-bubble:focus-visible {
+  outline: 3px solid var(--brand-red);
+  outline-offset: 3px;
+  border-radius: 12px;
+}
+
+:root[data-theme="dark"] .recap-bubble.is-seen .recap-ring::before {
   background: rgba(255, 255, 255, 0.18);
 }
 

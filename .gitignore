@@ -7,3 +7,4 @@
 *.apk
 *.aab
 signing-key-info.txt
+_mockup*

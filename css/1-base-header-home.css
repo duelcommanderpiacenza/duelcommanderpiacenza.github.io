@@ -596,13 +596,14 @@ html.app-header .sk-cols > .sk-col + .sk-col {
   margin-top: 16px;
 }
 
-/* The recap card's place (js/home.js recapLikely — only when one is likely),
-   as tall as the card, above everything. */
+/* The recaps' place (js/home.js recapLikely — only when one is likely): a
+   story bubble's size, above everything. */
 .sk-page.is-home .sk-recap {
   display: block;
-  height: 88px;
+  width: 84px;
+  height: 118px;
   margin-bottom: 18px;
-  border-radius: 20px;
+  border-radius: 16px;
 }
 
 .sk-page.is-home .sk-recap[hidden] {

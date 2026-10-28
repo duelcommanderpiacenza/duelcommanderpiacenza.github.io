@@ -396,8 +396,8 @@ async function renderCommandersSection(el) {
 // placeholder (index.html .home-charts-sk) until its charts are in.
 // --- Recap -------------------------------------------------------------------------
 
-// The latest event played in the last RECAP_DAYS days (or a season just
-// over — SEASON_DAYS, below): a card on top (its
+// The recaps due (events played in the last RECAP_DAYS days, seasons over
+// in the last SEASON_DAYS, below) on top — story bubbles (its
 // winner's commander art in a turning red-gold ring — grey once watched,
 // js/event-recap.js recapSeen —, "Nuovo · Recap", the event, who won with
 // what; the whole card a button) opening its recap's stories. Nothing when there's none
@@ -438,9 +438,9 @@ function isoDaysAgo(days) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-// A season just over takes the card's place: a closed league (not a Topdeck
-// series) whose last event was within SEASON_DAYS — its season recap
-// instead of that event's (js/event-recap.js openSeasonRecap).
+// A season just over: a closed league (not a Topdeck series) whose last
+// event was within SEASON_DAYS — its season recap (js/event-recap.js
+// openSeasonRecap), beside the events' own.
 const SEASON_DAYS = 14;
 
 const plusDays = (iso, days) => {
@@ -449,83 +449,106 @@ const plusDays = (iso, days) => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
 
-// The latest closed real league whose last played event is on or after
-// `cutoff`: { id, last } — or null.
-function recentSeason(events, cutoff) {
+// The closed real leagues whose last played event is on or after `cutoff`:
+// [{ id, last }], newest first.
+function recentSeasons(events, cutoff) {
   const lastByLeague = new Map();
   for (const e of events) {
     if (e.is_open || !e.event_date || !e.league || e.league.is_open || e.league.is_topdeck) continue;
     if ((lastByLeague.get(e.league_id) ?? "") < e.event_date) lastByLeague.set(e.league_id, e.event_date);
   }
-  const [id, last] = [...lastByLeague.entries()].filter(([, d]) => d >= cutoff).sort((a, b) => b[1].localeCompare(a[1]))[0] ?? [];
-  return id ? { id, last } : null;
+  return [...lastByLeague.entries()]
+    .filter(([, d]) => d >= cutoff)
+    .sort((a, b) => b[1].localeCompare(a[1]))
+    .map(([id, last]) => ({ id, last }));
 }
 
-function recapEntryHtml({ seen, kicker, title, line }) {
+// Every recap due now: each event played in the last RECAP_DAYS, each
+// season over in the last SEASON_DAYS — with what its card / bubble shows.
+// Not yet watched first, then newest first. A failed one is left out.
+async function dueRecaps(events) {
+  const eventItems = events
+    .filter((e) => !e.is_open && e.event_date && e.event_date >= isoDaysAgo(RECAP_DAYS))
+    .map(async (e) => {
+      const data = await loadRecapData(e.id);
+      if (!data.winner) return null;
+      return {
+        date: e.event_date,
+        until: plusDays(e.event_date, RECAP_DAYS),
+        seenId: e.id,
+        seen: recapSeen(e.id),
+        kicker: "Nuovo · Recap",
+        short: "Recap",
+        title: data.name,
+        line: `Vince ${escapeHtml(data.winner.player?.name)} con ${escapeHtml(data.winnerCommander)}`,
+        art: data.winnerCommander,
+        open: () => openEventRecap(e.id),
+      };
+    });
+  const seasonItems = recentSeasons(events, isoDaysAgo(SEASON_DAYS)).map(async ({ id, last }) => {
+    const data = await loadSeasonData(id);
+    if (!data.champion) return null;
+    return {
+      date: last,
+      until: plusDays(last, SEASON_DAYS),
+      seenId: `league:${id}`,
+      seen: seasonRecapSeen(id),
+      kicker: "Nuovo · Recap della stagione",
+      short: "Stagione",
+      title: data.name,
+      line: `Campione ${escapeHtml(data.champion.player?.name)} con ${escapeHtml(data.championCommander)}`,
+      art: data.championCommander,
+      open: () => openSeasonRecap(id),
+    };
+  });
+  const settled = await Promise.allSettled([...eventItems, ...seasonItems]);
+  return settled
+    .map((r) => (r.status === "fulfilled" ? r.value : null))
+    .filter(Boolean)
+    .sort((a, b) => a.seen - b.seen || b.date.localeCompare(a.date));
+}
+
+const RING_HTML = `<span class="recap-ring"><span class="recap-ring-art"></span><span class="recap-ring-play">${PLAY_ICON}</span></span>`;
+
+// The recaps as a row of compact bubbles, like a social app's stories (one
+// or several alike — since 2026-10-28 also a single one, which was a wide
+// card): the ring with the art, "Recap" / "Stagione" and the name under it.
+function recapBubblesHtml(items) {
   return `
-      <button type="button" class="recap-entry${seen ? " is-seen" : ""}">
-        <span class="recap-ring"><span class="recap-ring-art"></span><span class="recap-ring-play">${PLAY_ICON}</span></span>
-        <span class="recap-entry-text">
-          <span class="recap-entry-k">${kicker}</span>
-          <b>${escapeHtml(title)}</b>
-          <span>${line}</span>
-        </span>
-      </button>`;
+      <div class="recap-bubbles" role="list">${items
+        .map(
+          (item) => `
+        <button type="button" class="recap-bubble${item.seen ? " is-seen" : ""}" role="listitem" data-recap="${escapeHtml(item.seenId)}" aria-label="${escapeHtml(
+            `${item.kicker.replace("Nuovo · ", "")}: ${item.title}`
+          )}">
+          ${RING_HTML}
+          <small>${item.short}</small>
+          <b>${escapeHtml(item.title)}</b>
+        </button>`
+        )
+        .join("")}
+      </div>`;
 }
 
 async function renderRecapCard(el, signal) {
   try {
     const [events, upcoming] = await Promise.all([allEvents(), upcomingEvents().catch(() => [])]);
-    // For the next visit's loading skeleton (recapLikely).
+    const items = await dueRecaps(events);
+    // For the next visit's loading skeleton (recapLikely): the last day any
+    // of them is due.
     const next = upcoming[0]?.event_date ?? null;
-    const season = recentSeason(events, isoDaysAgo(SEASON_DAYS));
-    const ev = season
-      ? null
-      : events
-          .filter((e) => !e.is_open && e.event_date && e.event_date >= isoDaysAgo(RECAP_DAYS))
-          .sort((a, b) => b.event_date.localeCompare(a.event_date))[0];
-    if (!season && !ev) {
-      rememberRecapHint(null, next);
-      return;
-    }
-    rememberRecapHint(season ? plusDays(season.last, SEASON_DAYS) : plusDays(ev.event_date, RECAP_DAYS), next);
-
-    let art;
-    let seenId;
-    let open;
-    if (season) {
-      const data = await loadSeasonData(season.id);
-      if (signal.aborted || !data.champion) return;
-      el.innerHTML = recapEntryHtml({
-        seen: seasonRecapSeen(season.id),
-        kicker: "Nuovo · Recap della stagione",
-        title: data.name,
-        line: `Campione ${escapeHtml(data.champion.player?.name)} con ${escapeHtml(data.championCommander)}`,
-      });
-      art = data.championCommander;
-      seenId = `league:${season.id}`;
-      open = () => openSeasonRecap(season.id);
-    } else {
-      const data = await loadRecapData(ev.id);
-      if (signal.aborted || !data.winner) return;
-      el.innerHTML = recapEntryHtml({
-        seen: recapSeen(ev.id),
-        kicker: "Nuovo · Recap",
-        title: data.name,
-        line: `Vince ${escapeHtml(data.winner.player?.name)} con ${escapeHtml(data.winnerCommander)}`,
-      });
-      art = data.winnerCommander;
-      seenId = ev.id;
-      open = () => openEventRecap(ev.id);
-    }
+    rememberRecapHint(items.length ? items.map((i) => i.until).sort().at(-1) : null, next);
+    if (signal.aborted || !items.length) return;
+    el.innerHTML = recapBubblesHtml(items);
     el.hidden = false;
-    createArtPainter(el.querySelector(".recap-ring-art"))(art.split(" / ")[0]);
-    el.querySelector(".recap-entry").addEventListener("click", open);
+    for (const item of items) {
+      const btn = el.querySelector(`[data-recap="${CSS.escape(item.seenId)}"]`);
+      createArtPainter(btn.querySelector(".recap-ring-art"))(item.art.split(" / ")[0]);
+      btn.addEventListener("click", item.open);
+    }
     document.addEventListener(
       "recap:seen",
-      (e) => {
-        if (e.detail === seenId) el.querySelector(".recap-entry")?.classList.add("is-seen");
-      },
+      (e) => el.querySelector(`[data-recap="${CSS.escape(e.detail)}"]`)?.classList.add("is-seen"),
       { signal }
     );
   } catch (err) {
