@@ -193,6 +193,21 @@ window.addEventListener("beforeunload", (e) => {
   e.returnValue = "";
 });
 
+// On the admin's opening: the sync run once by itself if the achievements
+// have never been computed (player_achievements empty — just after
+// migration 028, before any event was closed or reopened), so they cover
+// every past result at once rather than waiting for the next change. Never
+// in the way: a failure (e.g. the table not there yet) is only logged.
+export async function syncIfAchievementsMissing() {
+  try {
+    if ((await PlayerAchievements.count()) > 0) return;
+    if (!(await Events.list()).some((ev) => !ev.is_open)) return;
+    await syncAutoBadges();
+  } catch (err) {
+    console.error(err);
+  }
+}
+
 export function syncAutoBadges() {
   if (current) {
     queued = true;

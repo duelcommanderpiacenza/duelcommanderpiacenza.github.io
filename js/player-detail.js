@@ -16,7 +16,7 @@ import { renderPublicPlayerCard, createArtPainter } from "./player-card.js";
 import { initFollowButton } from "./follow-button.js";
 import { initBackToTop } from "./back-to-top.js";
 import { renderPlayerLeagueRecap } from "./player-league-recap.js";
-import { achievementState, achievementsTileHtml, achievementsListHtml, achievementsCountText } from "./achievements.js";
+import { achievementState, achievementsRingHtml, achievementsListHtml, enableAchievementDetails } from "./achievements.js";
 import { openInfoDialog } from "./info-dialog.js";
 
 function getId() {
@@ -276,21 +276,24 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     for (const r of ownRows) if (!r.isDrop) tallyOutcome(bucket, r.outcome);
     renderWinrateTiles(overallEl, bucket, { events: entries.length });
 
-    // After the numbers (never first: the first is the winrate's pill), the
-    // achievements: "Obiettivi N/30", opening the whole list.
+    // The achievements: a completion ring with the count, on the player
+    // card's top-right corner (opposite its badges) — beside the name when
+    // there's no card — opening the whole list.
     const achievementRows = await achievementsRequest;
     if (signal.aborted) return;
-    if (achievementRows && overallEl.querySelector(".stat-tile")) {
+    const ringHost = document.querySelector("#player-page-card:not([hidden]) .pc-surface") ?? document.querySelector("#player-hero .detail-hero-title-row");
+    if (achievementRows && ringHost) {
       const state = achievementState(...achievementRows);
-      overallEl.insertAdjacentHTML("beforeend", achievementsTileHtml(state));
-      overallEl.querySelector(".ach-tile").addEventListener("click", () =>
-        openInfoDialog({
+      ringHost.insertAdjacentHTML("beforeend", achievementsRingHtml(state));
+      ringHost.querySelector(".ach-ring-btn").addEventListener("click", () => {
+        // (No subtitle: the list's own recap says how many.)
+        const dialog = openInfoDialog({
           id: "achievements-dialog",
           title: `Obiettivi di ${player.name}`,
-          subtitle: achievementsCountText(state),
           bodyHtml: achievementsListHtml(state),
-        })
-      );
+        });
+        enableAchievementDetails(dialog.querySelector(".info-dialog-body"), state);
+      });
     }
 
     // The second (last) round, together: the entries of the events played

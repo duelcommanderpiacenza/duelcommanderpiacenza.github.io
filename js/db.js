@@ -763,6 +763,15 @@ export const EventStandings = {
 // next level) and the date of the event that reached it. replaceAll(): the
 // admin's full rebuild (admin/js/badges-sync.js), like PlayerProgress.
 export const PlayerAchievements = {
+  // How many rows (none yet: the sync hasn't run since migration 028).
+  count: () =>
+    sb
+      .from("player_achievements")
+      .select("player_id", { count: "exact", head: true })
+      .then(({ count, error }) => {
+        if (error) throw error;
+        return count ?? 0;
+      }),
   listByPlayer: (playerId) =>
     sb.from("player_achievements").select("key, level, value, unlocked_at").eq("player_id", playerId).then(assertOk),
   replaceAll: async (rows) => {

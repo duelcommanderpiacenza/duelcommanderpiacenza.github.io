@@ -1029,10 +1029,42 @@ alter table achievements_seen enable row level security;
 create policy "achievements_seen_read_own" on achievements_seen for select using (user_id = auth.uid());
 create policy "achievements_seen_insert_own" on achievements_seen for insert with check (user_id = auth.uid());
 
+-- Records an account's site achievements whose fact is there (none twice):
+-- Collegato (linked to a player), Carta creata (a profiles row), Prima
+-- decklist (one sent — dated by the first). Normally called on each visit
+-- (my_achievements, below), so "now" is when it happened, near enough;
+-- p_backfill (this migration's own run over the accounts that already
+-- exist): the closest past date there is instead — the account's creation
+-- for Collegato (the link itself has no date), the card's last save for
+-- Carta creata. Never called directly.
+create or replace function record_site_achievements(p_user_id uuid, p_backfill boolean default false)
+returns void
+language plpgsql security definer set search_path = public as $$
+declare
+  t timestamptz;
+begin
+  if exists (select 1 from players p where p.user_id = p_user_id) then
+    select case when p_backfill then u.created_at else now() end into t from auth.users u where u.id = p_user_id;
+    insert into account_achievements (user_id, key, unlocked_at)
+    values (p_user_id, 'collegato', coalesce(t, now())) on conflict do nothing;
+  end if;
+  select case when p_backfill then pr.updated_at else now() end into t from profiles pr where pr.user_id = p_user_id;
+  if found then
+    insert into account_achievements (user_id, key, unlocked_at)
+    values (p_user_id, 'carta_creata', coalesce(t, now())) on conflict do nothing;
+  end if;
+  select min(d.sent_at) into t from decklist_submissions d where d.user_id = p_user_id;
+  if t is not null then
+    insert into account_achievements (user_id, key, unlocked_at)
+    values (p_user_id, 'prima_decklist', t) on conflict do nothing;
+  end if;
+end $$;
+
+revoke execute on function record_site_achievements(uuid, boolean) from public, anon, authenticated;
+
 -- The signed-in account's achievements, in one call (js/achievement-toast.js,
 -- account.html's "Obiettivi"): first the site ones whose fact is there now
--- are recorded (dated by the fact when it has a date — the first decklist
--- sent — else now), then returned:
+-- are recorded (record_site_achievements), then returned:
 --   kind 'player' — the linked player's player_achievements rows;
 --   kind 'site'   — the account's site ones (level 1);
 --   kind 'seen'   — every (key, level) already shown to this account.
@@ -1043,23 +1075,12 @@ language plpgsql security definer set search_path = public as $$
 declare
   uid uuid := auth.uid();
   pid uuid;
-  t timestamptz;
 begin
   if uid is null then
     raise exception 'not_signed_in';
   end if;
   select p.id into pid from players p where p.user_id = uid;
-
-  if pid is not null then
-    insert into account_achievements (user_id, key) values (uid, 'collegato') on conflict do nothing;
-  end if;
-  if exists (select 1 from profiles pr where pr.user_id = uid) then
-    insert into account_achievements (user_id, key) values (uid, 'carta_creata') on conflict do nothing;
-  end if;
-  select min(d.sent_at) into t from decklist_submissions d where d.user_id = uid;
-  if t is not null then
-    insert into account_achievements (user_id, key, unlocked_at) values (uid, 'prima_decklist', t) on conflict do nothing;
-  end if;
+  perform record_site_achievements(uid);
 
   return query
     select 'player'::text, pa.key, pa.level, pa.value, pa.unlocked_at::timestamptz

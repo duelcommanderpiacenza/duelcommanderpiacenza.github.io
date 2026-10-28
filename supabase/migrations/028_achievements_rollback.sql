@@ -3,6 +3,7 @@
 
 drop function if exists site_achievements_of(uuid);
 drop function if exists my_achievements();
+drop function if exists record_site_achievements(uuid, boolean);
 drop table if exists achievements_seen;
 drop table if exists account_achievements;
 drop table if exists player_achievements;

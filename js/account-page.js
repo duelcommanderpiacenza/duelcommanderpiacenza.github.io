@@ -55,7 +55,7 @@ import {
   PlayerProgress,
   Achievements,
 } from "./db.js";
-import { achievementState, achievementsListHtml } from "./achievements.js";
+import { achievementState, achievementsListHtml, enableAchievementDetails } from "./achievements.js";
 import { matchRoundOutcome, isDrop, isBye, computeLeaguePoints } from "./leaderboard.js";
 import { tallyOutcome, winRatePct } from "./winrate.js";
 import { applyCardCosmetics, openCardEffectsInfo } from "./card-cosmetics.js";
@@ -1575,7 +1575,10 @@ export function mount({ signal = new AbortController().signal } = {}) {
     try {
       const rows = await request;
       const of = (kind) => rows.filter((r) => r.kind === kind);
-      document.getElementById("profile-achievements-list").innerHTML = achievementsListHtml(achievementState(of("player"), of("site")));
+      const listEl = document.getElementById("profile-achievements-list");
+      const state = achievementState(of("player"), of("site"));
+      listEl.innerHTML = achievementsListHtml(state);
+      enableAchievementDetails(listEl, state);
       achievementsCard.hidden = false;
     } catch (err) {
       console.error(err);

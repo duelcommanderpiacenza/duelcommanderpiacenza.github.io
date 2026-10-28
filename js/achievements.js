@@ -148,57 +148,143 @@ export function medalHtml(a, level, extraClass = "") {
 
 const descText = (a, level) => (typeof a.desc === "function" ? a.desc(a.tiers[level - 1]) : a.desc);
 
-// One row: unlocked — name + level, description, date, and for a tiered
-// one not at its last level the progress toward the next; locked — the
-// name and the hint only.
-export function achievementRowHtml(a, st) {
-  if (!st) {
-    return `<div class="ach-row is-locked">${medalHtml(a, 0)}<span class="ach-text"><b>${nameHtml(a, 0)}</b><span>${escapeHtml(a.hint)}</span></span></div>`;
-  }
-  let progress = "";
-  if (a.tiers && st.level < a.tiers.length && st.value != null) {
-    const next = a.tiers[st.level];
-    const pct = Math.min(100, Math.round((st.value / next) * 100));
-    progress = `<div class="ach-progress"><i><b style="width:${pct}%"></b></i><span>Verso ${roman(st.level + 1)} · ${st.value}/${next}</span></div>`;
-  }
-  return `<div class="ach-row">${medalHtml(a, st.level)}<span class="ach-text"><b>${nameHtml(a, st.level)}</b><span>${escapeHtml(descText(a, st.level))}</span></span><span class="ach-date">${formatDate(st.unlockedAt)}</span>${progress}</div>`;
+// A tiered one's progress toward its next level (null at its last level or
+// locked — a locked one never shows its condition).
+function nextLevel(a, st) {
+  if (!a.tiers || !st || st.level >= a.tiers.length || st.value == null) return null;
+  const to = a.tiers[st.level];
+  return { level: st.level + 1, to, pct: Math.min(100, (st.value / to) * 100) };
+}
+
+// The colour a badge takes (its halo, its level dots, its detail): its
+// level's, a single one's red, Seriamente's gold.
+const toneClass = (a, st) => (!st ? "" : a.source === "final" ? "ach-tone-f" : a.tiers ? `ach-tone-${st.level}` : "ach-tone-0");
+
+// A tiered one's levels I–IV as dots, filled up to the one reached.
+function pipsHtml(a, st) {
+  if (!a.tiers) return "";
+  return `<span class="ach-pips" aria-hidden="true">${a.tiers.map((_, i) => `<i${st && i < st.level ? ' class="on"' : ""}></i>`).join("")}</span>`;
 }
 
 export const countUnlocked = (state) => ALL.filter((a) => state.has(a.key)).length;
 
-export const achievementsCountText = (state) => `${countUnlocked(state)} su ${ALL.length} sbloccati`;
-
-// player.html's hero tile (one of the .stat-tile numbers, a button): the
-// count over the total and a thin bar. Laid out value over label
-// (column-reverse), so the bar sits between them in the DOM.
-export function achievementsTileHtml(state) {
+// player.html's completion ring (a button opening the list): the count
+// inside, the ring filled by how many of all are unlocked, in the page's
+// accent colour (styles.css .ach-ring-btn) — on the player card's top-right
+// corner, else beside the name.
+export function achievementsRingHtml(state) {
   const unlocked = countUnlocked(state);
-  return `<button type="button" class="stat-tile ach-tile" aria-haspopup="dialog">
-      <div class="stat-tile-label">Obiettivi</div>
-      <span class="ach-tile-bar" aria-hidden="true"><i style="width:${(unlocked / ALL.length) * 100}%"></i></span>
-      <div class="stat-tile-value">${unlocked}<small>/${ALL.length}</small></div>
-    </button>`;
+  return `<button type="button" class="ach-ring-btn" style="--p:${(unlocked / ALL.length) * 100}" aria-haspopup="dialog" aria-label="Obiettivi: ${unlocked} sbloccati su ${ALL.length}" title="Obiettivi"><b>${unlocked}</b></button>`;
 }
 
-// The whole list: a summary (count, bar, the latest unlocked), Seriamente
-// 1.0 on its own, then each group — unlocked first, then locked.
+// The whole list (option A's recap + option B's medals, chosen from a
+// mockup): on top a red box with a gold ring (unlocked over the total) and
+// the percentage; then each group, its title with its own bar, as a grid of
+// big medals (name and level dots under each; unlocked first) — a tap opens
+// the medal's detail under its row (enableAchievementDetails); Seriamente
+// 1.0 last, a big medal on its own dark card (its date once unlocked, no count).
 export function achievementsListHtml(state) {
   const unlocked = countUnlocked(state);
-  const latest = ALL.filter((a) => state.has(a.key)).sort((x, y) => String(state.get(y.key).unlockedAt).localeCompare(String(state.get(x.key).unlockedAt)))[0];
-  const summary = `
-    <div class="ach-summary">
-      <span class="ach-summary-n">${unlocked}<small>/${ALL.length}</small></span>
-      <div class="ach-summary-text">
-        <b>Obiettivi sbloccati</b>
-        <div class="ach-summary-bar"><i style="width:${(unlocked / ALL.length) * 100}%"></i></div>
-        <span>${latest ? `Ultimo: ${nameHtml(latest, state.get(latest.key).level)} · ${formatDate(state.get(latest.key).unlockedAt)}` : "Nessuno ancora: gioca e scoprili."}</span>
+  const pct = Math.round((unlocked / ALL.length) * 100);
+  const head = `
+    <div class="ach-head">
+      <div class="ach-ring" style="--p:${(unlocked / ALL.length) * 100}" role="img" aria-label="${unlocked} obiettivi sbloccati su ${ALL.length}"><b>${unlocked}<small>/${ALL.length}</small></b></div>
+      <div class="ach-head-text">
+        <h4>Obiettivi sbloccati</h4>
+        <span>${pct}% completato</span>
       </div>
     </div>`;
   const groups = GROUPS.map((g) => {
     const list = ACHIEVEMENTS.filter((a) => a.group === g.id);
     const got = list.filter((a) => state.has(a.key));
-    const rows = [...got, ...list.filter((a) => !state.has(a.key))].map((a) => achievementRowHtml(a, state.get(a.key))).join("");
-    return `<section class="ach-group"><h3>${g.name} <small>${got.length}/${list.length}</small></h3><div class="ach-grid">${rows}</div></section>`;
+    const badges = [...got, ...list.filter((a) => !state.has(a.key))].map((a) => badgeHtml(a, state.get(a.key))).join("");
+    return `<section class="ach-group">
+        <div class="ach-group-head"><h3>${g.name}</h3><small>${got.length}/${list.length}</small><i aria-hidden="true"><b style="width:${(got.length / list.length) * 100}%"></b></i></div>
+        <div class="ach-medals">${badges}</div>
+      </section>`;
   }).join("");
-  return `<div class="ach-list">${summary}<div class="ach-final">${achievementRowHtml(FINAL, state.get(FINAL.key))}</div>${groups}</div>`;
+  const fin = state.get(FINAL.key);
+  const final = `
+    <div class="ach-final${fin ? " is-unlocked" : ""}">
+      ${medalHtml(FINAL, fin ? 1 : 0)}
+      <b>${escapeHtml(FINAL.name)}</b>
+      <span>${escapeHtml(fin ? FINAL.desc : FINAL.hint)}</span>
+      ${fin ? `<small>Sbloccato il ${formatDate(fin.unlockedAt)}</small>` : ""}
+    </div>`;
+  return `<div class="ach-list">${head}${groups}${final}</div>`;
+}
+
+// One medal of the grid: a button (its detail on tap).
+function badgeHtml(a, st) {
+  return `<button type="button" class="ach-badge ${st ? toneClass(a, st) : "is-locked"}" data-key="${a.key}" aria-expanded="false">
+      ${medalHtml(a, st?.level ?? 0)}
+      <b>${nameHtml(a, st?.level ?? 0)}</b>
+      ${pipsHtml(a, st)}
+    </button>`;
+}
+
+// A medal's detail: unlocked — description, date, the progress to the next
+// level; locked — the hint only.
+function detailHtml(a, st) {
+  const next = nextLevel(a, st);
+  const when = st ? `Sbloccato il ${formatDate(st.unlockedAt)}` : "Ancora da sbloccare";
+  return `<div class="ach-detail ${toneClass(a, st)}" role="region" aria-label="${escapeHtml(a.name)}"><div class="ach-detail-clip"><div class="ach-detail-inner">
+      ${medalHtml(a, st?.level ?? 0)}
+      <b>${nameHtml(a, st?.level ?? 0)}</b>
+      <span>${escapeHtml(st ? descText(a, st.level) : a.hint)}</span>
+      <small>${when}${next ? ` · verso ${roman(next.level)}: ${st.value}/${next.to}` : ""}</small>
+      ${next ? `<i class="ach-detail-bar" aria-hidden="true"><b style="width:${next.pct}%"></b></i>` : ""}
+    </div></div></div>`;
+}
+
+// A detail growing open (styles.css .ach-detail: its height from 0, the
+// grid's gap given back) and shrinking away before it goes; at once under
+// reduced motion.
+const reduceMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function openDetail(detail) {
+  void detail.offsetHeight;
+  requestAnimationFrame(() => detail.classList.add("is-open"));
+}
+
+function closeDetail(detail) {
+  detail.dataset.closing = "1";
+  detail.classList.remove("is-open");
+  if (reduceMotion()) return detail.remove();
+  let gone = false;
+  const done = () => {
+    if (gone) return;
+    gone = true;
+    detail.remove();
+  };
+  detail.addEventListener("transitionend", (e) => {
+    if (e.target === detail && e.propertyName === "grid-template-rows") done();
+  });
+  setTimeout(done, 450);
+}
+
+// The medals' details, on a list drawn by achievementsListHtml inside
+// `container`: a tap on a medal opens its detail right under the row it's
+// in (closing any other), a second tap closes it — both animated. One
+// listener per container, whatever list it holds later (`state` kept on it).
+export function enableAchievementDetails(container, state) {
+  container.achievementState = state;
+  if (container.dataset.achDetails) return;
+  container.dataset.achDetails = "1";
+  container.addEventListener("click", (e) => {
+    const badge = e.target.closest(".ach-badge");
+    if (!badge || !container.contains(badge)) return;
+    const grid = badge.parentElement;
+    const wasOpen = badge.getAttribute("aria-expanded") === "true";
+    container.querySelectorAll(".ach-detail:not([data-closing])").forEach(closeDetail);
+    container.querySelectorAll('.ach-badge[aria-expanded="true"]').forEach((b) => b.setAttribute("aria-expanded", "false"));
+    if (wasOpen) return;
+    badge.setAttribute("aria-expanded", "true");
+    const badges = [...grid.querySelectorAll(".ach-badge")];
+    const top = badge.offsetTop;
+    const rowEnd = badges.filter((b) => b.offsetTop === top).pop();
+    const a = BY_KEY.get(badge.dataset.key);
+    rowEnd.insertAdjacentHTML("afterend", detailHtml(a, container.achievementState.get(a.key)));
+    openDetail(rowEnd.nextElementSibling);
+  });
 }
