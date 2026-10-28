@@ -1661,16 +1661,25 @@ html.is-page-transition:not(.app-header) .site-header-brand {
    entrance, the timeline's…: nothing plays again — an endless one carries
    on afterwards), and every transition too (the splash's fade-out, an
    art's fade-in: the new screen's picture is taken with them done, not
-   half-way).
+   half-way). Except the phones' hero parallax (.profile-hero.is-parallax,
+   its art and content — scroll-driven animations, css "The hero pages on
+   touch screens"): at its "end" it's the hero pushed down by half its
+   height and blurred, the light page above it — which every quiet redraw
+   on a hero page showed for a moment until 2026-10-28.
    --------------------------------------------------------------------------- */
 html.is-quiet-refresh *,
 html.is-quiet-refresh *::before,
 html.is-quiet-refresh *::after {
   view-transition-name: none !important;
-  animation-duration: 0s !important;
-  animation-delay: 0s !important;
   transition-duration: 0s !important;
   transition-delay: 0s !important;
+}
+
+html.is-quiet-refresh *:not(.profile-hero.is-parallax, .profile-hero.is-parallax .profile-hero-art, .profile-hero.is-parallax .profile-hero-inner),
+html.is-quiet-refresh *::before,
+html.is-quiet-refresh *::after {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
 }
 
 /* plus-lighter: a true cross-fade, the screen covered all the way through.
