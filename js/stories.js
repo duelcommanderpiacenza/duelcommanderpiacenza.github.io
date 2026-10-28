@@ -6,6 +6,10 @@
 //    its title ("… // Tifa VS Light-Paws // series"), the two commanders'
 //    art face to face (matched against the commanders' names), then its
 //    thumbnail with "Guarda su YouTube".
+//  - **Nuovo primer**: each Moxfield deck whose name starts with "[PRIMER]"
+//    (not the events' decklists) created in the last PRIMER_HOURS (from
+//    decks.json, refreshed daily) — its commander's art, the deck's name,
+//    then "Apri su Moxfield".
 //  - **Il meta del mese**: from the 1st to the META_DAYS-th of a month, the
 //    month just ended — its events / decks / commanders, the commander of the
 //    month, the top 5 (share, winrate), the revelation (best winrate, at
@@ -19,6 +23,7 @@ import { escapeHtml } from "./ui.js";
 import { openStories, at, archetypesSlide } from "./event-recap.js";
 
 const VIDEO_HOURS = 48;
+const PRIMER_HOURS = 48;
 const META_DAYS = 5;
 const REVELATION_MIN_PLAYED = 6;
 const MONTHS = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"];
@@ -54,23 +59,24 @@ function commanderNamed(commanders, part) {
 }
 
 function videoSlides(video, commanders) {
-  const { matchup, left, right, series } = parseVideoTitle(video.title);
-  // Calendar days (today / yesterday), not 24-hour spans.
-  const day = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-  const ageDays = Math.round((day(new Date()) - day(new Date(video.publishedAtUtc))) / 864e5);
-  const when = ageDays <= 0 ? "uscito oggi" : ageDays === 1 ? "uscito ieri" : `uscito ${ageDays} giorni fa`;
-  const side = (part) => {
-    const c = commanderNamed(commanders, part);
-    return `<div class="story-vs-side"><span class="story-vs-art" data-art="${escapeHtml(c?.name ?? "")}"></span><b>${escapeHtml(c?.name ?? part ?? "")}</b></div>`;
-  };
+  const { matchup, left, right } = parseVideoTitle(video.title);
+  // The two commanders: their arts in one row (with the VS between), their
+  // names in a row under it — so the circles line up whatever the names'
+  // length.
+  const [lc, rc] = [left, right].map((part) => commanderNamed(commanders, part));
+  const art = (c) => `<span class="story-vs-art" data-art="${escapeHtml(c?.name ?? "")}"></span>`;
+  const label = (c, part) => `<b>${escapeHtml(c?.name ?? part ?? "")}</b>`;
   const slides = [
     `<section class="recap-slide is-center"><div class="recap-bg story-bg-thumb" style="background-image:url('${escapeHtml(video.thumbnailUrl)}')"></div>
-      <p class="recap-k" ${at(0)}>Nuovo video · ${when}</p>
+      <p class="recap-k" ${at(0)}>Nuovo video</p>
       <h2 class="recap-big is-small" ${at(1)}>${
         left && right ? `${escapeHtml(left)} <span class="story-vs-word">VS</span> ${escapeHtml(right)}` : escapeHtml(matchup)
       }</h2>
-      ${series ? `<p class="recap-mid" ${at(2)}>${escapeHtml(series)}</p>` : ""}
-      ${left && right ? `<div class="story-vs" ${at(3)}>${side(left)}<span class="story-vs-word">VS</span>${side(right)}</div>` : ""}</section>`,
+      ${
+        left && right
+          ? `<div class="story-vs" ${at(2)}>${art(lc)}<span class="story-vs-word">VS</span>${art(rc)}${label(lc, left)}<span></span>${label(rc, right)}</div>`
+          : ""
+      }</section>`,
     `<section class="recap-slide is-center"><div class="recap-bg is-dark"></div>
       <p class="recap-k" ${at(0)}>Guardalo ora</p>
       <a class="story-thumb" ${at(1)} href="${escapeHtml(video.url)}" target="_blank" rel="noopener noreferrer" aria-label="Guarda su YouTube"><span class="story-thumb-img" style="background-image:url('${escapeHtml(
@@ -108,6 +114,59 @@ async function dueVideos() {
             seenKey,
             seenId: `video:${video.id}`,
             shareUrl: video.url,
+          }),
+      };
+    });
+}
+
+// --- Nuovo primer ----------------------------------------------------------------------
+
+const isPrimer = (deck) => /^\[PRIMER\]/i.test(deck.name ?? "");
+const primerTitle = (deck) => (deck.name ?? "").replace(/^\[PRIMER\]\s*[-–—:]?\s*/i, "").trim() || deck.commanderName || "Primer";
+
+function primerSlides(deck) {
+  const art = deck.previewImageUrl ?? "";
+  return [
+    `<section class="recap-slide is-center"><div class="recap-bg" style="background-image:url('${escapeHtml(art)}')"></div>
+      <p class="recap-k" ${at(0)}>Nuovo primer</p>
+      <div class="recap-card-art" data-in style="--d:1;background-image:url('${escapeHtml(art)}')"></div>
+      <h2 class="recap-big is-small" ${at(2)}>${escapeHtml(primerTitle(deck))}</h2>
+      ${deck.commanderName ? `<p class="recap-mid" ${at(3)}>${escapeHtml(deck.commanderName)}</p>` : ""}
+      <p class="recap-mid story-meta-note" ${at(4)}>La guida al mazzo: come si gioca, le scelte, i matchup.</p></section>`,
+    `<section class="recap-slide is-center"><div class="recap-bg is-dark"></div>
+      <p class="recap-k" ${at(0)}>Leggilo ora</p>
+      <a class="story-thumb" ${at(1)} href="${escapeHtml(deck.url)}" target="_blank" rel="noopener noreferrer" aria-label="Apri su Moxfield"><span class="story-thumb-img" style="background-image:url('${escapeHtml(art)}')"></span></a>
+      <p class="recap-mid story-thumb-title" ${at(2)}>${escapeHtml(primerTitle(deck))}</p>
+      <a class="story-yt story-moxfield" ${at(3)} href="${escapeHtml(deck.url)}" target="_blank" rel="noopener noreferrer"><img src="moxfield.png" alt="">Apri su Moxfield</a></section>`,
+  ].join("");
+}
+
+async function duePrimers() {
+  const decks = await fetch("decks.json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : []));
+  const since = Date.now() - PRIMER_HOURS * 3600 * 1000;
+  return decks
+    .filter((d) => isPrimer(d) && d.createdAtUtc && new Date(d.createdAtUtc).getTime() >= since)
+    .map((deck) => {
+      const seenKey = `storySeen:primer:${deck.id}`;
+      return {
+        date: deck.createdAtUtc.slice(0, 10),
+        until: isoDate(new Date(new Date(deck.createdAtUtc).getTime() + PRIMER_HOURS * 3600 * 1000)),
+        seenId: `primer:${deck.id}`,
+        seen: seen(seenKey),
+        kicker: "Nuovo primer",
+        short: "Primer",
+        title: primerTitle(deck),
+        thumb: deck.previewImageUrl ?? null,
+        art: deck.previewImageUrl ? null : deck.commanderName,
+        open: () =>
+          openStories({
+            label: "Nuovo primer",
+            heading: () => "Nuovo primer",
+            load: async () => ({ name: deck.name }),
+            slides: () => primerSlides(deck),
+            seenKey,
+            seenId: `primer:${deck.id}`,
+            shareUrl: deck.url,
           }),
       };
     });
@@ -221,6 +280,6 @@ async function dueMeta() {
 
 /** The other stories due now, as bubble items (js/home.js); a failed one is left out. */
 export async function dueStories() {
-  const settled = await Promise.allSettled([dueVideos(), dueMeta()]);
+  const settled = await Promise.allSettled([dueVideos(), duePrimers(), dueMeta()]);
   return settled.flatMap((r) => (r.status === "fulfilled" ? r.value : (console.error(r.reason), [])));
 }

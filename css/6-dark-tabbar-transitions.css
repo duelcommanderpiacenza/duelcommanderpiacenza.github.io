@@ -3142,18 +3142,18 @@ html.is-recap-open {
    YouTube". "Il meta del mese": the top 5 as rows (art, name, winrate,
    share).
    --------------------------------------------------------------------------- */
+/* Two rows: the arts with the VS between them, centred on each other; the
+   names under them, from the top (a long one doesn't move the circles). */
 .story-vs {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: 8px;
+  gap: 10px 8px;
   margin-top: 22px;
 }
 
-.story-vs-side {
-  display: grid;
-  justify-items: center;
-  gap: 8px;
+.story-vs > b {
+  align-self: start;
   text-align: center;
 }
 
@@ -3165,7 +3165,7 @@ html.is-recap-open {
   box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.85), 0 10px 26px rgba(0, 0, 0, 0.5);
 }
 
-.story-vs-side b {
+.story-vs > b {
   font-size: 1rem;
   line-height: 1.2;
 }
@@ -3247,6 +3247,16 @@ html.is-recap-open {
 .story-yt img {
   width: 22px;
   height: 16px;
+}
+
+/* A primer's "Apri su Moxfield": the video's button, Moxfield's colours. */
+.story-moxfield {
+  color: #3a1e5f;
+}
+
+.story-moxfield img {
+  width: 20px;
+  height: 20px;
 }
 
 /* The video's link and button above the tap halves, so they're tappable. */
