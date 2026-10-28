@@ -21,6 +21,7 @@ import { archetypeIcon } from "./archetype-icons.js";
 import { openLeagueRules, RULES_ICON } from "./league-rules.js";
 import { loadRecapData, loadSeasonData, openEventRecap, openSeasonRecap, recapSeen, seasonRecapSeen } from "./event-recap.js";
 import { createArtPainter } from "./player-card.js";
+import { dueStories } from "./stories.js";
 
 // The timeline: how many played events above "Oggi", upcoming ones below
 // (2 and 4 since 2026-10-27 — was 3 and 3; still 6 rows, like the loading
@@ -505,14 +506,15 @@ async function dueRecaps(events) {
   return settled
     .map((r) => (r.status === "fulfilled" ? r.value : null))
     .filter(Boolean)
-    .sort((a, b) => a.seen - b.seen || b.date.localeCompare(a.date));
+    .sort((a, b) => a.seen - b.seen || a.date.localeCompare(b.date));
 }
 
 const RING_HTML = `<span class="recap-ring"><span class="recap-ring-art"></span><span class="recap-ring-play">${PLAY_ICON}</span></span>`;
 
 // The recaps as a row of compact bubbles, like a social app's stories (one
 // or several alike — since 2026-10-28 also a single one, which was a wide
-// card): the ring with the art, "Recap" / "Stagione" and the name under it.
+// card): the ring with the art and just its kind under it ("Recap" /
+// "Stagione" — the name only in its aria-label, since 2026-10-28).
 function recapBubblesHtml(items) {
   return `
       <div class="recap-bubbles" role="list">${items
@@ -523,7 +525,6 @@ function recapBubblesHtml(items) {
           )}">
           ${RING_HTML}
           <small>${item.short}</small>
-          <b>${escapeHtml(item.title)}</b>
         </button>`
         )
         .join("")}
@@ -533,7 +534,12 @@ function recapBubblesHtml(items) {
 async function renderRecapCard(el, signal) {
   try {
     const [events, upcoming] = await Promise.all([allEvents(), upcomingEvents().catch(() => [])]);
-    const items = await dueRecaps(events);
+    // The recaps and the other stories (js/stories.js: a new video, the
+    // month's meta) in one row: not yet watched first, the watched ones
+    // last — each group in chronological order, oldest first (a social
+    // app's stories).
+    const [recaps, others] = await Promise.all([dueRecaps(events), dueStories()]);
+    const items = [...recaps, ...others].sort((a, b) => a.seen - b.seen || a.date.localeCompare(b.date));
     // For the next visit's loading skeleton (recapLikely): the last day any
     // of them is due.
     const next = upcoming[0]?.event_date ?? null;
@@ -543,7 +549,12 @@ async function renderRecapCard(el, signal) {
     el.hidden = false;
     for (const item of items) {
       const btn = el.querySelector(`[data-recap="${CSS.escape(item.seenId)}"]`);
-      createArtPainter(btn.querySelector(".recap-ring-art"))(item.art.split(" / ")[0]);
+      // A commander's art, or (a video) its thumbnail.
+      const ring = btn.querySelector(".recap-ring-art");
+      if (item.thumb) {
+        ring.style.backgroundImage = `url("${item.thumb}")`;
+        ring.classList.add("is-loaded");
+      } else if (item.art) createArtPainter(ring)(item.art.split(" / ")[0]);
       btn.addEventListener("click", item.open);
     }
     document.addEventListener(

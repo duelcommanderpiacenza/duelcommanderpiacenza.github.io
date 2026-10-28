@@ -286,7 +286,7 @@ export function loadSeasonData(leagueId) {
 // --- The screens ----------------------------------------------------------------
 
 // [data-in] items rise in, staggered by --d (styles.css).
-const at = (d) => `data-in style="--d:${d}"`;
+export const at = (d) => `data-in style="--d:${d}"`;
 
 const CONFETTI = Array.from({ length: 34 }, (_, i) => {
   const colors = ["#ffd25a", "#ff5257", "#78dcff", "#ff78c8", "#fff"];
@@ -312,7 +312,7 @@ function archetypeHeadline(archetypes) {
 }
 
 // The archetypes' screen (event and season alike).
-function archetypesSlide(archetypes, kicker) {
+export function archetypesSlide(archetypes, kicker) {
   const maxArch = Math.max(1, ...archetypes.map((x) => x.n));
   return `<section class="recap-slide"><div class="recap-bg is-dark"></div>
       <p class="recap-k" ${at(0)}>${kicker}</p>
@@ -501,8 +501,11 @@ export function openSeasonRecap(leagueId) {
 }
 
 // The stories: `load()` the data, `slides(data)` its screens' markup;
-// watched: localStorage `seenKey`, and "recap:seen" (detail `seenId`).
-async function openStories({ label, load, slides: slidesOf, seenKey, seenId, shareUrl }) {
+// watched: localStorage `seenKey`, and "recap:seen" (detail `seenId`);
+// `heading(data)`: the bar's title (default "Recap · <name>"). Also used by
+// the Bacheca's other stories (js/stories.js: a new video, the month's
+// meta) — exported for them.
+export async function openStories({ label, load, slides: slidesOf, seenKey, seenId, shareUrl, heading = (data) => `Recap · ${data.name}` }) {
   open?.close();
   const dialog = document.createElement("dialog");
   dialog.className = "recap";
@@ -629,7 +632,7 @@ async function openStories({ label, load, slides: slidesOf, seenKey, seenId, sha
       // No storage: it just won't be remembered.
     }
     document.dispatchEvent(new CustomEvent("recap:seen", { detail: seenId }));
-    dialog.querySelector(".recap-title").textContent = `Recap · ${data.name}`;
+    dialog.querySelector(".recap-title").textContent = heading(data);
     const host = dialog.querySelector(".recap-slides");
     host.innerHTML = slidesOf(data);
     for (const el of host.querySelectorAll("[data-art]")) createArtPainter(el)(el.dataset.art.split(" / ")[0]);
@@ -642,7 +645,7 @@ async function openStories({ label, load, slides: slidesOf, seenKey, seenId, sha
     const stage = dialog.querySelector(".recap-st");
     let downAt = 0;
     stage.addEventListener("pointerdown", (e) => {
-      if (e.target.closest(".recap-close, .recap-share, .recap-sound")) return;
+      if (e.target.closest(".recap-close, .recap-share, .recap-sound, a")) return;
       downAt = performance.now();
       pause();
     });

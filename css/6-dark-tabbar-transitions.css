@@ -3135,6 +3135,191 @@ html.is-recap-open {
   text-align: right;
 }
 
+/* ---------------------------------------------------------------------------
+   Other stories (js/stories.js), in the recap's player and look.
+   "Nuovo video": the two commanders face to face (their art in rings, a
+   gold VS), then the thumbnail with YouTube's play button and "Guarda su
+   YouTube". "Il meta del mese": the top 5 as rows (art, name, winrate,
+   share).
+   --------------------------------------------------------------------------- */
+.story-vs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.story-vs-side {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.story-vs-art {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #3a3634 center 25% / cover;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.85), 0 10px 26px rgba(0, 0, 0, 0.5);
+}
+
+.story-vs-side b {
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.story-vs-word {
+  color: #ffd25a;
+  font-weight: 800;
+}
+
+.story-vs > .story-vs-word {
+  font-size: 1.6rem;
+}
+
+.story-thumb {
+  position: relative;
+  display: block;
+  margin-top: 18px;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border-radius: 16px;
+  background: #000;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
+  pointer-events: auto;
+}
+
+.story-thumb-img {
+  position: absolute;
+  inset: 0;
+  background: center / cover;
+}
+
+.story-thumb-play {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.story-thumb-play span {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 46px;
+  border-radius: 14px;
+  background: #f00;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.story-thumb-play svg {
+  width: 22px;
+  height: 22px;
+  margin-left: 3px;
+  color: #fff;
+}
+
+.story-thumb-title {
+  margin-top: 14px;
+}
+
+.story-yt {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  gap: 8px;
+  margin-top: 22px;
+  padding: 12px 22px;
+  border-radius: var(--radius-pill);
+  background: #fff;
+  color: #c00;
+  font-weight: 800;
+  text-decoration: none;
+  pointer-events: auto;
+}
+
+.story-yt:hover {
+  text-decoration: none;
+}
+
+.story-yt img {
+  width: 22px;
+  height: 16px;
+}
+
+/* The video's link and button above the tap halves, so they're tappable. */
+.recap-slide.is-on :is(.story-thumb, .story-yt) {
+  z-index: 6;
+}
+
+.story-meta-list {
+  display: grid;
+  gap: 8px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.story-meta-list li {
+  display: grid;
+  grid-template-columns: 22px 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.story-meta-pos {
+  font-weight: 800;
+  text-align: center;
+  opacity: 0.8;
+}
+
+.story-meta-art {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: #3a3634 center 25% / cover;
+}
+
+.story-meta-who {
+  min-width: 0;
+}
+
+.story-meta-who b {
+  display: block;
+  overflow: hidden;
+  font-size: 0.9rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.story-meta-who small {
+  font-size: 0.72rem;
+  opacity: 0.75;
+}
+
+.story-meta-share {
+  display: grid;
+  justify-items: end;
+  font-weight: 800;
+}
+
+.story-meta-share small {
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  opacity: 0.7;
+  text-transform: uppercase;
+}
+
+.story-meta-note {
+  font-size: 0.9rem;
+}
+
 /* The season's records: a card each — what, who, the number big. */
 .recap-records {
   display: grid;
@@ -3230,7 +3415,7 @@ html.is-recap-open {
 
 /* The Bacheca's recaps (story bubbles, below). */
 .home-recap {
-  margin: 0 0 18px;
+  margin: -6px 0 10px;
 }
 
 .recap-ring {
@@ -3298,13 +3483,13 @@ html.is-recap-open {
 
 /* The recaps due (js/home.js recapBubblesHtml), one or several: a row of
    compact bubbles — a social app's stories: the ring with the
-   art, "Recap" / "Stagione" and the name under it; scrolling sideways when
+   art and its kind under it ("Recap" / "Stagione", one line); scrolling sideways when
    they don't fit. */
 .recap-bubbles {
   display: flex;
-  gap: 14px;
+  gap: 12px;
   overflow-x: auto;
-  padding: 2px 2px 4px;
+  padding: 2px;
   scrollbar-width: none;
 }
 
@@ -3317,8 +3502,8 @@ html.is-recap-open {
   flex: none;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  width: 84px;
+  gap: 4px;
+  width: 78px;
   padding: 0;
   border: 0;
   background: none;
@@ -3330,7 +3515,6 @@ html.is-recap-open {
 .recap-bubble .recap-ring {
   width: 70px;
   height: 70px;
-  margin-bottom: 4px;
 }
 
 .recap-bubble .recap-ring-art {
@@ -3338,26 +3522,18 @@ html.is-recap-open {
   height: 63px;
 }
 
+/* Its kind ("Recap", "Stagione", "Nuovo video", "Meta"), on one line. */
 .recap-bubble small {
+  max-width: 100%;
+  overflow: hidden;
   color: var(--brand-red);
   font-size: 0.62rem;
   font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-/* The name on up to two lines ("Topdeck 27/10" whole, not cut). */
-.recap-bubble b {
-  display: -webkit-box;
-  width: 100%;
-  overflow: hidden;
-  font-size: 0.78rem;
+  letter-spacing: 0.1em;
   line-height: 1.2;
-  text-align: center;
-  overflow-wrap: anywhere;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .recap-bubble.is-seen .recap-ring::before {
