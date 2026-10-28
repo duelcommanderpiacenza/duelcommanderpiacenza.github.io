@@ -1612,26 +1612,33 @@ html.is-page-transition:not(.app-header) .site-header-brand {
   }
 }
 
-/* The nav cross-fades with the old screen's fade out instead: its open
-   panel (closed in the swap, js/nav-dropdown.js) leaves with the old page,
-   the pill's label / active tab change the same way; the pill itself, the
-   same in both, stays as it is. */
+/* The nav cross-fades with the screen: its open panel (closed in the swap,
+   js/nav-dropdown.js) leaves with the old page, the pill's label / active
+   tab change the same way; the pill itself, the same in both, stays as it
+   is. */
 ::view-transition-old(site-nav),
 ::view-transition-new(site-nav) {
-  animation-duration: 90ms;
+  animation-duration: 220ms;
 }
 
 /* The screen itself, on every in-app navigation (between nav sections,
-   list ↔ detail, back and forth): a fade through — the old screen out
-   quickly, then the new one in. Opacity only: the snapshot is the whole
-   screen, so any scale / slide moved its edges in view — an edge-to-edge
-   hero's corners shrinking over the page background. */
+   list ↔ detail, back and forth): a cross-fade — the old screen out while
+   the new one comes in, plus-lighter so the screen stays covered all the
+   way (the same as the quiet redraw's, below). Since 2026-10-28: it was a
+   fade *through* (out 90ms, then in 250ms), which for a moment showed only
+   the page's light background — between two dark heroes (player,
+   commander, league on a phone) the hero went nearly white, then dark
+   again. Opacity only: the snapshot is the whole screen, so any scale /
+   slide moved its edges in view — an edge-to-edge hero's corners shrinking
+   over the page background. */
 ::view-transition-old(root) {
-  animation: page-fade-out 90ms cubic-bezier(0.4, 0, 1, 1) both;
+  animation: page-fade-out 220ms ease both;
+  mix-blend-mode: plus-lighter;
 }
 
 ::view-transition-new(root) {
-  animation: page-fade-through-in 250ms cubic-bezier(0, 0, 0.2, 1) 90ms both;
+  animation: page-fade-through-in 220ms ease both;
+  mix-blend-mode: plus-lighter;
 }
 
 @keyframes page-fade-out {
@@ -1725,12 +1732,12 @@ html.is-page-transition.nav-mobile main > .meta-head > .meta-row {
 
 ::view-transition-old(meta-heading):only-child,
 ::view-transition-old(meta-tabs):only-child {
-  animation: page-fade-out 90ms cubic-bezier(0.4, 0, 1, 1) both;
+  animation: page-fade-out 220ms ease both;
 }
 
 ::view-transition-new(meta-heading):only-child,
 ::view-transition-new(meta-tabs):only-child {
-  animation: page-fade-through-in 250ms cubic-bezier(0, 0, 0.2, 1) 90ms both;
+  animation: page-fade-through-in 220ms ease both;
 }
 
 /* ---------------------------------------------------------------------------
