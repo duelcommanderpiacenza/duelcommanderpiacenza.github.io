@@ -215,6 +215,10 @@ async function go(url, { push = true, restoreY = null, quiet = false } = {}) {
     const oldMain = document.querySelector("main");
     for (const el of between(doc)) oldMain.before(document.adoptNode(el));
     oldMain.replaceWith(document.adoptNode(newMain));
+    // The new <main> in place, before the transition takes its picture
+    // (its page module isn't mounted yet): for what must be right in that
+    // very first frame — js/card-hints.js's loading placeholder.
+    document.dispatchEvent(new CustomEvent("app:main-swapped"));
     document.title = doc.title;
     if (toNav) document.body.dataset.activeNav = toNav;
     document.body.classList.toggle("is-loading", doc.body.classList.contains("is-loading"));

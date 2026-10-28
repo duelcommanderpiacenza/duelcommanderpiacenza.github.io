@@ -380,8 +380,76 @@ html:not(.app-header) .sk-touch-only {
 
 html.app-header .sk-hero {
   min-height: 260px;
-  padding-top: calc(var(--hero-header-h, 80px) + 24px);
+  padding-top: calc(var(--hero-header-h, 80px) + 30px);
   border-radius: 0;
+}
+
+/* …and ending like the real hero does, under the content's sheet
+   (.hero-sheet, styles.css "The hero pages on touch screens": its rounded
+   top corners lapping 26px over the hero, a soft shadow above): a strip in
+   the sheet's colour with those corners at the sketch's bottom, the content
+   sketched under it where the sheet's own content starts — not a straight
+   edge that the loaded page then rounds (every hero page: player,
+   commander, event, league, archetype, account). The sizes are the real
+   hero's on a phone (measured, 2026-10-28): the name 30px under the
+   header, the numbers' row 39px tall, 50px under it (the hero's padding
+   for the sheet), the sheet's content 4px under the hero's end (it laps
+   26px over it, then pads 22px) — so nothing moves when the page arrives. */
+html.app-header .sk-hero {
+  position: relative;
+  margin-bottom: -4px;
+  padding-bottom: 50px;
+}
+
+@media (max-width: 640px) {
+  html.app-header .sk-hero-chips i {
+    height: 39px;
+  }
+}
+
+/* Tablets (touch, wider than a phone): the name's line 38px, the numbers'
+   row 58px — the real hero's there. */
+@media (min-width: 641px) {
+  html.app-header .sk-hero .sk-hero-title {
+    height: 38px;
+  }
+
+  html.app-header .sk-hero-chips i {
+    height: 58px;
+  }
+}
+
+/* The name a little further from the card than the card from the numbers,
+   as in the real hero. */
+@media (max-width: 820px) {
+  html.app-header .sk-hero.has-card .sk-hero-title {
+    margin-bottom: 6px;
+  }
+}
+
+html.app-header .sk-hero::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  /* 2px past the hero's own bottom edge: at a fractional pixel ratio (most
+     phones) the two edges rounded apart and a hair of the dark hero showed
+     under the strip — a thin line across the screen. */
+  bottom: -2px;
+  left: 0;
+  height: 28px;
+  border-radius: 26px 26px 0 0;
+  background: var(--bg-cream-1);
+  box-shadow: 0 -6px 16px rgba(20, 8, 10, 0.14);
+  /* Only the shadow's part above the strip: its blur also spread under the
+     strip's lower edge, a faint line there (the real sheet goes on
+     downward, so its own never shows). Cut 1px inside the strip's bottom
+     (still 1px past the hero's): cut exactly at it, a part of the shadow
+     bled into the edge pixel at fractional pixel ratios. */
+  clip-path: inset(-40px 0 1px 0);
+}
+
+html.app-header[data-theme="dark"] .sk-hero::after {
+  box-shadow: 0 -6px 16px rgba(0, 0, 0, 0.45);
 }
 
 /* With the card (commander.html and account.html always; player.html once
@@ -495,7 +563,7 @@ html.app-header .sk-hero {
 }
 
 html.app-header .sk-hero.has-card {
-  padding-top: calc(var(--hero-header-h, 80px) + 24px);
+  padding-top: calc(var(--hero-header-h, 80px) + 30px);
 }
 
 @media (min-width: 641px) {
@@ -504,6 +572,131 @@ html.app-header .sk-hero.has-card {
     margin-inline: calc(-1 * var(--hero-bleed));
     padding-inline: var(--hero-bleed);
   }
+}
+
+/* ---- The detail heroes' placeholder at the real hero's sizes (player,
+   commander, event, league, archetype — not account's, .is-account: its
+   own layout, above). Measured against the loaded pages (2026-10-28) so the
+   page doesn't move when it arrives: the name's line, the info line under
+   it (event, league), the numbers' row, the hero's padding — and, on event
+   and league, the buttons' row ("Recap", "Liste", "Regolamento"; the
+   placeholder's .sk-hero-actions, in the numbers' row): on a computer at
+   its right end, on touch screens above the numbers, centred. No forced
+   minimum height any more: the parts make the height, as in the real hero.
+   The card layouts (.has-card) keep their own rules above, already exact on
+   touch screens. */
+.sk-page.is-hero:not(.is-account) .sk-hero .sk-hero-text {
+  gap: 0;
+}
+
+.sk-page.is-hero:not(.is-account) .sk-hero .sk-hero-line {
+  height: 19px;
+  margin-top: 12px;
+}
+
+/* event.html's info line sits a little lower (its title's own row). */
+.sk-page.is-hero:not(.is-account) .sk-hero.is-event .sk-hero-line {
+  margin-top: 18px;
+}
+
+.sk-page.is-hero:not(.is-account) .sk-hero .sk-hero-chips {
+  flex-wrap: wrap;
+}
+
+.sk-page.is-hero:not(.is-account) .sk-hero .sk-hero-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.sk-page.is-hero:not(.is-account) .sk-hero .sk-hero-actions i {
+  width: 104px;
+  height: 42px;
+  border-radius: 99px;
+}
+
+.sk-page.is-hero:not(.is-account) .sk-hero .sk-hero-actions i + i {
+  width: 92px;
+}
+
+/* league.html: "Regolamento" (a "Recap" beside it only once the league is
+   over). */
+.sk-page.is-hero:not(.is-account) .sk-hero .sk-hero-actions i.is-wide {
+  width: 152px;
+}
+
+/* From 820px down the real hero's text is centred (the name, its line, the
+   buttons; the numbers spread over the width): so are the bars. */
+@media (max-width: 820px) {
+  .sk-page.is-hero:not(.is-account) .sk-hero:not(.has-card) .sk-hero-text {
+    align-items: center;
+  }
+
+  .sk-page.is-hero:not(.is-account) .sk-hero:not(.has-card) .sk-hero-chips {
+    justify-content: space-around;
+    align-self: stretch;
+  }
+}
+
+/* A computer: the name 50px tall, 38px under the hero's top (32px with a
+   card), the numbers 59px tall, 30px under the name (24px under the info
+   line), 32px of hero under them; the buttons at the row's right end. */
+html:not(.app-header) .sk-page.is-hero:not(.is-account) .sk-hero:not(.has-card) {
+  min-height: 0;
+  padding-top: 38px;
+  padding-bottom: 32px;
+}
+
+html:not(.app-header) .sk-page.is-hero:not(.is-account) .sk-hero .sk-hero-title {
+  height: 50px;
+}
+
+html:not(.app-header) .sk-page.is-hero:not(.is-account) .sk-hero .sk-hero-chips {
+  margin-top: 30px;
+}
+
+html:not(.app-header) .sk-page.is-hero:not(.is-account) .sk-hero .sk-hero-line + .sk-hero-chips {
+  margin-top: 24px;
+}
+
+html:not(.app-header) .sk-page.is-hero:not(.is-account) .sk-hero .sk-hero-chips > i {
+  height: 59px;
+}
+
+html:not(.app-header) .sk-page.is-hero:not(.is-account) .sk-hero .sk-hero-actions {
+  align-self: flex-start;
+  margin-top: -3px;
+  margin-left: auto;
+}
+
+/* Beside a card (player, commander), the real text block sits 3px lower
+   than plainly centred. */
+@media (min-width: 821px) {
+  html:not(.app-header) .sk-page.is-hero:not(.is-account) .sk-hero.has-card .sk-hero-text {
+    padding-top: 6px;
+  }
+}
+
+/* Touch screens: the name 30px under the header (the rules above), the
+   numbers 28px under it — or, with an info line, the buttons 22px under
+   that and the numbers 16px under the buttons; 50px of hero under them. */
+html.app-header .sk-page.is-hero:not(.is-account) .sk-hero:not(.has-card) {
+  min-height: 0;
+}
+
+html.app-header .sk-page.is-hero:not(.is-account) .sk-hero:not(.has-card) .sk-hero-chips {
+  margin-top: 28px;
+}
+
+html.app-header .sk-page.is-hero:not(.is-account) .sk-hero .sk-hero-line + .sk-hero-chips {
+  margin-top: 22px;
+  row-gap: 0;
+}
+
+html.app-header .sk-page.is-hero:not(.is-account) .sk-hero .sk-hero-actions {
+  flex-basis: 100%;
+  order: -1;
+  justify-content: center;
+  margin-bottom: 16px;
 }
 
 /* Account: its hero sits in the signed-in view, hidden (display: none)

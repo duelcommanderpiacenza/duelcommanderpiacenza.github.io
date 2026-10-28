@@ -2,6 +2,7 @@
 // admin CRUD app. Every function throws on error so callers can catch once.
 
 import { sb } from "./supabase-client.js";
+import { rememberLinkedPlayers } from "./card-hints.js";
 
 function assertOk({ data, error }) {
   if (error) throw error;
@@ -118,7 +119,18 @@ export const BadgeIcons = {
 };
 
 export const Players = {
-  list: () => sb.from("players").select(`*, ${BADGE_EMBED}`).order("name").then(assertOk),
+  // (Which players are linked noted for the player pages' loading
+  // placeholder — js/card-hints.js.)
+  list: () =>
+    sb
+      .from("players")
+      .select(`*, ${BADGE_EMBED}`)
+      .order("name")
+      .then(assertOk)
+      .then((rows) => {
+        rememberLinkedPlayers(rows);
+        return rows;
+      }),
   get: (id) => sb.from("players").select(`*, ${BADGE_EMBED}`).eq("id", id).single().then(assertOk),
   create: (row) => sb.from("players").insert(row).select().single().then(assertOk),
   update: (id, patch) => sb.from("players").update(patch).eq("id", id).select().single().then(assertOk),

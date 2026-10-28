@@ -15,6 +15,7 @@ import { matchGroupsHtml, initScrollFade, setHistoryCount } from "./history-list
 import { renderPublicPlayerCard, createArtPainter } from "./player-card.js";
 import { initBackToTop } from "./back-to-top.js";
 import { renderPlayerLeagueRecap } from "./player-league-recap.js";
+import { cardHint, rememberCard, applyCardPlaceholder } from "./card-hints.js";
 
 function getId() {
   return new URLSearchParams(window.location.search).get("id");
@@ -130,15 +131,25 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     entriesRequest.catch(() => {});
     matchesRequest.catch(() => {});
 
+    // The loading placeholder's hero (styles.css .sk-hero) makes room for
+    // the card when there'll be one, so the page arrives at the size it's
+    // shown at. Known for sure only once the card request answers (a
+    // function call, never cached), so meanwhile js/card-hints.js's guess
+    // (already applied from the first frame) — what this browser saw last
+    // time, else whether the player is linked — and failing that the
+    // player's own row (linked: a card). Corrected, and remembered, when
+    // the answer comes.
+    const hint = cardHint(id);
+
     const player = await playerRequest;
     if (signal.aborted) return;
+    if (hint === null) applyCardPlaceholder(Boolean(player.user_id));
     // Known before the title is drawn (started alongside, so barely a wait):
     // with a card shown, the badges are on the card, not after the name.
     const card = await cardRequest;
     if (signal.aborted) return;
-    // The loading placeholder's hero (styles.css .sk-hero) makes room for
-    // the card too, so the page arrives at the size it's shown at.
-    if (card) document.querySelector("#page-loading-overlay .sk-hero")?.classList.add("has-card", "has-player-card");
+    applyCardPlaceholder(Boolean(card));
+    rememberCard(id, Boolean(card));
     const nameLabel = player.handle ? `${player.name} (${player.handle})` : player.name;
     // Not fatal if this fails — the page still works with just the
     // manually assigned badges, so it's kept out of this try/catch.
