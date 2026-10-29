@@ -1125,6 +1125,16 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   line-height: 1.3;
   margin-top: 8px;
 }
+
+/* The Winrate tile's V-S-P record, after the percentage: smaller, muted. */
+.cmd-carousel-record {
+  margin-left: 8px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
 @media (min-width: 880px) {
   .cmd-carousel {
     /* About commander.html's own desktop card, whose height js stretches

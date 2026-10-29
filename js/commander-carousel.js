@@ -317,8 +317,8 @@ export function renderCommanderCarousel(el, items) {
     loadNextImages();
   }
 
-  // Match-basis winrate (js/winrate.js). "—" for a commander with no match
-  // played (e.g. dropped before round 1).
+  // Match-basis winrate (js/winrate.js), its V-S-P record after it, small.
+  // "—" for a commander with no match played (e.g. dropped before round 1).
   function renderWinrate() {
     if (!records) {
       winrateEl.textContent = "…";
@@ -326,7 +326,10 @@ export function renderCommanderCarousel(el, items) {
     }
     const r = records.get(items[active].key);
     const rate = r ? winRatePct(r.wins, r.wins + r.draws + r.losses) : null;
-    winrateEl.textContent = rate === null ? "—" : `${rate}%`;
+    winrateEl.innerHTML =
+      rate === null
+        ? "—"
+        : `${rate}%<span class="cmd-carousel-record" title="Vittorie-Sconfitte-Pareggi">${r.wins}-${r.losses}-${r.draws}</span>`;
   }
 
   // Not one dot per card (there can be dozens): a window of up to 3 — the
