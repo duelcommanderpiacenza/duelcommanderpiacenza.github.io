@@ -11,7 +11,7 @@ import { Leagues, Events, EventEntries, fetchEventsResults } from "./db.js";
 import { computeLeaguePoints, previousLeaguePositions } from "./leaderboard.js";
 import { renderBubbleChart, initBubbleChart, ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
 import { initChartCarousel } from "./chart-carousel.js";
-import { escapeHtml, formatTime, isHttpUrl, localIso, playerLabel, showError } from "./ui.js";
+import { escapeHtml, formatTime, localIso, playerLabel, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { nestedResultsMenu } from "./results-link.js";
 import { fetchPlayerBadgesRenderer } from "./player-badges.js";
@@ -28,8 +28,8 @@ import { dueStories } from "./stories.js";
 // skeleton's).
 const UPCOMING_EVENTS_COUNT = 4;
 const LATEST_EVENTS_COUNT = 2;
-// External events (played somewhere else) only within this many days of
-// today, before or after.
+// External events (played somewhere else) only from this many days before
+// their day (and deleted once it's over: migration 030's nightly job).
 const EXTERNAL_EVENTS_DAYS = 7;
 // How many of the league's standings the Classifica shows.
 const LEAGUE_PREVIEW_COUNT = 8;
@@ -66,10 +66,10 @@ const PIN_ICON = ICON('<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12
 // An external event (played somewhere else, migration 026 — styles.css
 // .home-timeline .is-external): the colours of ours, a ticket's shape; its
 // Località with a pin in place of the league; never a link (it has no
-// page); its right part, past the ticket's tear line, "Liste" once past
-// (it's only shown with a link) or its time while upcoming (.league-tl-time,
-// at the bottom); the very next event of all, external or not, the red
-// "next" one.
+// page); its right part, past the ticket's tear line, its time
+// (.league-tl-time, at the bottom); the very next event of all, external or
+// not, the red "next" one. Only upcoming: a past one is deleted (migration
+// 030).
 function timelineItemHtml(ev, state) {
   const date = ev.event_date ? parseIsoDate(ev.event_date) : null;
   const node = date
@@ -131,29 +131,22 @@ const leagueStandings = (league) => once(`standings:${league.id}`, () => loadLea
 async function renderTimeline(el, signal) {
   try {
     const [upcoming, all, external] = await Promise.all([upcomingEvents(), allEvents(), externalEvents()]);
-    // External events (played somewhere else) mixed in by date, only within
-    // EXTERNAL_EVENTS_DAYS of today: the upcoming ones (today or later)
-    // among ours; a past one only with its mtgtop8 / Moxfield link, among
-    // the latest played.
+    // External events (played somewhere else) among ours by date: only from
+    // today to EXTERNAL_EVENTS_DAYS ahead (a past one is deleted the night
+    // after its day — migration 030 — and hidden here from midnight).
     const today = localIso();
-    const shiftDays = (days) => {
-      const d = new Date();
-      d.setDate(d.getDate() + days);
-      return localIso(d);
-    };
-    const [from, until] = [shiftDays(-EXTERNAL_EVENTS_DAYS), shiftDays(EXTERNAL_EVENTS_DAYS)];
+    const until = new Date();
+    until.setDate(until.getDate() + EXTERNAL_EVENTS_DAYS);
     const when = (ev) => `${ev.event_date ?? ""}T${ev.start_time ?? ""}`;
-    const dated = external.filter((ev) => ev.event_date && ev.event_date >= from && ev.event_date <= until);
+    const dated = external.filter((ev) => ev.event_date && ev.event_date >= today && ev.event_date <= localIso(until));
     // Soonest first, across every league / standalone; RLS lets a future
     // open event through (see events_public_read in supabase/schema.sql).
-    const next = [...upcoming, ...dated.filter((ev) => ev.event_date >= today)]
+    const next = [...upcoming, ...dated]
       .sort((a, b) => when(a).localeCompare(when(b)))
       .slice(0, UPCOMING_EVENTS_COUNT);
-    // Events.list() is newest first; only the closed (published) ones.
-    const pastExternal = dated.filter(
-      (ev) => ev.event_date < today && (isHttpUrl(ev.results_url) || isHttpUrl(ev.decklists_url))
-    );
-    const played = [...all.filter((ev) => !ev.is_open), ...pastExternal]
+    // Only the closed (published) ones, the latest first.
+    const played = all
+      .filter((ev) => !ev.is_open)
       .sort((a, b) => when(b).localeCompare(when(a)))
       .slice(0, LATEST_EVENTS_COUNT);
     if (next.length === 0 && played.length === 0) {

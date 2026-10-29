@@ -407,6 +407,17 @@ select cron.schedule(
   $$delete from announcements where expires_on < current_date$$
 );
 
+-- Nightly cleanup of past external events (pg_cron): every external event
+-- whose day is over (event_date before today), at 03:20 UTC — they're only
+-- announced on the Bacheca, with nothing of their own to keep (no entries /
+-- matches). One without a date stays. Added by migration 030; to stop it:
+-- select cron.unschedule('delete-past-external-events');
+select cron.schedule(
+  'delete-past-external-events',
+  '20 3 * * *',
+  $$delete from events where is_external and event_date < current_date$$
+);
+
 -- ---------------------------------------------------------------------------
 -- Row Level Security: public read (with the open/closed publishing rule
 -- below), admin-only write. "Admin" = is_admin() (listed in the admins

@@ -2649,13 +2649,13 @@ html.app-header .home-board > .home-panel:not(.is-current) {
 }
 
 /* External events (played somewhere else, js/home.js — migration 026): the
-   colours of ours (a played card, an upcoming outline, the red "next"), a
+   colours of ours (an upcoming outline, the red "next" — never a past one:
+   deleted the night after its day, migration 030), a
    ticket's shape instead — a notch on each side, cut out of the card (a
    mask: whatever is behind shows through), its edge drawn as a thin ring
    in the card's border colour (--ring), and a dashed tear line before the
-   stub on the right (the time, or "Liste"); the Località with a pin
-   (.league-tl-place) in place of the league. No badge. The mask also cuts
-   off the card's outer shadow: a past one has its border only. */
+   stub on the right (the time); the Località with a pin
+   (.league-tl-place) in place of the league. No badge. */
 .home-timeline .is-external > .league-tl-card {
   --notch: 8px;
   --ring: var(--hairline);
@@ -2678,11 +2678,6 @@ html.app-header .home-board > .home-panel:not(.is-current) {
   --tear: var(--tl-line);
 }
 
-:root[data-theme="dark"] .home-timeline .is-external.is-played > .league-tl-card {
-  --ring: rgba(255, 255, 255, 0.1);
-  --tear: rgba(255, 255, 255, 0.16);
-}
-
 /* The red "next" one has no border: no ring either. */
 .home-timeline .is-external.is-next > .league-tl-card,
 :root[data-theme="dark"] .home-timeline .is-external.is-next > .league-tl-card {
@@ -2690,7 +2685,7 @@ html.app-header .home-board > .home-panel:not(.is-current) {
   --tear: rgba(255, 255, 255, 0.55);
 }
 
-/* The tear line, then the stub: "Liste" centred, the time at the bottom. */
+/* The tear line, then the stub: the time at the bottom. */
 .home-timeline .is-external .league-tl-side {
   align-self: stretch;
   display: flex;
