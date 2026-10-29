@@ -1158,6 +1158,17 @@ body.is-busy::before {
   .admin-btn-spacer {
     display: none;
   }
+
+  /* The events' lists (a league's, the standalone ones): Data, Orario and
+     Stato on one line under the name — the date's column the widest, each
+     value on one line ("01 nov 2026" whole on a 320px screen too). */
+  :is(#events-admin-list, #standalone-events-admin-list) .admin-card-body {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.8fr) minmax(0, 1fr);
+  }
+
+  :is(#events-admin-list, #standalone-events-admin-list) .admin-card-value {
+    white-space: nowrap;
+  }
 }
 
 /* Eventi standalone: "In programma", then "Passati" — each with its count. */
