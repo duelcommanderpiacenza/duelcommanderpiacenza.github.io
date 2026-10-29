@@ -2707,6 +2707,33 @@ html.app-header .home-board > .home-panel:not(.is-current) {
   max-width: 100%;
 }
 
+/* Località - Sito on one line, cut with "…" when longer; the Sito (where
+   in the town) in the site's red — white on the red "next" card, the
+   Località there a little faded instead. */
+.league-tl-place-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.league-tl-venue {
+  color: var(--brand-red-deep);
+}
+
+:root[data-theme="dark"] .league-tl-venue {
+  color: #ff9a9d;
+}
+
+.is-next .league-tl-venue,
+:root[data-theme="dark"] .is-next .league-tl-venue {
+  color: #fff;
+}
+
+.is-next .league-tl-place-text {
+  color: rgba(255, 255, 255, 0.78);
+}
+
 .league-tl-place svg {
   flex-shrink: 0;
   width: 1.15em;

@@ -174,6 +174,8 @@ create table events (
   is_external boolean not null default false, -- an event played somewhere else, only announced on the Bacheca:
     -- standalone, no entries / matches, never closed (events_external_* below). Added by migration 026.
   location text, -- an external event's "Località" (optional). Added by migration 026.
+  venue text, -- an external event's "Sito" (optional): where in the town — a shop, a club; shown after the
+    -- Località ("Milano - Il Labirinto"). Added by migration 031.
   constraint events_unique_name_per_league unique (league_id, name), -- same name OK across leagues, not within one
   constraint events_external_standalone check (not is_external or league_id is null),
   constraint events_external_open check (not is_external or is_open),

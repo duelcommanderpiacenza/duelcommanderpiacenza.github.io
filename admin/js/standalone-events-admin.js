@@ -11,7 +11,8 @@ import { syncAutoBadges } from "./badges-sync.js";
  * off to the same shared entries/matches flow the league pyramid uses.
  *
  * An external event ("Evento esterno", migration 026: played somewhere
- * else, only announced on the public Bacheca) has a Località instead, and
+ * else, only announced on the public Bacheca) has a Località and a Sito
+ * (where in the town — "Milano - Il Labirinto") instead, and
  * neither entries/matches nor an open/closed state — no Gestisci, no
  * toggle; it stays open for good (events_external_open). Only a new event
  * can be made external (an existing one may already have entries); an
@@ -31,6 +32,8 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
   const externalHint = document.getElementById("standalone-events-admin-external-hint");
   const locationWrap = document.getElementById("standalone-events-admin-location-field");
   const locationField = document.getElementById("standalone-events-admin-location");
+  const venueWrap = document.getElementById("standalone-events-admin-venue-field");
+  const venueField = document.getElementById("standalone-events-admin-venue");
   const msgEl = document.getElementById("standalone-events-admin-message");
   const cancelBtn = document.getElementById("standalone-events-admin-cancel");
 
@@ -58,7 +61,7 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
           label: "Stato",
           render: (r) =>
             r.is_external
-              ? `<span class="admin-auto-chip">Esterno</span>${r.location ? ` ${escapeHtml(r.location)}` : ""}`
+              ? `<span class="admin-auto-chip">Esterno</span> ${escapeHtml([r.location, r.venue].filter(Boolean).join(" - "))}`
               : statusToggleButton(r.is_open, r.id, "event"),
         },
         {
@@ -101,13 +104,14 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
     }
   }
 
-  // The Località field only for an external event; the checkbox only for a
+  // The Località and Sito fields only for an external event; the checkbox only for a
   // new event or an external one (see the top of the file).
   function syncExternal(row = null) {
     const canChange = !row || Boolean(row.is_external);
     externalField.disabled = !canChange;
     externalHint.textContent = canChange ? "" : "Solo un evento nuovo può essere esterno.";
     locationWrap.hidden = !externalField.checked;
+    venueWrap.hidden = !externalField.checked;
   }
   externalField.addEventListener("change", () => syncExternal(events.find((e) => e.id === idField.value) ?? null));
 
@@ -116,6 +120,7 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
     nameField.value = row.name;
     externalField.checked = Boolean(row.is_external);
     locationField.value = row.location ?? "";
+    venueField.value = row.venue ?? "";
     syncExternal(row);
     dateField.value = row.event_date ?? "";
     timeField.value = formatTime(row.start_time) ?? "";
@@ -186,6 +191,7 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
     if (externalField.checked || editing?.is_external) {
       payload.is_external = externalField.checked;
       payload.location = externalField.checked ? locationField.value.trim() || null : null;
+      payload.venue = externalField.checked ? venueField.value.trim() || null : null;
       if (externalField.checked) payload.is_open = true;
     }
     try {

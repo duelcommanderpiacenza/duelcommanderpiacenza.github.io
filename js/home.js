@@ -53,7 +53,7 @@ function parseIsoDate(iso) {
 }
 
 
-// A map pin: an external event's Località (styles.css .league-tl-place).
+// A map pin: an external event's Località - Sito (styles.css .league-tl-place).
 const PIN_ICON = ICON('<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z"></path><circle cx="12" cy="9.5" r="2.5"></circle>');
 
 // --- Eventi: the timeline ------------------------------------------------------------
@@ -70,6 +70,14 @@ const PIN_ICON = ICON('<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12
 // (.league-tl-time, at the bottom); the very next event of all, external or
 // not, the red "next" one. Only upcoming: a past one is deleted (migration
 // 030).
+// An external event's place: its Località, then its Sito in its own colour
+// ("Milano - Il Labirinto"); either alone; "Evento esterno" with neither.
+function placeHtml(ev) {
+  const venue = ev.venue ? `<span class="league-tl-venue">${escapeHtml(ev.venue)}</span>` : "";
+  const text = ev.location ? `${escapeHtml(ev.location)}${venue ? ` - ${venue}` : ""}` : venue || "Evento esterno";
+  return `<span class="league-tl-place-text">${text}</span>`;
+}
+
 function timelineItemHtml(ev, state) {
   const date = ev.event_date ? parseIsoDate(ev.event_date) : null;
   const node = date
@@ -79,7 +87,7 @@ function timelineItemHtml(ev, state) {
     ? `${date.toLocaleDateString("it-IT", { day: "numeric", month: "long" })}<small>${date.toLocaleDateString("it-IT", { weekday: "long" })}</small>`
     : "—";
   const league = ev.is_external
-    ? `<span class="league-tl-place">${PIN_ICON}${escapeHtml(ev.location || "Evento esterno")}</span>`
+    ? `<span class="league-tl-place">${PIN_ICON}${placeHtml(ev)}</span>`
     : ev.league
       ? escapeHtml(ev.league.name)
       : "Evento";
