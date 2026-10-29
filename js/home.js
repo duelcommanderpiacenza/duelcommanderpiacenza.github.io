@@ -28,6 +28,9 @@ import { dueStories } from "./stories.js";
 // skeleton's).
 const UPCOMING_EVENTS_COUNT = 4;
 const LATEST_EVENTS_COUNT = 2;
+// External events (played somewhere else) only within this many days of
+// today, before or after.
+const EXTERNAL_EVENTS_DAYS = 7;
 // How many of the league's standings the Classifica shows.
 const LEAGUE_PREVIEW_COUNT = 8;
 const TOP_COMMANDERS_COUNT = 6;
@@ -125,15 +128,22 @@ const openLeague = () => once("openLeague", () => Leagues.getOpen());
 const leagueStandings = (league) => once(`standings:${league.id}`, () => loadLeagueStandings(league));
 
 // The latest played events, "Oggi", the upcoming ones — in time order.
-async function renderTimeline(el) {
+async function renderTimeline(el, signal) {
   try {
     const [upcoming, all, external] = await Promise.all([upcomingEvents(), allEvents(), externalEvents()]);
-    // External events (played somewhere else) mixed in by date: the upcoming
-    // ones (today or later) among ours; a past one only with its mtgtop8 /
-    // Moxfield link, among the latest played.
+    // External events (played somewhere else) mixed in by date, only within
+    // EXTERNAL_EVENTS_DAYS of today: the upcoming ones (today or later)
+    // among ours; a past one only with its mtgtop8 / Moxfield link, among
+    // the latest played.
     const today = localIso();
+    const shiftDays = (days) => {
+      const d = new Date();
+      d.setDate(d.getDate() + days);
+      return localIso(d);
+    };
+    const [from, until] = [shiftDays(-EXTERNAL_EVENTS_DAYS), shiftDays(EXTERNAL_EVENTS_DAYS)];
     const when = (ev) => `${ev.event_date ?? ""}T${ev.start_time ?? ""}`;
-    const dated = external.filter((ev) => ev.event_date);
+    const dated = external.filter((ev) => ev.event_date && ev.event_date >= from && ev.event_date <= until);
     // Soonest first, across every league / standalone; RLS lets a future
     // open event through (see events_public_read in supabase/schema.sql).
     const next = [...upcoming, ...dated.filter((ev) => ev.event_date >= today)]
@@ -159,9 +169,33 @@ async function renderTimeline(el) {
       ...next.map((ev, i) => timelineItemHtml(ev, i === 0 ? "next" : "future")),
     ];
     el.innerHTML = `<ol class="league-timeline home-timeline">${items.join("")}</ol>`;
+    fitTimelineNames(el, signal);
   } catch (err) {
     showError(el, err);
   }
+}
+
+// The smallest an event's name is shrunk to; still longer, it's cut ("…").
+const TL_NAME_MIN_PX = 13;
+
+// An event's name too long for its card shrunk to fit its line (only as
+// much as it needs) instead of being cut with "…". Measured again whenever
+// the timeline's width changes — a rotation, or its tab shown (inside a
+// hidden tab there's nothing to measure). `signal`: stops with the page.
+function fitTimelineNames(el, signal) {
+  const fit = () => {
+    for (const name of el.querySelectorAll(".league-tl-t")) {
+      name.style.fontSize = "";
+      const room = name.clientWidth;
+      // .league-tl-t is one line (nowrap): scrollWidth is its whole text.
+      if (!room || name.scrollWidth <= room) continue;
+      const base = parseFloat(getComputedStyle(name).fontSize);
+      name.style.fontSize = `${Math.max(TL_NAME_MIN_PX, Math.floor((base * room * 10) / name.scrollWidth) / 10)}px`;
+    }
+  };
+  const observer = new ResizeObserver(fit);
+  observer.observe(el);
+  signal?.addEventListener("abort", () => observer.disconnect(), { once: true });
 }
 
 // --- Classifica ----------------------------------------------------------------------
@@ -571,7 +605,7 @@ export function mount({ signal = new AbortController().signal } = {}) {
   initTabs(document.querySelector(".home-tabs"));
   renderCommandersSection(document.getElementById("dashboard-commanders-content"));
   return Promise.allSettled([
-    renderTimeline(document.getElementById("home-timeline")),
+    renderTimeline(document.getElementById("home-timeline"), signal),
     renderStandings(document.getElementById("dashboard-leagues-content")),
     renderRecapCard(document.getElementById("home-recap"), signal),
   ]).then(() => hidePageLoading(signal));
