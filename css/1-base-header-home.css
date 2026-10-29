@@ -2125,7 +2125,8 @@ main {
   .badge-card,
   .bar-chart-row,
   .player-card,
-  .pc-art {
+  .pc-art,
+  .league-recap-card {
     /* !important: most of these declare their own animation later in this
        file, which would otherwise win on source order (equal specificity)
        and keep animating despite the visitor's reduced-motion setting. */
