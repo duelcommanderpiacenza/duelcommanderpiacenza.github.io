@@ -186,8 +186,12 @@ create table events (
 -- Postgres treats every NULL as distinct for a plain unique constraint, so
 -- events_unique_name_per_league above doesn't actually stop two standalone
 -- (league_id is null) events from sharing a name — this partial index covers
--- that case specifically.
-create unique index events_unique_standalone_name on events (name) where league_id is null;
+-- that case specifically, for the ordinary ones. An external event only
+-- needs to differ from the other external ones in name, date, Località or
+-- Sito (the same "Qualifier" in two towns, or on two dates; empty values
+-- equal). Both since migration 031 (before: every standalone name unique).
+create unique index events_unique_standalone_name on events (name) where league_id is null and not is_external;
+create unique index events_unique_external on events (name, event_date, location, venue) nulls not distinct where is_external;
 
 create table event_entries ( -- a player's commander(s) + archetype for one event
   id uuid primary key default gen_random_uuid(),

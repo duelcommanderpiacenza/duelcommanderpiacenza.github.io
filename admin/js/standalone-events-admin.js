@@ -202,7 +202,13 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
       setMessage(msgEl, "Salvato.", false);
     } catch (err) {
       if (err?.code === "23505") {
-        setMessage(msgEl, "Esiste già un evento standalone con questo nome.", true);
+        setMessage(
+          msgEl,
+          externalField.checked
+            ? "Esiste già un evento esterno con questo nome, data, località e sito."
+            : "Esiste già un evento standalone con questo nome.",
+          true
+        );
       } else {
         setMessage(msgEl, "Errore nel salvataggio.", true);
       }
