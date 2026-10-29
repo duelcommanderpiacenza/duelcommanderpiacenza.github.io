@@ -1124,6 +1124,56 @@ body.is-busy::before {
   overflow-wrap: anywhere;
 }
 
+/* A second line under the title (Eventi standalone: an external event's
+   Località - Sito, after a pin). */
+.admin-card-sub {
+  display: inline-flex;
+  flex-basis: 100%;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.admin-card-sub svg {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+}
+
+/* "Esterno" as a field's whole value: no gap before it. */
+.admin-card-value > .admin-auto-chip:only-child {
+  margin-left: 0;
+}
+
+/* Where a row has no Gestisci (an external event): the same room, empty,
+   so every row's buttons line up — not on phones, where they start on the
+   left (nothing to line up). */
+.admin-btn-spacer {
+  visibility: hidden;
+}
+
+@media (max-width: 640px) {
+  .admin-btn-spacer {
+    display: none;
+  }
+}
+
+/* Eventi standalone: "In programma", then "Passati" — each with its count. */
+.admin-list-group + .admin-list-group {
+  margin-top: 26px;
+}
+
+.admin-list-heading {
+  display: flex;
+  align-items: center;
+  margin: 0 0 10px;
+  color: var(--text-title);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
 .admin-card-field {
   display: flex;
   flex-direction: column;

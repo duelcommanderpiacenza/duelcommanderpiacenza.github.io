@@ -1,5 +1,5 @@
 import { Events } from "../../js/db.js";
-import { escapeHtml, formatDate, formatTime, isHttpUrl } from "../../js/ui.js";
+import { escapeHtml, formatDate, formatTime, isHttpUrl, localIso } from "../../js/ui.js";
 import { renderTable, setMessage, statusToggleButton, onBusySubmit, runBusy, manageButton } from "./crud-ui.js";
 import { on } from "./bus.js";
 import { syncAutoBadges } from "./badges-sync.js";
@@ -18,6 +18,10 @@ import { syncAutoBadges } from "./badges-sync.js";
  * can be made external (an existing one may already have entries); an
  * external one can be turned back into an ordinary one.
  */
+// A map pin, before an external event's Località - Sito.
+const PIN_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z"></path><circle cx="12" cy="9.5" r="2.5"></circle></svg>';
+
 export function initStandaloneEventsAdmin({ onOpenEvent }) {
   const listEl = document.getElementById("standalone-events-admin-list");
   const searchField = document.getElementById("standalone-events-admin-search");
@@ -39,9 +43,39 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
 
   let events = [];
 
-  // Live filter over the already-fetched list — already ordered newest
-  // first by Events.listStandalone() itself, so filtering never disturbs
-  // that order.
+  // The columns of both lists. An external event: its Località - Sito under
+  // its name, "Esterno" for its state, and an empty space where the others
+  // have Gestisci (so every row's buttons line up).
+  const columns = [
+    {
+      key: "name",
+      label: "Nome",
+      render: (r) => {
+        const place = r.is_external ? [r.location, r.venue].filter(Boolean).join(" - ") : "";
+        return `${escapeHtml(r.name)}${place ? `<span class="admin-card-sub">${PIN_ICON}${escapeHtml(place)}</span>` : ""}`;
+      },
+    },
+    { key: "event_date", label: "Data", render: (r) => formatDate(r.event_date) },
+    { key: "start_time", label: "Orario", render: (r) => formatTime(r.start_time) ?? "—" },
+    {
+      key: "status",
+      label: "Stato",
+      render: (r) =>
+        r.is_external ? '<span class="admin-auto-chip">Esterno</span>' : statusToggleButton(r.is_open, r.id, "event"),
+    },
+    {
+      key: "manage",
+      label: "",
+      render: (e) => `
+              <div class="row-actions">
+                ${e.is_external ? '<span class="icon-btn admin-btn-spacer" aria-hidden="true"></span>' : manageButton(e.id, "Gestisci iscritti e partite")}
+              </div>`,
+    },
+  ];
+
+  // Two lists: "In programma" (from today, the soonest first — then any
+  // without a date) and "Passati" (the latest first, as
+  // Events.listStandalone() already orders them). The search filters both.
   function renderList(animate = true) {
     const term = searchField.value.trim().toLowerCase();
     const visible = term ? events.filter((e) => e.name.toLowerCase().includes(term)) : events;
@@ -49,36 +83,25 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
       listEl.innerHTML = '<p class="page-empty">Nessun evento corrisponde alla ricerca.</p>';
       return;
     }
-    renderTable(
-      listEl,
-      visible,
-      [
-        { key: "name", label: "Nome" },
-        { key: "event_date", label: "Data", render: (r) => formatDate(r.event_date) },
-        { key: "start_time", label: "Orario", render: (r) => formatTime(r.start_time) ?? "—" },
-        {
-          key: "status",
-          label: "Stato",
-          render: (r) =>
-            r.is_external
-              ? `<span class="admin-auto-chip">Esterno</span> ${escapeHtml([r.location, r.venue].filter(Boolean).join(" - "))}`
-              : statusToggleButton(r.is_open, r.id, "event"),
-        },
-        {
-          key: "manage",
-          label: "",
-          render: (e) =>
-            e.is_external
-              ? ""
-              : `
-              <div class="row-actions">
-                ${manageButton(e.id, "Gestisci iscritti e partite")}
-              </div>`,
-        },
-      ],
-      { onEdit, onDelete },
-      { animate }
-    );
+    const today = localIso();
+    const upcoming = visible
+      .filter((e) => !e.event_date || e.event_date >= today)
+      .sort((a, b) => (a.event_date ?? "9999").localeCompare(b.event_date ?? "9999"));
+    const past = visible.filter((e) => e.event_date && e.event_date < today);
+    const group = (key, title, rows) => `
+      <section class="admin-list-group">
+        <h4 class="admin-list-heading">${title}<span class="admin-heading-count">${rows.length}</span></h4>
+        <div data-group="${key}"></div>
+      </section>`;
+    listEl.innerHTML = group("upcoming", "In programma", upcoming) + group("past", "Passati", past);
+    renderTable(listEl.querySelector('[data-group="upcoming"]'), upcoming, columns, { onEdit, onDelete }, {
+      animate,
+      empty: "Nessun evento in programma.",
+    });
+    renderTable(listEl.querySelector('[data-group="past"]'), past, columns, { onEdit, onDelete }, {
+      animate,
+      empty: "Nessun evento passato.",
+    });
     listEl.querySelectorAll("[data-open]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const ev = events.find((e) => e.id === btn.dataset.open);
