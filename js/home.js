@@ -169,7 +169,7 @@ async function renderTimeline(el, signal) {
 }
 
 // The smallest an event's name is shrunk to; still longer, it's cut ("…").
-const TL_NAME_MIN_PX = 13;
+const TL_NAME_MIN_PX = 12;
 
 // An event's name too long for its card shrunk to fit its line (only as
 // much as it needs) instead of being cut with "…". Measured again whenever

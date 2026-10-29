@@ -2711,6 +2711,9 @@ html.app-header .home-board > .home-panel:not(.is-current) {
   flex-shrink: 0;
   width: 1.15em;
   height: 1.15em;
+  /* The pin is drawn from x 5 of its 24-wide box: pulled left by that blank
+     (about 5/24 of its width), its ink lines up with the name above. */
+  margin-left: -0.2em;
 }
 
 /* "Oggi": a small red dot on the line, the word, a rule to the right. */
