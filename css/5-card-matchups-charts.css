@@ -2894,7 +2894,7 @@ html.nav-mobile main[data-page="commanders"] .sk-chart {
 /* The links to the social services, the page's point (social.html): one
    card in the site's look (white, a red hairline edge, the dark tiles' in
    dark mode) — the Telegram group as the invite (its own round logo, the
-   name and a line, a red "Entra" on the right), then the other four as
+   name and a line, a red "Entra" on the right), then the other five as
    equal tiles in a row (a round logo, the name under it), a hairline
    between the two parts. A computer: the invite on the left, the tiles
    beside it; 820px down: the tiles under it. */
@@ -2970,7 +2970,7 @@ html.nav-mobile main[data-page="commanders"] .sk-chart {
 
 .social-links-rest {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   border-left: 1px solid var(--hairline);
 }
 
