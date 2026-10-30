@@ -412,7 +412,7 @@ async function renderCommandersSection(el) {
 // js/event-recap.js recapSeen —, "Nuovo · Recap", the event, who won with
 // what; the whole card a button) opening its recap's stories. Nothing when there's none
 // (or it can't be read).
-const RECAP_DAYS = 4;
+const RECAP_DAYS = 7;
 const PLAY_ICON =
   '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"></path></svg>';
 
@@ -451,7 +451,7 @@ function isoDaysAgo(days) {
 // A season just over: a closed league (not a Topdeck series) whose last
 // event was within SEASON_DAYS — its season recap (js/event-recap.js
 // openSeasonRecap), beside the events' own.
-const SEASON_DAYS = 7;
+const SEASON_DAYS = 14;
 
 const plusDays = (iso, days) => {
   const d = new Date(`${iso}T00:00:00`);

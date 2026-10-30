@@ -25,7 +25,7 @@ import { openStories, at, archetypesSlide } from "./event-recap.js";
 
 const VIDEO_HOURS = 48;
 const PRIMER_HOURS = 48;
-const META_DAYS = 4;
+const META_DAYS = 5;
 const REVELATION_MIN_PLAYED = 6;
 const MONTHS = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"];
 const PLAY =
