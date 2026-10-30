@@ -1230,8 +1230,7 @@ html.nav-mobile .back-to-top.is-visible {
    in the grid's columns).
    Touch screens: the wrapper steps aside (display: contents), the row the
    sticky part (the control inside it can't stick past the row's own box),
-   the filters' button beside the switcher on its right, on the same line
-   (since 2026-10-26 — before, out over the switcher's top-right corner). */
+   the filters' button the switcher's bottom line (below). */
 .meta-row > .meta-tabs {
   margin: 0;
 }
@@ -1265,13 +1264,165 @@ html:not(.nav-mobile) .meta-head .filter-toggle-btn {
   margin-left: 0;
 }
 
-/* Touch screens: the filters' button beside the switcher, on its right,
-   centred on it — finger-sized; it sticks with it (the row is the sticky
-   part). */
+/* Touch screens (option E of a mockup, 2026-10-30 — before, a round
+   button beside the switcher): the filters' button is the switcher's
+   bottom line, the two one card that sticks together — the funnel, the
+   filters set (only those: .filter-summary, js/filter-toggle.js — "Filtri"
+   with none) and a chevron; open, the panel hangs from it, the same card.
+   A computer keeps the round button (the summary and chevron hidden). */
+html:not(.nav-mobile) .filter-toggle-btn :is(.filter-summary, .filter-chev) {
+  display: none;
+}
+
 html.nav-mobile .meta-row > .filter-toggle-btn {
-  width: 46px;
-  height: 46px;
+  justify-content: flex-start;
+  gap: 8px;
+  width: auto;
+  height: 40px;
   margin: 0;
+  padding: 0 14px;
+  border: 1px solid var(--hairline);
+  border-top-color: var(--table-row-line);
+  border-radius: 0 0 18px 18px;
+  background: #fff;
+  box-shadow: var(--shadow-card);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: left;
+  animation: none;
+  transition: border-radius 200ms ease, box-shadow 200ms ease;
+}
+
+html.nav-mobile .meta-row > .filter-toggle-btn.has-active-filters {
+  color: var(--brand-red-deep);
+  font-weight: 800;
+}
+
+html.nav-mobile .meta-row > .filter-toggle-btn > svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+html.nav-mobile .meta-row > .filter-toggle-btn.has-active-filters > svg:first-child {
+  color: var(--brand-red);
+}
+
+html.nav-mobile .meta-row > .filter-toggle-btn .filter-chev {
+  margin-left: auto;
+  color: var(--brand-red-deep);
+  transition: transform 200ms ease;
+}
+
+html.nav-mobile .meta-row > .filter-toggle-btn.is-open .filter-chev {
+  transform: rotate(180deg);
+}
+
+html.nav-mobile .filter-summary {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html.nav-mobile .filter-summary-sep {
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+html.nav-mobile .filter-summary-colors {
+  display: inline-flex;
+  gap: 3px;
+  vertical-align: -2px;
+}
+
+html.nav-mobile .filter-summary-colors .color-pip {
+  width: 13px;
+  height: 13px;
+}
+
+/* Open: the panel hangs from the line, the same card — sliding down from
+   under it like a card pulled out (user, 2026-10-30), its rounded bottom
+   corners travelling down with it and back up on closing (not the line's
+   going and the panel's appearing). Its body is pinned to the bottom of
+   the clip (a flex column, justify-content: flex-end — what overflows goes
+   out at the top, clipped), so as the panel's row grows
+   (.filter-panel's grid-template-rows, css/5) the body's bottom edge — the
+   rounded corners — is always the leading edge. The panel starts 18px up,
+   behind the line (the sticky row is above it, z-index 10), its clip at
+   least 18px tall: closed, the body's rounded bottom sits exactly behind
+   the line's. The body is 18px taller on top for that (hidden behind the
+   line, open). The line's own corners square at once on opening (the
+   body's, right behind them, take over) and round back at once only when
+   it's all the way up (the same shape there, so nothing changes on
+   screen) — with timing curves fast at those two ends (below). The 18px gap under the card: the panel's padding. No shadow on
+   the body (it would pop in when the clip lifts at the end). */
+/* The corners' switch timed to the panel's (measured, 2026-10-30): opening,
+   the body's corners are out from under the line ~20ms after the tap (the
+   transition's first frame, then its first 18px); closing, back behind it
+   ~255ms after — the line's corners square / round at those moments. */
+html.nav-mobile .meta-row > .filter-toggle-btn {
+  transition: border-radius 0s 255ms, box-shadow 150ms ease 255ms;
+}
+
+html.nav-mobile .meta-row > .filter-toggle-btn.is-open {
+  border-radius: 0;
+  box-shadow: none;
+  transition: border-radius 0s 20ms, box-shadow 80ms ease;
+}
+
+html.nav-mobile main > .filter-panel {
+  margin-top: -18px;
+  padding-bottom: 18px;
+  /* Opening: fast out of the line, settling at the end; closing (below):
+     gentle at first, fast into the line at the end — so the moments with
+     the body's corners behind the line, while the line's own are square
+     (its first / last 18px), last a frame, not the slow ends of an "ease". */
+  transition: grid-template-rows 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+html.nav-mobile main > .filter-panel.is-collapsed {
+  transition: grid-template-rows 280ms cubic-bezier(0.8, 0, 0.8, 0.2);
+}
+
+html.nav-mobile main > .filter-panel .filter-panel-clip {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 18px;
+}
+
+html.nav-mobile main > .filter-panel .filter-panel-body {
+  flex-shrink: 0;
+  margin-bottom: 0;
+  padding-top: 34px;
+  border-top: 0;
+  border-radius: 0 0 18px 18px;
+  background: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.nav-mobile .meta-row > .filter-toggle-btn,
+  html.nav-mobile main > .filter-panel {
+    transition: none;
+  }
+}
+
+:root[data-theme="dark"].nav-mobile .meta-row > .filter-toggle-btn,
+:root[data-theme="dark"].nav-mobile main > .filter-panel .filter-panel-body {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: #1e1517;
+}
+
+:root[data-theme="dark"].nav-mobile .meta-row > .filter-toggle-btn {
+  border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+:root[data-theme="dark"].nav-mobile .meta-row > .filter-toggle-btn.has-active-filters {
+  color: #ff9a9d;
 }
 
 /* The filters' button (every screen): not there while the page loads — it
@@ -1294,18 +1445,28 @@ html.meta-filter-kept body.is-loading .meta-head .filter-toggle-btn {
   visibility: visible;
 }
 
+/* Touch screens: the line is the switcher's bottom edge — there from the
+   first paint with it (its summary filled at mount). */
+html.nav-mobile body.is-loading .meta-head .filter-toggle-btn {
+  opacity: 1;
+  visibility: visible;
+}
+
 html.nav-mobile .meta-head {
   display: contents;
 }
 
 html.nav-mobile .meta-row {
-  margin: 0 0 18px;
+  /* No gap of its own: the filters' panel under it holds the 18px (its
+     padding closed, its body's margin open — "Open: the panel hangs from
+     the line" above). */
+  margin: 0;
   position: sticky;
   top: calc(8px + env(safe-area-inset-top));
   z-index: 10;
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 /* Every sticky segmented control on touch screens (.profile-tabs — Bacheca,
@@ -1387,16 +1548,13 @@ html.nav-mobile :is(.profile-tabs:not(.meta-tabs), .meta-row) .profile-tab.is-ac
 html.nav-mobile .meta-row > .meta-tabs {
   position: static;
   /* (A flex item now: its z-index from the sticky controls' rule would
-     apply even unpositioned, lifting it and its band over the button.) */
+     apply even unpositioned, lifting it and its band over the line.) */
   z-index: auto;
-  flex: 1;
   min-width: 0;
-}
-
-/* Its shadow while stuck (the open tab's ::after, placed against the row):
-   under the switcher only, not the button beside it (46px + the 8px gap). */
-html.nav-mobile .meta-row > .meta-tabs .profile-tab.is-active::after {
-  right: 54px;
+  /* The card's top part: the filters' line under it is its bottom. */
+  border-bottom: 0;
+  border-radius: 18px 18px 0 0;
+  box-shadow: none;
 }
 
 /* The page's own <h1>: for screen readers only; Matchups' "?" in the
