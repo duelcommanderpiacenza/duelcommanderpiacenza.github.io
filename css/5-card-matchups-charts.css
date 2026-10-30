@@ -908,35 +908,36 @@ html.nav-mobile .pc-cancel-btn svg {
   height: 18px;
 }
 
-/* Giocatori (user's choice, 2026-10-30): white in every state, the funnel
-   dark — a filter set turns only the funnel red (no fill, no red edge). */
-#players-filter-toggle {
+/* Giocatori and the Meta pages on a computer (user's choice, 2026-10-30 —
+   the Meta pages' touch layout is their switcher's line, css/6): white in
+   every state, the funnel dark — a filter set turns only the funnel red
+   (no fill, no red edge). */
+:is(#players-filter-toggle, html:not(.nav-mobile) .meta-head .filter-toggle-btn) {
   color: var(--text-value);
 }
 
-#players-filter-toggle.has-active-filters,
-#players-filter-toggle.has-active-filters:is(:hover, .is-open) {
+:is(#players-filter-toggle, html:not(.nav-mobile) .meta-head .filter-toggle-btn).has-active-filters {
   border-color: var(--hairline);
   background: #fff;
   color: var(--brand-red);
 }
 
-#players-filter-toggle.has-active-filters:is(:hover, .is-open) {
+:is(#players-filter-toggle, html:not(.nav-mobile) .meta-head .filter-toggle-btn):is(:hover, .is-open) {
   border-color: var(--hairline-hover);
   background: #fff7f4;
 }
 
-:root[data-theme="dark"] #players-filter-toggle {
+:root[data-theme="dark"] :is(#players-filter-toggle, html:not(.nav-mobile) .meta-head .filter-toggle-btn) {
   color: var(--text-value);
 }
 
-:root[data-theme="dark"] #players-filter-toggle.has-active-filters {
+:root[data-theme="dark"] :is(#players-filter-toggle, html:not(.nav-mobile) .meta-head .filter-toggle-btn).has-active-filters {
   border-color: rgba(255, 255, 255, 0.14);
   background: #2a1f22;
   color: #ff8a8d;
 }
 
-:root[data-theme="dark"] #players-filter-toggle.has-active-filters:is(:hover, .is-open) {
+:root[data-theme="dark"] :is(#players-filter-toggle, html:not(.nav-mobile) .meta-head .filter-toggle-btn):is(:hover, .is-open) {
   border-color: rgba(255, 255, 255, 0.22);
   background: #34262a;
 }
