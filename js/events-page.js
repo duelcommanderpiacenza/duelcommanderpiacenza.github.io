@@ -1,20 +1,22 @@
-// The "Leghe & Eventi" tab, a board of tiles:
-//  - the league in progress as one card: on top a red cover — its name,
-//    players / average attendance / matches played, a ring with events
-//    played out of those scheduled, a link to its page — and under it its
-//    next event (the date as a small calendar sheet, the name, the weekday
-//    and how soon, the time big) and its latest one (date, name, players,
-//    the results links);
-//  - the Topdeck series in progress under it, a plain tile (its numbers);
-//  - then "Leghe concluse": one uniform tile per concluded league (the year,
-//    the name, events and players — a link to its page), newest first, with
-//    the standalone events' tile among them by the date of their latest one
-//    (it opens their list: they have no page of their own).
-// A tile with nothing to show is left out; the rest close up.
+// The "Leghe & Eventi" tab: two tabs (js/tabs.js), "In corso" and
+// "Archivio" (option D1, "Schede", of a mockup, 2026-10-30):
+//  - In corso: the league in progress as one white card — "Lega" (no
+//    status chip: the tab says it), its name, events played out of those scheduled as the
+//    Bacheca's segments, players / average / matches in small, a link to its
+//    page — with its next event beside it (under it on phones: the date as a
+//    small calendar sheet, the name, the weekday and how soon, the time big);
+//    the Topdeck series in progress a step down, one plain row under it (its
+//    name, next event, events played, players). With no real league in
+//    progress the series takes the card;
+//  - Archivio: one uniform tile per concluded league (the year, the name,
+//    events and players — a link to its page), newest first, with the
+//    standalone events' tile among them by the date of their latest one (it
+//    opens their list: they have no page of their own).
+// Only one of the two with anything in it: no tabs, just that one.
 
 import { Leagues, Events, EventEntries, Matches, EventCounts, LeaguePlayerCounts } from "./db.js";
-import { capitalize, escapeHtml, formatDate, formatTime, eventTitle, showError } from "./ui.js";
-import { nestedResultsMenu } from "./results-link.js";
+import { capitalize, escapeHtml, formatTime, eventTitle, leagueProgressHtml, showError } from "./ui.js";
+import { initTabs } from "./tabs.js";
 import { hidePageLoading } from "./page-loading.js";
 import { openInfoDialog } from "./info-dialog.js";
 import { countdownHtml, startCountdowns } from "./countdown.js";
@@ -38,8 +40,14 @@ const calendarHtml = (iso) => {
   return `<span class="ev-cal"><small>${d.toLocaleDateString("it-IT", { month: "short" }).replace(".", "")}</small><b>${d.getDate()}</b></span>`;
 };
 const year = (iso) => toDate(iso).getFullYear();
+// "mar 3 nov" — short weekday, day and short month.
+const shortDate = (iso) => {
+  const d = toDate(iso);
+  const short = (opts) => d.toLocaleDateString("it-IT", opts).replace(".", "");
+  return `${short({ weekday: "short" })} ${d.getDate()} ${short({ month: "short" })}`;
+};
 const fmtAvg = (n) => n.toLocaleString("it-IT", { maximumFractionDigits: 1 });
-const stat = (value, label) => `<div class="ev-stat"><b>${value}</b><span>${label}</span></div>`;
+const CHEVRON = svg('<path d="m9 18 6-6-6-6"></path>', "ev-chev");
 
 // The page's numbers: players and matches per event, a league's distinct
 // players (null: the standalone events together). Counted by the database
@@ -89,124 +97,84 @@ async function loadCounts(eventsRequest) {
   };
 }
 
-// What a league on the board is: in progress (the real league or the
-// Topdeck series), or the latest finished one keeping the main place.
-const boardLabel = (league) => (league.is_topdeck ? "Serie Topdeck in corso" : league.is_open ? "Lega in corso" : "Ultima lega");
-
-// Its numbers: players, average attendance, matches (the Topdeck series,
-// with no set number of events, also its events played).
-function statsHtml(league, { played, players, avg, matches }) {
-  return `
-      <div class="ev-stats">
-        ${stat(`${USERS}${players}`, "Giocatori")}
-        ${stat(played ? `${USERS}${fmtAvg(avg)}` : "—", "Media")}
-        ${stat(matches, "Partite")}
-        ${league.is_topdeck ? stat(played, "Eventi") : ""}
-      </div>`;
-}
-
-// The board's main league (in progress, or the latest finished one; the
-// Topdeck series when there's no real league) as one card: a red cover —
-// its label, name, numbers and (not the Topdeck series) the ring, a link
-// to the league — and under it its events (`slots`: the next and the
-// latest, side by side; stacked on phones).
-function mainCardHtml(league, numbers, slots) {
-  const total = Math.max(numbers.scheduled, numbers.played);
+// The league card: on the left (a link to the league) "Lega" — or "Serie
+// Topdeck" when the series holds the card — the name,
+// "N di M eventi giocati" over the Bacheca's segments (the series, with no
+// set number of events: just "N eventi giocati"), then players / average /
+// matches in small; on the right (under it on phones) `slot`, its next event.
+function mainCardHtml(league, { played, scheduled, players, avg, matches }, slot) {
+  const total = Math.max(scheduled, played);
+  const progress = league.is_topdeck
+    ? `<span class="ev-league-played"><b>${played}</b> ${played === 1 ? "evento giocato" : "eventi giocati"}</span>`
+    : `<span class="ev-league-played"><b>${played}</b> di ${total} eventi giocati</span>${leagueProgressHtml(played, total)}`;
   return `
     <div class="ev-tile ev-league">
-      <a class="ev-league-cover" href="league.html?id=${league.id}">
-        <div class="ev-league-text">
-          <span class="ev-tile-k">${boardLabel(league)}</span>
-          <div class="ev-tile-t">${escapeHtml(league.name)}</div>
-          ${statsHtml(league, numbers)}
-        </div>
-        ${league.is_topdeck ? "" : ringHtml(numbers.played, total)}
+      <a class="ev-league-main" href="league.html?id=${league.id}">
+        <span class="ev-tile-k">${league.is_topdeck ? "Serie Topdeck" : "Lega"}</span>
+        <span class="ev-tile-t">${escapeHtml(league.name)}</span>
+        ${progress}
+        <span class="ev-league-nums">
+          <span>${USERS}${players}</span>
+          <span>Media ${played ? fmtAvg(avg) : "—"}</span>
+          <span>${matches} ${matches === 1 ? "partita" : "partite"}</span>
+        </span>
       </a>
-      ${slots.length ? `<div class="ev-league-foot">${slots.join("")}</div>` : ""}
+      ${slot}
     </div>`;
 }
 
-// The Topdeck series under the main league: a plain tile, its label on a
-// light band, its name and numbers (styles.css .ev-board.is-secondary). A
-// link to it.
-function secondaryTile(league, numbers) {
+// The Topdeck series under the league card, a step down: one plain row —
+// "Serie Topdeck", its name, its next event ("mar 3 nov, 21:00") and events
+// played in small; its players and an arrow on the right. A link to it.
+function minorRowHtml(league, { played, players }, next) {
+  const when = next ? `Prossimo ${shortDate(next.event_date)}${next.start_time ? `, <b>${formatTime(next.start_time)}</b>` : ""} · ` : "";
   return `
-    <a class="ev-tile ev-big" href="league.html?id=${league.id}">
-      <span class="ev-tile-k">${boardLabel(league)}</span>
-      <div class="ev-tile-t">${escapeHtml(league.name)}</div>
-      ${statsHtml(league, numbers)}
+    <a class="ev-tile ev-minor" href="league.html?id=${league.id}">
+      <span class="ev-minor-text">
+        <span class="ev-tile-k">Serie Topdeck</span>
+        <span class="ev-tile-t">${escapeHtml(league.name)}</span>
+        <span class="ev-tile-s">${when}${played} ${played === 1 ? "evento" : "eventi"}</span>
+      </span>
+      <span class="ev-slot-players">${USERS}${players}</span>
+      ${CHEVRON}
     </a>`;
 }
 
-// The ring of the main league: events played out of those scheduled (the
-// Topdeck series has none — no set number of events: its count is a
-// number among the others).
-function ringHtml(played, total) {
-  const ring = 2 * Math.PI * 46;
-  const share = total ? played / total : 0;
+// The card's next event: its calendar sheet, then its label, name and a line
+// under it, and on the right `side` (the time).
+function slotHtml({ href, cal, name, sub = "", side = "" }) {
   return `
-        <span class="ev-ring" aria-label="${played} eventi giocati${total ? ` su ${total}` : ""}">
-          <svg viewBox="0 0 110 110" aria-hidden="true">
-            <circle cx="55" cy="55" r="46" class="ev-ring-track"></circle>
-            <circle cx="55" cy="55" r="46" class="ev-ring-fill" stroke-dasharray="${(ring * share).toFixed(1)} ${ring.toFixed(1)}"></circle>
-          </svg>
-          <span class="ev-ring-label"><span>${played}${total ? `/${total}` : ""}<small>EVENTI</small></span></span>
-        </span>`;
-}
-
-// One event under the cover: its calendar sheet, then its label, name and
-// a line under it, and on the right `side` (the time, or the players and
-// results links).
-function slotHtml({ cls = "", href, cal, label, name, sub = "", side = "" }) {
-  const inner = `
+      <a class="ev-slot is-next" href="${href}">
         ${cal}
         <span class="ev-slot-main">
-          <span class="ev-tile-k">${label}</span>
+          <span class="ev-tile-k">Prossimo evento</span>
           <span class="ev-slot-name">${name}</span>
           ${sub ? `<span class="ev-slot-sub">${sub}</span>` : ""}
         </span>
-        ${side ? `<span class="ev-slot-side">${side}</span>` : ""}`;
-  return href ? `<a class="ev-slot${cls}" href="${href}">${inner}</a>` : `<div class="ev-slot${cls}">${inner}</div>`;
+        ${side ? `<span class="ev-slot-side">${side}</span>` : ""}
+      </a>`;
 }
 
-// The next event: a pulsing dot, its name (an unnamed one by its league's),
-// the weekday and how soon (js/countdown.js: down to the hours on the day,
-// then "in corso"), the start time big on the right. A link to its league
-// (the event's own page fills in once it's played).
-function nextSlot(ev) {
+// The next event: its name (an unnamed one by its league's), the weekday and
+// how soon (js/countdown.js: down to the hours on the day, then "in corso"),
+// the start time big on the right. A link to its league (the event's own
+// page fills in once it's played).
+function nextSlot(ev, league) {
   return slotHtml({
-    cls: " is-next",
-    href: ev.league ? `league.html?id=${ev.league.id}` : "",
+    href: `league.html?id=${league.id}`,
     cal: calendarHtml(ev.event_date),
-    label: '<span class="ev-pulse"></span>Prossimo evento',
-    name: escapeHtml(ev.name || ev.league?.name || "Evento"),
+    name: escapeHtml(ev.name || league.name || "Evento"),
     sub: `${weekday(ev.event_date)} · ${countdownHtml(ev)}`,
     side: ev.start_time ? `<span class="ev-slot-time">${formatTime(ev.start_time)}</span>` : "",
   });
 }
 
-// A league in progress with no next event scheduled yet: the same slot,
-// "Prossimamente", a "?" for its date. A link to the league.
+// None scheduled yet: the same slot, "Prossimamente", a "?" for its date.
 function soonSlot(league) {
   return slotHtml({
-    cls: " is-next",
     href: `league.html?id=${league.id}`,
     cal: '<span class="ev-cal"><b>?</b></span>',
-    label: '<span class="ev-pulse"></span>Prossimo evento',
     name: "Prossimamente",
-  });
-}
-
-// The latest event: its name and weekday, its players and the Moxfield /
-// Top 8 links (js/results-link.js) on the right. A link to it.
-function latestSlot(ev, leagueName, players) {
-  return slotHtml({
-    href: `event.html?id=${ev.id}`,
-    cal: calendarHtml(ev.event_date),
-    label: "Ultimo evento",
-    name: escapeHtml(ev.name || leagueName || weekday(ev.event_date)),
-    sub: weekday(ev.event_date),
-    side: `<span class="ev-slot-players">${USERS}${players}</span>${nestedResultsMenu(ev.results_url, ev.decklists_url)}`,
   });
 }
 
@@ -255,19 +223,15 @@ function openStandaloneList(events, counter) {
   });
 }
 
-// A board league's name on one line, as big as its room allows: from
-// the tile's own size (the stylesheet's — bigger on desktop; on phones the
-// main league's from NAME_MAX_PHONE) down to NAME_MIN px, the largest that
-// fits beside the ring; still too long at that, it ends in "…". Redone on
-// resize (a rotation).
-const NAME_MAX_PHONE = 28;
+// The league card's name on one line, as big as its room allows: from its
+// size in the stylesheet down to NAME_MIN px; still too long at that, it
+// ends in "…". Redone on resize (a rotation).
 const NAME_MIN = 15;
 
 function fitBigNames(root) {
-  for (const el of root.querySelectorAll(":is(.ev-league, .ev-big) .ev-tile-t")) {
+  for (const el of root.querySelectorAll(".ev-league .ev-tile-t")) {
     el.style.fontSize = "";
-    const main = !el.closest(".is-secondary");
-    const start = main && window.innerWidth <= 480 ? NAME_MAX_PHONE : parseFloat(getComputedStyle(el).fontSize);
+    const start = parseFloat(getComputedStyle(el).fontSize);
     for (let size = Math.round(start); size >= NAME_MIN; size -= 1) {
       el.style.fontSize = `${size}px`;
       if (el.scrollWidth <= el.clientWidth) break;
@@ -280,8 +244,8 @@ function fitBigNames(root) {
 // aborts when the page is left.
 export async function mount({ signal = new AbortController().signal } = {}) {
   const boardEl = document.getElementById("events-board");
-  const archiveSectionEl = document.getElementById("events-archive-section");
   const archiveEl = document.getElementById("events-archive");
+  const tabsEl = document.querySelector(".ev-tabs");
   startCountdowns(signal);
   try {
     // One round: the leagues, the events, the upcoming ones and the counts
@@ -295,92 +259,85 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     ]);
     if (signal.aborted) return;
     // A still-open event isn't published yet: only the next one is shown
-    // (its own tile); everything else counts played (closed) events.
+    // (on the card); everything else counts played (closed) events.
     const played = allEvents
       .filter((ev) => !ev.is_open)
       .sort((a, b) => (b.event_date ?? "").localeCompare(a.event_date ?? ""));
 
     const eventsOf = (id) => played.filter((ev) => ev.league_id === id);
     const withEvents = leagues.map((l) => ({ ...l, events: eventsOf(l.id) }));
-    const current = withEvents.filter((l) => l.is_open && !l.is_topdeck).sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""))[0];
-    const topdeck = withEvents.filter((l) => l.is_open && l.is_topdeck).sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""))[0];
+    const newest = (list) => list.sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""))[0] ?? null;
+    const current = newest(withEvents.filter((l) => l.is_open && !l.is_topdeck));
+    const topdeck = newest(withEvents.filter((l) => l.is_open && l.is_topdeck));
     const standalone = played.filter((ev) => !ev.league_id);
-    // No league in progress: the latest finished one (by its latest event)
-    // keeps the board's main place — "Ultima lega" on its band, its latest
-    // event beside it (no next one) — and leaves the archive.
-    const lastLeague = current
-      ? null
-      : withEvents
-          .filter((l) => !l.is_open && !l.is_topdeck && l.events.length)
-          .sort((a, b) => (b.events[0].event_date ?? "").localeCompare(a.events[0].event_date ?? ""))[0] ?? null;
-    const mainLeague = current ?? lastLeague;
+    // The card: the league in progress — or, with none, the Topdeck series;
+    // the series a row under it while a real league holds the card.
+    const main = current ?? topdeck;
+    const minor = current ? topdeck : null;
 
-    // The board: a group per league in progress (the real league — or the
-    // latest finished one — first, then the Topdeck series) — its tile, its
-    // next event, its latest one.
-    const groups = [];
-    // Each board league's total event count (open ones included, even those
-    // hidden from visitors), both asked at once.
-    const boardLeagues = [mainLeague, topdeck].filter(Boolean);
-    const scheduledCounts = await Promise.all(
-      boardLeagues.map((league) => Leagues.eventCount(league.id, allEvents.filter((ev) => ev.league_id === league.id).length))
-    );
-    if (signal.aborted) return;
-    for (const [index, league] of boardLeagues.entries()) {
-      const played = league.events.length;
+    const numbersOf = (league) => {
+      const count = league.events.length;
       const attendance = league.events.reduce((sum, ev) => sum + counter.ofEvent(ev.id), 0);
-      const numbers = {
-        played,
-        scheduled: scheduledCounts[index],
+      return {
+        played: count,
         players: counter.ofLeague(league.id),
-        avg: played ? attendance / played : 0,
+        avg: count ? attendance / count : 0,
         matches: league.events.reduce((sum, ev) => sum + counter.matchesOf(ev.id), 0),
       };
-      // Secondary: the Topdeck series while the main place has a real league
-      // (in progress, or the latest finished one) — just its own tile, no
-      // events. With no real league at all the series takes that place: the
-      // main card, its next / latest event under the cover.
-      if (league.is_topdeck && mainLeague) {
-        groups.push(`<div class="ev-board is-secondary">${secondaryTile(league, numbers)}</div>`);
-        continue;
-      }
-      const slots = [];
-      const next = upcoming.find((ev) => ev.league?.id === league.id);
-      // A finished league: no next event to wait for.
-      if (league.is_open) slots.push(next ? nextSlot(next) : soonSlot(league));
-      if (league.events[0]) slots.push(latestSlot(league.events[0], league.name, counter.ofEvent(league.events[0].id)));
-      groups.push(`<div class="ev-board">${mainCardHtml(league, numbers, slots)}</div>`);
+    };
+    const nextOf = (league) => upcoming.find((ev) => ev.league?.id === league.id);
+    const board = [];
+    if (main) {
+      // A real league's total event count (open ones included, even those
+      // hidden from visitors), for its segments.
+      const scheduled = main.is_topdeck
+        ? 0
+        : await Leagues.eventCount(main.id, allEvents.filter((ev) => ev.league_id === main.id).length);
+      if (signal.aborted) return;
+      const next = nextOf(main);
+      board.push(mainCardHtml(main, { ...numbersOf(main), scheduled }, next ? nextSlot(next, main) : soonSlot(main)));
     }
-    boardEl.innerHTML = groups.join("");
-    const boardArea = boardEl.parentElement;
-    fitBigNames(boardArea);
+    if (minor) board.push(minorRowHtml(minor, numbersOf(minor), nextOf(minor)));
+    boardEl.innerHTML = board.join("");
+    fitBigNames(boardEl);
     let fitTimer;
     window.addEventListener(
       "resize",
       () => {
         clearTimeout(fitTimer);
-        fitTimer = setTimeout(() => fitBigNames(boardArea), 120);
+        fitTimer = setTimeout(() => fitBigNames(boardEl), 120);
       },
       { signal }
     );
-    if (!groups.length && !played.length) {
-      boardEl.innerHTML = '<p class="page-empty">Nessuna lega o evento inserito ancora.</p>';
-    }
 
-    // Leghe concluse, newest first by their latest event (one without
-    // events last), the standalone tile placed among them the same way.
+    // The archive: the concluded leagues, newest first by their latest event
+    // (one without events last), the standalone tile placed among them the
+    // same way.
     const archive = withEvents
-      .filter((l) => !l.is_open && l !== lastLeague)
+      .filter((l) => !l.is_open)
       .map((l) => ({ last: l.events[0]?.event_date ?? "", html: closedTile(l, counter.ofLeague(l.id)) }));
     if (standalone.length) {
       archive.push({ last: standalone[0].event_date ?? "", html: standaloneTile(standalone, counter.ofLeague(null)) });
     }
     archive.sort((a, b) => b.last.localeCompare(a.last));
     archiveEl.innerHTML = archive.map((x) => x.html).join("");
-    archiveSectionEl.hidden = archive.length === 0;
     document
       .getElementById("events-standalone-open")
       ?.addEventListener("click", () => openStandaloneList(standalone, counter));
+
+    // The tabs, each with its count. Only one with anything in it: no tabs,
+    // that one alone (initTabs opens the first tab not hidden); neither: the
+    // empty message, in the first.
+    const [currentTab, archiveTab] = tabsEl.querySelectorAll(".profile-tab");
+    currentTab.querySelector(".ev-tab-count").textContent = board.length;
+    archiveTab.querySelector(".ev-tab-count").textContent = archive.length;
+    if (!board.length && !archive.length) {
+      boardEl.innerHTML = '<p class="page-empty">Nessuna lega o evento inserito ancora.</p>';
+    }
+    currentTab.hidden = !board.length && archive.length > 0;
+    archiveTab.hidden = !archive.length;
+    tabsEl.hidden = !board.length || !archive.length;
+    initTabs(tabsEl);
   } catch (err) {
     showError(boardEl, err);
   } finally {

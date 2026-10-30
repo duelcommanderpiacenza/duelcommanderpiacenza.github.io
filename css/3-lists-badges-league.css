@@ -2,19 +2,20 @@
    original order: the parts are loaded in this order (partials/head.html,
    admin/index.html) and must stay so — later rules win ties. */
 
-/* Dark mode: the main league's card like the other dark tiles, a red
-   edge, the cover as in light mode; its events' hairlines light, the
-   calendar sheets and the next event's red a shade lighter. */
-:root[data-theme="dark"] .ev-tile.ev-league {
-  border-color: rgba(255, 110, 110, 0.3);
-}
-
-:root[data-theme="dark"] .ev-slot + .ev-slot {
+/* Dark mode: the league card like the other dark tiles; its hairline and
+   hovers light, the calendar sheets and the next event's red a shade
+   lighter. */
+:root[data-theme="dark"] .ev-slot {
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-:root[data-theme="dark"] a.ev-slot:hover {
+:root[data-theme="dark"] :is(a.ev-slot, .ev-league-main):hover {
   background: rgba(255, 255, 255, 0.04);
+}
+
+:root[data-theme="dark"] .ev-chev {
+  background: rgba(255, 110, 110, 0.14);
+  color: #ff9a9d;
 }
 
 :root[data-theme="dark"] .ev-cal {
@@ -36,7 +37,7 @@
 }
 
 :root[data-theme="dark"] .ev-archive .ev-tile.is-standalone {
-  background: rgba(255, 255, 255, 0.06);
+  background: transparent;
 }
 
 :root[data-theme="dark"] .ev-tag {
@@ -54,12 +55,6 @@
 
 :root[data-theme="dark"] .ev-list-date {
   color: #ff9a9d;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ev-pulse::after {
-    display: none;
-  }
 }
 
 /* Round red position chip (the old Bacheca standings preview's look),

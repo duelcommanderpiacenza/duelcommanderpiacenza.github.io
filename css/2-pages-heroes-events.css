@@ -1768,14 +1768,30 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   font-weight: 700;
 }
 
-/* Leghe & Eventi (events.html, js/events-page.js): the board — the main
-   league as one card (a red cover over its next and latest event), the
-   Topdeck series in progress under it as a plain tile — then the concluded
-   leagues in a grid of uniform tiles (as many as there are). */
+/* Leghe & Eventi (events.html, js/events-page.js; option D1, "Schede", of a
+   mockup, 2026-10-30): two tabs (.profile-tabs, js/tabs.js — the pill bar
+   on a computer, the sticky segmented control on touch screens), "In corso"
+   — the league in progress as one white card, its next event beside it, the
+   Topdeck series a row under it — and "Archivio", the concluded leagues in a
+   grid of uniform tiles. Only one with anything in it: no tabs at all. */
+.ev-tabs[hidden] {
+  display: none;
+}
+
+.ev-tab-count {
+  margin-left: 3px;
+  font-size: inherit;
+  opacity: 0.65;
+}
+
+.ev-panels > section:not(.is-current) {
+  display: none;
+}
+
 #events-board {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 12px;
 }
 
 .ev-tile {
@@ -1854,189 +1870,87 @@ button.ev-tile {
   height: 14px;
 }
 
-/* Numbers in a row: each a big number over a small label. */
-.ev-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 26px;
+/* The league card: on the left (a link to the league) "Lega" (no status
+   chip, by choice: the tab says it), the name (one line, fitted by js/events-page.js fitBigNames, "…" if
+   it still doesn't fit at the smallest size), events played over the
+   Bacheca's segments (.league-progress), the numbers in small; its next
+   event on the right, a hairline between — under it from 820px down. */
+.ev-tile.ev-league {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  padding: 0;
 }
 
-.ev-stat {
+.ev-league-main {
   display: flex;
   flex-direction: column;
-  gap: 3px;
   min-width: 0;
-}
-
-.ev-stat b {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 1.5rem;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.ev-stat b .ev-ico {
-  width: 18px;
-  height: 18px;
-}
-
-.ev-stat span {
-  font-size: 0.64rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  opacity: 0.6;
-  text-transform: uppercase;
-}
-
-/* The main league (option C, "Copertina", of a mockup, 2026-10-26): one
-   card — on top a red cover (its label, name, numbers and ring in white,
-   a link to the league), under it its next and latest event side by side
-   (stacked from 820px down), a hairline between them. */
-.ev-tile.ev-league {
-  justify-content: flex-start;
-  padding: 0;
-  border-color: rgba(220, 24, 28, 0.28);
-}
-
-.ev-league-cover {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  padding: 18px 22px 20px;
-  overflow: hidden;
-  background: radial-gradient(120% 140% at 100% 0%, #e0262a 0%, #a10f17 55%, #6e0a10 100%);
-  color: #fff;
-  text-decoration: none;
-  transition: filter 160ms ease;
-}
-
-.ev-league-cover:hover {
-  filter: brightness(1.08);
-  text-decoration: none;
-}
-
-.ev-league-cover:focus-visible {
-  outline: 3px solid #fff;
-  outline-offset: -6px;
-}
-
-/* A soft light in its bottom-right corner, behind the ring. */
-.ev-league-cover::after {
-  content: "";
-  position: absolute;
-  right: -60px;
-  bottom: -80px;
-  width: 260px;
-  height: 260px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0) 70%);
-  pointer-events: none;
-}
-
-.ev-league-text {
-  position: relative;
-  z-index: 1;
-  min-width: 0;
-}
-
-.ev-league-cover .ev-tile-k {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.74rem;
-  letter-spacing: 0.14em;
-}
-
-/* One line, fitted to its room by js/events-page.js (fitBigNames), "…" if
-   it still doesn't fit at the smallest size. */
-.ev-league-cover .ev-tile-t {
-  margin-top: 8px;
-  font-size: 2rem;
-  line-height: 1.1;
-}
-
-.ev-league-cover .ev-stats {
-  margin-top: 16px;
-}
-
-.ev-league-cover .ev-stat span {
-  opacity: 0.75;
-}
-
-/* The ring: events played out of those scheduled, white on the cover. */
-.ev-ring {
-  position: relative;
-  z-index: 1;
-  flex-shrink: 0;
-  width: 132px;
-  height: 132px;
-}
-
-.ev-ring svg {
-  width: 100%;
-  height: 100%;
-  transform: rotate(-90deg);
-}
-
-.ev-ring circle {
-  fill: none;
-  stroke-width: 10;
-}
-
-.ev-ring-track {
-  stroke: rgba(255, 255, 255, 0.2);
-}
-
-.ev-ring-fill {
-  stroke: #fff;
-  stroke-linecap: round;
-}
-
-.ev-ring-label {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  font-size: 1.5rem;
-  font-weight: 800;
-  line-height: 1.1;
-  text-align: center;
-}
-
-.ev-ring-label small {
-  display: block;
-  color: rgba(255, 255, 255, 0.75);
-  font-size: 0.66rem;
-  letter-spacing: 0.08em;
-}
-
-/* Its events: each its date as a small calendar sheet, its label, name and
-   a line under it, and on the right the start time (big, red) or the
-   players and the results links. One alone takes the whole width. */
-.ev-league-foot {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.ev-slot {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-  padding: 14px 20px;
+  padding: 20px 24px;
   color: var(--text-title);
   text-decoration: none;
   transition: background 150ms ease;
 }
 
-.ev-slot:only-child {
-  grid-column: 1 / -1;
+.ev-league-main:hover {
+  background: rgba(220, 24, 28, 0.03);
+  text-decoration: none;
 }
 
-.ev-slot + .ev-slot {
+.ev-league-main:focus-visible {
+  outline: 3px solid var(--brand-red);
+  outline-offset: -3px;
+}
+
+.ev-league .ev-tile-t {
+  margin: 10px 0 14px;
+  font-size: 1.45rem;
+  line-height: 1.15;
+}
+
+.ev-league-played {
+  margin-bottom: 8px;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.ev-league-played b {
+  color: var(--text-value);
+}
+
+.ev-league .league-progress {
+  margin-top: 0;
+}
+
+.ev-league-nums {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 16px;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.ev-league-nums > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Its next event: the date as a small calendar sheet (solid red), its label
+   red, the name and a line under it, the start time big and red on the
+   right. */
+.ev-slot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 20px 24px;
   border-left: 1px solid rgba(154, 28, 32, 0.14);
+  color: var(--text-title);
+  text-decoration: none;
+  transition: background 150ms ease;
 }
 
 a.ev-slot:hover {
@@ -2113,13 +2027,14 @@ a.ev-slot:hover {
 
 .ev-slot-time {
   color: var(--brand-red);
-  font-size: 1.7rem;
+  font-size: 1.5rem;
   font-weight: 800;
   line-height: 1;
 }
 
 .ev-slot-players {
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   gap: 5px;
   color: var(--text-muted);
@@ -2127,8 +2042,6 @@ a.ev-slot:hover {
   font-weight: 800;
 }
 
-/* The next event: its label red with a pulsing dot, its calendar sheet
-   solid red. */
 .ev-slot.is-next .ev-tile-k {
   color: var(--brand-red);
 }
@@ -2138,44 +2051,17 @@ a.ev-slot:hover {
   color: #fff;
 }
 
-.ev-pulse {
-  position: relative;
-  flex-shrink: 0;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--brand-red);
-}
-
-/* Its pulse: a ring growing out of it and fading (transform + opacity —
-   the GPU's, not a box-shadow repainted every frame). */
-.ev-pulse::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: rgba(220, 24, 28, 0.6);
-  animation: ev-pulse 2s ease-out infinite;
-}
-
-@keyframes ev-pulse {
-  70%,
-  100% {
-    opacity: 0;
-    transform: scale(2.7);
-  }
-}
-
 @media (max-width: 820px) {
-  .ev-league-foot {
+  .ev-tile.ev-league {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .ev-slot {
-    padding: 12px 16px;
+  .ev-league-main {
+    padding: 18px 18px 16px;
   }
 
-  .ev-slot + .ev-slot {
+  .ev-slot {
+    padding: 14px 18px 16px;
     border-top: 1px solid rgba(154, 28, 32, 0.14);
     border-left: 0;
   }
@@ -2185,152 +2071,91 @@ a.ev-slot:hover {
   }
 }
 
-/* Phones: the cover a size down, the ring small in its top-right corner;
-   the name fitted by js/events-page.js (fitBigNames: up to 28px when
-   there's room on one line). */
 @media (max-width: 480px) {
-  .ev-league-cover {
-    align-items: flex-start;
-    padding: 16px 16px 18px;
-  }
-
-  .ev-league-cover .ev-tile-t {
-    font-size: 1.2rem;
-  }
-
-  .ev-league-cover .ev-stats {
-    gap: 8px 20px;
-  }
-
-  .ev-league-cover .ev-stat b {
-    font-size: 1.4rem;
-  }
-
-  .ev-league-cover .ev-stat span {
-    font-size: 0.64rem;
-    letter-spacing: 0.07em;
-  }
-
-  .ev-ring {
-    width: 76px;
-    height: 76px;
-  }
-
-  .ev-ring-label {
-    font-size: 0.95rem;
-  }
-
-  .ev-ring-label small {
-    font-size: 0.52rem;
+  .ev-league .ev-tile-t {
+    font-size: 1.3rem;
   }
 }
 
-/* The Topdeck series in progress, under the main league: a plain tile, a
-   step down — its label on a band across the top, thin, a light red tint
-   with a red hairline under it, the text dark red (not the cover's red);
-   its name and numbers smaller; no ring (no set number of events: its
-   events played a number among the others). On a computer half the
-   card above's width (its right edge on the card's events' divider); up to
-   820px the whole width. */
-.ev-board.is-secondary > .ev-big {
-  min-height: 150px;
+/* The Topdeck series under the league card, a step down: one plain row,
+   like the archive's (no chip, no segments, no calendar sheet) — its label,
+   name, next event and events played on the left, its players and an arrow
+   on the right. */
+.ev-tile.ev-minor {
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 14px;
+  min-height: 64px;
+  padding: 10px 14px 10px 18px;
+  border-radius: 16px;
+  box-shadow: none;
 }
 
-@media (min-width: 821px) {
-  .ev-board.is-secondary > .ev-big {
-    width: 50%;
-  }
+.ev-minor-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
 }
 
-.ev-board.is-secondary .ev-big .ev-tile-k {
-  margin: -16px -16px 0;
-  padding: 6px 16px;
-  border-bottom: 1px solid rgba(154, 28, 32, 0.2);
-  background: color-mix(in srgb, var(--brand-red) 13%, #fff);
+.ev-minor .ev-tile-s {
+  display: block;
+  margin-top: 1px;
+}
+
+.ev-minor .ev-tile-s b {
+  color: var(--text-value);
+}
+
+.ev-chev {
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 26px;
+  height: 26px;
+  padding: 5px;
+  border-radius: 50%;
+  background: rgba(220, 24, 28, 0.08);
   color: var(--brand-red-deep);
-  font-size: 0.7rem;
-  letter-spacing: 0.14em;
 }
 
-:root[data-theme="dark"] .ev-board.is-secondary .ev-big .ev-tile-k {
-  border-bottom-color: rgba(255, 110, 110, 0.22);
-  background: rgba(220, 24, 28, 0.2);
-}
-
-.ev-board.is-secondary .ev-big .ev-tile-t {
-  margin-top: 10px;
-  font-size: 1.3rem;
-}
-
-.ev-board.is-secondary .ev-big .ev-stats {
-  margin-top: 12px;
-}
-
-.ev-board.is-secondary .ev-big .ev-stat b {
-  font-size: 1.1rem;
-}
-
-.ev-board.is-secondary .ev-big .ev-stat b .ev-ico {
-  width: 15px;
-  height: 15px;
-}
-
-.ev-board.is-secondary .ev-big .ev-stat span {
-  font-size: 0.6rem;
-}
-
-:root[data-theme="dark"] .ev-board.is-secondary > .ev-big {
-  border-color: rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.06);
-}
-
-/* Leghe concluse: uniform tiles, as many as there are; the standalone
-   events' tile dashed. */
-#events-archive-section {
-  margin-top: 34px;
-}
-
-/* "Archivio", its subtitle close under it. */
-#events-archive-section h2 {
-  margin-bottom: 4px;
-}
-
-.ev-archive-subtitle {
-  margin: 0 0 14px;
-}
-
+/* Archivio: uniform tiles, as many as there are — one per line on phones;
+   the standalone events' tile dashed. */
 .ev-archive {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
 }
 
 .ev-archive .ev-tile {
-  min-height: 138px;
-  padding: 18px 20px;
-  background: #f6f2f2;
-}
-
-/* Its label ("Conclusa" / "Eventi standalone") and year / date tag a size
-   up too. */
-.ev-archive .ev-tile-k {
-  font-size: 0.8rem;
-}
-
-.ev-archive .ev-tag {
-  padding: 3px 10px;
-  font-size: 0.8rem;
+  justify-content: flex-start;
+  padding: 16px 18px;
+  border-radius: 18px;
 }
 
 .ev-archive .ev-tile-t {
-  font-size: 1.4rem;
-  line-height: 1.15;
+  margin-top: 16px;
+  font-size: 1.05rem;
+  line-height: 1.2;
   white-space: normal;
+}
+
+.ev-archive .ev-tile-s {
+  margin-top: 4px;
 }
 
 .ev-archive .ev-tile.is-standalone {
   border-style: dashed;
-  background: #fff;
+  background: transparent;
+  box-shadow: none;
+}
+
+@media (max-width: 640px) {
+  .ev-archive {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
 }
 
 .ev-tag {

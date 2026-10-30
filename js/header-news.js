@@ -7,7 +7,9 @@
 // bell, the announcements across its width with a thin rule between them,
 // the unread ones marked "Nuovo"). The red
 // badge on the bell counts the ones this browser hasn't opened yet (their ids
-// in localStorage "seenNews"), and goes once the bell is clicked.
+// in localStorage "seenNews"), and goes once the bell is clicked. The bell
+// itself is shown only while there's something unread: it grows in once
+// they're loaded, and shrinks away when the pop-up that read them closes.
 // An event's own one (made when it's first closed — migration
 // 022: announcements.event_id) gets a button to the event's page;
 // following it closes the pop-up.
@@ -88,6 +90,31 @@ async function init() {
     button.setAttribute("aria-label", unseen ? `Novità (${unseen} da leggere)` : "Novità");
   }
 
+  // The bell is there only while something is unread (styles.css
+  // .site-news.has-news): arriving it grows in and swings once
+  // (.is-arriving, dropped after — so it doesn't replay when a page change
+  // hides and shows it again); once all is read, at the pop-up's closing, it
+  // shrinks away (.is-leaving). Still where motion is reduced.
+  const still = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function reveal() {
+    button.classList.add("has-news");
+    if (still()) return;
+    button.classList.add("is-arriving");
+    setTimeout(() => button.classList.remove("is-arriving"), 1300);
+  }
+  function dismiss() {
+    if (!button.classList.contains("has-news")) return;
+    const done = () => {
+      // Focus back on the bell (the pop-up returns it there): hand it on to
+      // the search button, not lost with the bell.
+      if (document.activeElement === button) document.getElementById("site-search-trigger")?.focus({ preventScroll: true });
+      button.classList.remove("has-news", "is-arriving", "is-leaving");
+    };
+    if (still() || getComputedStyle(button).display === "none") return done();
+    button.classList.add("is-leaving");
+    setTimeout(done, 220);
+  }
+
   button.addEventListener("click", async () => {
     await loaded;
     const unseen = unseenIds();
@@ -104,6 +131,10 @@ async function init() {
       dialog.addEventListener("click", (e) => {
         if (e.target.closest?.(".news-link")) dialog.close();
       });
+      // All read now: the bell goes once the pop-up is closed.
+      dialog.addEventListener("close", () => {
+        if (unseenIds().size === 0) dismiss();
+      });
     }
     // Every one shown is now seen (the ones no longer active dropped, so the
     // list doesn't grow forever).
@@ -113,6 +144,7 @@ async function init() {
 
   await loaded;
   syncBadge();
+  if (unseenIds().size) reveal();
 }
 
 init();

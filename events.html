@@ -72,7 +72,7 @@
   <link rel="modulepreload" href="js/card-progress.js">
   <link rel="modulepreload" href="js/leaderboard.js">
   <link rel="modulepreload" href="js/events-page.js">
-  <link rel="modulepreload" href="js/results-link.js">
+  <link rel="modulepreload" href="js/tabs.js">
   <link rel="modulepreload" href="js/countdown.js">
   <!-- /preload:modules -->
 </head>
@@ -136,24 +136,30 @@
   <div class="page-loading-region">
     <div id="page-loading-overlay" class="page-loading-overlay">
       <div class="sk-page is-events" aria-hidden="true">
+        <i class="sk sk-ev-tabs"></i>
         <div class="sk-ev-board"><i class="sk sk-ev-big"></i><i class="sk"></i></div>
-        <i class="sk sk-title"></i>
-        <div class="sk-ev-grid"><i class="sk"></i><i class="sk"></i><i class="sk"></i></div>
       </div>
       <p>Caricamento...</p>
     </div>
 
-    <!-- A board of tiles (js/events-page.js, styles.css .ev-*): the league in
-         progress (big, its numbers and a progress ring), the next event, the
-         latest one, the Topdeck series in progress; then the archive:
-         the concluded leagues, the standalone events' tile among them by date. -->
-    <div id="events-board" class="ev-board"></div>
+    <!-- Two tabs (js/events-page.js, styles.css .ev-*): "In corso" — the
+         league in progress as one card, its next event beside it, the
+         Topdeck series a row under it — and "Archivio": the concluded
+         leagues, the standalone events' tile among them by date. Only one
+         with anything in it: no tabs. -->
+    <nav class="profile-tabs ev-tabs" role="tablist" aria-label="Leghe ed eventi" hidden>
+      <button type="button" class="profile-tab" role="tab" id="events-tab-current" data-tab="events-current" aria-controls="events-current"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M3 10h18"></path></svg><span>In corso <small class="ev-tab-count"></small></span></button>
+      <button type="button" class="profile-tab" role="tab" id="events-tab-archive" data-tab="events-archive-section" aria-controls="events-archive-section"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="5" rx="1"></rect><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"></path><path d="M10 12h4"></path></svg><span>Archivio <small class="ev-tab-count"></small></span></button>
+    </nav>
 
-    <section id="events-archive-section" hidden>
-      <h2>Archivio</h2>
-      <p class="page-subtitle ev-archive-subtitle">Leghe e eventi conclusi</p>
-      <div id="events-archive" class="ev-archive"></div>
-    </section>
+    <div class="ev-panels">
+      <section id="events-current" role="tabpanel" aria-labelledby="events-tab-current">
+        <div id="events-board" class="ev-board"></div>
+      </section>
+      <section id="events-archive-section" role="tabpanel" aria-labelledby="events-tab-archive">
+        <div id="events-archive" class="ev-archive"></div>
+      </section>
+    </div>
   </div>
 </main>
 

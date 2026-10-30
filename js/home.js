@@ -11,7 +11,7 @@ import { Leagues, Events, EventEntries, fetchEventsResults } from "./db.js";
 import { computeLeaguePoints, previousLeaguePositions } from "./leaderboard.js";
 import { renderBubbleChart, initBubbleChart, ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
 import { initChartCarousel } from "./chart-carousel.js";
-import { escapeHtml, formatTime, localIso, playerLabel, showError } from "./ui.js";
+import { escapeHtml, formatTime, leagueProgressHtml, localIso, playerLabel, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { nestedResultsMenu } from "./results-link.js";
 import { fetchPlayerBadgesRenderer } from "./player-badges.js";
@@ -222,27 +222,6 @@ async function loadLeagueStandings(league) {
     played: closed.length,
     scheduled: Math.max(scheduledEvents, closed.length),
   };
-}
-
-// A league's progress: one segment per event (open and future ones
-// included), filled for those played. Past SEGMENTS_MAX events, one
-// continuous bar instead.
-const SEGMENTS_MAX = 16;
-
-function leagueProgressHtml(played, scheduled) {
-  if (!scheduled) return "";
-  const pct = Math.round((played / scheduled) * 100);
-  const bar =
-    scheduled <= SEGMENTS_MAX
-      ? Array.from(
-          { length: scheduled },
-          (_, i) => `<span class="league-progress-seg${i < played ? " is-done" : ""}${i === played ? " is-next" : ""}"></span>`
-        ).join("")
-      : `<span class="league-progress-fill" style="width:${pct}%"></span>`;
-  return `
-      <div class="league-progress" role="progressbar" aria-label="Eventi giocati" aria-valuemin="0" aria-valuemax="${scheduled}" aria-valuenow="${played}">
-        <div class="league-progress-track${scheduled <= SEGMENTS_MAX ? " is-segmented" : ""}">${bar}</div>
-      </div>`;
 }
 
 // The league's name (a link to league.html) — "Conclusa" when it's over —
