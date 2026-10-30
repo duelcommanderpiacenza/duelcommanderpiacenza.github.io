@@ -1,4 +1,5 @@
-// The app's settings on account.html (Profilo): the theme (Chiaro / Scuro
+// The app's settings on account.html (Profilo): the language (Italiano /
+// English — js/language.js, since 2026-10-30), the theme (Chiaro / Scuro
 // / Sistema, a segmented control) and the vibration (a switch, only where
 // it works — js/haptics.js hapticsSupported), plus the footer's own small
 // print (copyright, version, credits) for the touch screens, which hide the
@@ -11,6 +12,7 @@
 import { THEME_ICONS, themeMode, chooseTheme } from "./theme.js";
 import { chooseHaptics } from "./haptics-toggle.js";
 import { haptic, hapticsSupported, hapticsEnabled } from "./haptics.js";
+import { LANGUAGES, currentLanguage, chooseLanguage } from "./language.js";
 
 const PHONE =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="4" width="8" height="16" rx="1.5"></rect><path d="m3 8 1.5 2L3 12l1.5 2L3 16"></path><path d="m21 8-1.5 2 1.5 2-1.5 2 1.5 2"></path></svg>';
@@ -28,6 +30,15 @@ const MODES = [
  */
 export function mountSettings({ controlsEl, aboutEl = null, signal }) {
   controlsEl.innerHTML = `
+    <div class="settings-group">
+      <p class="settings-label">Lingua</p>
+      <div class="settings-seg settings-lang" role="radiogroup" aria-label="Lingua">
+        ${LANGUAGES.map(
+          ([lang, label]) =>
+            `<button type="button" role="radio" aria-checked="${lang === currentLanguage()}" data-lang="${lang}" lang="${lang}"><span>${label}</span></button>`
+        ).join("")}
+      </div>
+    </div>
     <div class="settings-group">
       <p class="settings-label">Tema</p>
       <div class="settings-seg" role="radiogroup" aria-label="Tema">
@@ -59,7 +70,7 @@ export function mountSettings({ controlsEl, aboutEl = null, signal }) {
 
   const reflectTheme = () => {
     const mode = themeMode();
-    for (const btn of controlsEl.querySelectorAll(".settings-seg button")) {
+    for (const btn of controlsEl.querySelectorAll(".settings-seg:not(.settings-lang) button")) {
       btn.setAttribute("aria-checked", String(btn.dataset.mode === mode));
     }
   };
@@ -67,7 +78,14 @@ export function mountSettings({ controlsEl, aboutEl = null, signal }) {
     controlsEl.querySelector(".settings-switch")?.setAttribute("aria-checked", String(hapticsEnabled()));
   };
 
-  controlsEl.querySelector(".settings-seg").addEventListener("click", (e) => {
+  // The language: a reload in it (js/language.js).
+  controlsEl.querySelector(".settings-lang").addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-lang]");
+    if (!btn || btn.dataset.lang === currentLanguage()) return;
+    haptic();
+    chooseLanguage(btn.dataset.lang);
+  });
+  controlsEl.querySelector(".settings-seg:not(.settings-lang)").addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-mode]");
     if (!btn || btn.dataset.mode === themeMode()) return;
     haptic();

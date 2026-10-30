@@ -5,7 +5,7 @@ rollback (`NNN_name.sql` + `NNN_name_rollback.sql`), run in the Supabase SQL
 editor on **dcp-dev** first, then live — and is folded into
 `../schema.sql`, which stays the from-scratch setup.
 
-**Next number: 033.**
+**Next number: 034.**
 
 Migrations 001–027 were run on both databases and their files deleted on
 2026-10-23; everything they did is in `schema.sql`. A "migration NNN" in

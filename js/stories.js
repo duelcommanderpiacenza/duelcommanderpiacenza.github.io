@@ -22,12 +22,14 @@ import { computeGroupedStats } from "./stats.js";
 import { ARCHETYPES } from "./metagame-chart.js";
 import { capitalize, escapeHtml, localIso } from "./ui.js";
 import { openStories, at, archetypesSlide } from "./event-recap.js";
+import { locale } from "./locale.js";
 
 const VIDEO_HOURS = 48;
 const PRIMER_HOURS = 48;
 const META_DAYS = 5;
 const REVELATION_MIN_PLAYED = 6;
-const MONTHS = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"];
+// The months in the page's language (js/locale.js): "ottobre" / "October".
+const MONTHS = Array.from({ length: 12 }, (_, m) => new Date(2000, m, 1).toLocaleDateString(locale(), { month: "long" }));
 const PLAY =
   '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"></path></svg>';
 

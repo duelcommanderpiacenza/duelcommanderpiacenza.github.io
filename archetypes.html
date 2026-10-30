@@ -13,6 +13,13 @@
         }
         document.documentElement.dataset.theme = t;
         if (navigator.maxTouchPoints > 0) document.documentElement.classList.add("nav-mobile", "app-header");
+        // English (js/language.js): set before the first paint, and the
+        // translation (js/i18n-en.js) loaded at once, so the page is put on
+        // screen in English. Not the admin, which stays Italian.
+        if (localStorage.getItem("lang") === "en" && location.pathname.indexOf("/admin/") < 0) {
+          document.documentElement.lang = "en";
+          document.write('<script src="js/i18n-en.js"><\/script>');
+        }
       } catch (e) {}
     })();
   </script>
@@ -39,6 +46,7 @@
   <!-- preload:modules -->
   <link rel="modulepreload" href="js/layout.js">
   <link rel="modulepreload" href="js/theme.js">
+  <link rel="modulepreload" href="js/language.js">
   <link rel="modulepreload" href="js/haptics-toggle.js">
   <link rel="modulepreload" href="js/custom-select.js">
   <link rel="modulepreload" href="js/custom-date.js">
@@ -61,6 +69,7 @@
   <link rel="modulepreload" href="js/data-updates.js">
   <link rel="modulepreload" href="js/supabase-client.js">
   <link rel="modulepreload" href="js/db.js">
+  <link rel="modulepreload" href="js/locale.js">
   <link rel="modulepreload" href="js/haptics.js">
   <link rel="modulepreload" href="js/ui.js">
   <link rel="modulepreload" href="js/drag-scroll.js">
@@ -216,7 +225,14 @@
       </a>
     </div>
   </div>
-  <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="false" aria-label="Cambia tema"></button>
+  <!-- The language (js/language.js) and the theme, side by side. -->
+  <div class="footer-actions">
+    <div class="lang-toggle" id="lang-toggle" role="group" aria-label="Lingua">
+      <button type="button" data-lang="it" aria-pressed="false">IT</button>
+      <button type="button" data-lang="en" aria-pressed="false">EN</button>
+    </div>
+    <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="false" aria-label="Cambia tema"></button>
+  </div>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

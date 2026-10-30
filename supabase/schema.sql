@@ -959,6 +959,9 @@ create table user_settings (
   user_id uuid primary key references auth.users(id) on delete cascade,
   theme text check (theme in ('light', 'dark', 'system')),
   haptics boolean,
+  -- The site's language (js/language.js), null = never chosen (Italian).
+  -- Added by migration 033.
+  language text check (language in ('it', 'en')),
   updated_at timestamptz not null default now()
 );
 

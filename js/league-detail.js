@@ -23,6 +23,7 @@ import { openLeagueRules } from "./league-rules.js";
 import { openSeasonRecap } from "./event-recap.js";
 import { nestedResultsMenu } from "./results-link.js";
 import { renderMetaCharts } from "./meta-charts.js";
+import { locale } from "./locale.js";
 
 // How many leaderboard rows get the "top 8" highlight (styles.css .is-top8).
 const LEAGUE_TOP_HIGHLIGHT = 8;
@@ -68,7 +69,7 @@ const cardName = (ev) => {
   if (ev.name) return escapeHtml(ev.name);
   const d = new Date(`${ev.event_date}T00:00:00`);
   if (!ev.event_date || Number.isNaN(d.getTime())) return "Evento";
-  const day = d.toLocaleDateString("it-IT", { weekday: "long" });
+  const day = d.toLocaleDateString(locale(), { weekday: "long" });
   return capitalize(day);
 };
 
@@ -83,11 +84,11 @@ const byDate = (a, b) => (a.event_date ?? "9999").localeCompare(b.event_date ?? 
 function timelineItemHtml({ ev, state, players }, number, today) {
   const date = ev?.event_date ? new Date(`${ev.event_date}T00:00:00`) : null;
   const node = date
-    ? `<b>${String(date.getDate()).padStart(2, "0")}</b><span>${date.toLocaleDateString("it-IT", { month: "short" }).replace(".", "")}</span>`
+    ? `<b>${String(date.getDate()).padStart(2, "0")}</b><span>${date.toLocaleDateString(locale(), { month: "short" }).replace(".", "")}</span>`
     : "<b>?</b>";
   // Wide: just the weekday left of the line (the day and month are in the
   // circle already).
-  const weekday = date ? date.toLocaleDateString("it-IT", { weekday: "long" }) : "";
+  const weekday = date ? date.toLocaleDateString(locale(), { weekday: "long" }) : "";
   const fullDate = weekday ? capitalize(weekday) : "—";
   const kicker =
     state === "pending"

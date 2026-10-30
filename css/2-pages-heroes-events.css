@@ -6,7 +6,9 @@
    the center block visually centered instead of drifting left once the
    toggle occupies the right edge. */
 .footer-spacer {
-  width: 44px;
+  /* As wide as the right-hand group (the language switch, 76px, + 8px +
+     the theme button, 44px), so the credits stay centred. */
+  width: 128px;
   flex-shrink: 0;
 }
 

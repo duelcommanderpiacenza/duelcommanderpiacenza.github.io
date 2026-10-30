@@ -22,6 +22,7 @@ import { openLeagueRules, RULES_ICON } from "./league-rules.js";
 import { loadRecapData, loadSeasonData, openEventRecap, openSeasonRecap, recapSeen, seasonRecapSeen } from "./event-recap.js";
 import { createArtPainter } from "./player-card.js";
 import { dueStories } from "./stories.js";
+import { locale } from "./locale.js";
 
 // The timeline: how many played events above "Oggi", upcoming ones below
 // (2 and 4 since 2026-10-27 — was 3 and 3; still 6 rows, like the loading
@@ -81,10 +82,10 @@ function placeHtml(ev) {
 function timelineItemHtml(ev, state) {
   const date = ev.event_date ? parseIsoDate(ev.event_date) : null;
   const node = date
-    ? `<b>${String(date.getDate()).padStart(2, "0")}</b><span>${date.toLocaleDateString("it-IT", { month: "short" }).replace(".", "")}</span>`
+    ? `<b>${String(date.getDate()).padStart(2, "0")}</b><span>${date.toLocaleDateString(locale(), { month: "short" }).replace(".", "")}</span>`
     : "<b>?</b>";
   const fullDate = date
-    ? `${date.toLocaleDateString("it-IT", { day: "numeric", month: "long" })}<small>${date.toLocaleDateString("it-IT", { weekday: "long" })}</small>`
+    ? `${date.toLocaleDateString(locale(), { day: "numeric", month: "long" })}<small>${date.toLocaleDateString(locale(), { weekday: "long" })}</small>`
     : "—";
   const league = ev.is_external
     ? `<span class="league-tl-place">${PIN_ICON}${placeHtml(ev)}</span>`
@@ -531,7 +532,7 @@ const TROPHY_ICON =
 const RING_HTML = `<span class="recap-ring"><span class="recap-ring-art"></span><span class="recap-ring-play">${PLAY_ICON}</span></span>`;
 
 // "25 ott": a recap's day, under its name in the bar.
-const shortDay = (iso) => new Date(`${iso}T00:00:00`).toLocaleDateString("it-IT", { day: "numeric", month: "short" }).replace(".", "");
+const shortDay = (iso) => new Date(`${iso}T00:00:00`).toLocaleDateString(locale(), { day: "numeric", month: "short" }).replace(".", "");
 
 // The recaps as a row of compact bubbles, like a social app's stories (one
 // or several alike — since 2026-10-28 also a single one, which was a wide

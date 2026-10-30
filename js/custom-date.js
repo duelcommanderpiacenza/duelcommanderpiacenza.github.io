@@ -17,11 +17,21 @@
 //     both call it in resetForm() — so a "reset" listener re-syncs
 //     explicitly, a tick after the browser's own reset has applied.
 
-const MONTHS_IT = [
-  "Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno",
-  "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre",
-];
-const WEEKDAYS_IT = ["Lu", "Ma", "Me", "Gi", "Ve", "Sa", "Do"]; // week starts Monday, as in it-IT
+import { locale } from "./locale.js";
+
+// The months and weekdays in the page's language (js/locale.js — Italian:
+// "Gennaio" / "gen" / "Lu"…, English: "January" / "Jan" / "Mo"…). The week
+// starts on Monday in both (it-IT, en-GB). 2024-01-01 was a Monday.
+const capitalizeFirst = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+const MONTHS = Array.from({ length: 12 }, (_, m) =>
+  capitalizeFirst(new Date(2000, m, 1).toLocaleDateString(locale(), { month: "long" }))
+);
+const MONTHS_SHORT = Array.from({ length: 12 }, (_, m) =>
+  new Date(2000, m, 1).toLocaleDateString(locale(), { month: "short" }).replace(".", "")
+);
+const WEEKDAYS = Array.from({ length: 7 }, (_, i) =>
+  capitalizeFirst(new Date(2024, 0, 1 + i).toLocaleDateString(locale(), { weekday: "short" }).slice(0, 2))
+);
 const GRID_CELLS = 42; // fixed 6 rows so the popup never resizes between months
 
 const ENHANCED = new WeakSet();
@@ -64,7 +74,7 @@ function firstWeekdayMondayIndex(y, m) {
 }
 
 function formatLabel(date) {
-  return `${date.d} ${MONTHS_IT[date.m].slice(0, 3).toLowerCase()} ${date.y}`;
+  return `${date.d} ${MONTHS_SHORT[date.m]} ${date.y}`;
 }
 
 function buildGrid(viewY, viewM) {
@@ -123,7 +133,7 @@ function enhanceDateInput(input) {
       <span class="cd-month-label"></span>
       <button type="button" class="cd-nav cd-nav-next" aria-label="Mese successivo">&rsaquo;</button>
     </div>
-    <div class="cd-weekdays">${WEEKDAYS_IT.map((w) => `<span>${w}</span>`).join("")}</div>
+    <div class="cd-weekdays">${WEEKDAYS.map((w) => `<span>${w}</span>`).join("")}</div>
     <div class="cd-grid" role="grid"></div>
     <div class="cd-footer">
       <button type="button" class="cd-footer-btn cd-today">Oggi</button>
@@ -143,7 +153,7 @@ function enhanceDateInput(input) {
   let view = parseISO(input.value) ?? todayParts();
 
   function renderGrid() {
-    monthLabel.textContent = `${MONTHS_IT[view.m]} ${view.y}`;
+    monthLabel.textContent = `${MONTHS[view.m]} ${view.y}`;
     const selected = parseISO(input.value);
     const today = todayParts();
     grid.innerHTML = "";

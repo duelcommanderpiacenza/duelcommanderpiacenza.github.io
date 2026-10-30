@@ -20,6 +20,7 @@ import { initTabs } from "./tabs.js";
 import { hidePageLoading } from "./page-loading.js";
 import { openInfoDialog } from "./info-dialog.js";
 import { countdownHtml, startCountdowns } from "./countdown.js";
+import { locale } from "./locale.js";
 
 const svg = (body, cls = "ev-ico") =>
   `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
@@ -31,22 +32,22 @@ const toDate = (iso) => new Date(`${iso}T00:00:00`);
 // "24 ott" — day and short month.
 const dayMonth = (iso) => {
   const d = toDate(iso);
-  return `${String(d.getDate()).padStart(2, "0")} ${d.toLocaleDateString("it-IT", { month: "short" }).replace(".", "")}`;
+  return `${String(d.getDate()).padStart(2, "0")} ${d.toLocaleDateString(locale(), { month: "short" }).replace(".", "")}`;
 };
-const weekday = (iso) => capitalize(toDate(iso).toLocaleDateString("it-IT", { weekday: "long" }));
+const weekday = (iso) => capitalize(toDate(iso).toLocaleDateString(locale(), { weekday: "long" }));
 // A date as a small calendar sheet: the short month over the day.
 const calendarHtml = (iso) => {
   const d = toDate(iso);
-  return `<span class="ev-cal"><small>${d.toLocaleDateString("it-IT", { month: "short" }).replace(".", "")}</small><b>${d.getDate()}</b></span>`;
+  return `<span class="ev-cal"><small>${d.toLocaleDateString(locale(), { month: "short" }).replace(".", "")}</small><b>${d.getDate()}</b></span>`;
 };
 const year = (iso) => toDate(iso).getFullYear();
 // "mar 3 nov" — short weekday, day and short month.
 const shortDate = (iso) => {
   const d = toDate(iso);
-  const short = (opts) => d.toLocaleDateString("it-IT", opts).replace(".", "");
+  const short = (opts) => d.toLocaleDateString(locale(), opts).replace(".", "");
   return `${short({ weekday: "short" })} ${d.getDate()} ${short({ month: "short" })}`;
 };
-const fmtAvg = (n) => n.toLocaleString("it-IT", { maximumFractionDigits: 1 });
+const fmtAvg = (n) => n.toLocaleString(locale(), { maximumFractionDigits: 1 });
 const CHEVRON = svg('<path d="m9 18 6-6-6-6"></path>', "ev-chev");
 
 // The page's numbers: players and matches per event, a league's distinct

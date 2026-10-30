@@ -59,6 +59,7 @@ import { escapeHtml, eventTitle, formatDate, softFail, statTileHtml } from "./ui
 import { hidePageLoading } from "./page-loading.js";
 import { haptic } from "./haptics.js";
 import { mountSettings } from "./settings-panel.js";
+import { translate } from "./locale.js";
 import { rememberMyPlayer } from "./me-highlight.js";
 import {
   applyCardAccents,
@@ -1361,7 +1362,9 @@ export function mount({ signal = new AbortController().signal } = {}) {
   accountDeleteBtn.addEventListener("click", async () => {
     if (
       !confirm(
-        "Eliminare definitivamente il tuo account?\n\nLa tua carta verrà cancellata e il collegamento al tuo giocatore rimosso. Il giocatore e i suoi risultati restano."
+        translate(
+          "Eliminare definitivamente il tuo account?\n\nLa tua carta verrà cancellata e il collegamento al tuo giocatore rimosso. Il giocatore e i suoi risultati restano."
+        )
       )
     ) {
       return;

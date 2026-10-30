@@ -1,5 +1,6 @@
 // Small shared render helpers used across the public pages and the admin app.
 import { archetypeIcon } from "./archetype-icons.js";
+import { locale } from "./locale.js";
 
 export function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (c) => ({
@@ -87,7 +88,7 @@ export function formatDate(value) {
   if (!value) return "—";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return escapeHtml(value);
-  return d.toLocaleDateString("it-IT", { year: "numeric", month: "short", day: "2-digit" });
+  return d.toLocaleDateString(locale(), { year: "numeric", month: "short", day: "2-digit" });
 }
 
 // A Postgres `time` column round-trips through PostgREST as "HH:MM:SS" —

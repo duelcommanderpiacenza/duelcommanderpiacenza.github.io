@@ -194,6 +194,21 @@ export const UserSettings = {
       .maybeSingle()
       .then(assertOk)
       .then((row) => row?.haptics ?? null),
+  // The site's language (js/language.js, migration 033): "it" / "en",
+  // null = never chosen.
+  language: (userId) =>
+    sb
+      .from("user_settings")
+      .select("language")
+      .eq("user_id", userId)
+      .maybeSingle()
+      .then(assertOk)
+      .then((row) => row?.language ?? null),
+  saveLanguage: (userId, language) =>
+    sb
+      .from("user_settings")
+      .upsert({ user_id: userId, language, updated_at: new Date().toISOString() })
+      .then(assertOk),
   saveHaptics: (userId, on) =>
     sb
       .from("user_settings")

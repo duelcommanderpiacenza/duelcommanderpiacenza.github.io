@@ -28,6 +28,7 @@ import { ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
 import { archetypeIcon } from "./archetype-icons.js";
 import { createArtPainter } from "./player-card.js";
 import { escapeHtml } from "./ui.js";
+import { locale } from "./locale.js";
 
 const RECAP_STEP = 6500;
 
@@ -147,7 +148,7 @@ const commanderOf = (entry) =>
 // icon dark (.recap-bar.is-light).
 const RECAP_LIGHT = { combo: "#d8cfd1" };
 
-const longDate = (iso) => new Date(`${iso}T00:00:00`).toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" });
+const longDate = (iso) => new Date(`${iso}T00:00:00`).toLocaleDateString(locale(), { weekday: "long", day: "numeric", month: "long" });
 
 // --- The data (once per event per visit) ---------------------------------------
 
@@ -413,7 +414,7 @@ function eventSlidesHtml(data, page) {
 }
 
 function seasonSlidesHtml(data, page) {
-  const shortDate = (iso) => new Date(`${iso}T00:00:00`).toLocaleDateString("it-IT", { day: "numeric", month: "long" });
+  const shortDate = (iso) => new Date(`${iso}T00:00:00`).toLocaleDateString(locale(), { day: "numeric", month: "long" });
   const slides = [
     `<section class="recap-slide"><div class="recap-bg" data-art="${escapeHtml(data.championCommander)}"></div>
       <p class="recap-k" ${at(0)}>La stagione</p>

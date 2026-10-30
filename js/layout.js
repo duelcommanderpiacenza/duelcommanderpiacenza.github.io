@@ -12,6 +12,7 @@
 // layout/reflow on every navigation.
 
 import { setupThemeToggle } from "./theme.js";
+import { setupLanguage } from "./language.js";
 import { setupHapticsToggle } from "./haptics-toggle.js";
 import { enhanceSelects } from "./custom-select.js";
 import { enhanceDateInputs } from "./custom-date.js";
@@ -37,6 +38,8 @@ import "./data-updates.js";
 // long or fails (js/page-loading.js).
 watchPageLoading();
 setupThemeToggle();
+// The language: the footer's IT / EN switch, the account's saved choice.
+setupLanguage();
 setupHapticsToggle();
 enhanceSelects();
 enhanceDateInputs();

@@ -13,6 +13,13 @@
         }
         document.documentElement.dataset.theme = t;
         if (navigator.maxTouchPoints > 0) document.documentElement.classList.add("nav-mobile", "app-header");
+        // English (js/language.js): set before the first paint, and the
+        // translation (js/i18n-en.js) loaded at once, so the page is put on
+        // screen in English. Not the admin, which stays Italian.
+        if (localStorage.getItem("lang") === "en" && location.pathname.indexOf("/admin/") < 0) {
+          document.documentElement.lang = "en";
+          document.write('<script src="js/i18n-en.js"><\/script>');
+        }
       } catch (e) {}
     })();
   </script>
@@ -39,6 +46,7 @@
   <!-- preload:modules -->
   <link rel="modulepreload" href="js/layout.js">
   <link rel="modulepreload" href="js/theme.js">
+  <link rel="modulepreload" href="js/language.js">
   <link rel="modulepreload" href="js/haptics-toggle.js">
   <link rel="modulepreload" href="js/custom-select.js">
   <link rel="modulepreload" href="js/custom-date.js">
@@ -61,6 +69,7 @@
   <link rel="modulepreload" href="js/data-updates.js">
   <link rel="modulepreload" href="js/supabase-client.js">
   <link rel="modulepreload" href="js/db.js">
+  <link rel="modulepreload" href="js/locale.js">
   <link rel="modulepreload" href="js/haptics.js">
   <link rel="modulepreload" href="js/ui.js">
   <link rel="modulepreload" href="js/drag-scroll.js">
@@ -134,7 +143,9 @@
        account.html's sign-in card, where the data is collected. Keep it in step with what the site actually does — new
        data, new third-party services. No analytics (Google Analytics removed
        2026-10-16). -->
-  <section class="card privacy-card">
+  <!-- In Italian and, below, in English: the one of the language chosen
+       shows (css/6 [data-lang-only]); js/i18n-en.js leaves both alone. -->
+  <section class="card privacy-card" data-lang-only="it" data-no-i18n>
     <p class="privacy-lead">Duel Commander Piacenza è un sito amatoriale che raccoglie risultati e statistiche dei tornei di Duel Commander a Piacenza. Questa pagina spiega quali dati usiamo, perché e cosa puoi fare.</p>
     <p class="privacy-updated">Ultimo aggiornamento: ottobre 2026</p>
 
@@ -172,7 +183,7 @@
     <p>Alcuni di questi servizi possono trattare dati anche fuori dall'Unione Europea, con le garanzie previste dal GDPR.</p>
 
     <h2>Cookie</h2>
-    <p>Il sito salva nel tuo browser solo quello che serve a farlo funzionare: la sessione di accesso e, finché resti collegato, quale giocatore è il tuo, la scelta del tema chiaro o scuro, se la vibrazione è attiva (sui telefoni Android), quali novità hai già letto, una copia delle immagini delle carte già viste, delle pagine del sito e dei dati pubblici già consultati (eventi, classifiche, giocatori, comandanti), per caricarli più in fretta o senza connessione, e per qualche minuto i dati dei grafici della Bacheca. Non usa cookie di profilazione né strumenti di statistica sulle visite.</p>
+    <p>Il sito salva nel tuo browser solo quello che serve a farlo funzionare: la sessione di accesso e, finché resti collegato, quale giocatore è il tuo, la scelta del tema chiaro o scuro e della lingua, se la vibrazione è attiva (sui telefoni Android), quali novità hai già letto, una copia delle immagini delle carte già viste, delle pagine del sito e dei dati pubblici già consultati (eventi, classifiche, giocatori, comandanti), per caricarli più in fretta o senza connessione, e per qualche minuto i dati dei grafici della Bacheca. Non usa cookie di profilazione né strumenti di statistica sulle visite.</p>
 
     <h2>Perché e per quanto tempo</h2>
     <p>Usiamo i dati del tuo account per darti il servizio che hai chiesto (la tua carta e il collegamento al tuo giocatore) e li conserviamo finché non elimini l'account. I risultati dei tornei restano nell'archivio storico degli eventi, nell'interesse di tutti i giocatori a classifiche e statistiche complete.</p>
@@ -180,6 +191,54 @@
     <h2>I tuoi diritti</h2>
     <p>Puoi chiedere in qualsiasi momento di vedere, correggere o cancellare i tuoi dati, scrivendo all'indirizzo qui sopra. Per eliminare l'account non serve scriverci: usa <em>“Elimina account”</em> nella pagina <a href="account.html">Profilo</a> — account, carta e collegamento al giocatore vengono cancellati, mentre i risultati restano al giocatore.</p>
     <p>Puoi anche presentare reclamo al Garante per la protezione dei dati personali.</p>
+  </section>
+
+  <section class="card privacy-card" lang="en" data-lang-only="en" data-no-i18n>
+    <p class="privacy-lead">Duel Commander Piacenza is an amateur site that collects the results and statistics of the Duel Commander tournaments in Piacenza. This page explains what data we use, why, and what you can do about it.</p>
+    <p class="privacy-updated">Last updated: October 2026</p>
+
+    <h2>Who manages the data</h2>
+    <p>The site is run by Michele Ferri, the data controller. For any question or request about your data, write to <a href="mailto:michele.ferri.2403@gmail.com">michele.ferri.2403@gmail.com</a>.</p>
+
+    <h2>Tournament results</h2>
+    <p>Player names, the commanders and archetypes played and event results are published as standings and statistics, as is usual for Magic tournaments. The organisers enter them and no account is needed. If you want something about you corrected or removed, write to us.</p>
+
+    <h2>If you sign in with Google</h2>
+    <p>The account is optional: it's only for linking you to your player and creating your card. When you sign in, Google gives us:</p>
+    <ul>
+      <li>your name and your email;</li>
+      <li>your profile photo;</li>
+      <li>an identifier of your Google account.</li>
+    </ul>
+    <p>We don't receive your password. Your email is seen only by you and the site's admins.</p>
+
+    <h2>If you send a decklist</h2>
+    <p>From the Profile page you can send your decklist for an event: the list, your name and your email reach the organisers by email (through the <strong>Resend</strong> service) and the list isn't saved on the site. The site only remembers that you sent it, to allow at most two per event.</p>
+
+    <h2>Your card and your profile</h2>
+    <p>What you put on your card (description, favourite colours, background card, your Instagram, Moxfield, Archidekt and endstep.cc profiles) stays private until you choose to show it: with the <em>“Show on the player page”</em> switch the card becomes visible to everyone on your player's page, with your name and — only if you turned on <em>“Show photo”</em> — your profile photo. You can hide it again at any time.</p>
+    <p>When your account is linked to a player, the site prepares a starting card for you: the commander you've played most as the background, without your photo. It's visible on your player's page and you can edit or hide it whenever you like.</p>
+    <p>When you ask to be linked to a player, the request is visible to the admins, who approve or reject it.</p>
+
+    <h2>Where it's kept</h2>
+    <ul>
+      <li><strong>Supabase</strong>: the site's database and sign-in management;</li>
+      <li><strong>GitHub Pages</strong>: hosts the site and records technical data about visits, such as the IP address;</li>
+      <li><strong>Google</strong>: sign-in with your Google account — the sign-in button on the Profile page is loaded from Google, which thereby receives technical data about the visit (such as the IP address) and may use its own cookies;</li>
+      <li><strong>Resend</strong>: sending the decklists to the organisers by email;</li>
+      <li><strong>Scryfall</strong>: card images are requested by your browser directly from Scryfall.</li>
+    </ul>
+    <p>Some of these services may process data outside the European Union, with the safeguards required by the GDPR.</p>
+
+    <h2>Cookies</h2>
+    <p>The site stores in your browser only what it needs to work: the sign-in session and, while you stay signed in, which player is yours, your choice of light or dark theme and of language, whether vibration is on (on Android phones), which news you've already read, a copy of the card images already seen, of the site's pages and of the public data already viewed (events, standings, players, commanders), to load them faster or offline, and for a few minutes the Home charts' data. It uses no profiling cookies and no visit statistics tools.</p>
+
+    <h2>Why and for how long</h2>
+    <p>We use your account's data to give you the service you asked for (your card and the link to your player) and keep it until you delete the account. Tournament results stay in the events' historical archive, in the interest of all players in complete standings and statistics.</p>
+
+    <h2>Your rights</h2>
+    <p>You can ask at any time to see, correct or delete your data, by writing to the address above. To delete the account you don't need to write to us: use <em>“Delete account”</em> on the <a href="account.html">Profile</a> page — account, card and the link to your player are deleted, while the results stay with the player.</p>
+    <p>You can also lodge a complaint with the Garante per la protezione dei dati personali (the Italian data protection authority).</p>
   </section>
 </main>
 
@@ -198,7 +257,14 @@
       </a>
     </div>
   </div>
-  <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="false" aria-label="Cambia tema"></button>
+  <!-- The language (js/language.js) and the theme, side by side. -->
+  <div class="footer-actions">
+    <div class="lang-toggle" id="lang-toggle" role="group" aria-label="Lingua">
+      <button type="button" data-lang="it" aria-pressed="false">IT</button>
+      <button type="button" data-lang="en" aria-pressed="false">EN</button>
+    </div>
+    <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="false" aria-label="Cambia tema"></button>
+  </div>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

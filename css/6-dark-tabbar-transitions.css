@@ -109,11 +109,13 @@
   background: rgba(255, 255, 255, 0.045);
 }
 
-/* Dark mode keeps the white disc (the icons need it for contrast), with the
-   ring in the theme's lighter red so it still reads on the dark page. */
+/* Dark mode keeps a light disc (the icons need it for contrast) — a shade
+   below white, so it doesn't glare on the dark page — with the ring in the
+   theme's lighter red so it still reads. */
 :root[data-theme="dark"] .badge-card-icon,
 :root[data-theme="dark"] .badge-disc {
   border-color: rgba(255, 106, 110, 0.6);
+  background: #d9d2d2;
 }
 
 :root[data-theme="dark"] .badge-holder {
@@ -303,6 +305,61 @@ html[data-theme="dark"]:not(.nav-mobile) .site-search-results {
   padding: 0;
   cursor: pointer;
   transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
+}
+
+/* The footer's right-hand group: the language switch, then the theme. */
+.footer-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+/* The language (js/language.js): IT / EN as a small two-part pill, the
+   theme button's look; the one on screen in red. */
+.lang-toggle {
+  display: inline-flex;
+  box-sizing: border-box;
+  width: 76px;
+  height: 44px;
+  padding: 4px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.lang-toggle button {
+  flex: 1;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--text-body);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.lang-toggle button[aria-pressed="true"] {
+  background: var(--brand-red);
+  color: #fff;
+  cursor: default;
+}
+
+.lang-toggle button[aria-pressed="false"]:hover {
+  background: rgba(220, 24, 28, 0.08);
+}
+
+:root[data-theme="dark"] .lang-toggle {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Content written out in both languages (privacy.html): only the one of the
+   language on screen shows. */
+html[lang="en"] [data-lang-only="it"],
+html:not([lang="en"]) [data-lang-only="en"] {
+  display: none;
 }
 
 /* Its icon (js/theme.js): the current choice as a line icon — sun, moon,
@@ -2559,6 +2616,13 @@ p.settings-account-label {
   padding: 4px;
   border-radius: 16px;
   background: rgba(154, 28, 32, 0.07);
+}
+
+/* The language: two segments, each as wide as one of the theme's three. */
+.settings-seg.settings-lang {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  box-sizing: border-box;
+  width: calc((min(100%, 460px) - 16px) * 2 / 3 + 12px);
 }
 
 .settings-seg button {

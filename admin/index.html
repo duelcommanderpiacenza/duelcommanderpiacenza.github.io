@@ -12,6 +12,13 @@
         }
         document.documentElement.dataset.theme = t;
         if (navigator.maxTouchPoints > 0) document.documentElement.classList.add("nav-mobile", "app-header");
+        // English (js/language.js): set before the first paint, and the
+        // translation (js/i18n-en.js) loaded at once, so the page is put on
+        // screen in English. Not the admin, which stays Italian.
+        if (localStorage.getItem("lang") === "en" && location.pathname.indexOf("/admin/") < 0) {
+          document.documentElement.lang = "en";
+          document.write('<script src="js/i18n-en.js"><\/script>');
+        }
       } catch (e) {}
     })();
   </script>
