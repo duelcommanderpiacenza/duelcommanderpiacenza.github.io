@@ -1,10 +1,11 @@
-// Touch screens (html.nav-mobile): the floating tab bar at the bottom of
-// the screen, in place of the old pill + list (styles.css "Tab bar") — a
-// solid capsule with five sections always in view, the current one
-// in a red chip (the hero's colour on hero pages: .site-nav.has-hero-accent)
-// with its name, the others icon only. One tap to change section; the chip
-// slides to the new one (also on back / forward). Tapping the current one
-// scrolls back to the top.
+// Touch screens (html.nav-mobile): the tab bar along the bottom of the
+// screen, in place of the old pill + list (styles.css "Tab bar") — an app's
+// bar, the whole width, fixed and always shown (since 2026-10-30; it was a
+// floating capsule sliding away scrolling down): five sections, each its
+// icon over its name, the current one's icon in a red pill and its name in
+// red — like Google's apps (the hero's colour on hero pages:
+// .site-nav.has-hero-accent). One tap to change section; tapping the
+// current one scrolls back to the top.
 //
 // The same five sections as the computer's top bar: "Meta" stands for
 // Comandanti, Matchups and Archetipi (and their detail pages —
@@ -12,10 +13,8 @@
 // segmented control at the top of those pages (.meta-tabs in
 // commanders.html / matchups.html / archetypes.html).
 //
-// Built here into .site-nav (every page's nav markup unchanged); it slides
-// away while scrolling down (js/nav-dropdown.js toggles
-// .is-scrolled-away on .site-nav). No section lit on a page outside them
-// (account, privacy).
+// Built here into .site-nav (every page's nav markup unchanged). No section
+// lit on a page outside them (account, privacy).
 
 import { haptic } from "./haptics.js";
 
@@ -40,55 +39,37 @@ function init() {
 
   const bar = document.createElement("div");
   bar.className = "tab-bar";
-  bar.innerHTML = `<span class="tab-bar-chip" aria-hidden="true"></span>${TABS.map(
+  bar.innerHTML = TABS.map(
     ([key, label, href, icon]) =>
-      `<a class="tab-bar-link" data-tab="${key}" href="${href}" aria-label="${label}">${icon}<span>${label}</span></a>`
-  ).join("")}`;
+      `<a class="tab-bar-link" data-tab="${key}" href="${href}" aria-label="${label}"><span class="tab-bar-icon">${icon}</span><span class="tab-bar-name">${label}</span></a>`
+  ).join("");
   nav.append(bar);
   nav.classList.add("has-tab-bar");
 
-  const chip = bar.querySelector(".tab-bar-chip");
   const links = [...bar.querySelectorAll(".tab-bar-link")];
 
-  const placeChip = (current) => {
-    chip.hidden = !current;
-    if (!current) return;
-    chip.style.left = `${current.offsetLeft}px`;
-    chip.style.width = `${current.offsetWidth}px`;
-  };
-
-  // The section for the page on screen: lit (its name shown), the chip
-  // straight under it — no sliding (the chip and the tabs used to glide to
-  // their new places: not needed, and work for the phone at every change).
+  // The section for the page on screen: lit.
   const sync = () => {
     const active = document.body.dataset.activeNav;
     const tab = TABS.find((t) => t[4].includes(active))?.[0] ?? null;
-    const current = links.find((a) => a.dataset.tab === tab) ?? null;
-    if (current?.classList.contains("is-current") && !chip.hidden) return;
     for (const a of links) {
-      const on = a === current;
+      const on = a.dataset.tab === tab;
       a.classList.toggle("is-current", on);
       if (on) a.setAttribute("aria-current", "page");
       else a.removeAttribute("aria-current");
     }
-    placeChip(current);
   };
 
   sync();
+  // From now on a change of section animates (styles.css .tab-bar.is-ready:
+  // the pill opening out, the icon's pop) — not this first paint.
+  requestAnimationFrame(() => requestAnimationFrame(() => bar.classList.add("is-ready")));
   // In-app navigation and back / forward (js/router.js sets the next page's
   // data-active-nav on <body>).
   new MutationObserver(sync).observe(document.body, {
     attributes: true,
     attributeFilter: ["data-active-nav"],
   });
-  // The bar's width changes (rotation): the chip re-placed under its tab.
-  new ResizeObserver(() => {
-    const current = bar.querySelector(".tab-bar-link.is-current");
-    chip.style.transition = "none";
-    placeChip(current);
-    requestAnimationFrame(() => (chip.style.transition = ""));
-  }).observe(bar);
-
   bar.addEventListener("click", (e) => {
     const link = e.target.closest(".tab-bar-link");
     if (!link) return;
