@@ -511,6 +511,55 @@ html.nav-mobile .commanders-row-title .color-identity-inline {
   margin-top: calc((1lh - 16px) / 2);
 }
 
+/* Giocatori's list, the same (user, 2026-10-30): the badges at the row's
+   right end, on the name's first line, the name wrapping under itself on
+   the left. Their group (.players-row-badges) adds nothing on a computer
+   (display: contents — the badges right after the name, as before). */
+.players-row-badges {
+  display: contents;
+}
+
+html.nav-mobile .players-row-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+/* The name only as wide as it needs (still free to wrap): "Tu"
+   (js/me-highlight.js, inserted right after it) stays beside it, the
+   badges pushed to the end (their margin-left: auto). */
+html.nav-mobile .players-row-title .history-name {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+/* On the name's first line (it's about a line tall), the usual small gap
+   after the name (the row's 10px gap pulled in). */
+html.nav-mobile .players-row-title .me-pill {
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-left: -4px;
+}
+
+html.nav-mobile .players-row-badges {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  /* Centred on the name's first line (a badge's disc: 1.6rem). */
+  margin-top: calc((1lh - 1.6rem) / 2);
+}
+
+html.nav-mobile .players-row-badges:empty {
+  display: none;
+}
+
+/* (Their spacing the group's gap, not each badge's own left margin.) */
+html.nav-mobile .players-row-badges .icon-badge {
+  margin-left: 0;
+}
+
 .color-pip {
   width: 18px;
   height: 18px;

@@ -9,12 +9,14 @@ import { historyPanelHtml, historyStatsHtml, winrateTrendHtml, latestPresence } 
 import { initBackToTop } from "./back-to-top.js";
 
 // One sub-card per player (js/history-list.js), the whole card a link to
-// the player's page: name + badges, the numbers on the right.
+// the player's page: name + badges (on touch screens the badges at the
+// row's right end, on the name's first line — styles.css
+// .players-row-title), the numbers on the right.
 function renderRow(r) {
   return `
     <a class="history-item history-ranked" href="player.html?id=${r.id}">
       <div class="history-main">
-        <span class="history-title"><span class="history-name">${r.nameHtml}</span>${r.badgesHtml}</span>
+        <span class="history-title players-row-title"><span class="history-name">${r.nameHtml}</span><span class="players-row-badges">${r.badgesHtml}</span></span>
       </div>
       ${historyStatsHtml([
         { label: "Eventi", value: r.eventsPlayed },
