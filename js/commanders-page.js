@@ -57,10 +57,14 @@ const minPlayed = (rows) => Math.max(1, Math.ceil(MIN_PLAYED_RATIO * Math.max(0,
 // Highest value first; a null winRate (no games played) always sorts last
 // rather than tying with an actual 0%. By winrate: those with enough
 // matches first.
+// "Ordina per": the numbers each card shows, in their order (since
+// 2026-10-30 — Vittorie, not on the cards, dropped; Piloti and Metashare
+// added). Metashare orders as Giocato does (its share of the decks).
 const SORTERS = {
   played: (a, b) => b.entries - a.entries,
+  pilots: (a, b) => b.pilots - a.pilots,
+  metashare: (a, b) => b.share - a.share,
   winrate: (a, b) => Number(b.enough) - Number(a.enough) || (b.winRate ?? -1) - (a.winRate ?? -1),
-  wins: (a, b) => b.wins - a.wins,
 };
 
 // In-app page (js/router.js): mounted by the router on this page's <main>

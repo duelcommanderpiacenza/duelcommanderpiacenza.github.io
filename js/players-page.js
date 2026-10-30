@@ -73,10 +73,11 @@ function playerRecords(eventsData) {
 
 // Highest value first; a null winRate (no games played) always sorts last
 // rather than tying with an actual 0%.
+// "Ordina per": the numbers each card shows (since 2026-10-30 — Vittorie,
+// not on the cards, dropped).
 const SORTERS = {
   events: (a, b) => b.eventsPlayed - a.eventsPlayed,
   winrate: (a, b) => (b.winRate ?? -1) - (a.winRate ?? -1),
-  wins: (a, b) => b.wins - a.wins,
 };
 
 // In-app page (js/router.js): mounted by the router on this page's <main>
