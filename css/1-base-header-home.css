@@ -713,9 +713,93 @@ html.app-header .sk-page.is-hero:not(.is-account) .sk-hero .sk-hero-actions {
   }
 }
 
+/* Once the real profile shows (the placeholder fading out over it), its
+   hero's own pull-up has moved the whole region up (its margin through the
+   region's top): the placeholder's would then count twice — it jumped
+   20–28px up for its fade-out, the tabs and the section with it. */
+.page-loading-region:has(> .profile[data-view="signed-in"]:not([hidden])) .sk-page.is-account .sk-hero {
+  margin-top: 0;
+}
+
 @media (min-width: 641px) {
   html:not(.app-header) .sk-page.is-account .sk-tabs {
-    width: 440px;
+    width: 298px;
+  }
+}
+
+/* Account at the real Profilo's sizes, measured against the loaded page
+   (signed in, linked — 2026-10-30) so the tabs and the section under the
+   hero don't move when it arrives: the card 4px taller than 2:1 (its
+   frame), the numbers' row, the buttons' row under it (Invia la tua
+   decklist / Pagina giocatore — .sk-hero-actions), the tabs' own height
+   (51px pill bar; 69px segmented control on touch screens, laid 4px into
+   the hero's sheet) and 18px down to the section. Touch screens: "Il tuo
+   profilo" 23px under the header, 6px above the name (34px; 36px on
+   tablets), then 28 / 22 / 22px between the name, the card, the numbers
+   (50px; 59px on tablets) and the buttons (42px), 50px of hero under them. */
+.sk-page.is-account .sk-hero.has-card .sk-hero-card {
+  box-sizing: content-box;
+  padding-bottom: 4px;
+}
+
+.sk-page.is-account .sk-hero-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.sk-page.is-account .sk-hero-actions i {
+  width: 150px;
+  height: 42px;
+  border-radius: 99px;
+}
+
+.sk-page.is-account .sk-tabs {
+  height: 51px;
+}
+
+.sk-page.is-account .sk-card {
+  margin-top: 4px;
+}
+
+html.app-header .sk-page.is-account .sk-hero.has-card {
+  padding-top: calc(var(--hero-header-h, 80px) + 23px);
+}
+
+@media (max-width: 820px) {
+  .sk-page.is-account .sk-hero.has-card .sk-hero-line {
+    height: 15px;
+    margin-bottom: -16px;
+  }
+
+  .sk-page.is-account .sk-hero-actions {
+    justify-content: center;
+  }
+
+  .sk-page.is-account .sk-hero-actions i {
+    width: min(174px, calc(50% - 5px));
+  }
+}
+
+html.app-header .sk-page.is-account .sk-hero-chips i {
+  height: 50px;
+}
+
+/* (Above the hero's sheet strip, which it laps into.) */
+html.app-header .sk-page.is-account .sk-tabs {
+  position: relative;
+  z-index: 1;
+  height: 69px;
+  margin-top: -14px;
+  border-radius: 18px;
+}
+
+@media (min-width: 641px) {
+  html.app-header .sk-page.is-account .sk-hero .sk-hero-title {
+    height: 36px;
+  }
+
+  html.app-header .sk-page.is-account .sk-hero-chips i {
+    height: 59px;
   }
 }
 

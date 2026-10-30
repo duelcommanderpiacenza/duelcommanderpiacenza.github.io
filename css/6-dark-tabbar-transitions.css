@@ -1852,6 +1852,58 @@ html.is-page-transition:not(.app-header) .site-header-brand {
   }
 }
 
+/* Profile slide (touch screens only, since 2026-10-30 — user, like
+   Google's apps): into the Profilo page (account.html, the header's picture
+   button — html.is-slide-in, js/router.js) the new screen comes in from the
+   right as a solid page over the old one, which drifts a little to the left
+   and dims under it; back out of it (html.is-slide-out: the browser's back)
+   the same in reverse — the profile slides away to the right, uncovering
+   the page before. The header (logo, bell, search, picture) and the tab bar
+   stay still on top: their own names, above. */
+/* Nothing of the pages themselves above the sliding profile: the parts
+   that keep their own name between some pages (the Meta pages' segmented
+   control, meta-tabs below) go with their screen here, like the rest of
+   it. */
+html.is-page-transition.nav-mobile:is(.is-slide-in, .is-slide-out) main > .meta-head > .meta-row {
+  view-transition-name: none;
+}
+
+html.nav-mobile.is-slide-in::view-transition-old(root) {
+  animation: page-slide-under 340ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  mix-blend-mode: normal;
+}
+
+html.nav-mobile.is-slide-in::view-transition-new(root) {
+  animation: page-slide-from-right 340ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  mix-blend-mode: normal;
+  box-shadow: -10px 0 28px rgba(0, 0, 0, 0.18);
+}
+
+html.nav-mobile.is-slide-out::view-transition-old(root) {
+  z-index: 1;
+  animation: page-slide-from-right 300ms cubic-bezier(0.4, 0, 0.6, 1) reverse both;
+  mix-blend-mode: normal;
+  box-shadow: -10px 0 28px rgba(0, 0, 0, 0.18);
+}
+
+html.nav-mobile.is-slide-out::view-transition-new(root) {
+  animation: page-slide-under 300ms cubic-bezier(0.4, 0, 0.6, 1) reverse both;
+  mix-blend-mode: normal;
+}
+
+@keyframes page-slide-from-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes page-slide-under {
+  to {
+    transform: translateX(-25%);
+    filter: brightness(0.85);
+  }
+}
+
 /* ---------------------------------------------------------------------------
    Quiet redraw (js/router.js go's quiet branch, js/data-updates.js): the
    page on screen redrawn with fresh data — the whole screen as one picture

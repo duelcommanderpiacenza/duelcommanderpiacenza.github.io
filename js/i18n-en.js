@@ -542,6 +542,7 @@
     [/^(\d+) annunc(?:io|i) · (\d+) da leggere$/, function (_, n, u) { return n + plural(n, " announcement", " announcements") + " · " + u + " unread"; }],
     [/^(\d+) annunc(?:io|i)$/, function (_, n) { return n + plural(n, " announcement", " announcements"); }],
     [/^Il tuo profilo \((.+)\)$/, "Your profile ($1)"],
+    [/^Torna a (.+)$/, function (_, a) { return "Back to " + tr(a); }],
     [/^Gli archetipi di (.+)$/, "The archetypes of $1"],
     [/^I più giocati di (.+)$/, "The most played of $1"],
     [/^Il meta di (.+)$/, "The meta of $1"],

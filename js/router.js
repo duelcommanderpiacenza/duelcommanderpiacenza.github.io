@@ -166,9 +166,10 @@ function syncBarBackButton() {
 // Leaves the current page for `url` (already a supported page). `restoreY`
 // comes from a history back/forward. `quiet`: the page redrawn with fresh
 // data (js/data-updates.js) — see the quiet branch below.
-async function go(url, { push = true, restoreY = null, quiet = false } = {}) {
+async function go(url, { push = true, restoreY = null, quiet = false, back = false, fromNav = false } = {}) {
   const token = ++navToken;
   const page = pageOf(url);
+  const fromPage = current?.page;
   let doc;
   try {
     doc = new DOMParser().parseFromString(await fetchPage(url), "text/html");
@@ -292,6 +293,13 @@ async function go(url, { push = true, restoreY = null, quiet = false } = {}) {
   if (document.startViewTransition && !reduceMotion) {
     const root = document.documentElement;
     root.classList.add("is-page-transition");
+    // The Profilo page (account.html — the header's picture button) on a
+    // touch screen (since 2026-10-30, user — like Google's apps): a solid
+    // page sliding in from the right over the one before, and back out to
+    // the right on back or a tab of the nav — css/6 "Profile slide".
+    // Everything else keeps the cross-fade.
+    root.classList.toggle("is-slide-in", page.name === "account" && fromPage?.name !== "account" && !back);
+    root.classList.toggle("is-slide-out", fromPage?.name === "account" && page.name !== "account" && (back || fromNav));
     // Neither page with a back pill (tab to tab): the logo stays as it is
     // (styles.css doesn't give it the bar-lead name, so no morph of the logo
     // into itself).
@@ -303,7 +311,7 @@ async function go(url, { push = true, restoreY = null, quiet = false } = {}) {
     // js/page-loading.js would show it as one.)
     transition.finished
       .catch(() => {})
-      .then(() => root.classList.remove("is-page-transition", "is-bar-logo-stay"));
+      .then(() => root.classList.remove("is-page-transition", "is-bar-logo-stay", "is-slide-in", "is-slide-out"));
     await transition.updateCallbackDone.catch(() => {});
   } else {
     swap();
@@ -427,10 +435,16 @@ function start() {
         history.back();
         return;
       }
+      // The header's picture button on the Profilo page itself: nothing
+      // (not the page loaded again).
+      if (e.target.closest?.("#site-account") && current?.page.name === "account") {
+        e.preventDefault();
+        return;
+      }
       const target = routableLink(e);
       if (!target) return;
       e.preventDefault();
-      go(target);
+      go(target, { fromNav: Boolean(e.target.closest?.(".site-nav")) });
     },
     false
   );
@@ -456,8 +470,9 @@ function start() {
       return;
     }
     const idx = e.state?.idx ?? 0;
+    const back = idx < historyIdx;
     historyIdx = idx;
-    go(url, { push: false, restoreY: e.state?.scrollY ?? 0 });
+    go(url, { push: false, restoreY: e.state?.scrollY ?? 0, back });
   });
 }
 
