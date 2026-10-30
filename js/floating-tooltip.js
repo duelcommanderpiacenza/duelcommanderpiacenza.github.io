@@ -6,7 +6,7 @@
 // matrix, the chart carousel are
 // horizontally-scrolling, and per the CSS overflow spec overflow-x: auto
 // forces overflow-y to clip too), so anything positioned relative to an
-// element inside it gets cut off at the wrapper's own edge (CLAUDE.md
+// element inside it gets cut off at the wrapper's own edge (docs/gotchas.md
 // gotchas #1/#2). Living outside that wrapper sidesteps it. One tooltip at
 // a time, site-wide.
 

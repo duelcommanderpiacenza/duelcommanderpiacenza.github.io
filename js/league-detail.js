@@ -151,9 +151,9 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   const leaderboardEl = document.getElementById("league-leaderboard");
   const tabsEl = document.querySelector(".league-tabs");
 
-  // Eventi / Classifica: tabs on phones and touch screens (the CSS hides
-  // them on a computer, one section under the other), each list whole there
-  // — a long page, hence the back-to-top button.
+  // Eventi / Classifica / Meta: one at a time behind the tabs on every screen
+  // (a pill bar on a computer, the segmented control on touch screens), each
+  // list whole — a long page, hence the back-to-top button.
   const tabs = initTabs(tabsEl);
   initBackToTop({ signal });
   // "Regolamento" in the hero (shown below, once the league is known not to

@@ -226,9 +226,9 @@ async function loadLeagueStandings(league) {
 }
 
 // The league's name (a link to league.html) — "Conclusa" when it's over —
-// and "Regolamento" (js/league-rules.js) on its right; its progress; the top
-// LEAGUE_PREVIEW_COUNT as sub-cards like league.html's Classifica, each a
-// link to the player, then "Classifica completa" under them:
+// with its progress ring on its right; the top LEAGUE_PREVIEW_COUNT as
+// sub-cards like league.html's Classifica, each a link to the player, then
+// "Classifica completa" and "Regolamento" (js/league-rules.js) under them:
 // position chip (while the league runs, with its change since the latest
 // event — leaguePosHtml), name + badges, points; a finished league's winner in gold
 // with a trophy. The name is plain text inside (a link can't hold another);

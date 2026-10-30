@@ -1076,7 +1076,8 @@ body.is-loading * {
    `animation` shorthand resets the play state to running, so they'd play —
    and finish — unseen while the page is still loading. Any new one like
    them goes here too. */
-body.is-loading input[type="search"]:not(#site-search-input) {
+body.is-loading input[type="search"]:not(#site-search-input),
+body.is-loading .detail-hero .player-card {
   animation-play-state: paused;
 }
 
@@ -2277,7 +2278,9 @@ main {
   .bar-chart-row,
   .player-card,
   .pc-art,
-  .league-recap-card {
+  .league-recap-card,
+  .ev-tile,
+  .matchups-matrix-wrap {
     /* !important: most of these declare their own animation later in this
        file, which would otherwise win on source order (equal specificity)
        and keep animating despite the visitor's reduced-motion setting. */
@@ -2796,7 +2799,8 @@ html.app-header .home-head-icon {
 
 /* Every event the same: one row as tall as its date's circle — the circle
    and the card side by side, level top and bottom; the name over the league
-   on the left (each cut with "…" when too long), the extra on the right,
+   on the left (each shrunk to fit its line — js/home.js fitTimelineNames,
+   down to 12px — and only then cut with "…"), the extra on the right,
    centred (the played ones' Moxfield / Top 8 links) — the upcoming ones'
    time alone, down on the league's line. The upcoming cards bare (no
    surface), their names as readable as the played ones'. */
