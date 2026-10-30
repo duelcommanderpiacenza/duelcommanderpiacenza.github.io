@@ -14,7 +14,8 @@
 //    month just ended — its events / decks / commanders, the commander of the
 //    month, the top 5 (share, winrate), the revelation (best winrate, at
 //    least REVELATION_MIN_PLAYED matches), the archetypes.
-// `dueStories()` gives each as a bubble item for js/home.js's bar.
+// `dueStories()` gives each as a bubble item for js/home.js's bar (`sub`:
+// the line under its name there, on a computer).
 
 import { Events, Commanders, fetchEventsResults } from "./db.js";
 import { computeGroupedStats } from "./stats.js";
@@ -24,7 +25,7 @@ import { openStories, at, archetypesSlide } from "./event-recap.js";
 
 const VIDEO_HOURS = 48;
 const PRIMER_HOURS = 48;
-const META_DAYS = 5;
+const META_DAYS = 4;
 const REVELATION_MIN_PLAYED = 6;
 const MONTHS = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"];
 const PLAY =
@@ -102,6 +103,7 @@ async function dueVideos() {
         kicker: "Nuovo video",
         short: "Nuovo video",
         title: parseVideoTitle(video.title).matchup,
+        sub: "YouTube",
         thumb: video.thumbnailUrl,
         open: () =>
           openStories({
@@ -154,6 +156,7 @@ async function duePrimers() {
         kicker: "Nuovo primer",
         short: "Primer",
         title: primerTitle(deck),
+        sub: "Moxfield",
         thumb: deck.previewImageUrl ?? null,
         art: deck.previewImageUrl ? null : deck.commanderName,
         open: () =>
@@ -261,6 +264,7 @@ async function dueMeta() {
       kicker: "Il meta del mese",
       short: "Meta",
       title: capitalize(month),
+      sub: "Il meta del mese",
       art: meta.top[0]?.first ?? "",
       open: () =>
         openStories({

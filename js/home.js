@@ -237,7 +237,7 @@ function standingsHtml({ league, standings: allStandings, before, played, schedu
   const standings = allStandings.slice(0, LEAGUE_PREVIEW_COUNT);
   const head = `
       <div class="home-panel-head">
-        <a class="home-panel-title" href="${href}">${escapeHtml(league.name)}</a>
+        ${TROPHY_ICON}<a class="home-panel-title" href="${href}">${escapeHtml(league.name)}</a>
         ${finished ? '<span class="home-finished-chip">Conclusa</span>' : ""}
         <button type="button" class="section-link dashboard-league-rules" data-league-rules aria-haspopup="dialog">${RULES_ICON}<span>Regolamento</span></button>
       </div>
@@ -412,7 +412,7 @@ async function renderCommandersSection(el) {
 // js/event-recap.js recapSeen —, "Nuovo · Recap", the event, who won with
 // what; the whole card a button) opening its recap's stories. Nothing when there's none
 // (or it can't be read).
-const RECAP_DAYS = 7;
+const RECAP_DAYS = 4;
 const PLAY_ICON =
   '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"></path></svg>';
 
@@ -451,7 +451,7 @@ function isoDaysAgo(days) {
 // A season just over: a closed league (not a Topdeck series) whose last
 // event was within SEASON_DAYS — its season recap (js/event-recap.js
 // openSeasonRecap), beside the events' own.
-const SEASON_DAYS = 14;
+const SEASON_DAYS = 7;
 
 const plusDays = (iso, days) => {
   const d = new Date(`${iso}T00:00:00`);
@@ -490,6 +490,8 @@ async function dueRecaps(events) {
         kicker: "Nuovo · Recap",
         short: "Recap",
         title: data.name,
+        // Under its name in the bar (a computer): its league and day.
+        sub: [e.league?.name, shortDay(e.event_date)].filter(Boolean).join(" · "),
         line: `Vince ${escapeHtml(data.winner.player?.name)} con ${escapeHtml(data.winnerCommander)}`,
         art: data.winnerCommander,
         open: () => openEventRecap(e.id),
@@ -506,6 +508,7 @@ async function dueRecaps(events) {
       kicker: "Nuovo · Recap della stagione",
       short: "Stagione",
       title: data.name,
+      sub: "Recap della stagione",
       line: `Campione ${escapeHtml(data.champion.player?.name)} con ${escapeHtml(data.championCommander)}`,
       art: data.championCommander,
       open: () => openSeasonRecap(id),
@@ -518,12 +521,23 @@ async function dueRecaps(events) {
     .sort((a, b) => a.seen - b.seen || a.date.localeCompare(b.date));
 }
 
+// The sections' headings' icons on a computer (the touch screens' tabs'
+// own): a trophy before the league's name (Eventi's calendar: index.html).
+const TROPHY_ICON =
+  '<svg class="home-head-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4"></path><path d="M7 4h10v5a5 5 0 0 1-10 0Z"></path><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"></path></svg>';
+
 const RING_HTML = `<span class="recap-ring"><span class="recap-ring-art"></span><span class="recap-ring-play">${PLAY_ICON}</span></span>`;
+
+// "25 ott": a recap's day, under its name in the bar.
+const shortDay = (iso) => new Date(`${iso}T00:00:00`).toLocaleDateString("it-IT", { day: "numeric", month: "short" }).replace(".", "");
 
 // The recaps as a row of compact bubbles, like a social app's stories (one
 // or several alike — since 2026-10-28 also a single one, which was a wide
 // card): the ring with the art and just its kind under it ("Recap" /
-// "Stagione" — the name only in its aria-label, since 2026-10-28).
+// "Stagione" — the name only in its aria-label, since 2026-10-28). On a
+// computer (option A3 of a mockup, 2026-10-30) the row is one white bar the
+// whole width, the stories its equal parts: the ring, then its kind, name
+// and `sub` beside it (.recap-bubble-name / -sub, hidden on touch screens).
 function recapBubblesHtml(items) {
   return `
       <div class="recap-bubbles" role="list">${items
@@ -533,7 +547,11 @@ function recapBubblesHtml(items) {
             `${item.kicker.replace("Nuovo · ", "")}: ${item.title}`
           )}">
           ${RING_HTML}
-          <small>${item.short}</small>
+          <span class="recap-bubble-text">
+            <small>${item.short}</small>
+            <b class="recap-bubble-name">${escapeHtml(item.title)}</b>
+            ${item.sub ? `<span class="recap-bubble-sub">${escapeHtml(item.sub)}</span>` : ""}
+          </span>
         </button>`
         )
         .join("")}

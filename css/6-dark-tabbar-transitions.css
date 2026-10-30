@@ -3543,6 +3543,121 @@ html.is-recap-open {
   background: rgba(255, 255, 255, 0.18);
 }
 
+/* Its name and line under it: only on a computer (below); touch screens
+   keep the bubble with just its kind. */
+.recap-bubble-text {
+  display: contents;
+}
+
+.recap-bubble-name,
+.recap-bubble-sub {
+  display: none;
+}
+
+/* A computer (option A3 of a mockup, 2026-10-30): one white bar the whole
+   width, the stories its equal parts (a hairline between them) — the ring
+   a size down, its kind, name and line beside it; at 200px each at least,
+   scrolling sideways past that (5 and more). */
+html:not(.app-header) .home-recap {
+  margin: 0 0 22px;
+}
+
+html:not(.app-header) .recap-bubbles {
+  gap: 0;
+  padding: 7px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+  background: #fff;
+  box-shadow: var(--shadow-card);
+}
+
+html:not(.app-header) .recap-bubble {
+  position: relative;
+  flex: 1 1 0;
+  flex-direction: row;
+  gap: 12px;
+  width: auto;
+  min-width: 200px;
+  padding: 6px 14px 6px 8px;
+  border-radius: 16px;
+  text-align: left;
+  transition: background 150ms ease;
+}
+
+html:not(.app-header) .recap-bubble + .recap-bubble::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 0;
+  width: 1px;
+  background: var(--table-row-line);
+}
+
+html:not(.app-header) .recap-bubble:hover {
+  background: rgba(220, 24, 28, 0.04);
+}
+
+html:not(.app-header) .recap-bubble .recap-ring {
+  width: 48px;
+  height: 48px;
+}
+
+html:not(.app-header) .recap-bubble .recap-ring-art {
+  width: 42px;
+  height: 42px;
+}
+
+html:not(.app-header) .recap-bubble .recap-ring-play {
+  width: 18px;
+  height: 18px;
+}
+
+html:not(.app-header) .recap-bubble .recap-ring-play svg {
+  width: 9px;
+  height: 9px;
+}
+
+html:not(.app-header) .recap-bubble-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+html:not(.app-header) .recap-bubble-name,
+html:not(.app-header) .recap-bubble-sub {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html:not(.app-header) .recap-bubble-name {
+  font-size: 0.98rem;
+  font-weight: 800;
+}
+
+html:not(.app-header) .recap-bubble-sub {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+:root[data-theme="dark"]:not(.app-header) .recap-bubbles {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+:root[data-theme="dark"]:not(.app-header) .recap-bubble:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+:root[data-theme="dark"]:not(.app-header) .recap-bubble:not(.is-seen) small {
+  color: #ff8a8d;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .recap-ring::before {
     animation: none;

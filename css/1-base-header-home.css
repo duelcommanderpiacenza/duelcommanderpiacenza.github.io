@@ -756,8 +756,8 @@ html.app-header .sk-cols > .sk-col + .sk-col {
    the charts' card under both. */
 @media (min-width: 861px) {
   html:not(.app-header) .sk-page.is-home .sk-cols {
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-    gap: 30px 32px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 30px 64px;
   }
 }
 
@@ -801,6 +801,13 @@ html.app-header .sk-cols > .sk-col + .sk-col {
 
 .sk-page.is-home .sk-recap[hidden] {
   display: none;
+}
+
+/* A computer: the stories' bar (css/6 "The Bacheca's recaps"). */
+html:not(.app-header) .sk-page.is-home .sk-recap {
+  height: 76px;
+  margin-bottom: 22px;
+  border-radius: var(--radius-card);
 }
 
 /* Touch screens: the segmented control, then Eventi alone (no heading of
@@ -2340,7 +2347,9 @@ a.dashboard-standing:hover .dashboard-standings-name-text {
    --------------------------------------------------------------------------- */
 .home-board {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  /* Two equal halves (since 2026-10-30 — was 1.1fr / 1fr): the hairline
+     between them, and the stories' bar's above them, in the page's middle. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: start;
   gap: 30px 32px;
 }
@@ -2376,6 +2385,20 @@ html.app-header .home-board > .home-panel:not(.is-current) {
   gap: 10px;
   min-height: 42px;
   margin-bottom: 12px;
+}
+
+/* Its icon on a computer (Eventi's calendar, the league's trophy — the
+   touch screens' tabs' own), red, before the name. */
+.home-head-icon {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  margin-right: -1px;
+  color: var(--brand-red);
+}
+
+html.app-header .home-head-icon {
+  display: none;
 }
 
 .home-panel-label {
@@ -2906,8 +2929,25 @@ html.app-header .home-events-head {
   }
 
   html:not(.app-header) #home-panel-standings {
+    position: relative;
     contain: size;
     min-height: 420px;
+  }
+
+  /* The two sections apart (option A of a mockup, 2026-10-30): wider gap,
+     a hairline down the middle of it. */
+  html:not(.app-header) .home-board {
+    column-gap: 64px;
+  }
+
+  html:not(.app-header) #home-panel-standings::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -32px;
+    width: 1px;
+    background: var(--hairline);
   }
 
   html:not(.app-header) #home-panel-standings,
