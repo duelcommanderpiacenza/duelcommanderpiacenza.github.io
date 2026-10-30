@@ -2360,6 +2360,59 @@ a.dashboard-standing:hover .dashboard-standings-name-text {
   grid-column: 1 / -1;
 }
 
+/* Eventi and Classifica in a card (option C of a mockup, 2026-10-30 —
+   everything else on the site is in blocks): on touch screens and narrow
+   windows each its own (the tabs above it stay their own control —
+   "C2, detached"), on a computer the two one card (below, "A computer").
+   Inside, the rows without their own box: a soft fill, no edge, no shadow
+   (the timeline's played events and the standings; the upcoming ones keep
+   their outline, the next one its red). The timeline's circles filled
+   with the card's colour, not the page's (--tl-node-bg). */
+.home-board > #home-panel-events,
+.home-board > #home-panel-standings {
+  --tl-node-bg: #fff;
+  box-sizing: border-box;
+  padding: 16px 16px 18px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+  background: #fff;
+  box-shadow: var(--shadow-card);
+}
+
+:root[data-theme="dark"] .home-board > :is(#home-panel-events, #home-panel-standings) {
+  --tl-node-bg: #1d1819;
+  border-color: rgba(255, 255, 255, 0.1);
+  background: #1d1819;
+}
+
+html.app-header .home-board > :is(#home-panel-events, #home-panel-standings) {
+  padding: 12px 12px 16px;
+}
+
+.home-board .home-timeline :is(.is-played, .is-pending) > .league-tl-card,
+.home-board .dashboard-standing {
+  border-color: transparent;
+  background: #fbf6f3;
+  box-shadow: none;
+}
+
+.home-board .home-timeline :is(.is-played, .is-pending) > a.league-tl-card:hover,
+.home-board a.dashboard-standing:hover {
+  border-color: transparent;
+  background: #f6ece8;
+}
+
+:root[data-theme="dark"] .home-board .home-timeline :is(.is-played, .is-pending) > .league-tl-card {
+  border-color: transparent;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: none;
+}
+
+/* (The standings rows' dark look: css/6, with the others' dark rules.) */
+:root[data-theme="dark"] .home-board .home-timeline :is(.is-played, .is-pending) > a.league-tl-card:hover {
+  background: rgba(255, 110, 110, 0.12);
+}
+
 @media (max-width: 860px) {
   .home-board {
     grid-template-columns: minmax(0, 1fr);
@@ -2992,20 +3045,72 @@ html.app-header .home-events-head {
     min-height: 48px;
   }
 
-  /* The two sections apart (option A of a mockup, 2026-10-30): wider gap,
-     a hairline down the middle of it. */
+  /* The two sections as ONE card (option C of a mockup, 2026-10-30 — like
+     the stories' bar above): its surface the board's ::before (a grid
+     item spanning both columns of the first row, behind them), the two
+     sections placed on it — their own card look (below) dropped — a
+     hairline down the middle. */
   html:not(.app-header) .home-board {
-    column-gap: 64px;
+    column-gap: 0;
+  }
+
+  html:not(.app-header) .home-board::before {
+    content: "";
+    grid-row: 1;
+    grid-column: 1 / -1;
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-card);
+    background: #fff;
+    box-shadow: var(--shadow-card);
+  }
+
+  html:not(.app-header) .home-board > #home-panel-events,
+  html:not(.app-header) .home-board > #home-panel-standings {
+    position: relative;
+    z-index: 1;
+    grid-row: 1;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  html:not(.app-header) .home-board > #home-panel-events {
+    grid-column: 1;
+    padding: 22px 32px 24px 26px;
+  }
+
+  html:not(.app-header) .home-board > #home-panel-standings {
+    grid-column: 2;
+    padding: 22px 26px 24px 32px;
+  }
+
+  html:not(.app-header) .home-board > .home-panel-meta {
+    grid-row: 2;
   }
 
   html:not(.app-header) #home-panel-standings::before {
     content: "";
     position: absolute;
-    top: 0;
-    bottom: 0;
-    left: -32px;
+    top: 22px;
+    bottom: 22px;
+    left: 0;
     width: 1px;
-    background: var(--hairline);
+    background: rgba(154, 28, 32, 0.12);
+  }
+
+  :root[data-theme="dark"]:not(.app-header) .home-board::before {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: #1d1819;
+  }
+
+  /* (Over the sections' own dark card colour, below.) */
+  :root[data-theme="dark"]:not(.app-header) .home-board > :is(#home-panel-events, #home-panel-standings) {
+    background: none;
+  }
+
+  :root[data-theme="dark"]:not(.app-header) #home-panel-standings::before {
+    background: rgba(255, 255, 255, 0.1);
   }
 }
 
