@@ -2028,20 +2028,13 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
     padding-top: calc(9px + env(safe-area-inset-top));
   }
 
-  /* The tab bar (js/tab-bar.js): fixed along the screen's bottom edge, the
-     whole width — an app's (Instagram-like, since 2026-10-30; before, a
-     floating capsule 16px up that slid away scrolling down) — and always
-     there, never hidden on scroll. Its own padding keeps it clear of the
-     home-indicator gesture bar on notched phones (css/6 "Tab bar").
-     --tab-bar-h: its height above that inset, for what sits above it. */
-  html.nav-mobile {
-    --tab-bar-h: 64px;
-  }
-
+  /* Same reasoning at the opposite edge — keeps the tab bar clear of the
+     home-indicator gesture bar on notched phones instead of sitting
+     underneath/behind it. */
   html.nav-mobile .site-nav {
     position: fixed;
     top: auto;
-    bottom: 0;
+    bottom: calc(16px + env(safe-area-inset-bottom));
     left: 0;
     right: 0;
     background: none;
@@ -2049,6 +2042,23 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
     border-bottom: none;
     box-shadow: none;
     padding: 0;
+  }
+
+  /* Out of the way while reading: scrolling down slides the tab bar below the
+     screen's bottom edge, scrolling up brings it back (js/nav-dropdown.js
+     .is-scrolled-away). */
+  html.nav-mobile .site-nav {
+    transition: bottom 450ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  html.nav-mobile .site-nav.is-scrolled-away {
+    bottom: -90px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html.nav-mobile .site-nav {
+      transition: none;
+    }
   }
 
   /* Rubber-band/pull-to-refresh bounce reads as "a webpage in a browser
@@ -2067,10 +2077,14 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
     display: none;
   }
 
-  /* The page's end clear of the tab bar (always there): room for it under
-     the content. */
+  /* A page shorter than the screen would leave its bottom under the tab bar
+     (which never slides away without scrolling): every page at least a
+     screen tall (the large viewport — browser bars hidden — so it never
+     peeks in), so it scrolls down to its end, which slides the bar away
+     (js/nav-dropdown.js, at the bottom however little the page scrolls). */
   html.nav-mobile .page-main {
-    padding-bottom: calc(var(--tab-bar-h) + 24px + env(safe-area-inset-bottom));
+    min-height: 100vh;
+    min-height: 100lvh;
   }
 
 @media (max-width: 480px) {
