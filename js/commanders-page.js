@@ -4,7 +4,7 @@ import { initScopeFilter } from "./scope-filter.js";
 import { renderPieChart, renderBarChart } from "./metagame-chart.js";
 import { initChartCarousel } from "./chart-carousel.js";
 import { attachHoverTooltips, fullTextIfTruncated } from "./floating-tooltip.js";
-import { commanderPairWithColors, commanderBadgesHtml, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
+import { commanderPairLabel, colorIdentityPips, commanderBadgesHtml, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
 import { savedMetaFilters, rememberMetaFilters, prefetchMetaResults, metaResults } from "./meta-filters.js";
@@ -186,9 +186,9 @@ export async function mount({ signal = new AbortController().signal } = {}) {
           (r) => `
       <a class="history-item history-ranked" href="${r.href}">
         <div class="history-main">
-          <span class="history-title">${commanderPairWithColors(r.commander, r.partner, { link: false })}${
+          <span class="history-title commanders-row-title"><span class="commanders-row-name">${commanderPairLabel(r.commander, r.partner, { link: false })}${
             commanderBadgesHtml({ banned: r.isBanned, isNew: r.isNew })
-          }</span>
+          }</span><span class="color-identity-inline">${colorIdentityPips(`${r.commander?.color_identity ?? ""}${r.partner?.color_identity ?? ""}`)}</span></span>
         </div>
         ${historyStatsHtml([
           { label: "Giocato", value: r.entries },

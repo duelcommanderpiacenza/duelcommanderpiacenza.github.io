@@ -489,6 +489,28 @@ img.badge-disc-glyph {
   height: 14px;
 }
 
+/* Comandanti's list on touch screens (user, 2026-10-30): the colour
+   identity at the row's right end, on the name's first line whatever its
+   length — the name (and its banned / new badges) on the left, wrapping
+   under itself. A computer keeps the pips right after the name. */
+html.nav-mobile .commanders-row-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+html.nav-mobile .commanders-row-title .commanders-row-name {
+  flex: 1;
+  min-width: 0;
+}
+
+html.nav-mobile .commanders-row-title .color-identity-inline {
+  flex-shrink: 0;
+  margin-left: auto;
+  /* Centred on the name's first line. */
+  margin-top: calc((1lh - 16px) / 2);
+}
+
 .color-pip {
   width: 18px;
   height: 18px;
