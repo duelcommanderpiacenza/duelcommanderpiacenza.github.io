@@ -1872,8 +1872,8 @@ button.ev-tile {
 
 /* The league card: on the left (a link to the league) "Lega" (no status
    chip, by choice: the tab says it), the name (one line, fitted by js/events-page.js fitBigNames, "…" if
-   it still doesn't fit at the smallest size), events played over the
-   Bacheca's segments (.league-progress), the numbers in small; its next
+   it still doesn't fit at the smallest size), the numbers in small, the
+   ring of events played on their right (.league-ring, css/1); its next
    event on the right, a hairline between — under it from 820px down. */
 .ev-tile.ev-league {
   display: grid;
@@ -1883,9 +1883,10 @@ button.ev-tile {
 
 .ev-league-main {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 18px;
   min-width: 0;
-  padding: 20px 24px;
+  padding: 16px 24px;
   color: var(--text-title);
   text-decoration: none;
   transition: background 150ms ease;
@@ -1901,14 +1902,34 @@ button.ev-tile {
   outline-offset: -3px;
 }
 
+/* Its text, then the ring (js/ui.js leagueRingHtml) on its right — 76px,
+   so the text sets the card's height, not the ring. */
+.ev-league .league-ring {
+  --ring: 76px;
+}
+
+.ev-league .league-ring-label b {
+  font-size: 1.2rem;
+}
+
+/* Its text, then the ring (js/ui.js leagueRingHtml) on its right. */
+.ev-league-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Tight (since the ring took the "N di M eventi giocati" line's place,
+   2026-10-30): the label, the name, the numbers close under each other. */
 .ev-league .ev-tile-t {
-  margin: 10px 0 14px;
+  margin: 6px 0 0;
   font-size: 1.45rem;
   line-height: 1.15;
 }
 
 .ev-league-played {
-  margin-bottom: 8px;
+  margin-top: 4px;
   color: var(--text-muted);
   font-size: 0.82rem;
   font-weight: 700;
@@ -1918,15 +1939,11 @@ button.ev-tile {
   color: var(--text-value);
 }
 
-.ev-league .league-progress {
-  margin-top: 0;
-}
-
 .ev-league-nums {
   display: flex;
   flex-wrap: wrap;
   gap: 4px 16px;
-  margin-top: 16px;
+  margin-top: 10px;
   color: var(--text-muted);
   font-size: 0.82rem;
   font-weight: 700;
@@ -2057,7 +2074,7 @@ a.ev-slot:hover {
   }
 
   .ev-league-main {
-    padding: 18px 18px 16px;
+    padding: 16px 18px 14px;
   }
 
   .ev-slot {
@@ -2075,10 +2092,18 @@ a.ev-slot:hover {
   .ev-league .ev-tile-t {
     font-size: 1.3rem;
   }
+
+  .ev-league .league-ring {
+    --ring: 66px;
+  }
+
+  .ev-league .league-ring-label b {
+    font-size: 1.05rem;
+  }
 }
 
 /* The Topdeck series under the league card, a step down: one plain row,
-   like the archive's (no chip, no segments, no calendar sheet) — its label,
+   like the archive's (no chip, no ring, no calendar sheet) — its label,
    name, next event and events played on the left, its players and an arrow
    on the right. */
 .ev-tile.ev-minor {

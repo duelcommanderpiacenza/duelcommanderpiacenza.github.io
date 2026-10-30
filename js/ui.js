@@ -231,26 +231,23 @@ export function colorIdentityPips(colorIdentity) {
   );
 }
 
-// A league's progress: one segment per event (open and future ones
-// included), filled for those played. Past SEGMENTS_MAX events, one
-// continuous bar instead. The Bacheca's Classifica and the Leghe & Eventi
-// league card (styles.css .league-progress).
-const SEGMENTS_MAX = 16;
-
-export function leagueProgressHtml(played, scheduled) {
+// A league's progress as a ring (since 2026-10-30, user's choice — it was
+// a bar of segments): events played out of those scheduled (open and
+// future ones included), "3/7" inside, "Eventi" under it unless `small`.
+// The Bacheca's Classifica (small, right of the league's name) and the
+// Leghe & Eventi league card (styles.css .league-ring).
+export function leagueRingHtml(played, scheduled, { small = false } = {}) {
   if (!scheduled) return "";
-  const pct = Math.round((played / scheduled) * 100);
-  const bar =
-    scheduled <= SEGMENTS_MAX
-      ? Array.from(
-          { length: scheduled },
-          (_, i) => `<span class="league-progress-seg${i < played ? " is-done" : ""}${i === played ? " is-next" : ""}"></span>`
-        ).join("")
-      : `<span class="league-progress-fill" style="width:${pct}%"></span>`;
+  const ring = 2 * Math.PI * 46;
+  const share = Math.min(1, played / scheduled);
   return `
-      <div class="league-progress" role="progressbar" aria-label="Eventi giocati" aria-valuemin="0" aria-valuemax="${scheduled}" aria-valuenow="${played}">
-        <div class="league-progress-track${scheduled <= SEGMENTS_MAX ? " is-segmented" : ""}">${bar}</div>
-      </div>`;
+      <span class="league-ring${small ? " is-small" : ""}" role="img" aria-label="${played} eventi giocati su ${scheduled}">
+        <svg viewBox="0 0 110 110" aria-hidden="true">
+          <circle cx="55" cy="55" r="46" class="league-ring-track"></circle>
+          <circle cx="55" cy="55" r="46" class="league-ring-fill" stroke-dasharray="${(ring * share).toFixed(1)} ${ring.toFixed(1)}"></circle>
+        </svg>
+        <span class="league-ring-label" aria-hidden="true"><b>${played}/${scheduled}</b>${small ? "" : "<small>Eventi</small>"}</span>
+      </span>`;
 }
 
 export function leagueStatusBadge(isOpen) {

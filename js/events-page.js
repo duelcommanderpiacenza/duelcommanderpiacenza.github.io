@@ -1,9 +1,9 @@
 // The "Leghe & Eventi" tab: two tabs (js/tabs.js), "In corso" and
 // "Archivio" (option D1, "Schede", of a mockup, 2026-10-30):
 //  - In corso: the league in progress as one white card — "Lega" (no
-//    status chip: the tab says it), its name, events played out of those scheduled as the
-//    Bacheca's segments, players / average / matches in small, a link to its
-//    page — with its next event beside it (under it on phones: the date as a
+//    status chip: the tab says it), its name, players / average / matches
+//    in small, a ring with events played out of those scheduled on their
+//    right, a link to its page — with its next event beside it (under it on phones: the date as a
 //    small calendar sheet, the name, the weekday and how soon, the time big);
 //    the Topdeck series in progress a step down, one plain row under it (its
 //    name, next event, events played, players). With no real league in
@@ -15,7 +15,7 @@
 // Only one of the two with anything in it: no tabs, just that one.
 
 import { Leagues, Events, EventEntries, Matches, EventCounts, LeaguePlayerCounts } from "./db.js";
-import { capitalize, escapeHtml, formatTime, eventTitle, leagueProgressHtml, showError } from "./ui.js";
+import { capitalize, escapeHtml, formatTime, eventTitle, leagueRingHtml, showError } from "./ui.js";
 import { initTabs } from "./tabs.js";
 import { hidePageLoading } from "./page-loading.js";
 import { openInfoDialog } from "./info-dialog.js";
@@ -98,26 +98,27 @@ async function loadCounts(eventsRequest) {
 }
 
 // The league card: on the left (a link to the league) "Lega" — or "Serie
-// Topdeck" when the series holds the card — the name,
-// "N di M eventi giocati" over the Bacheca's segments (the series, with no
-// set number of events: just "N eventi giocati"), then players / average /
-// matches in small; on the right (under it on phones) `slot`, its next event.
+// Topdeck" when the series holds the card — the name, players / average /
+// matches in small, and on the right of them the ring: events played out
+// of those scheduled (the series, with no set number of events: "N eventi
+// giocati" under the name instead); then (on its right, under it on
+// phones) `slot`, its next event.
 function mainCardHtml(league, { played, scheduled, players, avg, matches }, slot) {
   const total = Math.max(scheduled, played);
-  const progress = league.is_topdeck
-    ? `<span class="ev-league-played"><b>${played}</b> ${played === 1 ? "evento giocato" : "eventi giocati"}</span>`
-    : `<span class="ev-league-played"><b>${played}</b> di ${total} eventi giocati</span>${leagueProgressHtml(played, total)}`;
   return `
     <div class="ev-tile ev-league">
       <a class="ev-league-main" href="league.html?id=${league.id}">
-        <span class="ev-tile-k">${league.is_topdeck ? "Serie Topdeck" : "Lega"}</span>
-        <span class="ev-tile-t">${escapeHtml(league.name)}</span>
-        ${progress}
-        <span class="ev-league-nums">
-          <span>${USERS}${players}</span>
-          <span>Media ${played ? fmtAvg(avg) : "—"}</span>
-          <span>${matches} ${matches === 1 ? "partita" : "partite"}</span>
+        <span class="ev-league-text">
+          <span class="ev-tile-k">${league.is_topdeck ? "Serie Topdeck" : "Lega"}</span>
+          <span class="ev-tile-t">${escapeHtml(league.name)}</span>
+          ${league.is_topdeck ? `<span class="ev-league-played"><b>${played}</b> ${played === 1 ? "evento giocato" : "eventi giocati"}</span>` : ""}
+          <span class="ev-league-nums">
+            <span>${USERS}${players}</span>
+            <span>Media ${played ? fmtAvg(avg) : "—"}</span>
+            <span>${matches} ${matches === 1 ? "partita" : "partite"}</span>
+          </span>
         </span>
+        ${league.is_topdeck ? "" : leagueRingHtml(played, total)}
       </a>
       ${slot}
     </div>`;
@@ -289,7 +290,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     const board = [];
     if (main) {
       // A real league's total event count (open ones included, even those
-      // hidden from visitors), for its segments.
+      // hidden from visitors), for its ring.
       const scheduled = main.is_topdeck
         ? 0
         : await Leagues.eventCount(main.id, allEvents.filter((ev) => ev.league_id === main.id).length);

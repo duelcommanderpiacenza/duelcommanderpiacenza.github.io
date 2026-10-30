@@ -914,13 +914,13 @@ html.nav-mobile .sk-ev-tabs {
 }
 
 .sk-ev-board > .sk-ev-big {
-  height: 178px;
+  height: 110px;
   border-radius: var(--radius-card-sm);
 }
 
 @media (max-width: 820px) {
   .sk-ev-board > .sk-ev-big {
-    height: 270px;
+    height: 186px;
   }
 }
 
@@ -2227,12 +2227,15 @@ main {
 
 /* "Classifica completa" under the top 8 (js/home.js), centred, a small
    list icon before it: the rest of the ranking, on league.html (and the
-   Eventi's "Tutti gli eventi" under the timeline, a calendar before it). Beside the
-   league's name, "Regolamento" (js/league-rules.js — the scoring rules'
-   pop-up), a book before it: the same pill, a button. */
+   Eventi's "Tutti gli eventi" under the timeline, a calendar before it). Beside
+   it (since 2026-10-30 — it was on the league's name's line, now the
+   ring's), "Regolamento" (js/league-rules.js — the scoring rules' pop-up),
+   a book before it: the same pill, a button. */
 .dashboard-league-more-row {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
+  gap: 10px;
   margin: 14px 0 0;
 }
 
@@ -2243,7 +2246,6 @@ main {
 
 .dashboard-league-rules {
   flex-shrink: 0;
-  margin-left: auto;
   font: inherit;
   font-weight: 800;
   cursor: pointer;
@@ -2458,12 +2460,46 @@ html.app-header .home-head-icon {
   background: rgba(255, 255, 255, 0.1);
 }
 
-.home-board .league-progress {
-  margin: 0 0 14px;
+/* The ring at the right end of the league's name's line. */
+.home-panel-head .league-ring {
+  margin-left: auto;
 }
 
 .home-board .dashboard-standings {
   margin: 0;
+}
+
+/* A size up (user, 2026-10-30 — the rows were squeezed to the timeline's
+   height): roomier rows, a bigger position chip, name, points and badges. */
+.home-board .dashboard-standings .dashboard-standing {
+  padding: 8px 14px 8px 10px;
+  gap: 12px;
+}
+
+.home-board .dashboard-standing .history-pos {
+  min-width: 38px;
+  height: 38px;
+  font-size: 0.95rem;
+}
+
+.home-board .dashboard-standings-name {
+  font-size: 1.06rem;
+}
+
+.home-board .dashboard-standings-points .history-stat-value {
+  font-size: 1.25rem;
+}
+
+.home-board .dashboard-standings-points .history-stat-label {
+  font-size: 0.68rem;
+}
+
+.home-board .dashboard-standings-badges {
+  height: 1.76rem;
+}
+
+.home-board .dashboard-standings-badges .icon-badge {
+  font-size: 1.1rem;
 }
 
 /* A finished league's winner: gold, a trophy for its position. */
@@ -2920,18 +2956,40 @@ html.app-header .home-events-head {
 
 /* A computer, the two columns side by side: */
 @media (min-width: 861px) {
-  /* Classifica exactly as tall as Eventi beside it, so the two end level:
-     no height of its own (contain: size — player.html's .fills-row idea),
-     the row's height set by the timeline, 420px at least; its rows a little
-     more compact, sharing that height evenly. */
+  /* The two columns as tall as the taller one (the Classifica, its rows at
+     their own size since 2026-10-30 — before, squeezed to the timeline's
+     height, contain: size), each a column with its link row ("Tutti gli
+     eventi" / "Classifica completa" + "Regolamento") at the bottom, so the
+     two still end level. */
   html:not(.app-header) .home-board {
     align-items: stretch;
   }
 
+  html:not(.app-header) #home-panel-events,
+  html:not(.app-header) #home-panel-standings,
+  html:not(.app-header) #dashboard-leagues-content {
+    display: flex;
+    flex-direction: column;
+  }
+
   html:not(.app-header) #home-panel-standings {
     position: relative;
-    contain: size;
-    min-height: 420px;
+  }
+
+  html:not(.app-header) #dashboard-leagues-content {
+    flex: 1;
+  }
+
+  html:not(.app-header) .home-board :is(#home-panel-events, #dashboard-leagues-content) > .dashboard-league-more-row {
+    margin-top: auto;
+    padding-top: 16px;
+  }
+
+  /* The two lists start level (user, 2026-10-30): both headings as tall as
+     the Classifica's, its ring (48px) the tallest thing in either. Their
+     ends needn't match — the link rows above do. */
+  html:not(.app-header) .home-board .home-panel-head {
+    min-height: 48px;
   }
 
   /* The two sections apart (option A of a mockup, 2026-10-30): wider gap,
@@ -2948,35 +3006,6 @@ html.app-header .home-events-head {
     left: -32px;
     width: 1px;
     background: var(--hairline);
-  }
-
-  html:not(.app-header) #home-panel-standings,
-  html:not(.app-header) #dashboard-leagues-content {
-    display: flex;
-    flex-direction: column;
-  }
-
-  html:not(.app-header) #dashboard-leagues-content {
-    flex: 1;
-    min-height: 0;
-  }
-
-  html:not(.app-header) .home-board .dashboard-standings {
-    flex: 1;
-    min-height: 0;
-    gap: 5px;
-  }
-
-  html:not(.app-header) .home-board .dashboard-standings > li {
-    display: flex;
-    flex: 1 1 0;
-    min-height: 0;
-  }
-
-  html:not(.app-header) .home-board .dashboard-standings > li > .history-item {
-    flex: 1;
-    min-height: 0;
-    padding-block: 4px;
   }
 }
 
@@ -3054,62 +3083,84 @@ html.app-header .home-events-head {
   margin-bottom: 18px;
 }
 
-/* A real league's progress (js/home.js leagueProgressHtml): "3 di 8 eventi
-   giocati" over one segment per event — played ones
-   brand red, the next one outlined — or a continuous bar for a long
-   league. */
-.league-progress {
-  margin-top: 10px;
-}
-
-.league-progress-track {
+/* A real league's progress as a ring (js/ui.js leagueRingHtml — since
+   2026-10-30, it was a bar of segments): events played out of those
+   scheduled, in red, "3/7" inside and "Eventi" under it; small (.is-small,
+   the Bacheca's, right of the league's name): just "3/7". */
+.league-ring {
+  --ring: 88px;
   position: relative;
-  height: 8px;
-  overflow: hidden;
-  border-radius: var(--radius-pill);
-  background: rgba(220, 24, 28, 0.1);
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: var(--ring);
+  height: var(--ring);
 }
 
-.league-progress-track.is-segmented {
-  display: flex;
-  gap: 4px;
-  overflow: visible;
-  background: none;
+.league-ring.is-small {
+  --ring: 48px;
 }
 
-.league-progress-seg {
-  flex: 1;
-  border-radius: var(--radius-pill);
-  background: rgba(220, 24, 28, 0.12);
-}
-
-.league-progress-seg.is-done {
-  background: var(--brand-red);
-}
-
-.league-progress-seg.is-next {
-  box-shadow: inset 0 0 0 1.5px var(--brand-red);
-}
-
-.league-progress-fill {
+.league-ring svg {
   position: absolute;
-  inset: 0 auto 0 0;
-  border-radius: inherit;
-  background: var(--brand-red);
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
 }
 
-:root[data-theme="dark"] .league-progress-track:not(.is-segmented),
-:root[data-theme="dark"] .league-progress-seg {
-  background: rgba(255, 255, 255, 0.1);
+.league-ring circle {
+  fill: none;
+  stroke-width: 10;
 }
 
-:root[data-theme="dark"] .league-progress-seg.is-done,
-:root[data-theme="dark"] .league-progress-fill {
-  background: #ff6a6e;
+.league-ring.is-small circle {
+  stroke-width: 11;
 }
 
-:root[data-theme="dark"] .league-progress-seg.is-next {
-  box-shadow: inset 0 0 0 1.5px #ff6a6e;
+.league-ring-track {
+  stroke: rgba(220, 24, 28, 0.12);
+}
+
+.league-ring-fill {
+  stroke: var(--brand-red);
+  stroke-linecap: round;
+}
+
+.league-ring-label {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--text-title);
+  line-height: 1;
+  text-align: center;
+}
+
+.league-ring-label b {
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.league-ring.is-small .league-ring-label b {
+  font-size: 0.82rem;
+}
+
+.league-ring-label small {
+  margin-top: 3px;
+  color: var(--text-muted);
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+:root[data-theme="dark"] .league-ring-track {
+  stroke: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme="dark"] .league-ring-fill {
+  stroke: #ff6a6e;
 }
 
 /* Events calendar overlay ("Calendario" button on "Prossimi eventi"), js/

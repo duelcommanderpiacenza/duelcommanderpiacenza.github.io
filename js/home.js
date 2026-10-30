@@ -11,7 +11,7 @@ import { Leagues, Events, EventEntries, fetchEventsResults } from "./db.js";
 import { computeLeaguePoints, previousLeaguePositions } from "./leaderboard.js";
 import { renderBubbleChart, initBubbleChart, ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
 import { initChartCarousel } from "./chart-carousel.js";
-import { escapeHtml, formatTime, leagueProgressHtml, localIso, playerLabel, showError } from "./ui.js";
+import { escapeHtml, formatTime, leagueRingHtml, localIso, playerLabel, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { nestedResultsMenu } from "./results-link.js";
 import { fetchPlayerBadgesRenderer } from "./player-badges.js";
@@ -239,10 +239,12 @@ function standingsHtml({ league, standings: allStandings, before, played, schedu
       <div class="home-panel-head">
         ${TROPHY_ICON}<a class="home-panel-title" href="${href}">${escapeHtml(league.name)}</a>
         ${finished ? '<span class="home-finished-chip">Conclusa</span>' : ""}
-        <button type="button" class="section-link dashboard-league-rules" data-league-rules aria-haspopup="dialog">${RULES_ICON}<span>Regolamento</span></button>
-      </div>
-      ${leagueProgressHtml(played, scheduled)}`;
-  if (standings.length === 0) return `${head}<p class="page-empty">Nessun dato per la classifica.</p>`;
+        ${leagueRingHtml(played, scheduled, { small: true })}
+      </div>`;
+  // "Regolamento" under the list, beside "Classifica completa" (since
+  // 2026-10-30 — it was on the name's line, where the ring is now).
+  const rules = `<button type="button" class="section-link dashboard-league-rules" data-league-rules aria-haspopup="dialog">${RULES_ICON}<span>Regolamento</span></button>`;
+  if (standings.length === 0) return `${head}<p class="page-empty">Nessun dato per la classifica.</p><p class="dashboard-league-more-row">${rules}</p>`;
   return `${head}
       <ol class="dashboard-standings">
         ${standings
@@ -269,7 +271,7 @@ function standingsHtml({ league, standings: allStandings, before, played, schedu
           })
           .join("")}
       </ol>
-      <p class="dashboard-league-more-row"><a class="section-link dashboard-league-more" href="${href}">${LIST_ICON}<span>Classifica completa</span></a></p>`;
+      <p class="dashboard-league-more-row"><a class="section-link dashboard-league-more" href="${href}">${LIST_ICON}<span>Classifica completa</span></a>${rules}</p>`;
 }
 
 // The league in progress (a Topdeck series has no standings — its events
