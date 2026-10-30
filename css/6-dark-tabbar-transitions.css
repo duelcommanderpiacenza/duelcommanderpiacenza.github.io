@@ -444,7 +444,7 @@ html[data-theme="dark"]:not(.nav-mobile) .site-search-results {
 html.nav-mobile .pwa-install-banner {
   left: 12px;
   right: 12px;
-  bottom: calc(16px + 60px + 12px + env(safe-area-inset-bottom));
+  bottom: calc(16px + 66px + 12px + env(safe-area-inset-bottom));
   width: auto;
 }
 
@@ -990,11 +990,14 @@ html.app-header .site-header.has-hero-accent .site-search-trigger {
    Tab bar (js/tab-bar.js) — touch screens: the navigation at the bottom of
    the screen (the old pill and its list are gone; a computer keeps its tabs
    in the top bar, .site-nav-inner — hidden here). A solid capsule (white;
-   dark mode near-black) with five sections — Bacheca, Leghe, Meta,
-   Giocatori, Social — the current one in a red chip with its name (the
-   hero's colour on hero pages: .site-nav.has-hero-accent redefines the red),
-   the others icon only; the chip jumps to the new section. It slides away
-   scrolling down with the whole .site-nav (.is-scrolled-away, above).
+   dark mode near-black) floating over the page with five sections —
+   Bacheca, Leghe, Meta, Giocatori, Social — each its icon over its name;
+   the current one's icon in a red pill, filled, its name red, Google's
+   apps' way (since 2026-10-30, from a fixed-bar test — before, the current
+   one in a wide red chip with its name beside the icon, the others icon
+   only; the hero's colour on hero pages: .site-nav.has-hero-accent
+   redefines the red). It slides away scrolling down with the whole
+   .site-nav (.is-scrolled-away, above).
    --------------------------------------------------------------------------- */
 html.nav-mobile .site-nav-inner {
   display: none;
@@ -1008,7 +1011,7 @@ html.nav-mobile .tab-bar {
   box-sizing: border-box;
   width: min(420px, calc(100% - 24px));
   margin: 0 auto;
-  padding: 5px;
+  padding: 4px 6px;
   border: 1px solid rgba(154, 28, 32, 0.12);
   border-radius: var(--radius-pill);
   /* Solid, like the segmented controls (.profile-tabs): white, dark mode
@@ -1019,48 +1022,56 @@ html.nav-mobile .tab-bar {
   box-shadow: 0 -2px 10px rgba(40, 6, 9, 0.14), 0 4px 12px rgba(40, 6, 9, 0.2), 0 1px 3px rgba(40, 6, 9, 0.16);
 }
 
-.tab-bar-chip {
-  position: absolute;
-  top: 5px;
-  bottom: 5px;
-  left: 0;
-  width: 0;
-  border-radius: var(--radius-pill);
-  background: var(--brand-red);
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--brand-red) 40%, transparent);
-  /* No sliding to the new section (js/tab-bar.js): only its colour eases
-     (a hero page's). */
-  transition: background 450ms ease;
-}
-
-.tab-bar-chip[hidden] {
-  display: none;
-}
-
 html.nav-mobile .tab-bar-link {
   position: relative;
   z-index: 1;
-  flex: 1 1 0;
-  min-width: 0;
   display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  height: 56px;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  height: 48px;
-  padding: 0 4px;
-  border-radius: var(--radius-pill);
-  /* The sections not shown: the page's body text colour, near-black (dark
-     mode near-white below) — clearly readable, the red chip still marking
-     the current one. */
+  gap: 4px;
+  min-width: 0;
   color: var(--text-body);
-  font-size: 0.8rem;
-  font-weight: 800;
+  font-size: 0.68rem;
+  font-weight: 700;
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
 }
 
+/* The icon's place: the pill the current one fills (Google's apps' look,
+   user 2026-10-30 — the pill on the icon only, the name under it), the
+   icon centred in it. The pill is its ::before, so it can grow on its own:
+   a section becoming current, its pill opens out from the middle
+   (scaleX) as the icon turns white and filled with its own little
+   animation (below); the one left, its pill closes back in. Only once
+   the bar is up (.tab-bar.is-ready, js/tab-bar.js) — a page's first paint shows it in place, no animation. */
+.tab-bar-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 30px;
+}
+
+.tab-bar-icon {
+  /* The pill's colour — also the "cut-outs" of a filled icon (below). */
+  --tab-pill: var(--brand-red);
+}
+
+.tab-bar-icon::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-pill);
+  background: var(--tab-pill);
+  opacity: 0;
+  transform: scaleX(0.3);
+}
+
 .tab-bar-link svg {
-  flex: 0 0 auto;
+  position: relative;
   width: 22px;
   height: 22px;
   transition: transform 140ms ease;
@@ -1070,39 +1081,143 @@ html.nav-mobile .tab-bar-link {
   transform: scale(0.88);
 }
 
-.tab-bar-link span {
-  display: none;
+/* Each section's name under its icon (also its aria-label). */
+.tab-bar-name {
+  max-width: 100%;
   overflow: hidden;
-  white-space: nowrap;
+  line-height: 1.2;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* The current section: its name beside the icon, white on the chip. */
-/* One width whichever section it is (user, 2026-10-30 — it took its name's
-   width, 83–109px, so every change moved every other icon by a different
-   step, up to 46px): the others then stay put unless the chip crosses
-   them, and those move by one small step. Tight inside, the name a size
-   down (cut with "…" if ever too long). */
-html.nav-mobile .tab-bar-link.is-current {
-  box-sizing: border-box;
-  flex: 0 0 94px;
-  gap: 4px;
-  padding: 0 9px 0 7px;
+/* The current section: its icon white in the red pill, its name red. */
+html.nav-mobile .tab-bar-link.is-current .tab-bar-icon {
   color: #fff;
-  font-size: 0.74rem;
 }
 
-html.nav-mobile .tab-bar-link.is-current span {
-  display: inline;
-  animation: tab-bar-label 260ms ease both;
+html.nav-mobile .tab-bar-link.is-current .tab-bar-icon::before {
+  opacity: 1;
+  transform: none;
 }
 
-@keyframes tab-bar-label {
-  from {
-    opacity: 0;
-    transform: translateX(-4px);
+html.nav-mobile .tab-bar-link.is-current .tab-bar-name {
+  color: var(--brand-red-deep);
+  font-weight: 800;
+}
+
+/* The change, animated (not on a page's first paint). */
+.tab-bar.is-ready .tab-bar-icon {
+  transition: color 180ms ease;
+}
+
+.tab-bar.is-ready .tab-bar-icon::before {
+  transition: transform 160ms ease-in, opacity 120ms ease-in 40ms, background 450ms ease;
+}
+
+.tab-bar.is-ready .tab-bar-link.is-current .tab-bar-icon::before {
+  transition: transform 320ms cubic-bezier(0.2, 0.9, 0.3, 1.1), opacity 120ms ease, background 450ms ease;
+}
+
+.tab-bar.is-ready .tab-bar-name {
+  transition: color 180ms ease;
+}
+
+/* The current section's icon filled, as Google's apps do (outline →
+   solid): its shapes white, its details (the house's door, the play
+   triangle) cut out in the pill's colour so they still read. */
+.tab-bar-link svg :is(path, circle) {
+  fill: currentColor;
+  fill-opacity: 0;
+}
+
+html.nav-mobile .tab-bar-link.is-current svg :is(path, circle) {
+  fill-opacity: 1;
+}
+
+html.nav-mobile .tab-bar-link.is-current[data-tab="home"] svg path:nth-child(3),
+html.nav-mobile .tab-bar-link.is-current[data-tab="social"] svg path {
+  fill: var(--tab-pill);
+  stroke: var(--tab-pill);
+}
+
+.tab-bar.is-ready .tab-bar-link svg :is(path, circle) {
+  transition: fill-opacity 180ms ease;
+}
+
+/* …and, becoming current, its own little animation (user, 2026-10-30):
+   the house hops, the trophy spins round, the pie turns into place, the
+   people wiggle, the play button pulses. */
+.tab-bar.is-ready .tab-bar-link.is-current[data-tab="home"] svg {
+  animation: tab-icon-hop 460ms cubic-bezier(0.3, 0.7, 0.4, 1);
+}
+
+.tab-bar.is-ready .tab-bar-link.is-current[data-tab="events"] svg {
+  animation: tab-icon-spin 620ms cubic-bezier(0.25, 0.8, 0.3, 1);
+}
+
+.tab-bar.is-ready .tab-bar-link.is-current[data-tab="meta"] svg {
+  animation: tab-icon-turn 520ms cubic-bezier(0.2, 0.9, 0.3, 1.25);
+}
+
+.tab-bar.is-ready .tab-bar-link.is-current[data-tab="players"] svg {
+  animation: tab-icon-wiggle 520ms ease-in-out;
+  transform-origin: 50% 90%;
+}
+
+.tab-bar.is-ready .tab-bar-link.is-current[data-tab="social"] svg {
+  animation: tab-icon-pulse 440ms cubic-bezier(0.2, 0.9, 0.3, 1.5);
+}
+
+@keyframes tab-icon-hop {
+  35% {
+    transform: translateY(-5px) scale(1.06);
+  }
+
+  65% {
+    transform: translateY(0) scale(1.1, 0.9);
+  }
+
+  85% {
+    transform: scale(0.97, 1.03);
   }
 }
+
+@keyframes tab-icon-spin {
+  from {
+    transform: perspective(60px) rotateY(-360deg) scale(0.85);
+  }
+}
+
+@keyframes tab-icon-turn {
+  from {
+    transform: rotate(-140deg) scale(0.8);
+  }
+}
+
+@keyframes tab-icon-wiggle {
+  20% {
+    transform: rotate(-12deg);
+  }
+
+  45% {
+    transform: rotate(9deg);
+  }
+
+  70% {
+    transform: rotate(-4deg);
+  }
+}
+
+@keyframes tab-icon-pulse {
+  from {
+    transform: scale(0.6);
+  }
+
+  55% {
+    transform: scale(1.18);
+  }
+}
+
 
 :root[data-theme="dark"].nav-mobile .tab-bar {
   border-color: rgba(255, 255, 255, 0.1);
@@ -1110,23 +1225,36 @@ html.nav-mobile .tab-bar-link.is-current span {
   box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.45), 0 4px 14px rgba(0, 0, 0, 0.55), 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 
-:root[data-theme="dark"].nav-mobile .tab-bar-link:not(.is-current) {
+:root[data-theme="dark"].nav-mobile .tab-bar-link {
   color: rgba(255, 255, 255, 0.88);
 }
 
-/* Hero pages in dark mode: the chip a deep shade of the colour, as the pill
-   was (white text reads on it). */
-:root[data-theme="dark"].nav-mobile .site-nav.has-hero-accent .tab-bar-chip {
-  background: var(--hero-accent-deep);
+:root[data-theme="dark"].nav-mobile .tab-bar-link.is-current .tab-bar-name {
+  color: #ff8a8d;
+}
+
+/* Hero pages in dark mode: the pill a deep shade of the colour (white
+   reads on it), the name its light shade. */
+:root[data-theme="dark"].nav-mobile .site-nav.has-hero-accent .tab-bar-icon {
+  --tab-pill: var(--hero-accent-deep);
+}
+
+:root[data-theme="dark"].nav-mobile .site-nav.has-hero-accent .tab-bar-link.is-current .tab-bar-name {
+  color: var(--hero-accent-light);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tab-bar-chip {
+  .tab-bar.is-ready :is(.tab-bar-icon, .tab-bar-name),
+  .tab-bar.is-ready .tab-bar-icon::before {
     transition: none;
   }
 
-  html.nav-mobile .tab-bar-link.is-current span {
+  .tab-bar.is-ready .tab-bar-link.is-current[data-tab] svg {
     animation: none;
+  }
+
+  .tab-bar.is-ready .tab-bar-link svg :is(path, circle) {
+    transition: none;
   }
 }
 
@@ -1196,7 +1324,7 @@ html.nav-mobile .tab-bar-link.is-current span {
 html.nav-mobile .back-to-top {
   right: 16px;
   left: auto;
-  bottom: calc(16px + 60px + 12px + env(safe-area-inset-bottom) + var(--back-to-top-lift, 0px));
+  bottom: calc(16px + 66px + 12px + env(safe-area-inset-bottom) + var(--back-to-top-lift, 0px));
   z-index: 15;
 }
 
