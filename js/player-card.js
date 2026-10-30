@@ -336,6 +336,29 @@ export function cardLinksHtml(links) {
     .join("");
 }
 
+// No description but links (player.html): the name shares the bottom row
+// with the links and the foot (styles.css .player-card.no-description) —
+// only while it fits there on one line. Wrapping (a long name, the four
+// links, the picture beside it — down to breaking mid-word), it gets back a
+// row of its own the whole width, the links under it beside the foot, as
+// with a description (.name-own-row). Re-checked when the card is resized
+// (fonts arriving, a rotation).
+const nameRowFitted = new WeakSet();
+
+export function fitCardNameRow(cardEl) {
+  if (!cardEl.classList.contains("no-description") || !cardEl.querySelector(".pc-panel")) return;
+  if (!nameRowFitted.has(cardEl)) {
+    nameRowFitted.add(cardEl);
+    new ResizeObserver(() => fitCardNameRow(cardEl)).observe(cardEl);
+    document.fonts?.ready.then(() => fitCardNameRow(cardEl));
+  }
+  const nameEl = cardEl.querySelector(".pc-name");
+  if (!nameEl) return;
+  cardEl.classList.remove("name-own-row");
+  const lineHeight = parseFloat(getComputedStyle(nameEl).lineHeight);
+  if (nameEl.getBoundingClientRect().height > lineHeight * 1.4) cardEl.classList.add("name-own-row");
+}
+
 // The description outside edit mode (styles.css .pc-description, the
 // strip's room beside the links): a short one bigger, as big as still fits
 // on one line, up to DESC_MAX_CQW — about the links' height, so the strip
@@ -420,6 +443,7 @@ export function renderPublicPlayerCard(containerEl, card, { name, since, badges 
   applyCardAccents(cardEl, card.fav_colors);
   applyCardCosmetics(cardEl, progress);
   fitCardDescription(cardEl);
+  fitCardNameRow(cardEl);
   createArtPainter(cardEl.querySelector(".pc-art"))(card.commander_name, card.card_print ?? null);
   return cardEl;
 }

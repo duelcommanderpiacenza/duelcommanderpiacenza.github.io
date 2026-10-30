@@ -1845,6 +1845,23 @@ html.nav-mobile .player-card.is-editing .pc-art-space {
     "name panel foot";
 }
 
+/* …but only while the name fits there on one line (js/player-card.js
+   fitCardNameRow): otherwise it gets its row back, the whole width, the
+   links under it beside the foot — the layout with a description. */
+.player-card.no-description.name-own-row .pc-content:has(.pc-panel) {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "space space"
+    "name name"
+    "panel foot";
+}
+
+/* Only links in it (no description beside them): the glass as wide as the
+   links, not the row. */
+.player-card.no-description.name-own-row .pc-panel {
+  justify-self: start;
+}
+
 .player-card.is-editing .pc-content {
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr) auto auto auto;
