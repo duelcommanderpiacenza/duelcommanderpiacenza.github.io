@@ -2600,6 +2600,22 @@ a.pc-link:focus-visible {
   color: #d6249f;
 }
 
+/* Each disc's rim in its site's logo colour (user, 2026-10-30 — they were
+   all the same light red): Instagram's pink, Moxfield's purple (its logo's
+   #302060 a few steps lighter, to show on the card's dark glass),
+   Archidekt's blue, endstep's gold (below). */
+.pc-link-instagram {
+  border-color: #d6249f;
+}
+
+.pc-link-moxfield {
+  border-color: #6a4bc4;
+}
+
+.pc-link-archidekt {
+  border-color: #1b6ec2;
+}
+
 .pc-link img {
   width: 4.99cqw;
   height: 4.99cqw;
@@ -2611,6 +2627,21 @@ a.pc-link:focus-visible {
   font-size: 4.48cqw;
   font-weight: 900;
   line-height: 1;
+}
+
+/* endstep.cc: its logo (js/player-card.js) in its own colours, as on its
+   site (read off endstep.cc's header, 2026-10-30): gold on its near-black
+   — the gold too light to read on a white disc; a size down — it's taller
+   than wide and its ring reaches its box's edges. */
+.pc-link-endstep {
+  border-color: oklch(0.8 0.135 80);
+  background: oklch(0.175 0.014 82);
+  color: oklch(0.8 0.135 80);
+}
+
+.pc-link .pc-link-endstep-logo {
+  width: 4.1cqw;
+  height: 4.1cqw;
 }
 
 .pc-links-edit {

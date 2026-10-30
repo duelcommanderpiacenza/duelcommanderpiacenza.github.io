@@ -117,7 +117,7 @@ export function mount({ signal = new AbortController().signal } = {}) {
   const colorInputs = Array.from(profileForm.querySelectorAll('input[name="profile-color"]'));
   const descriptionEl = document.getElementById("profile-description");
   const counterEl = document.getElementById("profile-counter");
-  // One field per site (CARD_LINK_SITES: instagram, moxfield, archidekt).
+  // One field per site (CARD_LINK_SITES: instagram, moxfield, archidekt, endstep).
   const linkInputs = Object.fromEntries(Object.keys(CARD_LINK_SITES).map((key) => [key, document.getElementById(`profile-${key}`)]));
 
   // "Il tuo giocatore" (top, until linked)
@@ -196,6 +196,7 @@ export function mount({ signal = new AbortController().signal } = {}) {
       instagram: profile?.instagram ?? null,
       moxfield: profile?.moxfield ?? null,
       archidekt: profile?.archidekt ?? null,
+      endstep: profile?.endstep ?? null,
     };
   }
 

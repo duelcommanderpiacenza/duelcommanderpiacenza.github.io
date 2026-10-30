@@ -255,10 +255,10 @@ function cardBadgesHtml(badges) {
     .join("");
 }
 
-// --- Links on the card (Instagram, Moxfield, Archidekt) ---------------------------
+// --- Links on the card (Instagram, Moxfield, Archidekt, endstep.cc) -------------
 
 // The owner's usernames on those sites (profiles.instagram / moxfield /
-// archidekt, migration 010). Only the username is ever stored —
+// archidekt, migration 010; endstep, migration 032). Only the username is ever stored —
 // the database allows nothing else — and the links are built here. In edit
 // mode a pasted profile link is accepted too, but only from that site's own
 // address (hosts below): its username is taken out of it.
@@ -287,6 +287,16 @@ export const CARD_LINK_SITES = {
     url: (u) => `https://archidekt.com/u/${u}`,
     icon: '<span class="pc-link-letter" aria-hidden="true">A</span>',
   },
+  // endstep.cc: https://endstep.cc/u/<username>; its own logo (from its
+  // page's header — the diamond, its core and the step bar).
+  endstep: {
+    label: "endstep.cc",
+    hosts: ["endstep.cc", "www.endstep.cc"],
+    path: /^\/u\/([A-Za-z0-9_.-]{1,40})\/?$/,
+    username: /^[A-Za-z0-9_.-]{1,40}$/,
+    url: (u) => `https://endstep.cc/u/${u}`,
+    icon: '<svg class="pc-link-endstep-logo" viewBox="11 9 42 46" aria-hidden="true"><path d="M32 11 L49 28 L32 45 L15 28 Z" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round"></path><path d="M32 21 L38 28 L32 35 L26 28 Z" fill="currentColor"></path><rect x="13" y="49" width="38" height="4.4" rx="2.2" fill="currentColor"></rect></svg>',
+  },
 };
 
 // What's typed in edit mode → { username } (null when empty), or { error }
@@ -295,7 +305,7 @@ export function parseCardLink(site, raw) {
   const def = CARD_LINK_SITES[site];
   const value = raw.trim().replace(/^@/, "");
   if (!value) return { username: null };
-  const looksLikeLink = /[/:]/.test(value) || /^(www\.)?[a-z0-9-]+\.(com|net|org|it)\b/i.test(value);
+  const looksLikeLink = /[/:]/.test(value) || /^(www\.)?[a-z0-9-]+\.(com|net|org|it|cc)\b/i.test(value);
   if (looksLikeLink) {
     let url;
     try {

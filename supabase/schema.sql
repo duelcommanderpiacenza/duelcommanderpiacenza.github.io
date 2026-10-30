@@ -780,10 +780,11 @@ create table profiles (
   -- below). Added by migration 007.
   show_on_player_page boolean not null default true,
   -- The owner's usernames, shown as links on the card (the site builds the
-  -- links). Added by migration 010.
+  -- links). Added by migration 010; endstep (endstep.cc) by 032.
   instagram text check (instagram ~ '^[A-Za-z0-9._]{1,30}$'),
   moxfield text check (moxfield ~ '^[A-Za-z0-9_-]{1,40}$'),
   archidekt text check (archidekt ~ '^[A-Za-z0-9_.-]{1,40}$'),
+  endstep text check (endstep ~ '^[A-Za-z0-9_.-]{1,40}$'),
   updated_at timestamptz not null default now()
 );
 
@@ -848,7 +849,7 @@ revoke execute on function give_default_card(uuid, uuid) from public, anon, auth
 -- migration 007; the card's links since
 -- 010; no archetype since 013; commander_name is the background card's
 -- name since 014 (fav_card, else the old favourite commander's), with its
--- printing (card_print) since 015.
+-- printing (card_print) since 015, endstep since 032.
 create or replace function public_player_card(p_player_id uuid)
 returns table (
   description text,
@@ -860,7 +861,8 @@ returns table (
   card_print uuid,
   instagram text,
   moxfield text,
-  archidekt text
+  archidekt text,
+  endstep text
 )
 language sql stable security definer set search_path = public as $$
   select
@@ -874,7 +876,8 @@ language sql stable security definer set search_path = public as $$
     case when pr.fav_card is not null then pr.fav_card_print end,
     pr.instagram,
     pr.moxfield,
-    pr.archidekt
+    pr.archidekt,
+    pr.endstep
   from players p
   join profiles pr on pr.user_id = p.user_id
   join auth.users u on u.id = p.user_id
