@@ -3732,6 +3732,51 @@ html:not(.app-header) .social-filters .social-chips {
 }
 
 
+/* Ricambio del meta: its legend on the title's line, at the right end, on
+   every screen — on phones its two entries stacked, bare (side by side they
+   don't fit beside the title). */
+.evo-turnover .evo-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.evo-turnover .evo-head .pie-chart-title {
+  white-space: nowrap;
+}
+
+.evo-turnover .evo-legend {
+  flex-shrink: 0;
+  margin-top: 0;
+}
+
+html.nav-mobile .evo-turnover .evo-legend {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+html.nav-mobile .evo-turnover .evo-chip {
+  padding: 0;
+  background: none;
+  font-size: 0.76rem;
+}
+
+/* Computers: the archetypes' legend on the title's line, at its right end
+   (under it only if the window is too narrow for both). */
+html:not(.nav-mobile) .evo-archetypes .evo-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+}
+
+html:not(.nav-mobile) .evo-archetypes .evo-legend {
+  margin-top: 0;
+}
+
 /* Phones: the archetypes' legend on one line — bare icon + name, spread
    across. */
 html.nav-mobile .evo-archetypes .evo-legend {
@@ -3767,6 +3812,18 @@ html.nav-mobile .evo-archetypes .evo-chip i {
 
 .evo-movers > div {
   min-width: 0;
+}
+
+/* One tile per line on narrow windows and on every touch screen (a phone
+   held sideways, a tablet too). */
+@media (max-width: 760px) {
+  .evo-movers {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+html.nav-mobile .evo-movers {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .evo-movers h3 {
@@ -3976,70 +4033,6 @@ html.nav-mobile .evo-archetypes .evo-chip i {
   stroke-width: 2.5;
 }
 
-@media (max-width: 900px) {
-  .evo-colours {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .evo-colours > :last-child {
-    grid-column: 1 / -1;
-  }
-}
-
-/* Touch screens (and narrow windows): one tile per line, a little lower,
-   the curve across the whole width. */
-@media (max-width: 640px) {
-  .evo-colours {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-html.nav-mobile .evo-colours {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-html.nav-mobile .evo-colours > :last-child {
-  grid-column: auto;
-}
-
-/* Phones: Ricambio del meta's title and its two numbers on one line, none
-   of them wrapping — at their usual sizes when they fit; else the numbers
-   a size down (.is-tight), and only if still too wide the title too
-   (.is-tighter) — set by js/evolution-page.js fitHeads. */
-html.nav-mobile .evo-turnover .evo-head-row {
-  align-items: center;
-  gap: 8px;
-}
-
-html.nav-mobile .evo-turnover .evo-head .pie-chart-title,
-html.nav-mobile .evo-turnover .line-chart-stat-label {
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-
-html.nav-mobile .evo-turnover .line-chart-stats {
-  gap: 10px;
-}
-
-
-.evo-turnover .evo-head-row.is-tight .line-chart-stats {
-  gap: 8px;
-}
-
-.evo-turnover .evo-head-row.is-tight .line-chart-stat-value {
-  font-size: 1.05rem;
-}
-
-.evo-turnover .evo-head-row.is-tight .line-chart-stat-label {
-  font-size: 0.52rem;
-  letter-spacing: 0.02em;
-}
-
-/* Still too wide with the numbers a size down: the title too. */
-.evo-turnover .evo-head-row.is-tighter .pie-chart-title {
-  font-size: 0.94rem;
-}
-
 /* Ricambio del meta: two lines — the decks (the card's ink) and those with
    a never-seen commander (red), each with a faint area. */
 .evo-turnover {
@@ -4075,10 +4068,30 @@ html.nav-mobile .evo-turnover .line-chart-stats {
   fill-opacity: 0.16;
 }
 
-@media (max-width: 760px) {
-  .evo-movers {
+@media (max-width: 900px) {
+  .evo-colours {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .evo-colours > :last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Touch screens (and narrow windows): one tile per line, a little lower,
+   the curve across the whole width. */
+@media (max-width: 640px) {
+  .evo-colours {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+html.nav-mobile .evo-colours {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+html.nav-mobile .evo-colours > :last-child {
+  grid-column: auto;
 }
 
 /* Dark mode: Combo's near-black and the black colour's curve, a shade
@@ -4494,7 +4507,8 @@ html.nav-mobile .evo-turnover .line-chart-stats {
   color: var(--text-muted);
 }
 
-/* --- Statistiche: winrate featured on a tinted panel, then one row per
+/* --- Statistiche: winrate featured on a tinted panel (no W-D-L under it —
+   user), then one row per
    number — A's value, the label over a tug-of-war bar (A's share from the
    left, B's from the right, a notch at the middle; the side ahead in full
    colour), B's value. */
@@ -4540,15 +4554,6 @@ html.nav-mobile .evo-turnover .line-chart-stats {
 
 .cmp-stat.is-main .cmp-stat-val {
   font-size: 1.85rem;
-}
-
-.cmp-stat-val small {
-  display: block;
-  margin-top: 3px;
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
 }
 
 .cmp-stat-mid {
@@ -4813,22 +4818,18 @@ html.nav-mobile .evo-turnover .line-chart-stats {
 /* --- Andamento: commander.html's edge-to-edge chart (.line-chart-wrap
    .is-edge), two lines. The head over the hover strips (its selector
    reachable; the strips still get the pointer through the rest of it): the
-   title, the Winrate / Piazzamenti selector in the middle of the title's
-   line, the numbers at the right end; touch screens / narrow: the selector
-   centred on its own line under them (user). */
+   title, the Winrate / Piazzamenti selector at the right end — in place of
+   the numbers, on every screen (user). */
 .cmp-trend .line-chart-head {
   z-index: 3;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: start;
+  align-items: center;
 }
 
-.cmp-trend .line-chart-stats {
-  justify-self: end;
-}
-
-/* (Its middle on the title's.) */
 .cmp-trend .cmp-seg {
+  pointer-events: auto;
+}
+
+.cmp-seg {
   margin-top: -3px;
   pointer-events: auto;
 }

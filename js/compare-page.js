@@ -347,7 +347,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   // B's from the right, a notch at the middle, the side ahead in full colour.
   function renderStats(sa, sb) {
     const rows = [
-      { label: "Winrate", a: sa.wr, b: sb.wr, fmt: pct, sub: (s) => `${s.w}-${s.d}-${s.l}`, main: true },
+      { label: "Winrate", a: sa.wr, b: sb.wr, fmt: pct, main: true },
       { label: "Eventi", a: sa.events, b: sb.events },
       { label: "Primi posti", a: sa.firsts, b: sb.firsts },
       { label: `Top 8 · ${BIG_EVENT_MIN_PLAYERS}+ giocatori`, a: sa.top8, b: sb.top8 },
@@ -363,16 +363,15 @@ export async function mount({ signal = new AbortController().signal } = {}) {
         const vb = r.b ?? 0;
         let share = 50;
         if (va + vb) share = (va / (va + vb)) * 100;
-        const sub = (s) => (r.sub ? `<small>${r.sub(s)}</small>` : "");
         const is = (side) => (lead === side ? " is-lead" : "");
         return `
           <div class="cmp-stat${r.main ? " is-main" : ""}${lead ? "" : " is-even"}">
-            <span class="cmp-stat-val is-a${is("a")}">${fmt(r.a)}${sub(sa)}</span>
+            <span class="cmp-stat-val is-a${is("a")}">${fmt(r.a)}</span>
             <div class="cmp-stat-mid">
               <span class="cmp-stat-label">${r.label}</span>
               <div class="cmp-stat-bar"><i class="is-a${is("a")}" data-w="${share.toFixed(1)}"></i><i class="is-b${is("b")}"></i></div>
             </div>
-            <span class="cmp-stat-val is-b${is("b")}">${fmt(r.b)}${sub(sb)}</span>
+            <span class="cmp-stat-val is-b${is("b")}">${fmt(r.b)}</span>
           </div>`;
       })
       .join("");
@@ -443,18 +442,14 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   // guide, the two values and a dark tip on hover / tap (no dots).
   function renderChart() {
     const { sa, sb, h2h } = chartData;
-    const stats = $("compare-trend-stats");
     const W = plot.clientWidth;
     const H = plot.clientHeight;
     const zero = H - PLOT_BOTTOM;
-    // The lines start under the head (taller on touch screens, the selector
-    // on its own line).
+    // The lines start under the head (the title, the selector).
     const head = plot.parentElement.querySelector(".line-chart-head");
     const PLOT_TOP = Math.max(PLOT_TOP_MIN, (head?.offsetHeight ?? 0) + 14);
     const nA = escapeHtml(nameOf(state.a) ?? "");
     const nB = escapeHtml(nameOf(state.b) ?? "");
-    const stat = (value, label, cls = "is-n") =>
-      `<div class="line-chart-stat"><span class="line-chart-stat-value ${cls}">${value}</span><span class="line-chart-stat-label">${label}</span></div>`;
     const xPct = (x) => `${((x / VW) * 100).toFixed(3)}%`;
     const tipRow = (side, name, value) => `<div><i style="background:${COLOR[side]}"></i>${name}<span>${value}</span></div>`;
 
@@ -468,11 +463,9 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       const pb = sb.timeline.filter((p) => p.v != null);
       const all = [...pa, ...pb];
       if (!all.length) {
-        stats.innerHTML = "";
         plot.innerHTML = '<p class="page-empty cmp-plot-empty">Nessun evento nel periodo.</p>';
         return;
       }
-      stats.innerHTML = stat(pct(sa.wr), escapeHtml(firstName(nameOf(state.a))), "is-a") + stat(pct(sb.wr), escapeHtml(firstName(nameOf(state.b))), "is-b");
       const times = [...new Set(all.map((p) => p.t))].sort((x, y) => x - y);
       const t0 = times[0];
       const t1 = times.at(-1);
@@ -508,12 +501,9 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     } else {
       const shared = h2h.shared.filter((s) => s.pa && s.pb);
       if (!shared.length) {
-        stats.innerHTML = "";
         plot.innerHTML = '<p class="page-empty cmp-plot-empty">Nessun evento giocato insieme nel periodo.</p>';
         return;
       }
-      const ahead = shared.filter((s) => s.pa < s.pb).length;
-      stats.innerHTML = stat(`<span class="is-a">${ahead}</span><span class="sep"> – </span><span class="is-b">${shared.length - ahead}</span>`, "Davanti");
       const lowest = Math.max(...shared.flatMap((s) => [s.pa, s.pb]));
       const bottomRank = Math.max(8, Math.ceil(lowest / 4) * 4);
       const Y = (p) => PLOT_TOP + ((p - 1) / (bottomRank - 1)) * (zero - PLOT_TOP - 8);

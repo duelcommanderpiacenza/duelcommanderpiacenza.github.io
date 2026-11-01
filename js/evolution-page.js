@@ -343,7 +343,7 @@ function sectionsHtml({ points, byMonth }, width) {
     const rows = points.map((p) => {
       const fresh = new Set(p.entries.map(key).filter((k) => !seen.has(k)));
       for (const e of p.entries) seen.add(key(e));
-      return { n: p.entries.length, fresh: p.entries.filter((e) => fresh.has(key(e))).length, distinct: new Set(p.entries.map(key)).size };
+      return { n: p.entries.length, fresh: p.entries.filter((e) => fresh.has(key(e))).length };
     });
     const most = Math.max(1, ...rows.map((r) => r.n));
     const y = (v) => H - bottom - (v / most) * (H - bottom - TOP);
@@ -366,12 +366,10 @@ function sectionsHtml({ points, byMonth }, width) {
     const legend = series.map((s) => `<span class="evo-chip is-line"><i style="background:${s.color}"></i>${s.label}</span>`).join("");
     const tip = (i) =>
       `<strong>${escapeHtml(points[i].title)}</strong>` +
-      series.map((s) => `<div><i style="background:${s.color}"></i>${s.label}<span>${s.values[i]}</span></div>`).join("") +
-      `<div><i></i>Comandanti diversi<span>${rows[i].distinct}</span></div>`;
+      series.map((s) => `<div><i style="background:${s.color}"></i>${s.label}<span>${s.values[i]}</span></div>`).join("");
     const dots = (i) => series.map((s) => [y(s.values[i]), s.color]);
-    const stats = stat(avg(rows.slice(1).map((r) => r.fresh)).toFixed(1), "Nuovi in media") + stat(seen.size, "Totale comandanti");
     return `<section class="pie-chart-wrap line-chart-wrap is-edge evo-chart evo-turnover">
-      ${head("Ricambio del meta", { stats, legend })}
+      ${head("Ricambio del meta", { legend })}
       <div class="evo-plot" style="height:${H}px"><svg viewBox="0 0 ${VW} ${H}" preserveAspectRatio="none" aria-hidden="true">${grid}${paths}</svg>${yLabels}${dateLabels()}${hits(tip, dots)}</div>
     </section>`;
   }
@@ -430,26 +428,10 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     }
   }
 
-  // A head whose title and numbers don't fit on their one line (phones:
-  // Ricambio del meta's): its numbers a size down (.is-tight), and only if
-  // that's not enough its title too (.is-tighter) — css/5.
-  function fitHeads() {
-    const overflows = (row) => row.scrollWidth > row.clientWidth + 1;
-    for (const row of sectionsEl.querySelectorAll(".evo-turnover .evo-head-row")) {
-      row.classList.remove("is-tight", "is-tighter");
-      if (!overflows(row)) continue;
-      row.classList.add("is-tight");
-      row.classList.toggle("is-tighter", overflows(row));
-    }
-  }
-
   function draw() {
     shownWidth = sectionsEl.clientWidth;
     const { html, names } = sectionsHtml(shown, shownWidth);
     sectionsEl.innerHTML = html;
-    fitHeads();
-    // Again once the fonts are in (their widths decide it).
-    document.fonts?.ready.then(() => !signal.aborted && fitHeads());
     paintArt(names).catch((err) => console.error(err));
   }
 

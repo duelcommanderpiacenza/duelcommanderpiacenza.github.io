@@ -517,7 +517,6 @@
     "Andamento": "Trend",
     "Grafico": "Chart",
     "Piazzamenti": "Placings",
-    "Davanti": "Ahead",
     "Nessun evento nel periodo.": "No events in this period.",
     "Nessun evento giocato insieme nel periodo.": "No events played together in this period.",
     "in comune": "shared",
