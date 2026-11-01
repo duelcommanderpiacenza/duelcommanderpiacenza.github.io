@@ -2864,6 +2864,23 @@ html.nav-mobile main[data-page="commanders"] .sk-chart {
   opacity: 1;
 }
 
+/* Touch screens: the strip under a finger moving along the chart
+   (js/chart-scrub.js) — shown like :hover, the strip the browser still
+   thinks is :hover (where the touch began) hidden meanwhile. pan-y: a
+   sideways move stays with the chart, up / down still scrolls the page. */
+.line-chart-hit,
+.evo-plot {
+  touch-action: pan-y pinch-zoom;
+}
+
+.line-chart-hit.is-scrub > * {
+  opacity: 1;
+}
+
+.is-scrubbing > .line-chart-hit:not(.is-scrub):hover > * {
+  opacity: 0;
+}
+
 @media (max-width: 640px) {
   .line-chart-head {
     padding: 14px 14px 0;
@@ -3471,6 +3488,7 @@ html:not(.app-header) .social-filters .social-chips {
   --colour-B: #3a3a3a;
   --colour-R: #d3202a;
   --colour-G: #00733e;
+  --colour-C: #a8a39d;
   display: grid;
   gap: 20px;
 }
@@ -3556,7 +3574,9 @@ html:not(.app-header) .social-filters .social-chips {
   transition: opacity 150ms ease, background 150ms ease;
 }
 
-.evo-chip:hover {
+/* (Only the chips that are links: a plain legend does nothing on hover —
+   user.) */
+a.evo-chip:hover {
   background: color-mix(in srgb, var(--brand-red) 8%, var(--evo-fill));
 }
 
@@ -3647,7 +3667,8 @@ html:not(.app-header) .social-filters .social-chips {
    `translate`.) */
 
 /* The tips over everything in the plot, the end discs included. */
-.evo-plot .line-chart-hit:hover {
+.evo-plot .line-chart-hit:hover,
+.evo-plot .line-chart-hit.is-scrub {
   z-index: 4;
 }
 
@@ -3699,24 +3720,6 @@ html:not(.app-header) .social-filters .social-chips {
     width: 34px;
     height: 34px;
   }
-}
-
-.evo-race-end b {
-  position: absolute;
-  right: -8px;
-  bottom: -6px;
-  display: grid;
-  place-items: center;
-  box-sizing: border-box;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 4px;
-  border-radius: 10px;
-  background: var(--c);
-  color: #fff;
-  font-size: 0.62rem;
-  font-weight: 900;
-  box-shadow: 0 0 0 2px var(--bg-cream-1);
 }
 
 .evo-race.has-focus :is(.evo-race-line, .evo-race-end):not(.is-focus) {
@@ -4094,6 +4097,32 @@ html.nav-mobile .evo-colours > :last-child {
   grid-column: auto;
 }
 
+/* With colorless, six tiles: two lines of three on a computer, three of
+   two on narrower windows, one per line on touch screens. */
+.evo-colours.has-six {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 900px) {
+  .evo-colours.has-six {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .evo-colours.has-six > :last-child {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .evo-colours.has-six {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+html.nav-mobile .evo-colours.has-six {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 /* Dark mode: Combo's near-black and the black colour's curve, a shade
    lighter so they don't vanish into the dark card. */
 :root[data-theme="dark"] .evo .evo-band.is-combo {
@@ -4267,11 +4296,20 @@ html.nav-mobile .evo-colours > :last-child {
 }
 
 .cmp-mid {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto calc(2.8rem + 4px);
   align-items: center;
-  gap: 6px;
+  justify-items: center;
+  row-gap: 6px;
   min-width: 120px;
+}
+
+/* Under VS, one slot as tall as the score, there with or without a pair:
+   the score, "Mai affrontati" or nothing — the hero keeps one size from
+   the start (user). */
+.cmp-score,
+.cmp-score-note {
+  grid-area: 2 / 1;
 }
 
 .cmp-vs {
@@ -4388,8 +4426,10 @@ html.nav-mobile .evo-colours > :last-child {
     text-underline-offset: 6px;
   }
 
+  /* (Its line as tall when empty: the hero keeps one size — user.) */
   .cmp-side-score {
     display: block;
+    min-height: 1em;
     margin-left: auto;
     font-size: 2.3rem;
     font-weight: 800;
@@ -4398,6 +4438,7 @@ html.nav-mobile .evo-colours > :last-child {
   }
 
   .cmp-mid {
+    display: flex;
     flex-direction: row;
     gap: 10px;
     min-width: 0;
@@ -4485,26 +4526,6 @@ html.nav-mobile .evo-colours > :last-child {
 
 .cmp-card-head .pie-chart-title {
   margin: 0;
-}
-
-/* The cards' numbers (the chart's .line-chart-stat look) in the players'
-   colours, or the title's ink. */
-.cmp-page .line-chart-stat .line-chart-stat-value.is-n {
-  color: var(--text-title);
-}
-
-.cmp-page .line-chart-stat .line-chart-stat-value.is-a,
-.cmp-page .line-chart-stat-value .is-a {
-  color: var(--pa-text);
-}
-
-.cmp-page .line-chart-stat .line-chart-stat-value.is-b,
-.cmp-page .line-chart-stat-value .is-b {
-  color: var(--pb-text);
-}
-
-.cmp-page .line-chart-stat-value .sep {
-  color: var(--text-muted);
 }
 
 /* --- Statistiche: winrate featured on a tinted panel (no W-D-L under it —
@@ -4898,6 +4919,16 @@ html.nav-mobile .cmp-trend .cmp-seg {
 .cmp-seg button[aria-pressed="true"] {
   background: var(--brand-red);
   color: #fff;
+}
+
+/* Touch screens: a bigger target for a finger (user). */
+html.nav-mobile .cmp-seg {
+  padding: 4px;
+}
+
+html.nav-mobile .cmp-seg button {
+  padding: 8px 18px;
+  font-size: 0.86rem;
 }
 
 .cmp-plot {

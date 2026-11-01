@@ -57,7 +57,6 @@ import { tallyOutcome, winRatePct, outcomeFor } from "./winrate.js";
 import { applyCardCosmetics, openCardEffectsInfo } from "./card-cosmetics.js";
 import { escapeHtml, eventTitle, formatDate, softFail, statTileHtml } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
-import { haptic } from "./haptics.js";
 import { mountSettings } from "./settings-panel.js";
 import { translate } from "./locale.js";
 import { rememberMyPlayer } from "./me-highlight.js";
@@ -482,7 +481,6 @@ export function mount({ signal = new AbortController().signal } = {}) {
   for (const b of tabButtons) {
     b.addEventListener("click", () => {
       tabChosen = true;
-      if (b.dataset.tab !== currentTab) haptic();
       selectTab(b.dataset.tab);
     });
   }

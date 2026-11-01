@@ -509,7 +509,6 @@
     "Primi posti": "First places",
     "Scontri diretti": "Head to head",
     "Partita": "Match",
-    "Game": "Games",
     "Non si sono ancora affrontati.": "They haven't played each other yet.",
     "Eventi giocati insieme:": "Events played together:",
     "Nessun evento giocato insieme.": "No events played together.",

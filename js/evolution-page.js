@@ -10,9 +10,10 @@
 //    played (cumulative), point after point, their art on the line's end;
 //  - Chi sale, chi scende: the 3 biggest risers / fallers, the last points
 //    against the ones before, as art tiles with their curve;
-//  - Colori nel tempo: the share of decks playing each colour, a tile each;
+//  - Colori nel tempo: the share of decks playing each colour, a tile each
+//    (colorless a sixth one, only when some deck in scope is);
 //  - Ricambio del meta: two lines, each point's decks and those with a
-//    never-seen commander.
+//    never-seen commander (no gridlines: the values on the left).
 // A point is an event; with more than MAX_EVENT_POINTS events in scope, a
 // month instead. Chosen 2026-11-01 from two rounds of mockups (a summary
 // row and a winners' strip were dropped).
@@ -36,13 +37,15 @@ const RACE_COUNT = 6;
 const RACE_MAX_RANK = 8;
 const RACE_COLORS = ["#dc181c", "#2f5fdc", "#e0752b", "#0aa8bd", "#7b3fc4", "#2e9e5b"];
 const MOVERS_COUNT = 3;
-// The five colours (their lines' colours: css/5 --colour-W…G, light / dark).
+// The five colours, then colorless (their lines' colours: css/5
+// --colour-W…G / C, light / dark). Colorless only when some deck is.
 const COLOURS = [
   ["W", "Bianco"],
   ["U", "Blu"],
   ["B", "Nero"],
   ["R", "Rosso"],
   ["G", "Verde"],
+  ["C", "Incolore"],
 ];
 const ARCHETYPE_LABELS = { aggro: "Aggro", control: "Control", combo: "Combo", tempo: "Tempo", midrange: "Midrange" };
 // Combo's near-black, for text and dots on the dark tip / light card.
@@ -250,8 +253,8 @@ function sectionsHtml({ points, byMonth }, width) {
       const first = ranksAt.findIndex((m) => m.has(k));
       const pts = xs.map((x, i) => [x, y(ranksAt[i].get(k) ?? RACE_MAX_RANK + 1)]).slice(first);
       lines += `<path class="evo-race-line" data-k="${k}" d="${smoothPath(pts)}" stroke="${color}" vector-effect="non-scaling-stroke"></path>`;
-      const rank = ranksAt.at(-1).get(k);
-      ends += `<a class="evo-race-end" href="commander.html?id=${k}" data-k="${k}" data-card="${escapeHtml(nameOf.get(k))}" style="--c:${color};left:${xPct(pts.at(-1)[0])};top:${pts.at(-1)[1]}px" aria-label="${escapeHtml(nameOf.get(k))}"><b>${rank}°</b></a>`;
+      // (No rank chip on the disc — user: the tip gives the ranks.)
+      ends += `<a class="evo-race-end" href="commander.html?id=${k}" data-k="${k}" data-card="${escapeHtml(nameOf.get(k))}" style="--c:${color};left:${xPct(pts.at(-1)[0])};top:${pts.at(-1)[1]}px" aria-label="${escapeHtml(nameOf.get(k))}"></a>`;
     });
     const grid = `<line class="evo-grid is-zero" x1="0" x2="${VW}" y1="${H - bottom}" y2="${H - bottom}" vector-effect="non-scaling-stroke"></line>`;
     const tip = (i) =>
@@ -316,13 +319,16 @@ function sectionsHtml({ points, byMonth }, width) {
   }
 
   // --- Colori nel tempo: five tiles, each its latest share, its trend and
-  // its curve (one chart with five lines was tried: a tangle).
+  // its curve (one chart with five lines was tried: a tangle); a sixth for
+  // colorless decks when there are any (then two lines of three on a
+  // computer).
   function colours() {
     const half = Math.floor(points.length / 2);
-    const tiles = COLOURS.map(([c, name]) => {
-      const s = points.map(
-        (p) => p.entries.filter((e) => `${e.commander?.color_identity ?? ""}${e.partner_commander?.color_identity ?? ""}`.includes(c)).length / (p.entries.length || 1)
-      );
+    const identity = (e) => `${e.commander?.color_identity ?? ""}${e.partner_commander?.color_identity ?? ""}`;
+    const plays = (e, c) => (c === "C" ? Boolean(e.commander) && !/[WUBRG]/i.test(identity(e)) : identity(e).includes(c));
+    const shown = COLOURS.filter(([c]) => c !== "C" || all.some((e) => plays(e, "C")));
+    const tiles = shown.map(([c, name]) => {
+      const s = points.map((p) => p.entries.filter((e) => plays(e, c)).length / (p.entries.length || 1));
       const pts = points.map((p, i) => [xAt(p), 58 - s[i] * 54]);
       const d = avg(s.slice(half)) - avg(s.slice(0, half));
       const [arrow, tcolor] = trendArrow(d, 0.02);
@@ -330,7 +336,7 @@ function sectionsHtml({ points, byMonth }, width) {
     }).join("");
     return `<section class="pie-chart-wrap evo-card">
       ${head("Colori nel tempo")}
-      <div class="evo-colours">${tiles}</div>
+      <div class="evo-colours${shown.length > 5 ? " has-six" : ""}">${tiles}</div>
     </section>`;
   }
 
@@ -359,9 +365,8 @@ function sectionsHtml({ points, byMonth }, width) {
         return `<path class="evo-turnover-area ${s.cls}" d="${smoothPath(pts)} L${VW},${H} L0,${H} Z"></path><path class="evo-turnover-line ${s.cls}" d="${smoothPath(pts)}" vector-effect="non-scaling-stroke"></path>`;
       })
       .join("");
-    // The dashed lines at half and the peak; no baseline (the areas run on
-    // through the dates' band).
-    const grid = [0.5, 1].map((v) => `<line class="evo-grid" x1="0" x2="${VW}" y1="${y(most * v)}" y2="${y(most * v)}" vector-effect="non-scaling-stroke"></line>`).join("");
+    // The values at half and the peak on the left, no lines (user); no
+    // baseline (the areas run on through the dates' band).
     const yLabels = [Math.round(most / 2), most].map((v) => `<span class="line-chart-y" style="top:${y(v)}px">${v}</span>`).join("");
     const legend = series.map((s) => `<span class="evo-chip is-line"><i style="background:${s.color}"></i>${s.label}</span>`).join("");
     const tip = (i) =>
@@ -370,7 +375,7 @@ function sectionsHtml({ points, byMonth }, width) {
     const dots = (i) => series.map((s) => [y(s.values[i]), s.color]);
     return `<section class="pie-chart-wrap line-chart-wrap is-edge evo-chart evo-turnover">
       ${head("Ricambio del meta", { legend })}
-      <div class="evo-plot" style="height:${H}px"><svg viewBox="0 0 ${VW} ${H}" preserveAspectRatio="none" aria-hidden="true">${grid}${paths}</svg>${yLabels}${dateLabels()}${hits(tip, dots)}</div>
+      <div class="evo-plot" style="height:${H}px"><svg viewBox="0 0 ${VW} ${H}" preserveAspectRatio="none" aria-hidden="true">${paths}</svg>${yLabels}${dateLabels()}${hits(tip, dots)}</div>
     </section>`;
   }
 

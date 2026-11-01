@@ -14,6 +14,8 @@
 import { setupThemeToggle } from "./theme.js";
 import { setupLanguage } from "./language.js";
 import { setupHapticsToggle } from "./haptics-toggle.js";
+import { haptic } from "./haptics.js";
+import "./chart-scrub.js";
 import { enhanceSelects } from "./custom-select.js";
 import { enhanceDateInputs } from "./custom-date.js";
 import "./pwa-install.js";
@@ -75,6 +77,21 @@ function openArchetype(e) {
 }
 document.addEventListener("click", openArchetype, true);
 document.addEventListener("keydown", openArchetype, true);
+
+// Every tab switcher vibrates (js/haptics.js) when it changes tab — the
+// segmented controls (.profile-tab: the Meta pages', Giocatori / Confronto,
+// js/tabs.js's, the Profilo's) and the smaller ones choosing a view — here
+// once, delegated, so a new one only needs to match TAB_SWITCH (user,
+// 2026-11-01: the Meta / Giocatori ones didn't, the others did). Captured,
+// before a tab's own handler marks it current.
+const TAB_SWITCH = '.profile-tab:not(.is-active), .cmp-seg button[aria-pressed="false"], .social-chip[aria-pressed="false"]';
+document.addEventListener(
+  "click",
+  (e) => {
+    if (e.target.closest?.(TAB_SWITCH)) haptic();
+  },
+  true
+);
 
 // Touch: a badge inside a link (a list's sub-card — Giocatori, the Bacheca's
 // standings, a league's Classifica…) is tapped to read it, not to follow the

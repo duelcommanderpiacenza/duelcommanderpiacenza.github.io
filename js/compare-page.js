@@ -334,11 +334,11 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       paintHeroArt(side, s.topDecks[0]?.commander?.name);
     }
     requestAnimationFrame(fitNames);
-    $("compare-score").innerHTML = !pair
-      ? ""
-      : met
+    // (Never met: "Mai affrontati" in the score's place.)
+    $("compare-score").innerHTML =
+      pair && met
         ? `<span class="${a >= b ? "" : "is-behind"}">${a}</span><span class="sep">–</span><span class="${b >= a ? "" : "is-behind"}">${b}</span>`
-        : '<span class="is-behind">–</span>';
+        : "";
     $("compare-score-note").textContent = pair && !met ? "Mai affrontati" : "";
     $("compare-score-note").hidden = !pair || met;
   }
@@ -389,12 +389,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   function renderH2H(h2h) {
     const { games, shared } = h2h;
     const list = $("compare-h2h");
-    const ga = games.reduce((s, g) => s + g.ga, 0);
-    const gb = games.reduce((s, g) => s + g.gb, 0);
-    $("compare-h2h-stats").innerHTML = games.length
-      ? `<div class="line-chart-stat"><span class="line-chart-stat-value is-n"><span class="is-a">${ga}</span><span class="sep"> – </span><span class="is-b">${gb}</span></span><span class="line-chart-stat-label">Game</span></div>
-         <div class="line-chart-stat"><span class="line-chart-stat-value is-n">${games.length}</span><span class="line-chart-stat-label">${games.length === 1 ? "Partita" : "Partite"}</span></div>`
-      : "";
+    // (No games / matches totals at the head's right end — user.)
     if (!state.a || !state.b) {
       list.innerHTML = '<p class="page-empty">Scegli due giocatori.</p>';
       return;
