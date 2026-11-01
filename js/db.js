@@ -711,6 +711,10 @@ export const EventStandings = {
         .eq("player_id", playerId)
         .order("event_id")
     ),
+  // Every closed event's positions (compare.html: any two players' places
+  // in the events they shared), paged — ~20 rows per event.
+  listAll: () =>
+    selectAllRows(() => sb.from("event_standings").select("event_id, player_id, position").order("event_id").order("player_id")),
   // Full replace, like PlayerAutoBadges.replaceAll. Inserted in batches so
   // one request never carries the whole history (~20 rows per event).
   replaceAll: async (rows) => {

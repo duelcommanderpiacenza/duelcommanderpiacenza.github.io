@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <!-- shell:head (partials/head.html — scripts/sync-shell.py) -->
+  <meta charset="UTF-8">
+  <!-- shell:theme (partials/theme.html — scripts/sync-shell.py) -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (t !== "light" && t !== "dark") {
+          t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+        document.documentElement.dataset.theme = t;
+        if (navigator.maxTouchPoints > 0) document.documentElement.classList.add("nav-mobile", "app-header");
+        // English (js/language.js): set before the first paint, and the
+        // translation (js/i18n-en.js) loaded at once, so the page is put on
+        // screen in English. Not the admin, which stays Italian.
+        if (localStorage.getItem("lang") === "en" && location.pathname.indexOf("/admin/") < 0) {
+          document.documentElement.lang = "en";
+          document.write('<script src="js/i18n-en.js"><\/script>');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <!-- /shell:theme -->
+  <!-- The stylesheet, in six parts loaded in this order (css/). -->
+  <link rel="stylesheet" href="css/1-base-header-home.css">
+  <link rel="stylesheet" href="css/2-pages-heroes-events.css">
+  <link rel="stylesheet" href="css/3-lists-badges-league.css">
+  <link rel="stylesheet" href="css/4-profile-card.css">
+  <link rel="stylesheet" href="css/5-card-matchups-charts.css">
+  <link rel="stylesheet" href="css/6-dark-tabbar-transitions.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <link rel="icon" type="image/png" sizes="96x96" href="favicon-96.png">
+  <link rel="icon" type="image/svg+xml" href="dc_pc.svg">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#fffdf8" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#120d0e" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <!-- /shell:head -->
+  <title>Confronto - Duel Commander Piacenza</title>
+  <meta name="description" content="Confronta due giocatori di Duel Commander Piacenza: scontri diretti, winrate, piazzamenti, archetipi e comandanti.">
+  <!-- preload:modules -->
+  <link rel="modulepreload" href="js/layout.js">
+  <link rel="modulepreload" href="js/theme.js">
+  <link rel="modulepreload" href="js/language.js">
+  <link rel="modulepreload" href="js/haptics-toggle.js">
+  <link rel="modulepreload" href="js/custom-select.js">
+  <link rel="modulepreload" href="js/custom-date.js">
+  <link rel="modulepreload" href="js/pwa-install.js">
+  <link rel="modulepreload" href="js/nav-dropdown.js">
+  <link rel="modulepreload" href="js/tab-bar.js">
+  <link rel="modulepreload" href="js/site-search.js">
+  <link rel="modulepreload" href="js/top-bar.js">
+  <link rel="modulepreload" href="js/header-account.js">
+  <link rel="modulepreload" href="js/header-news.js">
+  <link rel="modulepreload" href="js/me-highlight.js">
+  <link rel="modulepreload" href="js/count-up.js">
+  <link rel="modulepreload" href="js/hero-sheet.js">
+  <link rel="modulepreload" href="js/floating-tooltip.js">
+  <link rel="modulepreload" href="js/page-loading.js">
+  <link rel="modulepreload" href="js/router.js">
+  <link rel="modulepreload" href="js/version.js">
+  <link rel="modulepreload" href="js/system-bars.js">
+  <link rel="modulepreload" href="js/pull-refresh.js">
+  <link rel="modulepreload" href="js/data-updates.js">
+  <link rel="modulepreload" href="js/supabase-client.js">
+  <link rel="modulepreload" href="js/db.js">
+  <link rel="modulepreload" href="js/locale.js">
+  <link rel="modulepreload" href="js/haptics.js">
+  <link rel="modulepreload" href="js/ui.js">
+  <link rel="modulepreload" href="js/drag-scroll.js">
+  <link rel="modulepreload" href="js/info-dialog.js">
+  <link rel="modulepreload" href="js/player-card.js">
+  <link rel="modulepreload" href="js/card-hints.js">
+  <link rel="modulepreload" href="js/archetype-icons.js">
+  <link rel="modulepreload" href="js/card-cosmetics.js">
+  <link rel="modulepreload" href="js/card-progress.js">
+  <link rel="modulepreload" href="js/leaderboard.js">
+  <link rel="modulepreload" href="js/compare-page.js">
+  <link rel="modulepreload" href="js/scope-filter.js">
+  <link rel="modulepreload" href="js/metagame-chart.js">
+  <link rel="modulepreload" href="js/filter-toggle.js">
+  <!-- /preload:modules -->
+</head>
+<body data-active-nav="players" class="is-loading">
+
+<!-- shell:header -->
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="site-header-brand" href="index.html">
+      <img src="dc_pc.svg" alt="" class="site-logo-sm">
+      <span>Duel Commander Piacenza</span>
+    </a>
+
+    <button type="button" class="site-news" id="site-news" aria-label="Novit&agrave;" title="Novit&agrave;" aria-haspopup="dialog">
+      <svg class="site-news-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
+      <span class="site-news-badge" hidden></span>
+    </button>
+
+    <div class="site-search">
+      <button type="button" class="site-search-trigger" id="site-search-trigger" aria-label="Cerca" aria-haspopup="true" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      </button>
+
+      <div class="site-search-box" id="site-search-box">
+        <div class="site-search-bar">
+          <div class="site-search-field">
+            <svg class="site-search-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="search" id="site-search-input" class="site-search-input" placeholder="Cerca giocatori, eventi, &hellip;" aria-label="Cerca nel sito" autocomplete="off">
+          </div>
+          <button type="button" class="site-search-close" id="site-search-close" aria-label="Chiudi ricerca">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="6" y1="18" x2="18" y2="6"></line></svg>
+          </button>
+        </div>
+        <div class="site-search-results" id="site-search-results"></div>
+      </div>
+    </div>
+
+    <a class="site-account" id="site-account" href="account.html" aria-label="Accedi" title="Accedi">
+      <svg class="site-account-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"></path></svg>
+    </a>
+  </div>
+</header>
+<!-- /shell:header -->
+
+<!-- shell:nav -->
+<nav class="site-nav" aria-label="Navigazione principale">
+  <div class="site-nav-inner">
+    <a class="nav-link" data-nav="current" href="index.html">Bacheca</a>
+    <a class="nav-link" data-nav="events" href="events.html">Leghe <span class="amp">&amp;</span> Eventi</a>
+    <a class="nav-link" data-nav="meta" href="commanders.html">Meta</a>
+    <a class="nav-link" data-nav="players" href="players.html">Giocatori</a>
+    <a class="nav-link" data-nav="social" href="social.html">Social</a>
+  </div>
+</nav>
+<!-- /shell:nav -->
+
+<main class="page-main cmp-page" data-page="compare">
+  <!-- The section's head, like the Meta pages' (styles.css .meta-head):
+       Giocatori / Confronto in the site's segmented control, the filters'
+       button beside it. No visible title: the <h1> for screen readers. -->
+  <div class="meta-head">
+    <div class="page-heading">
+      <h1>Confronto giocatori</h1>
+    </div>
+    <div class="meta-row">
+      <nav class="profile-tabs meta-tabs" aria-label="Giocatori">
+        <a class="profile-tab" href="players.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg><span>Giocatori</span></a>
+        <a class="profile-tab is-active" href="compare.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="18" r="3"></circle><circle cx="6" cy="6" r="3"></circle><path d="M13 6h3a2 2 0 0 1 2 2v7"></path><path d="M11 18H8a2 2 0 0 1-2-2V9"></path></svg><span>Confronto</span></a>
+      </nav>
+      <button type="button" class="filter-toggle-btn" id="compare-filter-toggle" aria-expanded="false" aria-controls="compare-filter-panel" aria-label="Filtri">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+      </button>
+    </div>
+  </div>
+  <!-- Lega and Dal (no Evento: one event says little about two players). -->
+  <div class="filter-panel is-collapsed" id="compare-filter-panel">
+    <div class="filter-panel-clip">
+      <div class="filter-panel-body">
+        <div class="filter-bar">
+          <div class="field">
+            <label for="compare-league-filter">Lega</label>
+            <select id="compare-league-filter"><option value="">Tutte le leghe</option></select>
+          </div>
+          <div class="field" hidden>
+            <label for="compare-event-filter">Evento</label>
+            <select id="compare-event-filter"><option value="">Tutti gli eventi</option></select>
+          </div>
+          <div class="field">
+            <label for="compare-date-from">Dal</label>
+            <input type="date" id="compare-date-from" placeholder="Dal" data-open-on-today>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-loading-region">
+    <div id="page-loading-overlay" class="page-loading-overlay">
+      <div class="sk-page is-compare" aria-hidden="true">
+        <i class="sk sk-compare-hero"></i>
+        <div class="sk-compare-cards">
+          <i class="sk sk-compare-card"></i>
+          <i class="sk sk-compare-card"></i>
+        </div>
+      </div>
+      <p>Caricamento...</p>
+    </div>
+
+    <!-- The duel (js/compare-page.js): the two players on their most played
+         commanders' art, the matches won against each other between them
+         (on touch screens a scoreboard: a line each, a VS divider). A name
+         opens the picker. -->
+    <section class="cmp-hero" id="compare-hero">
+      <div class="cmp-art is-a" id="compare-art-a" aria-hidden="true"></div>
+      <div class="cmp-art is-b" id="compare-art-b" aria-hidden="true"></div>
+      <div class="cmp-hero-inner">
+        <div class="cmp-side is-a">
+          <button type="button" class="cmp-pick" data-side="a" aria-haspopup="dialog"></button>
+          <span class="cmp-side-score" data-score="a"></span>
+        </div>
+        <div class="cmp-mid">
+          <span class="cmp-vs">VS</span>
+          <div class="cmp-score" id="compare-score"></div>
+          <div class="cmp-score-note" id="compare-score-note"></div>
+        </div>
+        <div class="cmp-side is-b">
+          <button type="button" class="cmp-pick" data-side="b" aria-haspopup="dialog"></button>
+          <span class="cmp-side-score" data-score="b"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- No pair chosen yet: this line instead of the cards. -->
+    <p class="cmp-empty" id="compare-empty" hidden>Scegli due giocatori da confrontare.</p>
+
+    <!-- The cards (the site's chart card): Statistiche, Scontri diretti,
+         Andamento (commander.html's edge-to-edge chart), Archetipi,
+         Comandanti. -->
+    <div class="cmp-grid" id="compare-grid">
+      <section class="pie-chart-wrap cmp-card">
+        <div class="cmp-card-head"><h2 class="pie-chart-title">Statistiche</h2><span class="cmp-scope" id="compare-scope"></span></div>
+        <div id="compare-stats"></div>
+      </section>
+
+      <section class="pie-chart-wrap cmp-card">
+        <div class="cmp-card-head">
+          <h2 class="pie-chart-title">Scontri diretti</h2>
+          <div class="line-chart-stats" id="compare-h2h-stats"></div>
+        </div>
+        <div id="compare-h2h"></div>
+      </section>
+
+      <section class="pie-chart-wrap line-chart-wrap is-edge cmp-card is-wide cmp-trend">
+        <div class="line-chart-head">
+          <div class="cmp-trend-title">
+            <h2 class="pie-chart-title">Andamento</h2>
+            <div class="cmp-seg" role="group" aria-label="Grafico">
+              <button type="button" data-view="winrate" aria-pressed="true">Winrate</button>
+              <button type="button" data-view="places" aria-pressed="false">Piazzamenti</button>
+            </div>
+          </div>
+          <div class="line-chart-stats" id="compare-trend-stats"></div>
+        </div>
+        <div class="line-chart-plot cmp-plot" id="compare-plot"></div>
+      </section>
+
+      <section class="pie-chart-wrap cmp-card">
+        <div class="cmp-card-head"><h2 class="pie-chart-title">Archetipi</h2></div>
+        <div id="compare-archetypes"></div>
+      </section>
+
+      <section class="pie-chart-wrap cmp-card">
+        <div class="cmp-card-head"><h2 class="pie-chart-title">Comandanti</h2></div>
+        <div id="compare-decks"></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- The picker: a popover under the name on a computer, a bottom sheet
+       on touch screens (styles.css .cmp-picker). -->
+  <div class="cmp-picker-backdrop" id="compare-picker-backdrop" hidden></div>
+  <div class="cmp-picker" id="compare-picker" role="dialog" aria-label="Scegli un giocatore" hidden>
+    <div class="cmp-picker-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input type="search" id="compare-picker-input" placeholder="Cerca giocatore…" autocomplete="off" aria-label="Cerca giocatore">
+    </div>
+    <div class="cmp-picker-list" id="compare-picker-list"></div>
+  </div>
+</main>
+
+<!-- shell:footer -->
+<footer>
+  <div class="footer-spacer" aria-hidden="true"></div>
+  <div class="footer-center">
+    <div>&copy; 2026 Duel Commander Piacenza</div>
+    <div class="footer-credit">
+      <!-- The site's version (js/version.js, filled in by js/layout.js),
+           on the credits' line — no extra line for it. -->
+      <span class="footer-version" id="site-version"></span>
+      Created by Michele Ferri
+      <a href="https://www.instagram.com/michele__f/" target="_blank" rel="noopener noreferrer" aria-label="Instagram di Michele Ferri">
+        <img src="instagram.svg" alt="Instagram" width="16" height="16">
+      </a>
+    </div>
+  </div>
+  <!-- The language (js/language.js) and the theme, side by side. -->
+  <div class="footer-actions">
+    <div class="lang-toggle" id="lang-toggle" role="group" aria-label="Lingua">
+      <button type="button" data-lang="it" aria-pressed="false">IT</button>
+      <button type="button" data-lang="en" aria-pressed="false">EN</button>
+    </div>
+    <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="false" aria-label="Cambia tema"></button>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script type="module" src="js/layout.js"></script>
+<!-- /shell:footer -->
+
+</body>
+</html>

@@ -9,10 +9,12 @@
 // scrolls back to the top.
 //
 // The same five sections as the computer's top bar: "Meta" stands for
-// Comandanti, Matchups and Archetipi (and their detail pages —
+// Comandanti, Matchups, Archetipi and Evoluzione (and their detail pages —
 // data-active-nav "meta"), which switch between each other with the
 // segmented control at the top of those pages (.meta-tabs in
-// commanders.html / matchups.html / archetypes.html).
+// commanders.html / matchups.html / archetypes.html / evolution.html).
+// Likewise "Giocatori" stands for players.html and compare.html (Confronto),
+// switched by the same control (data-active-nav "players").
 //
 // Built here into .site-nav (every page's nav markup unchanged); it slides
 // away while scrolling down (js/nav-dropdown.js toggles

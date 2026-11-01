@@ -26,6 +26,7 @@ import { refreshSystemBars } from "./system-bars.js";
 const PAGES = {
   "players.html": { name: "players", load: () => import("./players-page.js"), depth: 0 },
   "player.html": { name: "player", load: () => import("./player-detail.js"), depth: 1 },
+  "compare.html": { name: "compare", load: () => import("./compare-page.js"), depth: 0 },
   "commanders.html": { name: "commanders", load: () => import("./commanders-page.js"), depth: 0 },
   "commander.html": { name: "commander", load: () => import("./commander-detail.js"), depth: 1 },
   "index.html": { name: "home", load: () => import("./home.js"), depth: 0 },
@@ -33,6 +34,7 @@ const PAGES = {
   "league.html": { name: "league", load: () => import("./league-detail.js"), depth: 1 },
   "event.html": { name: "event", load: () => import("./event-detail.js"), depth: 1 },
   "archetypes.html": { name: "archetypes", load: () => import("./archetypes-page.js"), depth: 0 },
+  "evolution.html": { name: "evolution", load: () => import("./evolution-page.js"), depth: 0 },
   "archetype.html": { name: "archetype", load: () => import("./archetype-detail.js"), depth: 1 },
   "badges.html": { name: "badges", load: () => import("./badges-page.js"), depth: 1 },
   "matchups.html": { name: "matchups", load: () => import("./matchups-page.js"), depth: 0 },

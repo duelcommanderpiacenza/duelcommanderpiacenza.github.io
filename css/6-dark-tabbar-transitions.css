@@ -1655,6 +1655,13 @@ html.nav-mobile .meta-row > .meta-tabs {
   box-shadow: none;
 }
 
+/* A row without the filters' segment (Giocatori, whose filters' button is
+   on its "Cerca" line): the switcher the whole card. */
+html.nav-mobile .meta-row > .meta-tabs:only-child {
+  border-right: 1px solid var(--hairline);
+  border-radius: 18px;
+}
+
 /* The page's own <h1>: for screen readers only; Matchups' "?" in the
    matrix panel's top-left corner instead of beside it. */
 .meta-head .page-heading h1 {

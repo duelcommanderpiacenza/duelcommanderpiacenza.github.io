@@ -1077,7 +1077,9 @@ body.is-loading * {
    and finish — unseen while the page is still loading. Any new one like
    them goes here too. */
 body.is-loading input[type="search"]:not(#site-search-input),
-body.is-loading .detail-hero .player-card {
+body.is-loading .detail-hero .player-card,
+body.is-loading .evo-plot > svg,
+body.is-loading .evo-colour svg {
   animation-play-state: paused;
 }
 
@@ -2280,7 +2282,9 @@ main {
   .pc-art,
   .league-recap-card,
   .ev-tile,
-  .matchups-matrix-wrap {
+  .matchups-matrix-wrap,
+  .evo-plot > svg,
+  .evo-colour svg {
     /* !important: most of these declare their own animation later in this
        file, which would otherwise win on source order (equal specificity)
        and keep animating despite the visitor's reduced-motion setting. */

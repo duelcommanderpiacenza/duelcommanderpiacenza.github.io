@@ -285,6 +285,37 @@
     "Cerca comandante": "Search commander",
     "Nome comandante...": "Commander name...",
     "Tabella personalizzata": "Custom table",
+
+    // Evoluzione (evolution.html).
+    "Evoluzione": "Evolution",
+    "Archetipi nel tempo": "Archetypes over time",
+    "La fetta di ogni archetipo, evento per evento": "Each archetype's share, event by event",
+    "La fetta di ogni archetipo, mese per mese": "Each archetype's share, month by month",
+    "La corsa al vertice": "The race to the top",
+    "Leader diversi": "Different leaders",
+    "Eventi in vetta": "Events on top",
+    "Mesi in vetta": "Months on top",
+    "Chi sale, chi scende": "Who's rising, who's falling",
+    "In ascesa": "Rising",
+    "In calo": "Falling",
+    "nuovo": "new",
+    "Nessuno.": "None.",
+    "Colori nel tempo": "Colours over time",
+    "I mazzi che giocano ogni colore: all'ultimo evento, la tendenza e la curva": "The decks playing each colour: at the latest event, the trend and the curve",
+    "I mazzi che giocano ogni colore: all'ultimo mese, la tendenza e la curva": "The decks playing each colour: in the latest month, the trend and the curve",
+    "Ricambio del meta": "Meta turnover",
+    "I mazzi di ogni evento: in rosso quelli con un comandante mai visto prima": "Each event's decks: in red, those with a commander never seen before",
+    "I mazzi di ogni mese: in rosso quelli con un comandante mai visto prima": "Each month's decks: in red, those with a commander never seen before",
+    "Nuovi all'ultimo": "New at the latest",
+    "Nuovi nell'ultimo": "New in the latest",
+    "Nuovi in media": "New on average",
+    "Comandanti visti": "Commanders seen",
+    "Totale comandanti": "Total commanders",
+    "Totale mazzi": "Total decks",
+    "Nuovi comandanti": "New commanders",
+    "Comandanti nuovi": "New commanders",
+    "Comandanti diversi": "Different commanders",
+    "Servono almeno due eventi nel periodo scelto per vedere l'evoluzione.": "At least two events in the chosen period are needed to see the evolution.",
     "La matchup matrix mostra, per ogni coppia di comandanti, la percentuale di vittorie dell’uno contro l’altro nelle partite già giocate tra loro.": "The matchup matrix shows, for every pair of commanders, the percentage of wins of one against the other in the matches they've already played.",
     "Si legge per riga: la percentuale è la vittoria del comandante di riga contro quello di colonna. Sotto, il suo risultato in vittorie-sconfitte-pareggi (V-S-P).": "Read it by row: the percentage is the row commander's win rate against the column one. Below, its record in wins-losses-draws (W-L-D).",
 
@@ -463,6 +494,35 @@
     "Poi si arricchisce giocando: ogni effetto qui sotto si sblocca con i tuoi risultati.": "Then it gets richer as you play: each effect below unlocks with your results.",
     "Il link non è valido.": "The link isn't valid.",
 
+    // Confronto (compare.html — Giocatori's second tab).
+    "Confronto": "Compare",
+    "Confronto giocatori": "Compare players",
+    "Scegli un giocatore": "Pick a player",
+    "Scegli due giocatori da confrontare.": "Pick two players to compare.",
+    "Scegli due giocatori.": "Pick two players.",
+    "Tutti i giocatori": "All players",
+    "Cerca giocatore…": "Search player…",
+    "Cerca giocatore": "Search player",
+    "Nessun giocatore trovato.": "No player found.",
+    "Mai affrontati": "Never met",
+    "Statistiche": "Stats",
+    "Primi posti": "First places",
+    "Posizione media": "Average place",
+    "Scontri diretti": "Head to head",
+    "Partita": "Match",
+    "Game": "Games",
+    "Non si sono ancora affrontati.": "They haven't played each other yet.",
+    "Eventi giocati insieme:": "Events played together:",
+    "Nessun evento giocato insieme.": "No events played together.",
+    "Mostra meno": "Show less",
+    "Andamento": "Trend",
+    "Grafico": "Chart",
+    "Piazzamenti": "Placings",
+    "Davanti": "Ahead",
+    "Nessun evento nel periodo.": "No events in this period.",
+    "Nessun evento giocato insieme nel periodo.": "No events played together in this period.",
+    "in comune": "shared",
+
     // Privacy (privacy.html — its headings and short lines; the page's
     // body is in its own English block, js/privacy-en.js).
     "Informativa privacy": "Privacy policy",
@@ -498,7 +558,19 @@
     [/^(\d+) di (\d+) eventi giocati$/, "$1 of $2 events played"],
     [/^(\d+) \/ (\d+) selezionati$/, "$1 / $2 selected"],
     [/^Media (.+)$/, "Average $1"],
+    // Evoluzione's subtitles.
+    [/^I (\d+) più giocati: la loro posizione tra i più giocati, (evento dopo evento|mese dopo mese)$/, function (_, n, per) {
+      return "The " + n + " most played: their rank among the most played, " + (per === "mese dopo mese" ? "month after month" : "event after event");
+    }],
+    [/^La fetta di meta (dell'ultimo evento|dell'ultimo mese|degli ultimi (\d+) eventi|degli ultimi (\d+) mesi) contro quella di prima · in basso la sua curva nel tempo$/, function (_, span, ne, nm) {
+      var when = span === "dell'ultimo evento" ? "of the latest event" : span === "dell'ultimo mese" ? "of the latest month" : ne ? "of the last " + ne + " events" : "of the last " + nm + " months";
+      return "The meta share " + when + " against the one before · at the bottom, its curve over time";
+    }],
     [/^Cerca tra (\d+) giocatori…$/, "Search $1 players…"],
+    // Confronto (compare.html).
+    [/^Affrontati più spesso da (.+)$/, "Most often faced by $1"],
+    [/^Vai alla pagina di (.+) ›$/, "Go to $1's page ›"],
+    [/^Mostra tutte \((\d+)\)$/, "Show all ($1)"],
     [/^Cerca tra (\d+) comandanti…$/, "Search $1 commanders…"],
     [/^\(ultimi (\d+) mesi\)$/, "(last $1 months)"],
     [/^(\d+) eventi consecutivi giocati$/, "$1 events played in a row"],

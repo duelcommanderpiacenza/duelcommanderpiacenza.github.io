@@ -143,9 +143,20 @@
 <!-- /shell:nav -->
 
 <main class="page-main" data-page="players">
-  <!-- No visible title (the nav names the page): for screen readers. -->
-  <div class="page-heading visually-hidden">
-    <h1>Giocatori</h1>
+  <!-- The section's head, like the Meta pages' (styles.css .meta-head):
+       Giocatori / Confronto (compare.html) in the site's segmented control.
+       No visible title: the <h1> for screen readers. The filters' button
+       stays on the "Cerca" line. -->
+  <div class="meta-head">
+    <div class="page-heading">
+      <h1>Giocatori</h1>
+    </div>
+    <div class="meta-row">
+      <nav class="profile-tabs meta-tabs" aria-label="Giocatori">
+        <a class="profile-tab is-active" href="players.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg><span>Giocatori</span></a>
+        <a class="profile-tab" href="compare.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="18" r="3"></circle><circle cx="6" cy="6" r="3"></circle><path d="M13 6h3a2 2 0 0 1 2 2v7"></path><path d="M11 18H8a2 2 0 0 1-2-2V9"></path></svg><span>Confronto</span></a>
+      </nav>
+    </div>
   </div>
 
   <div class="page-loading-region">

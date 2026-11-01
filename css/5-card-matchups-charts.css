@@ -3454,3 +3454,1996 @@ html:not(.app-header) .social-filters .social-chips {
   outline: 2px solid var(--text-title);
   outline-offset: 1px;
 }
+
+/* ---------------------------------------------------------------------------
+   Evoluzione (evolution.html, js/evolution-page.js): the Meta section's
+   fourth tab — five cards, the charts in commander.html's "Utilizzo" look
+   (.line-chart-wrap.is-edge above: edge to edge, dashed gridlines, the
+   dates in the bottom band, the guide on hover); the title, its numbers and
+   the legend on top, in the flow (.evo-head), no subtitles. The SVGs are stretched to the card (preserveAspectRatio none, y
+   in px): round things — dots, discs, bars — are HTML laid over them.
+   --------------------------------------------------------------------------- */
+.evo {
+  --evo-fill: #fbf6f3;
+  /* The five colours' lines (Colori nel tempo). */
+  --colour-W: #cdb76a;
+  --colour-U: #0e68ab;
+  --colour-B: #3a3a3a;
+  --colour-R: #d3202a;
+  --colour-G: #00733e;
+  display: grid;
+  gap: 20px;
+}
+
+:root[data-theme="dark"] .evo {
+  --evo-fill: rgba(255, 255, 255, 0.06);
+  --colour-U: #3d8fd6;
+  --colour-B: #a39a9c;
+  --colour-G: #2fa36a;
+}
+
+.evo .pie-chart-wrap {
+  margin-bottom: 0;
+}
+
+/* The filters' hidden "Evento" (one event has no evolution). */
+.field[hidden] {
+  display: none;
+}
+
+.evo-head {
+  padding: 16px 18px 12px;
+}
+
+.evo-head-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.evo-head .pie-chart-title {
+  margin: 0;
+}
+
+.evo-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.evo-plot {
+  position: relative;
+}
+
+.evo-plot > svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  animation: line-chart-reveal 900ms cubic-bezier(0.2, 0.8, 0.2, 1) 120ms both;
+}
+
+.evo-grid {
+  stroke: var(--hairline);
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+}
+
+.evo-grid.is-zero {
+  stroke-dasharray: none;
+}
+
+.evo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px 5px 5px;
+  border-radius: var(--radius-pill);
+  background: var(--evo-fill);
+  color: var(--text-body);
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-decoration: none;
+  transition: opacity 150ms ease, background 150ms ease;
+}
+
+.evo-chip:hover {
+  background: color-mix(in srgb, var(--brand-red) 8%, var(--evo-fill));
+}
+
+.evo-chip i {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  color: #fff;
+  background: #ccc center / cover;
+}
+
+.evo-chip i svg {
+  width: 12px;
+  height: 12px;
+}
+
+.evo-chip b {
+  color: var(--text-muted);
+  font-weight: 800;
+}
+
+/* A line's legend: its colour as a short bar. */
+.evo-chip.is-line {
+  padding-left: 11px;
+}
+
+.evo-chip.is-line i {
+  width: 16px;
+  height: 4px;
+  border-radius: 2px;
+}
+
+/* The hover / tap tip: the site's dark pill, as a small box. */
+.evo-tip {
+  position: absolute;
+  top: 6px;
+  padding: 8px 11px;
+  border-radius: 12px;
+  background: rgba(12, 7, 8, 0.9);
+  color: #fff;
+  font-size: 0.76rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+}
+
+.evo-tip strong {
+  display: block;
+  font-size: 0.78rem;
+}
+
+.evo-tip em {
+  display: block;
+  margin-bottom: 3px;
+  opacity: 0.7;
+  font-style: normal;
+}
+
+.evo-tip div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1.5;
+}
+
+.evo-tip i {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.evo-tip span {
+  margin-left: auto;
+  padding-left: 14px;
+}
+
+.line-chart-hit:hover > .evo-tip {
+  opacity: 1;
+}
+
+.line-chart-hit.is-first .evo-tip {
+  transform: translateX(-12%);
+}
+
+.line-chart-hit.is-last .evo-tip {
+  transform: translateX(-88%);
+}
+
+/* The tips over everything in the plot, the end discs included. */
+.evo-plot .line-chart-hit:hover {
+  z-index: 4;
+}
+
+/* Archetipi nel tempo: light tints, a solid line on each band's top. */
+.evo-band {
+  fill-opacity: 0.2;
+}
+
+.evo-band-line {
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+:root[data-theme="dark"] .evo-band {
+  fill-opacity: 0.24;
+}
+
+/* La corsa al vertice: lines, the art discs on their ends (no dots: one
+   on each line only on hover / tap, the site's .line-chart-dot-html). */
+/* (Room on the right for the end discs' half beyond the last point.) */
+.evo-race-plot {
+  margin-right: 26px;
+}
+
+.evo-race-line {
+  fill: none;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: opacity 180ms ease, stroke-width 180ms ease;
+}
+
+.evo-race-end {
+  position: absolute;
+  z-index: 3;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #ccc center / cover;
+  box-shadow: 0 0 0 3px var(--c), 0 3px 10px rgba(0, 0, 0, 0.28);
+  transform: translate(-50%, -50%);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+@media (max-width: 600px) {
+  .evo-race-end {
+    width: 34px;
+    height: 34px;
+  }
+}
+
+.evo-race-end b {
+  position: absolute;
+  right: -8px;
+  bottom: -6px;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 4px;
+  border-radius: 10px;
+  background: var(--c);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 900;
+  box-shadow: 0 0 0 2px var(--bg-cream-1);
+}
+
+.evo-race.has-focus :is(.evo-race-line, .evo-race-end):not(.is-focus) {
+  opacity: 0.14;
+}
+
+.evo-race.has-focus .evo-race-line.is-focus {
+  stroke-width: 6;
+}
+
+.evo-race.has-focus .evo-race-end.is-focus {
+  transform: translate(-50%, -50%) scale(1.12);
+}
+
+
+/* Phones: the archetypes' legend on one line — bare icon + name, spread
+   across. */
+html.nav-mobile .evo-archetypes .evo-legend {
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+html.nav-mobile .evo-archetypes .evo-chip {
+  gap: 5px;
+  padding: 0;
+  background: none;
+  font-size: 0.76rem;
+}
+
+html.nav-mobile .evo-archetypes .evo-chip i {
+  width: 18px;
+  height: 18px;
+}
+
+/* The cards without an edge chart (Chi sale, Colori). */
+.evo-card {
+  padding: 0;
+}
+
+/* Chi sale, chi scende: art tiles. */
+.evo-movers {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 18px;
+  padding: 4px 18px 18px;
+}
+
+.evo-movers > div {
+  min-width: 0;
+}
+
+.evo-movers h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 10px;
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.evo-arrow {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 0.75rem;
+}
+
+.evo-arrow.is-up {
+  background: #1d9a55;
+}
+
+.evo-arrow.is-down {
+  background: var(--brand-red);
+}
+
+.evo-mover {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 116px;
+  margin-bottom: 12px;
+  padding: 0 14px;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #2a2224 center 25% / cover;
+  box-shadow: var(--shadow-card);
+  color: #fff;
+  text-decoration: none;
+  transition: transform 160ms ease;
+}
+
+.evo-mover:hover {
+  transform: translateY(-2px);
+}
+
+.evo-mover::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(14, 8, 9, 0.92) 0%, rgba(14, 8, 9, 0.7) 55%, rgba(14, 8, 9, 0.35) 100%);
+}
+
+.evo-mover > * {
+  position: relative;
+}
+
+.evo-mover-rank {
+  width: 16px;
+  font-size: 1.5rem;
+  font-weight: 900;
+  opacity: 0.35;
+}
+
+.evo-mover-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.evo-mover-text b {
+  display: block;
+  overflow: hidden;
+  font-size: 0.95rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.evo-mover-text small {
+  font-size: 0.76rem;
+  font-weight: 700;
+  opacity: 0.8;
+}
+
+.evo-new {
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.2);
+  font-size: 0.64rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.evo-mover-delta {
+  padding: 5px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.evo-mover-delta.is-up {
+  background: #1d9a55;
+}
+
+.evo-mover-delta.is-down {
+  background: var(--brand-red);
+}
+
+.evo-mover svg {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 30px;
+  opacity: 0.85;
+}
+
+/* Colori nel tempo: five tiles, each a small edge chart (one per line on
+   touch screens). */
+.evo-colours {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  padding: 4px 18px 18px;
+}
+
+/* As tall as Chi sale, chi scende's tiles (.evo-mover) above. */
+.evo-colour {
+  position: relative;
+  height: 116px;
+  overflow: hidden;
+  border-radius: 16px;
+  background: var(--evo-fill);
+}
+
+.evo-colour-top {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 12px 0;
+}
+
+.evo-colour-top .color-pip {
+  width: 22px;
+  height: 22px;
+}
+
+.evo-colour-name {
+  min-width: 0;
+  padding-top: 4px;
+  overflow: hidden;
+  color: var(--text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* The share top right, its trend under it. */
+.evo-colour-val {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-left: auto;
+  color: var(--text-title);
+  font-size: 1.45rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.evo-colour-trend {
+  margin-top: 3px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.evo-colour svg {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 62px;
+  animation: line-chart-reveal 900ms cubic-bezier(0.2, 0.8, 0.2, 1) 120ms both;
+}
+
+.evo-colour-area {
+  fill: var(--c);
+  fill-opacity: 0.22;
+}
+
+.evo-colour-line {
+  fill: none;
+  stroke: var(--c);
+  stroke-width: 2.5;
+}
+
+@media (max-width: 900px) {
+  .evo-colours {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .evo-colours > :last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Touch screens (and narrow windows): one tile per line, a little lower,
+   the curve across the whole width. */
+@media (max-width: 640px) {
+  .evo-colours {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+html.nav-mobile .evo-colours {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+html.nav-mobile .evo-colours > :last-child {
+  grid-column: auto;
+}
+
+/* Phones: Ricambio del meta's title and its two numbers on one line, none
+   of them wrapping — at their usual sizes when they fit; else the numbers
+   a size down (.is-tight), and only if still too wide the title too
+   (.is-tighter) — set by js/evolution-page.js fitHeads. */
+html.nav-mobile .evo-turnover .evo-head-row {
+  align-items: center;
+  gap: 8px;
+}
+
+html.nav-mobile .evo-turnover .evo-head .pie-chart-title,
+html.nav-mobile .evo-turnover .line-chart-stat-label {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+html.nav-mobile .evo-turnover .line-chart-stats {
+  gap: 10px;
+}
+
+
+.evo-turnover .evo-head-row.is-tight .line-chart-stats {
+  gap: 8px;
+}
+
+.evo-turnover .evo-head-row.is-tight .line-chart-stat-value {
+  font-size: 1.05rem;
+}
+
+.evo-turnover .evo-head-row.is-tight .line-chart-stat-label {
+  font-size: 0.52rem;
+  letter-spacing: 0.02em;
+}
+
+/* Still too wide with the numbers a size down: the title too. */
+.evo-turnover .evo-head-row.is-tighter .pie-chart-title {
+  font-size: 0.94rem;
+}
+
+/* Ricambio del meta: two lines — the decks (the card's ink) and those with
+   a never-seen commander (red), each with a faint area. */
+.evo-turnover {
+  --turnover-decks: #9a8286;
+}
+
+:root[data-theme="dark"] .evo-turnover {
+  --turnover-decks: #bfaeb1;
+}
+
+.evo-turnover-line {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.evo-turnover-line.is-decks {
+  stroke: var(--turnover-decks);
+}
+
+.evo-turnover-line.is-fresh {
+  stroke: var(--brand-red);
+}
+
+.evo-turnover-area.is-decks {
+  fill: var(--turnover-decks);
+  fill-opacity: 0.12;
+}
+
+.evo-turnover-area.is-fresh {
+  fill: var(--brand-red);
+  fill-opacity: 0.16;
+}
+
+@media (max-width: 760px) {
+  .evo-movers {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Dark mode: Combo's near-black and the black colour's curve, a shade
+   lighter so they don't vanish into the dark card. */
+:root[data-theme="dark"] .evo .evo-band.is-combo {
+  fill: #6e6267;
+}
+
+:root[data-theme="dark"] .evo .evo-band-line.is-combo {
+  stroke: #8a7d81;
+}
+
+:root[data-theme="dark"] .evo .evo-chip i.is-combo {
+  background: #6e6267 !important;
+}
+
+
+/* The loading placeholder (evolution.html's .sk-page.is-evolution). */
+.sk-page.is-evolution .sk-chart {
+  height: 420px;
+}
+
+.sk-page.is-evolution .sk-card {
+  height: 320px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .evo-mover,
+  .evo-race-end,
+  .evo-race-line {
+    transition: none;
+  }
+}
+
+/* ===========================================================================
+   Confronto (compare.html, js/compare-page.js): two players side by side.
+   Their colours: A red (the site's) on the left, B blue (Control's / the
+   Social blue) on the right. Chosen 2026-11-01 from three rounds of mockups.
+   =========================================================================== */
+.cmp-page {
+  --pa: var(--brand-red);
+  --pb: #2f5fdc;
+  --pa-text: #c8151a;
+  --pb-text: #2f5fdc;
+  --cmp-fill: rgba(154, 28, 32, 0.06);
+}
+
+:root[data-theme="dark"] .cmp-page {
+  --pa-text: #ff7a7e;
+  --pb-text: #8fa9ff;
+  --cmp-fill: rgba(255, 255, 255, 0.06);
+}
+
+/* --- The hero: the two names on their most played commanders' art (A's
+   half on the left, B's on the right, each washed with its colour), VS and
+   the matches won against each other in the middle. */
+.cmp-hero {
+  position: relative;
+  overflow: hidden;
+  margin: 0 0 22px;
+  border-radius: 28px;
+  background: linear-gradient(90deg, #4a2326, #1d1a24 50%, #1c2340);
+  color: #fff;
+  box-shadow: var(--shadow-soft);
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.cmp-art {
+  position: absolute;
+  top: -40px;
+  bottom: -40px;
+  width: 62%;
+  background-size: cover;
+  background-position: center 30%;
+  filter: blur(22px) saturate(1.3);
+  opacity: 0;
+  transition: opacity 600ms ease;
+}
+
+.cmp-art.is-loaded {
+  opacity: 1;
+}
+
+.cmp-art.is-a {
+  left: -40px;
+  mask-image: linear-gradient(90deg, #000 55%, transparent);
+}
+
+.cmp-art.is-b {
+  right: -40px;
+  mask-image: linear-gradient(270deg, #000 55%, transparent);
+}
+
+.cmp-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(220, 24, 28, 0.28), transparent 38%, transparent 62%, rgba(47, 95, 220, 0.3)),
+    rgba(18, 12, 13, 0.5);
+  pointer-events: none;
+}
+
+.cmp-hero-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 24px;
+  padding: 36px;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.35);
+}
+
+.cmp-side {
+  min-width: 0;
+  --c: var(--pa);
+}
+
+.cmp-side.is-b {
+  text-align: right;
+  --c: var(--pb);
+}
+
+/* The name: the picker's button, underlined in its player's colour (white
+   on hover / while open). On one line: js/compare-page.js shrinks a long
+   one (down to 60%), then it's cut. No player yet: "Scegli un giocatore",
+   lighter. */
+.cmp-pick {
+  display: block;
+  max-width: 100%;
+  padding: 2px 0 8px;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-size: 2.2rem;
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.cmp-side.is-b .cmp-pick {
+  margin-left: auto;
+}
+
+.cmp-pick-name {
+  text-decoration: underline;
+  text-decoration-color: var(--c);
+  text-decoration-thickness: 3px;
+  text-underline-offset: 8px;
+  transition: text-decoration-color 150ms ease;
+}
+
+.cmp-pick:hover .cmp-pick-name,
+.cmp-pick[aria-expanded="true"] .cmp-pick-name {
+  text-decoration-color: #fff;
+}
+
+.cmp-pick.is-empty {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* Each side's own score: touch screens' scoreboard only. */
+.cmp-side-score {
+  display: none;
+}
+
+.cmp-mid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 120px;
+}
+
+.cmp-vs {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--brand-red);
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.1);
+  text-shadow: none;
+}
+
+.cmp-score {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-top: 4px;
+  font-size: 2.8rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.cmp-score:empty {
+  display: none;
+}
+
+.cmp-score .sep {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.cmp-score .is-behind,
+.cmp-side-score.is-behind {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.cmp-score-note {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Narrow screens: a scoreboard — each player a full-width line (the name,
+   its score at the right end), a VS divider between them; A's art on the
+   top half, B's on the bottom. */
+@media (max-width: 820px) {
+  .cmp-hero {
+    border-radius: 24px;
+    background: linear-gradient(180deg, #4a2326, #1d1a24 50%, #1c2340);
+  }
+
+  .cmp-art {
+    right: -40px;
+    left: -40px;
+    width: auto;
+  }
+
+  .cmp-art.is-a {
+    bottom: 45%;
+    mask-image: linear-gradient(180deg, #000 60%, transparent);
+  }
+
+  .cmp-art.is-b {
+    top: 45%;
+    mask-image: linear-gradient(0deg, #000 60%, transparent);
+  }
+
+  .cmp-hero::after {
+    background:
+      linear-gradient(180deg, rgba(220, 24, 28, 0.26), transparent 40%, transparent 60%, rgba(47, 95, 220, 0.28)),
+      rgba(18, 12, 13, 0.5);
+  }
+
+  .cmp-hero-inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    padding: 18px 20px;
+  }
+
+  .cmp-side,
+  .cmp-side.is-b {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 4px 0;
+    text-align: left;
+  }
+
+  .cmp-pick {
+    flex: 0 1 auto;
+    padding-bottom: 6px;
+    font-size: 1.4rem;
+  }
+
+  .cmp-pick.is-empty {
+    font-size: 1.15rem;
+  }
+
+  .cmp-side.is-b .cmp-pick {
+    margin-left: 0;
+  }
+
+  .cmp-pick-name {
+    text-decoration-thickness: 2.5px;
+    text-underline-offset: 6px;
+  }
+
+  .cmp-side-score {
+    display: block;
+    margin-left: auto;
+    font-size: 2.3rem;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cmp-mid {
+    flex-direction: row;
+    gap: 10px;
+    min-width: 0;
+    margin: 10px 0;
+  }
+
+  .cmp-mid::before,
+  .cmp-mid::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.18);
+  }
+
+  .cmp-vs {
+    order: 1;
+    width: 30px;
+    height: 30px;
+    font-size: 0.68rem;
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
+  }
+
+  .cmp-score-note {
+    order: 2;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+  }
+
+  .cmp-mid::after {
+    order: 3;
+  }
+
+  .cmp-score {
+    display: none;
+  }
+}
+
+/* No pair chosen yet: a line inviting to pick, instead of the cards. */
+.cmp-empty {
+  margin: 8px 0 0;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* --- The cards (the site's chart card, .pie-chart-wrap): two columns on a
+   computer, Andamento the whole width. */
+.cmp-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  align-items: start;
+}
+
+@media (max-width: 820px) {
+  .cmp-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+}
+
+/* No pair yet: the cards hidden (their display would beat [hidden]). */
+.cmp-grid[hidden] {
+  display: none;
+}
+
+.cmp-card {
+  position: relative;
+  min-width: 0;
+  margin: 0;
+}
+
+.cmp-card.is-wide {
+  grid-column: 1 / -1;
+}
+
+.cmp-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.cmp-card-head .pie-chart-title {
+  margin: 0;
+}
+
+.cmp-scope {
+  padding-top: 3px;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+/* The cards' numbers (the chart's .line-chart-stat look) in the players'
+   colours, or the title's ink. */
+.cmp-page .line-chart-stat .line-chart-stat-value.is-n {
+  color: var(--text-title);
+}
+
+.cmp-page .line-chart-stat .line-chart-stat-value.is-a,
+.cmp-page .line-chart-stat-value .is-a {
+  color: var(--pa-text);
+}
+
+.cmp-page .line-chart-stat .line-chart-stat-value.is-b,
+.cmp-page .line-chart-stat-value .is-b {
+  color: var(--pb-text);
+}
+
+.cmp-page .line-chart-stat-value .sep {
+  color: var(--text-muted);
+}
+
+/* --- Statistiche: winrate featured on a tinted panel, then one row per
+   number — A's value, the label over a tug-of-war bar (A's share from the
+   left, B's from the right, a notch at the middle; the side ahead in full
+   colour), B's value. */
+.cmp-stat {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) 64px;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0;
+}
+
+.cmp-stat + .cmp-stat:not(:nth-child(2)) {
+  border-top: 1px solid var(--table-row-line);
+}
+
+.cmp-stat.is-main {
+  grid-template-columns: 96px minmax(0, 1fr) 96px;
+  margin: -4px -6px 8px;
+  padding: 14px 16px 16px;
+  border-radius: 16px;
+  background: var(--cmp-fill);
+}
+
+.cmp-stat-val {
+  color: var(--text-muted-2);
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.cmp-stat-val.is-b {
+  text-align: right;
+}
+
+.cmp-stat-val.is-a.is-lead {
+  color: var(--pa-text);
+}
+
+.cmp-stat-val.is-b.is-lead {
+  color: var(--pb-text);
+}
+
+.cmp-stat.is-main .cmp-stat-val {
+  font-size: 1.85rem;
+}
+
+.cmp-stat-val small {
+  display: block;
+  margin-top: 3px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.cmp-stat-mid {
+  min-width: 0;
+}
+
+.cmp-stat-label {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.cmp-stat-bar {
+  position: relative;
+  display: flex;
+  gap: 3px;
+  height: 8px;
+}
+
+.cmp-stat.is-main .cmp-stat-bar {
+  height: 12px;
+}
+
+.cmp-stat-bar i {
+  min-width: 6px;
+  border-radius: var(--radius-pill);
+  opacity: 0.32;
+  transition: flex-basis 800ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 300ms ease;
+}
+
+.cmp-stat-bar .is-a {
+  flex: 0 0 var(--w, 50%);
+  background: var(--pa);
+}
+
+.cmp-stat-bar .is-b {
+  flex: 1 1 0;
+  background: var(--pb);
+}
+
+.cmp-stat-bar i.is-lead {
+  opacity: 1;
+}
+
+.cmp-stat.is-even .cmp-stat-bar i {
+  opacity: 0.6;
+}
+
+.cmp-stat-bar::after {
+  content: "";
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  left: 50%;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 2px;
+  background: var(--text-title);
+  opacity: 0.22;
+}
+
+@media (max-width: 520px) {
+  .cmp-stat {
+    grid-template-columns: 52px minmax(0, 1fr) 52px;
+    gap: 10px;
+  }
+
+  .cmp-stat.is-main {
+    grid-template-columns: 80px minmax(0, 1fr) 80px;
+    padding: 12px 12px 14px;
+  }
+
+  .cmp-stat.is-main .cmp-stat-val {
+    font-size: 1.45rem;
+  }
+}
+
+/* --- Scontri diretti: a scoreboard row per match — the event and round on
+   top, the date beside the two lines (art, deck, games won), the winner's
+   line in its colour. */
+.cmp-matches {
+  display: flex;
+  flex-direction: column;
+}
+
+.cmp-match {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  grid-template-areas: "kicker kicker" "date lines";
+  align-items: center;
+  gap: 6px 14px;
+  margin: 0 -10px;
+  padding: 12px 10px;
+  border-radius: 14px;
+  color: inherit;
+  text-decoration: none;
+  transition: background 150ms ease;
+}
+
+.cmp-match + .cmp-match {
+  border-top: 1px solid var(--table-row-line);
+}
+
+.cmp-match:hover {
+  background: var(--cmp-fill);
+}
+
+.cmp-match-kicker {
+  grid-area: kicker;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.cmp-match-date {
+  grid-area: date;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  height: 50px;
+  border-radius: 12px;
+  background: var(--cmp-fill);
+  line-height: 1.05;
+}
+
+.cmp-match-date b {
+  color: var(--text-title);
+  font-size: 1.15rem;
+  font-weight: 900;
+}
+
+.cmp-match-date span {
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cmp-match-lines {
+  grid-area: lines;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.cmp-match-line {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  color: var(--text-muted-2);
+  --c: var(--pa);
+}
+
+.cmp-match-line.is-b {
+  --c: var(--pb);
+}
+
+.cmp-match-art {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--table-row-line) center 25% / cover;
+  box-shadow: 0 0 0 2px var(--c);
+}
+
+.cmp-match-deck {
+  overflow: hidden;
+  font-size: 0.88rem;
+  font-style: italic;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cmp-match-games {
+  min-width: 18px;
+  font-size: 1.05rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.cmp-match-line.is-win .cmp-match-deck {
+  color: var(--text-title);
+  font-weight: 800;
+}
+
+.cmp-match-line.is-win.is-a .cmp-match-games {
+  color: var(--pa-text);
+}
+
+.cmp-match-line.is-win.is-b .cmp-match-games {
+  color: var(--pb-text);
+}
+
+.cmp-match:not(.is-draw) .cmp-match-line:not(.is-win) .cmp-match-art {
+  opacity: 0.55;
+}
+
+.cmp-match.is-draw .cmp-match-games {
+  color: var(--text-title);
+}
+
+.cmp-more {
+  display: block;
+  margin: 12px auto 0;
+  padding: 7px 16px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--brand-red-deep);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cmp-more:hover {
+  border-color: var(--hairline-hover);
+  background: rgba(220, 24, 28, 0.06);
+}
+
+.cmp-shared {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* --- Andamento: commander.html's edge-to-edge chart (.line-chart-wrap
+   .is-edge), two lines. The head over the hover strips (its selector
+   reachable; the strips still get the pointer through the rest of it); the
+   selector under the title. */
+.cmp-trend .line-chart-head {
+  z-index: 3;
+}
+
+.cmp-trend-title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.cmp-seg {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-pill);
+  background: var(--bg-cream-1);
+}
+
+.cmp-seg button {
+  padding: 4px 12px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-muted-2);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 200ms ease, color 200ms ease;
+}
+
+.cmp-seg button[aria-pressed="true"] {
+  background: var(--brand-red);
+  color: #fff;
+}
+
+.cmp-plot {
+  height: 270px;
+}
+
+@media (max-width: 820px) {
+  .cmp-plot {
+    height: 240px;
+  }
+}
+
+.cmp-plot > svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  animation: line-chart-reveal 900ms cubic-bezier(0.2, 0.8, 0.2, 1) 120ms both;
+}
+
+.cmp-plot .line-chart-line.is-a {
+  stroke: var(--pa);
+}
+
+.cmp-plot .line-chart-line.is-b {
+  stroke: var(--pb);
+}
+
+.cmp-plot .line-chart-guide {
+  border-left-color: var(--text-muted);
+}
+
+.cmp-plot .line-chart-dot-html.is-a {
+  background: var(--pa);
+}
+
+.cmp-plot .line-chart-dot-html.is-b {
+  background: var(--pb);
+}
+
+.cmp-plot-empty {
+  padding-top: 110px;
+}
+
+/* The tip: the site's dark pill as a small box, beside the guide (left of
+   it in the chart's right half). */
+.cmp-tip {
+  position: absolute;
+  z-index: 5;
+  min-width: 150px;
+  padding: 8px 11px;
+  border-radius: 12px;
+  background: rgba(12, 7, 8, 0.9);
+  color: #fff;
+  font-size: 0.76rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transform: translateX(14px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+}
+
+.cmp-tip.is-left {
+  transform: translateX(calc(-100% - 14px));
+}
+
+.line-chart-hit:hover > .cmp-tip {
+  opacity: 1;
+}
+
+.cmp-tip strong {
+  display: block;
+  margin-bottom: 4px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.cmp-tip div {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.cmp-tip div i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.cmp-tip div span {
+  margin-left: auto;
+  padding-left: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Archetipi: a strip per player (its name over it) — its events split
+   by archetype, in the archetypes' colours, the icon and share inside a
+   piece wide enough; no box around it, no player-coloured edge (user) —,
+   the legend under them (on one line on phones: icon over name). A piece or a chip picks an
+   archetype: lit in both strips, the rest dimmed, and a line under them
+   with each player's events and winrate with it. */
+.cmp-dna {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cmp-dna-name {
+  display: block;
+  margin-bottom: 5px;
+  overflow: hidden;
+  color: var(--pa-text);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.cmp-dna-row.is-b .cmp-dna-name {
+  color: var(--pb-text);
+}
+
+.cmp-dna-bar {
+  display: flex;
+  gap: 3px;
+  height: 34px;
+}
+
+.cmp-dna-piece {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  flex: 0 1 calc(var(--s, 0) * 1%);
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 10px;
+  color: #fff;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: flex-basis 800ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 200ms ease, filter 200ms ease;
+}
+
+.cmp-dna-piece svg {
+  flex: none;
+  width: 15px;
+  height: 15px;
+}
+
+.cmp-dna-piece:hover {
+  filter: brightness(1.08);
+}
+
+.cmp-dna-none {
+  align-self: center;
+  padding-left: 10px;
+  color: var(--text-muted);
+}
+
+.cmp-dna-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.cmp-dna-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 4px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--cmp-fill);
+  color: var(--text-body);
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: opacity 200ms ease, background 150ms ease;
+}
+
+.cmp-dna-chip i,
+.cmp-dna-detail-name i {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  color: #fff;
+}
+
+.cmp-dna-chip svg,
+.cmp-dna-detail-name svg {
+  width: 12px;
+  height: 12px;
+}
+
+.cmp-dna-chip.is-unused {
+  opacity: 0.4;
+}
+
+@media (max-width: 520px) {
+  .cmp-dna-legend {
+    flex-wrap: nowrap;
+    gap: 4px;
+  }
+
+  .cmp-dna-chip {
+    flex: 1 1 0;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    padding: 6px 2px;
+    border-radius: 12px;
+    font-size: 0.66rem;
+  }
+}
+
+.cmp-dna-chip:hover,
+.cmp-dna-chip.is-picked {
+  background: color-mix(in srgb, var(--brand-red) 10%, var(--cmp-fill));
+}
+
+/* A pick: the others dimmed. */
+#compare-archetypes.has-pick .cmp-dna-piece:not(.is-picked),
+#compare-archetypes.has-pick .cmp-dna-chip:not(.is-picked) {
+  opacity: 0.3;
+}
+
+.cmp-dna-detail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 16px;
+  max-height: 0;
+  overflow: hidden;
+  color: var(--text-muted-2);
+  font-size: 0.8rem;
+  font-weight: 700;
+  opacity: 0;
+  transition: max-height 300ms ease, opacity 200ms ease, margin 300ms ease;
+}
+
+.cmp-dna-detail.is-open {
+  max-height: 80px;
+  margin-top: 12px;
+  opacity: 1;
+}
+
+.cmp-dna-detail-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-title);
+  font-weight: 800;
+}
+
+.cmp-dna-detail .is-a b {
+  color: var(--pa-text);
+}
+
+.cmp-dna-detail .is-b b {
+  color: var(--pb-text);
+}
+
+:root[data-theme="dark"] .cmp-page :is(.cmp-dna-piece, .cmp-dna-chip i, .cmp-dna-detail-name i).is-combo {
+  background: #6e6267 !important;
+}
+
+/* --- Comandanti: each player's 3 most played decks as art tiles (the
+   first bigger), the two columns the same width; a tile's left edge and its
+   winrate pill in the player's colour. */
+.cmp-decks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 520px) {
+  .cmp-decks {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+}
+
+.cmp-decks-col {
+  min-width: 0;
+  --c: var(--pa);
+}
+
+.cmp-decks-col.is-b {
+  --c: var(--pb);
+}
+
+.cmp-decks-head {
+  margin-bottom: 8px;
+  overflow: hidden;
+  color: var(--pa-text);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.cmp-decks-col.is-b .cmp-decks-head {
+  color: var(--pb-text);
+}
+
+.cmp-deck {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 62px;
+  padding: 10px 12px;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #2a2022 center 22% / cover;
+  color: #fff;
+  text-decoration: none;
+  box-shadow: inset 4px 0 0 var(--c);
+  transition: transform 200ms ease;
+}
+
+.cmp-deck + .cmp-deck {
+  margin-top: 8px;
+}
+
+.cmp-deck.is-top {
+  height: 112px;
+}
+
+.cmp-deck::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(0deg, rgba(14, 9, 10, 0.88), rgba(14, 9, 10, 0.25) 75%),
+    linear-gradient(90deg, rgba(14, 9, 10, 0.4), transparent);
+}
+
+.cmp-deck:hover {
+  transform: translateY(-2px);
+}
+
+.cmp-deck > * {
+  position: relative;
+}
+
+.cmp-deck-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.cmp-deck-name {
+  display: block;
+  overflow: hidden;
+  font-size: 0.86rem;
+  font-weight: 800;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+}
+
+.cmp-deck.is-top .cmp-deck-name {
+  font-size: 1rem;
+  white-space: normal;
+}
+
+.cmp-deck-meta {
+  display: block;
+  margin-top: 2px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.cmp-deck-pill {
+  flex: none;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--c);
+  font-size: 0.74rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.cmp-deck > .cmp-deck-shared {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(6px);
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* --- The picker (moved to <body> by js/compare-page.js): a popover under
+   the name on a computer, a bottom sheet on touch screens; the player's own
+   page first, then the ones the other player met most, then everyone. */
+.cmp-picker {
+  position: fixed;
+  z-index: 1200;
+  width: 320px;
+  max-width: calc(100vw - 24px);
+  overflow: hidden;
+  border: 1px solid var(--hairline);
+  border-radius: 20px;
+  background: var(--bg-cream-1);
+  box-shadow: 0 24px 60px rgba(40, 20, 22, 0.25);
+  animation: cs-menu-in 140ms ease;
+}
+
+.cmp-picker-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1199;
+}
+
+html.nav-mobile .cmp-picker-backdrop {
+  background: rgba(18, 12, 13, 0.4);
+  animation: cmp-fade-in 200ms ease;
+}
+
+@keyframes cmp-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+html.nav-mobile .cmp-picker {
+  top: auto !important;
+  right: 0;
+  bottom: 0;
+  left: 0 !important;
+  width: auto;
+  max-width: none;
+  padding-bottom: env(safe-area-inset-bottom);
+  border-radius: 24px 24px 0 0;
+  animation: cmp-sheet-in 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes cmp-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+.cmp-picker-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--table-row-line);
+}
+
+.cmp-picker-search svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+}
+
+.cmp-picker-search input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-body);
+  font: inherit;
+  font-size: 1rem;
+  outline: none;
+  box-shadow: none;
+  animation: none;
+}
+
+.cmp-picker-list {
+  max-height: min(380px, 55vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 6px;
+}
+
+html.nav-mobile .cmp-picker-list {
+  max-height: 60vh;
+}
+
+.cmp-picker-group {
+  padding: 10px 10px 4px;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cmp-picker-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-body);
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.cmp-picker-item:hover,
+.cmp-picker-item.is-focus {
+  background: rgba(220, 24, 28, 0.07);
+}
+
+.cmp-picker-item.is-current,
+.cmp-picker-page {
+  color: var(--brand-red-deep);
+}
+
+.cmp-picker-page {
+  margin-bottom: 4px;
+}
+
+.cmp-picker-count {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* The loading placeholder (compare.html's .sk-page.is-compare): the hero,
+   two cards. */
+.sk-page.is-compare .sk-compare-hero {
+  display: block;
+  height: 132px;
+  margin-bottom: 22px;
+  border-radius: 28px;
+}
+
+.sk-compare-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.sk-page.is-compare .sk-compare-card {
+  display: block;
+  height: 400px;
+  border-radius: var(--radius-card-sm);
+}
+
+@media (max-width: 820px) {
+  .sk-page.is-compare .sk-compare-hero {
+    height: 150px;
+    border-radius: 24px;
+  }
+
+  .sk-compare-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sk-compare-cards > :last-child {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cmp-hero,
+  .cmp-plot > svg,
+  .cmp-picker,
+  .cmp-picker-backdrop {
+    animation: none;
+  }
+
+  .cmp-stat-bar i,
+  .cmp-dna-piece,
+  .cmp-dna-detail,
+  .cmp-deck {
+    transition: none;
+  }
+}
