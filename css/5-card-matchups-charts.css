@@ -3486,6 +3486,12 @@ html:not(.app-header) .social-filters .social-chips {
   margin-bottom: 0;
 }
 
+/* Its links (the tiles, the chips, the discs) are cards, not text links:
+   no underline on hover (the site's a:hover). */
+.evo a:hover {
+  text-decoration: none;
+}
+
 /* The filters' hidden "Evento" (one event has no evolution). */
 .field[hidden] {
   display: none;
@@ -4625,12 +4631,13 @@ html.nav-mobile .evo-turnover .line-chart-stats {
   }
 }
 
-/* --- Scontri diretti: a scoreboard row per match — the event and round on
-   top, the date beside the two lines (art, deck, games won), the winner's
-   line in its colour. */
+/* --- Scontri diretti: a sub-card per match (the site's .history-item
+   look — user) — the event and round on top, the date beside the two lines
+   (art, deck, games won), the winner's line in its colour. */
 .cmp-matches {
   display: flex;
   flex-direction: column;
+  gap: 8px;
 }
 
 .cmp-match {
@@ -4639,20 +4646,34 @@ html.nav-mobile .evo-turnover .line-chart-stats {
   grid-template-areas: "kicker kicker" "date lines";
   align-items: center;
   gap: 6px 14px;
-  margin: 0 -10px;
-  padding: 12px 10px;
+  padding: 12px 14px;
+  border: 1px solid rgba(154, 28, 32, 0.14);
   border-radius: 14px;
+  background: rgba(220, 24, 28, 0.055);
   color: inherit;
   text-decoration: none;
-  transition: background 150ms ease;
-}
-
-.cmp-match + .cmp-match {
-  border-top: 1px solid var(--table-row-line);
+  transition: background 150ms ease, border-color 150ms ease;
 }
 
 .cmp-match:hover {
-  background: var(--cmp-fill);
+  border-color: rgba(154, 28, 32, 0.26);
+  background: rgba(220, 24, 28, 0.09);
+}
+
+:root[data-theme="dark"] .cmp-match {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+:root[data-theme="dark"] .cmp-match:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 110, 110, 0.1);
+}
+
+/* The entries are links: no underline on hover (the site's a:hover). */
+.cmp-match:hover,
+.cmp-deck:hover {
+  text-decoration: none;
 }
 
 .cmp-match-kicker {
@@ -4674,8 +4695,12 @@ html.nav-mobile .evo-turnover .line-chart-stats {
   align-content: center;
   height: 50px;
   border-radius: 12px;
-  background: var(--cmp-fill);
+  background: rgba(255, 255, 255, 0.75);
   line-height: 1.05;
+}
+
+:root[data-theme="dark"] .cmp-match-date {
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .cmp-match-date b {
