@@ -37,11 +37,11 @@ const COLOR = { a: "#dc181c", b: "#2f5fdc" };
 // Scontri diretti: rows shown before "Mostra tutte".
 const H2H_SHOWN = 4;
 // The chart: its viewBox width (stretched to the card, preserveAspectRatio
-// none — the y units are px, so the HTML overlays line up), the plot's top
-// (under the title, the selector and the numbers) and its bottom band (the
+// none — the y units are px, so the HTML overlays line up), the plot's least
+// top (under the head — measured, see renderChart) and its bottom band (the
 // dates), two date labels' least distance (px), the tip's height.
 const VW = 1000;
-const PLOT_TOP = 92;
+const PLOT_TOP_MIN = 92;
 const PLOT_BOTTOM = 30;
 const LABEL_GAP = 70;
 const TIP_H = 66;
@@ -437,7 +437,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     });
   }
 
-  // --- Andamento: commander.html's edge-to-edge chart — smooth lines, the
+  // --- Andamento: commander.html's edge-to-edge chart — smooth lines, each
+  // with its area down to the card's bottom edge (the dates inside it), the
   // values on the left (no gridlines), the dates in the bottom band, a
   // guide, the two values and a dark tip on hover / tap (no dots).
   function renderChart() {
@@ -446,6 +447,10 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     const W = plot.clientWidth;
     const H = plot.clientHeight;
     const zero = H - PLOT_BOTTOM;
+    // The lines start under the head (taller on touch screens, the selector
+    // on its own line).
+    const head = plot.parentElement.querySelector(".line-chart-head");
+    const PLOT_TOP = Math.max(PLOT_TOP_MIN, (head?.offsetHeight ?? 0) + 14);
     const nA = escapeHtml(nameOf(state.a) ?? "");
     const nB = escapeHtml(nameOf(state.b) ?? "");
     const stat = (value, label, cls = "is-n") =>
@@ -522,6 +527,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
         { side: "a", pts: shared.map((s, i) => [X(i), Y(s.pa)]) },
         { side: "b", pts: shared.map((s, i) => [X(i), Y(s.pb)]) },
       ];
+      area = true;
       keys = shared.map((s, i) => ({
         x: X(i),
         dots: [[Y(s.pa), "a"], [Y(s.pb), "b"]],
@@ -556,19 +562,13 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       .filter((g) => g.label)
       .map((g) => `<span class="line-chart-y" style="top:${g.y}px">${g.label}</span>`)
       .join("");
-    const defs = `<defs>${["a", "b"]
-      .map(
-        (k) =>
-          `<linearGradient id="compare-fade-${k}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${COLOR[k]}" stop-opacity="0.16"></stop><stop offset="0.75" stop-color="${COLOR[k]}" stop-opacity="0"></stop></linearGradient>`
-      )
-      .join("")}</defs>`;
     const paths = lines
       .filter((l) => l.pts.length)
       .map((l) => {
         const d = smoothPath(l.pts);
         const fill =
           area && l.pts.length > 1
-            ? `<path class="line-chart-area" style="fill:url(#compare-fade-${l.side})" d="${d} L${l.pts.at(-1)[0]},${H} L${l.pts[0][0]},${H} Z"></path>`
+            ? `<path class="line-chart-area is-${l.side}" d="${d} L${l.pts.at(-1)[0]},${H} L${l.pts[0][0]},${H} Z"></path>`
             : "";
         return `${fill}<path class="line-chart-line is-${l.side}" d="${d}" vector-effect="non-scaling-stroke"></path>`;
       })
@@ -591,7 +591,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
         }" style="left:${inner};top:${tipTop}px">${k.tip}</span></span>`;
       })
       .join("");
-    plot.innerHTML = `<svg viewBox="0 0 ${VW} ${H}" preserveAspectRatio="none" aria-hidden="true">${defs}${gridSvg}${paths}</svg>${yLabels}${xLabels}${hits}`;
+    plot.innerHTML = `<svg viewBox="0 0 ${VW} ${H}" preserveAspectRatio="none" aria-hidden="true">${gridSvg}${paths}</svg>${yLabels}${xLabels}${hits}`;
   }
 
   // --- Archetipi: a strip per player — its events split by archetype, in
@@ -642,14 +642,16 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       detail.classList.remove("is-open");
       return;
     }
+    // A row per player (the archetype already lit above: not repeated), in
+    // columns — name, events, winrate — so the two line up.
     const line = (side, s) => {
       const r = s.arch[a];
       const wr = winrate(r);
-      return `<span class="is-${side}"><b>${escapeHtml(firstName(nameOf(state[side])))}</b> <span>${plural(r.n, "evento", "eventi")}</span>${
-        r.n ? ` · <b>${wr == null ? "—" : `${wr.toFixed(0)}%`}</b> <span>winrate</span>` : ""
-      }</span>`;
+      return `<span class="cmp-dna-line is-${side}"><b>${escapeHtml(firstName(nameOf(state[side])))}</b><span>${plural(r.n, "evento", "eventi")}</span><span>${
+        r.n ? `<b>${wr == null ? "—" : `${wr.toFixed(0)}%`}</b> <span>winrate</span>` : "—"
+      }</span></span>`;
     };
-    detail.innerHTML = `<span class="cmp-dna-detail-name"><i style="background:${ARCHETYPE_COLORS[a]}" class="is-${a}">${archetypeIcon(a)}</i>${ARCHETYPE_LABELS[a]}</span>${line("a", archetypeData.sa)}${line("b", archetypeData.sb)}`;
+    detail.innerHTML = line("a", archetypeData.sa) + line("b", archetypeData.sb);
     detail.classList.add("is-open");
   }
 
@@ -732,9 +734,6 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     const item = (p, count) =>
       `<button type="button" class="cmp-picker-item${p.id === current ? " is-current" : ""}" data-id="${p.id}"><span>${escapeHtml(p.name)}</span><span class="cmp-picker-count">${count}</span></button>`;
     let html = "";
-    if (!q && current) {
-      html += `<a class="cmp-picker-item cmp-picker-page" href="player.html?id=${current}"><span>Vai alla pagina di ${escapeHtml(nameOf(current))} ›</span></a>`;
-    }
     if (!q && other) {
       const rivals = rivalsOf(other).filter(([id]) => playersById.has(id)).slice(0, 5);
       if (rivals.length) {
@@ -795,10 +794,6 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     if (e.key === "Enter") pickerList.querySelector("button.cmp-picker-item")?.click();
   });
   pickerList.addEventListener("click", (e) => {
-    if (e.target.closest("a")) {
-      closePicker();
-      return;
-    }
     const it = e.target.closest("button.cmp-picker-item");
     if (!it) return;
     const other = pickerSide === "a" ? "b" : "a";

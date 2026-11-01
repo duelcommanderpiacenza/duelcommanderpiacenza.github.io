@@ -17,9 +17,9 @@ import { sb } from "./supabase-client.js";
 
 // Not marked: the site search's results (a list of matches, not "you"), and
 // buttons that happen to lead to the player page (account.html's "Pagina
-// giocatore →", compare.html's picker). A badge holder (badges.html) is marked but gets no pill —
+// giocatore →"). A badge holder (badges.html) is marked but gets no pill —
 // it's a pill already.
-const SKIP = ".site-search, .btn-primary, .btn-secondary, .cmp-picker";
+const SKIP = ".site-search, .btn-primary, .btn-secondary";
 const NO_PILL = ".badge-holder";
 
 const NOT_LINKED_FOR = 60 * 60 * 1000;

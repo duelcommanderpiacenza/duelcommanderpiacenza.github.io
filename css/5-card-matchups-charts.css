@@ -3637,13 +3637,8 @@ html:not(.app-header) .social-filters .social-chips {
   opacity: 1;
 }
 
-.line-chart-hit.is-first .evo-tip {
-  transform: translateX(-12%);
-}
-
-.line-chart-hit.is-last .evo-tip {
-  transform: translateX(-88%);
-}
+/* (Kept inside the card near its edges by js/evolution-page.js, through
+   `translate`.) */
 
 /* The tips over everything in the plot, the end discs included. */
 .evo-plot .line-chart-hit:hover {
@@ -4792,18 +4787,65 @@ html.nav-mobile .evo-turnover .line-chart-stats {
 
 /* --- Andamento: commander.html's edge-to-edge chart (.line-chart-wrap
    .is-edge), two lines. The head over the hover strips (its selector
-   reachable; the strips still get the pointer through the rest of it); the
-   selector under the title. */
+   reachable; the strips still get the pointer through the rest of it): the
+   title, the Winrate / Piazzamenti selector in the middle of the title's
+   line, the numbers at the right end; touch screens / narrow: the selector
+   centred on its own line under them (user). */
 .cmp-trend .line-chart-head {
   z-index: 3;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: start;
 }
 
-.cmp-trend-title {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
+.cmp-trend .line-chart-stats {
+  justify-self: end;
+}
+
+/* (Its middle on the title's.) */
+.cmp-trend .cmp-seg {
+  margin-top: -3px;
   pointer-events: auto;
+}
+
+@media (max-width: 640px) {
+  .cmp-trend .line-chart-head {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "title stats" "seg seg";
+    row-gap: 10px;
+  }
+
+  .cmp-trend .pie-chart-title {
+    grid-area: title;
+  }
+
+  .cmp-trend .line-chart-stats {
+    grid-area: stats;
+  }
+
+  .cmp-trend .cmp-seg {
+    grid-area: seg;
+    justify-self: center;
+  }
+}
+
+html.nav-mobile .cmp-trend .line-chart-head {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "title stats" "seg seg";
+  row-gap: 10px;
+}
+
+html.nav-mobile .cmp-trend .pie-chart-title {
+  grid-area: title;
+}
+
+html.nav-mobile .cmp-trend .line-chart-stats {
+  grid-area: stats;
+}
+
+html.nav-mobile .cmp-trend .cmp-seg {
+  grid-area: seg;
+  justify-self: center;
 }
 
 .cmp-seg {
@@ -4857,6 +4899,24 @@ html.nav-mobile .evo-turnover .line-chart-stats {
 
 .cmp-plot .line-chart-line.is-b {
   stroke: var(--pb);
+}
+
+/* Each player's area, flat, down to the card's bottom edge (the dates
+   inside it, like commander.html's Utilizzo). */
+.cmp-plot .line-chart-area.is-a {
+  fill: rgba(220, 24, 28, 0.1);
+}
+
+.cmp-plot .line-chart-area.is-b {
+  fill: rgba(47, 95, 220, 0.1);
+}
+
+:root[data-theme="dark"] .cmp-plot .line-chart-area.is-a {
+  fill: rgba(255, 106, 110, 0.12);
+}
+
+:root[data-theme="dark"] .cmp-plot .line-chart-area.is-b {
+  fill: rgba(127, 160, 255, 0.12);
 }
 
 .cmp-plot .line-chart-guide {
@@ -5025,8 +5085,7 @@ html.nav-mobile .evo-turnover .line-chart-stats {
   transition: opacity 200ms ease, background 150ms ease;
 }
 
-.cmp-dna-chip i,
-.cmp-dna-detail-name i {
+.cmp-dna-chip i {
   display: inline-grid;
   place-items: center;
   width: 20px;
@@ -5035,8 +5094,7 @@ html.nav-mobile .evo-turnover .line-chart-stats {
   color: #fff;
 }
 
-.cmp-dna-chip svg,
-.cmp-dna-detail-name svg {
+.cmp-dna-chip svg {
   width: 12px;
   height: 12px;
 }
@@ -5074,16 +5132,16 @@ html.nav-mobile .evo-turnover .line-chart-stats {
 }
 
 .cmp-dna-detail {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(3, auto);
   justify-content: center;
-  gap: 4px 16px;
+  gap: 4px 18px;
   max-height: 0;
   overflow: hidden;
   color: var(--text-muted-2);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
   opacity: 0;
   transition: max-height 300ms ease, opacity 200ms ease, margin 300ms ease;
 }
@@ -5094,23 +5152,20 @@ html.nav-mobile .evo-turnover .line-chart-stats {
   opacity: 1;
 }
 
-.cmp-dna-detail-name {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--text-title);
-  font-weight: 800;
+/* A player's row: its cells in the detail's columns. */
+.cmp-dna-line {
+  display: contents;
 }
 
-.cmp-dna-detail .is-a b {
+.cmp-dna-line.is-a b {
   color: var(--pa-text);
 }
 
-.cmp-dna-detail .is-b b {
+.cmp-dna-line.is-b b {
   color: var(--pb-text);
 }
 
-:root[data-theme="dark"] .cmp-page :is(.cmp-dna-piece, .cmp-dna-chip i, .cmp-dna-detail-name i).is-combo {
+:root[data-theme="dark"] .cmp-page :is(.cmp-dna-piece, .cmp-dna-chip i).is-combo {
   background: #6e6267 !important;
 }
 
@@ -5253,8 +5308,7 @@ html.nav-mobile .evo-turnover .line-chart-stats {
    the name on a computer; full screen on touch screens (like the site
    search's overlay) — the search field on top, the results right under it,
    so filtering never pushes them down behind the keyboard (a bottom sheet
-   did). The player's own page first, then the ones the other player met
-   most, then everyone. */
+   did). The ones the other player met most first, then everyone. */
 .cmp-picker {
   position: fixed;
   z-index: 1200;
@@ -5407,7 +5461,6 @@ html.nav-mobile .cmp-picker-list {
   font: inherit;
   font-weight: 700;
   text-align: left;
-  text-decoration: none;
   cursor: pointer;
 }
 
@@ -5416,13 +5469,8 @@ html.nav-mobile .cmp-picker-list {
   background: rgba(220, 24, 28, 0.07);
 }
 
-.cmp-picker-item.is-current,
-.cmp-picker-page {
+.cmp-picker-item.is-current {
   color: var(--brand-red-deep);
-}
-
-.cmp-picker-page {
-  margin-bottom: 4px;
 }
 
 .cmp-picker-count {

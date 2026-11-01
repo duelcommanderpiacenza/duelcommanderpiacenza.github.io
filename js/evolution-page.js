@@ -50,6 +50,8 @@ const archetypeInk = (a) => (a === "combo" ? "#8a7d81" : ARCHETYPE_COLORS[a]);
 // The charts' viewBox width (stretched to the card, preserveAspectRatio
 // none — the y units are px, so the HTML overlays line up with them).
 const VW = 1000;
+// A tip at least this far from its card's edges (px).
+const TIP_MARGIN = 8;
 // Two date labels at least this far apart (px), the last one always shown.
 const LABEL_GAP = 66;
 
@@ -472,6 +474,29 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       hidePageLoading(signal);
     }
   }
+
+  // A point's tip kept whole inside its card, which clips it (rounded
+  // corners): measured as it shows (hover, or a tap — pointerover fires for
+  // both) and moved in (the CSS `translate`, on top of its own centring
+  // transform) from a side it would pass — like js/line-chart.js fitTip.
+  sectionsEl.addEventListener(
+    "pointerover",
+    (e) => {
+      const hit = e.target.closest?.(".line-chart-hit");
+      const tip = hit?.querySelector(".evo-tip");
+      const card = hit?.closest(".pie-chart-wrap");
+      if (!tip || !card) return;
+      tip.style.translate = "";
+      const box = card.getBoundingClientRect();
+      const r = tip.getBoundingClientRect();
+      let dx = 0;
+      if (r.left < box.left + TIP_MARGIN) dx = box.left + TIP_MARGIN - r.left;
+      else if (r.right > box.right - TIP_MARGIN) dx = box.right - TIP_MARGIN - r.right;
+      const dy = r.bottom > box.bottom - TIP_MARGIN ? Math.max(box.top + TIP_MARGIN - r.top, box.bottom - TIP_MARGIN - r.bottom) : 0;
+      if (dx || dy) tip.style.translate = `${Math.round(dx)}px ${Math.round(dy)}px`;
+    },
+    { passive: true, signal }
+  );
 
   // La corsa al vertice: pointing at a commander's disc lights its line.
   sectionsEl.addEventListener(

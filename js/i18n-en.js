@@ -568,7 +568,6 @@
     [/^Cerca tra (\d+) giocatori…$/, "Search $1 players…"],
     // Confronto (compare.html).
     [/^Affrontati più spesso da (.+)$/, "Most often faced by $1"],
-    [/^Vai alla pagina di (.+) ›$/, "Go to $1's page ›"],
     [/^Mostra tutte \((\d+)\)$/, "Show all ($1)"],
     [/^Top (\d+) · (\d+)\+ giocatori$/, "Top $1 · $2+ players"],
     [/^Top (\d+) · meno di (\d+) giocatori$/, "Top $1 · under $2 players"],
