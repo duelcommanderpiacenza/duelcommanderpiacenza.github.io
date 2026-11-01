@@ -1,5 +1,5 @@
 // compare.html — "Confronto", Giocatori's second tab: two players side by
-// side, in the filters' scope (Lega, Dal — no Evento). Chosen 2026-11-01
+// side, over their whole history (no filters — user). Chosen 2026-11-01
 // from three rounds of mockups. Everything is computed here from every
 // closed event's entries + matches (fetchClosedResultsSince, one paged
 // request each, no event ids needed first) and the event_standings cache
@@ -8,8 +8,9 @@
 //    in its player's colour — A red on the left, B blue on the right), on
 //    their most played commanders' art, the matches won against each other
 //    between them (draws not shown); on touch screens a scoreboard;
-//  - Statistiche: winrate (featured), Eventi, Primi posti, Top 8,
-//    Posizione media, Comandanti — a tug-of-war bar each;
+//  - Statistiche: winrate (featured), Eventi, Primi posti, Top 8 (events of
+//    20+ players, like the player card's Podio) and Top 4 (smaller events),
+//    Comandanti — a tug-of-war bar each;
 //  - Scontri diretti: their matches, newest first, as scoreboard rows;
 //  - Andamento: commander.html's edge-to-edge chart (js/line-chart.js's
 //    look), two lines — the overall winrate after each event, or the places
@@ -21,15 +22,14 @@
 // be shared); without one, no player is chosen: a line invites to pick two
 // (user: no default pair).
 
-import { Players, Events, Leagues, EventStandings, fetchClosedResultsSince } from "./db.js";
+import { Players, Events, EventStandings, fetchClosedResultsSince } from "./db.js";
 import { matchRoundOutcome, isBye, isDrop } from "./leaderboard.js";
-import { initScopeFilter } from "./scope-filter.js";
 import { ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
 import { archetypeIcon } from "./archetype-icons.js";
-import { escapeHtml, eventTitle, formatDate, scryfallImages, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
+import { escapeHtml, eventTitle, formatDate, scryfallImages, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
-import { initFilterToggle } from "./filter-toggle.js";
 import { locale } from "./locale.js";
+import { BIG_EVENT_MIN_PLAYERS } from "./card-progress.js";
 
 const ARCHETYPE_LABELS = { aggro: "Aggro", control: "Control", combo: "Combo", tempo: "Tempo", midrange: "Midrange" };
 // The two players' colours (the CSS's --pa / --pb), for the chart's tips.
@@ -96,7 +96,7 @@ function smoothPath(points) {
 // after each event.
 function playerStats(pid, evs) {
   const s = {
-    events: 0, w: 0, d: 0, l: 0, firsts: 0, top8: 0, posSum: 0, posN: 0,
+    events: 0, w: 0, d: 0, l: 0, firsts: 0, top8: 0, top4: 0,
     arch: Object.fromEntries(ARCHETYPES.map((a) => [a, { n: 0, w: 0, d: 0, l: 0 }])),
     archN: 0,
     decks: new Map(),
@@ -139,18 +139,19 @@ function playerStats(pid, evs) {
       deck.w += w;
       deck.d += d;
       deck.l += l;
+      // A top 8 only counts in an event of BIG_EVENT_MIN_PLAYERS or more, a
+      // top 4 in a smaller one.
       const pos = e.pos.get(pid);
       if (pos) {
-        s.posSum += pos;
-        s.posN += 1;
         if (pos === 1) s.firsts += 1;
-        if (pos <= 8) s.top8 += 1;
+        if (e.entries.length >= BIG_EVENT_MIN_PLAYERS) {
+          if (pos <= 8) s.top8 += 1;
+        } else if (pos <= 4) s.top4 += 1;
       }
       s.timeline.push({ e, t: new Date(e.ev.event_date).getTime(), v: winrate(s) });
     }
   }
   s.wr = winrate(s);
-  s.avgPos = s.posN ? s.posSum / s.posN : null;
   s.topDecks = [...s.decks.values()].sort((x, y) => y.n - x.n || y.w - x.w);
   return s;
 }
@@ -191,9 +192,6 @@ function headToHead(a, b, evs) {
 // first load and after each in-app navigation; `signal` aborts on leaving.
 export async function mount({ signal = new AbortController().signal } = {}) {
   const $ = (id) => document.getElementById(id);
-  const leagueSelect = $("compare-league-filter");
-  const eventSelect = $("compare-event-filter");
-  const dateFromInput = $("compare-date-from");
   const grid = $("compare-grid");
   const plot = $("compare-plot");
   // The picker on <body>: a fixed popover / bottom sheet, out of any
@@ -204,18 +202,16 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   signal.addEventListener("abort", () => {
     picker.remove();
     backdrop.remove();
+    document.documentElement.classList.remove("cmp-picker-open");
   }, { once: true });
 
-  dateFromInput.value = isoDateYearsAgo(DEFAULT_DATE_FROM_YEARS);
-  initFilterToggle("compare-filter-toggle", "compare-filter-panel");
 
   // Everything in one round.
-  let players, allEvents, leagues, results, standings;
+  let players, allEvents, results, standings;
   try {
-    [players, allEvents, leagues, results, standings] = await Promise.all([
+    [players, allEvents, results, standings] = await Promise.all([
       Players.list(),
       Events.list(),
-      Leagues.list(),
       fetchClosedResultsSince(null, { commanders: true }),
       EventStandings.listAll(),
     ]);
@@ -266,7 +262,6 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     if (state.a === state.b) state.b = null;
   }
 
-  let scopeIds = new Set();
   let chartData = null;
 
   // --- Commander art (Scryfall art crops): every name not asked yet, in
@@ -349,27 +344,25 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   }
 
   // --- Statistiche: a tug-of-war bar per number — A's share from the left,
-  // B's from the right (lower is better for the average place: the inverse
-  // values), a notch at the middle, the side ahead in full colour.
+  // B's from the right, a notch at the middle, the side ahead in full colour.
   function renderStats(sa, sb) {
     const rows = [
       { label: "Winrate", a: sa.wr, b: sb.wr, fmt: pct, sub: (s) => `${s.w}-${s.d}-${s.l}`, main: true },
       { label: "Eventi", a: sa.events, b: sb.events },
       { label: "Primi posti", a: sa.firsts, b: sb.firsts },
-      { label: "Top 8", a: sa.top8, b: sb.top8 },
-      { label: "Posizione media", a: sa.avgPos, b: sb.avgPos, lower: true, fmt: (v) => (v == null ? "—" : `${v.toFixed(1)}°`) },
+      { label: `Top 8 · ${BIG_EVENT_MIN_PLAYERS}+ giocatori`, a: sa.top8, b: sb.top8 },
+      { label: `Top 4 · meno di ${BIG_EVENT_MIN_PLAYERS} giocatori`, a: sa.top4, b: sb.top4 },
       { label: "Comandanti", a: sa.decks.size, b: sb.decks.size },
     ];
     $("compare-stats").innerHTML = rows
       .map((r) => {
         const fmt = r.fmt ?? ((v) => (v == null ? "—" : String(v)));
         let lead = null;
-        if (r.a != null && r.b != null && r.a !== r.b) lead = (r.lower ? r.a < r.b : r.a > r.b) ? "a" : "b";
+        if (r.a != null && r.b != null && r.a !== r.b) lead = r.a > r.b ? "a" : "b";
         const va = r.a ?? 0;
         const vb = r.b ?? 0;
         let share = 50;
-        if (r.lower && va && vb) share = (1 / va / (1 / va + 1 / vb)) * 100;
-        else if (!r.lower && va + vb) share = (va / (va + vb)) * 100;
+        if (va + vb) share = (va / (va + vb)) * 100;
         const sub = (s) => (r.sub ? `<small>${r.sub(s)}</small>` : "");
         const is = (side) => (lead === side ? " is-lead" : "");
         return `
@@ -445,7 +438,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   }
 
   // --- Andamento: commander.html's edge-to-edge chart — smooth lines, the
-  // dashed gridlines' values on the left, the dates in the bottom band, a
+  // values on the left (no gridlines), the dates in the bottom band, a
   // guide, the two values and a dark tip on hover / tap (no dots).
   function renderChart() {
     const { sa, sb, h2h } = chartData;
@@ -554,8 +547,10 @@ export async function mount({ signal = new AbortController().signal } = {}) {
           : ""
       )
       .join("");
+    // No dotted gridlines (user): the baseline only, the values on the left.
     const gridSvg = gridLines
-      .map((g) => `<line class="line-chart-grid${g.zero ? " is-zero" : ""}" x1="0" x2="${VW}" y1="${g.y}" y2="${g.y}" vector-effect="non-scaling-stroke"></line>`)
+      .filter((g) => g.zero)
+      .map((g) => `<line class="line-chart-grid is-zero" x1="0" x2="${VW}" y1="${g.y}" y2="${g.y}" vector-effect="non-scaling-stroke"></line>`)
       .join("");
     const yLabels = gridLines
       .filter((g) => g.label)
@@ -681,11 +676,10 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     $("compare-decks").innerHTML = `<div class="cmp-decks">${column("a", sa, sb)}${column("b", sb, sa)}</div>`;
   }
 
-  // --- Everything, for the scope and the pair --------------------------
+  // --- Everything, for the pair ------------------------------------------
 
   function render() {
-    const from = dateFromInput.value;
-    const evs = allEvs.filter((e) => scopeIds.has(e.ev.id) && (!from || e.ev.event_date >= from));
+    const evs = allEvs;
     const sa = playerStats(state.a, evs);
     const sb = playerStats(state.b, evs);
     const h2h = state.a && state.b ? headToHead(state.a, state.b, evs) : { games: [], shared: [], tally: { a: 0, b: 0, d: 0 } };
@@ -698,8 +692,6 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       renderHero(sa, sb, h2h);
       return;
     }
-    const league = leagues.find((l) => l.id === leagueSelect.value);
-    $("compare-scope").innerHTML = `<span>${league ? escapeHtml(league.name) : "Tutte le leghe"}</span>${from ? ` · <span>Dal ${formatDate(from)}</span>` : ""}`;
     renderStats(sa, sb);
     renderH2H(h2h);
     chartData = { sa, sb, h2h };
@@ -767,20 +759,24 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     picker.hidden = false;
     backdrop.hidden = false;
     btn.setAttribute("aria-expanded", "true");
+    // Touch screens: full screen (styles.css), the page behind it still.
+    document.documentElement.classList.toggle("cmp-picker-open", isTouch());
     if (!isTouch()) {
       const r = btn.getBoundingClientRect();
       const w = picker.offsetWidth;
       const left = side === "a" ? r.left : r.right - w;
       picker.style.left = `${Math.max(12, Math.min(left, innerWidth - w - 12))}px`;
       picker.style.top = `${r.bottom + 8}px`;
-      input.focus();
     }
+    input.focus();
   }
 
   function closePicker() {
     if (pickerSide === null) return;
     picker.hidden = true;
     backdrop.hidden = true;
+    document.documentElement.classList.remove("cmp-picker-open");
+    input.blur();
     document.querySelectorAll(".cmp-pick").forEach((b) => b.setAttribute("aria-expanded", "false"));
     pickerSide = null;
   }
@@ -789,7 +785,12 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     btn.addEventListener("click", () => (pickerSide === btn.dataset.side ? closePicker() : openPicker(btn.dataset.side, btn)))
   );
   backdrop.addEventListener("click", closePicker);
-  input.addEventListener("input", () => fillPicker(input.value));
+  input.addEventListener("input", () => {
+    fillPicker(input.value);
+    // The matches from the top, right under the field.
+    pickerList.scrollTop = 0;
+  });
+  $("compare-picker-close").addEventListener("click", closePicker);
   input.addEventListener("keydown", (e) => {
     if (e.key === "Enter") pickerList.querySelector("button.cmp-picker-item")?.click();
   });
@@ -841,19 +842,6 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   resize.observe(grid);
   signal.addEventListener("abort", () => resize.disconnect(), { once: true });
 
-  dateFromInput.addEventListener("change", render, { signal });
-  await initScopeFilter({
-    leagueSelect,
-    eventSelect,
-    leagues,
-    events: allEvents,
-    onChange: (eventIds) => {
-      scopeIds = new Set(eventIds);
-      if (signal.aborted) return;
-      render();
-      hidePageLoading(signal);
-    },
-  });
-  if (signal.aborted) return;
+  render();
   hidePageLoading(signal);
 }

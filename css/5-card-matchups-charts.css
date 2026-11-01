@@ -4473,14 +4473,6 @@ html.nav-mobile .evo-turnover .line-chart-stats {
   margin: 0;
 }
 
-.cmp-scope {
-  padding-top: 3px;
-  color: var(--text-muted);
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-align: right;
-}
-
 /* The cards' numbers (the chart's .line-chart-stat look) in the players'
    colours, or the title's ink. */
 .cmp-page .line-chart-stat .line-chart-stat-value.is-n {
@@ -5258,8 +5250,11 @@ html.nav-mobile .evo-turnover .line-chart-stats {
 }
 
 /* --- The picker (moved to <body> by js/compare-page.js): a popover under
-   the name on a computer, a bottom sheet on touch screens; the player's own
-   page first, then the ones the other player met most, then everyone. */
+   the name on a computer; full screen on touch screens (like the site
+   search's overlay) — the search field on top, the results right under it,
+   so filtering never pushes them down behind the keyboard (a bottom sheet
+   did). The player's own page first, then the ones the other player met
+   most, then everyone. */
 .cmp-picker {
   position: fixed;
   z-index: 1200;
@@ -5273,39 +5268,45 @@ html.nav-mobile .evo-turnover .line-chart-stats {
   animation: cs-menu-in 140ms ease;
 }
 
+.cmp-picker[hidden] {
+  display: none;
+}
+
 .cmp-picker-backdrop {
   position: fixed;
   inset: 0;
   z-index: 1199;
 }
 
-html.nav-mobile .cmp-picker-backdrop {
-  background: rgba(18, 12, 13, 0.4);
-  animation: cmp-fade-in 200ms ease;
-}
-
-@keyframes cmp-fade-in {
-  from {
-    opacity: 0;
-  }
-}
-
 html.nav-mobile .cmp-picker {
-  top: auto !important;
-  right: 0;
-  bottom: 0;
-  left: 0 !important;
+  inset: 0 !important;
+  flex-direction: column;
   width: auto;
   max-width: none;
-  padding-bottom: env(safe-area-inset-bottom);
-  border-radius: 24px 24px 0 0;
-  animation: cmp-sheet-in 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  height: 100dvh;
+  padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  animation: cmp-picker-up 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-@keyframes cmp-sheet-in {
+/* (Not on the [hidden] one: this display would beat it.) */
+html.nav-mobile .cmp-picker:not([hidden]) {
+  display: flex;
+}
+
+@keyframes cmp-picker-up {
   from {
-    transform: translateY(100%);
+    opacity: 0;
+    transform: translateY(24px);
   }
+}
+
+/* The page behind it doesn't scroll meanwhile. */
+html.nav-mobile.cmp-picker-open,
+html.nav-mobile.cmp-picker-open body {
+  overflow: hidden;
 }
 
 .cmp-picker-search {
@@ -5321,6 +5322,39 @@ html.nav-mobile .cmp-picker {
   width: 18px;
   height: 18px;
   color: var(--text-muted);
+}
+
+/* The browser's own clear button off: one ✕ only. */
+.cmp-picker-search input::-webkit-search-cancel-button {
+  display: none;
+}
+
+/* The ✕: touch screens only (a computer's popover closes on a click
+   outside it, or Esc). */
+.cmp-picker-close {
+  display: none;
+}
+
+html.nav-mobile .cmp-picker-search {
+  padding: 10px 12px 10px 16px;
+}
+
+html.nav-mobile .cmp-picker-close {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--cmp-fill, rgba(154, 28, 32, 0.06));
+  color: var(--text-title);
+  cursor: pointer;
+}
+
+html.nav-mobile .cmp-picker-close svg {
+  width: 18px;
+  height: 18px;
 }
 
 .cmp-picker-search input {
@@ -5345,7 +5379,9 @@ html.nav-mobile .cmp-picker {
 }
 
 html.nav-mobile .cmp-picker-list {
-  max-height: 60vh;
+  flex: 1;
+  max-height: none;
+  padding: 6px 8px 24px;
 }
 
 .cmp-picker-group {
@@ -5435,8 +5471,7 @@ html.nav-mobile .cmp-picker-list {
 @media (prefers-reduced-motion: reduce) {
   .cmp-hero,
   .cmp-plot > svg,
-  .cmp-picker,
-  .cmp-picker-backdrop {
+  .cmp-picker {
     animation: none;
   }
 

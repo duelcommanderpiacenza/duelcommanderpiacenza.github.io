@@ -1656,7 +1656,7 @@ html.nav-mobile .meta-row > .meta-tabs {
 }
 
 /* A row without the filters' segment (Giocatori, whose filters' button is
-   on its "Cerca" line): the switcher the whole card. */
+   on its "Cerca" line; Confronto, no filters): the switcher the whole card. */
 html.nav-mobile .meta-row > .meta-tabs:only-child {
   border-right: 1px solid var(--hairline);
   border-radius: 18px;

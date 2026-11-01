@@ -81,9 +81,7 @@
   <link rel="modulepreload" href="js/card-progress.js">
   <link rel="modulepreload" href="js/leaderboard.js">
   <link rel="modulepreload" href="js/compare-page.js">
-  <link rel="modulepreload" href="js/scope-filter.js">
   <link rel="modulepreload" href="js/metagame-chart.js">
-  <link rel="modulepreload" href="js/filter-toggle.js">
   <!-- /preload:modules -->
 </head>
 <body data-active-nav="players" class="is-loading">
@@ -141,8 +139,8 @@
 
 <main class="page-main cmp-page" data-page="compare">
   <!-- The section's head, like the Meta pages' (styles.css .meta-head):
-       Giocatori / Confronto in the site's segmented control, the filters'
-       button beside it. No visible title: the <h1> for screen readers. -->
+       Giocatori / Confronto in the site's segmented control (no filters:
+       the whole history). No visible title: the <h1> for screen readers. -->
   <div class="meta-head">
     <div class="page-heading">
       <h1>Confronto giocatori</h1>
@@ -152,30 +150,6 @@
         <a class="profile-tab" href="players.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg><span>Giocatori</span></a>
         <a class="profile-tab is-active" href="compare.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="18" r="3"></circle><circle cx="6" cy="6" r="3"></circle><path d="M13 6h3a2 2 0 0 1 2 2v7"></path><path d="M11 18H8a2 2 0 0 1-2-2V9"></path></svg><span>Confronto</span></a>
       </nav>
-      <button type="button" class="filter-toggle-btn" id="compare-filter-toggle" aria-expanded="false" aria-controls="compare-filter-panel" aria-label="Filtri">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
-      </button>
-    </div>
-  </div>
-  <!-- Lega and Dal (no Evento: one event says little about two players). -->
-  <div class="filter-panel is-collapsed" id="compare-filter-panel">
-    <div class="filter-panel-clip">
-      <div class="filter-panel-body">
-        <div class="filter-bar">
-          <div class="field">
-            <label for="compare-league-filter">Lega</label>
-            <select id="compare-league-filter"><option value="">Tutte le leghe</option></select>
-          </div>
-          <div class="field" hidden>
-            <label for="compare-event-filter">Evento</label>
-            <select id="compare-event-filter"><option value="">Tutti gli eventi</option></select>
-          </div>
-          <div class="field">
-            <label for="compare-date-from">Dal</label>
-            <input type="date" id="compare-date-from" placeholder="Dal" data-open-on-today>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -223,7 +197,7 @@
          Comandanti. -->
     <div class="cmp-grid" id="compare-grid">
       <section class="pie-chart-wrap cmp-card">
-        <div class="cmp-card-head"><h2 class="pie-chart-title">Statistiche</h2><span class="cmp-scope" id="compare-scope"></span></div>
+        <div class="cmp-card-head"><h2 class="pie-chart-title">Statistiche</h2></div>
         <div id="compare-stats"></div>
       </section>
 
@@ -261,13 +235,17 @@
     </div>
   </div>
 
-  <!-- The picker: a popover under the name on a computer, a bottom sheet
-       on touch screens (styles.css .cmp-picker). -->
+  <!-- The picker: a popover under the name on a computer, full screen on
+       touch screens — the search on top, the results right under it, above
+       the keyboard (styles.css .cmp-picker). -->
   <div class="cmp-picker-backdrop" id="compare-picker-backdrop" hidden></div>
   <div class="cmp-picker" id="compare-picker" role="dialog" aria-label="Scegli un giocatore" hidden>
     <div class="cmp-picker-search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
       <input type="search" id="compare-picker-input" placeholder="Cerca giocatore…" autocomplete="off" aria-label="Cerca giocatore">
+      <button type="button" class="cmp-picker-close" id="compare-picker-close" aria-label="Chiudi">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="6" y1="18" x2="18" y2="6"></line></svg>
+      </button>
     </div>
     <div class="cmp-picker-list" id="compare-picker-list"></div>
   </div>
