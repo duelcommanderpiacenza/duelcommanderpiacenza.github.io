@@ -3661,7 +3661,7 @@ html:not(.app-header) .social-filters .social-chips {
   fill-opacity: 0.24;
 }
 
-/* La corsa al vertice: lines, the art discs on their ends (no dots: one
+/* I più giocati: lines, the art discs on their ends (no dots: one
    on each line only on hover / tap, the site's .line-chart-dot-html). */
 /* (Room on the right for the end discs' half beyond the last point.) */
 .evo-race-plot {

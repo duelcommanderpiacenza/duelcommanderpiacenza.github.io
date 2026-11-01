@@ -291,7 +291,7 @@
     "Archetipi nel tempo": "Archetypes over time",
     "La fetta di ogni archetipo, evento per evento": "Each archetype's share, event by event",
     "La fetta di ogni archetipo, mese per mese": "Each archetype's share, month by month",
-    "La corsa al vertice": "The race to the top",
+    "I più giocati": "Most played",
     "Leader diversi": "Different leaders",
     "Eventi in vetta": "Events on top",
     "Mesi in vetta": "Months on top",

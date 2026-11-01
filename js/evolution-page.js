@@ -6,7 +6,7 @@
 // band at the bottom, a guide and a dark tip on hover / tap) — the title,
 // a few big numbers and the legend on top, no subtitles (user):
 //  - Archetipi nel tempo: each archetype's share, stacked to 100%;
-//  - La corsa al vertice: the 6 most played commanders' rank among the most
+//  - I più giocati: the 6 most played commanders' rank among the most
 //    played (cumulative), point after point, their art on the line's end;
 //  - Chi sale, chi scende: the 3 biggest risers / fallers, the last points
 //    against the ones before, as art tiles with their curve;
@@ -225,7 +225,7 @@ function sectionsHtml({ points, byMonth }, width) {
     </section>`;
   }
 
-  // --- La corsa al vertice ------------------------------------------------
+  // --- I più giocati ------------------------------------------------
   function race() {
     // A rank's row taller than an end disc, so neighbours' discs stand
     // apart; the discs sit on the lines' last point.
@@ -271,7 +271,7 @@ function sectionsHtml({ points, byMonth }, width) {
         .map(([r, color]) => [y(r), color]);
     return {
       html: `<section class="pie-chart-wrap line-chart-wrap is-edge evo-chart evo-race">
-        ${head("La corsa al vertice")}
+        ${head("I più giocati")}
         <div class="evo-plot evo-race-plot" style="height:${H}px"><svg viewBox="0 0 ${VW} ${H}" preserveAspectRatio="none" aria-hidden="true">${grid}${lines}</svg>${dateLabels(30)}${hits(tip, hoverDots)}${ends}</div>
       </section>`,
       names: leaders.map((k) => nameOf.get(k)),
@@ -498,7 +498,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     { passive: true, signal }
   );
 
-  // La corsa al vertice: pointing at a commander's disc lights its line.
+  // I più giocati: pointing at a commander's disc lights its line.
   sectionsEl.addEventListener(
     "pointerover",
     (e) => {
