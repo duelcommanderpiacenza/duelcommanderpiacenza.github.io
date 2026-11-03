@@ -166,27 +166,24 @@
       <p>Caricamento...</p>
     </div>
 
-    <!-- The duel (js/compare-page.js): the two players on their most played
-         commanders' art, the matches won against each other between them
-         (on touch screens a scoreboard: a line each, a VS divider). A name
-         opens the picker. -->
+    <!-- The duel (js/compare-page.js): a light card — the two names at
+         its sides (each opens the picker), their most played commanders'
+         art faint behind them, the matches won against each other in the
+         middle as giant numerals filled with that art; one height in
+         every state. -->
     <section class="cmp-hero" id="compare-hero">
-      <div class="cmp-art is-a" id="compare-art-a" aria-hidden="true"></div>
-      <div class="cmp-art is-b" id="compare-art-b" aria-hidden="true"></div>
-      <div class="cmp-hero-inner">
-        <div class="cmp-side is-a">
-          <button type="button" class="cmp-pick" data-side="a" aria-haspopup="dialog"></button>
-          <span class="cmp-side-score" data-score="a"></span>
-        </div>
-        <div class="cmp-mid">
-          <span class="cmp-vs">VS</span>
-          <div class="cmp-score" id="compare-score"></div>
-          <div class="cmp-score-note" id="compare-score-note"></div>
-        </div>
-        <div class="cmp-side is-b">
-          <button type="button" class="cmp-pick" data-side="b" aria-haspopup="dialog"></button>
-          <span class="cmp-side-score" data-score="b"></span>
-        </div>
+      <div class="cmp-side is-a">
+        <div class="cmp-art is-a" id="compare-art-a" aria-hidden="true"></div>
+        <button type="button" class="cmp-pick" data-side="a" aria-haspopup="dialog"></button>
+      </div>
+      <div class="cmp-mid">
+        <span class="cmp-vs" id="compare-vs">VS</span>
+        <div class="cmp-score" id="compare-score"></div>
+        <span class="cmp-score-note" id="compare-score-note" hidden>Mai affrontati</span>
+      </div>
+      <div class="cmp-side is-b">
+        <div class="cmp-art is-b" id="compare-art-b" aria-hidden="true"></div>
+        <button type="button" class="cmp-pick" data-side="b" aria-haspopup="dialog"></button>
       </div>
     </section>
 
@@ -194,20 +191,21 @@
     <p class="cmp-empty" id="compare-empty" hidden>Scegli due giocatori da confrontare.</p>
 
     <!-- The cards (the site's chart card): Statistiche, Scontri diretti,
-         Andamento (commander.html's edge-to-edge chart), Archetipi,
-         Comandanti. -->
+         Andamento (commander.html's edge-to-edge chart), Archetipi — on a
+         computer Statistiche and Archetipi left, Scontri diretti right,
+         Andamento under them (styles.css .cmp-grid). -->
     <div class="cmp-grid" id="compare-grid">
-      <section class="pie-chart-wrap cmp-card">
+      <section class="pie-chart-wrap cmp-card is-stats">
         <div class="cmp-card-head"><h2 class="pie-chart-title">Statistiche</h2></div>
         <div id="compare-stats"></div>
       </section>
 
-      <section class="pie-chart-wrap cmp-card">
+      <section class="pie-chart-wrap cmp-card is-h2h">
         <div class="cmp-card-head"><h2 class="pie-chart-title">Scontri diretti</h2></div>
         <div id="compare-h2h"></div>
       </section>
 
-      <section class="pie-chart-wrap line-chart-wrap is-edge cmp-card is-wide cmp-trend">
+      <section class="pie-chart-wrap line-chart-wrap is-edge cmp-card cmp-trend">
         <!-- The title, the Winrate / Piazzamenti selector at the right end
              (no numbers). -->
         <div class="line-chart-head">
@@ -220,14 +218,9 @@
         <div class="line-chart-plot cmp-plot" id="compare-plot"></div>
       </section>
 
-      <section class="pie-chart-wrap cmp-card">
+      <section class="pie-chart-wrap cmp-card is-arch">
         <div class="cmp-card-head"><h2 class="pie-chart-title">Archetipi</h2></div>
         <div id="compare-archetypes"></div>
-      </section>
-
-      <section class="pie-chart-wrap cmp-card">
-        <div class="cmp-card-head"><h2 class="pie-chart-title">Comandanti</h2></div>
-        <div id="compare-decks"></div>
       </section>
     </div>
   </div>

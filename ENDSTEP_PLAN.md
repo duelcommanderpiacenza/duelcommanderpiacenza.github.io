@@ -10,8 +10,9 @@ Decided with the user on 2026-10-30, from `_mockup-endstep.html` (deleted after 
 
 | Topic | Decision |
 |---|---|
-| **Data: league kind** | Replace `leagues.is_topdeck` (boolean) with a generic **`leagues.type`**: `'league'` / `'topdeck'` / `'online'` (user's own idea, chosen over a separate `platform` column). |
-| **Two open leagues** | Yes: **one open live league and one open online league at the same time** (plus the open Topdeck series, as today). |
+| **Data: league kind** | **Two independent flags** (revised 2026-11-03, replacing the earlier `leagues.type` idea, because an online league may or may not have points): **`leagues.no_points`** (`is_topdeck` renamed, same meaning: no points leaderboard) and **`leagues.is_online`** (played on endstep). Live + points = a league; live + no points = "Serie Topdeck"; online + points = an online league; online + no points = **"Serie online"** (no better name yet). |
+| **Standalone online events** | **Yes, they exist** (an online event outside any league), so `events` gets its own **`events.is_online`** too. |
+| **Open leagues** | One open per kind (the four above), so **one open live league and one open online league at the same time**, plus the open series. |
 | **Meta: Comandanti / Matchups / Archetipi** | A **"Dove" filter: Dal vivo · Online · Tutto, default Dal vivo** (mockup option 3B). |
 | **Player page and its history** | Online matches **appear in the history, marked with the endstep logo**. A "Dove" filter on the player's stats: **not decided yet** ("we'll see"). |
 | **Automatic badges, player card cosmetics, achievements** | **Live only.** Online games never count towards them. |
@@ -36,38 +37,40 @@ Decided with the user on 2026-10-30, from `_mockup-endstep.html` (deleted after 
 
 ## Data model (to do)
 
-1. **Migration: `leagues.type`**
-   - Add `type text not null default 'league' check (type in ('league', 'topdeck', 'online'))`.
-   - Backfill: `update leagues set type = 'topdeck' where is_topdeck`.
-   - Replace the partial unique index `leagues_only_one_open_idx on leagues (is_topdeck) where is_open` with `on leagues (type) where is_open`. That gives exactly one open league per type.
-   - Drop `is_topdeck`.
-   - Add a rollback; fold it into `schema.sql`; update the README's next number. **Run it on dcp-dev, then live, before pushing** the code that reads `type`.
-2. **Players' endstep username**: `players.endstep text` (same check as `profiles.endstep`: a username, not a URL), editable in the admin's player form.
-3. **Code that reads `is_topdeck` today**. Every one must move to `type`:
-   - the admin's events / leagues / matches forms;
-   - `js/auto-badges.js`, `js/db.js`, `js/event-recap.js`, `js/events-page.js`, `js/home.js`, `js/league-detail.js`, `js/player-league-recap.js`;
-   - `schema.sql`'s functions and policies.
+1. **Migration 034 (or the next free number): `no_points`, `is_online`**
+   - `alter table leagues rename column is_topdeck to no_points`.
+   - Add `leagues.is_online boolean not null default false` and `events.is_online boolean not null default false`.
+   - **Keep the old name for scripts still cached** (service worker, open tabs): add `is_topdeck boolean generated always as (no_points) stored`, so old code reading it keeps working. A later migration drops it, once the new code has been live for a while. (Dropping it straight away = "errore nel caricamento" for those visitors until they reload.)
+   - **`events.is_online` is the single answer to "was this played online"**: a trigger keeps a league event's flag equal to its league's (on an event's insert / league change, and on a league's `is_online` change); a standalone event sets it in the admin. So every "live only" / "Dove" filter reads the event alone, no join to leagues.
+   - Replace the partial unique index `leagues_only_one_open_idx on leagues (is_topdeck) where is_open` with `on leagues (no_points, is_online) where is_open`: one open league per kind.
+   - Add a rollback; fold it into `schema.sql`; update the README's next number. **Run it on dcp-dev, then live, before pushing** the code that reads the new names.
+2. **Players' endstep username**: `players.endstep text` (same check as `profiles.endstep`: a username, not a URL), editable in the admin's player form. Same migration.
+3. **Code that reads `is_topdeck` today: a plain rename to `no_points`** (same meaning, so nothing to decide per place; `no_points` rather than `has_points` keeps every check's polarity). Then:
+   - **Labels from both flags** ("Lega" / "Serie Topdeck" / "Lega online" / "Serie online"): js/events-page.js's card label, the admin's "Tipo" column, the event-name hint in admin/js/events-admin.js.
+   - **"The main live league" adds `&& !is_online`** (~8 places): `Leagues.getOpen` in js/db.js, js/auto-badges.js's league winner / rank rules, js/home.js, js/player-league-recap.js, the current-league pick in js/events-page.js.
+   - `Leagues.closeOtherOpenOfType` / `closeAllOpenOfType` take both flags.
+   - The admin: "Senza punti" and "Online (endstep)" checkboxes on the league; "Online (endstep)" on a standalone event.
 
-   `grep -rn "is_topdeck\|isTopdeck"` finds them.
-4. **"Live only" means `league.type <> 'online'`** (standalone events: see the open questions). Apply that filter in:
+   `grep -rn "is_topdeck\|isTopdeck"` finds them (about 45 places in 13 files; estimated ~1½ hours with the dcp-dev check).
+4. **"Live only" means `not events.is_online`**. Apply that filter in:
    - the automatic badges (`js/auto-badges.js`, `admin/js/badges-sync.js`);
    - the card cosmetics' progress (`js/card-cosmetics.js` and the progress request in `js/db.js`);
    - the achievements (not built yet; see the `dcp-achievements-decisions` memory).
-5. **The "Dove" filter**: next to the existing Lega / Evento filters (`js/scope-filter.js`, the Meta pages' filter panel). It filters entries and matches by their event's league type. Default "Dal vivo", the choice remembered (localStorage).
+5. **The "Dove" filter**: next to the existing Lega / Evento filters (`js/scope-filter.js`, the Meta pages' filter panel). It filters entries and matches by their event's `is_online`. Default "Dal vivo", the choice remembered (localStorage).
 6. **i18n**: every new Italian text needs its English in `js/i18n-en.js` ("Dove", "Dal vivo", "Online", "Tutto", "Lega su endstep", "Lega online", …).
 
 ## Open questions (ask when starting)
 
-- **Standalone online events** (not in an online league): does an event need its own online flag (e.g. `events.is_online`, or `events.type`), or are online events always inside an online league? The user only spoke of the league's type.
-- **The online league's points**: the same rules as a live league (best X−1 events, `computeLeaguePoints`), or different?
+- **The online league's points** (when it has them): the same rules as a live league (best X−1 events, `computeLeaguePoints`), or different?
+- **A standalone online event's line in the Bacheca** (2B): the disc plus "Online · endstep"?
 - **The player page's stats filter**: left for later.
 - **1C's "top black bar"**: see above.
 - **Leghe & Eventi**: does the online league sit in "In corso" next to the live one and the Topdeck series (as the mockup's B assumed), in what order, and how does it look in the Archivio?
 
 ## Suggested order
 
-1. The migration (`type`, `players.endstep`), then the code moved from `is_topdeck` to `type`, with no visible change.
-2. The admin: league type picker ("Lega / Topdeck / Online"), and the player's endstep username field.
+1. The migration (`no_points`, `is_online` on leagues and events, the sync trigger, `players.endstep`), then the code renamed from `is_topdeck` to `no_points`, with no visible change.
+2. The admin: "Senza punti" and "Online (endstep)" on the league form, "Online (endstep)" on a standalone event, and the player's endstep username field.
 3. The marks: the league card (1C), the Bacheca event (2B), the history's logo, the recap heading.
 4. The Bacheca's standings tabs (two open leagues).
 5. The "Dove" filter on the Meta pages.

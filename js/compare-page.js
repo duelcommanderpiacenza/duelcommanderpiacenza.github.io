@@ -4,20 +4,26 @@
 // closed event's entries + matches (fetchClosedResultsSince, one paged
 // request each, no event ids needed first) and the event_standings cache
 // (positions):
-//  - the hero: the two names (each a button opening the picker, underlined
-//    in its player's colour — A red on the left, B blue on the right), on
-//    their most played commanders' art, the matches won against each other
-//    between them (draws not shown); on touch screens a scoreboard;
+//  - the hero: a light card, the two names at its sides (each a button
+//    opening the picker, a bar in its player's colour under it — A red on
+//    the left, B blue on the right), their most played commanders' art
+//    faint behind them, and the matches won against each other between them
+//    (draws not shown) as giant numerals filled with that art; one height
+//    with or without a pair;
 //  - Statistiche: winrate (featured), Eventi, Primi posti, Top 8 (events of
 //    20+ players, like the player card's Podio) and Top 4 (smaller events),
 //    Comandanti — a tug-of-war bar each;
-//  - Scontri diretti: their matches, newest first, as scoreboard rows;
+//  - Scontri diretti: their matches, newest first, as strips of the two
+//    decks' art (the loser's greyed), the games won in the middle;
 //  - Andamento: commander.html's edge-to-edge chart (js/line-chart.js's
 //    look), two lines — the overall winrate after each event, or the places
 //    in the events played together;
-//  - Archetipi: a strip per player split by archetype, the legend under
-//    them, a pick lighting one and giving its events and winrate;
-//  - Comandanti: each one's 3 most played decks as art tiles.
+//  - Archetipi: a ring per player split by archetype, the legend under
+//    them, a pick lighting one and giving its winrate and events inside.
+// Every commander's art is asked once per visit (one Scryfall request for
+// all the names not asked yet) and drawn from the same URL wherever it
+// shows — the hero, the numerals, the matches — so the browser downloads
+// each picture once (user, 2026-11-03).
 // The pair is in the address (?a=&b=, kept up to date, so a comparison can
 // be shared); without one, no player is chosen: a line invites to pick two
 // (user: no default pair).
@@ -56,6 +62,10 @@ const shortDate = (iso) => new Date(iso).toLocaleDateString(locale(), { day: "nu
 const deckKey = (entry) => `${entry.commander_id ?? "?"}|${entry.partner_commander_id ?? ""}`;
 const deckLabel = (entry) =>
   entry.commander ? [entry.commander.name, entry.partner_commander?.name].filter(Boolean).join(" / ") : "—";
+// Its short form (each name up to its comma: "Yoshimaru / Breeches"), for
+// a line too narrow for the whole one.
+const deckShort = (entry) =>
+  entry.commander ? [entry.commander.name, entry.partner_commander?.name].filter(Boolean).map((n) => n.split(",")[0]).join(" / ") : "—";
 
 // js/line-chart.js's monotone cubic curve (Fritsch–Carlson): smooth, never
 // overshooting between two points.
@@ -178,6 +188,8 @@ function headToHead(a, b, evs) {
         gb: aFirst ? m.player2_wins : m.player1_wins,
         deckA: ea ? deckLabel(ea) : "—",
         deckB: eb ? deckLabel(eb) : "—",
+        shortA: ea ? deckShort(ea) : "—",
+        shortB: eb ? deckShort(eb) : "—",
         artA: ea?.commander?.name ?? "",
         artB: eb?.commander?.name ?? "",
       });
@@ -282,12 +294,16 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       });
     }
   }
+  // The hero's art: its side's wash and its numeral both read the hero's
+  // --art-a / --art-b (styles.css), set once the picture has loaded.
   async function paintHeroArt(side, name) {
     const el = $(`compare-art-${side}`);
+    const hero = $("compare-hero");
     const key = name?.toLowerCase() ?? "";
     if (el.dataset.name === key) return;
     el.dataset.name = key;
     el.classList.remove("is-loaded");
+    hero.style.removeProperty(`--art-${side}`);
     if (!key) return;
     ensureArts([name]);
     const url = await artCache.get(key);
@@ -295,7 +311,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     const img = new Image();
     img.onload = () => {
       if (el.dataset.name !== key) return;
-      el.style.backgroundImage = `url("${url}")`;
+      hero.style.setProperty(`--art-${side}`, `url("${url}")`);
       el.classList.add("is-loaded");
     };
     img.src = url;
@@ -303,21 +319,35 @@ export async function mount({ signal = new AbortController().signal } = {}) {
 
   // --- The hero ----------------------------------------------------------
 
-  // A name on one line: shrunk until it fits (down to 60%), then cut.
-  function fitName(btn) {
-    btn.style.fontSize = "";
-    const max = parseFloat(getComputedStyle(btn).fontSize);
-    let size = max;
-    while (btn.scrollWidth > btn.clientWidth + 1 && size > max * 0.6) {
-      size -= 1;
-      btn.style.fontSize = `${size}px`;
+  // A deck's name kept on one line (Scontri diretti — user): shrunk until
+  // it fits (down to 75%); still too long, its short form (data-short:
+  // the names up to their commas), shrunk the same way; then cut with an
+  // ellipsis. The whole name stays in its title.
+  function fitLine(el) {
+    const shrink = () => {
+      el.style.fontSize = "";
+      const max = parseFloat(getComputedStyle(el).fontSize);
+      let size = max;
+      while (el.scrollWidth > el.clientWidth + 1 && size > max * 0.75) {
+        size -= 0.5;
+        el.style.fontSize = `${size}px`;
+      }
+      return el.scrollWidth <= el.clientWidth + 1;
+    };
+    el.textContent = el.title;
+    if (!shrink() && el.dataset.short && el.dataset.short !== el.title) {
+      el.textContent = el.dataset.short;
+      shrink();
     }
   }
-  const fitNames = () => document.querySelectorAll(".cmp-pick").forEach(fitName);
+  const fitLines = () => grid.querySelectorAll(".cmp-match-deck").forEach(fitLine);
 
+  // The names (up to two lines), the bar in each one's colour under them;
+  // in the middle the matches won against each other — no pair yet: a
+  // hollow VS; never met: "–" and "Mai affrontati" (wins only, a pair that
+  // only drew still met). The card's height is fixed (styles.css): it
+  // never changes between these states (user).
   function renderHero(sa, sb, h2h) {
-    // Wins only (no draws); a pair that only drew still met. No pair yet:
-    // no score at all.
     const { a, b, d } = h2h.tally;
     const met = a + b + d > 0;
     const pair = Boolean(state.a && state.b);
@@ -326,20 +356,15 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       const btn = document.querySelector(`.cmp-pick[data-side="${side}"]`);
       btn.classList.toggle("is-empty", !pid);
       btn.innerHTML = `<span class="cmp-pick-name">${pid ? escapeHtml(nameOf(pid)) : "Scegli un giocatore"}</span>`;
-      const mine = side === "a" ? a : b;
-      const theirs = side === "a" ? b : a;
-      const score = document.querySelector(`[data-score="${side}"]`);
-      score.textContent = pair ? (met ? mine : "–") : "";
-      score.classList.toggle("is-behind", !met || mine < theirs);
       paintHeroArt(side, s.topDecks[0]?.commander?.name);
     }
-    requestAnimationFrame(fitNames);
-    // (Never met: "Mai affrontati" in the score's place.)
-    $("compare-score").innerHTML =
-      pair && met
-        ? `<span class="${a >= b ? "" : "is-behind"}">${a}</span><span class="sep">–</span><span class="${b >= a ? "" : "is-behind"}">${b}</span>`
-        : "";
-    $("compare-score-note").textContent = pair && !met ? "Mai affrontati" : "";
+    const score = $("compare-score");
+    score.classList.toggle("is-ghost", !pair);
+    if (!pair) score.innerHTML = '<b aria-hidden="true">VS</b>';
+    else if (met)
+      score.innerHTML = `<b class="is-a${a < b ? " is-behind" : ""}">${a}</b><i>–</i><b class="is-b${b < a ? " is-behind" : ""}">${b}</b>`;
+    else score.innerHTML = "<i>–</i>";
+    $("compare-vs").hidden = !pair;
     $("compare-score-note").hidden = !pair || met;
   }
 
@@ -383,39 +408,43 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     );
   }
 
-  // --- Scontri diretti: a scoreboard row per match — the event and round
-  // on top, then the date beside the two lines (art, deck, games won), the
-  // winner's in its colour.
-  function renderH2H(h2h) {
+  // --- Scontri diretti: a strip per match — the two decks' art side by
+  // side (a straight line between them; the loser's greyed, the winner's
+  // side tinted in its colour), the event and round and the date on top,
+  // each deck's name on one line at the bottom (fitLine), the games won in
+  // the middle, the winner's box in its colour. Never met: one strip on
+  // the two players' most played decks with the line.
+  function renderH2H(h2h, sa, sb) {
     const { games, shared } = h2h;
     const list = $("compare-h2h");
-    // (No games / matches totals at the head's right end — user.)
     if (!state.a || !state.b) {
       list.innerHTML = '<p class="page-empty">Scegli due giocatori.</p>';
       return;
     }
+    const art = (side, name) => `<span class="cmp-match-art is-${side}" data-art="${escapeHtml(name ?? "")}"></span>`;
     if (!games.length) {
-      list.innerHTML = `<p class="page-empty">Non si sono ancora affrontati.</p>${
-        shared.length
-          ? `<p class="cmp-shared"><span>Eventi giocati insieme:</span> <b>${shared.length}</b></p>`
-          : '<p class="cmp-shared">Nessun evento giocato insieme.</p>'
-      }`;
+      list.innerHTML = `
+        <div class="cmp-matches is-empty"><div class="cmp-match">${art("a", sa.topDecks[0]?.commander?.name)}${art("b", sb.topDecks[0]?.commander?.name)}<span class="cmp-match-shade"></span>
+          <span class="cmp-match-msg"><b>Non si sono ancora affrontati.</b>${
+            shared.length
+              ? `<span><span>Eventi giocati insieme:</span> <b>${shared.length}</b></span>`
+              : "<span>Nessun evento giocato insieme.</span>"
+          }</span>
+        </div></div>`;
       return;
     }
-    const line = (side, g) =>
-      `<span class="cmp-match-line is-${side}${g.winner === side ? " is-win" : ""}"><span class="cmp-match-art" data-art="${escapeHtml(
-        side === "a" ? g.artA : g.artB
-      )}"></span><span class="cmp-match-deck">${escapeHtml(side === "a" ? g.deckA : g.deckB)}</span><span class="cmp-match-games">${side === "a" ? g.ga : g.gb}</span></span>`;
     const shown = state.h2hAll ? games : games.slice(0, H2H_SHOWN);
     list.innerHTML = `
       <div class="cmp-matches">${shown
         .map((g) => {
-          const date = new Date(g.e.ev.event_date);
+          const deck = (side) =>
+            `<span class="cmp-match-deck is-${side}" title="${escapeHtml(g[`deck${side.toUpperCase()}`])}" data-short="${escapeHtml(g[`short${side.toUpperCase()}`])}">${escapeHtml(g[`deck${side.toUpperCase()}`])}</span>`;
           return `
-            <a class="cmp-match${g.winner ? "" : " is-draw"}" href="event.html?id=${g.e.ev.id}">
-              <span class="cmp-match-kicker"><span>${escapeHtml(eventTitle(g.e.ev))}</span> · <span>Turno ${g.round}</span></span>
-              <span class="cmp-match-date"><b>${date.getDate()}</b><span>${date.toLocaleDateString(locale(), { month: "short" }).replace(".", "")}</span></span>
-              <span class="cmp-match-lines">${line("a", g)}${line("b", g)}</span>
+            <a class="cmp-match ${g.winner ? `is-win-${g.winner}` : "is-draw"}" href="event.html?id=${g.e.ev.id}">
+              ${art("a", g.artA)}${art("b", g.artB)}<span class="cmp-match-shade"></span>
+              <span class="cmp-match-top"><span><span>${escapeHtml(eventTitle(g.e.ev))}</span> · <span>Turno ${g.round}</span></span><span>${shortDate(g.e.ev.event_date)}</span></span>
+              ${deck("a")}${deck("b")}
+              <span class="cmp-match-score"><b class="is-a${g.winner === "a" ? " is-win" : ""}">${g.ga}</b><b class="is-b${g.winner === "b" ? " is-win" : ""}">${g.gb}</b></span>
             </a>`;
         })
         .join("")}</div>
@@ -426,8 +455,9 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       }`;
     $("compare-h2h-more")?.addEventListener("click", () => {
       state.h2hAll = !state.h2hAll;
-      renderH2H(h2h);
+      renderH2H(h2h, sa, sb);
       paintArts(list);
+      fitLines();
     });
   }
 
@@ -579,88 +609,56 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     plot.innerHTML = `<svg viewBox="0 0 ${VW} ${H}" preserveAspectRatio="none" aria-hidden="true">${gridSvg}${paths}</svg>${yLabels}${xLabels}${hits}`;
   }
 
-  // --- Archetipi: a strip per player — its events split by archetype, in
-  // the archetypes' colours (icon and share inside a piece wide enough),
-  // the legend under them. A piece or a legend chip picks an archetype: it
-  // stays lit in both strips (the rest dimmed) and a line under them gives
-  // each player's events and winrate with it.
+  // --- Archetipi: a ring per player split by archetype (the archetypes'
+  // colours, the player's first name inside), the legend under them — icon,
+  // name, the two shares. A piece or a legend tile picks an archetype: its
+  // pieces thicker, the rest faded, and inside each ring that player's
+  // winrate and events with it (no icon there — user).
+  const RING_R = 46;
+  const RING_C = 2 * Math.PI * RING_R;
+  let archetypeData = null;
   function renderArchetypes(sa, sb) {
     const share = (s, a) => (s.archN ? (s.arch[a].n / s.archN) * 100 : 0);
-    const strip = (side, s) => {
+    const ring = (side, s) => {
+      let off = 0;
       const pieces = ARCHETYPES.filter((a) => s.arch[a].n)
         .map((a) => {
-          const v = share(s, a);
-          const label = v >= 14 ? `${archetypeIcon(a)}<span>${Math.round(v)}%</span>` : v >= 6 ? archetypeIcon(a) : "";
-          return `<button type="button" class="cmp-dna-piece is-${a}" data-arch="${a}" data-s="${v.toFixed(2)}" style="background:${ARCHETYPE_COLORS[a]}" aria-label="${ARCHETYPE_LABELS[a]} ${Math.round(v)}%">${label}</button>`;
+          const len = (share(s, a) / 100) * RING_C;
+          // (A hair of space between pieces; none round a single one.)
+          const gap = s.archN > s.arch[a].n ? 2 : 0;
+          const piece = `<circle class="cmp-don-seg is-${a}" data-arch="${a}" r="${RING_R}" cx="60" cy="60" stroke="${ARCHETYPE_COLORS[a]}" stroke-dasharray="${Math.max(0.1, len - gap).toFixed(2)} ${RING_C.toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}"></circle>`;
+          off += len;
+          return piece;
         })
         .join("");
-      return `<div class="cmp-dna-row is-${side}"><span class="cmp-dna-name">${escapeHtml(nameOf(state[side]) ?? "")}</span><div class="cmp-dna-bar">${
-        pieces || '<span class="cmp-dna-none">—</span>'
-      }</div></div>`;
+      return `<div class="cmp-don is-${side}"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="cmp-don-track" r="${RING_R}" cx="60" cy="60"></circle>${pieces}</svg><span class="cmp-don-c" data-side="${side}"></span></div>`;
     };
     const legend = ARCHETYPES.map(
       (a) =>
-        `<button type="button" class="cmp-dna-chip${sa.arch[a].n + sb.arch[a].n ? "" : " is-unused"}" data-arch="${a}"><i class="is-${a}" style="background:${ARCHETYPE_COLORS[a]}">${archetypeIcon(a)}</i>${ARCHETYPE_LABELS[a]}</button>`
+        `<button type="button" class="cmp-don-leg${sa.arch[a].n + sb.arch[a].n ? "" : " is-unused"}" data-arch="${a}"><i class="is-${a}" style="background:${ARCHETYPE_COLORS[a]}">${archetypeIcon(a)}</i><span class="cmp-don-ln">${ARCHETYPE_LABELS[a]}</span><span class="cmp-don-v"><b class="is-a">${Math.round(share(sa, a))}%</b><b class="is-b">${Math.round(share(sb, a))}%</b></span></button>`
     ).join("");
-    $("compare-archetypes").innerHTML = `
-      <div class="cmp-dna">${strip("a", sa)}${strip("b", sb)}</div>
-      <div class="cmp-dna-legend">${legend}</div>
-      <div class="cmp-dna-detail" id="compare-arch-detail"></div>`;
+    $("compare-archetypes").innerHTML = `<div class="cmp-dons">${ring("a", sa)}${ring("b", sb)}</div><div class="cmp-don-legend">${legend}</div>`;
     archetypeData = { sa, sb };
     pickArchetype(state.openArch);
-    // Grown in once drawn.
-    requestAnimationFrame(() =>
-      requestAnimationFrame(() =>
-        $("compare-archetypes").querySelectorAll("[data-s]").forEach((el) => el.style.setProperty("--s", el.dataset.s))
-      )
-    );
   }
 
-  let archetypeData = null;
   function pickArchetype(a) {
     state.openArch = a;
     const box = $("compare-archetypes");
     box.classList.toggle("has-pick", Boolean(a));
     box.querySelectorAll("[data-arch]").forEach((el) => el.classList.toggle("is-picked", el.dataset.arch === a));
-    const detail = $("compare-arch-detail");
-    if (!a || !archetypeData) {
-      detail.classList.remove("is-open");
-      return;
+    if (!archetypeData) return;
+    for (const side of ["a", "b"]) {
+      const centre = box.querySelector(`.cmp-don-c[data-side="${side}"]`);
+      centre.classList.toggle("is-pick", Boolean(a));
+      if (!a) {
+        centre.innerHTML = `<b>${escapeHtml(firstName(nameOf(state[side])))}</b>`;
+        continue;
+      }
+      const r = archetypeData[side === "a" ? "sa" : "sb"].arch[a];
+      const wr = r.n ? winrate(r) : null;
+      centre.innerHTML = `<b>${wr == null ? "—" : `${wr.toFixed(0)}%`}</b><span>winrate</span><span>${plural(r.n, "evento", "eventi")}</span>`;
     }
-    // A row per player (the archetype already lit above: not repeated), in
-    // columns — name, events, winrate — so the two line up.
-    const line = (side, s) => {
-      const r = s.arch[a];
-      const wr = winrate(r);
-      return `<span class="cmp-dna-line is-${side}"><b>${escapeHtml(firstName(nameOf(state[side])))}</b><span>${plural(r.n, "evento", "eventi")}</span><span>${
-        r.n ? `<b>${wr == null ? "—" : `${wr.toFixed(0)}%`}</b> <span>winrate</span>` : "—"
-      }</span></span>`;
-    };
-    detail.innerHTML = line("a", archetypeData.sa) + line("b", archetypeData.sb);
-    detail.classList.add("is-open");
-  }
-
-  // --- Comandanti: each one's 3 most played decks as art tiles (the first
-  // bigger), the winrate pill in the player's colour, "in comune" on a deck
-  // both played.
-  function renderDecks(sa, sb) {
-    const column = (side, s, other) => {
-      const top = s.topDecks.slice(0, 3);
-      const tiles = top.length
-        ? top
-            .map((d, i) => {
-              const wr = winrate(d);
-              return `<a class="cmp-deck${i === 0 ? " is-top" : ""}" href="commander.html?id=${d.commander?.id ?? ""}" data-art="${escapeHtml(d.commander?.name ?? "")}">
-                ${other.decks.has(d.key) ? '<span class="cmp-deck-shared">in comune</span>' : ""}
-                <span class="cmp-deck-text"><span class="cmp-deck-name">${escapeHtml(d.label)}</span><span class="cmp-deck-meta"><span>${plural(d.n, "evento", "eventi")}</span> · ${d.w}-${d.d}-${d.l}</span></span>
-                <span class="cmp-deck-pill">${wr == null ? "—" : `${wr.toFixed(0)}%`}</span>
-              </a>`;
-            })
-            .join("")
-        : '<p class="page-empty">—</p>';
-      return `<div class="cmp-decks-col is-${side}"><div class="cmp-decks-head">${escapeHtml(nameOf(state[side]) ?? "")}</div>${tiles}</div>`;
-    };
-    $("compare-decks").innerHTML = `<div class="cmp-decks">${column("a", sa, sb)}${column("b", sb, sa)}</div>`;
   }
 
   // --- Everything, for the pair ------------------------------------------
@@ -680,11 +678,10 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       return;
     }
     renderStats(sa, sb);
-    renderH2H(h2h);
+    renderH2H(h2h, sa, sb);
     chartData = { sa, sb, h2h };
     renderChart();
     renderArchetypes(sa, sb);
-    renderDecks(sa, sb);
     // All the art in one request, the hero's included.
     ensureArts([
       sa.topDecks[0]?.commander?.name,
@@ -693,6 +690,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     ]);
     paintArts(grid);
     renderHero(sa, sb, h2h);
+    requestAnimationFrame(fitLines);
     rememberPair();
   }
 
@@ -809,11 +807,11 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     if (el) pickArchetype(state.openArch === el.dataset.arch ? null : el.dataset.arch);
   });
 
-  // Redrawn when the width changes: the chart (its date labels), the names'
-  // fit.
+  // Redrawn when the width changes: the chart (its date labels), the deck
+  // names' fit.
   let chartWidth = 0;
   const resize = new ResizeObserver(() => {
-    fitNames();
+    fitLines();
     if (chartData && Math.abs(plot.clientWidth - chartWidth) > 20) {
       chartWidth = plot.clientWidth;
       renderChart();
@@ -824,4 +822,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
 
   render();
   hidePageLoading(signal);
+  // Measured again once the site's font is in (a first fit in the fallback
+  // font can cut a name that fits).
+  document.fonts?.ready.then(() => !signal.aborted && fitLines());
 }

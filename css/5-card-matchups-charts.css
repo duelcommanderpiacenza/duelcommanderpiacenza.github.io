@@ -3556,7 +3556,9 @@ html:not(.app-header) .social-filters .social-chips {
   stroke-dasharray: 3 5;
 }
 
+/* The bottom axis: solid, a shade stronger (it runs over the areas). */
 .evo-grid.is-zero {
+  stroke: var(--hairline-hover);
   stroke-dasharray: none;
 }
 
@@ -4174,305 +4176,293 @@ html.nav-mobile .evo-colours.has-six {
   --cmp-fill: rgba(255, 255, 255, 0.06);
 }
 
-/* --- The hero: the two names on their most played commanders' art (A's
-   half on the left, B's on the right, each washed with its colour), VS and
-   the matches won against each other in the middle. */
+/* --- The hero (option C "Numeri d'arte" of the 2026-11-01 mockups — user):
+   a light card; the two names at its sides (each the picker's button, a
+   short bar in its player's colour under it), each one's most played
+   commander's art faint and blurred behind its side; in the middle the
+   matches won against each other in giant numerals filled with that same
+   art (the side behind faded; draws never shown). No pair yet: a big hollow
+   VS; never met: "–" and "Mai affrontati". **One height in every state**
+   (user): the card's own. Narrow screens: the numbers on top, the two names
+   under them side by side. */
 .cmp-hero {
   position: relative;
-  overflow: hidden;
-  margin: 0 0 22px;
-  border-radius: 28px;
-  background: linear-gradient(90deg, #4a2326, #1d1a24 50%, #1c2340);
-  color: #fff;
-  box-shadow: var(--shadow-soft);
-  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-
-.cmp-art {
-  position: absolute;
-  top: -40px;
-  bottom: -40px;
-  width: 62%;
-  background-size: cover;
-  background-position: center 30%;
-  filter: blur(22px) saturate(1.3);
-  opacity: 0;
-  transition: opacity 600ms ease;
-}
-
-.cmp-art.is-loaded {
-  opacity: 1;
-}
-
-.cmp-art.is-a {
-  left: -40px;
-  mask-image: linear-gradient(90deg, #000 55%, transparent);
-}
-
-.cmp-art.is-b {
-  right: -40px;
-  mask-image: linear-gradient(270deg, #000 55%, transparent);
-}
-
-.cmp-hero::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(90deg, rgba(220, 24, 28, 0.28), transparent 38%, transparent 62%, rgba(47, 95, 220, 0.3)),
-    rgba(18, 12, 13, 0.5);
-  pointer-events: none;
-}
-
-.cmp-hero-inner {
-  position: relative;
-  z-index: 1;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: 24px;
-  padding: 36px;
-  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.35);
+  box-sizing: border-box;
+  height: 214px;
+  margin: 0 0 22px;
+  padding: 0 44px;
+  overflow: hidden;
+  border: 1px solid var(--hairline);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow-card);
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+:root[data-theme="dark"] .cmp-hero {
+  background: rgba(255, 255, 255, 0.045);
 }
 
 .cmp-side {
+  position: relative;
+  display: flex;
+  align-items: center;
+  align-self: stretch;
   min-width: 0;
   --c: var(--pa);
 }
 
 .cmp-side.is-b {
+  justify-content: flex-end;
   text-align: right;
   --c: var(--pb);
 }
 
-/* The name: the picker's button, underlined in its player's colour (white
-   on hover / while open). On one line: js/compare-page.js shrinks a long
-   one (down to 60%), then it's cut. No player yet: "Scegli un giocatore",
+/* The art behind a side: the hero's --art-a / --art-b (js/compare-page.js,
+   once loaded — the numerals use the same image). */
+.cmp-art {
+  position: absolute;
+  top: -40px;
+  bottom: -40px;
+  width: 130%;
+  background-position: center 30%;
+  background-size: cover;
+  filter: blur(26px) saturate(1.3);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 600ms ease;
+}
+
+.cmp-art.is-loaded {
+  opacity: 0.3;
+}
+
+.cmp-art.is-a {
+  left: -90px;
+  background-image: var(--art-a, none);
+  mask-image: linear-gradient(90deg, #000 30%, transparent);
+}
+
+.cmp-art.is-b {
+  right: -90px;
+  background-image: var(--art-b, none);
+  mask-image: linear-gradient(270deg, #000 30%, transparent);
+}
+
+/* The name: the picker's button, up to two lines, its colour's bar under
+   it (longer on hover / while open). No player yet: "Scegli un giocatore",
    lighter. */
 .cmp-pick {
+  position: relative;
   display: block;
   max-width: 100%;
-  padding: 2px 0 8px;
+  padding: 0;
   border: 0;
   background: transparent;
-  color: #fff;
+  color: var(--text-title);
   font: inherit;
-  font-size: 2.2rem;
+  font-size: 2rem;
   font-weight: 800;
-  line-height: 1.15;
+  line-height: 1.12;
   text-align: inherit;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   cursor: pointer;
 }
 
-.cmp-side.is-b .cmp-pick {
+.cmp-pick-name {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.cmp-pick::after {
+  content: "";
+  display: block;
+  width: 54px;
+  height: 6px;
+  margin-top: 12px;
+  border-radius: var(--radius-pill);
+  background: var(--c);
+  transition: width 200ms ease;
+}
+
+.cmp-side.is-b .cmp-pick::after {
   margin-left: auto;
 }
 
-.cmp-pick-name {
-  text-decoration: underline;
-  text-decoration-color: var(--c);
-  text-decoration-thickness: 3px;
-  text-underline-offset: 8px;
-  transition: text-decoration-color 150ms ease;
-}
-
-.cmp-pick:hover .cmp-pick-name,
-.cmp-pick[aria-expanded="true"] .cmp-pick-name {
-  text-decoration-color: #fff;
+.cmp-pick:hover::after,
+.cmp-pick[aria-expanded="true"]::after {
+  width: 84px;
 }
 
 .cmp-pick.is-empty {
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 1.5rem;
+  color: var(--text-muted);
+  font-size: 1.4rem;
   font-weight: 700;
 }
 
-/* Each side's own score: touch screens' scoreboard only. */
-.cmp-side-score {
-  display: none;
+.cmp-pick.is-empty::after {
+  opacity: 0.35;
 }
 
 .cmp-mid {
-  display: grid;
-  grid-template-rows: auto calc(2.8rem + 4px);
+  position: relative;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-items: center;
-  row-gap: 6px;
-  min-width: 120px;
-}
-
-/* Under VS, one slot as tall as the score, there with or without a pair:
-   the score, "Mai affrontati" or nothing — the hero keeps one size from
-   the start (user). */
-.cmp-score,
-.cmp-score-note {
-  grid-area: 2 / 1;
+  gap: 4px;
+  min-width: 220px;
 }
 
 .cmp-vs {
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--brand-red);
-  font-size: 0.85rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.1);
-  text-shadow: none;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.24em;
 }
 
 .cmp-score {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 12px;
-  margin-top: 4px;
-  font-size: 2.8rem;
-  font-weight: 800;
-  line-height: 1;
+  line-height: 0.84;
+}
+
+/* A numeral filled with its player's art (its colour until loaded),
+   outlined in that colour. */
+.cmp-score b {
+  padding: 0 4px;
+  background: var(--c) center 30% / cover;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-size: 9rem;
+  font-weight: 900;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+  -webkit-text-stroke: 2px var(--c);
+  filter: drop-shadow(0 8px 14px rgba(40, 24, 26, 0.16));
 }
 
-.cmp-score:empty {
-  display: none;
+.cmp-score b.is-a {
+  --c: var(--pa);
+  background-image: var(--art-a, none);
 }
 
-.cmp-score .sep {
-  color: rgba(255, 255, 255, 0.45);
-  font-size: 2rem;
-  font-weight: 600;
+.cmp-score b.is-b {
+  --c: var(--pb);
+  background-image: var(--art-b, none);
 }
 
-.cmp-score .is-behind,
-.cmp-side-score.is-behind {
-  color: rgba(255, 255, 255, 0.55);
+.cmp-score b.is-behind {
+  filter: grayscale(0.7);
+  opacity: 0.42;
+}
+
+.cmp-score i {
+  color: var(--text-muted);
+  font-size: 4rem;
+  font-style: normal;
+  font-weight: 700;
+}
+
+/* No pair yet: a hollow VS in the numbers' place. */
+.cmp-score.is-ghost b {
+  background: none;
+  -webkit-text-stroke: 2px var(--hairline-hover);
+  font-size: 8rem;
+  letter-spacing: 0.02em;
+  filter: none;
 }
 
 .cmp-score-note {
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 0.74rem;
-  font-weight: 700;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   white-space: nowrap;
 }
 
-/* Narrow screens: a scoreboard — each player a full-width line (the name,
-   its score at the right end), a VS divider between them; A's art on the
-   top half, B's on the bottom. */
 @media (max-width: 820px) {
   .cmp-hero {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: "mid mid" "a b";
+    align-content: center;
+    gap: 12px 16px;
+    height: 232px;
+    padding: 0 20px;
     border-radius: 24px;
-    background: linear-gradient(180deg, #4a2326, #1d1a24 50%, #1c2340);
+  }
+
+  /* (The art then placed against the card's corners.) */
+  .cmp-side {
+    position: static;
+    align-self: start;
+  }
+
+  .cmp-side.is-a {
+    grid-area: a;
+  }
+
+  .cmp-side.is-b {
+    grid-area: b;
   }
 
   .cmp-art {
-    right: -40px;
-    left: -40px;
-    width: auto;
+    top: -30px;
+    bottom: -30px;
+    width: 65%;
   }
 
   .cmp-art.is-a {
-    bottom: 45%;
-    mask-image: linear-gradient(180deg, #000 60%, transparent);
+    left: -30px;
   }
 
   .cmp-art.is-b {
-    top: 45%;
-    mask-image: linear-gradient(0deg, #000 60%, transparent);
-  }
-
-  .cmp-hero::after {
-    background:
-      linear-gradient(180deg, rgba(220, 24, 28, 0.26), transparent 40%, transparent 60%, rgba(47, 95, 220, 0.28)),
-      rgba(18, 12, 13, 0.5);
-  }
-
-  .cmp-hero-inner {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0;
-    padding: 18px 20px;
-  }
-
-  .cmp-side,
-  .cmp-side.is-b {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 4px 0;
-    text-align: left;
+    right: -30px;
   }
 
   .cmp-pick {
-    flex: 0 1 auto;
-    padding-bottom: 6px;
-    font-size: 1.4rem;
+    z-index: 1;
+    font-size: 1.25rem;
+  }
+
+  .cmp-pick::after {
+    width: 40px;
+    height: 5px;
+    margin-top: 8px;
+  }
+
+  .cmp-pick:hover::after,
+  .cmp-pick[aria-expanded="true"]::after {
+    width: 62px;
   }
 
   .cmp-pick.is-empty {
-    font-size: 1.15rem;
-  }
-
-  .cmp-side.is-b .cmp-pick {
-    margin-left: 0;
-  }
-
-  .cmp-pick-name {
-    text-decoration-thickness: 2.5px;
-    text-underline-offset: 6px;
-  }
-
-  /* (Its line as tall when empty: the hero keeps one size — user.) */
-  .cmp-side-score {
-    display: block;
-    min-height: 1em;
-    margin-left: auto;
-    font-size: 2.3rem;
-    font-weight: 800;
-    line-height: 1;
-    font-variant-numeric: tabular-nums;
+    font-size: 1.02rem;
   }
 
   .cmp-mid {
-    display: flex;
-    flex-direction: row;
-    gap: 10px;
+    z-index: 1;
+    grid-area: mid;
     min-width: 0;
-    margin: 10px 0;
   }
 
-  .cmp-mid::before,
-  .cmp-mid::after {
-    content: "";
-    flex: 1;
-    height: 1px;
-    background: rgba(255, 255, 255, 0.18);
+  .cmp-score b {
+    font-size: 6.2rem;
   }
 
-  .cmp-vs {
-    order: 1;
-    width: 30px;
-    height: 30px;
-    font-size: 0.68rem;
-    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
+  .cmp-score.is-ghost b {
+    font-size: 5.6rem;
   }
 
-  .cmp-score-note {
-    order: 2;
-    font-size: 0.62rem;
-    letter-spacing: 0.08em;
-  }
-
-  .cmp-mid::after {
-    order: 3;
-  }
-
-  .cmp-score {
-    display: none;
+  .cmp-score i {
+    font-size: 3rem;
   }
 }
 
@@ -4486,18 +4476,42 @@ html.nav-mobile .evo-colours.has-six {
 }
 
 /* --- The cards (the site's chart card, .pie-chart-wrap): two columns on a
-   computer, Andamento the whole width. */
+   computer — Statistiche and Archetipi on the left, Scontri diretti beside
+   both, Andamento the whole width under them (Comandanti removed — user,
+   2026-11-03); one column, in the page's order, on narrow screens. */
 .cmp-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-areas: "stats h2h" "arch h2h" "trend trend";
   gap: 22px;
   align-items: start;
+}
+
+.cmp-grid > .is-stats {
+  grid-area: stats;
+}
+
+.cmp-grid > .is-h2h {
+  grid-area: h2h;
+}
+
+.cmp-grid > .is-arch {
+  grid-area: arch;
+}
+
+.cmp-grid > .cmp-trend {
+  grid-area: trend;
 }
 
 @media (max-width: 820px) {
   .cmp-grid {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: none;
     gap: 16px;
+  }
+
+  .cmp-grid > .cmp-card {
+    grid-area: auto;
   }
 }
 
@@ -4510,10 +4524,6 @@ html.nav-mobile .evo-colours.has-six {
   position: relative;
   min-width: 0;
   margin: 0;
-}
-
-.cmp-card.is-wide {
-  grid-column: 1 / -1;
 }
 
 .cmp-card-head {
@@ -4657,9 +4667,13 @@ html.nav-mobile .evo-colours.has-six {
   }
 }
 
-/* --- Scontri diretti: a sub-card per match (the site's .history-item
-   look — user) — the event and round on top, the date beside the two lines
-   (art, deck, games won), the winner's line in its colour. */
+/* --- Scontri diretti (option C "Locandine" of the 2026-11-01 mockups —
+   user): a strip per match, the two decks' art side by side split by a
+   straight line (user: not diagonal), the loser's greyed, the winner's side
+   tinted in its colour (no coloured edge — user); the event and round and
+   the date along the top, each deck's name on one line at the bottom
+   (shrunk to fit — js/compare-page.js fitLines, user), the games won in two
+   boxes in the middle, the winner's filled with its colour. */
 .cmp-matches {
   display: flex;
   flex-direction: column;
@@ -4667,147 +4681,216 @@ html.nav-mobile .evo-colours.has-six {
 }
 
 .cmp-match {
-  display: grid;
-  grid-template-columns: 46px minmax(0, 1fr);
-  grid-template-areas: "kicker kicker" "date lines";
-  align-items: center;
-  gap: 6px 14px;
-  padding: 12px 14px;
-  border: 1px solid rgba(154, 28, 32, 0.14);
-  border-radius: 14px;
-  background: rgba(220, 24, 28, 0.055);
-  color: inherit;
+  position: relative;
+  display: block;
+  height: 96px;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #1a1416;
+  color: #fff;
   text-decoration: none;
-  transition: background 150ms ease, border-color 150ms ease;
-}
-
-.cmp-match:hover {
-  border-color: rgba(154, 28, 32, 0.26);
-  background: rgba(220, 24, 28, 0.09);
-}
-
-:root[data-theme="dark"] .cmp-match {
-  border-color: rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.06);
-}
-
-:root[data-theme="dark"] .cmp-match:hover {
-  border-color: rgba(255, 255, 255, 0.16);
-  background: rgba(255, 110, 110, 0.1);
+  isolation: isolate;
 }
 
 /* The entries are links: no underline on hover (the site's a:hover). */
-.cmp-match:hover,
-.cmp-deck:hover {
+.cmp-match:hover {
   text-decoration: none;
 }
 
-.cmp-match-kicker {
-  grid-area: kicker;
-  overflow: hidden;
-  color: var(--text-muted);
-  font-size: 0.7rem;
+.cmp-match-art {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  background: #3a2c30 center 25% / cover;
+  transition: filter 250ms ease;
+}
+
+.cmp-match-art.is-a {
+  left: 0;
+}
+
+/* The straight line between the two. */
+.cmp-match-art.is-b {
+  right: 0;
+  box-shadow: -1px 0 0 rgba(10, 6, 8, 0.9), -2px 0 0 rgba(255, 255, 255, 0.14);
+}
+
+.cmp-match.is-win-a .cmp-match-art.is-b,
+.cmp-match.is-win-b .cmp-match-art.is-a,
+.cmp-matches.is-empty .cmp-match-art {
+  filter: grayscale(1) brightness(0.55);
+}
+
+.cmp-match:hover .cmp-match-art {
+  filter: brightness(1.08);
+}
+
+.cmp-match.is-win-a:hover .cmp-match-art.is-b,
+.cmp-match.is-win-b:hover .cmp-match-art.is-a {
+  filter: grayscale(1) brightness(0.65);
+}
+
+.cmp-match-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(10, 6, 8, 0.85), rgba(10, 6, 8, 0.12) 55%, rgba(10, 6, 8, 0.6));
+}
+
+.cmp-match.is-win-a .cmp-match-shade {
+  background:
+    linear-gradient(90deg, rgba(220, 24, 28, 0.42), transparent 40%),
+    linear-gradient(0deg, rgba(10, 6, 8, 0.85), rgba(10, 6, 8, 0.12) 55%, rgba(10, 6, 8, 0.6));
+}
+
+.cmp-match.is-win-b .cmp-match-shade {
+  background:
+    linear-gradient(270deg, rgba(47, 95, 220, 0.46), transparent 40%),
+    linear-gradient(0deg, rgba(10, 6, 8, 0.85), rgba(10, 6, 8, 0.12) 55%, rgba(10, 6, 8, 0.6));
+}
+
+.cmp-match-top {
+  position: absolute;
+  z-index: 2;
+  top: 9px;
+  right: 14px;
+  left: 14px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.64rem;
   font-weight: 800;
   letter-spacing: 0.06em;
-  text-overflow: ellipsis;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.cmp-match-date {
-  grid-area: date;
-  display: grid;
-  place-items: center;
-  align-content: center;
-  height: 50px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.75);
-  line-height: 1.05;
-}
-
-:root[data-theme="dark"] .cmp-match-date {
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.cmp-match-date b {
-  color: var(--text-title);
-  font-size: 1.15rem;
-  font-weight: 900;
-}
-
-.cmp-match-date span {
-  color: var(--text-muted);
-  font-size: 0.66rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
   text-transform: uppercase;
 }
 
-.cmp-match-lines {
-  grid-area: lines;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
+.cmp-match-top span:first-child {
   min-width: 0;
-}
-
-.cmp-match-line {
-  display: grid;
-  grid-template-columns: 22px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 9px;
-  color: var(--text-muted-2);
-  --c: var(--pa);
-}
-
-.cmp-match-line.is-b {
-  --c: var(--pb);
-}
-
-.cmp-match-art {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--table-row-line) center 25% / cover;
-  box-shadow: 0 0 0 2px var(--c);
-}
-
-.cmp-match-deck {
   overflow: hidden;
-  font-size: 0.88rem;
-  font-style: italic;
-  font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.cmp-match-games {
-  min-width: 18px;
-  font-size: 1.05rem;
-  font-weight: 900;
-  font-variant-numeric: tabular-nums;
+.cmp-match-top span:last-child {
+  flex: none;
+}
+
+/* A deck's name: one line, as wide as its half beside the score. */
+.cmp-match-deck {
+  position: absolute;
+  z-index: 2;
+  bottom: 11px;
+  max-width: calc(50% - 58px);
+  overflow: hidden;
+  font-size: 0.84rem;
+  font-weight: 800;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+}
+
+.cmp-match-deck.is-a {
+  left: 16px;
+}
+
+.cmp-match-deck.is-b {
+  right: 16px;
   text-align: right;
 }
 
-.cmp-match-line.is-win .cmp-match-deck {
-  color: var(--text-title);
-  font-weight: 800;
+.cmp-match.is-win-a .cmp-match-deck.is-b,
+.cmp-match.is-win-b .cmp-match-deck.is-a {
+  color: rgba(255, 255, 255, 0.62);
+  font-weight: 600;
 }
 
-.cmp-match-line.is-win.is-a .cmp-match-games {
-  color: var(--pa-text);
+.cmp-match-score {
+  position: absolute;
+  z-index: 2;
+  top: 56%;
+  left: 50%;
+  display: flex;
+  overflow: hidden;
+  border-radius: 10px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+  transform: translate(-50%, -50%);
 }
 
-.cmp-match-line.is-win.is-b .cmp-match-games {
-  color: var(--pb-text);
+.cmp-match-score b {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 36px;
+  background: rgba(14, 9, 10, 0.85);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.2rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
 }
 
-.cmp-match:not(.is-draw) .cmp-match-line:not(.is-win) .cmp-match-art {
-  opacity: 0.55;
+.cmp-match-score b.is-a.is-win {
+  background: var(--pa);
+  color: #fff;
 }
 
-.cmp-match.is-draw .cmp-match-games {
-  color: var(--text-title);
+.cmp-match-score b.is-b.is-win {
+  background: var(--pb);
+  color: #fff;
+}
+
+/* Never met: one strip, both arts greyed, the line over them. */
+.cmp-match-msg {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 4px;
+  padding: 0 16px;
+  text-align: center;
+}
+
+.cmp-match-msg b {
+  font-size: 0.95rem;
+}
+
+.cmp-match-msg span {
+  font-size: 0.8rem;
+  opacity: 0.82;
+}
+
+@media (max-width: 600px) {
+  .cmp-match {
+    height: 92px;
+  }
+
+  .cmp-match-top {
+    right: 12px;
+    left: 12px;
+    font-size: 0.6rem;
+  }
+
+  .cmp-match-deck {
+    max-width: calc(50% - 46px);
+    font-size: 0.76rem;
+  }
+
+  .cmp-match-deck.is-a {
+    left: 13px;
+  }
+
+  .cmp-match-deck.is-b {
+    right: 13px;
+  }
+
+  .cmp-match-score b {
+    width: 28px;
+    height: 32px;
+    font-size: 1.05rem;
+  }
 }
 
 .cmp-more {
@@ -4827,13 +4910,6 @@ html.nav-mobile .evo-colours.has-six {
 .cmp-more:hover {
   border-color: var(--hairline-hover);
   background: rgba(220, 24, 28, 0.06);
-}
-
-.cmp-shared {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  text-align: center;
 }
 
 /* --- Andamento: commander.html's edge-to-edge chart (.line-chart-wrap
@@ -5046,319 +5122,188 @@ html.nav-mobile .cmp-seg button {
   font-variant-numeric: tabular-nums;
 }
 
-/* --- Archetipi: a strip per player (its name over it) — its events split
-   by archetype, in the archetypes' colours, the icon and share inside a
-   piece wide enough; no box around it, no player-coloured edge (user) —,
-   the legend under them (on one line on phones: icon over name). A piece or a chip picks an
-   archetype: lit in both strips, the rest dimmed, and a line under them
-   with each player's events and winrate with it. */
-.cmp-dna {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+/* --- Archetipi (option A "Ciambelle" of the 2026-11-01 mockups — user): a
+   ring per player split by archetype (the archetypes' colours; its first
+   name inside), the legend under them — each archetype's icon, name and the
+   two shares (A red, B blue); a piece or a legend tile picks an archetype:
+   its pieces thicker, the rest faded, and inside each ring that player's
+   winrate and events with it (no icon there — user). */
+.cmp-dons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  justify-items: center;
+  gap: 16px;
 }
 
-.cmp-dna-name {
-  display: block;
-  margin-bottom: 5px;
+.cmp-don {
+  position: relative;
+  width: min(100%, 190px);
+  aspect-ratio: 1;
+}
+
+.cmp-don > svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  transform: rotate(-90deg);
+}
+
+.cmp-don-track {
+  fill: none;
+  stroke: var(--cmp-fill);
+  stroke-width: 16;
+}
+
+.cmp-don-seg {
+  fill: none;
+  stroke-width: 16;
+  cursor: pointer;
+  transition: stroke-width 250ms ease, opacity 250ms ease;
+}
+
+#compare-archetypes.has-pick .cmp-don-seg.is-picked {
+  stroke-width: 24;
+}
+
+#compare-archetypes.has-pick .cmp-don-seg:not(.is-picked) {
+  opacity: 0.2;
+}
+
+.cmp-don-c {
+  position: absolute;
+  inset: 22%;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 3px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.cmp-don-c b {
+  max-width: 100%;
   overflow: hidden;
   color: var(--pa-text);
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  font-size: 1.1rem;
+  font-weight: 900;
   text-overflow: ellipsis;
-  text-transform: uppercase;
   white-space: nowrap;
 }
 
-.cmp-dna-row.is-b .cmp-dna-name {
+.cmp-don.is-b .cmp-don-c b {
   color: var(--pb-text);
 }
 
-.cmp-dna-bar {
-  display: flex;
-  gap: 3px;
-  height: 34px;
+.cmp-don-c.is-pick b {
+  font-size: 1.6rem;
+  line-height: 1;
 }
 
-.cmp-dna-piece {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  flex: 0 1 calc(var(--s, 0) * 1%);
-  min-width: 0;
-  padding: 0;
-  overflow: hidden;
-  border: 0;
-  border-radius: 10px;
-  color: #fff;
-  font: inherit;
-  font-size: 0.8rem;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: flex-basis 800ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 200ms ease, filter 200ms ease;
-}
-
-.cmp-dna-piece svg {
-  flex: none;
-  width: 15px;
-  height: 15px;
-}
-
-.cmp-dna-piece:hover {
-  filter: brightness(1.08);
-}
-
-.cmp-dna-none {
-  align-self: center;
-  padding-left: 10px;
+.cmp-don-c span {
   color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.15;
 }
 
-.cmp-dna-legend {
+.cmp-don-legend {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 16px;
+}
+
+.cmp-don-leg {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px;
-  margin-top: 14px;
-}
-
-.cmp-dna-chip {
-  display: inline-flex;
+  flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px 4px 4px;
+  gap: 4px;
+  min-width: 0;
+  padding: 8px 2px;
   border: 0;
-  border-radius: var(--radius-pill);
+  border-radius: 14px;
   background: var(--cmp-fill);
   color: var(--text-body);
   font: inherit;
-  font-size: 0.76rem;
-  font-weight: 800;
   cursor: pointer;
   transition: opacity 200ms ease, background 150ms ease;
 }
 
-.cmp-dna-chip i {
+.cmp-don-leg i {
   display: inline-grid;
   place-items: center;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   color: #fff;
 }
 
-.cmp-dna-chip svg {
-  width: 12px;
-  height: 12px;
+.cmp-don-leg svg {
+  width: 13px;
+  height: 13px;
 }
 
-.cmp-dna-chip.is-unused {
-  opacity: 0.4;
-}
-
-@media (max-width: 520px) {
-  .cmp-dna-legend {
-    flex-wrap: nowrap;
-    gap: 4px;
-  }
-
-  .cmp-dna-chip {
-    flex: 1 1 0;
-    flex-direction: column;
-    gap: 3px;
-    min-width: 0;
-    padding: 6px 2px;
-    border-radius: 12px;
-    font-size: 0.66rem;
-  }
-}
-
-.cmp-dna-chip:hover,
-.cmp-dna-chip.is-picked {
-  background: color-mix(in srgb, var(--brand-red) 10%, var(--cmp-fill));
-}
-
-/* A pick: the others dimmed. */
-#compare-archetypes.has-pick .cmp-dna-piece:not(.is-picked),
-#compare-archetypes.has-pick .cmp-dna-chip:not(.is-picked) {
-  opacity: 0.3;
-}
-
-.cmp-dna-detail {
-  display: grid;
-  grid-template-columns: repeat(3, auto);
-  justify-content: center;
-  gap: 4px 18px;
-  max-height: 0;
+.cmp-don-ln {
+  max-width: 100%;
   overflow: hidden;
-  color: var(--text-muted-2);
-  font-size: 0.82rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  opacity: 0;
-  transition: max-height 300ms ease, opacity 200ms ease, margin 300ms ease;
-}
-
-.cmp-dna-detail.is-open {
-  max-height: 80px;
-  margin-top: 12px;
-  opacity: 1;
-}
-
-/* A player's row: its cells in the detail's columns. */
-.cmp-dna-line {
-  display: contents;
-}
-
-.cmp-dna-line.is-a b {
-  color: var(--pa-text);
-}
-
-.cmp-dna-line.is-b b {
-  color: var(--pb-text);
-}
-
-:root[data-theme="dark"] .cmp-page :is(.cmp-dna-piece, .cmp-dna-chip i).is-combo {
-  background: #6e6267 !important;
-}
-
-/* --- Comandanti: each player's 3 most played decks as art tiles (the
-   first bigger), the two columns the same width; a tile's left edge and its
-   winrate pill in the player's colour. */
-.cmp-decks {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-}
-
-@media (max-width: 520px) {
-  .cmp-decks {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 16px;
-  }
-}
-
-.cmp-decks-col {
-  min-width: 0;
-  --c: var(--pa);
-}
-
-.cmp-decks-col.is-b {
-  --c: var(--pb);
-}
-
-.cmp-decks-head {
-  margin-bottom: 8px;
-  overflow: hidden;
-  color: var(--pa-text);
-  font-size: 0.74rem;
+  font-size: 0.7rem;
   font-weight: 800;
-  letter-spacing: 0.08em;
   text-overflow: ellipsis;
-  text-transform: uppercase;
-  white-space: nowrap;
 }
 
-.cmp-decks-col.is-b .cmp-decks-head {
-  color: var(--pb-text);
-}
-
-.cmp-deck {
-  position: relative;
+.cmp-don-v {
   display: flex;
-  align-items: flex-end;
-  gap: 10px;
-  height: 62px;
-  padding: 10px 12px;
-  overflow: hidden;
-  border-radius: 14px;
-  background: #2a2022 center 22% / cover;
-  color: #fff;
-  text-decoration: none;
-  box-shadow: inset 4px 0 0 var(--c);
-  transition: transform 200ms ease;
-}
-
-.cmp-deck + .cmp-deck {
-  margin-top: 8px;
-}
-
-.cmp-deck.is-top {
-  height: 112px;
-}
-
-.cmp-deck::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(0deg, rgba(14, 9, 10, 0.88), rgba(14, 9, 10, 0.25) 75%),
-    linear-gradient(90deg, rgba(14, 9, 10, 0.4), transparent);
-}
-
-.cmp-deck:hover {
-  transform: translateY(-2px);
-}
-
-.cmp-deck > * {
-  position: relative;
-}
-
-.cmp-deck-text {
-  flex: 1;
-  min-width: 0;
-}
-
-.cmp-deck-name {
-  display: block;
-  overflow: hidden;
-  font-size: 0.86rem;
-  font-weight: 800;
-  line-height: 1.15;
-  text-overflow: ellipsis;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
-  white-space: nowrap;
-}
-
-.cmp-deck.is-top .cmp-deck-name {
-  font-size: 1rem;
-  white-space: normal;
-}
-
-.cmp-deck-meta {
-  display: block;
-  margin-top: 2px;
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 0.72rem;
-  font-weight: 700;
-}
-
-.cmp-deck-pill {
-  flex: none;
-  padding: 3px 8px;
-  border-radius: var(--radius-pill);
-  background: var(--c);
+  gap: 6px;
   font-size: 0.74rem;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
 }
 
-.cmp-deck > .cmp-deck-shared {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  padding: 2px 8px;
-  border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(6px);
-  font-size: 0.6rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+.cmp-don-v .is-a {
+  color: var(--pa-text);
+}
+
+.cmp-don-v .is-b {
+  color: var(--pb-text);
+}
+
+.cmp-don-leg:hover,
+.cmp-don-leg.is-picked {
+  background: color-mix(in srgb, var(--brand-red) 10%, var(--cmp-fill));
+}
+
+.cmp-don-leg.is-picked {
+  box-shadow: inset 0 0 0 1.5px var(--hairline-hover);
+}
+
+.cmp-don-leg.is-unused,
+#compare-archetypes.has-pick .cmp-don-leg:not(.is-picked) {
+  opacity: 0.42;
+}
+
+@media (max-width: 600px) {
+  .cmp-don-legend {
+    gap: 4px;
+  }
+
+  .cmp-don-v {
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  .cmp-don-ln {
+    font-size: 0.62rem;
+  }
+}
+
+/* Dark mode: Combo's near-black a shade lighter (it vanished). */
+:root[data-theme="dark"] .cmp-don-seg.is-combo {
+  stroke: #6e6267;
+}
+
+:root[data-theme="dark"] .cmp-don-leg i.is-combo {
+  background: #6e6267 !important;
 }
 
 /* --- The picker (moved to <body> by js/compare-page.js): a popover under
@@ -5541,7 +5486,7 @@ html.nav-mobile .cmp-picker-list {
    two cards. */
 .sk-page.is-compare .sk-compare-hero {
   display: block;
-  height: 132px;
+  height: 214px;
   margin-bottom: 22px;
   border-radius: 28px;
 }
@@ -5560,7 +5505,7 @@ html.nav-mobile .cmp-picker-list {
 
 @media (max-width: 820px) {
   .sk-page.is-compare .sk-compare-hero {
-    height: 150px;
+    height: 232px;
     border-radius: 24px;
   }
 
@@ -5581,9 +5526,11 @@ html.nav-mobile .cmp-picker-list {
   }
 
   .cmp-stat-bar i,
-  .cmp-dna-piece,
-  .cmp-dna-detail,
-  .cmp-deck {
+  .cmp-art,
+  .cmp-pick::after,
+  .cmp-match-art,
+  .cmp-don-seg,
+  .cmp-don-leg {
     transition: none;
   }
 }

@@ -189,6 +189,9 @@ function sectionsHtml({ points, byMonth }, width) {
       .join("");
   // The plots' own margins: room for the tips over the top, the dates under.
   const bottom = 30;
+  // The bottom axis (the solid line over the dates' band), drawn over the
+  // areas that run on through it (user).
+  const axis = (H) => `<line class="evo-grid is-zero" x1="0" x2="${VW}" y1="${H - bottom}" y2="${H - bottom}" vector-effect="non-scaling-stroke"></line>`;
 
   // --- Archetipi nel tempo ------------------------------------------------
   function archetypes() {
@@ -224,7 +227,7 @@ function sectionsHtml({ points, byMonth }, width) {
     ).join("");
     return `<section class="pie-chart-wrap line-chart-wrap is-edge evo-chart evo-archetypes">
       ${head("Archetipi nel tempo", { legend })}
-      <div class="evo-plot" style="height:${H}px"><svg viewBox="0 0 ${VW} ${H}" preserveAspectRatio="none" aria-hidden="true">${bands}${lines}</svg>${dateLabels()}${hits(tip)}</div>
+      <div class="evo-plot" style="height:${H}px"><svg viewBox="0 0 ${VW} ${H}" preserveAspectRatio="none" aria-hidden="true">${bands}${axis(H)}${lines}</svg>${dateLabels()}${hits(tip)}</div>
     </section>`;
   }
 
@@ -256,7 +259,6 @@ function sectionsHtml({ points, byMonth }, width) {
       // (No rank chip on the disc — user: the tip gives the ranks.)
       ends += `<a class="evo-race-end" href="commander.html?id=${k}" data-k="${k}" data-card="${escapeHtml(nameOf.get(k))}" style="--c:${color};left:${xPct(pts.at(-1)[0])};top:${pts.at(-1)[1]}px" aria-label="${escapeHtml(nameOf.get(k))}"></a>`;
     });
-    const grid = `<line class="evo-grid is-zero" x1="0" x2="${VW}" y1="${H - bottom}" y2="${H - bottom}" vector-effect="non-scaling-stroke"></line>`;
     const tip = (i) =>
       `<strong>${escapeHtml(points[i].title)}</strong>` +
       leaders
@@ -275,7 +277,7 @@ function sectionsHtml({ points, byMonth }, width) {
     return {
       html: `<section class="pie-chart-wrap line-chart-wrap is-edge evo-chart evo-race">
         ${head("I più giocati")}
-        <div class="evo-plot evo-race-plot" style="height:${H}px"><svg viewBox="0 0 ${VW} ${H}" preserveAspectRatio="none" aria-hidden="true">${grid}${lines}</svg>${dateLabels(30)}${hits(tip, hoverDots)}${ends}</div>
+        <div class="evo-plot evo-race-plot" style="height:${H}px"><svg viewBox="0 0 ${VW} ${H}" preserveAspectRatio="none" aria-hidden="true">${axis(H)}${lines}</svg>${dateLabels(30)}${hits(tip, hoverDots)}${ends}</div>
       </section>`,
       names: leaders.map((k) => nameOf.get(k)),
     };
@@ -365,8 +367,8 @@ function sectionsHtml({ points, byMonth }, width) {
         return `<path class="evo-turnover-area ${s.cls}" d="${smoothPath(pts)} L${VW},${H} L0,${H} Z"></path><path class="evo-turnover-line ${s.cls}" d="${smoothPath(pts)}" vector-effect="non-scaling-stroke"></path>`;
       })
       .join("");
-    // The values at half and the peak on the left, no lines (user); no
-    // baseline (the areas run on through the dates' band).
+    // The values at half and the peak on the left, no lines (user); the
+    // bottom axis over the areas, which run on through the dates' band.
     const yLabels = [Math.round(most / 2), most].map((v) => `<span class="line-chart-y" style="top:${y(v)}px">${v}</span>`).join("");
     const legend = series.map((s) => `<span class="evo-chip is-line"><i style="background:${s.color}"></i>${s.label}</span>`).join("");
     const tip = (i) =>
@@ -375,7 +377,7 @@ function sectionsHtml({ points, byMonth }, width) {
     const dots = (i) => series.map((s) => [y(s.values[i]), s.color]);
     return `<section class="pie-chart-wrap line-chart-wrap is-edge evo-chart evo-turnover">
       ${head("Ricambio del meta", { legend })}
-      <div class="evo-plot" style="height:${H}px"><svg viewBox="0 0 ${VW} ${H}" preserveAspectRatio="none" aria-hidden="true">${paths}</svg>${yLabels}${dateLabels()}${hits(tip, dots)}</div>
+      <div class="evo-plot" style="height:${H}px"><svg viewBox="0 0 ${VW} ${H}" preserveAspectRatio="none" aria-hidden="true">${paths}${axis(H)}</svg>${yLabels}${dateLabels()}${hits(tip, dots)}</div>
     </section>`;
   }
 

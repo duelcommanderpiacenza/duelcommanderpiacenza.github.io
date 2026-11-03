@@ -518,7 +518,6 @@
     "Piazzamenti": "Placings",
     "Nessun evento nel periodo.": "No events in this period.",
     "Nessun evento giocato insieme nel periodo.": "No events played together in this period.",
-    "in comune": "shared",
 
     // Privacy (privacy.html — its headings and short lines; the page's
     // body is in its own English block, js/privacy-en.js).
