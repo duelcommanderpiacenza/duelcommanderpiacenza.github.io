@@ -37,7 +37,10 @@ export function tallyOutcome(bucket, outcome) {
 
 // `events` (optional): an extra "Eventi" tile right after Winrate — the
 // player page passes its events-played count; the commander page doesn't.
-export function renderWinrateTiles(el, bucket, { events = null } = {}) {
+// `elo` (optional): an "Elo" tile between them — the player page's rating. `compactRecord` (the player page): on phones
+// Vittorie / Pareggi / Sconfitte as one "V-S-P" tile (wins-losses-draws, the
+// site's order), so the hero's numbers fit one row (styles.css .is-phone-only).
+export function renderWinrateTiles(el, bucket, { events = null, elo = null, compactRecord = false } = {}) {
   const played = (bucket.wins ?? 0) + (bucket.draws ?? 0) + (bucket.losses ?? 0);
   const rate = winRatePct(bucket.wins ?? 0, played);
   el.innerHTML =
@@ -45,9 +48,11 @@ export function renderWinrateTiles(el, bucket, { events = null } = {}) {
       ? '<p class="page-empty">Non ci sono ancora dati sufficienti.</p>'
       : `
     ${statTileHtml("Winrate", `${rate}%`)}
+    ${elo === null ? "" : statTileHtml("Elo", elo)}
     ${events === null ? "" : statTileHtml("Eventi", events)}
-    ${statTileHtml("Vittorie", bucket.wins)}
-    ${statTileHtml("Pareggi", bucket.draws)}
-    ${statTileHtml("Sconfitte", bucket.losses)}
+    ${statTileHtml("Vittorie", bucket.wins, compactRecord ? "is-desktop-only" : "")}
+    ${statTileHtml("Pareggi", bucket.draws, compactRecord ? "is-desktop-only" : "")}
+    ${statTileHtml("Sconfitte", bucket.losses, compactRecord ? "is-desktop-only" : "")}
+    ${compactRecord ? statTileHtml("V-S-P", `${bucket.wins}-${bucket.losses}-${bucket.draws}`, "is-phone-only") : ""}
   `;
 }

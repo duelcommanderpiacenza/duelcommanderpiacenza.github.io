@@ -421,14 +421,18 @@ create policy "event_standings_public_read" on event_standings for select
 -- pairs, names of the real leagues won) — a pure derived cache like
 -- event_standings: computed by js/card-progress.js and fully replaced by
 -- admin/js/badges-sync.js on every event/league/badge change. Public read
--- (it only summarises public results). migration 011.
+-- (it only summarises public results). migration 011. Also each player's
+-- Elo rating (js/elo.js, the same sync; migration 035): now and at the start
+-- of their latest event, null with no rated match.
 create table player_progress (
   player_id uuid primary key references players(id) on delete cascade,
   events_played integer not null default 0,
   matches_won integer not null default 0,
   big_top8s integer not null default 0,   -- top 8s in events with 20+ players
   commanders integer not null default 0,  -- distinct commander + partner pairs
-  leagues_won text[] not null default '{}' -- names of the real leagues won
+  leagues_won text[] not null default '{}', -- names of the real leagues won
+  elo integer,                            -- Elo rating now (migration 035)
+  elo_before integer                      -- ... at the start of their latest event
 );
 
 alter table player_progress enable row level security;

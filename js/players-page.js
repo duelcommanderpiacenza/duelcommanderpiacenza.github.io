@@ -1,17 +1,18 @@
-import { Players, Events, Leagues, fetchEventsResults } from "./db.js";
+import { Players, Events, Leagues, PlayerProgress, fetchEventsResults } from "./db.js";
 import { matchRoundOutcome, isBye, isDrop } from "./leaderboard.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { fetchTopAutoBadgesByPlayer, playerBadgesHtml } from "./player-badges.js";
 import { escapeHtml, showError, softFail, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
-import { historyPanelHtml, historyStatsHtml, winrateTrendHtml, latestPresence } from "./history-list.js";
+import { historyPanelHtml, historyStatsHtml, winrateTrendHtml, eloTrendHtml, latestPresence } from "./history-list.js";
 import { initBackToTop } from "./back-to-top.js";
 
 // One sub-card per player (js/history-list.js), the whole card a link to
 // the player's page: name + badges (on touch screens the badges at the
 // row's right end, on the name's first line — styles.css
-// .players-row-title), the numbers on the right.
+// .players-row-title), the numbers on the right. The Elo is the player's
+// whole history (js/elo.js), not the filters' scope — said on hover.
 function renderRow(r) {
   return `
     <a class="history-item history-ranked" href="player.html?id=${r.id}">
@@ -21,6 +22,12 @@ function renderRow(r) {
       ${historyStatsHtml([
         { label: "Eventi", value: r.eventsPlayed },
         { label: "Winrate", value: `${r.rate}${winrateTrendHtml(r.winRate, r.winRateBefore, r.inLatest)}`, main: true, trend: true },
+        {
+          label: "Elo",
+          value: r.elo === null ? "—" : `${r.elo}${eloTrendHtml(r.elo, r.eloBefore)}`,
+          trend: true,
+          title: "Elo su tutti gli eventi, non cambia con i filtri",
+        },
       ])}
     </a>`;
 }
@@ -74,10 +81,11 @@ function playerRecords(eventsData) {
 // Highest value first; a null winRate (no games played) always sorts last
 // rather than tying with an actual 0%.
 // "Ordina per": the numbers each card shows (since 2026-10-30 — Vittorie,
-// not on the cards, dropped).
+// not on the cards, dropped). No Elo sorts last too.
 const SORTERS = {
   events: (a, b) => b.eventsPlayed - a.eventsPlayed,
   winrate: (a, b) => (b.winRate ?? -1) - (a.winRate ?? -1),
+  elo: (a, b) => (b.elo ?? -1) - (a.elo ?? -1),
 };
 
 // In-app page (js/router.js): mounted by the router on this page's <main>
@@ -101,20 +109,26 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   // months"), not scoped to whatever this page's own filters are set to —
   // read once, globally, rather than re-fetched on every filter change.
   let autoBadgesByPlayer = new Map();
+  // Each player's Elo (player_progress, js/elo.js): the whole history, so
+  // read once too, whatever the filters.
+  let eloByPlayer = new Map();
   // The filters' leagues and events (js/scope-filter.js), loaded with the rest.
   let allLeagues = [];
   let allEvents = [];
 
   // Everything before the stats in one round: the players, the events
-  // (dates; the filters' list too), the leagues and the automatic badges.
+  // (dates; the filters' list too), the leagues, the automatic badges and
+  // the Elo ratings.
   try {
-    const [players, events, leagues, autoBadges] = await Promise.all([
+    const [players, events, leagues, autoBadges, eloRows] = await Promise.all([
       Players.list(),
       Events.list(),
       Leagues.list(),
       // Not fatal if this fails — the page still works with just the
       // manually assigned badges.
       softFail(fetchTopAutoBadgesByPlayer(), new Map()),
+      // Nor this: "—" for every Elo.
+      softFail(PlayerProgress.listElo(), []),
     ]);
     if (signal.aborted) return;
     if (players.length === 0) {
@@ -126,6 +140,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     allLeagues = leagues;
     allEvents = events;
     autoBadgesByPlayer = autoBadges;
+    eloByPlayer = new Map(eloRows.map((r) => [r.player_id, r]));
     eventDateById = new Map(events.map((e) => [e.id, e.event_date]));
   } catch (err) {
     showError(listEl, err);
@@ -213,6 +228,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
           winRateBefore: rateBefore(p.id),
           inLatest: latestOf.has(p.id),
           rate: winRate === null ? "—" : `${winRate.toFixed(1)}%`,
+          elo: eloByPlayer.get(p.id)?.elo ?? null,
+          eloBefore: eloByPlayer.get(p.id)?.elo_before ?? null,
         };
       });
 

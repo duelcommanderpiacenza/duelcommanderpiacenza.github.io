@@ -181,6 +181,12 @@
 .profile-hero .page-empty {
   color: rgba(255, 255, 255, 0.7);
 }
+
+/* The phones' "V-S-P" tile (js/winrate.js compactRecord): the separate
+   tiles instead on a computer. */
+.profile-hero .stat-tile.is-phone-only {
+  display: none;
+}
 /* player.html / account.html / commander.html: the hero art's colour as the page's accent
    (js/player-card.js applyHeroTone, once the art is read): the site's red
    variables redefined on <main> — its buttons, chips, active tabs, carousel
@@ -1093,6 +1099,17 @@ html.app-header .page-back-wrap {
     letter-spacing: 0.02em;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  /* player.html: Vittorie / Pareggi / Sconfitte as one "V-S-P" tile
+     (js/winrate.js compactRecord), so its numbers — with the Elo — fit one
+     row: Winrate, Elo, Eventi, V-S-P. */
+  .profile-hero .stat-tile.is-desktop-only {
+    display: none;
+  }
+
+  .profile-hero .stat-tile.is-phone-only {
+    display: flex;
   }
 }
 

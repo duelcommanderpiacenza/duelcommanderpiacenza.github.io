@@ -19,8 +19,8 @@
 
 //
 // And a third: player_progress (js/card-progress.js — the numbers behind the
-// player card's cosmetics), from the same closed-event results, which are
-// downloaded once and shared by both.
+// player card's cosmetics — and js/elo.js, each player's Elo rating), from
+// the same closed-event results, which are downloaded once and shared by both.
 //
 // And a fourth: the commanders' "Nuovo" badge (commanders.is_new, migration
 // 027), from the same results and the events' dates.
@@ -30,6 +30,7 @@ import { showToast } from "./toast.js";
 import { localIso } from "../../js/ui.js";
 import { computeEventLeaderboard } from "../../js/leaderboard.js";
 import { computeCardProgress } from "../../js/card-progress.js";
+import { computeElo } from "../../js/elo.js";
 import { PlayerAutoBadges, EventStandings, PlayerProgress, Commanders, Events, Leagues, fetchEventsResults } from "../../js/db.js";
 
 async function syncBadgeAssignments() {
@@ -46,7 +47,7 @@ async function syncBadgeAssignments() {
 async function loadClosedResults() {
   const closed = (await Events.list()).filter((ev) => !ev.is_open);
   const closedIds = closed.map((ev) => ev.id);
-  return { closedIds, closedDates: closed.map((ev) => ev.event_date), eventsData: await fetchEventsResults(closedIds) };
+  return { closed, closedIds, closedDates: closed.map((ev) => ev.event_date), eventsData: await fetchEventsResults(closedIds) };
 }
 
 // The commanders' "Nuovo" badge: those whose first appearance in a closed
@@ -115,10 +116,35 @@ async function syncEventStandings({ closedIds, eventsData }) {
   await EventStandings.replaceAll(rows);
 }
 
-// Each player's progress (events, wins, big top 8s, commanders, leagues won).
-async function syncPlayerProgress({ eventsData }) {
+// Each player's progress (events, wins, big top 8s, commanders, leagues won)
+// and Elo rating.
+async function syncPlayerProgress({ closed, eventsData }) {
   const leagueWinners = await closedLeagueWinners(await Leagues.list());
-  await PlayerProgress.replaceAll(computeCardProgress(eventsData, leagueWinners));
+  const rows = computeCardProgress(eventsData, leagueWinners);
+  // The Elo needs the events oldest first (Events.list gives them newest
+  // first); on the same day, the one created first.
+  const order = closed
+    .map((_, i) => i)
+    .sort(
+      (a, b) =>
+        (closed[a].event_date ?? "").localeCompare(closed[b].event_date ?? "") ||
+        closed[a].created_at.localeCompare(closed[b].created_at)
+    );
+  const elo = computeElo(order.map((i) => eventsData[i]));
+  const withElo = rows.map((row) => ({
+    ...row,
+    elo: elo.get(row.player_id)?.elo ?? null,
+    elo_before: elo.get(row.player_id)?.before ?? null,
+  }));
+  try {
+    await PlayerProgress.replaceAll(withElo);
+  } catch (err) {
+    // Migration 035 not run on this database yet (no elo columns: PostgREST's
+    // PGRST204, Postgres' 42703) — the rest still saved, without them.
+    if (err?.code !== "PGRST204" && err?.code !== "42703") throw err;
+    console.warn("player_progress.elo missing: run migration 035", err);
+    await PlayerProgress.replaceAll(rows);
+  }
 }
 
 async function runSync() {

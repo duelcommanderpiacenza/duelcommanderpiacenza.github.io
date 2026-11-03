@@ -258,6 +258,18 @@ export function winrateTrendHtml(now, before, inLatest) {
   return `<span class="wr-trend is-${kind}" role="img" aria-label="${label}" title="${label}">${symbol}</span>`;
 }
 
+// The Elo's trend (Giocatori): the same arrow, against
+// the rating at the start of the player's latest event (player_progress,
+// js/elo.js — the whole history, whatever the filters), its change in
+// points on hover. Nothing without a rating.
+export function eloTrendHtml(elo, before) {
+  if (elo == null) return "";
+  const diff = before == null ? 0 : elo - before;
+  const kind = diff > 0 ? "up" : diff < 0 ? "down" : "same";
+  const label = diff === 0 ? "Invariato dall'ultimo evento" : `${diff > 0 ? "+" : "−"}${Math.abs(diff)} dall'ultimo evento`;
+  return `<span class="wr-trend is-${kind}" role="img" aria-label="${label}" title="${label}">${TREND_SYMBOLS[kind]}</span>`;
+}
+
 // The trend arrows' "before": for each player / commander pair, the latest
 // event (by date; a tie: the later one listed) among `eventIds` — the
 // filters' scope, nothing outside it — that it was in, as an index into

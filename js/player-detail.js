@@ -95,8 +95,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     const autoBadgesRequest = PlayerAutoBadges.listByPlayer(id);
     const entriesRequest = EventEntries.listByPlayer(id);
     const cardRequest = softFail(PlayerCards.get(id), null);
-    // The card's cosmetics (js/card-cosmetics.js) — never fatal either: no
-    // progress just means a card without them.
+    // The card's cosmetics (js/card-cosmetics.js) and the hero's Elo — never
+    // fatal either: no progress just means a card without them, no Elo tile.
     const progressRequest = softFail(PlayerProgress.get(id), null);
     // Storico partite's final positions (cached standings — never fatal: an
     // event missing from them is computed below) and the player's matches.
@@ -245,9 +245,15 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     // win, a loss, or a match played — skipped entirely; a bye counts as a
     // played match won, same as any other match win. Events: entries (an
     // event counts even if the player dropped before playing a round).
+    // The Elo (js/elo.js, cached in player_progress): the number alone, no
+    // trend arrow here (user's choice — the Giocatori list has it); no tile
+    // before the player has a rating.
     const bucket = { wins: 0, draws: 0, losses: 0 };
     for (const r of ownRows) if (!r.isDrop) tallyOutcome(bucket, r.outcome);
-    renderWinrateTiles(overallEl, bucket, { events: entries.length });
+    const progress = await progressRequest;
+    if (signal.aborted) return;
+    const elo = progress?.elo ?? null;
+    renderWinrateTiles(overallEl, bucket, { events: entries.length, elo, compactRecord: true });
 
     // The second (last) round, together: the entries of the events played
     // (the opponents' decks), and — only for events missing from the cached

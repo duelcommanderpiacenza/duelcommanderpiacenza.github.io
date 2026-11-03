@@ -722,18 +722,19 @@ export const PlayerAutoBadges = {
 };
 
 // A player's progress (migration 011): the numbers behind the
-// player card's cosmetics (js/card-cosmetics.js). get() → the row or null
-// (no results yet, or the table not created on this DB — callers treat a
-// failure the same: a card without cosmetics). replaceAll(): the admin's
-// full rebuild (admin/js/badges-sync.js), like EventStandings.replaceAll.
+// player card's cosmetics (js/card-cosmetics.js), and the Elo rating
+// (js/elo.js, migration 035). get() → the row or null (no results yet, or
+// the table not created on this DB — callers treat a failure the same: a
+// card without cosmetics); every column, so a database without migration
+// 035 still answers (just no `elo` / `elo_before`). listElo(): every rated
+// player's { player_id, elo, elo_before } (Giocatori). replaceAll(): the
+// admin's full rebuild (admin/js/badges-sync.js), like EventStandings.replaceAll.
 export const PlayerProgress = {
-  get: (playerId) =>
-    sb
-      .from("player_progress")
-      .select("events_played, matches_won, big_top8s, commanders, leagues_won")
-      .eq("player_id", playerId)
-      .maybeSingle()
-      .then(assertOk),
+  get: (playerId) => sb.from("player_progress").select("*").eq("player_id", playerId).maybeSingle().then(assertOk),
+  listElo: () =>
+    selectAllRows(() =>
+      sb.from("player_progress").select("player_id, elo, elo_before").not("elo", "is", null).order("player_id")
+    ),
   replaceAll: async (rows) => {
     assertOk(await sb.from("player_progress").delete().neq("player_id", "00000000-0000-0000-0000-000000000000"));
     for (let i = 0; i < rows.length; i += 500) {
