@@ -2493,6 +2493,17 @@ html.app-header .home-board > :is(#home-panel-events, #home-panel-standings) {
   background: #f6ece8;
 }
 
+/* The timeline's past events a step darker than the Classifica's rows, so
+   they stand out from the panel (user's choice 2026-11-03; the endstep /
+   external ones: their tints below, 14%). */
+.home-board .home-timeline :is(.is-played, .is-pending) > .league-tl-card {
+  background: #f5ebe6;
+}
+
+.home-board .home-timeline :is(.is-played, .is-pending) > a.league-tl-card:hover {
+  background: #efe0da;
+}
+
 :root[data-theme="dark"] .home-board .home-timeline :is(.is-played, .is-pending) > .league-tl-card {
   border-color: transparent;
   background: rgba(255, 255, 255, 0.06);
@@ -2948,6 +2959,25 @@ html.app-header .home-head-icon {
   --tl-kind: var(--external-blue);
 }
 
+/* Their "Liste" button in the type's colour too (ours keeps the red of
+   .results-menu-btn): darkened to read on its white, lightened on the dark
+   theme like the red; its hover tint in it. */
+.home-timeline :is(.is-online, .is-external) .results-menu-btn {
+  color: color-mix(in oklch, var(--tl-kind) 70%, #000);
+}
+
+.home-timeline :is(.is-online, .is-external) .results-menu-btn:is(:hover, [aria-expanded="true"]) {
+  background: color-mix(in oklch, var(--tl-kind) 8%, #fff);
+}
+
+:root[data-theme="dark"] .home-timeline :is(.is-online, .is-external) .results-menu-btn {
+  color: color-mix(in srgb, var(--tl-kind) 55%, #fff);
+}
+
+:root[data-theme="dark"] .home-timeline :is(.is-online, .is-external) .results-menu-btn:is(:hover, [aria-expanded="true"]) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .home-timeline :is(.is-local, .is-online, .is-external).is-future > .league-tl-node {
   border-color: var(--tl-kind);
 }
@@ -2961,11 +2991,11 @@ html.app-header .home-head-icon {
 }
 
 .home-board .home-timeline :is(.is-online, .is-external).is-played > .league-tl-card {
-  background: color-mix(in oklch, var(--tl-kind) 8%, #fff);
+  background: color-mix(in oklch, var(--tl-kind) 14%, #fff);
 }
 
 .home-board .home-timeline :is(.is-online, .is-external).is-played > a.league-tl-card:hover {
-  background: color-mix(in oklch, var(--tl-kind) 14%, #fff);
+  background: color-mix(in oklch, var(--tl-kind) 20%, #fff);
 }
 
 :root[data-theme="dark"] .home-board .home-timeline :is(.is-local, .is-online, .is-external).is-played > .league-tl-card {
