@@ -101,8 +101,8 @@ export function formatTime(value) {
 // endstep.cc's logo (the diamond, its core, the step bar), in currentColor —
 // the player card's link to it (js/player-card.js) and, as ENDSTEP_MARK, a
 // small disc in endstep's own colours (gold on near-black, styles.css
-// .endstep-mark) beside what's played online: the Bacheca's timeline, Leghe
-// & Eventi's cards.
+// .endstep-mark) beside what's played online: Leghe & Eventi's cards, and
+// the Bacheca's timeline (there without the disc).
 export function endstepLogo(cls = "") {
   return `<svg${cls ? ` class="${cls}"` : ""} viewBox="11 9 42 46" aria-hidden="true"><path d="M32 11 L49 28 L32 45 L15 28 Z" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round"></path><path d="M32 21 L38 28 L32 35 L26 28 Z" fill="currentColor"></path><rect x="13" y="49" width="38" height="4.4" rx="2.2" fill="currentColor"></rect></svg>`;
 }

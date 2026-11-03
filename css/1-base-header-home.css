@@ -3062,9 +3062,9 @@ html.app-header .home-head-icon {
 }
 
 /* Played online on endstep (js/ui.js ENDSTEP_MARK): endstep's logo, gold
-   on its near-black, in a small disc — before an online event's league on
-   the Bacheca's timeline, in Leghe & Eventi's labels. Its own colours in
-   both themes and on the red "next" card. */
+   on its near-black, in a small disc — in Leghe & Eventi's labels. Its own
+   colours in both themes. On the Bacheca's timeline, before an online
+   event's league, without the disc (below). */
 .endstep-mark {
   display: inline-flex;
   align-items: center;
@@ -3077,20 +3077,31 @@ html.app-header .home-head-icon {
   color: var(--endstep-gold);
 }
 
-.endstep-mark svg,
-.league-tl-place .endstep-mark svg {
+.endstep-mark svg {
   width: 64%;
   height: 64%;
   margin: 0;
 }
 
-/* 1px out to the left, past the name's first letter: a round mark touches
-   its left edge at one point only, so level with the name it looked set in
-   (user's eye, twice). Its line (.league-tl-k, clipped for its "…") lets it
-   out — the place's text cuts itself (.league-tl-place-text). */
+/* On the Bacheca's timeline the logo alone, no disc (user's choice,
+   2026-11-03), the size of the pin before an external's Località: the gold
+   dark enough to read on the light card (--endstep-gold-deep, the gold
+   itself on the dark theme), the gold on the dark "next" card (below). Its
+   line (.league-tl-k, clipped for its "…") lets it out — the place's text
+   cuts itself (.league-tl-place-text). */
 .league-tl-place .endstep-mark {
+  width: auto;
+  height: auto;
   margin-right: 2px;
-  margin-left: -1px;
+  border-radius: 0;
+  background: none;
+  color: var(--endstep-gold-deep);
+}
+
+.league-tl-place .endstep-mark svg {
+  width: 1.05em;
+  height: 1.15em;
+  margin: 0;
 }
 
 .home-timeline .league-tl-k:has(> .league-tl-place > .endstep-mark) {
@@ -3138,7 +3149,7 @@ html.app-header .home-head-icon {
   background: radial-gradient(140% 160% at 100% 0%, var(--endstep-ink-2), var(--endstep-ink) 65%);
 }
 
-:root .home-timeline .is-online.is-next > .league-tl-card :is(.league-tl-k, .league-tl-place-text, .league-tl-side) {
+:root .home-timeline .is-online.is-next > .league-tl-card :is(.league-tl-k, .league-tl-place-text, .league-tl-side, .endstep-mark) {
   color: var(--endstep-gold);
 }
 
