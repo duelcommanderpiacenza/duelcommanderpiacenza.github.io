@@ -10,7 +10,9 @@ import { syncAutoBadges } from "./badges-sync.js";
  * nested under. Drilling into "Gestisci iscritti/partite" hands the event
  * off to the same shared entries/matches flow the league pyramid uses.
  *
- * An external event ("Evento esterno", migration 026: played somewhere
+ * The form's switch: Locale (ordinary), Esterno, Online — one of the three.
+ *
+ * An external event ("Esterno", migration 026: played somewhere
  * else, only announced on the public Bacheca) has a Località and a Sito
  * (where in the town — "Milano - Il Labirinto") instead, and
  * neither entries/matches nor an open/closed state — no Gestisci, no
@@ -18,7 +20,7 @@ import { syncAutoBadges } from "./badges-sync.js";
  * can be made external (an existing one may already have entries); an
  * external one can be turned back into an ordinary one.
  *
- * An online event ("Si gioca online", migration 034: played on endstep)
+ * An online event ("Online", migration 034: played on endstep)
  * is an ordinary one in every way here — entries, matches, open/closed —
  * just marked "Online" in the list; never external too.
  */
@@ -36,14 +38,17 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
   const timeField = document.getElementById("standalone-events-admin-time");
   const resultsUrlField = document.getElementById("standalone-events-admin-results-url");
   const decklistsUrlField = document.getElementById("standalone-events-admin-decklists-url");
-  const externalField = document.getElementById("standalone-events-admin-external");
+  // Locale / Esterno / Online: one of the three (an event is never both
+  // external and online — events_external_not_online), Locale by default.
+  const kindRadios = Array.from(form.querySelectorAll('input[name="standalone-events-admin-kind"]'));
+  const externalRadio = kindRadios.find((r) => r.value === "external");
+  const kind = () => kindRadios.find((r) => r.checked)?.value ?? "local";
+  const setKind = (value) => kindRadios.forEach((r) => (r.checked = r.value === value));
   const externalHint = document.getElementById("standalone-events-admin-external-hint");
   const locationWrap = document.getElementById("standalone-events-admin-location-field");
   const locationField = document.getElementById("standalone-events-admin-location");
   const venueWrap = document.getElementById("standalone-events-admin-venue-field");
   const venueField = document.getElementById("standalone-events-admin-venue");
-  const onlineWrap = document.getElementById("standalone-events-admin-online-field");
-  const onlineField = document.getElementById("standalone-events-admin-online");
   const msgEl = document.getElementById("standalone-events-admin-message");
   const cancelBtn = document.getElementById("standalone-events-admin-cancel");
 
@@ -134,25 +139,24 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
     }
   }
 
-  // The Località and Sito fields only for an external event; the checkbox only for a
-  // new event or an external one (see the top of the file).
+  // The Località and Sito fields only for an external event; "Esterno" only
+  // for a new event or an external one (see the top of the file).
   function syncExternal(row = null) {
     const canChange = !row || Boolean(row.is_external);
-    externalField.disabled = !canChange;
+    externalRadio.disabled = !canChange;
     externalHint.textContent = canChange ? "" : "Solo un evento nuovo può essere esterno.";
-    locationWrap.hidden = !externalField.checked;
-    venueWrap.hidden = !externalField.checked;
-    // External or online, never both (events_external_not_online).
-    onlineWrap.hidden = externalField.checked;
-    if (externalField.checked) onlineField.checked = false;
+    const external = kind() === "external";
+    locationWrap.hidden = !external;
+    venueWrap.hidden = !external;
   }
-  externalField.addEventListener("change", () => syncExternal(events.find((e) => e.id === idField.value) ?? null));
+  kindRadios.forEach((r) =>
+    r.addEventListener("change", () => syncExternal(events.find((e) => e.id === idField.value) ?? null))
+  );
 
   function onEdit(row) {
     idField.value = row.id;
     nameField.value = row.name;
-    externalField.checked = Boolean(row.is_external);
-    onlineField.checked = Boolean(row.is_online);
+    setKind(row.is_external ? "external" : row.is_online ? "online" : "local");
     locationField.value = row.location ?? "";
     venueField.value = row.venue ?? "";
     syncExternal(row);
@@ -217,17 +221,18 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
       results_url: resultsUrl || null,
       decklists_url: decklistsUrl || null,
       league_id: null,
-      is_online: onlineField.checked && !externalField.checked,
+      is_online: kind() === "online",
     };
+    const external = kind() === "external";
     if (!payload.name) return;
     // Sent only when it's (or was) external, so an ordinary event still saves
     // on a database without migration 026. External: open for good.
     const editing = events.find((e) => e.id === idField.value);
-    if (externalField.checked || editing?.is_external) {
-      payload.is_external = externalField.checked;
-      payload.location = externalField.checked ? locationField.value.trim() || null : null;
-      payload.venue = externalField.checked ? venueField.value.trim() || null : null;
-      if (externalField.checked) payload.is_open = true;
+    if (external || editing?.is_external) {
+      payload.is_external = external;
+      payload.location = external ? locationField.value.trim() || null : null;
+      payload.venue = external ? venueField.value.trim() || null : null;
+      if (external) payload.is_open = true;
     }
     try {
       if (idField.value) await Events.update(idField.value, payload);
@@ -239,7 +244,7 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
       if (err?.code === "23505") {
         setMessage(
           msgEl,
-          externalField.checked
+          external
             ? "Esiste già un evento esterno con questo nome, data, località e sito."
             : "Esiste già un evento standalone con questo nome.",
           true
