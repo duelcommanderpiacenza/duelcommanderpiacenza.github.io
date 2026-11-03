@@ -60,8 +60,8 @@
 /* An online league (migration 034 — option A2 of a mockup, js/events-page.js):
    the card light like the live one's, its label and ring in endstep's gold,
    its next event's side endstep-dark (gold calendar sheet, label and time);
-   the Serie online's row with a dark block on its left, endstep's logo in it
-   (.ev-online-cap). Here, after the dark theme's rules above, and with a
+   the Serie online's row its label gold too, endstep's mark before it (the
+   dark block on its left, .ev-online-cap, dropped 2026-11-03). Here, after the dark theme's rules above, and with a
    :root where those would win: the same in both themes. */
 .ev-tile.is-online .ev-tile-k {
   color: var(--endstep-gold-deep);
@@ -101,26 +101,6 @@
 :root .ev-league.is-online .ev-slot.is-next .ev-cal {
   background: var(--endstep-gold);
   color: var(--endstep-ink);
-}
-
-.ev-tile.ev-minor.is-online {
-  padding-left: 0;
-}
-
-.ev-online-cap {
-  display: grid;
-  flex-shrink: 0;
-  place-items: center;
-  align-self: stretch;
-  width: 54px;
-  margin: -10px 0;
-  background: var(--endstep-ink);
-  color: var(--endstep-gold);
-}
-
-.ev-online-cap svg {
-  width: 22px;
-  height: 22px;
 }
 
 :root .ev-minor.is-online .ev-chev {

@@ -1787,11 +1787,10 @@ button.ev-tile {
   text-transform: uppercase;
 }
 
-/* An online league's label (js/events-page.js): endstep's mark before it. */
+/* An online league's label (js/events-page.js): endstep's mark before it,
+   overhanging its line by a hair so the label stays as tall as the others'. */
 .ev-tile-k .endstep-mark {
-  width: 1.8em;
-  height: 1.8em;
-  margin-right: -1px;
+  margin-block: -0.1em;
 }
 
 .ev-tile-t {

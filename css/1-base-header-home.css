@@ -2908,7 +2908,8 @@ html.app-header .home-head-icon {
   border-color: var(--tl-line);
 }
 
-/* The upcoming circles: grey ring, the date as dark as the played ones'. */
+/* The upcoming circles: the date as dark as the played ones' (their ring
+   grey on league.html, its kind's colour on the Bacheca — below). */
 .home-timeline .is-future > .league-tl-node span {
   color: var(--text-muted);
 }
@@ -2926,6 +2927,53 @@ html.app-header .home-head-icon {
    (.home-timeline too) stays as it was. */
 :root {
   --external-blue: oklch(0.52 0.08 245);
+}
+
+/* Each kind's colour (--tl-kind) — all three kinds alike (user,
+   2026-11-03: ours had been pale upcoming, solid played): the upcoming
+   ones' circle in it, solid, their card's outline pale; the played ones' circle ring
+   pale, their card's fill tinted with it (ours keep their warm fill on the
+   light theme, above — the others' had been ours too; on the dark one all
+   three tinted). The next one's circle filled (css/3
+   and below). */
+.home-timeline .is-local {
+  --tl-kind: var(--brand-red);
+}
+
+.home-timeline .is-online {
+  --tl-kind: var(--endstep-gold);
+}
+
+.home-timeline .is-external {
+  --tl-kind: var(--external-blue);
+}
+
+.home-timeline :is(.is-local, .is-online, .is-external).is-future > .league-tl-node {
+  border-color: var(--tl-kind);
+}
+
+.home-timeline :is(.is-local, .is-online, .is-external).is-future > .league-tl-card {
+  border-color: color-mix(in oklch, var(--tl-kind) 45%, transparent);
+}
+
+.home-timeline :is(.is-local, .is-online, .is-external).is-played > .league-tl-node {
+  border-color: color-mix(in oklch, var(--tl-kind) 40%, transparent);
+}
+
+.home-board .home-timeline :is(.is-online, .is-external).is-played > .league-tl-card {
+  background: color-mix(in oklch, var(--tl-kind) 8%, #fff);
+}
+
+.home-board .home-timeline :is(.is-online, .is-external).is-played > a.league-tl-card:hover {
+  background: color-mix(in oklch, var(--tl-kind) 14%, #fff);
+}
+
+:root[data-theme="dark"] .home-board .home-timeline :is(.is-local, .is-online, .is-external).is-played > .league-tl-card {
+  background: color-mix(in oklch, var(--tl-kind) 8%, rgba(255, 255, 255, 0.05));
+}
+
+:root[data-theme="dark"] .home-board .home-timeline :is(.is-local, .is-online, .is-external).is-played > a.league-tl-card:hover {
+  background: color-mix(in oklch, var(--tl-kind) 14%, rgba(255, 255, 255, 0.05));
 }
 
 .home-timeline :is(.is-local, .is-external) > .league-tl-card {
@@ -2954,6 +3002,13 @@ html.app-header .home-head-icon {
   transform: translateY(-50%) rotate(-10deg);
 }
 
+/* On a played one's red-tinted fill (dark theme): a lighter red, a little
+   stronger, or it sinks into the tint. */
+:root[data-theme="dark"] .home-board .is-local.is-played .league-tl-wm.is-lotus {
+  background: #ff7a7d;
+  opacity: 0.16;
+}
+
 /* On the next one's colour: white. */
 .is-next .league-tl-wm.is-lotus {
   background: #fff;
@@ -2969,14 +3024,6 @@ html.app-header .home-head-icon {
    the others' next. */
 :root .home-timeline .is-local.is-next > .league-tl-card {
   background: radial-gradient(140% 160% at 100% 0%, #f0484b, var(--brand-red) 65%);
-}
-
-.home-timeline .is-external > .league-tl-node {
-  border-color: var(--external-blue);
-}
-
-.home-timeline .is-external.is-future > .league-tl-card {
-  border-color: color-mix(in oklch, var(--external-blue) 45%, transparent);
 }
 
 .home-timeline .is-external .league-tl-place > svg {
@@ -3061,41 +3108,28 @@ html.app-header .home-head-icon {
   --endstep-gold-deep: var(--endstep-gold);
 }
 
-/* Played online on endstep (js/ui.js ENDSTEP_MARK): endstep's logo, gold
-   on its near-black, in a small disc — in Leghe & Eventi's labels. Its own
-   colours in both themes. On the Bacheca's timeline, before an online
-   event's league, without the disc (below). */
+/* Played online on endstep (js/ui.js ENDSTEP_MARK): endstep's logo alone,
+   no disc (user's choice, 2026-11-03 — it had been gold on a near-black
+   disc), the size of the pin before an external's Località, in the gold
+   dark enough to read on white (--endstep-gold-deep, the gold itself on the
+   dark theme) — before an online event's league on the Bacheca's timeline
+   (the gold on the dark "next" card, below), in Leghe & Eventi's labels. */
 .endstep-mark {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   flex-shrink: 0;
-  width: 1.4em;
-  height: 1.4em;
-  border-radius: 50%;
-  background: var(--endstep-ink);
-  color: var(--endstep-gold);
+  color: var(--endstep-gold-deep);
 }
 
 .endstep-mark svg {
-  width: 64%;
-  height: 64%;
-  margin: 0;
+  width: 1.05em;
+  height: 1.15em;
 }
 
-/* On the Bacheca's timeline the logo alone, no disc (user's choice,
-   2026-11-03), the size of the pin before an external's Località: the gold
-   dark enough to read on the light card (--endstep-gold-deep, the gold
-   itself on the dark theme), the gold on the dark "next" card (below). Its
-   line (.league-tl-k, clipped for its "…") lets it out — the place's text
-   cuts itself (.league-tl-place-text). */
+/* Its line (.league-tl-k, clipped for its "…") lets it out — the place's
+   text cuts itself (.league-tl-place-text). */
 .league-tl-place .endstep-mark {
-  width: auto;
-  height: auto;
   margin-right: 2px;
-  border-radius: 0;
-  background: none;
-  color: var(--endstep-gold-deep);
 }
 
 .league-tl-place .endstep-mark svg {
@@ -3112,13 +3146,9 @@ html.app-header .home-head-icon {
    no gold edge — js/home.js; the model for the other kinds' look, above):
    its circle ringed in gold; endstep's logo big and faint in its card, on
    the right (.league-tl-wm, behind the text: the card isolated). The next one endstep's instead of red: the card dark
-   (a warm glow in its corner), the league and time gold, the circle gold
-   with its halo pulsing gold. (The :root on the next one's rules outranks
+   (a warm glow in its corner), the league and time gold, the circle black
+   with a glowing gold ring, its halo pulsing gold. (The :root on the next one's rules outranks
    css/3's red "next" card, dark theme included.) */
-.home-timeline .is-online > .league-tl-node {
-  border-color: var(--endstep-gold);
-}
-
 .home-timeline .is-online > .league-tl-card {
   position: relative;
   isolation: isolate;
@@ -3157,17 +3187,32 @@ html.app-header .home-head-icon {
   color: var(--endstep-text);
 }
 
+/* Its circle endstep's black with a gold ring and the others' pulsing
+   halo in gold (user, 2026-11-03 — it had been solid gold), the date gold. */
 :root .home-timeline .is-online.is-next > .league-tl-node {
   border-color: var(--endstep-gold);
-  background: var(--endstep-gold);
+  background: var(--endstep-ink);
 }
 
 :root .home-timeline .is-online.is-next > .league-tl-node :is(b, span) {
-  color: var(--endstep-ink);
+  color: var(--endstep-gold);
 }
 
+/* The halo (::after) paints over the circle's inside — a red disc on the
+   red circle never showed, on the black one it turned it brown: the black
+   again on a layer above it (::before, inside the ring), under the date. */
 .home-timeline .is-online.is-next > .league-tl-node::after {
-  background: color-mix(in oklch, var(--endstep-gold) 60%, transparent);
+  z-index: -2;
+  background: color-mix(in oklch, var(--endstep-gold) 55%, transparent);
+}
+
+.home-timeline .is-online.is-next > .league-tl-node::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 50%;
+  background: var(--endstep-ink);
 }
 
 /* "Oggi": a small red dot on the line, the word, a rule to the right. */

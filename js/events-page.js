@@ -21,7 +21,7 @@
 // Only one of the two with anything in it: no tabs, just that one.
 
 import { Leagues, Events, EventEntries, Matches, EventCounts, LeaguePlayerCounts } from "./db.js";
-import { capitalize, escapeHtml, formatTime, endstepLogo, eventTitle, leagueKindLabel, leagueRingHtml, showError, ENDSTEP_MARK } from "./ui.js";
+import { capitalize, escapeHtml, formatTime, eventTitle, leagueKindLabel, leagueRingHtml, showError, ENDSTEP_MARK } from "./ui.js";
 import { initTabs } from "./tabs.js";
 import { hidePageLoading } from "./page-loading.js";
 import { openInfoDialog } from "./info-dialog.js";
@@ -138,17 +138,17 @@ function mainCardHtml(league, { played, scheduled, players, avg, matches }, slot
 }
 
 // The series under the league card, a step down: one plain row — "Serie
-// Topdeck" / "Serie online" (with endstep's logo on a dark block on its
-// left — styles.css .ev-online-cap), its name, its next event ("mar 3 nov,
+// Topdeck" / "Serie online" (endstep's mark before it, like the league
+// card's label — until 2026-11-03 a dark block on the row's left), its
+// name, its next event ("mar 3 nov,
 // 21:00") and events played in small; its players and an arrow on the
 // right. A link to it.
 function minorRowHtml(league, { played, players }, next) {
   const when = next ? `Prossimo ${shortDate(next.event_date)}${next.start_time ? `, <b>${formatTime(next.start_time)}</b>` : ""} · ` : "";
   return `
     <a class="ev-tile ev-minor${league.is_online ? " is-online" : ""}" href="league.html?id=${league.id}">
-      ${league.is_online ? `<span class="ev-online-cap">${endstepLogo()}</span>` : ""}
       <span class="ev-minor-text">
-        <span class="ev-tile-k">${leagueKindLabel(league)}</span>
+        <span class="ev-tile-k">${kindHtml(league)}</span>
         <span class="ev-tile-t">${escapeHtml(league.name)}</span>
         <span class="ev-tile-s">${when}${played} ${played === 1 ? "evento" : "eventi"}</span>
       </span>
