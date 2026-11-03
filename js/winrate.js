@@ -4,7 +4,7 @@
 //
 // The "Winrate" figure is on a *match* basis (matches won / matches played),
 // not a game basis: a 2-0 and a 2-1 match win both just count as one win,
-// same as the Vittorie/Pareggi/Sconfitte tiles below it — those and the
+// same as the V-S-P record beside it — that and the
 // Winrate figure are now two views of the exact same match-level tally,
 // not two different statistics.
 
@@ -35,12 +35,11 @@ export function tallyOutcome(bucket, outcome) {
   else bucket.losses += 1;
 }
 
-// `events` (optional): an extra "Eventi" tile right after Winrate — the
-// player page passes its events-played count; the commander page doesn't.
-// `elo` (optional): an "Elo" tile between them — the player page's rating. `compactRecord` (the player page): on phones
-// Vittorie / Pareggi / Sconfitte as one "V-S-P" tile (wins-losses-draws, the
-// site's order), so the hero's numbers fit one row (styles.css .is-phone-only).
-export function renderWinrateTiles(el, bucket, { events = null, elo = null, compactRecord = false } = {}) {
+// The hero's numbers (player.html, commander.html): Winrate, then `extra`
+// ([label, value] pairs — the player's Elo and Eventi, the commander's
+// Piloti and Giocato), then the record as one "V-S-P" tile
+// (wins-losses-draws, the site's order) so they fit one row on phones too.
+export function renderWinrateTiles(el, bucket, { extra = [] } = {}) {
   const played = (bucket.wins ?? 0) + (bucket.draws ?? 0) + (bucket.losses ?? 0);
   const rate = winRatePct(bucket.wins ?? 0, played);
   el.innerHTML =
@@ -48,11 +47,7 @@ export function renderWinrateTiles(el, bucket, { events = null, elo = null, comp
       ? '<p class="page-empty">Non ci sono ancora dati sufficienti.</p>'
       : `
     ${statTileHtml("Winrate", `${rate}%`)}
-    ${elo === null ? "" : statTileHtml("Elo", elo)}
-    ${events === null ? "" : statTileHtml("Eventi", events)}
-    ${statTileHtml("Vittorie", bucket.wins, compactRecord ? "is-desktop-only" : "")}
-    ${statTileHtml("Pareggi", bucket.draws, compactRecord ? "is-desktop-only" : "")}
-    ${statTileHtml("Sconfitte", bucket.losses, compactRecord ? "is-desktop-only" : "")}
-    ${compactRecord ? statTileHtml("V-S-P", `${bucket.wins}-${bucket.losses}-${bucket.draws}`, "is-phone-only") : ""}
+    ${extra.map(([label, value]) => statTileHtml(label, value)).join("")}
+    ${statTileHtml("V-S-P", `${bucket.wins}-${bucket.losses}-${bucket.draws}`)}
   `;
 }

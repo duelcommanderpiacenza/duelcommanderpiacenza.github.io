@@ -28,8 +28,8 @@ export function localIso(d = new Date()) {
 
 // One number tile (.stat-tile): a small label over the big value. `label`
 // and `value` go in as HTML.
-export function statTileHtml(label, value, className = "") {
-  return `<div class="stat-tile${className ? ` ${className}` : ""}"><div class="stat-tile-label">${label}</div><div class="stat-tile-value">${value}</div></div>`;
+export function statTileHtml(label, value) {
+  return `<div class="stat-tile"><div class="stat-tile-label">${label}</div><div class="stat-tile-value">${value}</div></div>`;
 }
 
 // A request that's never fatal: its error logged, `fallback` instead.

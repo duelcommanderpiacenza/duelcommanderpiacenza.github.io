@@ -378,15 +378,22 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       capScrollToHeightOf(playersEl, matchesEl);
       setHistoryCount("commander-matches-count", matchRows.length);
 
-      // The hero's numbers. A bye is a free win for the player, not a
-      // "victory" for the commander — it never actually beat anything. A
-      // drop isn't a "victory" either, and isn't a match played at all.
+      // The hero's numbers: after the winrate its pilots and the times it
+      // was played (entries — the pairing shown, like the rest). A bye is a
+      // free win for the player, not a "victory" for the commander — it
+      // never actually beat anything. A drop isn't a "victory" either, and
+      // isn't a match played at all.
       const bucket = { wins: 0, draws: 0, losses: 0 };
       for (const r of rows) {
         if (r.isBye || r.isDrop) continue;
         tallyOutcome(bucket, r.outcome);
       }
-      renderWinrateTiles(winrateEl, bucket);
+      renderWinrateTiles(winrateEl, bucket, {
+        extra: [
+          ["Piloti", playerList.length],
+          ["Giocato", entries.length],
+        ],
+      });
     }
 
     // The partner's card beside the commander's (Scryfall, fetched once per

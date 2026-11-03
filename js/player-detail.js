@@ -253,7 +253,9 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     const progress = await progressRequest;
     if (signal.aborted) return;
     const elo = progress?.elo ?? null;
-    renderWinrateTiles(overallEl, bucket, { events: entries.length, elo, compactRecord: true });
+    renderWinrateTiles(overallEl, bucket, {
+      extra: [...(elo === null ? [] : [["Elo", elo]]), ["Eventi", entries.length]],
+    });
 
     // The second (last) round, together: the entries of the events played
     // (the opponents' decks), and — only for events missing from the cached

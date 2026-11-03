@@ -126,12 +126,15 @@
 
 /* Bare: no tile box at all — background, border, shadow, and the tiles'
    own backdrop blur (which, over the hero's art, showed as a faint
-   rectangle behind some numbers). */
+   rectangle behind some numbers). The label centred under its number, at
+   every width (user's choice 2026-11-03; phones already did). */
 .profile-hero .stat-tile,
 :root[data-theme="dark"] .profile-hero .stat-tile {
   display: flex;
   flex-direction: column-reverse;
+  align-items: center;
   gap: 4px;
+  text-align: center;
   padding: 0;
   border: 0;
   background: none;
@@ -163,7 +166,7 @@
 
 .profile-hero .stat-tile:first-child .stat-tile-value,
 :root[data-theme="dark"] .profile-hero .stat-tile:first-child .stat-tile-value {
-  align-self: flex-start;
+  align-self: center;
   padding: 0.12em 0.32em;
   border-radius: 0.28em;
   /* The hero buttons' colour (--hero-btn: taken from the hero's art,
@@ -182,11 +185,6 @@
   color: rgba(255, 255, 255, 0.7);
 }
 
-/* The phones' "V-S-P" tile (js/winrate.js compactRecord): the separate
-   tiles instead on a computer. */
-.profile-hero .stat-tile.is-phone-only {
-  display: none;
-}
 /* player.html / account.html / commander.html: the hero art's colour as the page's accent
    (js/player-card.js applyHeroTone, once the art is read): the site's red
    variables redefined on <main> — its buttons, chips, active tabs, carousel
@@ -1100,17 +1098,6 @@ html.app-header .page-back-wrap {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-
-  /* player.html: Vittorie / Pareggi / Sconfitte as one "V-S-P" tile
-     (js/winrate.js compactRecord), so its numbers — with the Elo — fit one
-     row: Winrate, Elo, Eventi, V-S-P. */
-  .profile-hero .stat-tile.is-desktop-only {
-    display: none;
-  }
-
-  .profile-hero .stat-tile.is-phone-only {
-    display: flex;
-  }
 }
 
 /* Narrower: the hero in one column, centred — the card first. */
@@ -1860,6 +1847,33 @@ html.nav-mobile .player-card.is-editing .pc-art-space {
   grid-template-areas:
     "space space space"
     "name panel foot";
+}
+
+/* There the name's column is about as wide as the name, so the Podio bar
+   (.pc-fx-ribbon, 70% of it) stopped mid-name: the nameplate as wide as
+   its avatar + name, the bar the whole of it, ending in the gap before the
+   links' glass (2.4cqw, .pc-content's). Its right end fades out rather
+   than ending in the notch (user's choice): its gradient stretched past
+   that end (its own fade falling outside), a mask fading the last 3.5cqw
+   instead — short, so the name's letters stay on the solid part (a longer
+   tail, under the glass, was too long). */
+.player-card.no-description:not(.name-own-row) .pc-content:has(.pc-panel) .pc-nameplate {
+  justify-self: start;
+}
+
+.player-card.no-description:not(.name-own-row) .pc-content:has(.pc-panel) .pc-fx-ribbon {
+  width: calc(100% + 2.88cqw + 2.4cqw);
+  background-size: 112% 100%;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 4% 50%);
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 3.5cqw), transparent);
+  mask-image: linear-gradient(90deg, #000 calc(100% - 3.5cqw), transparent);
+}
+
+/* With the bar, the links' glass lined up with its bottom edge rather than
+   the name's: moved down by as much as the bar hangs below the nameplate
+   (its 7.4cqw height centred on the name's 5.29cqw line — .pc-fx-ribbon). */
+.player-card.no-description:not(.name-own-row) .pc-content:has(.pc-fx-ribbon):has(.pc-panel) .pc-panel {
+  translate: 0 calc((7.4cqw - 5.29cqw) / 2);
 }
 
 /* …but only while the name fits there on one line (js/player-card.js
