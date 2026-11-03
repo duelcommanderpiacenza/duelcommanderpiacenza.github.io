@@ -120,7 +120,7 @@ export function initPlayersAdmin() {
     // open-event-only player needs those entries removed first; checked
     // here up front for a clear message instead of a generic failure.
     try {
-      const entries = await EventEntries.listByPlayer(row.id);
+      const entries = await EventEntries.listByPlayer(row.id, { withOnline: true });
       const closed = entries.filter((e) => e.event && !e.event.is_open).length;
       if (closed > 0) {
         setMessage(msgEl, `Impossibile eliminare: il giocatore è associato a ${closed} ${closed === 1 ? "evento chiuso" : "eventi chiusi"}.`, true);

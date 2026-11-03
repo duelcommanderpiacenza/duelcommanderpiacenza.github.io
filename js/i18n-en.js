@@ -215,6 +215,9 @@
     // Leghe & Eventi.
     "Archivio": "Archive",
     "Serie Topdeck": "Topdeck series",
+    "Lega online": "Online league",
+    "Serie online": "Online series",
+    "Online su endstep": "Online on endstep",
     "Eventi standalone": "Standalone events",
     "Standalone": "Standalone",
     "Nessuna lega o evento inserito ancora.": "No leagues or events yet.",

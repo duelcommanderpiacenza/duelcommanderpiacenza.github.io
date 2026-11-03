@@ -11,7 +11,7 @@ import { Leagues, Events, EventEntries, fetchEventsResults } from "./db.js";
 import { computeLeaguePoints, previousLeaguePositions } from "./leaderboard.js";
 import { renderBubbleChart, initBubbleChart, ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
 import { initChartCarousel } from "./chart-carousel.js";
-import { escapeHtml, formatTime, leagueRingHtml, localIso, playerLabel, showError } from "./ui.js";
+import { ENDSTEP_MARK, endstepLogo, escapeHtml, formatTime, leagueRingHtml, localIso, playerLabel, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { nestedResultsMenu } from "./results-link.js";
 import { fetchPlayerBadgesRenderer } from "./player-badges.js";
@@ -64,12 +64,12 @@ const PIN_ICON = ICON('<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12
 // name over the league (or "Evento"; the next one's circle pulsing), and on the right: played → "Liste", a menu of its results links (the card a link to
 // the event); upcoming → its time alone, when set ("15:00"), down on the
 // league's line.
-// An external event (played somewhere else, migration 026 — styles.css
-// .home-timeline .is-external): the colours of ours, a ticket's shape; its
-// Località with a pin in place of the league; never a link (it has no
-// page); its right part, past the ticket's tear line, its time
-// (.league-tl-time, at the bottom); the very next event of all, external or
-// not, the red "next" one. Only upcoming: a past one is deleted (migration
+// Three kinds, each its colour and its big faint logo on the card's right
+// (option E2 of a mockup, styles.css "The Bacheca's three kinds of event"):
+// ours (.is-local) red, the lotus; online (.is-online) endstep's, below;
+// external (.is-external — played somewhere else, migration 026) slate
+// blue, the pin: its Località with a pin in place of the league; never a
+// link (it has no page). Only upcoming: a past one is deleted (migration
 // 030).
 // An external event's place: its Località, then its Sito in its own colour
 // ("Milano - Il Labirinto"); either alone; "Evento esterno" with neither.
@@ -87,36 +87,42 @@ function timelineItemHtml(ev, state) {
   const fullDate = date
     ? `${date.toLocaleDateString(locale(), { day: "numeric", month: "long" })}<small>${date.toLocaleDateString(locale(), { weekday: "long" })}</small>`
     : "—";
+  // An online event (played on endstep, migration 034 — option B5 of a
+  // mockup, styles.css .home-timeline .is-online): endstep's mark before its
+  // league's name ("Online · endstep" for a standalone one), its logo big
+  // and faint in the card (.league-tl-wm), the next one endstep-dark.
+  const online = ev.is_online
+    ? `<span class="league-tl-place">${ENDSTEP_MARK}<span class="league-tl-place-text">${ev.league ? escapeHtml(ev.league.name) : "Online · endstep"}</span></span>`
+    : "";
   const league = ev.is_external
     ? `<span class="league-tl-place">${PIN_ICON}${placeHtml(ev)}</span>`
-    : ev.league
-      ? escapeHtml(ev.league.name)
-      : "Evento";
+    : online || (ev.league ? escapeHtml(ev.league.name) : "Evento");
   const title = escapeHtml(ev.name || ev.league?.name || "Evento");
   // Played: "Liste" (its Moxfield / mtgtop8 links in a menu) beside the
   // text, centred; upcoming: the time on the league's line under the name
   // (its baseline), at the card's bottom right.
   const links = state === "played" ? nestedResultsMenu(ev.results_url, ev.decklists_url) : "";
   const time = state !== "played" && ev.start_time ? formatTime(ev.start_time) : "";
-  // An external event's time in the ticket's stub (its own side part).
-  const lineTime = time && !ev.is_external ? `<span class="league-tl-side">${time}</span>` : "";
-  const stub = links
-    ? `<span class="league-tl-side">${links}</span>`
-    : time && ev.is_external
-      ? `<span class="league-tl-side league-tl-time">${time}</span>`
-      : "";
+  const lineTime = time ? `<span class="league-tl-side">${time}</span>` : "";
+  const stub = links ? `<span class="league-tl-side">${links}</span>` : "";
+  const kind = ev.is_external ? "is-external" : ev.is_online ? "is-online" : "is-local";
+  const watermark = ev.is_online
+    ? `<span class="league-tl-wm">${endstepLogo()}</span>`
+    : ev.is_external
+      ? `<span class="league-tl-wm is-pin">${PIN_ICON}</span>`
+      : '<span class="league-tl-wm is-lotus"></span>';
   const body = `
           <span class="league-tl-text">
             <span class="league-tl-t">${title}</span>
             <span class="league-tl-k-row"><span class="league-tl-k">${league}</span>${lineTime}</span>
           </span>
-          ${stub}`;
+          ${stub}${watermark}`;
   const card =
     state === "played" && !ev.is_external
       ? `<a class="league-tl-card" href="event.html?id=${ev.id}">${body}</a>`
       : `<div class="league-tl-card">${body}</div>`;
   return `
-      <li class="league-tl-item is-${state}${ev.is_external ? " is-external" : ""}">
+      <li class="league-tl-item is-${state} ${kind}">
         <span class="league-tl-date">${fullDate}</span>
         <span class="league-tl-node">${node}</span>
         ${card}
@@ -129,8 +135,13 @@ const once = (key, load) => {
   if (!shared.has(key)) shared.set(key, load());
   return shared.get(key);
 };
-const upcomingEvents = () => once("upcoming", () => Events.listUpcoming());
-const allEvents = () => once("events", () => Events.list());
+// Online events (migration 034) only on the timeline, for now: the rest of
+// the page (Classifica, the stories) reads the live ones alone.
+const timelineUpcoming = () => once("upcomingWithOnline", () => Events.listUpcoming({ withOnline: true }));
+const timelineEvents = () => once("eventsWithOnline", () => Events.list({ withOnline: true }));
+const live = (request) => request.then((events) => events.filter((ev) => !ev.is_online));
+const upcomingEvents = () => once("upcoming", () => live(timelineUpcoming()));
+const allEvents = () => once("events", () => live(timelineEvents()));
 // Never fatal: the timeline just shows ours.
 const externalEvents = () => once("external", () => Events.listExternal().catch((err) => (console.error(err), [])));
 const openLeague = () => once("openLeague", () => Leagues.getOpen());
@@ -139,7 +150,7 @@ const leagueStandings = (league) => once(`standings:${league.id}`, () => loadLea
 // The latest played events, "Oggi", the upcoming ones — in time order.
 async function renderTimeline(el, signal) {
   try {
-    const [upcoming, all, external] = await Promise.all([upcomingEvents(), allEvents(), externalEvents()]);
+    const [upcoming, all, external] = await Promise.all([timelineUpcoming(), timelineEvents(), externalEvents()]);
     // External events (played somewhere else) among ours by date: only from
     // today to EXTERNAL_EVENTS_DAYS ahead (a past one is deleted the night
     // after its day — migration 030 — and hidden here from midnight).
@@ -283,7 +294,7 @@ async function renderStandings(el) {
     let league = await openLeague();
     let finished = false;
     if (!league) {
-      league = (await Leagues.list()).find((l) => !l.is_open && !l.is_topdeck) ?? null;
+      league = (await Leagues.list()).find((l) => !l.is_open && !l.no_points) ?? null;
       finished = Boolean(league);
     }
     if (!league) {
@@ -467,7 +478,7 @@ const plusDays = (iso, days) => {
 function recentSeasons(events, cutoff) {
   const lastByLeague = new Map();
   for (const e of events) {
-    if (e.is_open || !e.event_date || !e.league || e.league.is_open || e.league.is_topdeck) continue;
+    if (e.is_open || !e.event_date || !e.league || e.league.is_open || e.league.no_points) continue;
     if ((lastByLeague.get(e.league_id) ?? "") < e.event_date) lastByLeague.set(e.league_id, e.event_date);
   }
   return [...lastByLeague.entries()]

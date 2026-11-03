@@ -27,7 +27,7 @@ export async function renderPlayerLeagueRecap(el, playerId, { signal }) {
   el.innerHTML = `<div class="league-recap-card is-loading">${sectionLoadingHtml(2)}</div>`;
   try {
     const [openLeague, leagues] = await Promise.all([Leagues.getOpen(), Leagues.list()]);
-    const league = openLeague ?? leagues.find((l) => !l.is_open && !l.is_topdeck) ?? null;
+    const league = openLeague ?? leagues.find((l) => !l.is_open && !l.no_points) ?? null;
     if (signal.aborted) return;
     if (!league) {
       el.hidden = true;

@@ -198,10 +198,10 @@ export function initMatchesAdmin() {
   }
 
   // League bonus points are a league-points adjustment — meaningless for a
-  // Topdeck series (no points leaderboard) or a standalone event (no league
+  // series (no_points: no points leaderboard) or a standalone event (no league
   // at all), so the leaderboard's Bonus column only exists for these.
   function bonusApplies() {
-    return Boolean(currentEvent?.league && !currentEvent.league.is_topdeck);
+    return Boolean(currentEvent?.league && !currentEvent.league.no_points);
   }
 
   // Preview of the full event standings (all rounds, not just the active

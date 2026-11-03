@@ -280,20 +280,31 @@ export const AdminUsers = {
   remove: (userId) => sb.rpc("admin_delete_user", { p_user_id: userId }).then(assertOk),
 };
 
+// Online leagues and events (migration 034: played on endstep.cc) are, for
+// now, shown only on the Bacheca's timeline, Leghe & Eventi, their league's
+// and their own page — so Leagues.list(), Events.list() / listUpcoming() and
+// every site-wide entries / matches query below leave them out, unless asked
+// with `withOnline` (those pages, the admin). get() / listByLeague() keep
+// them: they're the league's and the event's own pages.
 export const Leagues = {
   // Newest-created first, so a just-added league/topdeck shows up front
   // rather than wherever it happens to fall alphabetically.
-  list: () => sb.from("leagues").select("*").order("created_at", { ascending: false }).then(assertOk),
+  list: ({ withOnline = false } = {}) => {
+    const query = sb.from("leagues").select("*");
+    return (withOnline ? query : query.eq("is_online", false)).order("created_at", { ascending: false }).then(assertOk);
+  },
   get: (id) => sb.from("leagues").select("*").eq("id", id).single().then(assertOk),
   // The "current" league featured on the homepage: the most recently
-  // created league that's still open. Returns null if none is open.
-  // Topdeck series never power this — they have no points leaderboard.
+  // created live league that's still open. Returns null if none is open.
+  // Series (no_points: Topdeck) never power this — they have no points
+  // leaderboard; nor do online leagues.
   getOpen: () =>
     sb
       .from("leagues")
       .select("*")
       .eq("is_open", true)
-      .eq("is_topdeck", false)
+      .eq("no_points", false)
+      .eq("is_online", false)
       .order("created_at", { ascending: false })
       .limit(1)
       .then(({ data, error }) => {
@@ -303,16 +314,18 @@ export const Leagues = {
   create: (row) => sb.from("leagues").insert(row).select().single().then(assertOk),
   update: (id, patch) => sb.from("leagues").update(patch).eq("id", id).select().single().then(assertOk),
   remove: (id) => sb.from("leagues").delete().eq("id", id).then(assertOk),
-  // At most one league, and separately at most one Topdeck, is open at a
-  // time (one of each together is fine) — call before opening one
-  // (flipping an existing row's is_open true) so it's the only *other row
-  // of that same kind* left open.
-  closeOtherOpenOfType: (isTopdeck, exceptId) =>
+  // At most one open league of each kind — the kind being `{ no_points,
+  // is_online }`: live league, Serie Topdeck, online league, Serie online —
+  // is open at a time (one of each together is fine): call before opening
+  // one (flipping an existing row's is_open true) so it's the only *other
+  // row of that same kind* left open.
+  closeOtherOpenOfType: ({ no_points, is_online }, exceptId) =>
     sb
       .from("leagues")
       .update({ is_open: false })
       .eq("is_open", true)
-      .eq("is_topdeck", isTopdeck)
+      .eq("no_points", no_points)
+      .eq("is_online", is_online)
       .neq("id", exceptId)
       .then(assertOk),
   // Same, for creating a brand new row — it doesn't exist yet to "except",
@@ -320,8 +333,14 @@ export const Leagues = {
   // that same kind must be closed *before* the insert (a plain insert would
   // otherwise violate leagues_only_one_open_idx the instant another row of
   // that kind is still open).
-  closeAllOpenOfType: (isTopdeck) =>
-    sb.from("leagues").update({ is_open: false }).eq("is_open", true).eq("is_topdeck", isTopdeck).then(assertOk),
+  closeAllOpenOfType: ({ no_points, is_online }) =>
+    sb
+      .from("leagues")
+      .update({ is_open: false })
+      .eq("is_open", true)
+      .eq("no_points", no_points)
+      .eq("is_online", is_online)
+      .then(assertOk),
   // Total events in a league, open and closed — including an open one RLS
   // hides from anonymous visitors (see league_event_count in
   // supabase/schema.sql). Falls back to `visibleCount` (the caller's own
@@ -343,30 +362,40 @@ export const Leagues = {
 // the admin's listStandalone(). On a database without the column yet
 // (migration 026 not run: Postgres' "undefined column", 42703) the query is
 // made again without that filter — there are no external events there.
-function notExternal(build) {
-  return build((query) => query.eq("is_external", false)).then((result) =>
+// `withOnline`: online events too (see Leagues above), left out otherwise.
+function notExternal(build, withOnline = false) {
+  const online = (query) => (withOnline ? query : query.eq("is_online", false));
+  return build((query) => online(query.eq("is_external", false))).then((result) =>
     result.error?.code === "42703" ? build((query) => query) : result
   );
 }
 
+// The league embedded in an event: what tells a series (no_points) and an
+// online one apart.
+const EVENT_LEAGUE_EMBED = "league:leagues(id,name,is_open,no_points,is_online)";
+
 export const Events = {
-  list: () =>
-    notExternal((scope) =>
-      scope(sb.from("events").select("*, league:leagues(id,name,is_open,is_topdeck)")).order("event_date", {
-        ascending: false,
-        nullsFirst: false,
-      })
+  list: ({ withOnline = false } = {}) =>
+    notExternal(
+      (scope) =>
+        scope(sb.from("events").select(`*, ${EVENT_LEAGUE_EMBED}`)).order("event_date", {
+          ascending: false,
+          nullsFirst: false,
+        }),
+      withOnline
     ).then(assertOk),
   // The public Bacheca's "Prossimi eventi" card: soonest-first, across every
   // league/standalone, from today onward — only still-open events (a closed
   // one has already been played, however recent its date, so it belongs in
   // "Ultimi eventi" instead, not here).
-  listUpcoming: () =>
-    notExternal((scope) =>
-      scope(sb.from("events").select("*, league:leagues(id,name,is_topdeck)"))
-        .eq("is_open", true)
-        .gte("event_date", localIso())
-        .order("event_date", { ascending: true })
+  listUpcoming: ({ withOnline = false } = {}) =>
+    notExternal(
+      (scope) =>
+        scope(sb.from("events").select(`*, ${EVENT_LEAGUE_EMBED}`))
+          .eq("is_open", true)
+          .gte("event_date", localIso())
+          .order("event_date", { ascending: true }),
+      withOnline
     ).then(assertOk),
   // Every external event (the Bacheca's timeline picks the upcoming ones and
   // the past ones with a link), newest first. None without migration 026.
@@ -380,12 +409,12 @@ export const Events = {
   listByLeague: (leagueId) =>
     sb
       .from("events")
-      .select("*, league:leagues(id,name,is_topdeck)")
+      .select(`*, ${EVENT_LEAGUE_EMBED}`)
       .eq("league_id", leagueId)
       .order("event_date", { ascending: false, nullsFirst: false })
       .then(assertOk),
   get: (id) =>
-    sb.from("events").select("*, league:leagues(id,name,is_topdeck)").eq("id", id).single().then(assertOk),
+    sb.from("events").select(`*, ${EVENT_LEAGUE_EMBED}`).eq("id", id).single().then(assertOk),
   // Standalone events aren't part of any league (league_id is null).
   listStandalone: () =>
     sb
@@ -399,6 +428,10 @@ export const Events = {
   remove: (id) => sb.from("events").delete().eq("id", id).then(assertOk),
 };
 
+// An entries / matches query with an inner-joined `event` left to the
+// live events (see Leagues above), unless `withOnline`.
+const liveOnly = (query, withOnline) => (withOnline ? query : query.eq("event.is_online", false));
+
 export const EventEntries = {
   // Every entry of the whole history (matchups page, auto-badge rules) —
   // paged past the 1000-row cap, which a year of weekly events outgrows.
@@ -410,7 +443,7 @@ export const EventEntries = {
         .order("id")
     ),
   // Bacheca's "Più giocati" charts: just the primary commander and archetype
-  // of every entry whose event falls on/after `sinceIso` (YYYY-MM-DD) —
+  // of every live entry whose event falls on/after `sinceIso` (YYYY-MM-DD) —
   // filtered by the database (inner join on the event) rather than
   // downloading every entry ever and filtering in the browser, so the
   // payload stays the same size however long the club's history grows.
@@ -418,8 +451,9 @@ export const EventEntries = {
     selectAllRows(() =>
       sb
         .from("event_entries")
-        .select("id, archetype, commander:commanders!event_entries_commander_id_fkey(id,name), event:events!inner(event_date)")
+        .select("id, archetype, commander:commanders!event_entries_commander_id_fkey(id,name), event:events!inner(event_date,is_online)")
         .gte("event.event_date", sinceIso)
+        .eq("event.is_online", false)
         .order("id")
     ),
   listByEvent: (eventId) =>
@@ -428,20 +462,27 @@ export const EventEntries = {
       .select(`*, player:players(id,name,handle), ${COMMANDER_EMBED}`)
       .eq("event_id", eventId)
       .then(assertOk),
-  listByPlayer: (playerId) =>
-    sb
-      .from("event_entries")
-      .select(`*, event:events(id,name,event_date,is_open,league:leagues(id,name)), ${COMMANDER_EMBED}`)
-      .eq("player_id", playerId)
-      .then(assertOk),
+  // (Online events' left out — see Leagues above — unless `withOnline`: the
+  // admin's check before deleting a player.)
+  listByPlayer: (playerId, { withOnline = false } = {}) =>
+    liveOnly(
+      sb
+        .from("event_entries")
+        .select(`*, event:events!inner(id,name,event_date,is_open,is_online,league:leagues(id,name)), ${COMMANDER_EMBED}`)
+        .eq("player_id", playerId),
+      withOnline
+    ).then(assertOk),
   // Entries where this commander appears in EITHER seat (primary or
   // partner) — a commander's own page should reflect every appearance.
-  listByCommander: (commanderId) =>
-    sb
-      .from("event_entries")
-      .select(`*, player:players(id,name,handle), event:events(id,name,event_date,is_open), ${COMMANDER_EMBED}`)
-      .or(`commander_id.eq.${commanderId},partner_commander_id.eq.${commanderId}`)
-      .then(assertOk),
+  // (Online ones left out unless `withOnline`, as listByPlayer.)
+  listByCommander: (commanderId, { withOnline = false } = {}) =>
+    liveOnly(
+      sb
+        .from("event_entries")
+        .select(`*, player:players(id,name,handle), event:events!inner(id,name,event_date,is_open,is_online), ${COMMANDER_EMBED}`)
+        .or(`commander_id.eq.${commanderId},partner_commander_id.eq.${commanderId}`),
+      withOnline
+    ).then(assertOk),
   // Batch lookup across several events at once (e.g. every event a given
   // commander was played in), used to find each entrant's commander without
   // one request per event.
@@ -540,21 +581,24 @@ export const Matches = {
       )
       .in("event_id", eventIds)
       .then(assertOk),
+  // (Online events' left out, as EventEntries.listByPlayer.)
   listByPlayer: async (playerId) => {
     const [asP1, asP2] = await Promise.all([
       sb
         .from("matches")
         .select(
-          "*, event:events(id,name,event_date,league_id,league:leagues(id,name)), player2:players!matches_player2_id_fkey(id,name,handle)"
+          "*, event:events!inner(id,name,event_date,league_id,is_online,league:leagues(id,name)), player2:players!matches_player2_id_fkey(id,name,handle)"
         )
         .eq("player1_id", playerId)
+        .eq("event.is_online", false)
         .then(assertOk),
       sb
         .from("matches")
         .select(
-          "*, event:events(id,name,event_date,league_id,league:leagues(id,name)), player1:players!matches_player1_id_fkey(id,name,handle)"
+          "*, event:events!inner(id,name,event_date,league_id,is_online,league:leagues(id,name)), player1:players!matches_player1_id_fkey(id,name,handle)"
         )
         .eq("player2_id", playerId)
+        .eq("event.is_online", false)
         .then(assertOk),
     ]);
     return { asP1, asP2 };
@@ -616,7 +660,8 @@ function groupByEvent(rows) {
 
 /**
  * Every closed event's entries + matches from `fromIso` (YYYY-MM-DD) on —
- * every closed event's when null — filtered by the database on the event's
+ * every closed event's when null (online events' left out: see Leagues
+ * above) — filtered by the database on the event's
  * date (an inner join, like EventEntries.listForChartsSince), so it needs no
  * event ids first: started with a page's own first requests. Slim rows
  * (fetchEventsResults' slim), each with a small `event` ({ event_date,
@@ -625,10 +670,10 @@ function groupByEvent(rows) {
  * @returns {Promise<{entriesByEvent: Map, matchesByEvent: Map}>} rows by event id.
  */
 export async function fetchClosedResultsSince(fromIso, { commanders = false } = {}) {
-  const join = "event:events!inner(event_date,is_open)";
+  const join = "event:events!inner(event_date,is_open,is_online)";
   const entryColumns = `${commanders ? `${SLIM_ENTRY_COLUMNS}, ${COMMANDER_EMBED}` : SLIM_ENTRY_COLUMNS}, ${join}`;
   const scoped = (query) => {
-    const closed = query.eq("event.is_open", false);
+    const closed = query.eq("event.is_open", false).eq("event.is_online", false);
     return fromIso ? closed.gte("event.event_date", fromIso) : closed;
   };
   const [entries, matches] = await Promise.all([

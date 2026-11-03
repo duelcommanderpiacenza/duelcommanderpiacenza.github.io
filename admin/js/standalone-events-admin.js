@@ -17,6 +17,10 @@ import { syncAutoBadges } from "./badges-sync.js";
  * toggle; it stays open for good (events_external_open). Only a new event
  * can be made external (an existing one may already have entries); an
  * external one can be turned back into an ordinary one.
+ *
+ * An online event ("Si gioca online", migration 034: played on endstep)
+ * is an ordinary one in every way here — entries, matches, open/closed —
+ * just marked "Online" in the list; never external too.
  */
 // A map pin, before an external event's Località - Sito.
 const PIN_ICON =
@@ -38,6 +42,8 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
   const locationField = document.getElementById("standalone-events-admin-location");
   const venueWrap = document.getElementById("standalone-events-admin-venue-field");
   const venueField = document.getElementById("standalone-events-admin-venue");
+  const onlineWrap = document.getElementById("standalone-events-admin-online-field");
+  const onlineField = document.getElementById("standalone-events-admin-online");
   const msgEl = document.getElementById("standalone-events-admin-message");
   const cancelBtn = document.getElementById("standalone-events-admin-cancel");
 
@@ -52,7 +58,8 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
       label: "Nome",
       render: (r) => {
         const place = r.is_external ? [r.location, r.venue].filter(Boolean).join(" - ") : "";
-        return `${escapeHtml(r.name)}${place ? `<span class="admin-card-sub">${PIN_ICON}${escapeHtml(place)}</span>` : ""}`;
+        const sub = place ? `${PIN_ICON}${escapeHtml(place)}` : r.is_online ? "Online (endstep)" : "";
+        return `${escapeHtml(r.name)}${sub ? `<span class="admin-card-sub">${sub}</span>` : ""}`;
       },
     },
     { key: "event_date", label: "Data", render: (r) => formatDate(r.event_date) },
@@ -135,6 +142,9 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
     externalHint.textContent = canChange ? "" : "Solo un evento nuovo può essere esterno.";
     locationWrap.hidden = !externalField.checked;
     venueWrap.hidden = !externalField.checked;
+    // External or online, never both (events_external_not_online).
+    onlineWrap.hidden = externalField.checked;
+    if (externalField.checked) onlineField.checked = false;
   }
   externalField.addEventListener("change", () => syncExternal(events.find((e) => e.id === idField.value) ?? null));
 
@@ -142,6 +152,7 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
     idField.value = row.id;
     nameField.value = row.name;
     externalField.checked = Boolean(row.is_external);
+    onlineField.checked = Boolean(row.is_online);
     locationField.value = row.location ?? "";
     venueField.value = row.venue ?? "";
     syncExternal(row);
@@ -206,6 +217,7 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
       results_url: resultsUrl || null,
       decklists_url: decklistsUrl || null,
       league_id: null,
+      is_online: onlineField.checked && !externalField.checked,
     };
     if (!payload.name) return;
     // Sent only when it's (or was) external, so an ordinary event still saves

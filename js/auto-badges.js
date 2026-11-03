@@ -70,7 +70,7 @@ async function fetchLeagueEventsData(leagueId) {
 // most recently *created* closed real league is, in practice, the most
 // recently concluded one.
 async function latestClosedRealLeague(leagues) {
-  return leagues.find((l) => !l.is_topdeck && !l.is_open) ?? null;
+  return leagues.find((l) => !l.no_points && !l.is_open) ?? null;
 }
 
 async function leagueWinnerPlayerId(leagues) {
@@ -85,7 +85,7 @@ async function leagueWinnerPlayerId(leagues) {
 const LEAGUE_RANK_POSITION = { league_rank_1: 1, league_rank_2: 2, league_rank_3: 3 };
 
 async function leagueRankPlayerId(leagues, rule) {
-  const league = leagues.find((l) => !l.is_topdeck && l.is_open) ?? null;
+  const league = leagues.find((l) => !l.no_points && l.is_open) ?? null;
   if (!league) return null;
   const { eventsData, scheduledEvents } = await fetchLeagueEventsData(league.id);
   const results = computeLeaguePoints(eventsData, { scheduledEvents });
@@ -296,7 +296,7 @@ async function completistPlayerIds() {
 // with no results) — same final standings as league.html's. Also used by
 // the player card's progress (js/card-progress.js, its "Campione" stars).
 export async function closedLeagueWinners(leagues) {
-  const closedLeagues = leagues.filter((l) => !l.is_topdeck && !l.is_open);
+  const closedLeagues = leagues.filter((l) => !l.no_points && !l.is_open);
   return Promise.all(
     closedLeagues.map(async (league) => {
       const { eventsData, scheduledEvents } = await fetchLeagueEventsData(league.id);

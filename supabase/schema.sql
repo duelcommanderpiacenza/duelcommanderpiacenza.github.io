@@ -142,8 +142,13 @@ create table leagues (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   is_open boolean not null default true, -- true while ongoing; the "current" league shown on the homepage
-  is_topdeck boolean not null default false, -- a "Topdeck" series: same shape as a league (a bucket of
-    -- events), listed alongside leagues, but has no points leaderboard and never powers the homepage
+  no_points boolean not null default false, -- a series with no points leaderboard ("Serie Topdeck", or
+    -- "Serie online" when is_online): same shape as a league (a bucket of events), listed alongside leagues,
+    -- but never powers the homepage. Was is_topdeck until migration 034.
+  is_online boolean not null default false, -- played online on endstep.cc (results entered by hand, like the
+    -- live ones); its events' is_online follows it (events_online_from_league below). Migration 034.
+  is_topdeck boolean generated always as (no_points) stored, -- the old name, a read-only copy for browsers
+    -- still running scripts from before migration 034; to be dropped by a later migration.
   created_at timestamptz not null default now()
 );
 
@@ -176,9 +181,14 @@ create table events (
   location text, -- an external event's "Località" (optional). Added by migration 026.
   venue text, -- an external event's "Sito" (optional): where in the town — a shop, a club; shown after the
     -- Località ("Milano - Il Labirinto"). Added by migration 031.
+  is_online boolean not null default false, -- played online on endstep.cc: a league event's always its
+    -- league's (events_online_from_league below), a standalone one's set in the admin. Shown for now only on
+    -- the Bacheca's timeline, Leghe & Eventi, its league's and its own page (js/db.js leaves it out of the
+    -- rest). Added by migration 034.
   constraint events_unique_name_per_league unique (league_id, name), -- same name OK across leagues, not within one
   constraint events_external_standalone check (not is_external or league_id is null),
   constraint events_external_open check (not is_external or is_open),
+  constraint events_external_not_online check (not (is_external and is_online)),
   constraint events_results_url_http check (results_url ~* '^https?://'),
   constraint events_decklists_url_http check (decklists_url ~* '^https?://')
 );
@@ -255,15 +265,13 @@ create table matches ( -- one round pairing between two players, scored as a bes
   )
 );
 
--- At most one *league* and, separately, at most one *Topdeck* series can be
--- open at a time — a normal league and a Topdeck may be open together, but
--- never two of the same kind. A partial unique index on is_topdeck, scoped
--- to the open rows, gives exactly that: among rows where is_open is true,
--- is_topdeck (only two possible values) must be unique, so at most one
--- open row has is_topdeck = false and at most one has it = true. The app
--- closes whatever else is open *of that same kind* before opening one, but
--- this is the actual guarantee.
-create unique index leagues_only_one_open_idx on leagues (is_topdeck) where is_open;
+-- At most one open league of each kind — live league, Serie Topdeck (live,
+-- no points), online league, Serie online (online, no points) — but one of
+-- each may be open together. A partial unique index on (no_points,
+-- is_online), scoped to the open rows, gives exactly that. The app closes
+-- whatever else is open *of that same kind* before opening one, but this is
+-- the actual guarantee. (On is_topdeck alone until migration 034.)
+create unique index leagues_only_one_open_idx on leagues (no_points, is_online) where is_open;
 
 create index events_league_id_idx on events (league_id);
 create index event_entries_event_id_idx on event_entries (event_id);
@@ -294,6 +302,36 @@ $$;
 create trigger leagues_block_delete_with_closed_events
   before delete on leagues
   for each row execute function leagues_block_delete_with_closed_events();
+
+-- A league event's is_online is always its league's (migration 034): set on
+-- every insert and league change, whatever the admin sent...
+create or replace function events_online_from_league() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if new.league_id is not null then
+    select is_online into new.is_online from leagues where id = new.league_id;
+  end if;
+  return new;
+end;
+$$;
+
+create trigger events_online_from_league
+  before insert or update of league_id, is_online on events
+  for each row execute function events_online_from_league();
+
+-- ...and passed on to its events when the league's own flag changes.
+create or replace function leagues_online_to_events() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  update events set is_online = new.is_online where league_id = new.id and is_online <> new.is_online;
+  return new;
+end;
+$$;
+
+create trigger leagues_online_to_events
+  after update of is_online on leagues
+  for each row when (old.is_online is distinct from new.is_online)
+  execute function leagues_online_to_events();
 
 -- Every event's first close makes a "Novità" of its own (js/header-news.js):
 -- "Risultati online: <event>", linked to it (announcements.event_id, shown
@@ -980,9 +1018,10 @@ create policy "user_settings_update_own" on user_settings for update
 -- ---------------------------------------------------------------------------
 -- Leghe & Eventi's numbers (js/events-page.js): per event its players and
 -- matches, per league its distinct players (league_id null = the standalone
--- events) — read instead of every entry and match. security_invoker: the
--- tables' RLS applies as for a direct query (visitors: closed events only).
--- Added by migration 021.
+-- events; the live ones only — online standalone events aren't listed
+-- there, migration 034) — read instead of every entry and match.
+-- security_invoker: the tables' RLS applies as for a direct query
+-- (visitors: closed events only). Added by migration 021.
 -- ---------------------------------------------------------------------------
 
 create view event_counts with (security_invoker = true) as
@@ -998,6 +1037,7 @@ select
   count(distinct ee.player_id)::int as players
 from event_entries ee
 join events e on e.id = ee.event_id
+where e.league_id is not null or not e.is_online
 group by e.league_id;
 
 grant select on event_counts, league_player_counts to anon, authenticated;

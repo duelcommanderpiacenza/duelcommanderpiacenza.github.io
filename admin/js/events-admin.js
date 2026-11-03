@@ -136,9 +136,10 @@ export function initEventsAdmin({ onOpenEvent }) {
       decklists_url: decklistsUrl || null,
       league_id: currentLeague.id,
     };
-    // Only a Topdeck event can be left unnamed — the public site then shows
-    // its date as the title instead. Any other league still requires a name.
-    if (!payload.name && !currentLeague.is_topdeck) return;
+    // Only a series' event (no_points: Topdeck, Serie online) can be left
+    // unnamed — the public site then shows its date as the title instead.
+    // Any other league still requires a name.
+    if (!payload.name && !currentLeague.no_points) return;
     try {
       if (idField.value) {
         await Events.update(idField.value, payload);
@@ -171,7 +172,7 @@ export function initEventsAdmin({ onOpenEvent }) {
 
   function openLeague(league) {
     currentLeague = league;
-    nameHintEl.textContent = league.is_topdeck ? "(opzionale per un Topdeck: se vuoto, verrà mostrata la data)" : "";
+    nameHintEl.textContent = league.no_points ? "(opzionale in una serie: se vuoto, verrà mostrata la data)" : "";
     resetForm();
     refresh();
   }

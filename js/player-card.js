@@ -3,7 +3,7 @@
 // (js/player-detail.js): the border/glow colours, the commander art
 // (Scryfall), and the public card's markup. Its look is styles.css's
 // .player-card / .pc-* rules.
-import { escapeHtml, badgeTooltipAttrs } from "./ui.js";
+import { escapeHtml, badgeTooltipAttrs, endstepLogo } from "./ui.js";
 import { applyCardCosmetics } from "./card-cosmetics.js";
 
 // The favourite colours on the card — never as text: the avatar's ring in
@@ -295,7 +295,7 @@ export const CARD_LINK_SITES = {
     path: /^\/u\/([A-Za-z0-9_.-]{1,40})\/?$/,
     username: /^[A-Za-z0-9_.-]{1,40}$/,
     url: (u) => `https://endstep.cc/u/${u}`,
-    icon: '<svg class="pc-link-endstep-logo" viewBox="11 9 42 46" aria-hidden="true"><path d="M32 11 L49 28 L32 45 L15 28 Z" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round"></path><path d="M32 21 L38 28 L32 35 L26 28 Z" fill="currentColor"></path><rect x="13" y="49" width="38" height="4.4" rx="2.2" fill="currentColor"></rect></svg>',
+    icon: endstepLogo("pc-link-endstep-logo"),
   },
 };
 

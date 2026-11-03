@@ -57,6 +57,77 @@
   color: #ff9a9d;
 }
 
+/* An online league (migration 034 — option A2 of a mockup, js/events-page.js):
+   the card light like the live one's, its label and ring in endstep's gold,
+   its next event's side endstep-dark (gold calendar sheet, label and time);
+   the Serie online's row with a dark block on its left, endstep's logo in it
+   (.ev-online-cap). Here, after the dark theme's rules above, and with a
+   :root where those would win: the same in both themes. */
+.ev-tile.is-online .ev-tile-k {
+  color: var(--endstep-gold-deep);
+}
+
+.ev-league.is-online .league-ring-track {
+  stroke: color-mix(in oklch, var(--endstep-gold) 22%, transparent);
+}
+
+.ev-league.is-online .league-ring-fill {
+  stroke: var(--endstep-gold);
+}
+
+:root .ev-league.is-online .ev-slot {
+  border: 0;
+  background: var(--endstep-ink);
+  color: var(--endstep-text);
+}
+
+:root .ev-league.is-online a.ev-slot:hover {
+  background: var(--endstep-ink-2);
+}
+
+:root .ev-league.is-online .ev-slot.is-next .ev-tile-k,
+:root .ev-league.is-online .ev-slot.is-next .ev-slot-time {
+  color: var(--endstep-gold);
+}
+
+.ev-league.is-online .ev-slot-name {
+  color: var(--endstep-text);
+}
+
+.ev-league.is-online .ev-slot-sub {
+  color: var(--endstep-muted);
+}
+
+:root .ev-league.is-online .ev-slot.is-next .ev-cal {
+  background: var(--endstep-gold);
+  color: var(--endstep-ink);
+}
+
+.ev-tile.ev-minor.is-online {
+  padding-left: 0;
+}
+
+.ev-online-cap {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  align-self: stretch;
+  width: 54px;
+  margin: -10px 0;
+  background: var(--endstep-ink);
+  color: var(--endstep-gold);
+}
+
+.ev-online-cap svg {
+  width: 22px;
+  height: 22px;
+}
+
+:root .ev-minor.is-online .ev-chev {
+  background: color-mix(in oklch, var(--endstep-gold) 18%, transparent);
+  color: var(--endstep-gold-deep);
+}
+
 /* Round red position chip (the old Bacheca standings preview's look),
    one color for every position; min-width + padding only so a 3-digit
    rank would stretch it into a pill instead of overflowing. */

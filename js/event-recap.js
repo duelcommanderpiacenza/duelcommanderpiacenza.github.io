@@ -161,7 +161,7 @@ export function loadRecapData(eventId) {
       const [ev, [results], upcoming] = await Promise.all([
         Events.get(eventId),
         fetchEventsResults([eventId]),
-        Events.listUpcoming().catch(() => []),
+        Events.listUpcoming({ withOnline: true }).catch(() => []),
       ]);
       const { entries, matches } = results;
       const rows = computeEventLeaderboard(matches, entries);
@@ -192,9 +192,12 @@ export function loadRecapData(eventId) {
         topBest: topEntries.length ? bestOf(topEntries) : null,
         archetypes: archetypeCounts(entries),
         // The end's next event: the same league's next one, else (a league
-        // over, a standalone event) the soonest upcoming one of any kind.
+        // over, a standalone event) the soonest upcoming one of any kind —
+        // played the same way, live or online (migration 034).
         next: (() => {
-          const later = upcoming.filter((u) => u.event_date >= ev.event_date && u.id !== ev.id);
+          const later = upcoming.filter(
+            (u) => u.event_date >= ev.event_date && u.id !== ev.id && Boolean(u.is_online) === Boolean(ev.is_online)
+          );
           return (ev.league_id && later.find((u) => u.league_id === ev.league_id)) || later[0] || null;
         })(),
       };
@@ -237,7 +240,7 @@ export function loadSeasonData(leagueId) {
       const [league, leagueEvents, upcoming] = await Promise.all([
         Leagues.get(leagueId),
         Events.listByLeague(leagueId),
-        Events.listUpcoming().catch(() => []),
+        Events.listUpcoming({ withOnline: true }).catch(() => []),
       ]);
       const played = leagueEvents.filter((e) => !e.is_open).sort((a, b) => (a.event_date ?? "").localeCompare(b.event_date ?? ""));
       const [eventsData, scheduled] = await Promise.all([
@@ -273,9 +276,16 @@ export function loadSeasonData(leagueId) {
         topPilots: new Set(topEntries.map((e) => e.player_id)).size,
         archetypes: archetypeCounts(entries),
         // The end's next event: only a new season's — the soonest upcoming
-        // event of another open real league (not a Topdeck series); none:
-        // no event shown.
-        next: upcoming.find((u) => u.league && !u.league.is_topdeck && u.league_id !== leagueId) ?? null,
+        // event of another open real league (not a series), live or online
+        // as this one; none: no event shown.
+        next:
+          upcoming.find(
+            (u) =>
+              u.league &&
+              !u.league.no_points &&
+              u.league_id !== leagueId &&
+              Boolean(u.league.is_online) === Boolean(league.is_online)
+          ) ?? null,
       };
     })();
     cache.set(key, request);
@@ -380,7 +390,7 @@ function eventSlidesHtml(data, page) {
     // A league's (or standalone) event: its top 8; a Topdeck series': its
     // best, TOPDECK_MIN_POINTS or more (none: no screen).
     const lineOf = (r) => commanderOf(entryOf.get(r.player?.id));
-    if (!ev.league?.is_topdeck) slides.push(topEightSlide("La top 8", rows.slice(0, 8), lineOf));
+    if (!ev.league?.no_points) slides.push(topEightSlide("La top 8", rows.slice(0, 8), lineOf));
     else {
       const best = rows.filter((r) => r.points >= TOPDECK_MIN_POINTS);
       if (best.length) slides.push(topEightSlide(`I migliori · ${TOPDECK_MIN_POINTS} punti o più`, best, lineOf));

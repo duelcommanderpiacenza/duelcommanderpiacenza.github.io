@@ -2913,56 +2913,92 @@ html.app-header .home-head-icon {
   color: var(--text-muted);
 }
 
-/* External events (played somewhere else, js/home.js — migration 026): the
-   colours of ours (an upcoming outline, the red "next" — never a past one:
-   deleted the night after its day, migration 030), a
-   ticket's shape instead — a notch on each side, cut out of the card (a
-   mask: whatever is behind shows through), its edge drawn as a thin ring
-   in the card's border colour (--ring), and a dashed tear line before the
-   stub on the right (the time); the Località with a pin
-   (.league-tl-place) in place of the league. No badge. */
-.home-timeline .is-external > .league-tl-card {
-  --notch: 8px;
-  --ring: var(--hairline);
-  --tear: var(--hairline);
-  padding-right: 14px;
-  box-shadow: none;
-  background-image:
-    radial-gradient(circle at 0 50%, transparent var(--notch), var(--ring) var(--notch), var(--ring) calc(var(--notch) + 1px), transparent calc(var(--notch) + 1.5px)),
-    radial-gradient(circle at 100% 50%, transparent var(--notch), var(--ring) var(--notch), var(--ring) calc(var(--notch) + 1px), transparent calc(var(--notch) + 1.5px));
-  -webkit-mask:
-    radial-gradient(circle at 0 50%, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) left / 51% 100% no-repeat,
-    radial-gradient(circle at 100% 50%, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) right / 51% 100% no-repeat;
-  mask:
-    radial-gradient(circle at 0 50%, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) left / 51% 100% no-repeat,
-    radial-gradient(circle at 100% 50%, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) right / 51% 100% no-repeat;
+/* The Bacheca's three kinds of event (option E2 of a mockup, 2026-11-03 —
+   js/home.js): each its own colour and its own big faint logo on the
+   card's right (.league-tl-wm, behind the text: the card isolated) — ours
+   (.is-local) red with the lotus (dc_pc_lotus.svg, by a mask), online
+   endstep's gold and black with its logo (below, .is-online), external
+   (played somewhere else, migration 026 — only ever upcoming: deleted the
+   night after its day, migration 030) slate blue with the pin: its circle
+   and outline, the pin before its Località, the next one slate blue
+   instead of red. All the same shape (the externals were a ticket until
+   then). Only the Bacheca adds these classes — league.html's timeline
+   (.home-timeline too) stays as it was. */
+:root {
+  --external-blue: oklch(0.52 0.08 245);
+}
+
+.home-timeline :is(.is-local, .is-external) > .league-tl-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.league-tl-wm.is-lotus {
+  right: 52px;
+  width: 92px;
+  height: 92px;
+  background: var(--brand-red);
+  opacity: 0.1;
+  transform: translateY(-50%) rotate(-8deg);
+  -webkit-mask: url(../dc_pc_lotus.svg) center / contain no-repeat;
+  mask: url(../dc_pc_lotus.svg) center / contain no-repeat;
+}
+
+.league-tl-wm.is-pin {
+  right: 64px;
+  width: 76px;
+  height: 76px;
+  color: var(--external-blue);
+  opacity: 0.13;
+  transform: translateY(-50%) rotate(-10deg);
+}
+
+/* On the next one's colour: white. */
+.is-next .league-tl-wm.is-lotus {
+  background: #fff;
+  opacity: 0.2;
+}
+
+.is-next .league-tl-wm.is-pin {
+  color: #fff;
+  opacity: 0.2;
+}
+
+/* The next one of ours: its red with a lighter glow in the corner, like
+   the others' next. */
+:root .home-timeline .is-local.is-next > .league-tl-card {
+  background: radial-gradient(140% 160% at 100% 0%, #f0484b, var(--brand-red) 65%);
+}
+
+.home-timeline .is-external > .league-tl-node {
+  border-color: var(--external-blue);
 }
 
 .home-timeline .is-external.is-future > .league-tl-card {
-  --ring: var(--tl-line);
-  --tear: var(--tl-line);
+  border-color: color-mix(in oklch, var(--external-blue) 45%, transparent);
 }
 
-/* The red "next" one has no border: no ring either. */
-.home-timeline .is-external.is-next > .league-tl-card,
-:root[data-theme="dark"] .home-timeline .is-external.is-next > .league-tl-card {
-  --ring: transparent;
-  --tear: rgba(255, 255, 255, 0.55);
+.home-timeline .is-external .league-tl-place > svg {
+  color: var(--external-blue);
 }
 
-/* The tear line, then the stub: the time at the bottom. */
-.home-timeline .is-external .league-tl-side {
-  align-self: stretch;
-  display: flex;
-  align-items: center;
-  margin: 0 0 0 auto;
-  padding: 0 2px 0 14px;
-  border-left: 2px dashed var(--tear);
+:root .home-timeline .is-external.is-next > .league-tl-card {
+  border-color: transparent;
+  background: radial-gradient(140% 160% at 100% 0%, oklch(0.6 0.09 245), var(--external-blue) 65%);
 }
 
-.home-timeline .is-external .league-tl-side.league-tl-time {
-  align-items: flex-end;
-  padding-bottom: 9px;
+:root .home-timeline .is-external.is-next > .league-tl-node {
+  border-color: var(--external-blue);
+  background: var(--external-blue);
+}
+
+.home-timeline .is-external.is-next > .league-tl-node::after {
+  background: color-mix(in oklch, var(--external-blue) 55%, transparent);
+}
+
+:root .home-timeline .is-external.is-next .league-tl-place > svg {
+  color: #fff;
 }
 
 .league-tl-place {
@@ -3006,6 +3042,121 @@ html.app-header .home-head-icon {
   /* The pin is drawn from x 5 of its 24-wide box: pulled left by that blank
      (about 5/24 of its width), its ink lines up with the name above. */
   margin-left: -0.2em;
+}
+
+/* endstep's own colours (online leagues and events, migration 034 —
+   ENDSTEP_PLAN.md): its gold on its near-black, a second dark shade, light
+   and muted text for on the dark; --endstep-gold-deep: the gold dark enough
+   to read on white (the gold itself on the dark theme). */
+:root {
+  --endstep-gold: oklch(0.8 0.135 80);
+  --endstep-gold-deep: oklch(0.62 0.12 75);
+  --endstep-ink: oklch(0.175 0.014 82);
+  --endstep-ink-2: oklch(0.24 0.016 82);
+  --endstep-text: #f3eee4;
+  --endstep-muted: #b9ae9b;
+}
+
+:root[data-theme="dark"] {
+  --endstep-gold-deep: var(--endstep-gold);
+}
+
+/* Played online on endstep (js/ui.js ENDSTEP_MARK): endstep's logo, gold
+   on its near-black, in a small disc — before an online event's league on
+   the Bacheca's timeline, in Leghe & Eventi's labels. Its own colours in
+   both themes and on the red "next" card. */
+.endstep-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.4em;
+  height: 1.4em;
+  border-radius: 50%;
+  background: var(--endstep-ink);
+  color: var(--endstep-gold);
+}
+
+.endstep-mark svg,
+.league-tl-place .endstep-mark svg {
+  width: 64%;
+  height: 64%;
+  margin: 0;
+}
+
+/* 1px out to the left, past the name's first letter: a round mark touches
+   its left edge at one point only, so level with the name it looked set in
+   (user's eye, twice). Its line (.league-tl-k, clipped for its "…") lets it
+   out — the place's text cuts itself (.league-tl-place-text). */
+.league-tl-place .endstep-mark {
+  margin-right: 2px;
+  margin-left: -1px;
+}
+
+.home-timeline .league-tl-k:has(> .league-tl-place > .endstep-mark) {
+  overflow: visible;
+}
+
+/* An online event on the Bacheca's timeline (option B5 of a mockup, with
+   no gold edge — js/home.js; the model for the other kinds' look, above):
+   its circle ringed in gold; endstep's logo big and faint in its card, on
+   the right (.league-tl-wm, behind the text: the card isolated). The next one endstep's instead of red: the card dark
+   (a warm glow in its corner), the league and time gold, the circle gold
+   with its halo pulsing gold. (The :root on the next one's rules outranks
+   css/3's red "next" card, dark theme included.) */
+.home-timeline .is-online > .league-tl-node {
+  border-color: var(--endstep-gold);
+}
+
+.home-timeline .is-online > .league-tl-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.league-tl-wm {
+  position: absolute;
+  top: 50%;
+  right: 58px;
+  z-index: -1;
+  width: 84px;
+  height: 84px;
+  color: var(--endstep-gold);
+  opacity: 0.18;
+  transform: translateY(-50%) rotate(-12deg);
+  pointer-events: none;
+}
+
+.league-tl-wm svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+:root .home-timeline .is-online.is-next > .league-tl-card {
+  border-color: transparent;
+  background: radial-gradient(140% 160% at 100% 0%, var(--endstep-ink-2), var(--endstep-ink) 65%);
+}
+
+:root .home-timeline .is-online.is-next > .league-tl-card :is(.league-tl-k, .league-tl-place-text, .league-tl-side) {
+  color: var(--endstep-gold);
+}
+
+:root .home-timeline .is-online.is-next > .league-tl-card .league-tl-t {
+  color: var(--endstep-text);
+}
+
+:root .home-timeline .is-online.is-next > .league-tl-node {
+  border-color: var(--endstep-gold);
+  background: var(--endstep-gold);
+}
+
+:root .home-timeline .is-online.is-next > .league-tl-node :is(b, span) {
+  color: var(--endstep-ink);
+}
+
+.home-timeline .is-online.is-next > .league-tl-node::after {
+  background: color-mix(in oklch, var(--endstep-gold) 60%, transparent);
 }
 
 /* "Oggi": a small red dot on the line, the word, a rule to the right. */

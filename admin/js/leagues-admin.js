@@ -1,4 +1,5 @@
 import { Leagues, Events } from "../../js/db.js";
+import { leagueKindLabel } from "../../js/ui.js";
 import { renderTable, setMessage, statusToggleButton, onBusySubmit, runBusy, manageButton } from "./crud-ui.js";
 import { syncAutoBadges } from "./badges-sync.js";
 
@@ -8,7 +9,7 @@ import { syncAutoBadges } from "./badges-sync.js";
 // rather than falling through to a generic message when it does fire.
 function describeError(err, fallback) {
   if (err?.code === "23505" && err?.message?.includes("leagues_only_one_open_idx")) {
-    return "Non possono esistere due leghe (o due Topdeck) dello stesso tipo aperte contemporaneamente. Chiudi quella attualmente aperta di questo tipo per crearne o aprirne un'altra.";
+    return "Non possono esistere due leghe dello stesso tipo (lega, serie, online o dal vivo) aperte contemporaneamente. Chiudi quella attualmente aperta di questo tipo per crearne o aprirne un'altra.";
   }
   return fallback;
 }
@@ -18,15 +19,20 @@ function describeError(err, fallback) {
  * row also offers a "Manage events" action that drills into that league,
  * plus a toggle for open/closed (open = ongoing, shown as the homepage's
  * current league; closing it doesn't hide its already-closed events).
- * A row can also be a "Topdeck" series — same shape, just no points
- * leaderboard and never featured on the homepage (see is_topdeck in db.js).
+ * A row can also be a series (no_points: "Serie Topdeck") — same shape,
+ * just no points leaderboard and never featured on the homepage — and either
+ * kind can be played online (is_online: on endstep, migration 034 — shown
+ * for now only on Leghe & Eventi and its own pages; see Leagues in db.js).
+ * One open of each of the four kinds at a time.
  */
 // Same rule as the public Leghe & Eventi page (js/events-page.js): open
-// first, then whichever has the most recently dated associated event,
-// newest first — so the admin list matches what visitors actually see.
+// first (live before online, leagues before series), then whichever has the
+// most recently dated associated event, newest first — so the admin list
+// matches what visitors actually see.
 function compareLeagues(a, b) {
   if (a.is_open !== b.is_open) return a.is_open ? -1 : 1;
-  if (a.is_open && b.is_open && a.is_topdeck !== b.is_topdeck) return a.is_topdeck ? 1 : -1;
+  if (a.is_open && b.is_open && a.is_online !== b.is_online) return a.is_online ? 1 : -1;
+  if (a.is_open && b.is_open && a.no_points !== b.no_points) return a.no_points ? 1 : -1;
   const aDate = a.latestEventDate ?? "";
   const bDate = b.latestEventDate ?? "";
   if (aDate !== bDate) return aDate < bDate ? 1 : -1;
@@ -39,7 +45,8 @@ export function initLeaguesAdmin({ onOpenLeague }) {
   const form = document.getElementById("leagues-admin-form");
   const idField = document.getElementById("leagues-admin-id");
   const nameField = document.getElementById("leagues-admin-name");
-  const topdeckField = document.getElementById("leagues-admin-topdeck");
+  const noPointsField = document.getElementById("leagues-admin-no-points");
+  const onlineField = document.getElementById("leagues-admin-online");
   const msgEl = document.getElementById("leagues-admin-message");
   const cancelBtn = document.getElementById("leagues-admin-cancel");
 
@@ -59,7 +66,7 @@ export function initLeaguesAdmin({ onOpenLeague }) {
       visible,
       [
         { key: "name", label: "Nome" },
-        { key: "type", label: "Tipo", render: (l) => (l.is_topdeck ? "Topdeck" : "Lega") },
+        { key: "type", label: "Tipo", render: (l) => leagueKindLabel(l) },
         { key: "status", label: "Stato", render: (l) => statusToggleButton(l.is_open, l.id, "league") },
         {
           key: "manage",
@@ -94,7 +101,10 @@ export function initLeaguesAdmin({ onOpenLeague }) {
   // just orders by creation date.
   async function refresh(animate = true) {
     try {
-      const [allLeagues, events] = await Promise.all([Leagues.list(), Events.list()]);
+      const [allLeagues, events] = await Promise.all([
+        Leagues.list({ withOnline: true }),
+        Events.list({ withOnline: true }),
+      ]);
       const latestEventDateByLeague = new Map();
       for (const ev of events) {
         if (!ev.league_id || !ev.event_date) continue;
@@ -115,7 +125,8 @@ export function initLeaguesAdmin({ onOpenLeague }) {
   function onEdit(row) {
     idField.value = row.id;
     nameField.value = row.name;
-    topdeckField.checked = !!row.is_topdeck;
+    noPointsField.checked = !!row.no_points;
+    onlineField.checked = !!row.is_online;
   }
 
   function resetForm() {
@@ -126,10 +137,10 @@ export function initLeaguesAdmin({ onOpenLeague }) {
 
   async function onToggleOpen(row) {
     try {
-      // At most one league, and separately at most one Topdeck, is open at
-      // a time — opening this one closes every other open row of the same
-      // kind first (a league and a Topdeck can be open together).
-      if (!row.is_open) await Leagues.closeOtherOpenOfType(row.is_topdeck, row.id);
+      // At most one open league of each kind — opening this one closes
+      // every other open row of the same kind first (a league, a Topdeck
+      // and an online one can be open together).
+      if (!row.is_open) await Leagues.closeOtherOpenOfType(row, row.id);
       await Leagues.update(row.id, { is_open: !row.is_open });
       // Unconditional, not just on the "closing this row" branch — opening
       // one can itself close a *different* league as a side effect just
@@ -177,7 +188,7 @@ export function initLeaguesAdmin({ onOpenLeague }) {
 
   onBusySubmit(form, async (e) => {
     e.preventDefault();
-    const payload = { name: nameField.value.trim(), is_topdeck: topdeckField.checked };
+    const payload = { name: nameField.value.trim(), no_points: noPointsField.checked, is_online: onlineField.checked };
     if (!payload.name) return;
     try {
       if (idField.value) {
@@ -187,7 +198,7 @@ export function initLeaguesAdmin({ onOpenLeague }) {
         // may be — close whatever else of that same kind was open *before*
         // inserting, or the insert itself would violate that uniqueness
         // the instant another row of that kind is still open.
-        await Leagues.closeAllOpenOfType(payload.is_topdeck);
+        await Leagues.closeAllOpenOfType(payload);
         await Leagues.create(payload);
         // Creating one just closed the previously open league of its kind
         // (above) — a "league just closed" moment for league_winner /

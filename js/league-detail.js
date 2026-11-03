@@ -192,13 +192,13 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     titleEl.textContent = league.name;
     document.title = `${league.name} - Duel Commander Piacenza`;
     initTitleFit(titleEl, { signal });
-    rulesBtn.hidden = league.is_topdeck;
-    recapBtn.hidden = league.is_topdeck || league.is_open;
+    rulesBtn.hidden = league.no_points;
+    recapBtn.hidden = league.no_points || league.is_open;
     // Beside "Recap" (the hero's colour), "Regolamento" white — like an
     // event's "Liste".
     rulesBtn.classList.toggle("is-light", !recapBtn.hidden);
     const actionsEl = document.getElementById("league-actions");
-    if (actionsEl) actionsEl.hidden = league.is_topdeck;
+    if (actionsEl) actionsEl.hidden = league.no_points;
     // A shared season recap link (league.html?id=…&recap=1): opened at once.
     if (!recapBtn.hidden && new URLSearchParams(location.search).get("recap") === "1") openSeasonRecap(id);
 
@@ -206,7 +206,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     // no Classifica tab (Eventi and Meta). A closed league: its Classifica —
     // its final standings — the first tab and the open one (Classifica /
     // Eventi / Meta); an open one keeps Eventi / Classifica / Meta, on Eventi.
-    if (league.is_topdeck) {
+    if (league.no_points) {
       leaderboardSectionEl.hidden = true;
       document.getElementById("league-tab-leaderboard").hidden = true;
     } else if (!league.is_open) {
@@ -217,7 +217,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     // Started now (a Topdeck series has no leaderboard to need it), awaited
     // only right before the leaderboard renders, so it loads alongside the
     // league's results rather than after them.
-    const badgesPromise = league.is_topdeck ? null : fetchPlayerBadgesRenderer();
+    const badgesPromise = league.no_points ? null : fetchPlayerBadgesRenderer();
 
     // A still-open (including future) event isn't published yet — it has no
     // entries/matches for RLS to even hand back, and would otherwise inflate
@@ -250,13 +250,13 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     // Opening on Eventi (an open league, a Topdeck series): shown now, with
     // the players per event from their counts — the hero's numbers and art,
     // Classifica and Meta shimmering until the results are in.
-    const playerCounts = league.is_open || league.is_topdeck ? await playerCountsRequest : null;
+    const playerCounts = league.is_open || league.no_points ? await playerCountsRequest : null;
     if (signal.aborted) return;
     if (playerCounts) {
       const countByEvent = new Map(playerCounts.map((r) => [r.event_id, r.players]));
       renderTimeline(new Map(events.map((ev) => [ev.id, countByEvent.get(ev.id) ?? 0])));
       if (events.length) statsEl.innerHTML = statTilesLoadingHtml(["Eventi", "Giocatori", "Presenza media", "Partite giocate"]);
-      if (!league.is_topdeck) leaderboardEl.innerHTML = sectionLoadingHtml(6);
+      if (!league.no_points) leaderboardEl.innerHTML = sectionLoadingHtml(6);
       document.getElementById("league-meta-charts").innerHTML = sectionLoadingHtml(4);
       hidePageLoading(signal);
     }
@@ -302,7 +302,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     // played commander's art (the hero's own reds alone without one).
     createArtPainter(document.getElementById("league-hero-art"))(wrapped.topCommanders[0]?.commander?.name ?? null);
 
-    if (league.is_topdeck) return;
+    if (league.no_points) return;
 
     // While the league runs: each player's place before its latest event,
     // for the change shown in the position chip (leaguePosHtml).

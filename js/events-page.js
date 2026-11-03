@@ -7,15 +7,21 @@
 //    small calendar sheet, the name, the weekday and how soon, the time big);
 //    the Topdeck series in progress a step down, one plain row under it (its
 //    name, next event, events played, players). With no real league in
-//    progress the series takes the card;
+//    progress the series takes the card. Under them the online ones (played
+//    on endstep, migration 034): the online league a card, the Serie online
+//    always a row under it (never the card) — in endstep's colours (option
+//    A2 of a mockup: the card light, its next event's side endstep-dark; the
+//    row a dark block with the logo on its left);
 //  - Archivio: one uniform tile per concluded league (the year, the name,
 //    events and players — a link to its page), newest first, with the
 //    standalone events' tile among them by the date of their latest one (it
-//    opens their list: they have no page of their own).
+//    opens their list: they have no page of their own). A concluded online
+//    league's tile has endstep's mark; the online standalone events aren't
+//    listed (for now they're only on the Bacheca's timeline).
 // Only one of the two with anything in it: no tabs, just that one.
 
 import { Leagues, Events, EventEntries, Matches, EventCounts, LeaguePlayerCounts } from "./db.js";
-import { capitalize, escapeHtml, formatTime, eventTitle, leagueRingHtml, showError } from "./ui.js";
+import { capitalize, escapeHtml, formatTime, endstepLogo, eventTitle, leagueKindLabel, leagueRingHtml, showError, ENDSTEP_MARK } from "./ui.js";
 import { initTabs } from "./tabs.js";
 import { hidePageLoading } from "./page-loading.js";
 import { openInfoDialog } from "./info-dialog.js";
@@ -84,7 +90,8 @@ async function loadCounts(eventsRequest) {
   // league.html's "Partite giocate").
   const matchesByEvent = new Map();
   for (const m of matchRows) matchesByEvent.set(m.event_id, (matchesByEvent.get(m.event_id) ?? 0) + 1);
-  const leagueOf = new Map(events.map((ev) => [ev.id, ev.league_id ?? null]));
+  // (The online standalone events kept apart from the standalone tile's.)
+  const leagueOf = new Map(events.map((ev) => [ev.id, ev.league_id ?? (ev.is_online ? "online" : null)]));
   const byLeague = new Map();
   for (const [eventId, players] of playersByEvent) {
     const key = leagueOf.get(eventId) ?? null;
@@ -98,8 +105,13 @@ async function loadCounts(eventsRequest) {
   };
 }
 
+// A league's label: its kind (js/ui.js leagueKindLabel), endstep's mark
+// before an online one's.
+const kindHtml = (league) => `${league.is_online ? ENDSTEP_MARK : ""}${leagueKindLabel(league)}`;
+
 // The league card: on the left (a link to the league) "Lega" — or "Serie
-// Topdeck" when the series holds the card — the name, players / average /
+// Topdeck" when the series holds the card; an online one's kind with
+// endstep's mark — the name, players / average /
 // matches in small, and on the right of them the ring: events played out
 // of those scheduled (the series, with no set number of events: "N eventi
 // giocati" under the name instead); then (on its right, under it on
@@ -107,33 +119,36 @@ async function loadCounts(eventsRequest) {
 function mainCardHtml(league, { played, scheduled, players, avg, matches }, slot) {
   const total = Math.max(scheduled, played);
   return `
-    <div class="ev-tile ev-league">
+    <div class="ev-tile ev-league${league.is_online ? " is-online" : ""}">
       <a class="ev-league-main" href="league.html?id=${league.id}">
         <span class="ev-league-text">
-          <span class="ev-tile-k">${league.is_topdeck ? "Serie Topdeck" : "Lega"}</span>
+          <span class="ev-tile-k">${kindHtml(league)}</span>
           <span class="ev-tile-t">${escapeHtml(league.name)}</span>
-          ${league.is_topdeck ? `<span class="ev-league-played"><b>${played}</b> ${played === 1 ? "evento giocato" : "eventi giocati"}</span>` : ""}
+          ${league.no_points ? `<span class="ev-league-played"><b>${played}</b> ${played === 1 ? "evento giocato" : "eventi giocati"}</span>` : ""}
           <span class="ev-league-nums">
             <span>${USERS}${players}</span>
             <span>Media ${played ? fmtAvg(avg) : "—"}</span>
             <span>${matches} ${matches === 1 ? "partita" : "partite"}</span>
           </span>
         </span>
-        ${league.is_topdeck ? "" : leagueRingHtml(played, total)}
+        ${league.no_points ? "" : leagueRingHtml(played, total)}
       </a>
       ${slot}
     </div>`;
 }
 
-// The Topdeck series under the league card, a step down: one plain row —
-// "Serie Topdeck", its name, its next event ("mar 3 nov, 21:00") and events
-// played in small; its players and an arrow on the right. A link to it.
+// The series under the league card, a step down: one plain row — "Serie
+// Topdeck" / "Serie online" (with endstep's logo on a dark block on its
+// left — styles.css .ev-online-cap), its name, its next event ("mar 3 nov,
+// 21:00") and events played in small; its players and an arrow on the
+// right. A link to it.
 function minorRowHtml(league, { played, players }, next) {
   const when = next ? `Prossimo ${shortDate(next.event_date)}${next.start_time ? `, <b>${formatTime(next.start_time)}</b>` : ""} · ` : "";
   return `
-    <a class="ev-tile ev-minor" href="league.html?id=${league.id}">
+    <a class="ev-tile ev-minor${league.is_online ? " is-online" : ""}" href="league.html?id=${league.id}">
+      ${league.is_online ? `<span class="ev-online-cap">${endstepLogo()}</span>` : ""}
       <span class="ev-minor-text">
-        <span class="ev-tile-k">Serie Topdeck</span>
+        <span class="ev-tile-k">${leagueKindLabel(league)}</span>
         <span class="ev-tile-t">${escapeHtml(league.name)}</span>
         <span class="ev-tile-s">${when}${played} ${played === 1 ? "evento" : "eventi"}</span>
       </span>
@@ -185,7 +200,7 @@ function closedTile(league, players) {
   const count = league.events.length;
   return `
     <a class="ev-tile" href="league.html?id=${league.id}">
-      <span class="ev-tile-k">Conclusa${last ? `<span class="ev-tag">${year(last)}</span>` : ""}</span>
+      <span class="ev-tile-k">${league.is_online ? ENDSTEP_MARK : ""}Conclusa${last ? `<span class="ev-tag">${year(last)}</span>` : ""}</span>
       <div>
         <div class="ev-tile-t">${escapeHtml(league.name)}</div>
         <div class="ev-tile-s">${count} ${count === 1 ? "evento" : "eventi"} · ${USERS}${players}</div>
@@ -252,11 +267,12 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   try {
     // One round: the leagues, the events, the upcoming ones and the counts
     // (which don't need the events — see loadCounts).
-    const eventsRequest = Events.list();
+    // Online leagues and events too (left out by default — see db.js).
+    const eventsRequest = Events.list({ withOnline: true });
     const [leagues, allEvents, upcoming, counter] = await Promise.all([
-      Leagues.list(),
+      Leagues.list({ withOnline: true }),
       eventsRequest,
-      Events.listUpcoming().catch((err) => (console.error(err), [])),
+      Events.listUpcoming({ withOnline: true }).catch((err) => (console.error(err), [])),
       loadCounts(eventsRequest),
     ]);
     if (signal.aborted) return;
@@ -269,13 +285,20 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     const eventsOf = (id) => played.filter((ev) => ev.league_id === id);
     const withEvents = leagues.map((l) => ({ ...l, events: eventsOf(l.id) }));
     const newest = (list) => list.sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""))[0] ?? null;
-    const current = newest(withEvents.filter((l) => l.is_open && !l.is_topdeck));
-    const topdeck = newest(withEvents.filter((l) => l.is_open && l.is_topdeck));
-    const standalone = played.filter((ev) => !ev.league_id);
-    // The card: the league in progress — or, with none, the Topdeck series;
-    // the series a row under it while a real league holds the card.
-    const main = current ?? topdeck;
-    const minor = current ? topdeck : null;
+    const standalone = played.filter((ev) => !ev.league_id && !ev.is_online);
+    // Live, then online (migration 034): the card the league in progress,
+    // the series (Topdeck / Serie online) a row under it. With no live
+    // league the Topdeck series takes the card; the Serie online never does
+    // (user's choice: always a row, with or without an online league).
+    const groups = [false, true].flatMap((isOnline) => {
+      const ofKind = (noPoints) =>
+        newest(withEvents.filter((l) => l.is_open && Boolean(l.is_online) === isOnline && Boolean(l.no_points) === noPoints));
+      const league = ofKind(false);
+      const series = ofKind(true);
+      if (isOnline) return league || series ? [{ main: league, minor: series }] : [];
+      const main = league ?? series;
+      return main ? [{ main, minor: league ? series : null }] : [];
+    });
 
     const numbersOf = (league) => {
       const count = league.events.length;
@@ -288,18 +311,20 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       };
     };
     const nextOf = (league) => upcoming.find((ev) => ev.league?.id === league.id);
+    // A real league's total event count (open ones included, even those
+    // hidden from visitors), for its ring.
+    const scheduledOf = (league) =>
+      league.no_points ? 0 : Leagues.eventCount(league.id, allEvents.filter((ev) => ev.league_id === league.id).length);
+    const scheduled = await Promise.all(groups.map(({ main }) => (main ? scheduledOf(main) : 0)));
+    if (signal.aborted) return;
     const board = [];
-    if (main) {
-      // A real league's total event count (open ones included, even those
-      // hidden from visitors), for its ring.
-      const scheduled = main.is_topdeck
-        ? 0
-        : await Leagues.eventCount(main.id, allEvents.filter((ev) => ev.league_id === main.id).length);
-      if (signal.aborted) return;
-      const next = nextOf(main);
-      board.push(mainCardHtml(main, { ...numbersOf(main), scheduled }, next ? nextSlot(next, main) : soonSlot(main)));
-    }
-    if (minor) board.push(minorRowHtml(minor, numbersOf(minor), nextOf(minor)));
+    groups.forEach(({ main, minor }, i) => {
+      if (main) {
+        const next = nextOf(main);
+        board.push(mainCardHtml(main, { ...numbersOf(main), scheduled: scheduled[i] }, next ? nextSlot(next, main) : soonSlot(main)));
+      }
+      if (minor) board.push(minorRowHtml(minor, numbersOf(minor), nextOf(minor)));
+    });
     boardEl.innerHTML = board.join("");
     fitBigNames(boardEl);
     let fitTimer;

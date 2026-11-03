@@ -1,6 +1,19 @@
 # Endstep leagues — plan (decided, not built yet)
 
-Decided with the user on 2026-10-30, from `_mockup-endstep.html` (deleted after the choice). **Nothing here is built yet**: the user said "don't do it now". Read this before starting, and check that the code it names still looks this way.
+Decided with the user on 2026-10-30, from `_mockup-endstep.html` (deleted after the choice). Read this before going on, and check that the code it names still looks this way.
+
+## Status (2026-11-03): a first part built
+
+Built (migration 034, details in docs/data-model.md's `leagues` / `events` rows):
+- `leagues.no_points` (was `is_topdeck`, kept a while as a generated copy), `leagues.is_online`, `events.is_online` (a league event's follows its league by trigger), one open league per kind.
+- The admin: online leagues (and series) and online standalone events; their entries and matches like any other.
+- The Bacheca's timeline shows online events (endstep's mark + league name, "Online · endstep" standalone); Leghe & Eventi shows the open online ones by the live ones' rule (the online league a card like the live league's, the Serie online always a row like the Topdeck series', never the card), concluded ones in the Archivio; their league and event pages work as any other.
+- **By the user's choice, online data is shown nowhere else for now** (Meta, Giocatori, Confronto, player / commander / archetype pages, search, stories, badges, card progress): js/db.js leaves it out unless `{ withOnline: true }`. **This replaces "the Dove filter" and "live only" below for now**; the switch to show online data in Meta / Giocatori / detail pages is expected later.
+- Online standalone events are not in Leghe & Eventi (only the timeline).
+
+- **Graphics chosen 2026-11-03 (replacing 1C / 2B below)** from five + five new proposals (`_mockup-endstep.html`, not committed): **A2** for Leghe & Eventi (light card, gold label and ring, the next event's side endstep-dark; the Serie online's row a dark block with the logo on its left) and **B5 without its gold left edge** for the Bacheca (gold-ringed circle, the logo big and faint in the card, the next one endstep-dark). Details in docs/pages.md.
+
+Not built: `players.endstep`, the Bacheca's standings tabs, the Dove filter, the player history's endstep logo, the recap heading's logo. Also: drop the `is_topdeck` copy in a later migration.
 
 ## What it is
 

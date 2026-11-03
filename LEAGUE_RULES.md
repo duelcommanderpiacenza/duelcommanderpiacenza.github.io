@@ -2,7 +2,7 @@
 
 How a league's standings are computed, as implemented in `js/leaderboard.js`
 (`computeEventLeaderboard` → `computeLeaguePoints` → `compareLeagueStandings`).
-Topdeck series have no points leaderboard; everything below applies to real
+Series (`no_points`: Topdeck, Serie online) have no points leaderboard; an online league with points (`is_online`) is scored the same way; everything below applies to real
 leagues only.
 
 The standings are always computed live from the database (league page,

@@ -98,8 +98,26 @@ export function formatTime(value) {
   return value ? value.slice(0, 5) : null;
 }
 
-// A Topdeck event can be left unnamed by the admin — wherever its name would
-// be shown as a title/label, fall back to its formatted date instead.
+// endstep.cc's logo (the diamond, its core, the step bar), in currentColor —
+// the player card's link to it (js/player-card.js) and, as ENDSTEP_MARK, a
+// small disc in endstep's own colours (gold on near-black, styles.css
+// .endstep-mark) beside what's played online: the Bacheca's timeline, Leghe
+// & Eventi's cards.
+export function endstepLogo(cls = "") {
+  return `<svg${cls ? ` class="${cls}"` : ""} viewBox="11 9 42 46" aria-hidden="true"><path d="M32 11 L49 28 L32 45 L15 28 Z" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round"></path><path d="M32 21 L38 28 L32 35 L26 28 Z" fill="currentColor"></path><rect x="13" y="49" width="38" height="4.4" rx="2.2" fill="currentColor"></rect></svg>`;
+}
+export const ENDSTEP_MARK = `<span class="endstep-mark" title="Online su endstep">${endstepLogo()}</span>`;
+
+// A league's kind, by its two flags (migration 034): points or not
+// (no_points: a series), live or online (is_online: played on endstep).
+export function leagueKindLabel(league) {
+  if (league.is_online) return league.no_points ? "Serie online" : "Lega online";
+  return league.no_points ? "Serie Topdeck" : "Lega";
+}
+
+// A series' event (Topdeck, Serie online) can be left unnamed by the admin —
+// wherever its name would be shown as a title/label, fall back to its
+// formatted date instead.
 export function eventTitle(ev) {
   return ev.name || formatDate(ev.event_date);
 }
