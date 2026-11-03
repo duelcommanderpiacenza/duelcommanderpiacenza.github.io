@@ -89,8 +89,11 @@ async function syncNewCommanders({ closedDates, eventsData }) {
     await Commanders.setNew(ids);
   } catch (err) {
     // Migration 027 not run on this database yet (no is_new column:
+    // PostgREST's PGRST204 — what an update with it actually gets —, or
     // Postgres' 42703) — nothing to update; the other caches still are.
-    if (err?.code === "42703") return console.warn("commanders.is_new missing: run migration 027", err);
+    if (err?.code === "PGRST204" || err?.code === "42703") {
+      return console.warn("commanders.is_new missing: run migration 027", err);
+    }
     throw err;
   }
 }
