@@ -12,6 +12,7 @@ Decided with the user on 2026-10-30, from `_mockup-endstep.html` (deleted after 
 |---|---|
 | **Data: league kind** | **Two independent flags** (revised 2026-11-03, replacing the earlier `leagues.type` idea, because an online league may or may not have points): **`leagues.no_points`** (`is_topdeck` renamed, same meaning: no points leaderboard) and **`leagues.is_online`** (played on endstep). Live + points = a league; live + no points = "Serie Topdeck"; online + points = an online league; online + no points = **"Serie online"** (no better name yet). |
 | **Standalone online events** | **Yes, they exist** (an online event outside any league), so `events` gets its own **`events.is_online`** too. |
+| **Online league points** | When it has points: **the same rules as a live league** (`computeLeaguePoints`, LEAGUE_RULES.md) "for now". |
 | **Open leagues** | One open per kind (the four above), so **one open live league and one open online league at the same time**, plus the open series. |
 | **Meta: Comandanti / Matchups / Archetipi** | A **"Dove" filter: Dal vivo · Online · Tutto, default Dal vivo** (mockup option 3B). |
 | **Player page and its history** | Online matches **appear in the history, marked with the endstep logo**. A "Dove" filter on the player's stats: **not decided yet** ("we'll see"). |
@@ -32,7 +33,7 @@ Decided with the user on 2026-10-30, from `_mockup-endstep.html` (deleted after 
 - **Event in the Bacheca: option 2B, with the league's name next to the endstep icon**.
   - On the timeline card (`.home-timeline`, `js/home.js`), the line under the name shows a small endstep disc (the logo, gold on dark, about 16px) **followed by the league's name** ("◆ ENDSTEP LEAGUE 1"). It takes the place where external events show "📍 Milano".
   - The rest of the card is like a live event's.
-  - A standalone online event: the disc plus "Online · endstep" (see the open questions).
+  - A standalone online event: the disc plus "Online · endstep" (agreed 2026-11-03; the user will rework the graphics later).
 - **Bacheca on a computer (3B)**: events stay one list, live and online mixed and the online ones marked. The standings card ("Classifica") gets **one tab per open league**: the live one first, then the online one with the logo. **The live league stays the homepage's main league** (the ring in the heading, the stories, …).
 
 ## Data model (to do)
@@ -61,8 +62,6 @@ Decided with the user on 2026-10-30, from `_mockup-endstep.html` (deleted after 
 
 ## Open questions (ask when starting)
 
-- **The online league's points** (when it has them): the same rules as a live league (best X−1 events, `computeLeaguePoints`), or different?
-- **A standalone online event's line in the Bacheca** (2B): the disc plus "Online · endstep"?
 - **The player page's stats filter**: left for later.
 - **1C's "top black bar"**: see above.
 - **Leghe & Eventi**: does the online league sit in "In corso" next to the live one and the Topdeck series (as the mockup's B assumed), in what order, and how does it look in the Archivio?
