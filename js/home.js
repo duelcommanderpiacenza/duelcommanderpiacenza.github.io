@@ -25,9 +25,9 @@ import { dueStories } from "./stories.js";
 import { locale } from "./locale.js";
 
 // The timeline: how many played events above "Oggi", upcoming ones below
-// (2 and 4 since 2026-10-27 — was 3 and 3; still 6 rows, like the loading
-// skeleton's).
-const UPCOMING_EVENTS_COUNT = 4;
+// (2 and 5 since 2026-11-03 — was 3 and 3, then 2 and 4; 7 rows, like the
+// loading skeleton's).
+const UPCOMING_EVENTS_COUNT = 5;
 const LATEST_EVENTS_COUNT = 2;
 // External events (played somewhere else) only from this many days before
 // their day (and deleted once it's over: migration 030's nightly job).

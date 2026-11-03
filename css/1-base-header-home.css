@@ -837,26 +837,60 @@ html.app-header .sk-cols > .sk-col + .sk-col {
 }
 
 /* Bacheca: the timeline (a dot and a card per event) beside Classifica,
-   the charts' card under both. */
+   the charts' card under both. On a computer laid out like the loaded
+   board (measured 2026-11-03): the panel's padding, the 48px headings,
+   the lists 60px under their top, the link pills under them, the charts'
+   card below. */
 @media (min-width: 861px) {
   html:not(.app-header) .sk-page.is-home .sk-cols {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 30px 64px;
+    padding: 22px 26px 24px;
+  }
+
+  html:not(.app-header) .sk-page.is-home .sk-title {
+    margin-block: 11px;
+  }
+
+  html:not(.app-header) .sk-page.is-home .sk-standings {
+    height: 494px;
+    margin-top: 60px;
+  }
+
+  /* The charts' card as tall as it is with its own loading block. */
+  html:not(.app-header) .sk-page.is-home .sk-chart {
+    height: 386px;
   }
 }
 
+/* "Tutti gli eventi" / "Classifica completa": a pill under each list. */
+.sk-page.is-home .sk-more {
+  align-self: center;
+  width: 170px;
+  height: 44px;
+  margin-top: 4px;
+  border-radius: var(--radius-pill);
+}
+
+/* Like the loaded timeline: the date's 56px circle, the card 14px on,
+   12px apart, "Oggi" (.sk-tl-today, empty) 42px between the played and
+   the upcoming ones. */
 .sk-tl {
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr);
+  grid-template-columns: 56px minmax(0, 1fr);
   align-items: center;
-  gap: 14px 26px;
+  gap: 12px 14px;
 }
 
 .sk-tl .sk-dot {
-  width: 14px;
-  height: 14px;
-  margin-left: 13px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
+}
+
+.sk-tl .sk-tl-today {
+  grid-column: 1 / -1;
+  height: 18px;
 }
 
 .sk-tl .sk-row {
@@ -897,7 +931,19 @@ html:not(.app-header) .sk-page.is-home .sk-recap {
 /* Touch screens: the segmented control, then Eventi alone (no heading of
    its own there). */
 html.app-header .sk-page.is-home .sk-tabs {
+  height: 69px;
   margin-bottom: 4px;
+  border-radius: 18px;
+}
+
+/* …and the board's 13px padding round the timeline, its link pill a
+   little closer under it (measured against the loaded page, 2026-11-03). */
+html.app-header .sk-page.is-home .sk-cols {
+  padding: 13px;
+}
+
+html.app-header .sk-page.is-home .sk-more {
+  margin-top: 2px;
 }
 
 html.app-header .sk-page.is-home .sk-title,
@@ -3368,10 +3414,21 @@ html.app-header .home-events-head {
   }
 
   /* The two lists start level (user, 2026-10-30): both headings as tall as
-     the Classifica's, its ring (48px) the tallest thing in either. Their
-     ends needn't match — the link rows above do. */
+     the Classifica's, its ring (48px) the tallest thing in either. And,
+     full, they end level too (user, 2026-11-03): the timeline's 2 played +
+     5 upcoming cards (56px, 12px apart) with "Oggi" between them, the
+     Classifica's 8 rows (56px, 6px apart) — 490px each with "Oggi" 4px
+     shorter (its bottom padding 8px, not 12px). Fewer events or players:
+     they don't (the link rows below still do). */
   html:not(.app-header) .home-board .home-panel-head {
     min-height: 48px;
+  }
+
+  /* The Classifica's rows spread over the column's height, so the list
+     ends level with the timeline (user, 2026-11-03). */
+  html:not(.app-header) .home-board .dashboard-standings {
+    flex: 1;
+    justify-content: space-between;
   }
 
   /* The two sections as ONE card (option C of a mockup, 2026-10-30 — like
@@ -3503,10 +3560,11 @@ html.app-header .home-events-head {
 
 /* Each "Più giocati" slide's own "Vedi tutti" (js/home.js) — the slide is a
    flex column (.chart-grid > .pie-chart-wrap), which would otherwise
-   stretch the link into a full-width bar; kept its natural size, pinned to
-   the slide's bottom so both slides' links line up. */
+   stretch the link into a full-width bar; kept its natural size, centred
+   (user's choice 2026-11-03 — it was on the left), pinned to the slide's
+   bottom so both slides' links line up. */
 .dashboard-card-commanders .pie-chart-wrap > .section-link {
-  align-self: flex-start;
+  align-self: center;
   margin-top: auto;
 }
 
