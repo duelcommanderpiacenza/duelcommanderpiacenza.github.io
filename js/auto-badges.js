@@ -260,36 +260,35 @@ async function mostCommandersPlayedPlayerIds(closedIds) {
   );
 }
 
-// Every player with an entry in *all* of the latest COMPLETIST_EVENT_COUNT
-// events club-wide — any league, Topdeck, or standalone, whichever mix is
-// most recent by date — not scoped to one league like the rank/winner rules
-// above. Nobody qualifies until that many events exist yet at all. Any
-// number of players can independently qualify (a threshold check, not a
-// ranking), same shape as top8StreakPlayerIds above.
+// "Instancabile": the longest current run of consecutive events — counted
+// back from the latest closed event, any league, Topdeck or standalone —
+// at least COMPLETIST_EVENT_COUNT long (since 2026-11-04; it was everyone
+// at all of the latest 10). Normally one player; a tie, all of them. Read
+// back in chunks until nobody's run continues.
+const STREAK_EVENTS_PER_REQUEST = 20;
+
 async function completistPlayerIds() {
-  // A still-open (including future) event has no visible entries at all yet
-  // — left in here, it would always count as zero participants and make
-  // the "latest 10" intersection permanently empty for as long as it stays
-  // open, so it's excluded the same way every other "how many events" count
-  // on the public site now is.
-  const events = (await Events.list()).filter((ev) => !ev.is_open); // newest-first already
-  if (events.length < COMPLETIST_EVENT_COUNT) return [];
-  const recentEvents = events.slice(0, COMPLETIST_EVENT_COUNT);
-  const entries = await EventEntries.listByEvents(recentEvents.map((e) => e.id));
-
-  const playerIdsByEvent = new Map(); // event id -> Set of player ids
-  for (const e of entries) {
-    if (!playerIdsByEvent.has(e.event_id)) playerIdsByEvent.set(e.event_id, new Set());
-    playerIdsByEvent.get(e.event_id).add(e.player_id);
+  // A still-open (including future) event has no visible entries yet — it
+  // would end every run at once — so only closed ones (newest first).
+  const events = (await Events.list()).filter((ev) => !ev.is_open);
+  let runners = null; // players whose run reaches back this far
+  let length = 0;
+  for (let i = 0; i < events.length; i += STREAK_EVENTS_PER_REQUEST) {
+    const chunk = events.slice(i, i + STREAK_EVENTS_PER_REQUEST);
+    const playerIdsByEvent = new Map(); // event id -> Set of player ids
+    for (const e of await EventEntries.listByEvents(chunk.map((ev) => ev.id))) {
+      if (!playerIdsByEvent.has(e.event_id)) playerIdsByEvent.set(e.event_id, new Set());
+      playerIdsByEvent.get(e.event_id).add(e.player_id);
+    }
+    for (const ev of chunk) {
+      const present = playerIdsByEvent.get(ev.id) ?? new Set();
+      const still = runners === null ? present : new Set([...runners].filter((id) => present.has(id)));
+      if (still.size === 0) return length >= COMPLETIST_EVENT_COUNT ? [...runners] : [];
+      runners = still;
+      length += 1;
+    }
   }
-
-  let qualifying = null;
-  for (const ev of recentEvents) {
-    const playerIds = playerIdsByEvent.get(ev.id) ?? new Set();
-    qualifying = qualifying === null ? new Set(playerIds) : new Set([...qualifying].filter((id) => playerIds.has(id)));
-    if (qualifying.size === 0) break;
-  }
-  return qualifying ? Array.from(qualifying) : [];
+  return runners && length >= COMPLETIST_EVENT_COUNT ? [...runners] : [];
 }
 
 // Every closed real (non-Topdeck) league with its winner (null for a league

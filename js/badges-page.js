@@ -34,7 +34,7 @@ const RULE_TEXT = {
   highest_winrate: `Hai il winrate più alto tra tutti i giocatori (minimo ${MIN_EVENTS_FOR_WINRATE_BADGE} eventi giocati, di cui almeno uno negli ultimi ${WINRATE_BADGE_ACTIVE_MONTHS} mesi).`,
   most_matches_played: `Hai giocato più partite di tutti (minimo ${MIN_MATCHES_FOR_MOST_MATCHES_BADGE}).`,
   most_commanders_played: `Hai giocato più comandanti diversi di tutti (minimo ${MIN_COMMANDERS_FOR_DIVERSITY_BADGE}).`,
-  completionist: `Hai partecipato a tutti gli ultimi ${COMPLETIST_EVENT_COUNT} eventi.`,
+  completionist: `Hai la serie più lunga di eventi consecutivi giocati, fino all'ultimo (minimo ${COMPLETIST_EVENT_COUNT}).`,
   league_champion: "Hai vinto almeno una lega. Una volta conquistato, resta tuo per sempre.",
   most_byes: `Hai ricevuto più bye di tutti (minimo ${MIN_BYES_FOR_MOST_BYES_BADGE}).`,
   most_drops: `Hai fatto più drop di tutti (minimo ${MIN_DROPS_FOR_MOST_DROPS_BADGE}).`,
