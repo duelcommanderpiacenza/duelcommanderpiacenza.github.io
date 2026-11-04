@@ -12,11 +12,11 @@
 //    always a row under it (never the card) — in endstep's colours (option
 //    A2 of a mockup: the card light, its next event's side endstep-dark; the
 //    row a dark block with the logo on its left);
-//  - Archivio: one uniform tile per concluded league (the year, the name,
-//    events and players — a link to its page), newest first, with the
-//    standalone events' tile among them by the date of their latest one (it
-//    opens their list: they have no page of their own). A concluded online
-//    league's tile has endstep's mark; the online standalone events aren't
+//  - Archivio: one tile per concluded league (its kind in its colour, the
+//    year, the name, events and players — a link to its page), newest
+//    first, with the standalone events' tile among them by the date of
+//    their latest one (it opens their list: they have no page of their
+//    own). A concluded online league's tile has endstep's mark; the online standalone events aren't
 //    listed (for now they're only on the Bacheca's timeline).
 // Only one of the two with anything in it: no tabs, just that one.
 
@@ -195,12 +195,17 @@ function soonSlot(league) {
   });
 }
 
+// A concluded league's tile: its kind as the label (the tab already says
+// it's over — option A of a mockup, 2026-11-04), in the kind's colour —
+// a league red, a series grey, an online one endstep's gold (styles.css
+// .ev-archive .is-kind-*), the year tag too.
 function closedTile(league, players) {
   const last = league.events[0]?.event_date;
   const count = league.events.length;
+  const kind = league.is_online ? "online" : league.no_points ? "series" : "league";
   return `
-    <a class="ev-tile" href="league.html?id=${league.id}">
-      <span class="ev-tile-k">${league.is_online ? ENDSTEP_MARK : ""}Conclusa${last ? `<span class="ev-tag">${year(last)}</span>` : ""}</span>
+    <a class="ev-tile is-kind-${kind}" href="league.html?id=${league.id}">
+      <span class="ev-tile-k">${kindHtml(league)}${last ? `<span class="ev-tag">${year(last)}</span>` : ""}</span>
       <div>
         <div class="ev-tile-t">${escapeHtml(league.name)}</div>
         <div class="ev-tile-s">${count} ${count === 1 ? "evento" : "eventi"} · ${USERS}${players}</div>

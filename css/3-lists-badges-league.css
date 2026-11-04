@@ -36,13 +36,22 @@
   background: rgba(255, 255, 255, 0.035);
 }
 
-:root[data-theme="dark"] .ev-archive .ev-tile.is-standalone {
-  background: transparent;
-}
-
 :root[data-theme="dark"] .ev-tag {
   background: rgba(255, 110, 110, 0.14);
   color: #ff9a9d;
+}
+
+:root[data-theme="dark"] .ev-archive .is-kind-league .ev-tile-k {
+  color: #ff8a8d;
+}
+
+:root[data-theme="dark"] .ev-archive .is-kind-series .ev-tag {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+}
+
+:root[data-theme="dark"] .ev-archive .is-kind-online :is(.ev-tile-k, .ev-tag) {
+  color: var(--endstep-gold);
 }
 
 :root[data-theme="dark"] .ev-list-row {

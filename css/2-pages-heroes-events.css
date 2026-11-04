@@ -2097,7 +2097,7 @@ a.ev-slot:hover {
 }
 
 /* Archivio: uniform tiles, as many as there are — one per line on phones;
-   the standalone events' tile dashed. */
+   the standalone events' tile dashed (on the same white). */
 .ev-archive {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -2123,8 +2123,31 @@ a.ev-slot:hover {
 
 .ev-archive .ev-tile.is-standalone {
   border-style: dashed;
-  background: transparent;
-  box-shadow: none;
+}
+
+/* A league's kind (js/events-page.js closedTile): the label and the year
+   tag in its colour — a league red, a series grey, an online one
+   endstep's gold (its tile edged in it too). */
+.ev-archive .is-kind-league .ev-tile-k {
+  color: var(--brand-red);
+}
+
+.ev-archive .is-kind-series .ev-tag {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text-muted);
+}
+
+.ev-archive .is-kind-online {
+  border-color: color-mix(in oklch, var(--endstep-gold) 45%, transparent);
+}
+
+.ev-archive .is-kind-online .ev-tile-k {
+  color: var(--endstep-gold-deep);
+}
+
+.ev-archive .is-kind-online .ev-tag {
+  background: color-mix(in oklch, var(--endstep-gold) 18%, transparent);
+  color: var(--endstep-gold-deep);
 }
 
 @media (max-width: 640px) {
