@@ -60,11 +60,11 @@ const minPlayed = (rows) => Math.max(1, Math.ceil(MIN_PLAYED_RATIO * Math.max(0,
 // matches first.
 // "Ordina per": the numbers each card shows, in their order (since
 // 2026-10-30 — Vittorie, not on the cards, dropped; Piloti and Metashare
-// added). Metashare orders as Giocato does (its share of the decks).
+// added). Metashare (the default) orders by decks played — its share of
+// them; "Giocato", the same number as a count, dropped 2026-11-04.
 const SORTERS = {
-  played: (a, b) => b.entries - a.entries,
   pilots: (a, b) => b.pilots - a.pilots,
-  metashare: (a, b) => b.share - a.share,
+  metashare: (a, b) => b.entries - a.entries,
   winrate: (a, b) => Number(b.enough) - Number(a.enough) || (b.winRate ?? -1) - (a.winRate ?? -1),
 };
 
@@ -188,7 +188,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     // One sub-card per deck (js/history-list.js), the whole card a link to
     // the (primary) commander's page: name with its colours, the numbers on
     // the right.
-    const sorter = SORTERS[sortSelect.value] ?? SORTERS.played;
+    const sorter = SORTERS[sortSelect.value] ?? SORTERS.metashare;
     const rows = [...filtered].sort((a, b) => sorter(a, b) || a.name.localeCompare(b.name));
     return historyPanelHtml(
       rows
@@ -201,7 +201,6 @@ export async function mount({ signal = new AbortController().signal } = {}) {
           }</span><span class="color-identity-inline">${colorIdentityPips(`${r.commander?.color_identity ?? ""}${r.partner?.color_identity ?? ""}`)}</span></span>
         </div>
         ${historyStatsHtml([
-          { label: "Giocato", value: r.entries },
           { label: "Piloti", value: r.pilots },
           { label: "Metashare", value: `${r.share.toFixed(1)}%${winrateTrendHtml(r.share, r.shareBefore, true)}`, trend: true },
           {
