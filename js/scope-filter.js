@@ -6,6 +6,7 @@
 
 import { Leagues, Events } from "./db.js";
 import { escapeHtml, eventTitle } from "./ui.js";
+import { inWhere } from "./where-filter.js";
 
 // `initial` ({ league, event }, optional — the Meta section's shared filter,
 // js/meta-filters.js): picked to start with, when still offered.
@@ -13,6 +14,11 @@ import { escapeHtml, eventTitle } from "./ui.js";
 // loaded by the page — fetched together with its own first requests, so
 // its data isn't waiting on a second round just for the filter (and the
 // events not downloaded twice). Fetched here when not given.
+// `where` (optional — js/where-filter.js's Dal vivo / Online / Tutto): only
+// the leagues and events played that way are offered and reported (the
+// page then loads its lists `withOnline`); a change redraws both lists,
+// keeping the league / event picked when still offered, and reports the
+// new scope.
 export async function initScopeFilter({
   leagueSelect,
   eventSelect,
@@ -20,16 +26,24 @@ export async function initScopeFilter({
   initial = null,
   leagues: loadedLeagues = null,
   events: loadedEvents = null,
+  where = null,
 }) {
-  const [leagues, allEvents] = await Promise.all([loadedLeagues ?? Leagues.list(), loadedEvents ?? Events.list()]);
+  const [allLeagues, allEvents] = await Promise.all([loadedLeagues ?? Leagues.list(), loadedEvents ?? Events.list()]);
+  const inScope = (row) => !where || inWhere(where.value, row);
   // A still-open (including future) event has no stats to filter by yet —
   // offering it here would just be a selectable option that always shows
   // an empty result.
-  const events = allEvents.filter((e) => !e.is_open);
+  let events = [];
 
-  leagueSelect.innerHTML =
-    '<option value="">Tutte le leghe</option>' +
-    leagues.map((l) => `<option value="${l.id}">${escapeHtml(l.name)}</option>`).join("");
+  function populateLeagues() {
+    events = allEvents.filter((e) => !e.is_open && inScope(e));
+    leagueSelect.innerHTML =
+      '<option value="">Tutte le leghe</option>' +
+      allLeagues
+        .filter(inScope)
+        .map((l) => `<option value="${l.id}">${escapeHtml(l.name)}</option>`)
+        .join("");
+  }
 
   function eventsInLeague(leagueId) {
     return leagueId ? events.filter((e) => e.league_id === leagueId) : events;
@@ -67,10 +81,22 @@ export async function initScopeFilter({
   eventSelect.addEventListener("change", () => onChange(currentEventIds()));
 
   const offered = (select, value) => value && [...select.options].some((o) => o.value === value);
-  if (offered(leagueSelect, initial?.league)) leagueSelect.value = initial.league;
-  populateEvents();
-  if (offered(eventSelect, initial?.event)) eventSelect.value = initial.event;
+  function pick({ league, event }) {
+    populateLeagues();
+    if (offered(leagueSelect, league)) leagueSelect.value = league;
+    populateEvents();
+    if (offered(eventSelect, event)) eventSelect.value = event;
+  }
   // The filters button's "set" dot (js/filter-toggle.js) re-reads the panel.
-  if (initial) leagueSelect.closest(".filter-panel")?.dispatchEvent(new Event("change"));
+  const refreshButton = () => leagueSelect.closest(".filter-panel")?.dispatchEvent(new Event("change"));
+
+  pick(initial ?? {});
+  if (initial) refreshButton();
   onChange(currentEventIds());
+
+  where?.onChange(() => {
+    pick({ league: leagueSelect.value, event: eventSelect.value });
+    refreshButton();
+    onChange(currentEventIds());
+  });
 }

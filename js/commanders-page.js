@@ -7,6 +7,7 @@ import { attachHoverTooltips, fullTextIfTruncated } from "./floating-tooltip.js"
 import { commanderPairLabel, colorIdentityPips, commanderBadgesHtml, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
+import { initWhereFilter } from "./where-filter.js";
 import { savedMetaFilters, rememberMetaFilters, prefetchMetaResults, metaResults } from "./meta-filters.js";
 import { historyPanelHtml, historyStatsHtml, winrateTrendHtml, latestPresence } from "./history-list.js";
 import { initBackToTop } from "./back-to-top.js";
@@ -88,6 +89,9 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   const resultsPrefetch = prefetchMetaResults(savedFilters, dateFromInput.value, RESULTS_OPTIONS);
   rememberMetaFilters({ leagueSelect, eventSelect, dateFromInput });
   initFilterToggle("commanders-filter-toggle", "commanders-filter-panel");
+  // Dal vivo / Online / Tutto (js/where-filter.js): the scope filter offers
+  // and reports only the events played that way.
+  const where = initWhereFilter({ signal });
   const searchInput = document.getElementById("commanders-search");
   const sortSelect = document.getElementById("commanders-sort");
   const colorCheckboxes = Array.from(document.querySelectorAll('input[name="commanders-color-filter"]'));
@@ -115,11 +119,13 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   let allEvents = [];
 
   try {
-    const [commanders, events, leagues] = await Promise.all([Commanders.list(), Events.list(), Leagues.list()]);
+    const [commanders, events, leagues] = await Promise.all([Commanders.list(), Events.list({ withOnline: true }), Leagues.list({ withOnline: true })]);
     allCommanders = commanders;
     allLeagues = leagues;
     allEvents = events;
     eventDateById = new Map(events.map((e) => [e.id, e.event_date]));
+    // The Dove bar only when there are both live and online events.
+    where.setEvents(events);
   } catch (err) {
     showError(chartEl, err);
     hidePageLoading(signal);
@@ -435,6 +441,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   initScopeFilter({
     leagueSelect,
     eventSelect,
+    where,
     initial: savedFilters,
     leagues: allLeagues,
     events: allEvents,

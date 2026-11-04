@@ -85,6 +85,7 @@
   <link rel="modulepreload" href="js/scope-filter.js">
   <link rel="modulepreload" href="js/player-badges.js">
   <link rel="modulepreload" href="js/filter-toggle.js">
+  <link rel="modulepreload" href="js/where-filter.js">
   <link rel="modulepreload" href="js/history-list.js">
   <link rel="modulepreload" href="js/back-to-top.js">
   <link rel="modulepreload" href="js/auto-badges.js">
@@ -158,6 +159,15 @@
         <a class="profile-tab" href="compare.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="18" r="3"></circle><circle cx="6" cy="6" r="3"></circle><path d="M13 6h3a2 2 0 0 1 2 2v7"></path><path d="M11 18H8a2 2 0 0 1-2-2V9"></path></svg><span>Confronto</span></a>
       </nav>
     </div>
+    <!-- Dal vivo / Online / Tutto (js/where-filter.js): which events the
+         section counts. A computer: in the tabs' row, before the filters'
+         button; touch screens: a bar under the sticky switcher. Hidden
+         unless there are both live and online events. -->
+    <div class="where-filter" role="radiogroup" aria-label="Dove" hidden>
+      <button type="button" class="where-opt is-active" data-where="live" role="radio" aria-checked="true"><span class="where-lotus" aria-hidden="true"></span><span>Dal vivo</span></button>
+      <button type="button" class="where-opt" data-where="online" role="radio" aria-checked="false"><svg viewBox="11 9 42 46" aria-hidden="true"><path d="M32 11 L49 28 L32 45 L15 28 Z" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round"></path><path d="M32 21 L38 28 L32 35 L26 28 Z" fill="currentColor"></path><rect x="13" y="49" width="38" height="4.4" rx="2.2" fill="currentColor"></rect></svg><span>Online</span></button>
+      <button type="button" class="where-opt" data-where="all" role="radio" aria-checked="false"><span>Tutto</span></button>
+    </div>
   </div>
 
   <div class="page-loading-region">
@@ -181,11 +191,11 @@
          loading region). -->
     <div class="filter-toggle-line">
       <div class="field filter-toggle-search">
-        <label for="players-search">Cerca</label>
+        <label for="players-search" class="visually-hidden">Cerca</label>
         <input type="search" id="players-search" placeholder="Cerca giocatore...">
       </div>
       <div class="field filter-toggle-sort">
-        <label for="players-sort">Ordina per</label>
+        <label for="players-sort" class="visually-hidden">Ordina per</label>
         <select id="players-sort">
           <option value="events">Eventi</option>
           <option value="winrate">Winrate</option>

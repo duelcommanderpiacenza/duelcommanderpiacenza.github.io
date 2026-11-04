@@ -1,8 +1,10 @@
 // One filter for the whole Meta section (Comandanti / Matchups /
-// Archetipi): the Lega / Evento / Dal set on one page is already applied on
-// the other two. Kept for the browsing session (sessionStorage
-// "metaFilters" — closing the app goes back to the default, the last
-// DEFAULT_DATE_FROM_YEARS years). Comandanti's colour filter stays its own.
+// Archetipi / Evoluzione): the Lega / Evento / Dal set on one page is
+// already applied on the others (the Dove bar, js/where-filter.js, is
+// shared too, and with Giocatori / Confronto). Kept for the browsing
+// session (sessionStorage "metaFilters" — closing the app goes back to the
+// default, the last DEFAULT_DATE_FROM_YEARS years). Comandanti's colour
+// filter stays its own.
 
 import { fetchClosedResultsSince, fetchEventsResults } from "./db.js";
 
@@ -58,11 +60,13 @@ export function rememberMetaFilters({ leagueSelect, eventSelect, dateFromInput }
 // Started at mount, before the first await. null when a league or event is
 // picked to start with (that scope is small: fetched as before).
 // `commanders`: the entries' commanders too (fetchEventsResults'), the rows
-// always slim — the same options as the page's metaResults calls.
+// always slim — the same options as the page's metaResults calls. Online
+// events' too, whatever the Dove choice (js/where-filter.js): the scope's
+// event ids pick the rows, so switching it needs no request.
 export function prefetchMetaResults(savedFilters, dateFrom, { commanders = false } = {}) {
   if (savedFilters?.league || savedFilters?.event) return null;
   const from = dateFrom || null;
-  const request = fetchClosedResultsSince(from, { commanders });
+  const request = fetchClosedResultsSince(from, { commanders, withOnline: true });
   // Marked as handled: a failure only means falling back (below).
   request.catch((err) => console.error(err));
   return { from, request };

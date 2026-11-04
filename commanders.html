@@ -87,6 +87,7 @@
   <link rel="modulepreload" href="js/metagame-chart.js">
   <link rel="modulepreload" href="js/chart-carousel.js">
   <link rel="modulepreload" href="js/filter-toggle.js">
+  <link rel="modulepreload" href="js/where-filter.js">
   <link rel="modulepreload" href="js/meta-filters.js">
   <link rel="modulepreload" href="js/history-list.js">
   <link rel="modulepreload" href="js/back-to-top.js">
@@ -170,6 +171,15 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
       </button>
     </div>
+    <!-- Dal vivo / Online / Tutto (js/where-filter.js): which events the
+         section counts. A computer: in the tabs' row, before the filters'
+         button; touch screens: a bar under the sticky switcher. Hidden
+         unless there are both live and online events. -->
+    <div class="where-filter" role="radiogroup" aria-label="Dove" hidden>
+      <button type="button" class="where-opt is-active" data-where="live" role="radio" aria-checked="true"><span class="where-lotus" aria-hidden="true"></span><span>Dal vivo</span></button>
+      <button type="button" class="where-opt" data-where="online" role="radio" aria-checked="false"><svg viewBox="11 9 42 46" aria-hidden="true"><path d="M32 11 L49 28 L32 45 L15 28 Z" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round"></path><path d="M32 21 L38 28 L32 35 L26 28 Z" fill="currentColor"></path><rect x="13" y="49" width="38" height="4.4" rx="2.2" fill="currentColor"></rect></svg><span>Online</span></button>
+      <button type="button" class="where-opt" data-where="all" role="radio" aria-checked="false"><span>Tutto</span></button>
+    </div>
   </div>
   <div class="filter-panel is-collapsed" id="commanders-filter-panel">
     <div class="filter-panel-clip">
@@ -239,11 +249,11 @@
 
   <div class="filter-toggle-line">
     <div class="field filter-toggle-search">
-      <label for="commanders-search">Cerca</label>
+      <label for="commanders-search" class="visually-hidden">Cerca</label>
       <input type="search" id="commanders-search" placeholder="Cerca comandante...">
     </div>
     <div class="field filter-toggle-sort">
-      <label for="commanders-sort">Ordina per</label>
+      <label for="commanders-sort" class="visually-hidden">Ordina per</label>
       <select id="commanders-sort">
         <option value="played">Giocato</option>
         <option value="pilots">Piloti</option>

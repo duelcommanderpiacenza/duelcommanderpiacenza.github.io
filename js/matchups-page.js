@@ -14,6 +14,7 @@ import { hidePageLoading } from "./page-loading.js";
 import { attachHoverTooltips, fullTextIfTruncated } from "./floating-tooltip.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { initFilterToggle } from "./filter-toggle.js";
+import { initWhereFilter } from "./where-filter.js";
 import { savedMetaFilters, rememberMetaFilters, prefetchMetaResults, metaResults } from "./meta-filters.js";
 import { openInfoDialog } from "./info-dialog.js";
 import { enableDragScroll, enableSnapDrag } from "./drag-scroll.js";
@@ -529,6 +530,9 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   const resultsPrefetch = prefetchMetaResults(savedFilters, dateFromInput.value, resultsOptions);
   rememberMetaFilters({ leagueSelect, eventSelect, dateFromInput });
   initFilterToggle("matchups-filter-toggle", "matchups-filter-panel");
+  // Dal vivo / Online / Tutto (js/where-filter.js): the scope filter offers
+  // and reports only the events played that way.
+  const where = initWhereFilter({ signal });
   let eventDateById = new Map();
   let lastScopeEventIds = [];
 
@@ -577,11 +581,13 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   let allLeagues = [];
   let allEvents = [];
   try {
-    const [events, leagues] = await Promise.all([Events.list(), Leagues.list()]);
+    const [events, leagues] = await Promise.all([Events.list({ withOnline: true }), Leagues.list({ withOnline: true })]);
     if (signal.aborted) return;
     allLeagues = leagues;
     allEvents = events;
     eventDateById = new Map(events.map((e) => [e.id, e.event_date]));
+    // The Dove bar only when there are both live and online events.
+    where.setEvents(events);
   } catch (err) {
     showError(matrixEl, err);
     hidePageLoading(signal);
@@ -594,6 +600,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   await initScopeFilter({
     leagueSelect,
     eventSelect,
+    where,
     initial: savedFilters,
     leagues: allLeagues,
     events: allEvents,

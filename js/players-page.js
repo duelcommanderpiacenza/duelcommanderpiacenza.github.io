@@ -5,6 +5,7 @@ import { fetchTopAutoBadgesByPlayer, playerBadgesHtml } from "./player-badges.js
 import { escapeHtml, showError, softFail, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
+import { initWhereFilter } from "./where-filter.js";
 import { historyPanelHtml, historyStatsHtml, winrateTrendHtml, eloTrendHtml, latestPresence } from "./history-list.js";
 import { initBackToTop } from "./back-to-top.js";
 
@@ -12,7 +13,8 @@ import { initBackToTop } from "./back-to-top.js";
 // the player's page: name + badges (on touch screens the badges at the
 // row's right end, on the name's first line — styles.css
 // .players-row-title), the numbers on the right. The Elo is the player's
-// whole history (js/elo.js), not the filters' scope — said on hover.
+// whole history (js/elo.js), live events only, not the filters' scope (nor
+// the Dove bar's) — said on hover.
 function renderRow(r) {
   return `
     <a class="history-item history-ranked" href="player.html?id=${r.id}">
@@ -26,7 +28,7 @@ function renderRow(r) {
           label: "Elo",
           value: r.elo === null ? "—" : `${r.elo}${eloTrendHtml(r.elo, r.eloBefore)}`,
           trend: true,
-          title: "Elo su tutti gli eventi, non cambia con i filtri",
+          title: "Elo su tutti gli eventi dal vivo, non cambia con i filtri",
         },
       ])}
     </a>`;
@@ -100,6 +102,9 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   const sortSelect = document.getElementById("players-sort");
   // A long list: a round button back to the top once scrolled down.
   initBackToTop({ signal });
+  // Dal vivo / Online / Tutto (js/where-filter.js): the scope filter offers
+  // and reports only the events played that way.
+  const where = initWhereFilter({ signal });
 
   let allPlayers = [];
   let eventDateById = new Map();
@@ -122,8 +127,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   try {
     const [players, events, leagues, autoBadges, eloRows] = await Promise.all([
       Players.list(),
-      Events.list(),
-      Leagues.list(),
+      Events.list({ withOnline: true }),
+      Leagues.list({ withOnline: true }),
       // Not fatal if this fails — the page still works with just the
       // manually assigned badges.
       softFail(fetchTopAutoBadgesByPlayer(), new Map()),
@@ -142,6 +147,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     autoBadgesByPlayer = autoBadges;
     eloByPlayer = new Map(eloRows.map((r) => [r.player_id, r]));
     eventDateById = new Map(events.map((e) => [e.id, e.event_date]));
+    // The Dove bar only when there are both live and online events.
+    where.setEvents(events);
   } catch (err) {
     showError(listEl, err);
     hidePageLoading(signal);
@@ -253,6 +260,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   initScopeFilter({
     leagueSelect,
     eventSelect,
+    where,
     leagues: allLeagues,
     events: allEvents,
     onChange: (eventIds) => {

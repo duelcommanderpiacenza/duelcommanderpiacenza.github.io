@@ -617,7 +617,9 @@ const EVENT_IDS_PER_REQUEST = 100;
 // leaderboard.js's isBye / isDrop / matchRoundOutcome and stats.js's
 // computeGroupedStats. `commanders` adds the entries' commander embeds
 // (name, colours) back — Comandanti's colours chart, Matchups' names.
-const SLIM_ENTRY_COLUMNS = "id, event_id, player_id, commander_id, partner_commander_id, archetype";
+// manual_rank: Confronto's places in an online event (computeEventLeaderboard
+// — the event_standings cache has the live ones only).
+const SLIM_ENTRY_COLUMNS = "id, event_id, player_id, commander_id, partner_commander_id, archetype, manual_rank";
 const SLIM_MATCH_COLUMNS = "id, event_id, round, player1_id, player2_id, player1_wins, draws, player2_wins, is_drop";
 
 /**
@@ -660,20 +662,20 @@ function groupByEvent(rows) {
 
 /**
  * Every closed event's entries + matches from `fromIso` (YYYY-MM-DD) on —
- * every closed event's when null (online events' left out: see Leagues
- * above) — filtered by the database on the event's
+ * every closed event's when null (online events' left out unless
+ * `withOnline`: see Leagues above) — filtered by the database on the event's
  * date (an inner join, like EventEntries.listForChartsSince), so it needs no
  * event ids first: started with a page's own first requests. Slim rows
  * (fetchEventsResults' slim), each with a small `event` ({ event_date,
- * is_open }) from the join. For the Meta pages' default scope
- * (js/meta-filters.js prefetchMetaResults).
+ * is_open, is_online }) from the join. For the Meta pages' default scope
+ * (js/meta-filters.js prefetchMetaResults) and Confronto.
  * @returns {Promise<{entriesByEvent: Map, matchesByEvent: Map}>} rows by event id.
  */
-export async function fetchClosedResultsSince(fromIso, { commanders = false } = {}) {
+export async function fetchClosedResultsSince(fromIso, { commanders = false, withOnline = false } = {}) {
   const join = "event:events!inner(event_date,is_open,is_online)";
   const entryColumns = `${commanders ? `${SLIM_ENTRY_COLUMNS}, ${COMMANDER_EMBED}` : SLIM_ENTRY_COLUMNS}, ${join}`;
   const scoped = (query) => {
-    const closed = query.eq("event.is_open", false).eq("event.is_online", false);
+    const closed = liveOnly(query.eq("event.is_open", false), withOnline);
     return fromIso ? closed.gte("event.event_date", fromIso) : closed;
   };
   const [entries, matches] = await Promise.all([

@@ -805,6 +805,30 @@ html.nav-mobile .pc-cancel-btn svg {
   width: 220px;
 }
 
+/* Comandanti / Giocatori (user, 2026-11-04): no "Cerca" / "Ordina per"
+   labels over the line (visually-hidden, still read out) — a line less;
+   the search box says what it does in its placeholder, the sort box by a
+   sort icon (two arrows, up and down) before its value, in the red of its
+   arrow — in the select's empty icon slot (its options have none). */
+.filter-toggle-sort .cs-trigger-icon::before {
+  content: "";
+  width: 16px;
+  height: 16px;
+  background: var(--brand-red);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 8 4-4 4 4M7 4v16M21 16l-4 4-4-4M17 20V4'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 8 4-4 4 4M7 4v16M21 16l-4 4-4-4M17 20V4'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+:root[data-theme="dark"] .filter-toggle-sort .cs-trigger-icon::before {
+  background: #ff8a8d;
+}
+
+/* Their loading placeholder's search bar: the line's height, no labels
+   (the 41px boxes, measured with the gap under it). */
+main:is([data-page="commanders"], [data-page="players"]) .sk-search {
+  height: 43px;
+}
+
 /* Pinned to the row's right edge via the row's only auto margin — same
    trick as the nav's own Social tab (.nav-link[data-nav="social"]) —
    everything else stays left-packed regardless of how many (or how few —
@@ -1254,7 +1278,14 @@ html.nav-mobile .help-toggle-btn {
    on desktop. */
 @media (max-width: 480px) {
   .filter-toggle-sort {
-    width: 130px;
+    /* 140px since its sort icon (2026-11-04), the icon, value and arrow
+       closer: "Metashare" whole beside it, the search's placeholder too. */
+    width: 140px;
+  }
+
+  .filter-toggle-sort .cs-trigger {
+    gap: 6px;
+    padding-inline: 10px;
   }
 }
 
@@ -2511,11 +2542,14 @@ html.nav-mobile .chart-carousel-arrow {
    room kept for them — and their loading placeholder — to match, so the
    list sits right under them. */
 html.nav-mobile #commanders-chart {
-  min-height: 265px;
+  min-height: 247px;
 }
 
+/* (Measured: the placeholder starts 16px lower and has the 14px gap of
+   .sk-page under it, so 30px less than the room above — its search bar
+   then where the loaded line is.) */
 html.nav-mobile main[data-page="commanders"] .sk-chart {
-  height: 265px;
+  height: 217px;
 }
 
 #archetypes-chart {
@@ -2634,6 +2668,19 @@ html.nav-mobile main[data-page="commanders"] .sk-chart {
     width: 12px;
     height: 12px;
   }
+}
+
+/* Comandanti / Archetipi on touch screens (user, 2026-11-04): the charts a
+   bit shorter — the title closer to its chart (6px, not 14px: the tallest
+   chart, Winrate, sets every slide's height) — and the dots closer under
+   them (about 8px, up into the row's bottom padding, which keeps the
+   cards' shadows: the dots drawn over its faint end). */
+html.nav-mobile :is(#commanders-chart, #archetypes-chart) .chart-grid > .pie-chart-wrap > .pie-chart-title {
+  margin-bottom: 6px;
+}
+
+html.nav-mobile :is(#commanders-chart, #archetypes-chart) .chart-carousel-nav {
+  margin-top: -16px;
 }
 
 /* Commander detail's "decks played over time" line (js/line-chart.js) —

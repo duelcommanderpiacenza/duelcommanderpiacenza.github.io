@@ -1680,6 +1680,151 @@ html.nav-mobile .meta-row > .meta-tabs:only-child {
   display: none;
 }
 
+/* The Dove bar (js/where-filter.js — option H2 of a mockup, 2026-11-04):
+   Dal vivo · Online · Tutto, a small pill bar in the section's head, on the
+   Meta pages and Giocatori / Confronto alike. A computer: in the tabs'
+   row, at its right end, before the filters' button where there is one;
+   touch screens: a bar of its own, the page's width, under the sticky
+   switcher (not sticky itself). The choice tinted like a picked option,
+   Online in endstep's colours (its gold on its near-black). Static in each
+   page, wired at mount; hidden unless there are both live and online
+   events (js/where-filter.js). */
+.where-filter {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  background: #fff;
+}
+
+.where-filter[hidden] {
+  display: none;
+}
+
+:root[data-theme="dark"] .where-filter {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: #1e1517;
+}
+
+.where-opt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.where-opt:not(.is-active):hover {
+  color: var(--text-title);
+}
+
+.where-opt.is-active {
+  background: color-mix(in srgb, var(--brand-red) 10%, transparent);
+  color: var(--brand-red-deep);
+}
+
+:root[data-theme="dark"] .where-opt:not(.is-active):hover {
+  color: #f3e9ea;
+}
+
+:root[data-theme="dark"] .where-opt.is-active {
+  background: rgba(255, 110, 110, 0.14);
+  color: #ff9a9d;
+}
+
+.where-opt[data-where="online"].is-active {
+  background: var(--endstep-ink);
+  color: var(--endstep-gold);
+}
+
+/* The lotus (Dal vivo, dc_pc_lotus.svg by a mask, in the text's colour)
+   and endstep's logo (Online, its gold). */
+.where-lotus {
+  flex-shrink: 0;
+  width: 1.25em;
+  height: 0.95em;
+  background: currentColor;
+  -webkit-mask: url(../dc_pc_lotus.svg) center / contain no-repeat;
+  mask: url(../dc_pc_lotus.svg) center / contain no-repeat;
+}
+
+.where-opt svg {
+  flex-shrink: 0;
+  width: 1.05em;
+  height: 1.05em;
+  color: var(--endstep-gold-deep);
+}
+
+.where-opt.is-active svg {
+  color: var(--endstep-gold);
+}
+
+/* A computer: the row's middle column, pushed right — the filters' button
+   (the Meta pages) a third column after it. */
+html:not(.nav-mobile) .meta-head > .where-filter {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+}
+
+html:not(.nav-mobile) .meta-head:has(.filter-toggle-btn) {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  column-gap: 12px;
+}
+
+html:not(.nav-mobile) .meta-head:has(> .where-filter) .filter-toggle-btn {
+  grid-column: 3;
+}
+
+/* A narrow window (no touch): the Meta pages' four tabs, the bar and the
+   button don't fit one line — the bar a line of its own under them, at
+   the right; Giocatori / Confronto's two tabs only when narrower still. */
+@media (max-width: 960px) {
+  html:not(.nav-mobile) .meta-head:has(.filter-toggle-btn) > .where-filter {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  html:not(.nav-mobile) .meta-head:has(.filter-toggle-btn) {
+    row-gap: 14px;
+  }
+}
+
+@media (max-width: 600px) {
+  html:not(.nav-mobile) .meta-head > .where-filter {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  html:not(.nav-mobile) .meta-head {
+    row-gap: 14px;
+  }
+}
+
+/* Touch screens: the page's width, the three equal, under the switcher's
+   card (its 18px margin partly taken back). Not when hidden (:not — this
+   rule would outrank .where-filter[hidden] above). */
+html.nav-mobile .where-filter:not([hidden]) {
+  display: flex;
+  margin: -6px 0 16px;
+}
+
+html.nav-mobile .where-opt {
+  flex: 1;
+  padding: 8px 6px;
+}
+
 /* Matchups on touch screens: "Crea tabella personalizzata" / "Mostra
    tabella predefinita" centred under the matrix (js/matchups-page.js moves
    it there). */

@@ -27,15 +27,19 @@
 // The pair is in the address (?a=&b=, kept up to date, so a comparison can
 // be shared); without one, no player is chosen: a line invites to pick two
 // (user: no default pair).
+// The section's Dove bar (js/where-filter.js — Dal vivo / Online / Tutto)
+// picks the events counted, the picker's lists too; online events' places
+// computed here (event_standings caches the live ones only).
 
 import { Players, Events, EventStandings, fetchClosedResultsSince } from "./db.js";
-import { matchRoundOutcome, isBye, isDrop } from "./leaderboard.js";
+import { matchRoundOutcome, isBye, isDrop, computeEventLeaderboard } from "./leaderboard.js";
 import { ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
 import { archetypeIcon } from "./archetype-icons.js";
 import { escapeHtml, eventTitle, formatDate, scryfallImages, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { locale } from "./locale.js";
 import { BIG_EVENT_MIN_PLAYERS } from "./card-progress.js";
+import { initWhereFilter, inWhere } from "./where-filter.js";
 
 const ARCHETYPE_LABELS = { aggro: "Aggro", control: "Control", combo: "Combo", tempo: "Tempo", midrange: "Midrange" };
 // The two players' colours (the CSS's --pa / --pb), for the chart's tips.
@@ -218,13 +222,16 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   }, { once: true });
 
 
-  // Everything in one round.
+  // Dal vivo / Online / Tutto: the events counted.
+  const where = initWhereFilter({ signal });
+
+  // Everything in one round — online events too, whatever the choice.
   let players, allEvents, results, standings;
   try {
     [players, allEvents, results, standings] = await Promise.all([
       Players.list(),
-      Events.list(),
-      fetchClosedResultsSince(null, { commanders: true }),
+      Events.list({ withOnline: true }),
+      fetchClosedResultsSince(null, { commanders: true, withOnline: true }),
       EventStandings.listAll(),
     ]);
     if (signal.aborted) return;
@@ -234,6 +241,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     return;
   }
 
+  // The Dove bar only when there are both live and online events.
+  where.setEvents(allEvents);
   const playersById = new Map(players.map((p) => [p.id, p]));
   const nameOf = (pid) => (pid ? playersById.get(pid)?.name ?? "?" : null);
   const posByEvent = new Map();
@@ -241,30 +250,48 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     if (!posByEvent.has(r.event_id)) posByEvent.set(r.event_id, new Map());
     posByEvent.get(r.event_id).set(r.player_id, r.position);
   }
+  // An event's places: the cache's, else (an online event) computed as
+  // event.html does — the slim rows given the player objects it keys on.
+  function placesOf(ev, entries, matches) {
+    if (posByEvent.has(ev.id) || !ev.is_online) return posByEvent.get(ev.id) ?? new Map();
+    const withPlayer = (id) => (id ? { id } : null);
+    const board = computeEventLeaderboard(
+      matches.map((m) => ({ ...m, player1: withPlayer(m.player1_id), player2: withPlayer(m.player2_id) })),
+      entries.map((en) => ({ ...en, player: withPlayer(en.player_id) }))
+    );
+    return new Map(board.filter((r) => r.player?.id).map((r, i) => [r.player.id, i + 1]));
+  }
   // Closed events, oldest first, with their rows.
-  const allEvs = allEvents
+  const closedEvs = allEvents
     .filter((ev) => !ev.is_open)
     .sort((x, y) => x.event_date.localeCompare(y.event_date))
-    .map((ev) => ({
-      ev,
-      entries: results.entriesByEvent.get(ev.id) ?? [],
-      matches: results.matchesByEvent.get(ev.id) ?? [],
-      pos: posByEvent.get(ev.id) ?? new Map(),
-    }));
-  // Over the whole history: how often each pair met (the picker's "most
-  // faced"), each player's events (the picker's list: players with one).
+    .map((ev) => {
+      const entries = results.entriesByEvent.get(ev.id) ?? [];
+      const matches = results.matchesByEvent.get(ev.id) ?? [];
+      return { ev, entries, matches, pos: placesOf(ev, entries, matches) };
+    });
+  // The ones the Dove bar counts, and over them: how often each pair met
+  // (the picker's "most faced"), each player's events (the picker's list:
+  // players with one). Again on a change of the bar.
+  let allEvs = [];
   const pairCounts = new Map();
   const eventsByPlayer = new Map();
-  for (const e of allEvs) {
-    for (const en of e.entries) eventsByPlayer.set(en.player_id, (eventsByPlayer.get(en.player_id) ?? 0) + 1);
-    for (const m of e.matches) {
-      if (isDrop(m) || isBye(m)) continue;
-      for (const [p, q] of [[m.player1_id, m.player2_id], [m.player2_id, m.player1_id]]) {
-        if (!pairCounts.has(p)) pairCounts.set(p, new Map());
-        pairCounts.get(p).set(q, (pairCounts.get(p).get(q) ?? 0) + 1);
+  function scopeEvents() {
+    allEvs = closedEvs.filter((e) => inWhere(where.value, e.ev));
+    pairCounts.clear();
+    eventsByPlayer.clear();
+    for (const e of allEvs) {
+      for (const en of e.entries) eventsByPlayer.set(en.player_id, (eventsByPlayer.get(en.player_id) ?? 0) + 1);
+      for (const m of e.matches) {
+        if (isDrop(m) || isBye(m)) continue;
+        for (const [p, q] of [[m.player1_id, m.player2_id], [m.player2_id, m.player1_id]]) {
+          if (!pairCounts.has(p)) pairCounts.set(p, new Map());
+          pairCounts.get(p).set(q, (pairCounts.get(p).get(q) ?? 0) + 1);
+        }
       }
     }
   }
+  scopeEvents();
   const rivalsOf = (pid) => [...(pairCounts.get(pid) ?? new Map()).entries()].sort((x, y) => y[1] - x[1]);
 
   const state = { a: null, b: null, view: "winrate", h2hAll: false, openArch: null };
@@ -819,6 +846,11 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   });
   resize.observe(grid);
   signal.addEventListener("abort", () => resize.disconnect(), { once: true });
+
+  where.onChange(() => {
+    scopeEvents();
+    render();
+  });
 
   render();
   hidePageLoading(signal);

@@ -38,7 +38,7 @@ function closeAllExcept(except) {
 function openMenu(wrap) {
   if (wrap.classList.contains("is-disabled")) return;
   closeAllExcept(wrap);
-  wrap.classList.remove("cs-open-upward");
+  wrap.classList.remove("cs-open-upward", "cs-align-right");
   // A searchable menu always opens unfiltered, whatever was typed last time.
   const search = wrap.querySelector(".cs-search");
   if (search) {
@@ -53,6 +53,13 @@ function openMenu(wrap) {
   const spaceBelow = window.innerHeight - wrapRect.bottom;
   if (menuHeight > spaceBelow && wrapRect.top > menuHeight) {
     wrap.classList.add("cs-open-upward");
+  }
+  // Wider than its trigger and past the screen's right edge (a select at a
+  // row's right end — Comandanti's "Ordina per" on a phone): lined up with
+  // the trigger's right edge instead. Out past it, the page got wider than
+  // the screen and phones shifted the fixed tab bar down.
+  if (menu.getBoundingClientRect().right > document.documentElement.clientWidth) {
+    wrap.classList.add("cs-align-right");
   }
   const active = menu.querySelector('.cs-option[aria-selected="true"]') || menu.querySelector(".cs-option");
   if (search) {

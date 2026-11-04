@@ -2364,6 +2364,13 @@ frame in a way that wasn't worth chasing further). */
   bottom: calc(100% + 6px);
 }
 
+/* Set by js/custom-select.js when the menu, wider than its trigger, would
+   pass the screen's right edge: lined up with the trigger's right edge. */
+.cs-wrap.cs-align-right .cs-menu {
+  left: auto;
+  right: 0;
+}
+
 @keyframes cs-menu-in {
   from {
     opacity: 0;
