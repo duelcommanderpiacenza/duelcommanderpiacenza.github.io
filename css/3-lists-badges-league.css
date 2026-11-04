@@ -59,7 +59,8 @@
 
 /* An online league (migration 034 — option A2 of a mockup, js/events-page.js):
    the card light like the live one's, its label and ring in endstep's gold,
-   its next event's side endstep-dark (gold calendar sheet, label and time);
+   its next event's side light too (since 2026-11-04 — it was endstep-dark),
+   gold its accents: the calendar sheet, the label and the time;
    the Serie online's row its label gold too, endstep's mark before it (the
    dark block on its left, .ev-online-cap, dropped 2026-11-03). Here, after the dark theme's rules above, and with a
    :root where those would win: the same in both themes. */
@@ -75,27 +76,22 @@
   stroke: var(--endstep-gold);
 }
 
-:root .ev-league.is-online .ev-slot {
-  border: 0;
-  background: var(--endstep-ink);
-  color: var(--endstep-text);
+.ev-league.is-online .ev-slot {
+  border-left-color: color-mix(in oklch, var(--endstep-gold) 30%, transparent);
 }
 
-:root .ev-league.is-online a.ev-slot:hover {
-  background: var(--endstep-ink-2);
+.ev-league.is-online a.ev-slot:hover {
+  background: color-mix(in oklch, var(--endstep-gold) 7%, transparent);
 }
 
-:root .ev-league.is-online .ev-slot.is-next .ev-tile-k,
-:root .ev-league.is-online .ev-slot.is-next .ev-slot-time {
+.ev-league.is-online .ev-slot.is-next .ev-tile-k,
+.ev-league.is-online .ev-slot.is-next .ev-slot-time {
+  color: var(--endstep-gold-deep);
+}
+
+:root[data-theme="dark"] .ev-league.is-online .ev-slot.is-next .ev-tile-k,
+:root[data-theme="dark"] .ev-league.is-online .ev-slot.is-next .ev-slot-time {
   color: var(--endstep-gold);
-}
-
-.ev-league.is-online .ev-slot-name {
-  color: var(--endstep-text);
-}
-
-.ev-league.is-online .ev-slot-sub {
-  color: var(--endstep-muted);
 }
 
 :root .ev-league.is-online .ev-slot.is-next .ev-cal {

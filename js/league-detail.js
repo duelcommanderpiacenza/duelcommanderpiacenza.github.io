@@ -34,13 +34,14 @@ const LEAGUE_TOP_HIGHLIGHT = 8;
 // "In corso" chip in place of the end ("12 set 2026 – ● In corso" — the chip
 // then isn't shown on its own too: withStatus); "Inizia il 12 set 2026" when
 // even the first event hasn't happened yet. "" when no event has a date yet
-// — the dates are then hidden entirely.
+// — the dates are then hidden entirely. An online league (endstep) has no
+// status chip at all: its dates run first to latest, like a closed one's.
 function leagueDateRange(league, events) {
   const dates = events.map((ev) => ev.event_date).filter(Boolean).sort();
   if (dates.length === 0) return { html: "", withStatus: false };
   const start = escapeHtml(formatDate(dates[0]));
   if (dates[0] > localIso()) return { html: `Inizia il ${start}`, withStatus: false };
-  if (league.is_open) return { html: `${start} – ${leagueStatusBadge(true)}`, withStatus: true };
+  if (league.is_open && !league.is_online) return { html: `${start} – ${leagueStatusBadge(true)}`, withStatus: true };
   const end = escapeHtml(formatDate(dates[dates.length - 1]));
   return { html: start === end ? start : `${start} – ${end}`, withStatus: false };
 }
@@ -233,7 +234,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     datesEl.innerHTML = dateRange.html;
     datesEl.hidden = !dateRange.html;
     statusEl.innerHTML = leagueStatusBadge(league.is_open);
-    statusEl.hidden = dateRange.withStatus;
+    statusEl.hidden = dateRange.withStatus || league.is_online;
 
     const today = localIso();
     const resultsRequest = fetchEventsResults(events.map((ev) => ev.id));
