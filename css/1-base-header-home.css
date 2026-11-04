@@ -3032,6 +3032,13 @@ html.app-header .home-head-icon {
   border-color: color-mix(in oklch, var(--tl-kind) 45%, transparent);
 }
 
+/* endstep's gold is much lighter than the red and the blue: at 45% its
+   outline all but vanished on the white — stronger on the light theme
+   (user, 2026-11-04); the dark one keeps the 45%. */
+:root:not([data-theme="dark"]) .home-timeline .is-online.is-future > .league-tl-card {
+  border-color: color-mix(in oklch, var(--tl-kind) 85%, transparent);
+}
+
 .home-timeline :is(.is-local, .is-online, .is-external).is-played > .league-tl-node {
   border-color: color-mix(in oklch, var(--tl-kind) 40%, transparent);
 }
