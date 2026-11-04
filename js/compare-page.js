@@ -460,7 +460,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
 
   // --- Scontri diretti: a strip per match — the two decks' art side by
   // side (a straight line between them; the loser's greyed, the winner's
-  // side tinted in its colour), the event and round and the date on top,
+  // side tinted in its colour), the event's name alone centred on top,
   // each deck's name on one line at the bottom (fitLine), the games won in
   // the middle, the winner's box in its colour. Never met: one strip on
   // the two players' most played decks with the line.
@@ -492,7 +492,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
           return `
             <a class="cmp-match ${g.winner ? `is-win-${g.winner}` : "is-draw"}" href="event.html?id=${g.e.ev.id}">
               ${art("a", g.artA)}${art("b", g.artB)}<span class="cmp-match-shade"></span>
-              <span class="cmp-match-top"><span><span>${escapeHtml(eventTitle(g.e.ev))}</span> · <span>Turno ${g.round}</span></span><span>${shortDate(g.e.ev.event_date)}</span></span>
+              <span class="cmp-match-top"><span>${escapeHtml(eventTitle(g.e.ev))}</span></span>
               ${deck("a")}${deck("b")}
               <span class="cmp-match-score"><b class="is-a${g.winner === "a" ? " is-win" : ""}">${g.ga}</b><b class="is-b${g.winner === "b" ? " is-win" : ""}">${g.gb}</b></span>
             </a>`;

@@ -4803,8 +4803,7 @@ html.nav-mobile .evo-colours.has-six {
   right: 14px;
   left: 14px;
   display: flex;
-  justify-content: space-between;
-  gap: 10px;
+  justify-content: center;
   color: rgba(255, 255, 255, 0.88);
   font-size: 0.64rem;
   font-weight: 800;
@@ -4813,15 +4812,11 @@ html.nav-mobile .evo-colours.has-six {
   text-transform: uppercase;
 }
 
-.cmp-match-top span:first-child {
+.cmp-match-top span {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.cmp-match-top span:last-child {
-  flex: none;
 }
 
 /* A deck's name: one line, as wide as its half beside the score. */
