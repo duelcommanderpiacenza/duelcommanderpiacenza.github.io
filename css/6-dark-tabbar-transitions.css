@@ -1655,8 +1655,8 @@ html.nav-mobile .meta-row > .meta-tabs {
   box-shadow: none;
 }
 
-/* A row without the filters' segment (Giocatori, whose filters' button is
-   on its "Cerca" line; Confronto, no filters): the switcher the whole card. */
+/* A row without the filters' segment (none now — Giocatori / Confronto got
+   theirs 2026-11-04): the switcher the whole card. */
 html.nav-mobile .meta-row > .meta-tabs:only-child {
   border-right: 1px solid var(--hairline);
   border-radius: 18px;

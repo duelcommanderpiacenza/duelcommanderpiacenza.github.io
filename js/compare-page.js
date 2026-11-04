@@ -1,5 +1,8 @@
 // compare.html — "Confronto", Giocatori's second tab: two players side by
-// side, over their whole history (no filters — user). Chosen 2026-11-01
+// side, over the events in Giocatori's filters (Lega / Evento / Dal, shared
+// with it — js/meta-filters.js PLAYERS_FILTERS_KEY; since 2026-11-04, user:
+// it had none, the whole history; the default the last 2 years, like
+// Giocatori's). Chosen 2026-11-01
 // from three rounds of mockups. Everything is computed here from every
 // closed event's entries + matches (fetchClosedResultsSince, one paged
 // request each, no event ids needed first) and the event_standings cache
@@ -31,15 +34,18 @@
 // picks the events counted, the picker's lists too; online events' places
 // computed here (event_standings caches the live ones only).
 
-import { Players, Events, EventStandings, fetchClosedResultsSince } from "./db.js";
+import { Players, Events, Leagues, EventStandings, fetchClosedResultsSince } from "./db.js";
 import { matchRoundOutcome, isBye, isDrop, computeEventLeaderboard } from "./leaderboard.js";
 import { ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
 import { archetypeIcon } from "./archetype-icons.js";
-import { escapeHtml, eventTitle, formatDate, scryfallImages, showError } from "./ui.js";
+import { escapeHtml, eventTitle, formatDate, scryfallImages, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { locale } from "./locale.js";
 import { BIG_EVENT_MIN_PLAYERS } from "./card-progress.js";
 import { initWhereFilter, inWhere } from "./where-filter.js";
+import { initFilterToggle } from "./filter-toggle.js";
+import { initScopeFilter } from "./scope-filter.js";
+import { savedMetaFilters, rememberMetaFilters, PLAYERS_FILTERS_KEY } from "./meta-filters.js";
 
 const ARCHETYPE_LABELS = { aggro: "Aggro", control: "Control", combo: "Combo", tempo: "Tempo", midrange: "Midrange" };
 // The two players' colours (the CSS's --pa / --pb), for the chart's tips.
@@ -224,13 +230,24 @@ export async function mount({ signal = new AbortController().signal } = {}) {
 
   // Dal vivo / Online / Tutto: the events counted.
   const where = initWhereFilter({ signal });
+  // …and Lega / Evento / Dal, shared with Giocatori: as last set on either
+  // tab, else the last DEFAULT_DATE_FROM_YEARS years. Set before anything
+  // loads, so the funnel shows them from the start.
+  const leagueSelect = $("compare-league-filter");
+  const eventSelect = $("compare-event-filter");
+  const dateFromInput = $("compare-date-from");
+  const savedFilters = savedMetaFilters(PLAYERS_FILTERS_KEY);
+  dateFromInput.value = savedFilters ? savedFilters.dateFrom : isoDateYearsAgo(DEFAULT_DATE_FROM_YEARS);
+  rememberMetaFilters({ leagueSelect, eventSelect, dateFromInput }, PLAYERS_FILTERS_KEY);
+  initFilterToggle("compare-filter-toggle", "compare-filter-panel");
 
   // Everything in one round — online events too, whatever the choice.
-  let players, allEvents, results, standings;
+  let players, allEvents, allLeagues, results, standings;
   try {
-    [players, allEvents, results, standings] = await Promise.all([
+    [players, allEvents, allLeagues, results, standings] = await Promise.all([
       Players.list(),
       Events.list({ withOnline: true }),
+      Leagues.list({ withOnline: true }),
       fetchClosedResultsSince(null, { commanders: true, withOnline: true }),
       EventStandings.listAll(),
     ]);
@@ -270,14 +287,20 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       const matches = results.matchesByEvent.get(ev.id) ?? [];
       return { ev, entries, matches, pos: placesOf(ev, entries, matches) };
     });
-  // The ones the Dove bar counts, and over them: how often each pair met
-  // (the picker's "most faced"), each player's events (the picker's list:
-  // players with one). Again on a change of the bar.
+  // The ones the Dove bar and the filters count (the league / event picked
+  // — null until the scope filter reports, every one —, from "Dal" on),
+  // and over them: how often each pair met (the picker's "most faced"),
+  // each player's events (the picker's list: players with one). Again on a
+  // change of either.
+  let scopeIds = null;
   let allEvs = [];
   const pairCounts = new Map();
   const eventsByPlayer = new Map();
   function scopeEvents() {
-    allEvs = closedEvs.filter((e) => inWhere(where.value, e.ev));
+    const from = dateFromInput.value;
+    allEvs = closedEvs.filter(
+      (e) => inWhere(where.value, e.ev) && (!scopeIds || scopeIds.has(e.ev.id)) && (!from || e.ev.event_date >= from)
+    );
     pairCounts.clear();
     eventsByPlayer.clear();
     for (const e of allEvs) {
@@ -850,6 +873,23 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   where.onChange(() => {
     scopeEvents();
     render();
+  });
+  dateFromInput.addEventListener("change", () => {
+    scopeEvents();
+    render();
+  });
+  initScopeFilter({
+    leagueSelect,
+    eventSelect,
+    where,
+    initial: savedFilters,
+    leagues: allLeagues,
+    events: allEvents,
+    onChange: (eventIds) => {
+      scopeIds = new Set(eventIds);
+      scopeEvents();
+      render();
+    },
   });
 
   render();

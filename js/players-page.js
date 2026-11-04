@@ -6,6 +6,7 @@ import { escapeHtml, showError, softFail, isoDateYearsAgo, DEFAULT_DATE_FROM_YEA
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
 import { initWhereFilter } from "./where-filter.js";
+import { savedMetaFilters, rememberMetaFilters, PLAYERS_FILTERS_KEY } from "./meta-filters.js";
 import { historyPanelHtml, historyStatsHtml, winrateTrendHtml, eloTrendHtml, latestPresence } from "./history-list.js";
 import { initBackToTop } from "./back-to-top.js";
 
@@ -249,8 +250,11 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   }
 
   // Default "Dal": the last DEFAULT_DATE_FROM_YEARS years (js/ui.js) — set before the
-  // first load, so that load already fetches only that window.
-  dateFromInput.value = isoDateYearsAgo(DEFAULT_DATE_FROM_YEARS);
+  // first load, so that load already fetches only that window. Or the
+  // filters as last set here or on Confronto (shared, js/meta-filters.js).
+  const savedFilters = savedMetaFilters(PLAYERS_FILTERS_KEY);
+  dateFromInput.value = savedFilters ? savedFilters.dateFrom : isoDateYearsAgo(DEFAULT_DATE_FROM_YEARS);
+  rememberMetaFilters({ leagueSelect, eventSelect, dateFromInput }, PLAYERS_FILTERS_KEY);
   initFilterToggle("players-filter-toggle", "players-filter-panel");
 
   searchInput.addEventListener("input", () => renderList(false));
@@ -261,6 +265,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     leagueSelect,
     eventSelect,
     where,
+    initial: savedFilters,
     leagues: allLeagues,
     events: allEvents,
     onChange: (eventIds) => {

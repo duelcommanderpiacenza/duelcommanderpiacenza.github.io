@@ -86,6 +86,7 @@
   <link rel="modulepreload" href="js/player-badges.js">
   <link rel="modulepreload" href="js/filter-toggle.js">
   <link rel="modulepreload" href="js/where-filter.js">
+  <link rel="modulepreload" href="js/meta-filters.js">
   <link rel="modulepreload" href="js/history-list.js">
   <link rel="modulepreload" href="js/back-to-top.js">
   <link rel="modulepreload" href="js/auto-badges.js">
@@ -146,9 +147,9 @@
 
 <main class="page-main" data-page="players">
   <!-- The section's head, like the Meta pages' (styles.css .meta-head):
-       Giocatori / Confronto (compare.html) in the site's segmented control.
-       No visible title: the <h1> for screen readers. The filters' button
-       stays on the "Cerca" line. -->
+       Giocatori / Confronto (compare.html) in the site's segmented control,
+       the filters' button beside it (since 2026-11-04 — it was on the
+       "Cerca" line). No visible title: the <h1> for screen readers. -->
   <div class="meta-head">
     <div class="page-heading">
       <h1>Giocatori</h1>
@@ -158,6 +159,9 @@
         <a class="profile-tab is-active" href="players.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg><span>Giocatori</span></a>
         <a class="profile-tab" href="compare.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="18" r="3"></circle><circle cx="6" cy="6" r="3"></circle><path d="M13 6h3a2 2 0 0 1 2 2v7"></path><path d="M11 18H8a2 2 0 0 1-2-2V9"></path></svg><span>Confronto</span></a>
       </nav>
+      <button type="button" class="filter-toggle-btn" id="players-filter-toggle" aria-expanded="false" aria-controls="players-filter-panel" aria-label="Filtri">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+      </button>
     </div>
     <!-- Dal vivo / Online / Tutto (js/where-filter.js): which events the
          section counts. A computer: in the tabs' row, before the filters'
@@ -167,6 +171,28 @@
       <button type="button" class="where-opt is-active" data-where="live" role="radio" aria-checked="true"><span class="where-lotus" aria-hidden="true"></span><span>Dal vivo</span></button>
       <button type="button" class="where-opt" data-where="online" role="radio" aria-checked="false"><svg viewBox="11 9 42 46" aria-hidden="true"><path d="M32 11 L49 28 L32 45 L15 28 Z" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round"></path><path d="M32 21 L38 28 L32 35 L26 28 Z" fill="currentColor"></path><rect x="13" y="49" width="38" height="4.4" rx="2.2" fill="currentColor"></rect></svg><span>Online</span></button>
       <button type="button" class="where-opt" data-where="all" role="radio" aria-checked="false"><span>Tutto</span></button>
+    </div>
+  </div>
+  <!-- Lega / Evento / Dal: shared with Confronto (js/meta-filters.js
+       PLAYERS_FILTERS_KEY) — set on either tab, already applied on the other. -->
+  <div class="filter-panel is-collapsed" id="players-filter-panel">
+    <div class="filter-panel-clip">
+      <div class="filter-panel-body">
+        <div class="filter-bar">
+          <div class="field">
+            <label for="players-league-filter">Lega</label>
+            <select id="players-league-filter"><option value="">Tutte le leghe</option></select>
+          </div>
+          <div class="field">
+            <label for="players-event-filter">Evento</label>
+            <select id="players-event-filter"><option value="">Tutti gli eventi</option></select>
+          </div>
+          <div class="field">
+            <label for="players-date-from">Dal</label>
+            <input type="date" id="players-date-from" placeholder="Dal" data-open-on-today>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -186,9 +212,8 @@
       <p>Caricamento...</p>
     </div>
 
-    <!-- Search, sort and the filters' button, the filters' panel under
-         them — shown with the list once the page has loaded (inside the
-         loading region). -->
+    <!-- Search and sort — shown with the list once the page has loaded
+         (inside the loading region). -->
     <div class="filter-toggle-line">
       <div class="field filter-toggle-search">
         <label for="players-search" class="visually-hidden">Cerca</label>
@@ -202,31 +227,7 @@
           <option value="elo">Rating</option>
         </select>
       </div>
-      <button type="button" class="filter-toggle-btn" id="players-filter-toggle" aria-expanded="false" aria-controls="players-filter-panel" aria-label="Filtri">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
-      </button>
     </div>
-    <div class="filter-panel is-collapsed" id="players-filter-panel">
-      <div class="filter-panel-clip">
-        <div class="filter-panel-body">
-          <div class="filter-bar">
-            <div class="field">
-              <label for="players-league-filter">Lega</label>
-              <select id="players-league-filter"><option value="">Tutte le leghe</option></select>
-            </div>
-            <div class="field">
-              <label for="players-event-filter">Evento</label>
-              <select id="players-event-filter"><option value="">Tutti gli eventi</option></select>
-            </div>
-            <div class="field">
-              <label for="players-date-from">Dal</label>
-              <input type="date" id="players-date-from" placeholder="Dal" data-open-on-today>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <div id="players-list">
       <p class="page-loading">Caricamento giocatori...</p>
     </div>

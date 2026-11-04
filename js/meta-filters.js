@@ -4,11 +4,13 @@
 // shared too, and with Giocatori / Confronto). Kept for the browsing
 // session (sessionStorage "metaFilters" — closing the app goes back to the
 // default, the last DEFAULT_DATE_FROM_YEARS years). Comandanti's colour
-// filter stays its own.
+// filter stays its own. Giocatori / Confronto share theirs the same way,
+// under their own key (PLAYERS_FILTERS_KEY).
 
 import { fetchClosedResultsSince, fetchEventsResults } from "./db.js";
 
 const KEY = "metaFilters";
+export const PLAYERS_FILTERS_KEY = "playersFilters";
 
 // Moving from one Meta page to another (in-app navigation): the filters'
 // button already shown stays shown while the next page loads (styles.css
@@ -20,9 +22,9 @@ document.addEventListener("app:navigate", () => {
 
 // { league, event, dateFrom } as last set, or null (nothing set yet this
 // session — the page's defaults then). dateFrom "" = the whole history.
-export function savedMetaFilters() {
+export function savedMetaFilters(key = KEY) {
   try {
-    const saved = JSON.parse(sessionStorage.getItem(KEY) ?? "null");
+    const saved = JSON.parse(sessionStorage.getItem(key) ?? "null");
     return saved && typeof saved === "object" ? saved : null;
   } catch {
     return null;
@@ -31,12 +33,12 @@ export function savedMetaFilters() {
 
 // Remembers the three fields whenever one changes — read a beat later, once
 // the page's own listeners have run (choosing a league resets the event).
-export function rememberMetaFilters({ leagueSelect, eventSelect, dateFromInput }) {
+export function rememberMetaFilters({ leagueSelect, eventSelect, dateFromInput }, key = KEY) {
   const save = () =>
     setTimeout(() => {
       try {
         sessionStorage.setItem(
-          KEY,
+          key,
           JSON.stringify({ league: leagueSelect.value, event: eventSelect.value, dateFrom: dateFromInput.value })
         );
       } catch {
