@@ -630,7 +630,7 @@
     [/^Hai giocato più comandanti diversi di tutti \(minimo (\d+)\)\.$/, "You played more different commanders than anyone (at least $1)."],
     [/^Hai giocato più partite di tutti \(minimo (\d+)\)\.$/, "You played more matches than anyone (at least $1)."],
     [/^Hai il winrate più alto tra tutti i giocatori \(minimo (\d+) eventi giocati, di cui almeno uno negli ultimi (\d+) mesi\)\.$/, "You have the highest winrate of all players (at least $1 events played, one of them in the last $2 months)."],
-    [/^Hai la serie più lunga di eventi consecutivi giocati, fino all'ultimo \(minimo (\d+)\)\.$/, "You have the longest run of events played in a row, up to the latest one (at least $1)."],
+    [/^Hai la serie più lunga di eventi consecutivi giocati \(minimo (\d+)\)\.$/, "You have the longest run of events played in a row (at least $1)."],
     [/^Hai ricevuto più bye di tutti \(minimo (\d+)\)\.$/, "You've had more byes than anyone (at least $1)."],
     // Player card links (js/player-card.js parseCardLink).
     [/^Dal link (.+) non si capisce il nome utente\.$/, "The username can't be worked out from the $1 link."],
