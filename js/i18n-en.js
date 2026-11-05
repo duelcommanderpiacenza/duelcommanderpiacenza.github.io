@@ -358,6 +358,7 @@
     "Volpe": "Fox",
     "La Volpe": "The Fox",
     "Monogamo": "Monogamous",
+    "Più eventi con lo stesso comandante": "Most events with the same commander",
 
     // Social.
     "La community di Duel Commander Piacenza": "The Duel Commander Piacenza community",
