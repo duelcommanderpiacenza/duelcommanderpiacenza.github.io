@@ -1300,6 +1300,18 @@ html.nav-mobile .tab-bar-link.is-current[data-tab="social"] svg path {
   color: var(--hero-accent-light);
 }
 
+/* Social: blue, not red — like its tab in the computer nav (css/1's
+   .nav-link[data-nav="social"]), user 2026-11-05. Its own pill (and the
+   play triangle cut out in it) and its name, in both themes. */
+html.nav-mobile .tab-bar-link[data-tab="social"] .tab-bar-icon {
+  --tab-pill: var(--social-blue);
+}
+
+:root.nav-mobile .tab-bar-link.is-current[data-tab="social"] .tab-bar-name,
+:root[data-theme="dark"].nav-mobile .tab-bar-link.is-current[data-tab="social"] .tab-bar-name {
+  color: var(--social-blue-text);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .tab-bar.is-ready :is(.tab-bar-icon, .tab-bar-name),
   .tab-bar.is-ready .tab-bar-icon::before {
