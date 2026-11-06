@@ -24,7 +24,7 @@ const HERO_DEFAULT = "#140c0e";
 const BRAND = "#dc181c";
 
 function heroUnderHeader() {
-  return Boolean(document.querySelector(".page-main .profile-hero")) && !document.querySelector(".profile-claim:not([hidden])");
+  return Boolean(document.querySelector(".page-main .profile-hero")) && !document.querySelector(':is(.profile-claim, [data-view="login"]):not([hidden])');
 }
 
 function barColor() {

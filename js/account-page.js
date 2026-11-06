@@ -59,6 +59,7 @@ import { escapeHtml, eventTitle, formatDate, softFail, statTileHtml } from "./ui
 import { hidePageLoading } from "./page-loading.js";
 import { mountSettings } from "./settings-panel.js";
 import { translate } from "./locale.js";
+import { refreshSystemBars } from "./system-bars.js";
 import { rememberMyPlayer } from "./me-highlight.js";
 import {
   applyCardAccents,
@@ -170,6 +171,9 @@ export function mount({ signal = new AbortController().signal } = {}) {
 
   function show(view) {
     for (const v of views) v.hidden = v.dataset.view !== view;
+    // Signed out, the page has no hero under the header (js/system-bars.js):
+    // the status bar's colour follows.
+    refreshSystemBars();
   }
 
   function playerLabel(player) {

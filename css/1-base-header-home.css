@@ -380,7 +380,7 @@ html:not(.app-header) .sk-touch-only {
 
 html.app-header .sk-hero {
   min-height: 260px;
-  padding-top: calc(var(--hero-header-h, 80px) + 30px);
+  padding-top: calc(var(--hero-header-h, 80px) + 14px);
   border-radius: 0;
 }
 
@@ -391,7 +391,7 @@ html.app-header .sk-hero {
    sketched under it where the sheet's own content starts — not a straight
    edge that the loaded page then rounds (every hero page: player,
    commander, event, league, archetype, account). The sizes are the real
-   hero's on a phone (measured, 2026-10-28): the name 30px under the
+   hero's on a phone (measured, 2026-10-28): the name 14px under the
    header, the numbers' row 39px tall, 50px under it (the hero's padding
    for the sheet), the sheet's content 4px under the hero's end (it laps
    26px over it, then pads 22px) — so nothing moves when the page arrives. */
@@ -563,7 +563,7 @@ html.app-header[data-theme="dark"] .sk-hero::after {
 }
 
 html.app-header .sk-hero.has-card {
-  padding-top: calc(var(--hero-header-h, 80px) + 30px);
+  padding-top: calc(var(--hero-header-h, 80px) + 14px);
 }
 
 @media (min-width: 641px) {
@@ -676,7 +676,8 @@ html:not(.app-header) .sk-page.is-hero:not(.is-account) .sk-hero .sk-hero-action
   }
 }
 
-/* Touch screens: the name 30px under the header (the rules above), the
+/* Touch screens: the name 14px under the header (the rules above — 30px
+   until 2026-11-06, the hero's top padding 16px less since), the
    numbers 28px under it — or, with an info line, the buttons 22px under
    that and the numbers 16px under the buttons; 50px of hero under them. */
 html.app-header .sk-page.is-hero:not(.is-account) .sk-hero:not(.has-card) {
@@ -762,7 +763,7 @@ html.app-header .sk-page.is-hero:not(.is-account) .sk-hero .sk-hero-actions {
 }
 
 html.app-header .sk-page.is-account .sk-hero.has-card {
-  padding-top: calc(var(--hero-header-h, 80px) + 23px);
+  padding-top: calc(var(--hero-header-h, 80px) + 7px);
 }
 
 @media (max-width: 820px) {
@@ -1427,12 +1428,12 @@ html.app-header .site-news-icon {
 
 /* Phone header on a page without a hero: a light edge like the search
    button's; over a hero: a deeper shadow, the icon in the hero's colour. */
-html.app-header :is(body:not(:has(.page-main .profile-hero)), body:has(.profile-claim:not([hidden]))) .site-news {
+html.app-header :is(body:not(:has(.page-main .profile-hero)), body:has(:is(.profile-claim, [data-view="login"]):not([hidden]))) .site-news {
   border: 1px solid rgba(154, 28, 32, 0.22);
   box-shadow: 0 2px 8px rgba(80, 10, 14, 0.1);
 }
 
-html.app-header body:has(.page-main .profile-hero):not(:has(.profile-claim:not([hidden]))) .site-news {
+html.app-header body:has(.page-main .profile-hero):not(:has(:is(.profile-claim, [data-view="login"]):not([hidden]))) .site-news {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
 }
 
@@ -2161,13 +2162,19 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
     padding-top: calc(9px + env(safe-area-inset-top));
   }
 
-  /* Same reasoning at the opposite edge — keeps the tab bar clear of the
-     home-indicator gesture bar on notched phones instead of sitting
-     underneath/behind it. */
+  /* The tab bar docked to the screen's bottom edge, the whole width (css/6
+     "Tab bar" — since 2026-11-06; before, a capsule floating 16px up). Its
+     own bottom padding keeps the tabs clear of the home-indicator gesture
+     bar on notched phones. --tab-bar-h: its height without that safe area,
+     for what sits above it ("Torna all'inizio", the install card). */
+  html.nav-mobile {
+    --tab-bar-h: 64px;
+  }
+
   html.nav-mobile .site-nav {
     position: fixed;
     top: auto;
-    bottom: calc(16px + env(safe-area-inset-bottom));
+    bottom: 0;
     left: 0;
     right: 0;
     background: none;
@@ -2179,13 +2186,14 @@ body[data-active-nav="social"] .nav-link[data-nav="social"]:hover {
 
   /* Out of the way while reading: scrolling down slides the tab bar below the
      screen's bottom edge, scrolling up brings it back (js/nav-dropdown.js
-     .is-scrolled-away). */
+     .is-scrolled-away) — by a transform, its height plus room for its
+     shadow. */
   html.nav-mobile .site-nav {
-    transition: bottom 450ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    transition: transform 450ms cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
   html.nav-mobile .site-nav.is-scrolled-away {
-    bottom: -90px;
+    transform: translateY(calc(100% + 24px));
   }
 
   @media (prefers-reduced-motion: reduce) {
