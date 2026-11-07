@@ -1017,21 +1017,9 @@ html.app-header .sk-page.is-home > .sk-chart {
   }
 }
 
-/* Leghe & Eventi: the tabs, the league card, the Topdeck series' row under
-   it (js/events-page.js, styles.css "Leghe & Eventi"). */
-.sk-ev-tabs {
-  display: block;
-  width: 250px;
-  height: 52px;
-  margin: 0 0 18px;
-  border-radius: var(--radius-pill);
-}
-
-html.nav-mobile .sk-ev-tabs {
-  width: auto;
-  height: 62px;
-  border-radius: 18px;
-}
+/* Leghe & Eventi: the league card, the Topdeck series' row under it
+   (js/events-page.js, styles.css "Leghe & Eventi"; the tabs themselves are
+   shown from the first frame, outside the loading region). */
 
 .sk-ev-board {
   display: flex;

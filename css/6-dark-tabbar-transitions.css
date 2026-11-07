@@ -2213,12 +2213,14 @@ html.is-theme-transition::view-transition-new(root) {
    them, its title line (the filters' button on it) and the segmented
    control stay still, swapped at once, while the rest of the page fades
    through; to or from any other page (only one side has them) they fade
-   with the page as usual. */
-html.is-page-transition:not(.nav-mobile) main > .meta-head {
+   with the page as usual. The same between sections: Meta, Giocatori /
+   Confronto and Leghe (its In corso / Archivio tabs, .ev-tabs — in the same
+   place, user's request 2026-11-07) swap their switchers at once too. */
+html.is-page-transition:not(.nav-mobile) main > :is(.meta-head, .ev-tabs) {
   view-transition-name: meta-heading;
 }
 
-html.is-page-transition.nav-mobile main > .meta-head > .meta-row {
+html.is-page-transition.nav-mobile main > :is(.meta-head > .meta-row, .ev-tabs) {
   view-transition-name: meta-tabs;
 }
 
