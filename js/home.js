@@ -19,7 +19,7 @@ import { initTabs } from "./tabs.js";
 import { leaguePosHtml } from "./history-list.js";
 import { archetypeIcon } from "./archetype-icons.js";
 import { openLeagueRules, RULES_ICON } from "./league-rules.js";
-import { loadRecapData, loadSeasonData, openEventRecap, openSeasonRecap, openStories, recapSeen, seasonRecapSeen } from "./event-recap.js"; // TEMP-FAKE-STORY: openStories
+import { loadRecapData, loadSeasonData, openEventRecap, openSeasonRecap, recapSeen, seasonRecapSeen } from "./event-recap.js";
 import { createArtPainter } from "./player-card.js";
 import { dueStories } from "./stories.js";
 import { locale } from "./locale.js";
@@ -580,30 +580,6 @@ async function renderRecapCard(el, signal) {
     // last — each group in chronological order, oldest first (a social
     // app's stories).
     const [recaps, others] = await Promise.all([dueRecaps(events), dueStories()]);
-    // TEMP-FAKE-STORY: a test story on localhost with ?fakestory — remove.
-    if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && new URLSearchParams(location.search).has("fakestory")) {
-      localStorage.removeItem("storySeen:fake");
-      others.push({
-        date: isoDaysAgo(0),
-        until: isoDaysAgo(0),
-        seenId: "fake",
-        seen: false,
-        kicker: "Nuovo video",
-        short: "Prova",
-        title: "Storia di prova",
-        sub: "Test",
-        open: () =>
-          openStories({
-            label: "Prova",
-            heading: () => "Storia di prova",
-            load: async () => ({ name: "Prova" }),
-            slides: () => `<section class="recap-slide is-on is-center"><div class="recap-bg is-red"></div><p class="recap-mid">Storia di prova</p></section>`,
-            seenKey: "storySeen:fake",
-            seenId: "fake",
-            shareUrl: location.href,
-          }),
-      });
-    }
     const items = [...recaps, ...others].sort((a, b) => a.seen - b.seen || a.date.localeCompare(b.date));
     // For the next visit's loading skeleton (recapLikely): the last day any
     // not yet watched one is due (the watched ones aren't shown, below).
