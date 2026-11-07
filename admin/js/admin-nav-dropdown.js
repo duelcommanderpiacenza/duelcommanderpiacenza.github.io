@@ -1,10 +1,11 @@
 // Touch screens (html.nav-mobile): the admin's tabs as a tab bar at the
-// bottom of the screen, like the public site's (js/tab-bar.js) — a solid
-// capsule with every tab always in view: the open one a red chip with its
-// icon and short name, the others their icon only (admin.css "Tab bar").
-// The same .admin-tab buttons as the computer's top row (js/app.js switches
-// the panels), given here an icon and a short name each; a count (Utenti's
-// pending requests, js/tab-counts.js) sits on its icon's corner.
+// bottom of the screen, the public site's (js/tab-bar.js, admin.css "Tab
+// bar") — since 2026-11-07 its same style: docked to the bottom edge in
+// liquid glass, every tab its icon over its short name, the open one's icon
+// filled in a pill in the admin's accent. The same .admin-tab buttons as
+// the computer's top row (js/app.js switches the panels), given here an
+// icon and a short name each; a count (Utenti's pending requests,
+// js/tab-counts.js) sits on its icon's corner.
 //
 // The bar slides away while the page scrolls down, back as soon as it
 // scrolls up (.is-scrolled-away). (The file's name is from the old pill
@@ -64,8 +65,12 @@ export function initAdminNavDropdown() {
     shortEl.textContent = short;
     tab.prepend(iconWrap);
     tab.append(shortEl);
-    // A tab picked: the bar back in view.
+    // A tab picked: the bar back in view, and from now on a change
+    // animates (.is-ready: the pill opening out, the icon's move) — not
+    // when the bar first appears (hidden until signed in, so a frame-based
+    // start would play the first tab's animation on showing it).
     tab.addEventListener("click", () => {
+      bar.classList.add("is-ready");
       bar.classList.remove("is-scrolled-away");
       lastY = window.scrollY;
     });

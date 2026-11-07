@@ -566,75 +566,116 @@ html:not(.nav-mobile) .admin-tab.is-active:hover {
   display: none;
 }
 
-/* Touch screens: a tab bar at the bottom, like the public site's (css/6
-   "Tab bar", js/admin-nav-dropdown.js) — a solid capsule (white; dark mode
-   near-black) with every tab in view: the open one a red chip with its icon
-   and short name, the others their icon only; a count on its icon's
-   corner. It slides away while the page scrolls down (.is-scrolled-away).
-   The tabs' own labels (the computer's) hidden here. */
+/* Touch screens: a tab bar at the bottom, the public site's (css/6 "Tab
+   bar", js/admin-nav-dropdown.js) — since 2026-11-07 (user: the same style
+   as the public one; before, a solid capsule floating 16px up, the open tab
+   a chip with its name, the others icon only): docked to the screen's
+   bottom edge, the whole width, in liquid glass; every tab its icon over its
+   short name, the open one's icon white and filled in a pill in the
+   admin's accent (--brand-red, near-black here), its name in it too; the
+   pill opens out and the icon does a little animation on a change (only
+   once the bar is up, .admin-tabs.is-ready). A count on its icon's corner.
+   It slides away while the page scrolls down (.is-scrolled-away). The tabs'
+   own labels (the computer's) hidden here. */
 html.nav-mobile .admin-tabs {
   position: fixed;
   top: auto;
-  bottom: calc(16px + env(safe-area-inset-bottom));
+  bottom: 0;
   left: 0;
   right: 0;
   z-index: 20;
-  padding: 0;
+  box-sizing: border-box;
+  /* 4px + the 56px tabs + 4px, then the home indicator's room; sideways
+     the tabs keep to a centred 520px (.admin-tabs-inner). */
+  padding: 4px calc(6px + env(safe-area-inset-right)) calc(4px + env(safe-area-inset-bottom)) calc(6px + env(safe-area-inset-left));
   border: 0;
-  background: none;
-  box-shadow: none;
-  transition: bottom 450ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.62), rgba(253, 253, 253, 0.5));
+  -webkit-backdrop-filter: blur(20px) saturate(1.8);
+  backdrop-filter: blur(20px) saturate(1.8);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 -0.5px 0 rgba(0, 0, 0, 0.14), 0 -6px 20px rgba(0, 0, 0, 0.06);
+  transition: transform 450ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* The glass's sheen: light gathered along its top, fading down. */
+html.nav-mobile .admin-tabs::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 22px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0));
+  pointer-events: none;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html.nav-mobile .admin-tabs {
+    background: rgba(253, 253, 253, 0.96);
+  }
 }
 
 html.nav-mobile .admin-tabs.is-scrolled-away {
-  bottom: -90px;
+  transform: translateY(calc(100% + 24px));
 }
 
 html.nav-mobile .admin-tabs-inner {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: 2px;
-  box-sizing: border-box;
-  width: min(460px, calc(100% - 24px));
+  max-width: 520px;
   margin: 0 auto;
-  padding: 5px;
-  border: 1px solid rgba(154, 28, 32, 0.12);
-  border-radius: var(--radius-pill);
-  background: #fff;
-  box-shadow: 0 -2px 10px rgba(40, 6, 9, 0.14), 0 4px 12px rgba(40, 6, 9, 0.2), 0 1px 3px rgba(40, 6, 9, 0.16);
+  padding: 0;
 }
 
 html.nav-mobile .admin-tab {
-  flex: 1 1 0;
-  min-width: 0;
   display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  height: 48px;
-  padding: 0 4px;
+  gap: 4px;
+  min-width: 0;
+  height: 56px;
+  padding: 0;
   border: 0;
-  border-radius: var(--radius-pill);
+  border-radius: 0;
   background: none;
   color: var(--text-body);
-  font-size: 0.8rem;
-  font-weight: 800;
+  font-weight: 700;
+  /* Seven tabs on a phone: the names shrink with the tab's width
+     (.admin-tab-short, cqw) so "Comandanti" fits. */
+  container-type: inline-size;
   -webkit-tap-highlight-color: transparent;
-  transition: background 200ms ease, color 200ms ease;
 }
 
-html.nav-mobile .admin-tab .admin-tab-label,
-html.nav-mobile .admin-tab .admin-tab-short {
+html.nav-mobile .admin-tab .admin-tab-label {
   display: none;
 }
 
+/* The icon's place, the pill the open one fills (its ::before, so it can
+   open out on its own). */
 html.nav-mobile .admin-tab-icon-wrap {
+  --tab-pill: var(--brand-red);
   position: relative;
-  display: inline-flex;
-  flex: 0 0 auto;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: min(56px, 100%);
+  height: 30px;
+}
+
+html.nav-mobile .admin-tab-icon-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-pill);
+  background: var(--tab-pill);
+  opacity: 0;
+  transform: scaleX(0.3);
 }
 
 html.nav-mobile .admin-tab-icon {
+  position: relative;
   width: 22px;
   height: 22px;
   transition: transform 140ms ease;
@@ -644,11 +685,22 @@ html.nav-mobile .admin-tab:active .admin-tab-icon {
   transform: scale(0.88);
 }
 
+html.nav-mobile .admin-tab .admin-tab-short {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: clamp(0.56rem, 16.5cqw, 0.68rem);
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* The count on the icon's top-right corner, ringed in the bar's colour. */
 html.nav-mobile .admin-tab-icon-wrap .admin-tab-count {
   position: absolute;
-  top: -7px;
-  right: -10px;
+  top: -6px;
+  right: calc(50% - 22px);
+  z-index: 1;
   min-width: 18px;
   height: 18px;
   margin: 0;
@@ -657,36 +709,96 @@ html.nav-mobile .admin-tab-icon-wrap .admin-tab-count {
   font-size: 0.66rem;
 }
 
-/* The open tab: its short name beside the icon, white on the red chip. */
+/* The open tab: its icon white in the pill, its name in the accent. */
 html.nav-mobile .admin-tab.is-active,
 html.nav-mobile .admin-tab.is-active:hover {
-  flex: 0 1 auto;
-  padding: 0 14px 0 12px;
-  background: var(--brand-red);
+  background: none;
+  color: var(--text-body);
+  box-shadow: none;
+}
+
+html.nav-mobile .admin-tab.is-active .admin-tab-icon-wrap {
   color: #fff;
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--brand-red) 40%, transparent);
+}
+
+html.nav-mobile .admin-tab.is-active .admin-tab-icon-wrap::before {
+  opacity: 1;
+  transform: none;
 }
 
 html.nav-mobile .admin-tab.is-active .admin-tab-short {
-  display: inline;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  animation: tab-bar-label 260ms ease both;
+  color: var(--brand-red-deep);
+  font-weight: 800;
 }
 
-html.nav-mobile .admin-tab.is-active .admin-tab-count {
-  box-shadow: 0 0 0 2px var(--brand-red);
-  background: #fff;
-  color: var(--brand-red);
+/* The open tab's icon filled (outline → solid, the public bar's way), its
+   details cut out in the pill's colour: the calendar's lines; the
+   megaphone's sound waves stay lines. */
+html.nav-mobile .admin-tab-icon :is(path, circle, rect) {
+  fill: currentColor;
+  fill-opacity: 0;
+}
+
+html.nav-mobile .admin-tab.is-active .admin-tab-icon :is(path, circle, rect) {
+  fill-opacity: 1;
+}
+
+html.nav-mobile .admin-tab.is-active[data-tab="standalone-events"] .admin-tab-icon path {
+  stroke: var(--tab-pill);
+}
+
+html.nav-mobile .admin-tab.is-active[data-tab="announcements"] .admin-tab-icon path:nth-child(2) {
+  fill-opacity: 0;
+}
+
+/* The change, animated (not on the first paint): the pill opening out, the
+   icon's own little move (the public bar's keyframes, css/6). */
+html.nav-mobile .admin-tabs.is-ready :is(.admin-tab-icon-wrap, .admin-tab-short) {
+  transition: color 180ms ease;
+}
+
+html.nav-mobile .admin-tabs.is-ready .admin-tab-icon-wrap::before {
+  transition: transform 160ms ease-in, opacity 120ms ease-in 40ms;
+}
+
+html.nav-mobile .admin-tabs.is-ready .admin-tab.is-active .admin-tab-icon-wrap::before {
+  transition: transform 320ms cubic-bezier(0.2, 0.9, 0.3, 1.1), opacity 120ms ease;
+}
+
+html.nav-mobile .admin-tabs.is-ready .admin-tab-icon :is(path, circle, rect) {
+  transition: fill-opacity 180ms ease;
+}
+
+html.nav-mobile .admin-tabs.is-ready .admin-tab.is-active:is([data-tab="players"], [data-tab="users"]) .admin-tab-icon {
+  animation: tab-icon-wiggle 520ms ease-in-out;
+  transform-origin: 50% 90%;
+}
+
+html.nav-mobile .admin-tabs.is-ready .admin-tab.is-active:is([data-tab="commanders"], [data-tab="standalone-events"]) .admin-tab-icon {
+  animation: tab-icon-hop 460ms cubic-bezier(0.3, 0.7, 0.4, 1);
+}
+
+html.nav-mobile .admin-tabs.is-ready .admin-tab.is-active[data-tab="badges"] .admin-tab-icon {
+  animation: tab-icon-turn 520ms cubic-bezier(0.2, 0.9, 0.3, 1.25);
+}
+
+html.nav-mobile .admin-tabs.is-ready .admin-tab.is-active[data-tab="leagues"] .admin-tab-icon {
+  animation: tab-icon-spin 620ms cubic-bezier(0.25, 0.8, 0.3, 1);
+}
+
+html.nav-mobile .admin-tabs.is-ready .admin-tab.is-active[data-tab="announcements"] .admin-tab-icon {
+  animation: tab-icon-pulse 440ms cubic-bezier(0.2, 0.9, 0.3, 1.5);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html.nav-mobile .admin-tabs {
+  html.nav-mobile .admin-tabs,
+  html.nav-mobile .admin-tabs.is-ready :is(.admin-tab-icon-wrap, .admin-tab-short),
+  html.nav-mobile .admin-tabs.is-ready .admin-tab-icon-wrap::before,
+  html.nav-mobile .admin-tabs.is-ready .admin-tab-icon :is(path, circle, rect) {
     transition: none;
   }
 
-  html.nav-mobile .admin-tab.is-active .admin-tab-short {
+  html.nav-mobile .admin-tabs.is-ready .admin-tab.is-active .admin-tab-icon {
     animation: none;
   }
 }
@@ -1862,25 +1974,37 @@ body.is-busy::before {
   background: #1e1517;
 }
 
-/* The tab bar in dark mode: the public bar's near-black, the inactive
-   icons near-white. The bar row itself bare (:root[data-theme="dark"]
-   .admin-tabs above is for the computer's sticky top bar). */
+/* The tab bar in dark mode: the public bar's dark glass (neutral, the
+   admin's greys), the icons and names near-white; the open one's name
+   white. */
 html[data-theme="dark"].nav-mobile .admin-tabs {
-  background: none;
+  background: linear-gradient(to bottom, rgba(36, 36, 40, 0.62), rgba(22, 22, 25, 0.7));
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  backdrop-filter: blur(20px) saturate(1.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 -0.5px 0 rgba(0, 0, 0, 0.5), 0 -6px 20px rgba(0, 0, 0, 0.3);
 }
 
-html[data-theme="dark"].nav-mobile .admin-tabs-inner {
-  border-color: rgba(255, 255, 255, 0.1);
-  background: #1e1517;
-  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.45), 0 4px 14px rgba(0, 0, 0, 0.55), 0 1px 3px rgba(0, 0, 0, 0.45);
+html[data-theme="dark"].nav-mobile .admin-tabs::before {
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0));
 }
 
-html[data-theme="dark"].nav-mobile .admin-tab:not(.is-active) {
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html[data-theme="dark"].nav-mobile .admin-tabs {
+    background: rgba(26, 26, 29, 0.96);
+  }
+}
+
+html[data-theme="dark"].nav-mobile .admin-tab,
+html[data-theme="dark"].nav-mobile .admin-tab.is-active {
   color: rgba(255, 255, 255, 0.88);
 }
 
+html[data-theme="dark"].nav-mobile .admin-tab.is-active .admin-tab-short {
+  color: #fff;
+}
+
 html[data-theme="dark"].nav-mobile .admin-tab-icon-wrap .admin-tab-count {
-  box-shadow: 0 0 0 2px #1e1517;
+  box-shadow: 0 0 0 2px #1e1e21;
 }
 
 /* A three-way switch in a form (the standalone event's Locale / Esterno /
