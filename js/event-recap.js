@@ -6,7 +6,8 @@
 // a tap on the right there). The screens: the cover (the event, players /
 // rounds / matches, on the winner's commander art), the winner (their commander's art
 // as a foil card, confetti), the top 8, the unbeaten (no losses AND a real
-// match won — a bye isn't one, only draws isn't a result to celebrate), the
+// match won — a bye isn't one, only draws isn't a result to celebrate — AND
+// more wins than draws: a 1-0-2 isn't listed, user's choice 2026-11-07), the
 // commander of the day (the most played; a tie: the best placed), the
 // archetypes, and the end ("Ci vediamo al prossimo evento!", the next event — the
 // same league's, else the soonest of any kind — and "Condividi il recap").
@@ -186,7 +187,7 @@ export function loadRecapData(eventId) {
         matchCount: realMatches.length,
         winner,
         winnerCommander: winner ? commanderOf(entryOf.get(winner.player?.id)) : "—",
-        unbeaten: rows.filter((r) => r.losses === 0 && (realWins.get(r.player?.id) ?? 0) > 0),
+        unbeaten: rows.filter((r) => r.losses === 0 && (realWins.get(r.player?.id) ?? 0) > 0 && r.wins > r.draws),
         topCommander,
         topCount: topEntries.length,
         topBest: topEntries.length ? bestOf(topEntries) : null,
@@ -409,7 +410,12 @@ function eventSlidesHtml(data, page) {
             (r, i) =>
               `<span class="recap-chip" ${at(i + 2)}>${SHIELD}${escapeHtml(r.player?.name)}<small>${r.wins}-${r.losses}-${r.draws}</small></span>`
           )
-          .join("") || `<p class="recap-mid" ${at(2)}>Ogni giocatore ha perso almeno una partita.</p>`
+          .join("") ||
+        `<p class="recap-mid" ${at(2)}>${
+          rows.some((r) => r.losses === 0)
+            ? "Nessuno ha chiuso senza sconfitte con più vittorie che pareggi."
+            : "Ogni giocatore ha perso almeno una partita."
+        }</p>`
       }</div></section>`);
   if (data.topCount) {
     slides.push(`<section class="recap-slide is-center"><div class="recap-bg" data-art="${escapeHtml(data.topCommander)}"></div>
