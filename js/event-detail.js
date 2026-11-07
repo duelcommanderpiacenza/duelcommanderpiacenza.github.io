@@ -13,6 +13,7 @@ import {
 import { hidePageLoading, sectionLoadingHtml, statTilesLoadingHtml } from "./page-loading.js";
 import { nestedResultsMenu } from "./results-link.js";
 import { openEventRecap } from "./event-recap.js";
+import { initShareButton } from "./share.js";
 import { initTitleFit } from "./page-title-fit.js";
 import { historyPanelHtml, historyStatsHtml, historyPosHtml } from "./history-list.js";
 import { createArtPainter } from "./player-card.js";
@@ -121,15 +122,18 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     resultsEl.innerHTML = resultsHtml;
     resultsEl.hidden = !resultsHtml;
     // The hero's buttons: "Recap" for a played event with entrants, "Liste"
-    // beside it (above).
-    // (Either missing from an old copy of the page: nothing.)
+    // beside it (above), the share button always (the bare page's link, not
+    // a shared recap's &recap=1).
+    // (Any missing from an old copy of the page: nothing.)
     const recapBtn = document.getElementById("event-recap");
     const actionsEl = document.getElementById("event-actions");
+    const shareBtn = document.getElementById("event-share");
     if (recapBtn && actionsEl) {
       recapBtn.hidden = event.is_open || entries.length === 0;
       recapBtn.onclick = () => openEventRecap(id);
-      actionsEl.hidden = recapBtn.hidden && resultsEl.hidden;
+      actionsEl.hidden = recapBtn.hidden && resultsEl.hidden && !shareBtn;
     }
+    initShareButton(shareBtn, { title: document.title, url: `event.html?id=${encodeURIComponent(id)}` });
     initTitleFit(titleEl, { signal });
     metaEl.innerHTML = `${formatDate(event.event_date)}${
       event.league

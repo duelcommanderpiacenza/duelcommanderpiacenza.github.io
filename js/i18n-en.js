@@ -378,6 +378,8 @@
     "Attiva la musica": "Turn the music on",
     "Disattiva la musica": "Turn the music off",
     "Condividi il recap": "Share the recap",
+    "Condividi": "Share",
+    "Link copiato!": "Link copied!",
     "Tocca per continuare ›": "Tap to continue ›",
     "Ci vediamo al prossimo evento!": "See you at the next event!",
     "Ci vediamo alla prossima stagione!": "See you next season!",

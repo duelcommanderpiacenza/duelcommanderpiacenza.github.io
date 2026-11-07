@@ -624,6 +624,12 @@ html.app-header .sk-hero.has-card {
   width: 152px;
 }
 
+/* event.html / league.html: the round share button at the row's end
+   (js/share.js). */
+.sk-page.is-hero:not(.is-account) .sk-hero .sk-hero-actions i.is-round {
+  width: 42px;
+}
+
 /* From 820px down the real hero's text is centred (the name, its line, the
    buttons; the numbers spread over the width): so are the bars. */
 @media (max-width: 820px) {

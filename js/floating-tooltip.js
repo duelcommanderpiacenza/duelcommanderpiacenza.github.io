@@ -115,6 +115,12 @@ export function showFloatingTooltip(anchor, text) {
   requestAnimationFrame(() => tip.classList.add("is-visible"));
 }
 
+// Hides the tooltip only if it's still `anchor`'s — a timed hide (js/share.js's
+// "Link copiato!") leaves a newer one alone.
+export function hideFloatingTooltipOf(anchor) {
+  if (anchor === anchorEl) hideFloatingTooltip();
+}
+
 function hideFloatingTooltip() {
   clearTimeout(hideTimer);
   tooltipEl?.remove();

@@ -21,6 +21,7 @@ import { initTabs } from "./tabs.js";
 import { initBackToTop } from "./back-to-top.js";
 import { openLeagueRules } from "./league-rules.js";
 import { openSeasonRecap } from "./event-recap.js";
+import { initShareButton } from "./share.js";
 import { nestedResultsMenu } from "./results-link.js";
 import { renderMetaCharts } from "./meta-charts.js";
 import { locale } from "./locale.js";
@@ -198,8 +199,12 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     // Beside "Recap" (the hero's colour), "Regolamento" white — like an
     // event's "Liste".
     rulesBtn.classList.toggle("is-light", !recapBtn.hidden);
+    // Then the share button, always (the bare page's link, not a shared
+    // recap's &recap=1) — a Topdeck series' only one.
+    const shareBtn = document.getElementById("league-share");
+    initShareButton(shareBtn, { title: document.title, url: `league.html?id=${encodeURIComponent(id)}` });
     const actionsEl = document.getElementById("league-actions");
-    if (actionsEl) actionsEl.hidden = league.no_points;
+    if (actionsEl) actionsEl.hidden = league.no_points && !shareBtn;
     // A shared season recap link (league.html?id=…&recap=1): opened at once.
     if (!recapBtn.hidden && new URLSearchParams(location.search).get("recap") === "1") openSeasonRecap(id);
 

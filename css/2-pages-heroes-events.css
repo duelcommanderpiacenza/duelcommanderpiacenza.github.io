@@ -312,6 +312,19 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
+/* The heroes' share button (js/share.js): round, the icon alone, as tall
+   as the others, at the end of .hero-actions. */
+.league-rules-btn.is-icon {
+  justify-content: center;
+  width: 42px;
+  padding: 0;
+}
+
+.league-rules-btn.is-icon svg {
+  width: 19px;
+  height: 19px;
+}
+
 /* The rules' pop-up (js/league-rules.js): a small label over each part;
    the league points by position as a ladder —
    red columns as tall as their points, lighter down the ladder, the places

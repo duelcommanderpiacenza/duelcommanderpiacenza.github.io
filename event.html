@@ -84,6 +84,7 @@
   <link rel="modulepreload" href="js/event-detail.js">
   <link rel="modulepreload" href="js/results-link.js">
   <link rel="modulepreload" href="js/event-recap.js">
+  <link rel="modulepreload" href="js/share.js">
   <link rel="modulepreload" href="js/page-title-fit.js">
   <link rel="modulepreload" href="js/history-list.js">
   <link rel="modulepreload" href="js/tabs.js">
@@ -149,7 +150,7 @@
   <div class="page-loading-region">
     <div id="page-loading-overlay" class="page-loading-overlay">
       <div class="sk-page is-hero" aria-hidden="true">
-        <div class="sk sk-hero is-event"><div class="sk-hero-text"><i class="sk-hero-title"></i><i class="sk-hero-line"></i><div class="sk-hero-chips"><i></i><i></i><i></i><span class="sk-hero-actions"><i></i><i></i></span></div></div></div>
+        <div class="sk sk-hero is-event"><div class="sk-hero-text"><i class="sk-hero-title"></i><i class="sk-hero-line"></i><div class="sk-hero-chips"><i></i><i></i><i></i><span class="sk-hero-actions"><i></i><i></i><i class="is-round"></i></span></div></div></div>
         <i class="sk sk-tabs sk-touch-only"></i>
         <div class="sk-cols">
           <div class="sk-col">
@@ -193,7 +194,8 @@
             </div>
             <!-- The numbers, then the hero's buttons: "Recap" (the event's
                  stories, js/event-recap.js — a played event) and "Liste" (its
-                 Moxfield / mtgtop8 links, when set) at its right — on a
+                 Moxfield / mtgtop8 links, when set) at its right, then the
+                 round share button (js/share.js, always) — on a
                  computer at the right end of the numbers' line, up to 820px
                  above them, centred. -->
             <div class="profile-hero-stats">
@@ -201,6 +203,7 @@
               <div class="hero-actions" id="event-actions" hidden>
                 <button type="button" class="league-rules-btn" id="event-recap" aria-haspopup="dialog" hidden><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"></path></svg>Recap</button>
                 <span id="event-results" hidden></span>
+                <button type="button" class="league-rules-btn is-light is-icon" id="event-share" aria-label="Condividi" title="Condividi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="m8.6 13.5 6.8 4"></path><path d="m15.4 6.5-6.8 4"></path></svg></button>
               </div>
             </div>
           </div>
