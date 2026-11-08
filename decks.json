@@ -1,5 +1,93 @@
 [
   {
+    "id": "M2O7wK",
+    "publicId": "c7qhAdtzp3iTI48XQg_Dnw",
+    "name": "W26 4/7 - Rank 07/24 Aragorn Flash (Marinels)",
+    "url": "https://moxfield.com/decks/c7qhAdtzp3iTI48XQg_Dnw",
+    "commanderName": "Aragorn, King of Gondor",
+    "updatedAtUtc": "2026-11-08T09:18:43.130Z",
+    "createdAtUtc": "2026-11-08T09:18:10.907Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/1c7ac04c-8510-468b-aa6f-f249bde9ff87?format=image&version=art_crop"
+  },
+  {
+    "id": "yQ1bRo",
+    "publicId": "RbqhAeiVK3muABzVT4mX5g",
+    "name": "W26 4/7 - Rank 08/24 Glarb (Gibbonz33)",
+    "url": "https://moxfield.com/decks/RbqhAeiVK3muABzVT4mX5g",
+    "commanderName": "Glarb, Calamity's Augur",
+    "updatedAtUtc": "2026-11-08T08:57:13.703Z",
+    "createdAtUtc": "2026-11-08T08:28:04.967Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/ffc70b2d-5a3a-49ea-97db-175a62248302?format=image&version=art_crop"
+  },
+  {
+    "id": "KoVz3N",
+    "publicId": "Q7qhAW2as3u38mA14iMn3w",
+    "name": "W26 4/7 - Rank 04/24 {DC} The Greatful Deadpool 💀 (Sancho182)",
+    "url": "https://moxfield.com/decks/Q7qhAW2as3u38mA14iMn3w",
+    "commanderName": "Deadpool, Trading Card",
+    "updatedAtUtc": "2026-11-08T08:57:05.047Z",
+    "createdAtUtc": "2026-11-08T08:25:55.053Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/3a14d6c5-cfd1-4860-834a-5a0dc9df0320?format=image&version=art_crop"
+  },
+  {
+    "id": "gaRlgr",
+    "publicId": "QbqhATxJlH6i6U5wRkGIuA",
+    "name": "W26 4/7 - Rank 03/24 [DUEL] Glarb Control (Rinnen)",
+    "url": "https://moxfield.com/decks/QbqhATxJlH6i6U5wRkGIuA",
+    "commanderName": "Glarb, Calamity's Augur",
+    "updatedAtUtc": "2026-11-08T08:56:56.923Z",
+    "createdAtUtc": "2026-11-08T08:23:23.197Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/ffc70b2d-5a3a-49ea-97db-175a62248302?format=image&version=art_crop"
+  },
+  {
+    "id": "NO35pM",
+    "publicId": "RLqhAWXdI3mpgSM1eTv4tw",
+    "name": "W26 4/7 - Rank 01/24 Green Deception (AveCesare88)",
+    "url": "https://moxfield.com/decks/RLqhAWXdI3mpgSM1eTv4tw",
+    "commanderName": "Surrak, Elusive Hunter",
+    "updatedAtUtc": "2026-11-08T08:56:49.437Z",
+    "createdAtUtc": "2026-11-08T08:27:17.733Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/e4775a26-0b66-40e9-8f64-41d9308ca032?format=image&version=art_crop"
+  },
+  {
+    "id": "P2pKNm",
+    "publicId": "RLqhAfFBGXGbAI-hiib03g",
+    "name": "W26 4/7 - Rank 02/24 GranCasso (solarraggio)",
+    "url": "https://moxfield.com/decks/RLqhAfFBGXGbAI-hiib03g",
+    "commanderName": "Aragorn, King of Gondor",
+    "updatedAtUtc": "2026-11-08T08:56:42.170Z",
+    "createdAtUtc": "2026-11-08T08:26:37.937Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/1c7ac04c-8510-468b-aa6f-f249bde9ff87?format=image&version=art_crop"
+  },
+  {
+    "id": "Qpdbbe",
+    "publicId": "WrqhAVTeJHGjyTornxEJVw",
+    "name": "W26 4/7 - Rank 06/24 cloud 2 (Devian)",
+    "url": "https://moxfield.com/decks/WrqhAVTeJHGjyTornxEJVw",
+    "commanderName": "Cloud, Midgar Mercenary",
+    "updatedAtUtc": "2026-11-08T08:56:23.327Z",
+    "createdAtUtc": "2026-11-08T08:51:19.763Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/5d8690ec-fded-4801-8eaf-5e5fe3d444ec?format=image&version=art_crop"
+  },
+  {
+    "id": "6VvW6N",
+    "publicId": "XbqhAdyLjXCtYs5K9FGX0w",
+    "name": "W26 4/7 - Rank 05/24  [26-11-07] ur drago (Zanezar)",
+    "url": "https://moxfield.com/decks/XbqhAdyLjXCtYs5K9FGX0w",
+    "commanderName": "The Ur-Dragon",
+    "updatedAtUtc": "2026-11-08T08:55:40.853Z",
+    "createdAtUtc": "2026-11-08T08:54:15.260Z",
+    "format": "duelCommander",
+    "previewImageUrl": "https://api.scryfall.com/cards/10d42b35-844f-4a64-9981-c6118d45e826?format=image&version=art_crop"
+  },
+  {
     "id": "0RPbDW",
     "publicId": "8XahAaR2dnmhjkfi8XMuCQ",
     "name": "W26 3/7 - Rank 01/23 Glarb (Gibbonz33)",
@@ -18,94 +106,6 @@
     "commanderName": "Elminster",
     "updatedAtUtc": "2026-10-26T06:46:59.663Z",
     "createdAtUtc": "2026-10-26T06:46:59.603Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/4eac2b49-6cb6-4ff4-8fac-2ba669326640?format=image&version=art_crop"
-  },
-  {
-    "id": "W9yvZl",
-    "publicId": "9HahAWj_QHqM44CrJjoO3g",
-    "name": "W26 3/7 - Rank 08/23 DC - Phlage (michele__f)",
-    "url": "https://moxfield.com/decks/9HahAWj_QHqM44CrJjoO3g",
-    "commanderName": "Phlage, Titan of Fire's Fury",
-    "updatedAtUtc": "2026-10-26T06:45:34.077Z",
-    "createdAtUtc": "2026-10-26T06:45:30.090Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/e419cd0b-2449-4cc5-9ead-b9e45e271700?format=image&version=art_crop"
-  },
-  {
-    "id": "xo8N5g",
-    "publicId": "9HahAXiBcHKt-XFxmfpOVQ",
-    "name": "W26 3/7 - Rank 07/23 ellie partner beta  (stantuffodado88)",
-    "url": "https://moxfield.com/decks/9HahAXiBcHKt-XFxmfpOVQ",
-    "commanderName": "Ellie, Vengeful Hunter",
-    "updatedAtUtc": "2026-10-26T06:45:01.123Z",
-    "createdAtUtc": "2026-10-26T06:44:57.850Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/dd0b3ace-91aa-46b7-8265-b8bc22dff5f7?format=image&version=art_crop"
-  },
-  {
-    "id": "XBDvq1",
-    "publicId": "9HahAW4BvX2oJ8IuS5LR1g",
-    "name": "W26 3/7 - Rank 06/23 Aragorn (Rinnen)",
-    "url": "https://moxfield.com/decks/9HahAW4BvX2oJ8IuS5LR1g",
-    "commanderName": "Aragorn, King of Gondor",
-    "updatedAtUtc": "2026-10-26T06:44:27.860Z",
-    "createdAtUtc": "2026-10-26T06:44:25.070Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/1c7ac04c-8510-468b-aa6f-f249bde9ff87?format=image&version=art_crop"
-  },
-  {
-    "id": "6w0Ajw",
-    "publicId": "83ahASBaDnS1VkA6hoe5Qg",
-    "name": "W26 3/7 - Rank 05/23 Aang, Swift Savior  (DrPain)",
-    "url": "https://moxfield.com/decks/83ahASBaDnS1VkA6hoe5Qg",
-    "commanderName": "Aang, Swift Savior // Aang and La, Ocean's Fury",
-    "updatedAtUtc": "2026-10-26T06:43:45.750Z",
-    "createdAtUtc": "2026-10-26T06:43:42.240Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/de89fec4-f5c8-4513-8504-ac9bafb44054?format=image&version=art_crop"
-  },
-  {
-    "id": "AjK53R",
-    "publicId": "8nahATDDInmNCkIBhTvn4g",
-    "name": "W26 3/7 - Rank 03/23 [DC] Light-Paws v19.6 (lex_luthor)",
-    "url": "https://moxfield.com/decks/8nahATDDInmNCkIBhTvn4g",
-    "commanderName": "Light-Paws, Emperor's Voice",
-    "updatedAtUtc": "2026-10-26T06:43:06.730Z",
-    "createdAtUtc": "2026-10-26T06:43:03.600Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/39555a72-a57b-45ee-9222-ce3b9e8de126?format=image&version=art_crop"
-  },
-  {
-    "id": "9XOdl4",
-    "publicId": "8nahAWQUS36l7fbfDTCHtw",
-    "name": "W26 3/7 - Rank 02/23 EllieS 2.0 (Cannonalpha)",
-    "url": "https://moxfield.com/decks/8nahAWQUS36l7fbfDTCHtw",
-    "commanderName": "Ellie, Vengeful Hunter",
-    "updatedAtUtc": "2026-10-26T06:42:24.047Z",
-    "createdAtUtc": "2026-10-26T06:42:18.853Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/dd0b3ace-91aa-46b7-8265-b8bc22dff5f7?format=image&version=art_crop"
-  },
-  {
-    "id": "woqRj4",
-    "publicId": "6SqhARhyLnW9uFXwiG1GMQ",
-    "name": "W26 2/7 - Rank 01/29 quintorius (ricc41)",
-    "url": "https://moxfield.com/decks/6SqhARhyLnW9uFXwiG1GMQ",
-    "commanderName": "Quintorius, History Chaser",
-    "updatedAtUtc": "2026-10-11T12:21:47.893Z",
-    "createdAtUtc": "2026-10-11T12:21:44.600Z",
-    "format": "duelCommander",
-    "previewImageUrl": "https://api.scryfall.com/cards/0742f19d-179c-43c4-ab95-4160c56b4384?format=image&version=art_crop"
-  },
-  {
-    "id": "JBQ505",
-    "publicId": "FGeKXdjH2UCHKps2c6_Q6w",
-    "name": "W26 2/7 - Rank 07/29 Elminster",
-    "url": "https://moxfield.com/decks/FGeKXdjH2UCHKps2c6_Q6w",
-    "commanderName": "Elminster",
-    "updatedAtUtc": "2026-10-11T08:13:11.177Z",
-    "createdAtUtc": "2026-10-11T07:46:19.897Z",
     "format": "duelCommander",
     "previewImageUrl": "https://api.scryfall.com/cards/4eac2b49-6cb6-4ff4-8fac-2ba669326640?format=image&version=art_crop"
   }
