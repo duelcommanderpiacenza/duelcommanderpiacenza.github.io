@@ -5,6 +5,7 @@ import {
   formatDate,
   eventTitle,
   playerLabel,
+  commanderPairLabel,
   commanderPairWithColors,
   archetypeBadge,
   showError,
@@ -39,14 +40,32 @@ function playerCard(player, className, innerHtml) {
     : `<article class="history-item ${className}">${innerHtml}</article>`;
 }
 
+// A player's deck at this event, as Giocatori shows it (.history-deck): the
+// commander (+ partner) and colour pips; nothing without an entry or a
+// commander. `options` as js/ui.js's (NO_LINK inside a card that is a link).
+function deckLineHtml(entry, options) {
+  return entry?.commander
+    ? `<span class="history-deck">${commanderPairWithColors(entry.commander, entry.partner_commander, options)}</span>`
+    : "";
+}
+
+// Partite's: the same line without the pips.
+function matchDeckLineHtml(entry) {
+  return entry?.commander
+    ? `<span class="history-deck">${commanderPairLabel(entry.commander, entry.partner_commander)}</span>`
+    : "";
+}
+
 // Partite: per round, a grid of small match cards — Giocatore 1 · score ·
-// Giocatore 2, the winner in bold. Not links themselves (a match has two
-// players): the names are, each to its player.
-function matchCardHtml(m) {
+// Giocatore 2, the winner in bold, each name with its deck under it (no
+// pips; each on one line, cut with "…" when too long). Not
+// links themselves (a match has two players): the names are, each to its
+// player, and the commanders to theirs. `entryOf`: player id → entry.
+function matchCardHtml(m, entryOf) {
   const special = isBye(m) ? "Bye" : isDrop(m) ? "Drop" : null;
   const outcome = special ? null : matchRoundOutcome(m);
   const side = (player, wins) =>
-    `<span class="event-match-player${wins ? " is-winner" : ""}">${playerLabel(player)}</span>`;
+    `<span class="event-match-player${wins ? " is-winner" : ""}"><span class="event-match-name">${playerLabel(player)}</span>${matchDeckLineHtml(entryOf.get(player?.id))}</span>`;
   return `
           <article class="history-item event-match">
             ${side(m.player1, special === "Bye" || outcome === "player1")}
@@ -55,7 +74,7 @@ function matchCardHtml(m) {
           </article>`;
 }
 
-function renderMatchesByRound(matches) {
+function renderMatchesByRound(matches, entryOf) {
   if (matches.length === 0) return '<p class="page-empty">Nessuna partita registrata.</p>';
 
   const byRound = new Map();
@@ -70,7 +89,7 @@ function renderMatchesByRound(matches) {
     .map(
       (round) => `
       <h3 style="margin:18px 0 10px;font-size:1.05rem;">Turno ${round}</h3>
-      ${historyPanelHtml(byRound.get(round).map(matchCardHtml).join(""), { scroll: false, className: "event-match-grid" })}`
+      ${historyPanelHtml(byRound.get(round).map((m) => matchCardHtml(m, entryOf)).join(""), { scroll: false, className: "event-match-grid" })}`
     )
     .join("");
 }
@@ -156,7 +175,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
                   "history-split",
                   `<div class="history-main">
                     ${playerTitleHtml(e.player)}
-                    <span class="history-deck">${commanderPairWithColors(e.commander, e.partner_commander, NO_LINK)}</span>
+                    ${deckLineHtml(e, NO_LINK) || '<span class="history-deck">—</span>'}
                   </div>
                   ${archetypeBadge(e.archetype)}`
                 )
@@ -180,7 +199,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
 
     const matches = await matchesRequest;
     if (signal.aborted) return;
-    matchesEl.innerHTML = renderMatchesByRound(matches);
+    const entryOf = new Map(entries.map((e) => [e.player_id, e]));
+    matchesEl.innerHTML = renderMatchesByRound(matches, entryOf);
     const standings = computeEventLeaderboard(matches, entries);
 
     // The hero: the numbers, and the winner's (first in the standings)
@@ -203,7 +223,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     const mostPlayed = [...usage].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
     createArtPainter(document.getElementById("event-hero-art"))(winnerEntry?.commander?.name ?? mostPlayed);
     // Classifica: one sub-card per player, linking to them — position chip
-    // and name, then Punti / V-S-P / Winrate.
+    // and name (the deck under it, as in Giocatori), then Punti / V-S-P /
+    // Winrate.
     leaderboardEl.innerHTML =
       standings.length === 0
         ? '<p class="page-empty">Nessun dato per la classifica.</p>'
@@ -215,7 +236,10 @@ export async function mount({ signal = new AbortController().signal } = {}) {
                   "history-ranked",
                   `<div class="history-lead">
                     ${historyPosHtml(i + 1)}
-                    <div class="history-main">${playerTitleHtml(s.player)}</div>
+                    <div class="history-main">
+                      ${playerTitleHtml(s.player)}
+                      ${deckLineHtml(entryOf.get(s.player?.id), NO_LINK)}
+                    </div>
                   </div>
                   ${historyStatsHtml([
                     { label: "Punti", value: s.points, main: true },

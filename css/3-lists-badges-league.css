@@ -1857,14 +1857,31 @@ body.has-hero-accent .ptr {
   gap: 10px;
 }
 
+/* Each side: the name, its deck under it (.history-deck, as in Giocatori,
+   without the pips; in its normal weight even for the winner) — each on one
+   line, cut with "…" when too long. */
 .event-match-player {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
   color: var(--text-muted-2);
   font-weight: 600;
-  overflow-wrap: anywhere;
 }
 
 .event-match-player:last-child {
   text-align: right;
+}
+
+.event-match-name,
+.event-match-player .history-deck {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.event-match-player .history-deck {
+  font-weight: 400;
 }
 
 .event-match-player.is-winner {
