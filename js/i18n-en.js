@@ -195,6 +195,7 @@
     "Archetipi più giocati": "Most played archetypes",
     "Comandanti più giocati": "Most played commanders",
     "Colori più giocati": "Most played colours",
+    "Colori": "Colours",
     "Nessun dato per il grafico.": "No data for the chart.",
     "Nessun dato per la classifica.": "No data for the standings.",
     "Nessun evento ancora.": "No events yet.",

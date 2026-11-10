@@ -1,8 +1,8 @@
 // The Meta tab of event.html and league.html (one event's entries, or a
-// whole league's): its commanders and archetypes as the Bacheca's bubble
-// charts.
+// whole league's): its commanders, archetypes and colours as the Bacheca's
+// bubble charts.
 
-import { renderBubbleChart, initBubbleChart, ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
+import { renderBubbleChart, initBubbleChart, colorBubbleRows, ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
 import { initChartCarousel } from "./chart-carousel.js";
 import { archetypeIcon } from "./archetype-icons.js";
 
@@ -12,11 +12,13 @@ const META_TOP_COMMANDERS = 8;
 const META_COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#8e5bd6", "#d6455d"];
 const META_OTHER_COLOR = "#9a9a94";
 
-// A Meta tab (event.html, league.html): the entries' commanders and archetypes as the Bacheca's
-// bubble charts (js/metagame-chart.js), in its light card and carousel —
-// side by side when there's room, else one at a time with ‹ • › under the
-// card. Counted like the Bacheca: one per entry, the primary commander only
-// (a partner counted too would push the shares past 100%).
+// A Meta tab (event.html, league.html): the entries' commanders, archetypes
+// and colours as the Bacheca's bubble charts (js/metagame-chart.js), in its
+// light card and carousel — two side by side when there's room, else one at
+// a time, with ‹ • › under the card. Counted like the Bacheca: one per
+// entry, the primary commander only (a partner counted too would push the
+// shares past 100%) — but the colours are the whole deck's, the partner's
+// included (colorBubbleRows: each colour's share of the decks playing it).
 export function renderMetaCharts(el, cardEl, entries) {
   const counted = entries.filter((e) => e.commander);
   if (counted.length === 0) {
@@ -56,6 +58,7 @@ export function renderMetaCharts(el, cardEl, entries) {
     <div class="chart-grid">
       ${renderBubbleChart(commanderRows, "Nessun dato per il grafico.", "Comandanti", { subtitle })}
       ${renderBubbleChart(archetypeRows, "Nessun dato per il grafico.", "Archetipi", { subtitle })}
+      ${renderBubbleChart(colorBubbleRows(counted), "Nessun dato per il grafico.", "Colori", { subtitle })}
     </div>`;
   initBubbleChart(el);
   initChartCarousel(el, { navAfter: cardEl });

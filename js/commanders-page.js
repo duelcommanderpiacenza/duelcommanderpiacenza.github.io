@@ -1,7 +1,7 @@
 import { Commanders, Events, Leagues } from "./db.js";
 import { computeGroupedStats, computeColorShares } from "./stats.js";
 import { initScopeFilter } from "./scope-filter.js";
-import { renderPieChart, renderBarChart } from "./metagame-chart.js";
+import { renderPieChart, renderBarChart, MTG_COLOR_CHART } from "./metagame-chart.js";
 import { initChartCarousel } from "./chart-carousel.js";
 import { attachHoverTooltips, fullTextIfTruncated } from "./floating-tooltip.js";
 import { commanderPairLabel, colorIdentityPips, commanderBadgesHtml, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
@@ -27,19 +27,6 @@ const CHART_COLORS = [
   "#8e5bd6", "#d6455d", "#00a3a3", "#b07b24", "#5c6bc0", "#c2185b", "#6d8f00",
 ];
 const OTHER_COLOR = "#9a9a94";
-
-// "Colori più giocati" bars — the same hues as the color-identity pips
-// (styles.css .color-pip-*), except white and colorless: the pip's own
-// near-white (#f8f6d8) would all but vanish against the bar chart's light
-// track, so white gets a deeper cream, and colorless a mid grey.
-const MTG_COLOR_BARS = {
-  W: { label: "Bianco", color: "#e3d58a" },
-  U: { label: "Blu", color: "#0e68ab" },
-  B: { label: "Nero", color: "#3a3a3a" },
-  R: { label: "Rosso", color: "#d3202a" },
-  G: { label: "Verde", color: "#00733e" },
-  C: { label: "Incolore", color: "#a8a39d" },
-};
 
 // Entries + matches of the events in scope (js/meta-filters.js metaResults):
 // slim, no player embeds — only the commanders (the colours chart).
@@ -404,7 +391,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
           ? []
           : computeColorShares(eventsData)
               .filter((c) => c.color !== "C" || c.entries > 0)
-              .map((c) => ({ label: MTG_COLOR_BARS[c.color].label, value: c.share, color: MTG_COLOR_BARS[c.color].color }))
+              .map((c) => ({ label: MTG_COLOR_CHART[c.color].label, value: c.share, color: MTG_COLOR_CHART[c.color].color }))
               .sort((a, b) => b.value - a.value);
 
       lastChartHtml = `

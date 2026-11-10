@@ -1992,8 +1992,11 @@ a.bubble:active {
   cursor: pointer;
 }
 
-/* No art (an archetype): its colour fills it, the % in the middle. */
-.bubble.is-solid {
+/* No art (an archetype, a colour): its colour fills it, the % in the
+   middle — in dark mode too (the dark .bubble's faint fill above outranks
+   the plain selector). */
+.bubble.is-solid,
+:root[data-theme="dark"] .bubble.is-solid {
   align-items: center;
   background: var(--bubble-color, #9a9a94);
 }
@@ -2035,7 +2038,8 @@ a.bubble:active {
 }
 
 /* Just the % (the name is on hover — the bubble's title — and in the
-   legend). */
+   legend). A light bubble's dark % (white's, js `ink`) without the shadow
+   (--bubble-text-shadow: none). */
 .bubble-label {
   position: relative;
   z-index: 1;
@@ -2046,7 +2050,7 @@ a.bubble:active {
   padding-bottom: 14cqw;
   line-height: 1.05;
   text-align: center;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  text-shadow: var(--bubble-text-shadow, 0 1px 4px rgba(0, 0, 0, 0.6));
 }
 
 .bubble-label strong {

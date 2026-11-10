@@ -9,7 +9,7 @@
 
 import { Leagues, Events, EventEntries, fetchEventsResults } from "./db.js";
 import { computeLeaguePoints, previousLeaguePositions } from "./leaderboard.js";
-import { renderBubbleChart, initBubbleChart, ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
+import { renderBubbleChart, initBubbleChart, colorBubbleRows, ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
 import { initChartCarousel } from "./chart-carousel.js";
 import { ENDSTEP_MARK, endstepLogo, escapeHtml, formatTime, leagueRingHtml, localIso, playerLabel, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
@@ -312,11 +312,17 @@ async function renderStandings(el) {
 // --- Più giocati ---------------------------------------------------------------------
 
 // The Più giocati charts' entries since `cutoffIso`, reused from this
-// browser for CHART_CACHE_MS (localStorage "homeCharts": the cutoff, when,
+// browser for CHART_CACHE_MS (localStorage "homeCharts2": the cutoff, when,
 // the rows) — a reload or a return to the Bacheca within it skips the
-// request. Any storage problem: just fetched.
-const CHART_CACHE_KEY = "homeCharts";
+// request. Any storage problem: just fetched. ("homeCharts", the key before
+// the rows carried the colour identities, is dropped.)
+const CHART_CACHE_KEY = "homeCharts2";
 const CHART_CACHE_MS = 5 * 60 * 1000;
+try {
+  localStorage.removeItem("homeCharts");
+} catch {
+  // No storage: nothing to drop.
+}
 async function chartEntries(cutoffIso) {
   try {
     const cached = JSON.parse(localStorage.getItem(CHART_CACHE_KEY) ?? "null");
@@ -388,10 +394,13 @@ async function renderCommandersSection(el) {
     })).sort((a, b) => b.share - a.share);
 
     // The same whole-block carousel as the Comandanti/Archetipi charts
-    // (js/chart-carousel.js): the two side by side once the card is wide
+    // (js/chart-carousel.js): two side by side once the card is wide
     // enough (.chart-carousel-host in styles.css — the full width on a
     // computer), else one at a time. Each slide carries its own title,
     // "(ultimi 3 mesi)" and "Vedi tutti"; the ‹ • › controls under the card.
+    // The colours (colorBubbleRows: each colour's share of the decks playing
+    // it, the partner's colours included) third, "Vedi tutti" to Comandanti
+    // — its "Colori più giocati" chart.
     const periodLabel = `(ultimi ${TOP_COMMANDERS_WINDOW_MONTHS} mesi)`;
     const seeAll = (href) => `<a class="section-link" href="${href}">Vedi tutti</a>`;
     el.innerHTML = `
@@ -403,6 +412,10 @@ async function renderCommandersSection(el) {
         ${renderBubbleChart(archetypeRows, "Nessun dato per il grafico.", "Archetipi più giocati", {
           subtitle: periodLabel,
           footer: seeAll("archetypes.html"),
+        })}
+        ${renderBubbleChart(colorBubbleRows(entries), "Nessun dato per il grafico.", "Colori più giocati", {
+          subtitle: periodLabel,
+          footer: seeAll("commanders.html"),
         })}
       </div>`;
     initBubbleChart(el);

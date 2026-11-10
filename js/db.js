@@ -442,8 +442,9 @@ export const EventEntries = {
         .select(`*, player:players(id,name,handle), ${COMMANDER_EMBED}`)
         .order("id")
     ),
-  // Bacheca's "Più giocati" charts: just the primary commander and archetype
-  // of every live entry whose event falls on/after `sinceIso` (YYYY-MM-DD) —
+  // Bacheca's "Più giocati" charts: just the commanders (with their colour
+  // identity, the partner's too — the colours chart) and archetype of every
+  // live entry whose event falls on/after `sinceIso` (YYYY-MM-DD) —
   // filtered by the database (inner join on the event) rather than
   // downloading every entry ever and filtering in the browser, so the
   // payload stays the same size however long the club's history grows.
@@ -451,7 +452,7 @@ export const EventEntries = {
     selectAllRows(() =>
       sb
         .from("event_entries")
-        .select("id, archetype, commander:commanders!event_entries_commander_id_fkey(id,name), event:events!inner(event_date,is_online)")
+        .select(`id, archetype, ${COMMANDER_EMBED}, event:events!inner(event_date,is_online)`)
         .gte("event.event_date", sinceIso)
         .eq("event.is_online", false)
         .order("id")
