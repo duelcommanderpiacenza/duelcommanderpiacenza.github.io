@@ -1,6 +1,6 @@
 import { Leagues, Events } from "../../js/db.js";
 import { leagueKindLabel } from "../../js/ui.js";
-import { renderTable, setMessage, statusToggleButton, onBusySubmit, runBusy, manageButton } from "./crud-ui.js";
+import { renderTable, setMessage, statusToggleButton, onBusySubmit, runBusy } from "./crud-ui.js";
 import { syncAutoBadges } from "./badges-sync.js";
 
 // The proactive close-before-open/create calls should normally prevent this
@@ -68,24 +68,10 @@ export function initLeaguesAdmin({ onOpenLeague }) {
         { key: "name", label: "Nome" },
         { key: "type", label: "Tipo", render: (l) => leagueKindLabel(l) },
         { key: "status", label: "Stato", render: (l) => statusToggleButton(l.is_open, l.id, "league") },
-        {
-          key: "manage",
-          label: "",
-          render: (l) => `
-              <div class="row-actions">
-                ${manageButton(l.id, "Gestisci eventi")}
-              </div>`,
-        },
       ],
-      { onEdit, onDelete },
+      { onEdit, onDelete, onOpen: onOpenLeague },
       { animate }
     );
-    listEl.querySelectorAll("[data-open]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const league = leagues.find((l) => l.id === btn.dataset.open);
-        if (league) onOpenLeague(league);
-      });
-    });
     listEl.querySelectorAll("[data-toggle]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const league = leagues.find((l) => l.id === btn.dataset.toggle);

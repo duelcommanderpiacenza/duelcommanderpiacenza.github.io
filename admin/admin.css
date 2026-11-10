@@ -1204,7 +1204,9 @@ body.is-busy::before {
 
 /* The admin lists (js/crud-ui.js renderTable): the public site's sub-card
    look (.history-panel / .history-item, ../../styles.css), one card per row
-   — not clickable, so no hover change; only its buttons react. Title on the
+   — not clickable, so no hover change, only its buttons react; except in the
+   lists whose items open (.is-openable: a league → its events, an event →
+   its entries and matches — the whole card is the way in). Title on the
    left, then the labelled fields in equal columns (the same in every card,
    so they line up like a table's), the buttons on the right — always on
    one line on desktop, the columns narrowing (their text wrapping inside
@@ -1259,18 +1261,38 @@ body.is-busy::before {
   margin-left: 0;
 }
 
-/* Where a row has no Gestisci (an external event): the same room, empty,
-   so every row's buttons line up — not on phones, where they start on the
-   left (nothing to line up). */
-.admin-btn-spacer {
-  visibility: hidden;
+/* A card that opens its item: a hand, the tint and border of the public
+   site's linked sub-cards on hover (a.history-item, neutral here), its title
+   in the accent; a focus ring drawn inside (the list would clip one
+   outside). Not while the pointer is on one of its own buttons. */
+.admin-card.is-openable {
+  cursor: pointer;
+}
+
+.admin-card.is-openable:hover:not(:has(button:hover)) {
+  border-color: rgba(0, 0, 0, 0.18);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+:root[data-theme="dark"] .admin-card.is-openable:hover:not(:has(button:hover)) {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.admin-card.is-openable .admin-card-title {
+  transition: color 150ms ease;
+}
+
+.admin-card.is-openable:hover:not(:has(button:hover)) .admin-card-title {
+  color: var(--brand-red-deep);
+}
+
+.admin-card.is-openable:focus-visible {
+  outline: 2px solid var(--brand-red);
+  outline-offset: -2px;
 }
 
 @media (max-width: 640px) {
-  .admin-btn-spacer {
-    display: none;
-  }
-
   /* The events' lists (a league's, the standalone ones): Data, Orario and
      Stato on one line under the name — the date's column the widest, each
      value on one line ("01 nov 2026" whole on a 320px screen too). */
@@ -1328,12 +1350,6 @@ body.is-busy::before {
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
-}
-
-/* An unlabelled column's own .row-actions (Gestisci): its buttons join the
-   card's row of buttons. */
-.admin-card-actions .row-actions {
-  display: contents;
 }
 
 @media (max-width: 640px) {
@@ -1608,6 +1624,18 @@ body.is-busy::before {
    so it's pinned to the size it has in the list cards (.admin-card-value). */
 .page-heading .badge-status-toggle {
   font-size: 0.95rem;
+}
+
+/* The lock before Aperto / Chiuso (events) and Aperta / Chiusa (leagues),
+   open or shut like the item (crud-ui.js lockIcon). */
+.badge-status-toggle:has(.badge-status-lock) {
+  gap: 5px;
+}
+
+.badge-status-lock {
+  flex-shrink: 0;
+  width: 1.05em;
+  height: 1.05em;
 }
 
 /* Excludes .icon-btn (Modifica/Elimina) — those are fixed-size circles

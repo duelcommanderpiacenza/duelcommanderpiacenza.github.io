@@ -1,6 +1,6 @@
 import { Events } from "../../js/db.js";
 import { formatDate, formatTime, isHttpUrl } from "../../js/ui.js";
-import { renderTable, setMessage, statusToggleButton, onBusySubmit, runBusy, manageButton } from "./crud-ui.js";
+import { renderTable, setMessage, statusToggleButton, onBusySubmit, runBusy } from "./crud-ui.js";
 import { on } from "./bus.js";
 import { syncAutoBadges } from "./badges-sync.js";
 
@@ -40,24 +40,10 @@ export function initEventsAdmin({ onOpenEvent }) {
           { key: "event_date", label: "Data", render: (r) => formatDate(r.event_date) },
           { key: "start_time", label: "Orario", render: (r) => formatTime(r.start_time) ?? "—" },
           { key: "status", label: "Stato", render: (r) => statusToggleButton(r.is_open, r.id, "event") },
-          {
-            key: "manage",
-            label: "",
-            render: (e) => `
-              <div class="row-actions">
-                ${manageButton(e.id, "Gestisci iscritti e partite")}
-              </div>`,
-          },
         ],
-        { onEdit, onDelete },
+        { onEdit, onDelete, onOpen: onOpenEvent },
         { animate }
       );
-      listEl.querySelectorAll("[data-open]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const ev = events.find((e) => e.id === btn.dataset.open);
-          if (ev) onOpenEvent(ev);
-        });
-      });
       listEl.querySelectorAll("[data-toggle]").forEach((btn) => {
         btn.addEventListener("click", () => {
           const ev = events.find((e) => e.id === btn.dataset.toggle);

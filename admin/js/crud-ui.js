@@ -16,28 +16,28 @@ const DELETE_ICON_SVG = `<svg width="21" height="21" viewBox="0 0 24 24" fill="n
   <path d="M6 6l12 12"/>
 </svg>`;
 
-// "Gestisci" (a league's events, an event's entries and matches): a round
-// button like ✎ beside it, an arrow going into a box — opens the item.
-export function manageButton(id, label) {
-  return `<button type="button" class="icon-btn icon-btn-edit" data-open="${id}" aria-label="${label}" title="${label}"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"></path><path d="M14 8l4 4-4 4"></path><path d="M18 12H9"></path></svg></button>`;
-}
-
 /**
  * Renders an admin list — the public site's sub-card look (.history-panel /
- * .history-item, ../../styles.css), not a table: one card per row, which
- * isn't itself clickable — only the buttons in it are. Per card: the
+ * .history-item, ../../styles.css), not a table: one card per row. A card
+ * is clickable as a whole only when the list opens its items (`onOpen`: a
+ * league → its events, an event → its entries and matches); otherwise only
+ * the buttons in it react. Per card: the
  * primary column (the first, or the one marked `primary`) as its bold title
  * on the left; the other labelled columns as small label-over-value fields
  * (the same width in every card, so they line up like a table's columns);
- * on the right the unlabelled columns' content (their own buttons — Gestisci,
- * ↑↓, Approva…) then Modifica/Elimina when given. One line on desktop
+ * on the right the unlabelled columns' content (their own buttons — ↑↓,
+ * Approva…) then Modifica/Elimina when given. One line on desktop
  * (narrower columns when the list is narrow); only on phones (≤640px,
  * admin.css .admin-card) do the fields wrap below the title.
  * @param {HTMLElement} container
  * @param {Array} rows - each with a unique `id`
  * @param {Array<{key:string,label:string,render?:(row)=>string,primary?:boolean}>} columns
- * @param {{onEdit?: (row)=>void, onDelete?: (row)=>void, canEdit?: (row)=>boolean}} actions
+ * @param {{onEdit?: (row)=>void, onDelete?: (row)=>void, canEdit?: (row)=>boolean,
+ *   onOpen?: (row)=>void, canOpen?: (row)=>boolean}} actions
  *   canEdit: false for a row that can only be deleted (no Modifica on it).
+ *   onOpen: a click on the card (not on a button in it), or Enter / Space
+ *   on it focused, opens the row; canOpen: false for a row that can't be
+ *   opened (an external event).
  * @param {{animate?: boolean, empty?: string}} [options] - animate defaults
  *   to true; live search callers pass false so re-filtering on every
  *   keystroke doesn't replay the list's entrance animation each time.
@@ -52,12 +52,13 @@ export function renderTable(container, rows, columns, actions, { animate = true,
   const primary = columns.find((c) => c.primary) ?? columns[0];
   const fields = columns.filter((c) => c !== primary && c.label);
   const extras = columns.filter((c) => c !== primary && !c.label);
+  const canOpen = (row) => !!actions.onOpen && (actions.canOpen?.(row) ?? true);
 
   container.innerHTML = `<div class="history-panel no-scroll admin-card-list${animate ? "" : " no-entrance-anim"}"><div class="history-scroll">
       ${rows
         .map(
           (row) => `
-        <div class="history-item admin-card" data-id="${row.id}" style="--admin-fields:${fields.length}">
+        <div class="history-item admin-card${canOpen(row) ? ' is-openable' : ""}"${canOpen(row) ? ' tabindex="0"' : ""} data-id="${row.id}" style="--admin-fields:${fields.length}">
           <div class="admin-card-body">
             <div class="admin-card-title">${cell(primary, row)}</div>
             ${fields
@@ -92,6 +93,19 @@ export function renderTable(container, rows, columns, actions, { animate = true,
     card.querySelector('[data-action="edit"]')?.addEventListener("click", () => actions.onEdit(row));
     const deleteBtn = card.querySelector('[data-action="delete"]');
     deleteBtn?.addEventListener("click", () => runBusy(deleteBtn, () => actions.onDelete(row)));
+    if (!card.classList.contains("is-openable")) return;
+    // Not from its own buttons (Stato, ✎, ✕), nor the end of a drag
+    // selecting its text.
+    card.addEventListener("click", (e) => {
+      if (e.target.closest("button, a, input, select, textarea, label")) return;
+      if (String(window.getSelection?.() ?? "")) return;
+      actions.onOpen(row);
+    });
+    card.addEventListener("keydown", (e) => {
+      if (e.target !== card || (e.key !== "Enter" && e.key !== " ")) return;
+      e.preventDefault();
+      actions.onOpen(row);
+    });
   });
 }
 
@@ -99,16 +113,27 @@ export function renderTable(container, rows, columns, actions, { animate = true,
 // .badge-status look as the public site's) with the action to flip it —
 // one button instead of a status badge plus a separate "Chiudi"/"Riapri"
 // one. kind picks the grammatical gender: "league" (la lega → Aperta) or
-// "event" (l'evento → Aperto).
+// "event" (l'evento → Aperto). A lock before the word, open or shut like
+// the item (admin.css .badge-status-lock).
+const LOCK_SHACKLE = {
+  open: "M7 11V7a5 5 0 0 1 9.9-1",
+  closed: "M7 11V7a5 5 0 0 1 10 0v4",
+};
+
+function lockIcon(state) {
+  return `<svg class="badge-status-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="${LOCK_SHACKLE[state]}"/></svg>`;
+}
+
 const STATUS_LABELS = {
   league: { open: "Aperta", closed: "Chiusa" },
   event: { open: "Aperto", closed: "Chiuso" },
 };
 
 function statusToggle(isOpen, kind) {
+  const state = isOpen ? "open" : "closed";
   return {
     className: `badge-status badge-status-toggle ${isOpen ? "badge-status-open" : "badge-status-closed"}`,
-    label: STATUS_LABELS[kind][isOpen ? "open" : "closed"],
+    label: `${lockIcon(state)}${STATUS_LABELS[kind][state]}`,
     title: isOpen ? "Clic per chiudere" : "Clic per riaprire",
   };
 }
@@ -125,7 +150,7 @@ export function statusToggleButton(isOpen, id, kind) {
 export function setStatusToggle(button, isOpen, kind) {
   const { className, label, title } = statusToggle(isOpen, kind);
   button.className = className;
-  button.textContent = label;
+  button.innerHTML = label;
   button.title = title;
 }
 

@@ -1,13 +1,13 @@
 import { Events } from "../../js/db.js";
 import { escapeHtml, formatDate, formatTime, isHttpUrl, localIso } from "../../js/ui.js";
-import { renderTable, setMessage, statusToggleButton, onBusySubmit, runBusy, manageButton } from "./crud-ui.js";
+import { renderTable, setMessage, statusToggleButton, onBusySubmit, runBusy } from "./crud-ui.js";
 import { on } from "./bus.js";
 import { syncAutoBadges } from "./badges-sync.js";
 
 /**
  * A flat list of events that don't belong to any league (league_id null) —
  * same shape as the per-league events list, just without a league to be
- * nested under. Drilling into "Gestisci iscritti/partite" hands the event
+ * nested under. Clicking an event's card (iscritti / partite) hands the event
  * off to the same shared entries/matches flow the league pyramid uses.
  *
  * The form's switch: Locale (ordinary), Esterno, Online — one of the three.
@@ -15,8 +15,8 @@ import { syncAutoBadges } from "./badges-sync.js";
  * An external event ("Esterno", migration 026: played somewhere
  * else, only announced on the public Bacheca) has a Località and a Sito
  * (where in the town — "Milano - Il Labirinto") instead, and
- * neither entries/matches nor an open/closed state — no Gestisci, no
- * toggle; it stays open for good (events_external_open). Only a new event
+ * neither entries/matches nor an open/closed state — its card doesn't
+ * open, no toggle; it stays open for good (events_external_open). Only a new event
  * can be made external (an existing one may already have entries); an
  * external one can be turned back into an ordinary one.
  *
@@ -55,8 +55,8 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
   let events = [];
 
   // The columns of both lists. An external event: its Località - Sito under
-  // its name, "Esterno" for its state, and an empty space where the others
-  // have Gestisci (so every row's buttons line up).
+  // its name, "Esterno" for its state — and it can't be opened (no entries
+  // or matches), so its card isn't clickable.
   const columns = [
     {
       key: "name",
@@ -75,15 +75,8 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
       render: (r) =>
         r.is_external ? '<span class="admin-auto-chip">Esterno</span>' : statusToggleButton(r.is_open, r.id, "event"),
     },
-    {
-      key: "manage",
-      label: "",
-      render: (e) => `
-              <div class="row-actions">
-                ${e.is_external ? '<span class="icon-btn admin-btn-spacer" aria-hidden="true"></span>' : manageButton(e.id, "Gestisci iscritti e partite")}
-              </div>`,
-    },
   ];
+  const actions = { onEdit, onDelete, onOpen: onOpenEvent, canOpen: (e) => !e.is_external };
 
   // Two lists: "In programma" (from today, the soonest first — then any
   // without a date) and "Passati" (the latest first, as
@@ -106,19 +99,13 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
         <div data-group="${key}"></div>
       </section>`;
     listEl.innerHTML = group("upcoming", "In programma", upcoming) + group("past", "Passati", past);
-    renderTable(listEl.querySelector('[data-group="upcoming"]'), upcoming, columns, { onEdit, onDelete }, {
+    renderTable(listEl.querySelector('[data-group="upcoming"]'), upcoming, columns, actions, {
       animate,
       empty: "Nessun evento in programma.",
     });
-    renderTable(listEl.querySelector('[data-group="past"]'), past, columns, { onEdit, onDelete }, {
+    renderTable(listEl.querySelector('[data-group="past"]'), past, columns, actions, {
       animate,
       empty: "Nessun evento passato.",
-    });
-    listEl.querySelectorAll("[data-open]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const ev = events.find((e) => e.id === btn.dataset.open);
-        if (ev) onOpenEvent(ev);
-      });
     });
     listEl.querySelectorAll("[data-toggle]").forEach((btn) => {
       btn.addEventListener("click", () => {
