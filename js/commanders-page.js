@@ -11,6 +11,7 @@ import { initWhereFilter } from "./where-filter.js";
 import { savedMetaFilters, rememberMetaFilters, prefetchMetaResults, metaResults } from "./meta-filters.js";
 import { historyPanelHtml, historyStatsHtml, winrateTrendHtml, latestPresence } from "./history-list.js";
 import { initBackToTop } from "./back-to-top.js";
+import { manaSymbol } from "./mana-icons.js";
 
 // Both charts are built from the *current filter's* data only (league /
 // event / date): Metashare = its 6 most played commanders + "Altri",
@@ -391,7 +392,12 @@ export async function mount({ signal = new AbortController().signal } = {}) {
           ? []
           : computeColorShares(eventsData)
               .filter((c) => c.color !== "C" || c.entries > 0)
-              .map((c) => ({ label: MTG_COLOR_CHART[c.color].label, value: c.share, color: MTG_COLOR_CHART[c.color].color }))
+              .map((c) => ({
+                label: MTG_COLOR_CHART[c.color].label,
+                value: c.share,
+                color: MTG_COLOR_CHART[c.color].color,
+                icon: manaSymbol(c.color),
+              }))
               .sort((a, b) => b.value - a.value);
 
       lastChartHtml = `

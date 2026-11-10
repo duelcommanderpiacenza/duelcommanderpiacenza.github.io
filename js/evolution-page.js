@@ -28,6 +28,7 @@ import { initFilterToggle } from "./filter-toggle.js";
 import { initWhereFilter } from "./where-filter.js";
 import { savedMetaFilters, rememberMetaFilters, prefetchMetaResults, metaResults } from "./meta-filters.js";
 import { locale } from "./locale.js";
+import { manaSymbol } from "./mana-icons.js";
 
 // The entries' commanders (names, colour identities) are needed: not slim.
 const RESULTS_OPTIONS = { commanders: true };
@@ -335,7 +336,7 @@ function sectionsHtml({ points, byMonth }, width) {
       const pts = points.map((p, i) => [xAt(p), 58 - s[i] * 54]);
       const d = avg(s.slice(half)) - avg(s.slice(0, half));
       const [arrow, tcolor] = trendArrow(d, 0.02);
-      return `<div class="evo-colour" style="--c:var(--colour-${c})"><div class="evo-colour-top"><span class="color-pip color-pip-${c}"></span><span class="evo-colour-name">${name}</span><span class="evo-colour-val">${pct(s.at(-1))}<span class="evo-colour-trend" style="color:${tcolor}">${arrow} ${pct(Math.abs(d))}</span></span></div><svg viewBox="0 0 ${VW} 62" preserveAspectRatio="none" aria-hidden="true"><path class="evo-colour-area" d="${smoothPath(pts)} L${VW},62 L0,62 Z"></path><path class="evo-colour-line" d="${smoothPath(pts)}" vector-effect="non-scaling-stroke"></path></svg></div>`;
+      return `<div class="evo-colour" style="--c:var(--colour-${c})"><div class="evo-colour-top">${manaSymbol(c)}<span class="evo-colour-name">${name}</span><span class="evo-colour-val">${pct(s.at(-1))}<span class="evo-colour-trend" style="color:${tcolor}">${arrow} ${pct(Math.abs(d))}</span></span></div><svg viewBox="0 0 ${VW} 62" preserveAspectRatio="none" aria-hidden="true"><path class="evo-colour-area" d="${smoothPath(pts)} L${VW},62 L0,62 Z"></path><path class="evo-colour-line" d="${smoothPath(pts)}" vector-effect="non-scaling-stroke"></path></svg></div>`;
     }).join("");
     return `<section class="pie-chart-wrap evo-card">
       ${head("Colori nel tempo")}

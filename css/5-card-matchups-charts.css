@@ -1992,13 +1992,14 @@ a.bubble:active {
   cursor: pointer;
 }
 
-/* No art (an archetype, a colour): its colour fills it, the % in the
+/* No art (an archetype, a colour): its colour fills it (a colour's: its
+   mana symbol's pale disc, --bubble-fill), the % in the
    middle — in dark mode too (the dark .bubble's faint fill above outranks
    the plain selector). */
 .bubble.is-solid,
 :root[data-theme="dark"] .bubble.is-solid {
   align-items: center;
-  background: var(--bubble-color, #9a9a94);
+  background: var(--bubble-fill, var(--bubble-color, #9a9a94));
 }
 
 .bubble.is-solid .bubble-label {
@@ -2038,8 +2039,7 @@ a.bubble:active {
 }
 
 /* Just the % (the name is on hover — the bubble's title — and in the
-   legend). A light bubble's dark % (white's, js `ink`) without the shadow
-   (--bubble-text-shadow: none). */
+   legend). */
 .bubble-label {
   position: relative;
   z-index: 1;
@@ -2050,7 +2050,7 @@ a.bubble:active {
   padding-bottom: 14cqw;
   line-height: 1.05;
   text-align: center;
-  text-shadow: var(--bubble-text-shadow, 0 1px 4px rgba(0, 0, 0, 0.6));
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
 }
 
 .bubble-label strong {
@@ -3479,6 +3479,12 @@ html:not(.app-header) .social-filters .social-chips {
   grid-template-columns: 136px 1fr 48px;
 }
 
+/* Room for a mana symbol's 1px ring (css/3 .bar-chart-icon .mana-symbol),
+   which the label's own clipping (for its "…") would cut. */
+.bar-chart-label:has(.bar-chart-icon) {
+  padding: 1px;
+}
+
 .bar-chart-icon {
   display: inline-grid;
   flex: none;
@@ -4031,7 +4037,7 @@ html.nav-mobile .evo-movers {
   padding: 12px 12px 0;
 }
 
-.evo-colour-top .color-pip {
+.evo-colour-top .mana-symbol {
   width: 22px;
   height: 22px;
 }

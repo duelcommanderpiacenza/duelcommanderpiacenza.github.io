@@ -1,6 +1,7 @@
 // Small shared render helpers used across the public pages and the admin app.
 import { archetypeIcon } from "./archetype-icons.js";
 import { locale } from "./locale.js";
+import { manaSymbol } from "./mana-icons.js";
 
 export function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (c) => ({
@@ -236,17 +237,14 @@ export function archetypeBadge(archetype, { link = true } = {}) {
 
 const COLOR_ORDER = ["W", "U", "B", "R", "G"];
 
+// A deck's colours as the real mana symbols (js/mana-icons.js), WUBRG order;
+// colorless's when it has none. Their name on hover.
 export function colorIdentityPips(colorIdentity) {
   const letters = String(colorIdentity ?? "").toUpperCase();
   const present = COLOR_ORDER.filter((c) => letters.includes(c));
-  if (present.length === 0) {
-    return '<span class="color-identity"><span class="color-pip" style="background:#ddd" title="Incolore"></span></span>';
-  }
-  return (
-    '<span class="color-identity">' +
-    present.map((c) => `<span class="color-pip color-pip-${c}" title="${c}"></span>`).join("") +
-    "</span>"
-  );
+  return `<span class="color-identity">${(present.length ? present : ["C"])
+    .map((c) => manaSymbol(c, { title: true }))
+    .join("")}</span>`;
 }
 
 // A league's progress as a ring (since 2026-10-30, user's choice — it was

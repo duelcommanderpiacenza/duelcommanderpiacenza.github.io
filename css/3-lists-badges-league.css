@@ -540,9 +540,86 @@ img.badge-disc-glyph {
   white-space: nowrap;
 }
 
-.color-identity-inline .color-pip {
+/* The real mana symbols (js/mana-icons.js, Scryfall's — everywhere a
+   colour is shown, since 2026-11-10): each symbol is the whole disc; a faint
+   ring round the small ones, as the plain pips had, so white's pale one
+   still shows on the light page. */
+.mana-symbol {
+  display: block;
+  flex: none;
+  border-radius: 50%;
+  pointer-events: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* A deck's colours (js/ui.js colorIdentityPips): the plain pips' sizes and
+   spacing (.color-identity's 4px gap) — 18px, 14px after a name. Their
+   name on hover (the title's on the image). */
+.color-identity .mana-symbol,
+.evo-colour-top .mana-symbol,
+.pie-legend-swatch.has-symbol .mana-symbol,
+.bar-chart-icon .mana-symbol {
+  width: 18px;
+  height: 18px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.22);
+}
+
+.color-identity-inline .mana-symbol {
   width: 14px;
   height: 14px;
+}
+
+.color-identity .mana-symbol[title] {
+  pointer-events: auto;
+}
+
+/* The colour pickers (Comandanti's filter, the admin's colour identity, the
+   player card's favourite colours): the symbol fills the disc, inside its
+   ring; a picked one shows by its ring and swell (.color-swatch /
+   .pc-mana's :has(input:checked)), no ✓ over the symbol. */
+.color-swatch .mana-symbol,
+.pc-mana .mana-symbol {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Comandanti's "Colori più giocati" bars and the colour bubbles' legend:
+   the symbol is the disc (the bars' icon disc otherwise takes the row's
+   colour, inline). */
+.bar-chart-icon:has(.mana-symbol) {
+  background: none !important;
+}
+
+.bar-chart-icon .mana-symbol,
+.pie-legend-swatch.has-symbol .mana-symbol {
+  width: 100%;
+  height: 100%;
+}
+
+.pie-legend-swatch.has-symbol {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: none;
+}
+
+/* A colour bubble (js/metagame-chart.js): its symbol over the %, the
+   bubble filled with the symbol's own pale disc colour — the symbol's disc
+   melting into it (no ring), just its glyph showing — so the % is dark
+   (white wouldn't show on it), with no shadow. */
+.bubble-label .mana-symbol {
+  width: max(16px, 34cqw);
+  height: max(16px, 34cqw);
+  margin-bottom: 3cqw;
+}
+
+.bubble-label:has(.mana-symbol) {
+  color: #1f1b18;
+  text-shadow: none;
 }
 
 /* Comandanti's list on touch screens (user, 2026-10-30): the colour
@@ -615,21 +692,6 @@ html.nav-mobile .players-row-badges:empty {
 html.nav-mobile .players-row-badges .icon-badge {
   margin-left: 0;
 }
-
-.color-pip {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  border: 1px solid rgba(0, 0, 0, 0.25);
-  display: inline-block;
-}
-
-.color-pip-W { background: #f8f6d8; }
-.color-pip-U { background: #0e68ab; }
-.color-pip-B { background: #3a3a3a; }
-.color-pip-R { background: #d3202a; }
-.color-pip-G { background: #00733e; }
-.color-pip-C { background: #ddd; }
 
 /* Buttons/links reused across new pages */
 
@@ -2813,24 +2875,6 @@ img.cs-option-icon {
   transform: scale(1.08);
 }
 
-.color-swatch:has(input:checked)::after {
-  content: "\2713";
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.05rem;
-  font-weight: 900;
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
-}
-
-.color-swatch-W { background: #f8f6d8; }
-.color-swatch-U { background: #0e68ab; }
-.color-swatch-B { background: #3a3a3a; }
-.color-swatch-R { background: #d3202a; }
-.color-swatch-G { background: #00733e; }
 
 /* Smaller variant so a 5-color filter row fits on the same line as the
    other filter fields instead of the full-size 38px picker used for
@@ -2843,14 +2887,6 @@ img.cs-option-icon {
   width: 26px;
   height: 26px;
   border-width: 1px;
-}
-
-.color-swatch-row-compact .color-swatch:has(input:checked)::after {
-  font-size: 0.75rem;
-}
-
-.color-swatch-colorless {
-  background: repeating-linear-gradient(45deg, #ddd 0, #ddd 5px, #eee 5px, #eee 10px);
 }
 
 #badges-admin-icon-preview img {

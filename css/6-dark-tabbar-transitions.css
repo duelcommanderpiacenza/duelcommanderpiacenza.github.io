@@ -278,14 +278,6 @@ html[data-theme="dark"]:not(.nav-mobile) .site-search-results {
   color: #ff8a80;
 }
 
-:root[data-theme="dark"] .color-pip {
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-:root[data-theme="dark"] .color-swatch-colorless {
-  background: repeating-linear-gradient(45deg, #2a2224 0, #2a2224 5px, #362c2e 5px, #362c2e 10px);
-}
-
 /* Theme toggle switch — sits in the footer bar. A plain icon button rather
    than a sliding track: it shows the icon for the theme a click would
    switch *to*, so its own look doesn't need to itself be theme-aware. */

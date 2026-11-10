@@ -2,6 +2,7 @@
 // Commanders and Archetypes pages and the Bacheca.
 import { escapeHtml, scryfallImages } from "./ui.js";
 import { computeColorShares } from "./stats.js";
+import { manaSymbol } from "./mana-icons.js";
 
 export const ARCHETYPES = ["aggro", "control", "combo", "tempo", "midrange"];
 
@@ -23,15 +24,15 @@ export const ARCHETYPE_COLORS = {
 // the color-identity pips (styles.css .color-pip-*), except white and
 // colorless: the pip's own near-white (#f8f6d8) would all but vanish against
 // a bar's light track or the card, so white gets a deeper cream, and
-// colorless a mid grey. `ink`: the % on a bubble that light, dark instead
-// of white.
+// colorless a mid grey. `fill`: the colour bubbles' own fill — the mana
+// symbol's pale disc (icons/mana/*.svg), the symbol over it.
 export const MTG_COLOR_CHART = {
-  W: { label: "Bianco", color: "#e3d58a", ink: "#4a3f12" },
-  U: { label: "Blu", color: "#0e68ab" },
-  B: { label: "Nero", color: "#3a3a3a" },
-  R: { label: "Rosso", color: "#d3202a" },
-  G: { label: "Verde", color: "#00733e" },
-  C: { label: "Incolore", color: "#a8a39d" },
+  W: { label: "Bianco", color: "#e3d58a", fill: "#f8f6d8" },
+  U: { label: "Blu", color: "#0e68ab", fill: "#c1d7e9" },
+  B: { label: "Nero", color: "#3a3a3a", fill: "#cac5c0" },
+  R: { label: "Rosso", color: "#d3202a", fill: "#e49977" },
+  G: { label: "Verde", color: "#00733e", fill: "#a3c095" },
+  C: { label: "Incolore", color: "#a8a39d", fill: "#cac5c0" },
 };
 
 // The colour bubbles' rows (renderBubbleChart) from a list of entries (each
@@ -45,17 +46,18 @@ export function colorBubbleRows(entries) {
   if (decks.length === 0) return [];
   return computeColorShares([{ entries: decks }])
     .filter((c) => c.color !== "C" || c.entries > 0)
-    .map((c) => ({ ...MTG_COLOR_CHART[c.color], share: c.share, disc: true }))
+    .map((c) => ({ ...MTG_COLOR_CHART[c.color], share: c.share, symbol: manaSymbol(c.color) }))
     .sort((a, b) => b.share - a.share);
 }
 
 // A legend row's colour swatch — a row with an `icon` (an archetype's): a
-// small disc in its colour with the icon in white; one with `disc` (a
-// colour's) the same disc, bare — so its rows are spaced like the
-// archetypes'; else the plain square.
+// small disc in its colour with the icon in white; one with a `symbol` (a
+// colour's mana symbol, js/mana-icons.js) the symbol itself, the same size;
+// else the plain square.
 function legendSwatch(r) {
-  return r.icon || r.disc
-    ? `<span class="pie-legend-swatch has-icon" style="background:${r.color};">${r.icon ?? ""}</span>`
+  if (r.symbol) return `<span class="pie-legend-swatch has-symbol">${r.symbol}</span>`;
+  return r.icon
+    ? `<span class="pie-legend-swatch has-icon" style="background:${r.color};">${r.icon}</span>`
     : `<span class="pie-legend-swatch" style="background:${r.color};"></span>`;
 }
 
@@ -121,10 +123,11 @@ export function renderPieChart(rows, emptyMessage, title, { subtitle = "", foote
  * the donut's own legend below. A row with `href` is a link (the commander page),
  * one with `card` gets that card's art (without: filled with its colour —
  * the archetypes); one with `icon` (an archetype's, js/archetype-icons.js)
- * shows it over its % and in its legend swatch; one with `ink` (a light
- * colour's — white's) has its % in that colour instead of white; one with
+ * shows it over its % and in its legend swatch, as one with `symbol` (a
+ * colour's mana symbol) does; one with `fill` is filled with it instead of
+ * its colour (which stays its ring and legend bar); one with
  * `bubble: false` ("Altri") is in the legend only.
- * @param {Array<{label: string, share: number, color: string, href?: string, card?: string, icon?: string, ink?: string, bubble?: boolean}>} rows
+ * @param {Array<{label: string, share: number, color: string, href?: string, card?: string, icon?: string, symbol?: string, fill?: string, bubble?: boolean}>} rows
  * @param {string} emptyMessage
  * @param {string} [title]
  * @param {{subtitle?: string, footer?: string}} [options] - as renderPieChart's.
@@ -189,9 +192,9 @@ export function renderBubbleChart(rows, emptyMessage, title, { subtitle = "", fo
     .map((p, i) => {
       const style = `left:${pct(((p.x - p.r - minX) / W) * 100)};top:${pct(((p.y - p.r - minY) / H) * 100)};width:${pct(
         ((2 * p.r) / W) * 100
-      )};--bubble-color:${p.color};${p.ink ? `color:${p.ink};--bubble-text-shadow:none;` : ""}--enter-delay:${i * 90}ms;${drift(i)}`;
+      )};--bubble-color:${p.color};${p.fill ? `--bubble-fill:${p.fill};` : ""}--enter-delay:${i * 90}ms;${drift(i)}`;
       const inner = `${p.card ? `<span class="bubble-art" data-card="${escapeHtml(p.card)}"></span>` : ""}
-        <span class="bubble-label">${p.icon ?? ""}<strong>${Math.round(p.share)}%</strong></span>`;
+        <span class="bubble-label">${p.icon ?? p.symbol ?? ""}<strong>${Math.round(p.share)}%</strong></span>`;
       const label = `${escapeHtml(p.label)}: ${p.share.toFixed(1)}%`;
       const key = `data-bubble="${escapeHtml(p.label)}"`;
       // No art (an archetype): filled with its colour instead.
