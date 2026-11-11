@@ -281,7 +281,7 @@
     "Nessun dato registrato per questo giocatore.": "No data recorded for this player.",
     "Olografica con scintille": "Holographic with sparkles",
     "Pochi dati: troppe poche partite per un winrate affidabile": "Little data: too few matches for a reliable winrate",
-    "Rating su tutti gli eventi dal vivo, non cambia con i filtri": "Rating over every live event, not changed by the filters",
+    "Elo su tutti gli eventi dal vivo, non cambia con i filtri": "Elo over every live event, not changed by the filters",
     "(min. 12 partite)": "(min. 12 matches)",
     "Mostra tabella predefinita": "Show the default table",
     "Crea tabella personalizzata": "Create a custom table",

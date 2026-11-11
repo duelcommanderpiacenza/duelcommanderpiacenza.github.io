@@ -254,7 +254,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     if (signal.aborted) return;
     const elo = progress?.elo ?? null;
     renderWinrateTiles(overallEl, bucket, {
-      extra: [...(elo === null ? [] : [["Rating", elo]]), ["Eventi", entries.length]],
+      extra: [...(elo === null ? [] : [["Elo", elo]]), ["Eventi", entries.length]],
     });
 
     // The second (last) round, together: the entries of the events played

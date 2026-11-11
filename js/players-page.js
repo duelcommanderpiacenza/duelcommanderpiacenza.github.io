@@ -26,10 +26,10 @@ function renderRow(r) {
         { label: "Eventi", value: r.eventsPlayed },
         { label: "Winrate", value: `${r.rate}${winrateTrendHtml(r.winRate, r.winRateBefore, r.inLatest)}`, main: true, trend: true },
         {
-          label: "Rating",
+          label: "Elo",
           value: r.elo === null ? "—" : `${r.elo}${eloTrendHtml(r.elo, r.eloBefore)}`,
           trend: true,
-          title: "Rating su tutti gli eventi dal vivo, non cambia con i filtri",
+          title: "Elo su tutti gli eventi dal vivo, non cambia con i filtri",
         },
       ])}
     </a>`;
