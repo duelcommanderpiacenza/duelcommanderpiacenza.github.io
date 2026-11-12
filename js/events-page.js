@@ -1,9 +1,10 @@
 // The "Leghe & Eventi" tab: two tabs (js/tabs.js), "In corso" and
 // "Archivio" (option D1, "Schede", of a mockup, 2026-10-30):
-//  - In corso: the league in progress as one white card — "Lega" (no
+//  - In corso: the league in progress as one white card, one link to its
+//    page — "Lega" (no
 //    status chip: the tab says it), its name, players / average / matches
 //    in small, a ring with events played out of those scheduled on their
-//    right, a link to its page — with its next event beside it (under it on phones: the date as a
+//    right — with its next event beside it (under it on phones: the date as a
 //    small calendar sheet, the name, the weekday and how soon, the time big);
 //    the Topdeck series in progress a step down, one plain row under it (its
 //    name, next event, events played, players). With no real league in
@@ -109,8 +110,9 @@ async function loadCounts(eventsRequest) {
 // before an online one's.
 const kindHtml = (league) => `${league.is_online ? ENDSTEP_MARK : ""}${leagueKindLabel(league)}`;
 
-// The league card: on the left (a link to the league) "Lega" — or "Serie
-// Topdeck" when the series holds the card; an online one's kind with
+// The league card, one link to the league as a whole (since 2026-11-12,
+// user — before, its left part and its next event were two links to the
+// same page): on the left "Lega" — or "Serie Topdeck" when the series holds the card; an online one's kind with
 // endstep's mark — the name, players / average /
 // matches in small, and on the right of them the ring: events played out
 // of those scheduled (the series, with no set number of events: "N eventi
@@ -119,8 +121,8 @@ const kindHtml = (league) => `${league.is_online ? ENDSTEP_MARK : ""}${leagueKin
 function mainCardHtml(league, { played, scheduled, players, avg, matches }, slot) {
   const total = Math.max(scheduled, played);
   return `
-    <div class="ev-tile ev-league${league.is_online ? " is-online" : ""}">
-      <a class="ev-league-main" href="league.html?id=${league.id}">
+    <a class="ev-tile ev-league${league.is_online ? " is-online" : ""}" href="league.html?id=${league.id}">
+      <div class="ev-league-main">
         <span class="ev-league-text">
           <span class="ev-tile-k">${kindHtml(league)}</span>
           <span class="ev-tile-t">${escapeHtml(league.name)}</span>
@@ -132,9 +134,9 @@ function mainCardHtml(league, { played, scheduled, players, avg, matches }, slot
           </span>
         </span>
         ${league.no_points ? "" : leagueRingHtml(played, total)}
-      </a>
+      </div>
       ${slot}
-    </div>`;
+    </a>`;
 }
 
 // The series under the league card, a step down: one plain row — "Serie
@@ -159,9 +161,9 @@ function minorRowHtml(league, { played, players }, next) {
 
 // The card's next event: its calendar sheet, then its label, name and a line
 // under it, and on the right `side` (the time).
-function slotHtml({ href, cal, name, sub = "", side = "" }) {
+function slotHtml({ cal, name, sub = "", side = "" }) {
   return `
-      <a class="ev-slot is-next" href="${href}">
+      <div class="ev-slot is-next">
         ${cal}
         <span class="ev-slot-main">
           <span class="ev-tile-k">Prossimo evento</span>
@@ -169,16 +171,15 @@ function slotHtml({ href, cal, name, sub = "", side = "" }) {
           ${sub ? `<span class="ev-slot-sub">${sub}</span>` : ""}
         </span>
         ${side ? `<span class="ev-slot-side">${side}</span>` : ""}
-      </a>`;
+      </div>`;
 }
 
 // The next event: its name (an unnamed one by its league's), the weekday and
 // how soon (js/countdown.js: down to the hours on the day, then "in corso"),
-// the start time big on the right. A link to its league (the event's own
-// page fills in once it's played).
+// the start time big on the right. Part of the card's link to its league
+// (the event's own page fills in once it's played).
 function nextSlot(ev, league) {
   return slotHtml({
-    href: `league.html?id=${league.id}`,
     cal: calendarHtml(ev.event_date),
     name: escapeHtml(ev.name || league.name || "Evento"),
     sub: `${weekday(ev.event_date)} · ${countdownHtml(ev)}`,
@@ -189,7 +190,6 @@ function nextSlot(ev, league) {
 // None scheduled yet: the same slot, "Prossimamente", a "?" for its date.
 function soonSlot(league) {
   return slotHtml({
-    href: `league.html?id=${league.id}`,
     cal: '<span class="ev-cal"><b>?</b></span>',
     name: "Prossimamente",
   });

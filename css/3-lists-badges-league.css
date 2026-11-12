@@ -2,15 +2,10 @@
    original order: the parts are loaded in this order (partials/head.html,
    admin/index.html) and must stay so — later rules win ties. */
 
-/* Dark mode: the league card like the other dark tiles; its hairline and
-   hovers light, the calendar sheets and the next event's red a shade
-   lighter. */
+/* Dark mode: the league card like the other dark tiles; its hairline
+   light, the calendar sheets and the next event's red a shade lighter. */
 :root[data-theme="dark"] .ev-slot {
   border-color: rgba(255, 255, 255, 0.1);
-}
-
-:root[data-theme="dark"] :is(a.ev-slot, .ev-league-main):hover {
-  background: rgba(255, 255, 255, 0.04);
 }
 
 :root[data-theme="dark"] .ev-chev {
@@ -87,10 +82,6 @@
 
 .ev-league.is-online .ev-slot {
   border-left-color: color-mix(in oklch, var(--endstep-gold) 30%, transparent);
-}
-
-.ev-league.is-online a.ev-slot:hover {
-  background: color-mix(in oklch, var(--endstep-gold) 7%, transparent);
 }
 
 .ev-league.is-online .ev-slot.is-next .ev-tile-k,
