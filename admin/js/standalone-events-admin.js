@@ -38,9 +38,6 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
   const timeField = document.getElementById("standalone-events-admin-time");
   const resultsUrlField = document.getElementById("standalone-events-admin-results-url");
   const decklistsUrlField = document.getElementById("standalone-events-admin-decklists-url");
-  // An online event (migration 036): its link on endstep too.
-  const endstepWrap = document.getElementById("standalone-events-admin-endstep-field");
-  const endstepUrlField = document.getElementById("standalone-events-admin-endstep-url");
   // Locale / Esterno / Online: one of the three (an event is never both
   // external and online — events_external_not_online), Locale by default.
   const kindRadios = Array.from(form.querySelectorAll('input[name="standalone-events-admin-kind"]'));
@@ -129,9 +126,8 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
     }
   }
 
-  // The Località and Sito fields only for an external event, Link endstep
-  // only for an online one; "Esterno" only for a new event or an external
-  // one (see the top of the file).
+  // The Località and Sito fields only for an external event; "Esterno" only
+  // for a new event or an external one (see the top of the file).
   function syncExternal(row = null) {
     const canChange = !row || Boolean(row.is_external);
     externalRadio.disabled = !canChange;
@@ -139,7 +135,6 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
     const external = kind() === "external";
     locationWrap.hidden = !external;
     venueWrap.hidden = !external;
-    endstepWrap.hidden = kind() !== "online";
   }
   kindRadios.forEach((r) =>
     r.addEventListener("change", () => syncExternal(events.find((e) => e.id === idField.value) ?? null))
@@ -156,7 +151,6 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
     timeField.value = formatTime(row.start_time) ?? "";
     resultsUrlField.value = row.results_url ?? "";
     decklistsUrlField.value = row.decklists_url ?? "";
-    endstepUrlField.value = row.endstep_url ?? "";
   }
 
   function resetForm() {
@@ -202,10 +196,8 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
     e.preventDefault();
     const resultsUrl = resultsUrlField.value.trim();
     const decklistsUrl = decklistsUrlField.value.trim();
-    const online = kind() === "online";
-    const endstepUrl = online ? endstepUrlField.value.trim() : "";
     // See events-admin.js's own submit handler for why this is checked here too.
-    if ([resultsUrl, decklistsUrl, endstepUrl].some((url) => url && !isHttpUrl(url))) {
+    if ((resultsUrl && !isHttpUrl(resultsUrl)) || (decklistsUrl && !isHttpUrl(decklistsUrl))) {
       setMessage(msgEl, "Il link deve iniziare con http:// o https://.", true);
       return;
     }
@@ -223,9 +215,6 @@ export function initStandaloneEventsAdmin({ onOpenEvent }) {
     // Sent only when it's (or was) external, so an ordinary event still saves
     // on a database without migration 026. External: open for good.
     const editing = events.find((e) => e.id === idField.value);
-    // The endstep link likewise only for an online event (or one that had
-    // it), so the others still save without migration 036.
-    if (online || editing?.endstep_url) payload.endstep_url = endstepUrl || null;
     if (external || editing?.is_external) {
       payload.is_external = external;
       payload.location = external ? locationField.value.trim() || null : null;

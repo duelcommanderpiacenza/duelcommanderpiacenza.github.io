@@ -84,7 +84,7 @@ document.addEventListener("keydown", openArchetype, true);
 // once, delegated, so a new one only needs to match TAB_SWITCH (user,
 // 2026-11-01: the Meta / Giocatori ones didn't, the others did). Captured,
 // before a tab's own handler marks it current.
-const TAB_SWITCH = '.profile-tab:not(.is-active), .cmp-seg button[aria-pressed="false"], .social-chip[aria-pressed="false"]';
+const TAB_SWITCH = '.profile-tab:not(.is-active), .cmp-seg button[aria-pressed="false"], .social-chip[aria-pressed="false"], .where-opt:not(.is-active)';
 document.addEventListener(
   "click",
   (e) => {

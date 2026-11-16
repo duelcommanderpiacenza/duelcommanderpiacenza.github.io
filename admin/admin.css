@@ -1592,38 +1592,10 @@ body.is-busy::before {
   font-style: italic;
 }
 
-/* An event's leaderboard under its matches; an online event's alone (no
-   matches: its rounds, form and list hidden — matches-admin.js), so no gap
-   above it, and a line saying how it's ordered. */
-.matches-leaderboard-block {
-  margin-top: 32px;
-}
-
-.matches-leaderboard-block.is-online {
-  margin-top: 0;
-}
-
-/* (…and the Iscritti form's "Giocatore non registrato" row, online events
-   only — entries-admin.js.) Their own display would outrank [hidden]. */
-#matches-round-tabs[hidden],
-#entries-admin-free-row[hidden],
-#matches-admin-layout[hidden],
-.matches-online-hint[hidden] {
-  display: none;
-}
-
-.matches-online-hint {
-  margin: 6px 0 12px;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-}
-
 /* League bonus points, edited inline in an event's leaderboard
    (matches-admin.js) — same look as a form field (.field input), sized down
-   to sit in a table row; an online event's place (.standings-pos-input) the
-   same way. */
-.standings-bonus-input,
-.standings-pos-input {
+   to sit in a table row. */
+.standings-bonus-input {
   width: 72px;
   font: inherit;
   padding: 6px 8px;
@@ -1633,19 +1605,16 @@ body.is-busy::before {
   color: var(--text-body);
 }
 
-.standings-bonus-input:focus,
-.standings-pos-input:focus {
+.standings-bonus-input:focus {
   outline: none;
   border-color: var(--hairline-hover-strong);
 }
 
-.standings-bonus-input:disabled,
-.standings-pos-input:disabled {
+.standings-bonus-input:disabled {
   opacity: 0.6;
 }
 
-:root[data-theme="dark"] .standings-bonus-input,
-:root[data-theme="dark"] .standings-pos-input {
+:root[data-theme="dark"] .standings-bonus-input {
   background: rgba(255, 255, 255, 0.06);
 }
 

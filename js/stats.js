@@ -4,7 +4,7 @@
 // Commanders and Archetypes pages, both of which let the viewer narrow the
 // scope to a league and/or a single event first.
 
-import { matchRoundOutcome, isBye, isDrop, entrantKey } from "./leaderboard.js";
+import { matchRoundOutcome, isBye, isDrop } from "./leaderboard.js";
 
 const MTG_COLORS = ["W", "U", "B", "R", "G"];
 
@@ -187,7 +187,7 @@ export function computeLeagueSummary(eventsData) {
   for (const { entries, matches } of eventsData) {
     totalEntries += entries.length;
     totalMatches += matches.length;
-    for (const e of entries) uniquePlayers.add(entrantKey(e));
+    for (const e of entries) uniquePlayers.add(e.player_id);
   }
 
   const events = eventsData.length;

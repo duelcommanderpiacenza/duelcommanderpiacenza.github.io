@@ -170,18 +170,6 @@ function setSwitch(view) {
   });
 }
 
-// The switch's second option: "Partite", or — an online event (endstep,
-// migration 034: no matches, only its leaderboard ordered by hand,
-// matches-admin.js) — "Classifica", with a trophy.
-const matchesOption = eventFlowSwitch.querySelector('[data-view="matches"]');
-const MATCHES_OPTION_HTML = matchesOption.innerHTML;
-const LEADERBOARD_OPTION_HTML =
-  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4"></path><path d="M7 4h10v5a5 5 0 0 1-10 0Z"></path><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"></path></svg><span>Classifica</span>';
-
-function labelMatchesOption(online) {
-  matchesOption.innerHTML = online ? LEADERBOARD_OPTION_HTML : MATCHES_OPTION_HTML;
-}
-
 // direction "left"/"right": the view slides in from that side (a switch);
 // null: no animation of its own (entering the flow animates it as a whole).
 function showEventView(view, direction) {
@@ -304,7 +292,6 @@ function showAdmin(session) {
       // Set while the flow is still hidden, so the switch's pill jumps
       // straight to Giocatori instead of sliding there from last time.
       setSwitch("entries");
-      labelMatchesOption(Boolean(event.is_online));
       if (!(await loadEventView("entries"))) return;
       swapScreen(() => {
         showEventView("entries", null);

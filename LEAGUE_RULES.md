@@ -2,7 +2,7 @@
 
 How a league's standings are computed, as implemented in `js/leaderboard.js`
 (`computeEventLeaderboard` → `computeLeaguePoints` → `compareLeagueStandings`).
-Series (`no_points`: Topdeck, Serie online) have no points leaderboard; an online league with points (`is_online`) is scored the same way — its events have no matches, so each one's places are the order the admin set by hand (`manual_rank`) and no one gets the undefeated bonus; a free-form player (a name with no player record, migration 037) is matched across the league's events by that name, case and outer spaces ignored; everything below applies to real
+Series (`no_points`: Topdeck, Serie online) have no points leaderboard; an online league with points (`is_online`) is scored the same way; everything below applies to real
 leagues only.
 
 The standings are always computed live from the database (league page,

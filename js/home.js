@@ -101,7 +101,7 @@ function timelineItemHtml(ev, state) {
   // Played: "Liste" (its Moxfield / mtgtop8 links in a menu) beside the
   // text, centred; upcoming: the time on the league's line under the name
   // (its baseline), at the card's bottom right.
-  const links = state === "played" ? nestedResultsMenu(ev.results_url, ev.decklists_url, ev.endstep_url) : "";
+  const links = state === "played" ? nestedResultsMenu(ev.results_url, ev.decklists_url) : "";
   const time = state !== "played" && ev.start_time ? formatTime(ev.start_time) : "";
   const lineTime = time ? `<span class="league-tl-side">${time}</span>` : "";
   const stub = links ? `<span class="league-tl-side">${links}</span>` : "";

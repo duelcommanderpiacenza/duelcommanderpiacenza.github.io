@@ -102,7 +102,7 @@ function timelineItemHtml({ ev, state, players }, number, today) {
   // name, so the name alone, centred, and the time at the card's bottom
   // right (.league-tl-time).
   const upcoming = state === "next" || state === "future";
-  const links = state === "played" ? nestedResultsMenu(ev.results_url, ev.decklists_url, ev.endstep_url) : "";
+  const links = state === "played" ? nestedResultsMenu(ev.results_url, ev.decklists_url) : "";
   const time = upcoming && ev?.start_time ? `<span class="league-tl-side league-tl-time">${formatTime(ev.start_time)}</span>` : "";
   const body = `
           <span class="league-tl-text">
@@ -327,7 +327,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
               .map((s, i) => {
                 const inner = `
                 <div class="history-lead">
-                  ${leaguePosHtml(i + 1, before, s.key)}
+                  ${leaguePosHtml(i + 1, before, s.player?.id)}
                   <div class="history-main">
                     <span class="history-title"><span class="history-name">${playerLabel(s.player, { link: false })}</span>${badgesFor(s.player)}</span>
                   </div>

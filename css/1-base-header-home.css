@@ -2860,19 +2860,6 @@ html.app-header .home-head-icon {
   height: 14px;
 }
 
-/* An online event's link to endstep.cc (migration 036): endstep's logo in
-   its own colours, gold on its near-black. */
-.is-endstep .results-menu-logo {
-  border-color: transparent;
-  background: var(--endstep-ink);
-  color: var(--endstep-gold);
-}
-
-.is-endstep .results-menu-logo svg {
-  width: 22px;
-  height: 22px;
-}
-
 /* Every event the same: one row as tall as its date's circle — the circle
    and the card side by side, level top and bottom; the name over the league
    on the left (each shrunk to fit its line — js/home.js fitTimelineNames,

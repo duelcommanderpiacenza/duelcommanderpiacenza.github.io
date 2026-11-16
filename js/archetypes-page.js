@@ -6,6 +6,7 @@ import { initChartCarousel } from "./chart-carousel.js";
 import { archetypeBadge, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
+import { initWhereFilter } from "./where-filter.js";
 import { savedMetaFilters, rememberMetaFilters, prefetchMetaResults, metaResults } from "./meta-filters.js";
 import { historyPanelHtml, historyStatsHtml, winrateTrendHtml, latestPresence } from "./history-list.js";
 import { archetypeIcon } from "./archetype-icons.js";
@@ -35,6 +36,9 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   const resultsPrefetch = prefetchMetaResults(savedFilters, dateFromInput.value, RESULTS_OPTIONS);
   rememberMetaFilters({ leagueSelect, eventSelect, dateFromInput });
   initFilterToggle("archetypes-filter-toggle", "archetypes-filter-panel");
+  // Dal vivo / Online / Tutto (js/where-filter.js): the scope filter offers
+  // and reports only the events played that way.
+  const where = initWhereFilter({ signal });
 
   let eventDateById = new Map();
   let lastScopeEventIds = [];
@@ -42,11 +46,13 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   let allLeagues = [];
   let allEvents = [];
   try {
-    const [events, leagues] = await Promise.all([Events.list(), Leagues.list()]);
+    const [events, leagues] = await Promise.all([Events.list({ withOnline: true }), Leagues.list({ withOnline: true })]);
     if (signal.aborted) return;
     allLeagues = leagues;
     allEvents = events;
     eventDateById = new Map(events.map((e) => [e.id, e.event_date]));
+    // The Dove bar only when there are both live and online events.
+    where.setEvents(events);
   } catch (err) {
     showError(chartEl, err);
     hidePageLoading(signal);
@@ -197,6 +203,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   initScopeFilter({
     leagueSelect,
     eventSelect,
+    where,
     initial: savedFilters,
     leagues: allLeagues,
     events: allEvents,

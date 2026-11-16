@@ -24,7 +24,7 @@
 // hero ("Recap") and league.html?id=…&recap=1. Styles: css/6 "Event recap".
 
 import { Events, Leagues, fetchEventsResults } from "./db.js";
-import { computeEventLeaderboard, computeLeaguePoints, entrantKey } from "./leaderboard.js";
+import { computeEventLeaderboard, computeLeaguePoints } from "./leaderboard.js";
 import { ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
 import { archetypeIcon } from "./archetype-icons.js";
 import { createArtPainter } from "./player-card.js";
@@ -166,9 +166,8 @@ export function loadRecapData(eventId) {
       ]);
       const { entries, matches } = results;
       const rows = computeEventLeaderboard(matches, entries);
-      // By entrantKey (a free-form player's name in an online event).
-      const posOf = new Map(rows.map((r, i) => [r.key, i + 1]));
-      const entryOf = new Map(entries.map((e) => [entrantKey(e), e]));
+      const posOf = new Map(rows.map((r, i) => [r.player?.id, i + 1]));
+      const entryOf = new Map(entries.map((e) => [e.player_id, e]));
       const realMatches = matches.filter((m) => m.player2_id && !m.is_drop);
       const realWins = new Map();
       for (const m of realMatches) {
@@ -176,7 +175,7 @@ export function loadRecapData(eventId) {
         const w = m.player1_wins > m.player2_wins ? m.player1_id : m.player2_id;
         realWins.set(w, (realWins.get(w) ?? 0) + 1);
       }
-      const bestOf = (list) => Math.min(...list.map((e) => posOf.get(entrantKey(e)) ?? 999));
+      const bestOf = (list) => Math.min(...list.map((e) => posOf.get(e.player_id) ?? 999));
       const [topCommander, topEntries] = mostPlayed(entries, posOf);
       const winner = rows[0] ?? null;
       return {
@@ -186,11 +185,8 @@ export function loadRecapData(eventId) {
         entryOf,
         rounds: Math.max(0, ...matches.map((m) => m.round)),
         matchCount: realMatches.length,
-        // An online event's first screen counts its decks instead of
-        // rounds / matches (it has none: places set by hand).
-        deckCount: new Set(entries.filter((e) => e.commander_id).map((e) => `${e.commander_id}_${e.partner_commander_id ?? ""}`)).size,
         winner,
-        winnerCommander: winner ? commanderOf(entryOf.get(winner.key)) : "—",
+        winnerCommander: winner ? commanderOf(entryOf.get(winner.player?.id)) : "—",
         unbeaten: rows.filter((r) => r.losses === 0 && (realWins.get(r.player?.id) ?? 0) > 0 && r.wins > r.draws),
         topCommander,
         topCount: topEntries.length,
@@ -230,7 +226,7 @@ function mostPlayed(entries, posOf = null) {
     const key = commanderOf(e);
     byCommander.set(key, [...(byCommander.get(key) ?? []), e]);
   }
-  const bestOf = (list) => (posOf ? Math.min(...list.map((e) => posOf.get(entrantKey(e)) ?? 999)) : 0);
+  const bestOf = (list) => (posOf ? Math.min(...list.map((e) => posOf.get(e.player_id) ?? 999)) : 0);
   return [...byCommander.entries()].sort((a, b) => b[1].length - a[1].length || bestOf(a[1]) - bestOf(b[1]))[0] ?? ["—", []];
 }
 
@@ -255,7 +251,7 @@ export function loadSeasonData(leagueId) {
       const standings = computeLeaguePoints(eventsData, { leagueClosed: !league.is_open, scheduledEvents: scheduled ?? played.length });
       const entries = eventsData.flatMap((d) => d.entries);
       const champion = standings[0] ?? null;
-      const [championCommander] = champion ? mostPlayed(entries.filter((e) => entrantKey(e) === champion.key)) : ["—"];
+      const [championCommander] = champion ? mostPlayed(entries.filter((e) => e.player_id === champion.player?.id)) : ["—"];
       const [topCommander, topEntries] = mostPlayed(entries);
       // A record and everyone sharing it (ties all named).
       const leaders = (valueOf) => {
@@ -278,7 +274,7 @@ export function loadSeasonData(leagueId) {
         fullAttendance: standings.filter((r) => r.fullAttendance),
         topCommander,
         topCount: topEntries.length,
-        topPilots: new Set(topEntries.map(entrantKey)).size,
+        topPilots: new Set(topEntries.map((e) => e.player_id)).size,
         archetypes: archetypeCounts(entries),
         // The end's next event: only a new season's — the soonest upcoming
         // event of another open real league (not a series), live or online
@@ -359,9 +355,8 @@ function endSlide(title, next, page) {
 }
 
 // A list of the best (an event's top 8, a Topdeck event's best, a league's
-// top 8 — `rows` already cut): position, name, a line under it, the points
-// (not for an online event's: `points` false).
-function topEightSlide(kicker, rows, lineOf, points = true) {
+// top 8 — `rows` already cut): position, name, a line under it, the points.
+function topEightSlide(kicker, rows, lineOf) {
   return `<section class="recap-slide"><div class="recap-bg is-dark"></div>
       <p class="recap-k" ${at(0)}>${kicker}</p>
       <ol class="recap-list">${rows
@@ -369,27 +364,20 @@ function topEightSlide(kicker, rows, lineOf, points = true) {
           (r, i) =>
             `<li ${at(i + 1)}><span class="recap-pos">${i + 1}</span><span class="recap-who"><b>${escapeHtml(r.player?.name)}</b><small>${escapeHtml(
               lineOf(r)
-            )}</small></span>${points ? `<span class="recap-pts">${r.points} pt</span>` : ""}</li>`
+            )}</small></span><span class="recap-pts">${r.points} pt</span></li>`
         )
         .join("")}</ol></section>`;
 }
 
-// An online event (endstep, migration 034): no matches, its places set by
-// hand — decks instead of rounds / matches, no record or points, no
-// Imbattuti screen; a Serie online's its top 8 too.
 function eventSlidesHtml(data, page) {
   const { ev, name, rows, entryOf, winner } = data;
-  const online = Boolean(ev.is_online);
   const league = ev.league?.name && ev.league.name !== name ? `${escapeHtml(ev.league.name)} · ` : "";
-  const tiles = online
-    ? `<div><b>${rows.length}</b><span>giocatori</span></div><div><b>${data.deckCount}</b><span>comandanti</span></div>`
-    : `<div><b>${rows.length}</b><span>giocatori</span></div><div><b>${data.rounds}</b><span>turni</span></div><div><b>${data.matchCount}</b><span>partite</span></div>`;
   const slides = [
     `<section class="recap-slide"><div class="recap-bg" data-art="${escapeHtml(data.winnerCommander)}"></div>
       <p class="recap-k" ${at(0)}>Il recap</p>
       <h2 class="recap-big" ${at(1)}>${escapeHtml(name)}</h2>
       <p class="recap-mid" ${at(2)}>${league}${escapeHtml(longDate(ev.event_date))}</p>
-      <div class="recap-tiles" ${at(3)}>${tiles}</div>
+      <div class="recap-tiles" ${at(3)}><div><b>${rows.length}</b><span>giocatori</span></div><div><b>${data.rounds}</b><span>turni</span></div><div><b>${data.matchCount}</b><span>partite</span></div></div>
       <p class="recap-tap" ${at(5)}>Tocca per continuare ›</p></section>`,
   ];
   if (winner) {
@@ -399,18 +387,17 @@ function eventSlidesHtml(data, page) {
       <h2 class="recap-big" ${at(1)}>${escapeHtml(winner.player?.name)}</h2>
       <p class="recap-mid" ${at(2)}>con ${escapeHtml(data.winnerCommander)}</p>
       <div class="recap-card-art" ${at(3)} data-art="${escapeHtml(data.winnerCommander)}"></div>
-      ${online ? "" : `<div class="recap-pills" ${at(4)}><span>${winner.wins}-${winner.losses}-${winner.draws} V-S-P</span><span>${winner.points} punti</span></div>`}</section>`);
+      <div class="recap-pills" ${at(4)}><span>${winner.wins}-${winner.losses}-${winner.draws} V-S-P</span><span>${winner.points} punti</span></div></section>`);
     // A league's (or standalone) event: its top 8; a Topdeck series': its
     // best, TOPDECK_MIN_POINTS or more (none: no screen).
-    const lineOf = (r) => commanderOf(entryOf.get(r.key));
-    if (online) slides.push(topEightSlide("La top 8", rows.slice(0, 8), lineOf, false));
-    else if (!ev.league?.no_points) slides.push(topEightSlide("La top 8", rows.slice(0, 8), lineOf));
+    const lineOf = (r) => commanderOf(entryOf.get(r.player?.id));
+    if (!ev.league?.no_points) slides.push(topEightSlide("La top 8", rows.slice(0, 8), lineOf));
     else {
       const best = rows.filter((r) => r.points >= TOPDECK_MIN_POINTS);
       if (best.length) slides.push(topEightSlide(`I migliori · ${TOPDECK_MIN_POINTS} punti o più`, best, lineOf));
     }
   }
-  if (!online) slides.push(`<section class="recap-slide"><div class="recap-bg is-red"></div>
+  slides.push(`<section class="recap-slide"><div class="recap-bg is-red"></div>
       <p class="recap-k" ${at(0)}>Imbattuti</p>
       <h2 class="recap-big" ${at(1)}>${
         data.unbeaten.length
