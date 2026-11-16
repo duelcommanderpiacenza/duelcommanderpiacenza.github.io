@@ -30,19 +30,15 @@
 // The pair is in the address (?a=&b=, kept up to date, so a comparison can
 // be shared); without one, no player is chosen: a line invites to pick two
 // (user: no default pair).
-// The section's Dove bar (js/where-filter.js — Dal vivo / Online / Tutto)
-// picks the events counted, the picker's lists too; online events' places
-// computed here (event_standings caches the live ones only).
 
 import { Players, Events, Leagues, EventStandings, fetchClosedResultsSince } from "./db.js";
-import { matchRoundOutcome, isBye, isDrop, computeEventLeaderboard } from "./leaderboard.js";
+import { matchRoundOutcome, isBye, isDrop } from "./leaderboard.js";
 import { ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
 import { archetypeIcon } from "./archetype-icons.js";
 import { escapeHtml, eventTitle, formatDate, scryfallImages, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { locale } from "./locale.js";
 import { BIG_EVENT_MIN_PLAYERS } from "./card-progress.js";
-import { initWhereFilter, inWhere } from "./where-filter.js";
 import { initFilterToggle } from "./filter-toggle.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { savedMetaFilters, rememberMetaFilters, PLAYERS_FILTERS_KEY } from "./meta-filters.js";
@@ -228,9 +224,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   }, { once: true });
 
 
-  // Dal vivo / Online / Tutto: the events counted.
-  const where = initWhereFilter({ signal });
-  // …and Lega / Evento / Dal, shared with Giocatori: as last set on either
+  // Lega / Evento / Dal, shared with Giocatori: as last set on either
   // tab, else the last DEFAULT_DATE_FROM_YEARS years. Set before anything
   // loads, so the funnel shows them from the start.
   const leagueSelect = $("compare-league-filter");
@@ -241,14 +235,14 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   rememberMetaFilters({ leagueSelect, eventSelect, dateFromInput }, PLAYERS_FILTERS_KEY);
   initFilterToggle("compare-filter-toggle", "compare-filter-panel");
 
-  // Everything in one round — online events too, whatever the choice.
+  // Everything in one round.
   let players, allEvents, allLeagues, results, standings;
   try {
     [players, allEvents, allLeagues, results, standings] = await Promise.all([
       Players.list(),
-      Events.list({ withOnline: true }),
-      Leagues.list({ withOnline: true }),
-      fetchClosedResultsSince(null, { commanders: true, withOnline: true }),
+      Events.list(),
+      Leagues.list(),
+      fetchClosedResultsSince(null, { commanders: true }),
       EventStandings.listAll(),
     ]);
     if (signal.aborted) return;
@@ -258,25 +252,12 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     return;
   }
 
-  // The Dove bar only when there are both live and online events.
-  where.setEvents(allEvents);
   const playersById = new Map(players.map((p) => [p.id, p]));
   const nameOf = (pid) => (pid ? playersById.get(pid)?.name ?? "?" : null);
   const posByEvent = new Map();
   for (const r of standings) {
     if (!posByEvent.has(r.event_id)) posByEvent.set(r.event_id, new Map());
     posByEvent.get(r.event_id).set(r.player_id, r.position);
-  }
-  // An event's places: the cache's, else (an online event) computed as
-  // event.html does — the slim rows given the player objects it keys on.
-  function placesOf(ev, entries, matches) {
-    if (posByEvent.has(ev.id) || !ev.is_online) return posByEvent.get(ev.id) ?? new Map();
-    const withPlayer = (id) => (id ? { id } : null);
-    const board = computeEventLeaderboard(
-      matches.map((m) => ({ ...m, player1: withPlayer(m.player1_id), player2: withPlayer(m.player2_id) })),
-      entries.map((en) => ({ ...en, player: withPlayer(en.player_id) }))
-    );
-    return new Map(board.filter((r) => r.player?.id).map((r, i) => [r.player.id, i + 1]));
   }
   // Closed events, oldest first, with their rows.
   const closedEvs = allEvents
@@ -285,13 +266,13 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     .map((ev) => {
       const entries = results.entriesByEvent.get(ev.id) ?? [];
       const matches = results.matchesByEvent.get(ev.id) ?? [];
-      return { ev, entries, matches, pos: placesOf(ev, entries, matches) };
+      return { ev, entries, matches, pos: posByEvent.get(ev.id) ?? new Map() };
     });
-  // The ones the Dove bar and the filters count (the league / event picked
+  // The ones the filters count (the league / event picked
   // — null until the scope filter reports, every one —, from "Dal" on),
   // and over them: how often each pair met (the picker's "most faced"),
   // each player's events (the picker's list: players with one). Again on a
-  // change of either.
+  // change of the filters.
   let scopeIds = null;
   let allEvs = [];
   const pairCounts = new Map();
@@ -299,7 +280,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   function scopeEvents() {
     const from = dateFromInput.value;
     allEvs = closedEvs.filter(
-      (e) => inWhere(where.value, e.ev) && (!scopeIds || scopeIds.has(e.ev.id)) && (!from || e.ev.event_date >= from)
+      (e) => (!scopeIds || scopeIds.has(e.ev.id)) && (!from || e.ev.event_date >= from)
     );
     pairCounts.clear();
     eventsByPlayer.clear();
@@ -870,10 +851,6 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   resize.observe(grid);
   signal.addEventListener("abort", () => resize.disconnect(), { once: true });
 
-  where.onChange(() => {
-    scopeEvents();
-    render();
-  });
   dateFromInput.addEventListener("change", () => {
     scopeEvents();
     render();
@@ -881,7 +858,6 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   initScopeFilter({
     leagueSelect,
     eventSelect,
-    where,
     initial: savedFilters,
     leagues: allLeagues,
     events: allEvents,

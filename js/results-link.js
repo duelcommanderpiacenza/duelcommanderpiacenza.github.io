@@ -1,10 +1,11 @@
 // An event's external links: its decklists on Moxfield
-// (events.decklists_url) and its top decks on mtgtop8 (events.results_url),
-// both optional, set in the admin — behind one "Liste" button (below), on
+// (events.decklists_url), its top decks on mtgtop8 (events.results_url) and,
+// an online event, its event on endstep.cc (events.endstep_url, migration
+// 036), all optional, set in the admin — behind one "Liste" button (below), on
 // the Bacheca's and league.html's rows, Leghe & Eventi's latest-event tiles
 // and event.html's title.
 
-import { escapeHtml, isHttpUrl } from "./ui.js";
+import { escapeHtml, isHttpUrl, endstepLogo } from "./ui.js";
 
 // width/height = the files' own size, so the browser knows each logo's
 // proportions before it loads (styles.css sets the displayed size).
@@ -17,7 +18,8 @@ const TOP8_LOGO = '<img src="top8.png" alt="" width="243" height="55">';
 // events and event.html's title: one same "Liste" button on each (a row's /
 // tile's inside its own link, so a <span role="button">), opening a small
 // menu of the
-// links the event has — its decklists on Moxfield, its top decks on mtgtop8.
+// links the event has — its event on endstep (first), its decklists on
+// Moxfield, its top decks on mtgtop8.
 // The menu is appended to <body> (real <a>s there, nothing nested; no
 // clipping ancestor) and positioned under the button, its right edge on
 // the button's (above it when there's no room below).
@@ -27,11 +29,12 @@ const TOP8_LOGO = '<img src="top8.png" alt="" width="243" height="55">';
 const DECKS_ICON =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="3" width="12" height="16" rx="2"></rect><path d="M8 6H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2"></path></svg>';
 
-export function nestedResultsMenu(resultsUrl, decklistsUrl) {
+export function nestedResultsMenu(resultsUrl, decklistsUrl, endstepUrl = null) {
   const moxfield = isHttpUrl(decklistsUrl) ? ` data-moxfield-url="${escapeHtml(decklistsUrl)}"` : "";
   const top8 = isHttpUrl(resultsUrl) ? ` data-top8-url="${escapeHtml(resultsUrl)}"` : "";
-  if (!moxfield && !top8) return "";
-  return `<span class="results-menu-btn" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false"${moxfield}${top8}>${DECKS_ICON}Liste</span>`;
+  const endstep = isHttpUrl(endstepUrl) ? ` data-endstep-url="${escapeHtml(endstepUrl)}"` : "";
+  if (!moxfield && !top8 && !endstep) return "";
+  return `<span class="results-menu-btn" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false"${endstep}${moxfield}${top8}>${DECKS_ICON}Liste</span>`;
 }
 
 let menuEl = null;
@@ -50,11 +53,12 @@ function menuItem(url, className, logo, label) {
 
 function openMenu(btn) {
   closeMenu();
-  const { moxfieldUrl, top8Url } = btn.dataset;
+  const { moxfieldUrl, top8Url, endstepUrl } = btn.dataset;
   const menu = document.createElement("div");
   menu.className = "results-menu";
   menu.setAttribute("role", "menu");
   menu.innerHTML = [
+    isHttpUrl(endstepUrl) ? menuItem(endstepUrl, "is-endstep", endstepLogo(), "endstep") : "",
     isHttpUrl(moxfieldUrl) ? menuItem(moxfieldUrl, "is-moxfield", MOXFIELD_LOGO, "Moxfield") : "",
     isHttpUrl(top8Url) ? menuItem(top8Url, "is-top8", TOP8_LOGO, "MTGTop8") : "",
   ].join("");

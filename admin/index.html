@@ -411,6 +411,11 @@
               <label for="events-admin-decklists-url">Link Moxfield</label>
               <input type="url" id="events-admin-decklists-url" placeholder="https://moxfield.com/..." pattern="https?://.+">
             </div>
+            <!-- Solo per un evento online (lega online): il link all'evento su endstep. -->
+            <div class="field" id="events-admin-endstep-field" hidden>
+              <label for="events-admin-endstep-url">Link endstep</label>
+              <input type="url" id="events-admin-endstep-url" placeholder="https://endstep.cc/..." pattern="https?://.+">
+            </div>
             <div class="form-actions">
               <button type="submit" class="btn-primary">Salva</button>
               <button type="button" class="btn-secondary" id="events-admin-cancel">Annulla</button>
@@ -466,6 +471,11 @@
           <div class="field">
             <label for="standalone-events-admin-decklists-url">Link Moxfield</label>
             <input type="url" id="standalone-events-admin-decklists-url" placeholder="https://moxfield.com/..." pattern="https?://.+">
+          </div>
+          <!-- Solo per un evento online: il link all'evento su endstep. -->
+          <div class="field" id="standalone-events-admin-endstep-field" hidden>
+            <label for="standalone-events-admin-endstep-url">Link endstep</label>
+            <input type="url" id="standalone-events-admin-endstep-url" placeholder="https://endstep.cc/..." pattern="https?://.+">
           </div>
           <div class="form-actions">
             <button type="submit" class="btn-primary">Salva</button>
@@ -592,9 +602,21 @@
           <h3>Nuovo / modifica iscritto</h3>
           <form id="entries-admin-form">
             <input type="hidden" id="entries-admin-id">
-            <div class="field">
+            <div class="field" id="entries-admin-player-field">
               <label for="entries-admin-player">Giocatore</label>
               <select id="entries-admin-player" data-searchable required></select>
+            </div>
+            <!-- Solo in un evento online: un giocatore senza scheda, solo il
+                 nome (event_entries.player_name, migrazione 037). -->
+            <div class="checkbox-field-row" id="entries-admin-free-row" hidden>
+              <label class="checkbox-inline">
+                <input type="checkbox" id="entries-admin-free">
+                Giocatore non registrato
+              </label>
+            </div>
+            <div class="field" id="entries-admin-free-name-field" hidden>
+              <label for="entries-admin-free-name">Nome <span class="field-hint">(solo per questo evento e la sua lega)</span></label>
+              <input type="text" id="entries-admin-free-name" placeholder="es. il nome su endstep" maxlength="80">
             </div>
             <div class="field">
               <label for="entries-admin-commander">Commander</label>
@@ -625,11 +647,13 @@
       </div>
     </div>
 
-    <!-- Partite, divise in tab per turno, di un evento -->
+    <!-- Partite, divise in tab per turno, di un evento. Un evento online
+         (endstep) non ha partite: qui solo la sua classifica, ordinata a
+         mano (js/matches-admin.js) — turni, form e lista nascosti. -->
     <div class="admin-subview" id="subview-matches-detail" hidden>
       <div class="round-tabs" id="matches-round-tabs"></div>
 
-      <div class="admin-panel-layout">
+      <div class="admin-panel-layout" id="matches-admin-layout">
         <div class="admin-form-card">
           <h3>Nuova / modifica partita</h3>
           <form id="matches-admin-form">
@@ -676,8 +700,9 @@
         <div id="matches-admin-list"><p class="page-empty">Nessuna partita ancora.</p></div>
       </div>
 
-      <div style="margin-top:32px;">
+      <div class="matches-leaderboard-block" id="matches-leaderboard-block">
         <h3 style="margin:0;">Classifica evento</h3>
+        <p class="matches-online-hint" id="matches-online-hint" hidden>Evento online: nessuna partita. Metti i giocatori in ordine di arrivo con le frecce o scrivendo la posizione.</p>
         <div id="matches-event-leaderboard"><div class="admin-sk" role="status" aria-label="Caricamento..."><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i></div></div>
       </div>
     </div>

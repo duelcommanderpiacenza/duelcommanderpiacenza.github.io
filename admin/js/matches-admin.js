@@ -15,6 +15,10 @@ import { on } from "./bus.js";
  * round) or a "drop" (player2_id null, is_drop true — the player left the
  * event and this round isn't scored at all) — picked via the two mutually
  * exclusive checkboxes below Giocatore 1.
+ * An online event (endstep, migration 034) has no matches: only its
+ * leaderboard is shown here, its order set by hand (manual_rank — every
+ * player tied on 0 points, so the ↑↓ reorder covers the whole list), with a
+ * place field per player to move one further in one go.
  */
 export function initMatchesAdmin() {
   const roundTabsEl = document.getElementById("matches-round-tabs");
@@ -33,6 +37,9 @@ export function initMatchesAdmin() {
   const msgEl = document.getElementById("matches-admin-message");
   const cancelBtn = document.getElementById("matches-admin-cancel");
   const eventLeaderboardEl = document.getElementById("matches-event-leaderboard");
+  const layoutEl = document.getElementById("matches-admin-layout");
+  const leaderboardBlock = document.getElementById("matches-leaderboard-block");
+  const onlineHint = document.getElementById("matches-online-hint");
 
   // A best-of-3 (see the check on save): each field's max follows the other
   // two — wins at most 2 and what's left of 3 games, draws what's left — so
@@ -52,6 +59,8 @@ export function initMatchesAdmin() {
   let allMatches = [];
   let currentEntrants = [];
   let editingRow = null; // the match object loaded into the form, or null when adding new
+
+  const isOnline = () => Boolean(currentEvent?.is_online);
 
   function scoreLabel(m) {
     return `${m.player1_wins}-${m.player2_wins}-${m.draws}`;
@@ -211,6 +220,8 @@ export function initMatchesAdmin() {
   // For a league event it's also where per-player league bonus points are
   // set (stored as the entry's bonus_points, added by computeLeaguePoints);
   // like the reorder arrows, only while the event is open.
+  // An online event: no Punti / V-S-P (no matches), a Posizione field
+  // instead — a place typed there moves the player to it.
   function renderEventLeaderboard() {
     const standings = computeEventLeaderboard(allMatches, currentEntrants);
     if (standings.length === 0) {
@@ -218,6 +229,7 @@ export function initMatchesAdmin() {
       return;
     }
     const showBonus = bonusApplies();
+    const online = isOnline();
     const locked = !currentEvent?.is_open;
     // One card per player (crud-ui.js): position chip + name as its title,
     // Punti / V-S-P (/ the Bonus lega field) beside it, the ↑↓ reorder
@@ -232,8 +244,19 @@ export function initMatchesAdmin() {
           label: "Giocatore",
           render: (s) => `<span class="rank-chip">${s.index + 1}</span> ${escapeHtml(s.player?.name ?? "")}`,
         },
-        { key: "points", label: "Punti", render: (s) => `<strong>${s.points}</strong>` },
-        { key: "record", label: "V-S-P", render: (s) => `${s.wins}-${s.losses}-${s.draws}` },
+        ...(online
+          ? [
+              {
+                key: "position",
+                label: "Posizione",
+                render: (s) =>
+                  `<input type="number" class="standings-pos-input" min="1" max="${standings.length}" step="1" value="${s.index + 1}" data-index="${s.index}" aria-label="Posizione di ${escapeHtml(s.player?.name ?? "")}" ${locked ? "disabled" : ""}>`,
+              },
+            ]
+          : [
+              { key: "points", label: "Punti", render: (s) => `<strong>${s.points}</strong>` },
+              { key: "record", label: "V-S-P", render: (s) => `${s.wins}-${s.losses}-${s.draws}` },
+            ]),
         ...(showBonus
           ? [
               {
@@ -263,9 +286,18 @@ export function initMatchesAdmin() {
     );
 
     eventLeaderboardEl.querySelectorAll("[data-move]").forEach((btn) => {
-      btn.addEventListener("click", () =>
-        runBusy(btn, () => moveStanding(standings, parseInt(btn.dataset.index, 10), btn.dataset.move === "up" ? -1 : 1))
-      );
+      btn.addEventListener("click", () => {
+        const index = parseInt(btn.dataset.index, 10);
+        runBusy(btn, () => moveStanding(standings, index, index + (btn.dataset.move === "up" ? -1 : 1)));
+      });
+    });
+    eventLeaderboardEl.querySelectorAll(".standings-pos-input").forEach((input) => {
+      input.addEventListener("change", () => {
+        const index = parseInt(input.dataset.index, 10);
+        const target = Math.min(Math.max((parseInt(input.value, 10) || index + 1) - 1, 0), standings.length - 1);
+        input.value = target + 1;
+        runBusy(input, () => moveStanding(standings, index, target));
+      });
     });
     eventLeaderboardEl.querySelectorAll(".standings-bonus-input").forEach((input) => {
       input.addEventListener("change", () => runBusy(input, () => saveBonus(input)));
@@ -290,21 +322,25 @@ export function initMatchesAdmin() {
     }
   }
 
-  async function moveStanding(standings, index, direction) {
-    const other = index + direction;
-    if (other < 0 || other >= standings.length) return;
-    if (standings[other].points !== standings[index].points) return;
+  // Moves standings[index] to place `target` (↑↓: the next one; an online
+  // event's Posizione field: any), only within its tied-points group.
+  async function moveStanding(standings, index, target) {
+    if (target === index || target < 0 || target >= standings.length) return;
+    const points = standings[index].points;
+    const low = Math.min(index, target);
+    const high = Math.max(index, target);
+    if (standings.slice(low, high + 1).some((s) => s.points !== points)) return;
 
     const reordered = standings.slice();
-    [reordered[index], reordered[other]] = [reordered[other], reordered[index]];
+    reordered.splice(target, 0, ...reordered.splice(index, 1));
 
     // Persist a full, contiguous manual order across the whole tied-points
-    // group this swap touches, so the result stays consistent with any
+    // group this move touches, so the result stays consistent with any
     // other entries in that same group (already ranked or not).
-    let start = Math.min(index, other);
-    while (start > 0 && reordered[start - 1].points === reordered[index].points) start -= 1;
-    let end = Math.max(index, other);
-    while (end < reordered.length - 1 && reordered[end + 1].points === reordered[index].points) end += 1;
+    let start = low;
+    while (start > 0 && reordered[start - 1].points === points) start -= 1;
+    let end = high;
+    while (end < reordered.length - 1 && reordered[end + 1].points === points) end += 1;
 
     try {
       await Promise.all(
@@ -359,7 +395,8 @@ export function initMatchesAdmin() {
   async function refresh() {
     if (!currentEvent) return;
     try {
-      allMatches = await Matches.listByEvent(currentEvent.id);
+      // An online event's matches aren't asked for (none are entered).
+      allMatches = isOnline() ? [] : await Matches.listByEvent(currentEvent.id);
       renderMatchList();
     } catch (err) {
       setMessage(msgEl, "Errore nel caricamento.", true);
@@ -516,6 +553,11 @@ export function initMatchesAdmin() {
   function openEvent(event) {
     currentEvent = event;
     currentRound = 1;
+    const online = isOnline();
+    roundTabsEl.hidden = online;
+    layoutEl.hidden = online;
+    onlineHint.hidden = !online;
+    leaderboardBlock.classList.toggle("is-online", online);
     renderRoundTabs();
     resetForm();
     return populateEntrants().then(refresh);

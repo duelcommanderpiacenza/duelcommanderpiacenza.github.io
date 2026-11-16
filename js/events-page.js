@@ -22,6 +22,7 @@
 // Only one of the two with anything in it: no tabs, just that one.
 
 import { Leagues, Events, EventEntries, Matches, EventCounts, LeaguePlayerCounts } from "./db.js";
+import { entrantKey } from "./leaderboard.js";
 import { capitalize, escapeHtml, formatTime, eventTitle, leagueKindLabel, leagueRingHtml, showError, ENDSTEP_MARK } from "./ui.js";
 import { initTabs } from "./tabs.js";
 import { hidePageLoading } from "./page-loading.js";
@@ -85,7 +86,7 @@ async function loadCounts(eventsRequest) {
   const playersByEvent = new Map();
   for (const e of entries) {
     if (!playersByEvent.has(e.event_id)) playersByEvent.set(e.event_id, new Set());
-    playersByEvent.get(e.event_id).add(e.player_id);
+    playersByEvent.get(e.event_id).add(entrantKey(e));
   }
   // Every match row, byes and drops included (the same count as
   // league.html's "Partite giocate").

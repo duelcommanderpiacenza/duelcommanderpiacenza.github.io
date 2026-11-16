@@ -22,6 +22,9 @@ export function initEventsAdmin({ onOpenEvent }) {
   const timeField = document.getElementById("events-admin-time");
   const resultsUrlField = document.getElementById("events-admin-results-url");
   const decklistsUrlField = document.getElementById("events-admin-decklists-url");
+  // An online league's events (migration 036): their link on endstep too.
+  const endstepWrap = document.getElementById("events-admin-endstep-field");
+  const endstepUrlField = document.getElementById("events-admin-endstep-url");
   const msgEl = document.getElementById("events-admin-message");
   const cancelBtn = document.getElementById("events-admin-cancel");
 
@@ -62,6 +65,7 @@ export function initEventsAdmin({ onOpenEvent }) {
     timeField.value = formatTime(row.start_time) ?? "";
     resultsUrlField.value = row.results_url ?? "";
     decklistsUrlField.value = row.decklists_url ?? "";
+    endstepUrlField.value = row.endstep_url ?? "";
   }
 
   function resetForm() {
@@ -108,9 +112,11 @@ export function initEventsAdmin({ onOpenEvent }) {
     if (!currentLeague) return;
     const resultsUrl = resultsUrlField.value.trim();
     const decklistsUrl = decklistsUrlField.value.trim();
+    const online = Boolean(currentLeague.is_online);
+    const endstepUrl = online ? endstepUrlField.value.trim() : "";
     // Same http(s)-only rule as the DB's own check constraints — caught here
     // first so the admin gets a clear message instead of a generic save error.
-    if ((resultsUrl && !isHttpUrl(resultsUrl)) || (decklistsUrl && !isHttpUrl(decklistsUrl))) {
+    if ([resultsUrl, decklistsUrl, endstepUrl].some((url) => url && !isHttpUrl(url))) {
       setMessage(msgEl, "Il link deve iniziare con http:// o https://.", true);
       return;
     }
@@ -122,6 +128,10 @@ export function initEventsAdmin({ onOpenEvent }) {
       decklists_url: decklistsUrl || null,
       league_id: currentLeague.id,
     };
+    // Sent only for an online league's event (or one that had a link), so
+    // the others still save on a database without migration 036.
+    const editing = events.find((ev) => ev.id === idField.value);
+    if (online || editing?.endstep_url) payload.endstep_url = endstepUrl || null;
     // Only a series' event (no_points: Topdeck, Serie online) can be left
     // unnamed — the public site then shows its date as the title instead.
     // Any other league still requires a name.
@@ -158,6 +168,7 @@ export function initEventsAdmin({ onOpenEvent }) {
 
   function openLeague(league) {
     currentLeague = league;
+    endstepWrap.hidden = !league.is_online;
     nameHintEl.textContent = league.no_points ? "(opzionale in una serie: se vuoto, verrà mostrata la data)" : "";
     resetForm();
     refresh();

@@ -1,5 +1,5 @@
 import { Events, EventEntries, Matches } from "./db.js";
-import { computeEventLeaderboard, matchRoundOutcome, isBye, isDrop } from "./leaderboard.js";
+import { computeEventLeaderboard, matchRoundOutcome, isBye, isDrop, entrantKey } from "./leaderboard.js";
 import {
   escapeHtml,
   formatDate,
@@ -137,7 +137,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     // A shared recap link (js/event-recap.js "Condividi il recap"):
     // event.html?id=…&recap=1 opens the event's recap straight away.
     if (!event.is_open && new URLSearchParams(location.search).get("recap") === "1") openEventRecap(id);
-    const resultsHtml = nestedResultsMenu(event.results_url, event.decklists_url);
+    const resultsHtml = nestedResultsMenu(event.results_url, event.decklists_url, event.endstep_url);
     resultsEl.innerHTML = resultsHtml;
     resultsEl.hidden = !resultsHtml;
     // The hero's buttons: "Recap" for a played event with entrants, "Liste"
@@ -186,8 +186,15 @@ export async function mount({ signal = new AbortController().signal } = {}) {
 
     renderMetaCharts(metaChartsEl, document.getElementById("event-meta-card"), entries);
 
+    // An online event (endstep, migration 034) has no matches: its
+    // leaderboard is the order set by hand in the admin (manual_rank) — no
+    // Partite tab, no Turni / Partite in the hero, nothing to wait for.
+    const online = Boolean(event.is_online);
+    const matchesTab = document.getElementById("event-tab-matches");
+    if (matchesTab) matchesTab.hidden = online;
+
     const decks = new Set(entries.filter((e) => e.commander_id).map((e) => `${e.commander_id}_${e.partner_commander_id ?? ""}`));
-    if (!matchesReady) {
+    if (!matchesReady && !online) {
       statsEl.innerHTML = statTilesLoadingHtml(["Giocatori", "Turni", "Partite", "Comandanti"]);
       const [playersTile, , , decksTile] = statsEl.querySelectorAll(".stat-tile-value");
       playersTile.textContent = entries.length;
@@ -197,23 +204,28 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       hidePageLoading(signal);
     }
 
-    const matches = await matchesRequest;
+    const matches = online ? [] : await matchesRequest;
     if (signal.aborted) return;
-    const entryOf = new Map(entries.map((e) => [e.player_id, e]));
-    matchesEl.innerHTML = renderMatchesByRound(matches, entryOf);
+    // By entrantKey: a player's id, or an online event's free-form player's
+    // name (no player record — migration 037); the standings' `key` too.
+    const entryOf = new Map(entries.map((e) => [entrantKey(e), e]));
+    if (!online) matchesEl.innerHTML = renderMatchesByRound(matches, entryOf);
     const standings = computeEventLeaderboard(matches, entries);
 
     // The hero: the numbers, and the winner's (first in the standings)
     // commander as the backdrop — else the most played one (none: the
     // hero's own reds).
-    const winner = standings[0]?.player ?? null;
-    const winnerEntry = winner ? entries.find((e) => e.player_id === winner.id) : null;
+    const winnerEntry = standings[0] ? entryOf.get(standings[0].key) : null;
     const realMatches = matches.filter((m) => !isBye(m) && !isDrop(m));
     const rounds = new Set(matches.map((m) => m.round ?? 1)).size;
     statsEl.innerHTML = [
       ["Giocatori", entries.length],
-      ["Turni", rounds],
-      ["Partite", realMatches.length],
+      ...(online
+        ? []
+        : [
+            ["Turni", rounds],
+            ["Partite", realMatches.length],
+          ]),
       ["Comandanti", decks.size],
     ]
       .map(([label, value]) => statTileHtml(label, value))
@@ -224,7 +236,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     createArtPainter(document.getElementById("event-hero-art"))(winnerEntry?.commander?.name ?? mostPlayed);
     // Classifica: one sub-card per player, linking to them — position chip
     // and name (the deck under it, as in Giocatori), then Punti / V-S-P /
-    // Winrate.
+    // Winrate (an online event: none — no matches, only the places).
     leaderboardEl.innerHTML =
       standings.length === 0
         ? '<p class="page-empty">Nessun dato per la classifica.</p>'
@@ -238,14 +250,18 @@ export async function mount({ signal = new AbortController().signal } = {}) {
                     ${historyPosHtml(i + 1)}
                     <div class="history-main">
                       ${playerTitleHtml(s.player)}
-                      ${deckLineHtml(entryOf.get(s.player?.id), NO_LINK)}
+                      ${deckLineHtml(entryOf.get(s.key), NO_LINK)}
                     </div>
                   </div>
-                  ${historyStatsHtml([
-                    { label: "Punti", value: s.points, main: true },
-                    { label: "V-S-P", value: `${s.wins}-${s.losses}-${s.draws}` },
-                    { label: "Winrate", value: s.winRate === null ? "—" : `${s.winRate.toFixed(1)}%` },
-                  ])}`
+                  ${
+                    online
+                      ? ""
+                      : historyStatsHtml([
+                          { label: "Punti", value: s.points, main: true },
+                          { label: "V-S-P", value: `${s.wins}-${s.losses}-${s.draws}` },
+                          { label: "Winrate", value: s.winRate === null ? "—" : `${s.winRate.toFixed(1)}%` },
+                        ])
+                  }`
                 )
               )
               .join(""),

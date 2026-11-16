@@ -1,13 +1,21 @@
 // One filter for the whole Meta section (Comandanti / Matchups /
 // Archetipi / Evoluzione): the Lega / Evento / Dal set on one page is
-// already applied on the others (the Dove bar, js/where-filter.js, is
-// shared too, and with Giocatori / Confronto). Kept for the browsing
+// already applied on the others. Kept for the browsing
 // session (sessionStorage "metaFilters" — closing the app goes back to the
 // default, the last DEFAULT_DATE_FROM_YEARS years). Comandanti's colour
 // filter stays its own. Giocatori / Confronto share theirs the same way,
 // under their own key (PLAYERS_FILTERS_KEY).
 
 import { fetchClosedResultsSince, fetchEventsResults } from "./db.js";
+
+// The Dove bar's choice (Dal vivo / Online / Tutto, removed 2026-11-16 —
+// online events aren't in these pages any more): its keys dropped.
+try {
+  localStorage.removeItem("where");
+  localStorage.removeItem("whereShown");
+} catch {
+  // Storage off: nothing kept anyway.
+}
 
 const KEY = "metaFilters";
 export const PLAYERS_FILTERS_KEY = "playersFilters";
@@ -62,13 +70,12 @@ export function rememberMetaFilters({ leagueSelect, eventSelect, dateFromInput }
 // Started at mount, before the first await. null when a league or event is
 // picked to start with (that scope is small: fetched as before).
 // `commanders`: the entries' commanders too (fetchEventsResults'), the rows
-// always slim — the same options as the page's metaResults calls. Online
-// events' too, whatever the Dove choice (js/where-filter.js): the scope's
-// event ids pick the rows, so switching it needs no request.
+// always slim — the same options as the page's metaResults calls. Live
+// events only, like the pages' lists (online ones aren't in the Meta pages).
 export function prefetchMetaResults(savedFilters, dateFrom, { commanders = false } = {}) {
   if (savedFilters?.league || savedFilters?.event) return null;
   const from = dateFrom || null;
-  const request = fetchClosedResultsSince(from, { commanders, withOnline: true });
+  const request = fetchClosedResultsSince(from, { commanders });
   // Marked as handled: a failure only means falling back (below).
   request.catch((err) => console.error(err));
   return { from, request };

@@ -25,7 +25,6 @@ import { archetypeIcon } from "./archetype-icons.js";
 import { escapeHtml, eventTitle, scryfallImages, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
-import { initWhereFilter } from "./where-filter.js";
 import { savedMetaFilters, rememberMetaFilters, prefetchMetaResults, metaResults } from "./meta-filters.js";
 import { locale } from "./locale.js";
 import { manaSymbol } from "./mana-icons.js";
@@ -406,22 +405,17 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   const resultsPrefetch = prefetchMetaResults(savedFilters, dateFromInput.value, RESULTS_OPTIONS);
   rememberMetaFilters({ leagueSelect, eventSelect, dateFromInput });
   initFilterToggle("evolution-filter-toggle", "evolution-filter-panel");
-  // Dal vivo / Online / Tutto (js/where-filter.js): the scope filter offers
-  // and reports only the events played that way.
-  const where = initWhereFilter({ signal });
 
   let allEvents = [];
   let allLeagues = [];
   try {
-    [allEvents, allLeagues] = await Promise.all([Events.list({ withOnline: true }), Leagues.list({ withOnline: true })]);
+    [allEvents, allLeagues] = await Promise.all([Events.list(), Leagues.list()]);
     if (signal.aborted) return;
   } catch (err) {
     showError(sectionsEl, err);
     hidePageLoading(signal);
     return;
   }
-  // The Dove bar only when there are both live and online events.
-  where.setEvents(allEvents);
   const eventById = new Map(allEvents.map((e) => [e.id, e]));
   const eventDateById = new Map(allEvents.map((e) => [e.id, e.event_date]));
   let scopeIds = [];
@@ -531,7 +525,6 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   initScopeFilter({
     leagueSelect,
     eventSelect,
-    where,
     initial: savedFilters,
     leagues: allLeagues,
     events: allEvents,

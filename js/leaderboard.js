@@ -146,6 +146,18 @@ function buildTiebreakers(matches) {
 }
 
 /**
+ * Who an entry is, as a key: its player's id, or — an online event's
+ * free-form player (event_entries.player_name, no player record, migration
+ * 037) — "name:" + the name, lowercased and trimmed, so the same name is the
+ * same entrant across an online league's events. Null with neither.
+ */
+export function entrantKey(entry) {
+  if (entry?.player_id) return entry.player_id;
+  const name = entry?.player_name?.trim().toLowerCase();
+  return name ? `name:${name}` : null;
+}
+
+/**
  * Event leaderboard: 3 pts win / 1 pt draw / 0 pt loss, ties broken by the
  * standard Magic tournament tiebreakers — opponents' match-win %, then own
  * game-win %, then opponents' game-win % — with an optional per-entry
@@ -166,15 +178,18 @@ function buildTiebreakers(matches) {
  * @param {Array} matches - rows from `matches` for one event.
  * @param {Array} entries - rows from `event_entries` for the same event (with player/commander joined).
  * @returns {Array} standings sorted by points desc, then tiebreakers, then name; each row also carries
- *   `isTop8` (its final position is within the top TOP_FINISH_CUTOFF).
+ *   `isTop8` (its final position is within the top TOP_FINISH_CUTOFF) and `key` (entrantKey: the
+ *   player's id, or a free-form player's "name:…" — whose `player` is { id: null, name }).
  */
 export function computeEventLeaderboard(matches, entries) {
   const byPlayer = new Map();
 
   for (const entry of entries) {
-    byPlayer.set(entry.player_id, {
+    const key = entrantKey(entry);
+    byPlayer.set(key, {
+      key,
       entryId: entry.id,
-      player: entry.player,
+      player: entry.player ?? (entry.player_name ? { id: null, name: entry.player_name.trim() } : null),
       commander: entry.commander,
       archetype: entry.archetype,
       manualRank: entry.manual_rank ?? null,
@@ -193,6 +208,7 @@ export function computeEventLeaderboard(matches, entries) {
   const ensure = (playerId, playerObj) => {
     if (!byPlayer.has(playerId)) {
       byPlayer.set(playerId, {
+        key: playerId,
         entryId: null,
         player: playerObj,
         commander: null,
@@ -336,7 +352,8 @@ export function computeLeaguePoints(eventsData, { leagueClosed = false, schedule
   eventsData.forEach(({ matches, entries }, eventIndex) => {
     const standings = computeEventLeaderboard(matches, entries);
     standings.forEach((row, index) => {
-      const id = row.player?.id;
+      // Keyed by entrantKey: a free-form player (an online league's) by name.
+      const id = row.key;
       if (!id) return;
 
       let score = pointsForPosition(index + 1);
@@ -344,7 +361,7 @@ export function computeLeaguePoints(eventsData, { leagueClosed = false, schedule
       score += row.bonusPoints;
 
       if (!byPlayer.has(id)) {
-        byPlayer.set(id, { player: row.player, eventScores: [], results: [], placements: [], wins: 0, draws: 0, losses: 0 });
+        byPlayer.set(id, { key: id, player: row.player, eventScores: [], results: [], placements: [], wins: 0, draws: 0, losses: 0 });
       }
       const agg = byPlayer.get(id);
       agg.eventScores.push(score);
@@ -359,7 +376,7 @@ export function computeLeaguePoints(eventsData, { leagueClosed = false, schedule
   // Tiebreakers over every match of this league's events only.
   const tiebreakers = buildTiebreakers(eventsData.flatMap(({ matches }) => matches));
 
-  const results = Array.from(byPlayer.values()).map(({ player, eventScores, results: eventResults, placements, wins, draws, losses }) => {
+  const results = Array.from(byPlayer.values()).map(({ key, player, eventScores, results: eventResults, placements, wins, draws, losses }) => {
     const bestScores = [...eventScores].sort((a, b) => b - a).slice(0, countedResults);
     const fullAttendance = totalEvents > 0 && eventScores.length === totalEvents;
     const attendanceBonus = leagueClosed && fullAttendance ? FULL_ATTENDANCE_BONUS : 0;
@@ -370,6 +387,7 @@ export function computeLeaguePoints(eventsData, { leagueClosed = false, schedule
     const played = wins + draws + losses;
     const winRate = played > 0 ? (wins / played) * 100 : null;
     return {
+      key,
       player,
       points,
       eventsPlayed: eventScores.length,
@@ -386,9 +404,9 @@ export function computeLeaguePoints(eventsData, { leagueClosed = false, schedule
       // missing index, an event this player didn't play) — the score
       // before the best-results cap (player.html's league recap).
       results: eventResults,
-      matchWinPct: tiebreakers.matchWinPct(player.id),
-      gameWinPct: tiebreakers.gameWinPct(player.id),
-      opponentsGameWinPct: tiebreakers.opponentsGameWinPct(player.id),
+      matchWinPct: tiebreakers.matchWinPct(key),
+      gameWinPct: tiebreakers.gameWinPct(key),
+      opponentsGameWinPct: tiebreakers.opponentsGameWinPct(key),
     };
   });
 
@@ -407,7 +425,7 @@ export function computeLeaguePoints(eventsData, { leagueClosed = false, schedule
  * @param {Array<{matches: Array, entries: Array}>} eventsData - as computeLeaguePoints's.
  * @param {Array<{event_date: string, start_time?: string}>} events - the events eventsData is for, same order.
  * @param {{scheduledEvents?: number}} [options] - as computeLeaguePoints's.
- * @returns {Map<string, number>|null} player id → position (1-based).
+ * @returns {Map<string, number>|null} entrantKey (a player's id, a free name's "name:…") → position (1-based).
  */
 export function previousLeaguePositions(eventsData, events, { scheduledEvents = 0 } = {}) {
   if (eventsData.length < 2) return null;
@@ -420,7 +438,7 @@ export function previousLeaguePositions(eventsData, events, { scheduledEvents = 
     eventsData.filter((_, i) => i !== latest),
     { scheduledEvents }
   );
-  return new Map(before.map((s, i) => [s.player?.id, i + 1]));
+  return new Map(before.map((s, i) => [s.key, i + 1]));
 }
 
 /**

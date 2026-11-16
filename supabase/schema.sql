@@ -185,12 +185,16 @@ create table events (
     -- league's (events_online_from_league below), a standalone one's set in the admin. Shown for now only on
     -- the Bacheca's timeline, Leghe & Eventi, its league's and its own page (js/db.js leaves it out of the
     -- rest). Added by migration 034.
+  endstep_url text, -- an online event's link to its event on endstep.cc (optional, set in the admin only for an
+    -- online one), in the event's "Liste" menu with the other two links. Same rules as results_url. Added by
+    -- migration 036.
   constraint events_unique_name_per_league unique (league_id, name), -- same name OK across leagues, not within one
   constraint events_external_standalone check (not is_external or league_id is null),
   constraint events_external_open check (not is_external or is_open),
   constraint events_external_not_online check (not (is_external and is_online)),
   constraint events_results_url_http check (results_url ~* '^https?://'),
-  constraint events_decklists_url_http check (decklists_url ~* '^https?://')
+  constraint events_decklists_url_http check (decklists_url ~* '^https?://'),
+  constraint events_endstep_url_http check (endstep_url ~* '^https?://')
 );
 
 -- Postgres treats every NULL as distinct for a plain unique constraint, so
@@ -206,7 +210,10 @@ create unique index events_unique_external on events (name, event_date, location
 create table event_entries ( -- a player's commander(s) + archetype for one event
   id uuid primary key default gen_random_uuid(),
   event_id uuid not null references events(id) on delete cascade,
-  player_id uuid not null references players(id) on delete restrict,
+  player_id uuid references players(id) on delete restrict, -- null only for a free-form player (player_name)
+  player_name text, -- an online event's free-form player: a name typed in the admin, no player record —
+    -- shown in that event and its online league only (matched by name). Exactly one of player_id /
+    -- player_name; only in an online event (event_entries_name_online_only below). Added by migration 037.
   commander_id uuid not null,
   partner_commander_id uuid, -- optional partner/background commander; entry reads as "Commander / Partner"
   archetype deck_archetype not null,
@@ -217,8 +224,15 @@ create table event_entries ( -- a player's commander(s) + archetype for one even
   constraint event_entries_commander_id_fkey foreign key (commander_id) references commanders(id) on delete restrict,
   constraint event_entries_partner_commander_id_fkey foreign key (partner_commander_id) references commanders(id) on delete restrict,
   constraint event_entries_partner_distinct check (partner_commander_id is null or partner_commander_id <> commander_id),
-  constraint event_entries_one_per_player unique (event_id, player_id)
+  constraint event_entries_one_per_player unique (event_id, player_id),
+  constraint event_entries_player_or_name check (
+    (player_id is null) <> (player_name is null) and (player_name is null or btrim(player_name) <> '')
+  )
 );
+
+-- One entry per free name per event (case and outer spaces ignored). Migration 037.
+create unique index event_entries_one_per_name
+  on event_entries (event_id, lower(btrim(player_name))) where player_name is not null;
 
 create table player_badges_auto ( -- precomputed badges.auto_rule assignments — see admin/js/badges-sync.js.
     -- Recomputed and fully replaced (delete-all then reinsert) whenever an
@@ -332,6 +346,38 @@ create trigger leagues_online_to_events
   after update of is_online on leagues
   for each row when (old.is_online is distinct from new.is_online)
   execute function leagues_online_to_events();
+
+-- A free-form player (event_entries.player_name) only in an online event,
+-- and an event with one can't stop being online (a league's change
+-- included: passed on above, it fails as a whole). Migration 037.
+create or replace function event_entries_name_online_only() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if new.player_name is not null and not coalesce((select is_online from events where id = new.event_id), false) then
+    raise exception 'A free-form player (player_name) is only allowed in an online event';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger event_entries_name_online_only
+  before insert or update of player_name, event_id on event_entries
+  for each row execute function event_entries_name_online_only();
+
+create or replace function events_keep_online_with_names() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if not new.is_online and exists (select 1 from event_entries where event_id = new.id and player_name is not null) then
+    raise exception 'This event has free-form players: it must stay online';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger events_keep_online_with_names
+  before update of is_online on events
+  for each row when (old.is_online and not new.is_online)
+  execute function events_keep_online_with_names();
 
 -- Every event's first close makes a "Novità" of its own (js/header-news.js):
 -- "Risultati online: <event>", linked to it (announcements.event_id, shown
@@ -1038,7 +1084,8 @@ from events e;
 create view league_player_counts with (security_invoker = true) as
 select
   e.league_id,
-  count(distinct ee.player_id)::int as players
+  count(distinct coalesce(ee.player_id::text, 'name:' || lower(btrim(ee.player_name))))::int as players
+  -- (a free-form player once per name, migration 037)
 from event_entries ee
 join events e on e.id = ee.event_id
 where e.league_id is not null or not e.is_online

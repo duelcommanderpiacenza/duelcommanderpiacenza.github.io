@@ -432,6 +432,17 @@ export const Events = {
 // live events (see Leagues above), unless `withOnline`.
 const liveOnly = (query, withOnline) => (withOnline ? query : query.eq("event.is_online", false));
 
+// An online event's free-form player (event_entries.player_name, no player
+// record — migration 037) given a stand-in `player`, { id: null, name }, so
+// every list shows the name like a player's, unlinked (no id: no page).
+// Keyed elsewhere by js/leaderboard.js's entrantKey.
+function withEntrantPlayers(rows) {
+  for (const row of rows) {
+    if (!row.player && row.player_name) row.player = { id: null, name: row.player_name.trim(), handle: null };
+  }
+  return rows;
+}
+
 export const EventEntries = {
   // Every entry of the whole history (matchups page, auto-badge rules) —
   // paged past the 1000-row cap, which a year of weekly events outgrows.
@@ -462,7 +473,8 @@ export const EventEntries = {
       .from("event_entries")
       .select(`*, player:players(id,name,handle), ${COMMANDER_EMBED}`)
       .eq("event_id", eventId)
-      .then(assertOk),
+      .then(assertOk)
+      .then(withEntrantPlayers),
   // (Online events' left out — see Leagues above — unless `withOnline`: the
   // admin's check before deleting a player.)
   listByPlayer: (playerId, { withOnline = false } = {}) =>
@@ -496,8 +508,9 @@ export const EventEntries = {
   // Who played which event, nothing else — every entry the visitor can see
   // (closed events), paged past the row cap: the Leghe & Eventi page counts
   // players per event / league from it (js/events-page.js).
-  listPlayersByEvent: () =>
-    selectAllRows(() => sb.from("event_entries").select("event_id, player_id").order("id")),
+  // (player_name: a free-form player, counted by name — js/leaderboard.js
+  // entrantKey; "*" so a database without migration 037 still answers.)
+  listPlayersByEvent: () => selectAllRows(() => sb.from("event_entries").select("*").order("id")),
   // Same as listByEvents, but paged past the row cap and deterministically
   // ordered — for fetchEventsResults below, which may span a whole league.
   // `columns`: its lighter selection, when given (fetchEventsResults' slim).
@@ -618,9 +631,7 @@ const EVENT_IDS_PER_REQUEST = 100;
 // leaderboard.js's isBye / isDrop / matchRoundOutcome and stats.js's
 // computeGroupedStats. `commanders` adds the entries' commander embeds
 // (name, colours) back — Comandanti's colours chart, Matchups' names.
-// manual_rank: Confronto's places in an online event (computeEventLeaderboard
-// — the event_standings cache has the live ones only).
-const SLIM_ENTRY_COLUMNS = "id, event_id, player_id, commander_id, partner_commander_id, archetype, manual_rank";
+const SLIM_ENTRY_COLUMNS = "id, event_id, player_id, commander_id, partner_commander_id, archetype";
 const SLIM_MATCH_COLUMNS = "id, event_id, round, player1_id, player2_id, player1_wins, draws, player2_wins, is_drop";
 
 /**
@@ -647,7 +658,7 @@ export async function fetchEventsResults(eventIds, { slim = false, commanders = 
     Promise.all(chunks.map((ids) => EventEntries.listByEventsForStandings(ids, slim ? entryColumns : undefined))),
     Promise.all(chunks.map((ids) => Matches.listByEventsForStandings(ids, slim ? SLIM_MATCH_COLUMNS : undefined))),
   ]);
-  const entriesByEvent = groupByEvent(entryChunks.flat());
+  const entriesByEvent = groupByEvent(withEntrantPlayers(entryChunks.flat()));
   const matchesByEvent = groupByEvent(matchChunks.flat());
   return eventIds.map((id) => ({ entries: entriesByEvent.get(id) ?? [], matches: matchesByEvent.get(id) ?? [] }));
 }
