@@ -1884,47 +1884,38 @@ html.nav-mobile .where-opt {
   padding: 8px 6px;
 }
 
-/* player.html's Dove bar (js/player-detail.js — user, 2026-11-16): in the
-   hero, between the name and the numbers it scopes — on a computer at the
-   left; up to 820px centred, where event.html / league.html have their
-   buttons. Never moving on a change (the numbers held at their tallest —
-   holdNumbersHeight). The same
-   pill as the Meta pages', lifted off the art by a shadow; never the
-   touch screens' full-width bar. */
-.player-hero .profile-hero-stats:has(> .where-filter:not([hidden])) {
+/* player.html's Dove bar (js/player-detail.js — user, 2026-11-16): on
+   touch screens at the top of the sheet under the hero (.hero-sheet),
+   above the league recap, the sheet's width like the Meta pages' (the rule
+   above, its top margin given back); elsewhere moved into the hero by the
+   script, between the name and the numbers, at the left (a narrow window:
+   centred), lifted off the art by a shadow. The hero never changes height
+   on a change (holdNumbersHeight), so nothing moves. */
+main[data-page="player"] .hero-sheet > .where-filter:not([hidden]) {
+  margin: 0 0 18px;
+}
+
+/* Touch screens: closer to the sheet's top edge (into its 22px padding —
+   user, 2026-11-16). */
+html.nav-mobile main[data-page="player"] .hero-sheet > .where-filter:not([hidden]) {
+  margin: -10px 0 16px;
+}
+
+html:not(.nav-mobile) #player-hero .profile-hero-stats:has(> .where-filter:not([hidden])) {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 14px;
 }
 
-.player-hero .profile-hero-stats > .where-filter {
+html:not(.nav-mobile) #player-hero .profile-hero-stats > .where-filter {
   order: -1;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
-html.nav-mobile .player-hero .where-filter:not([hidden]) {
-  display: inline-flex;
-  margin: 0;
-}
-
-html.nav-mobile .player-hero .where-opt {
-  flex: none;
-  padding: 7px 12px;
-}
-
 @media (max-width: 820px) {
-  .player-hero .profile-hero-stats:has(> .where-filter:not([hidden])) {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 16px;
-  }
-
-  .player-hero .profile-hero-stats > .where-filter,
-  html.nav-mobile .player-hero .profile-hero-stats > .where-filter:not([hidden]) {
-    order: -1;
+  html:not(.nav-mobile) #player-hero .profile-hero-stats > .where-filter {
     align-self: center;
-    margin: 0;
   }
 }
 

@@ -80,6 +80,13 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   // has no bar and their online events counted. The badges, the card and
   // the Elo stay live only; the league recap (the live league) is hidden
   // under "Online".
+  // Its place: on touch screens at the top of the sheet under the hero (as
+  // in the page); elsewhere moved into the hero, between the name and the
+  // numbers (user, 2026-11-16).
+  const whereBar = document.querySelector("main .where-filter");
+  if (whereBar && !document.documentElement.classList.contains("nav-mobile")) {
+    document.querySelector("#player-hero .profile-hero-stats")?.prepend(whereBar);
+  }
   const where = initWhereFilter({ signal, remember: false });
   const recapEl = document.getElementById("player-league-recap");
 
@@ -281,10 +288,11 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     }
 
     // With the bar: the numbers as tall as the tallest of the three scopes'
-    // (they wrap differently — "0-2-0" is narrower than "24-12-4"), so
-    // nothing in the hero moves on a change (user).
+    // (they wrap differently — "0-2-0" is narrower than "24-12-4"), so the
+    // hero keeps its height on a change and the bar under it never moves
+    // (user).
     // Measured again when the hero's width changes.
-    const barShown = !document.querySelector("#player-hero .where-filter")?.hidden;
+    const barShown = !document.querySelector("main .where-filter")?.hidden;
     function holdNumbersHeight() {
       if (!barShown) return;
       overallEl.style.minHeight = "";
