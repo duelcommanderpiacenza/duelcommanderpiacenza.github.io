@@ -135,8 +135,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     if (signal.aborted) return;
 
     titleEl.textContent = eventTitle(event);
-    // An online event's players by their endstep username, never a link
-    // (js/ui.js onlinePlayer — user, 2026-11-16).
+    // An online event's players by their endstep username (js/ui.js
+    // onlinePlayer — user, 2026-11-16).
     const shown = event.is_online ? onlinePlayer : (p) => p;
     document.title = `${eventTitle(event)} - Duel Commander Piacenza`;
     // A shared recap link (js/event-recap.js "Condividi il recap"):

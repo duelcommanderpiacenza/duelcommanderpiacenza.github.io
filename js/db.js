@@ -567,21 +567,6 @@ export const EventCounts = {
   list: () => selectAllRows(() => sb.from("event_counts").select("event_id, players, matches").order("event_id")),
 };
 
-// Players who have played online events only (migration 040's
-// player_event_kinds — visitors: closed events): never a link (their player
-// page, live events only, would be empty) and not in the site search (user,
-// 2026-11-16). A Set of ids; empty on any failure (e.g. before 040).
-export const PlayerEventKinds = {
-  onlineOnly: () =>
-    sb
-      .from("player_event_kinds")
-      .select("player_id")
-      .eq("live", false)
-      .then(assertOk)
-      .then((rows) => new Set(rows.map((r) => r.player_id)))
-      .catch((err) => (console.error(err), new Set())),
-};
-
 export const LeaguePlayerCounts = {
   list: () => sb.from("league_player_counts").select("league_id, players").then(assertOk),
 };
@@ -594,7 +579,7 @@ export const Matches = {
       sb
         .from("matches")
         .select(
-          "*, player1:players!matches_player1_id_fkey(id,name,handle), player2:players!matches_player2_id_fkey(id,name,handle)"
+          "*, player1:players!matches_player1_id_fkey(id,name,handle,endstep), player2:players!matches_player2_id_fkey(id,name,handle,endstep)"
         )
         .order("id")
     ),
@@ -602,7 +587,7 @@ export const Matches = {
     sb
       .from("matches")
       .select(
-        "*, player1:players!matches_player1_id_fkey(id,name,handle), player2:players!matches_player2_id_fkey(id,name,handle)"
+        "*, player1:players!matches_player1_id_fkey(id,name,handle,endstep), player2:players!matches_player2_id_fkey(id,name,handle,endstep)"
       )
       .eq("event_id", eventId)
       .order("round")
@@ -618,7 +603,7 @@ export const Matches = {
   // `columns`: its lighter selection, when given (fetchEventsResults' slim).
   listByEventsForStandings: (
     eventIds,
-    columns = "*, player1:players!matches_player1_id_fkey(id,name,handle), player2:players!matches_player2_id_fkey(id,name,handle)"
+    columns = "*, player1:players!matches_player1_id_fkey(id,name,handle,endstep), player2:players!matches_player2_id_fkey(id,name,handle,endstep)"
   ) =>
     selectAllRows(() =>
       sb
@@ -636,29 +621,31 @@ export const Matches = {
     sb
       .from("matches")
       .select(
-        "*, event:events(id,name,event_date,league_id,league:leagues(id,name)), player1:players!matches_player1_id_fkey(id,name,handle), player2:players!matches_player2_id_fkey(id,name,handle)"
+        "*, event:events(id,name,event_date,league_id,league:leagues(id,name)), player1:players!matches_player1_id_fkey(id,name,handle,endstep), player2:players!matches_player2_id_fkey(id,name,handle,endstep)"
       )
       .in("event_id", eventIds)
       .then(assertOk),
-  // (Online events' left out, as EventEntries.listByPlayer.)
-  listByPlayer: async (playerId) => {
+  // (Online events' left out, as EventEntries.listByPlayer, unless
+  // `withOnline`: the player page, with its Dove bar.)
+  listByPlayer: async (playerId, { withOnline = false } = {}) => {
+    const live = (query) => (withOnline ? query : query.eq("event.is_online", false));
     const [asP1, asP2] = await Promise.all([
-      sb
-        .from("matches")
-        .select(
-          "*, event:events!inner(id,name,event_date,league_id,is_online,league:leagues(id,name)), player2:players!matches_player2_id_fkey(id,name,handle)"
-        )
-        .eq("player1_id", playerId)
-        .eq("event.is_online", false)
-        .then(assertOk),
-      sb
-        .from("matches")
-        .select(
-          "*, event:events!inner(id,name,event_date,league_id,is_online,league:leagues(id,name)), player1:players!matches_player1_id_fkey(id,name,handle)"
-        )
-        .eq("player2_id", playerId)
-        .eq("event.is_online", false)
-        .then(assertOk),
+      live(
+        sb
+          .from("matches")
+          .select(
+            "*, event:events!inner(id,name,event_date,league_id,is_online,league:leagues(id,name)), player2:players!matches_player2_id_fkey(id,name,handle,endstep)"
+          )
+          .eq("player1_id", playerId)
+      ).then(assertOk),
+      live(
+        sb
+          .from("matches")
+          .select(
+            "*, event:events!inner(id,name,event_date,league_id,is_online,league:leagues(id,name)), player1:players!matches_player1_id_fkey(id,name,handle,endstep)"
+          )
+          .eq("player2_id", playerId)
+      ).then(assertOk),
     ]);
     return { asP1, asP2 };
   },

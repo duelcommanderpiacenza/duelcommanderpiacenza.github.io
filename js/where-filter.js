@@ -44,11 +44,13 @@ export function inWhere(where, ev) {
 // new scope. `value` is the choice in force ("all" while the bar is
 // hidden); setEvents(events) — the page's events, once loaded, before its
 // scope filter starts — shows or hides the bar.
-export function initWhereFilter({ signal } = {}) {
+// `remember: false` (player.html — user, 2026-11-16): the page's own choice,
+// Dal vivo to start with, neither read from nor saved to the shared one.
+export function initWhereFilter({ signal, remember = true } = {}) {
   const root = document.querySelector("main .where-filter");
-  const saved = read(KEY);
+  const saved = remember ? read(KEY) : null;
   let picked = VALUES.includes(saved) ? saved : "live";
-  let shown = read(SHOWN_KEY) === "1";
+  let shown = remember && read(SHOWN_KEY) === "1";
   const listeners = [];
 
   function paint() {
@@ -67,7 +69,7 @@ export function initWhereFilter({ signal } = {}) {
       const next = e.target.closest("[data-where]")?.dataset.where;
       if (!next || next === picked) return;
       picked = next;
-      write(KEY, picked === "live" ? null : picked);
+      if (remember) write(KEY, picked === "live" ? null : picked);
       paint();
       for (const fn of listeners) fn(picked);
     },
@@ -84,7 +86,7 @@ export function initWhereFilter({ signal } = {}) {
     setEvents(events) {
       const closed = events.filter((ev) => !ev.is_open);
       shown = closed.some((ev) => ev.is_online) && closed.some((ev) => !ev.is_online);
-      write(SHOWN_KEY, shown ? "1" : null);
+      if (remember) write(SHOWN_KEY, shown ? "1" : null);
       paint();
     },
   };

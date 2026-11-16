@@ -1,4 +1,4 @@
-import { Players, Events, Leagues, PlayerProgress, PlayerEventKinds, fetchEventsResults } from "./db.js";
+import { Players, Events, Leagues, PlayerProgress, fetchEventsResults } from "./db.js";
 import { matchRoundOutcome, isBye, isDrop } from "./leaderboard.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { fetchTopAutoBadgesByPlayer, playerBadgesHtml } from "./player-badges.js";
@@ -16,13 +16,9 @@ import { initBackToTop } from "./back-to-top.js";
 // .players-row-title), the numbers on the right. The Elo is the player's
 // whole history (js/elo.js), live events only, not the filters' scope (nor
 // the Dove bar's) — said on hover.
-// Not a link (a <div>) for a player with online events only (their page
-// counts live events only) or anyone under the Dove bar's "Online" (shown by
-// their endstep username — js/ui.js onlinePlayer; user, 2026-11-16).
 function renderRow(r) {
-  const tag = r.linked ? "a" : "div";
   return `
-    <${tag} class="history-item history-ranked"${r.linked ? ` href="player.html?id=${r.id}"` : ""}>
+    <a class="history-item history-ranked" href="player.html?id=${r.id}">
       <div class="history-main">
         <span class="history-title players-row-title"><span class="history-name">${r.nameHtml}</span><span class="players-row-badges">${r.badgesHtml}</span></span>
       </div>
@@ -36,7 +32,7 @@ function renderRow(r) {
           title: "Elo su tutti gli eventi dal vivo, non cambia con i filtri",
         },
       ])}
-    </${tag}>`;
+    </a>`;
 }
 
 // Entries + matches of every event in scope, batched (js/db.js) rather than
@@ -122,8 +118,6 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   // Each player's Elo (player_progress, js/elo.js): the whole history, so
   // read once too, whatever the filters.
   let eloByPlayer = new Map();
-  // Who has played online events only (migration 040): never a link.
-  let onlineOnly = new Set();
   // The filters' leagues and events (js/scope-filter.js), loaded with the rest.
   let allLeagues = [];
   let allEvents = [];
@@ -132,7 +126,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   // (dates; the filters' list too), the leagues, the automatic badges and
   // the Elo ratings.
   try {
-    const [players, events, leagues, autoBadges, eloRows, onlineOnlyIds] = await Promise.all([
+    const [players, events, leagues, autoBadges, eloRows] = await Promise.all([
       Players.list(),
       Events.list({ withOnline: true }),
       Leagues.list({ withOnline: true }),
@@ -141,8 +135,6 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       softFail(fetchTopAutoBadgesByPlayer(), new Map()),
       // Nor this: "—" for every Elo.
       softFail(PlayerProgress.listElo(), []),
-      // Nor this (an empty set on failure): everyone a link.
-      PlayerEventKinds.onlineOnly(),
     ]);
     if (signal.aborted) return;
     if (players.length === 0) {
@@ -155,7 +147,6 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     allEvents = events;
     autoBadgesByPlayer = autoBadges;
     eloByPlayer = new Map(eloRows.map((r) => [r.player_id, r]));
-    onlineOnly = onlineOnlyIds;
     eventDateById = new Map(events.map((e) => [e.id, e.event_date]));
     // The Dove bar only when there are both live and online events.
     where.setEvents(events);
@@ -226,8 +217,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
         return rateOf({ wins: all.wins - ev.wins, draws: all.draws - ev.draws, losses: all.losses - ev.losses });
       };
 
-      // Under "Online": everyone by their endstep username, no link, no
-      // badges (live achievements).
+      // Under "Online": everyone by their endstep username (js/ui.js
+      // onlinePlayer), no badges (live achievements).
       const online = where.value === "online";
       lastRows = allPlayers.map((p) => {
         const shownAs = online ? onlinePlayer(p) : p;
@@ -238,7 +229,6 @@ export async function mount({ signal = new AbortController().signal } = {}) {
         const winRate = played > 0 ? (record.wins / played) * 100 : null;
         return {
           id: p.id,
-          linked: !online && !onlineOnly.has(p.id),
           searchText: `${shownAs.name} ${shownAs.handle ?? ""}`.toLowerCase(),
           nameHtml: shownAs.handle ? `${escapeHtml(shownAs.name)} (${escapeHtml(shownAs.handle)})` : escapeHtml(shownAs.name),
           badgesHtml: online ? "" : playerBadgesHtml(p, autoBadgesByPlayer),

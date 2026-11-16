@@ -8,6 +8,7 @@ import {
   commanderPairLabel,
   showError,
   softFail,
+  onlinePlayer,
 } from "./ui.js";
 import { hidePageLoading, sectionLoadingHtml } from "./page-loading.js";
 import { initTitleFit } from "./page-title-fit.js";
@@ -17,6 +18,7 @@ import { renderPublicPlayerCard, createArtPainter } from "./player-card.js";
 import { initBackToTop } from "./back-to-top.js";
 import { renderPlayerLeagueRecap } from "./player-league-recap.js";
 import { cardHint, rememberCard, applyCardPlaceholder } from "./card-hints.js";
+import { initWhereFilter, inWhere } from "./where-filter.js";
 
 // Manual (badge1/badge2) and auto badges together — the auto ones are a
 // plain read of PlayerAutoBadges, precomputed by admin/js/badges-sync.js
@@ -71,6 +73,15 @@ export async function mount({ signal = new AbortController().signal } = {}) {
 
   // Storico partite is the whole list on phones (no scrolling inside).
   initBackToTop({ signal });
+  // Dal vivo / Online / Tutto (js/where-filter.js — the page's own choice,
+  // Dal vivo to start with, user 2026-11-16): which of the player's events
+  // the numbers, Album comandanti and Storico partite count. Shown only for
+  // a player with both live and online events; one with online events only
+  // has no bar and their online events counted. The badges, the card and
+  // the Elo stay live only; the league recap (the live league) is hidden
+  // under "Online".
+  const where = initWhereFilter({ signal, remember: false });
+  const recapEl = document.getElementById("player-league-recap");
 
   if (!id) {
     titleEl.textContent = "Giocatore non trovato";
@@ -80,7 +91,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
 
   // The league recap under the hero: its own requests, alongside the rest,
   // never holding the page up (not awaited; never throws).
-  renderPlayerLeagueRecap(document.getElementById("player-league-recap"), id, { signal });
+  renderPlayerLeagueRecap(recapEl, id, { signal });
 
   try {
     // Seven independent requests (each needs only the id), all started at
@@ -93,7 +104,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     // without it.
     const playerRequest = Players.get(id);
     const autoBadgesRequest = PlayerAutoBadges.listByPlayer(id);
-    const entriesRequest = EventEntries.listByPlayer(id);
+    const entriesRequest = EventEntries.listByPlayer(id, { withOnline: true });
     const cardRequest = softFail(PlayerCards.get(id), null);
     // The card's cosmetics (js/card-cosmetics.js) and the hero's Elo — never
     // fatal either: no progress just means a card without them, no Elo tile.
@@ -101,7 +112,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     // Storico partite's final positions (cached standings — never fatal: an
     // event missing from them is computed below) and the player's matches.
     const standingsRequest = softFail(EventStandings.listByPlayer(id), []);
-    const matchesRequest = Matches.listByPlayer(id);
+    const matchesRequest = Matches.listByPlayer(id, { withOnline: true });
     autoBadgesRequest.catch(() => {});
     entriesRequest.catch(() => {});
     matchesRequest.catch(() => {});
@@ -153,6 +164,9 @@ export async function mount({ signal = new AbortController().signal } = {}) {
 
     const entries = await entriesRequest;
     if (signal.aborted) return;
+    // The bar only with both kinds among the player's (closed) events.
+    where.setEvents(entries.map((e) => e.event).filter(Boolean));
+    const inScope = (event) => inWhere(where.value, event ?? {});
 
     // The card, once the year of the player's first event ("Dal …") is
     // known: in the hero's left column (without one, the text takes the
@@ -174,11 +188,10 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       document.getElementById("player-hero").classList.remove("is-no-card");
     }
 
-    // Album comandanti: one card per commander + partner pair, most played
-    // first (js/commander-carousel.js albumItems).
-    const commanderList = albumItems(entries);
-    paintHeroArt(card?.commander_name ?? commanderList[0]?.commander.name ?? null, card?.card_print ?? null);
-    const carousel = renderCommanderCarousel(commandersEl, commanderList);
+    // The hero's art: the card's, else the most played commander (in the
+    // scope the page opens on).
+    const openingList = albumItems(entries.filter((e) => inScope(e.event)));
+    paintHeroArt(card?.commander_name ?? openingList[0]?.commander.name ?? null, card?.card_print ?? null);
 
     // The player's final position in each event they entered (Storico
     // partite's per-event chip). Read from the cached standings (EventStandings, rebuilt by the
@@ -213,7 +226,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
         return {
           event: m.event,
           round: m.round,
-          opponent,
+          // An online match's opponent by their endstep username.
+          opponent: m.event?.is_online ? onlinePlayer(opponent) : opponent,
           isBye: isBye(m),
           isDrop: isDrop(m),
           outcome: outcomeFor(m, viewerIsP1),
@@ -228,33 +242,92 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     // now; Storico partite (the opponents' decks, the final positions) after
     // the second round.
     const ownRows = buildRows(new Map());
-
-    // Album comandanti's Winrate tile: each pair's match record over the
-    // player's whole history, counted like the hero's tiles — a drop is
-    // skipped, a bye counts as a win.
-    const recordsByPair = new Map();
-    for (const r of ownRows) {
-      if (!r.myCommander || r.isDrop) continue;
-      const key = commanderPairKey(r.myCommander, r.myPartner);
-      if (!recordsByPair.has(key)) recordsByPair.set(key, { wins: 0, draws: 0, losses: 0 });
-      tallyOutcome(recordsByPair.get(key), r.outcome);
-    }
-    carousel.setRecords(recordsByPair);
-
-    // The hero's numbers, over the player's whole history: a drop isn't a
-    // win, a loss, or a match played — skipped entirely; a bye counts as a
-    // played match won, same as any other match win. Events: entries (an
-    // event counts even if the player dropped before playing a round).
-    // The Elo (js/elo.js, cached in player_progress): the number alone, no
-    // trend arrow here (user's choice — the Giocatori list has it); no tile
-    // before the player has a rating.
-    const bucket = { wins: 0, draws: 0, losses: 0 };
-    for (const r of ownRows) if (!r.isDrop) tallyOutcome(bucket, r.outcome);
     const progress = await progressRequest;
     if (signal.aborted) return;
     const elo = progress?.elo ?? null;
-    renderWinrateTiles(overallEl, bucket, {
-      extra: [...(elo === null ? [] : [["Elo", elo]]), ["Eventi", entries.length]],
+
+    // Album comandanti: one card per commander + partner pair, most played
+    // first (js/commander-carousel.js albumItems), in the Dove bar's scope;
+    // its Winrate tile each pair's match record, counted like the hero's
+    // tiles — a drop is skipped, a bye counts as a win.
+    function renderAlbum() {
+      const carousel = renderCommanderCarousel(commandersEl, albumItems(entries.filter((e) => inScope(e.event))));
+      const recordsByPair = new Map();
+      for (const r of ownRows) {
+        if (!r.myCommander || r.isDrop || !inScope(r.event)) continue;
+        const key = commanderPairKey(r.myCommander, r.myPartner);
+        if (!recordsByPair.has(key)) recordsByPair.set(key, { wins: 0, draws: 0, losses: 0 });
+        tallyOutcome(recordsByPair.get(key), r.outcome);
+      }
+      carousel.setRecords(recordsByPair);
+    }
+
+    // The hero's numbers, in the Dove bar's scope: a drop isn't a win, a
+    // loss, or a match played — skipped entirely; a bye counts as a played
+    // match won, same as any other match win. Events: entries (an event
+    // counts even if the player dropped before playing a round). The Elo
+    // (js/elo.js, cached in player_progress — live events only, so "—" under
+    // "Online": the tiles stay the same, nothing moves): the number alone,
+    // no trend arrow here (user's choice — the Giocatori list has it); no
+    // tile before the player has a rating.
+    function renderNumbers(scope = where.value) {
+      const counted = (event) => inWhere(scope, event ?? {});
+      const bucket = { wins: 0, draws: 0, losses: 0 };
+      for (const r of ownRows) if (!r.isDrop && counted(r.event)) tallyOutcome(bucket, r.outcome);
+      const eloTile = elo === null ? [] : [["Elo", scope === "online" ? "—" : elo]];
+      renderWinrateTiles(overallEl, bucket, {
+        extra: [...eloTile, ["Eventi", entries.filter((e) => counted(e.event)).length]],
+      });
+    }
+
+    // With the bar: the numbers as tall as the tallest of the three scopes'
+    // (they wrap differently — "0-2-0" is narrower than "24-12-4"), so
+    // nothing in the hero moves on a change (user).
+    // Measured again when the hero's width changes.
+    const barShown = !document.querySelector("#player-hero .where-filter")?.hidden;
+    function holdNumbersHeight() {
+      if (!barShown) return;
+      overallEl.style.minHeight = "";
+      let tallest = 0;
+      for (const scope of ["live", "online", "all"]) {
+        renderNumbers(scope);
+        tallest = Math.max(tallest, overallEl.offsetHeight);
+      }
+      renderNumbers();
+      overallEl.style.minHeight = `${tallest}px`;
+    }
+    let heroWidth = 0;
+    const heroResize = new ResizeObserver(([entry]) => {
+      const width = Math.round(entry.contentRect.width);
+      if (width === heroWidth) return;
+      heroWidth = width;
+      holdNumbersHeight();
+    });
+    heroResize.observe(document.getElementById("player-hero"));
+    signal.addEventListener("abort", () => heroResize.disconnect(), { once: true });
+
+    // Storico partite, once the second round is in (null before).
+    let historyRows = null;
+    let positionByEvent = new Map();
+    function renderHistory() {
+      if (!historyRows) return;
+      const rows = historyRows.filter((r) => inScope(r.event));
+      matchesEl.innerHTML = matchGroupsHtml(matchGroupsByEvent(rows, positionByEvent));
+      initScrollFade(matchesEl);
+      setHistoryCount("player-matches-count", rows.length);
+    }
+
+    // The league recap is the live league's: not under "Online".
+    const syncRecap = () => recapEl.classList.toggle("is-where-hidden", where.value === "online");
+
+    renderAlbum();
+    renderNumbers();
+    syncRecap();
+    where.onChange(() => {
+      renderNumbers();
+      renderAlbum();
+      renderHistory();
+      syncRecap();
     });
 
     // The second (last) round, together: the entries of the events played
@@ -283,13 +356,9 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       const s = standings[index];
       standingByEvent.set(eventId, { position: index + 1, wins: s.wins, draws: s.draws, losses: s.losses });
     }
-    const rows = buildRows(new Map(eventEntries.map((e) => [`${e.event_id}_${e.player_id}`, e])));
-
-    matchesEl.innerHTML = matchGroupsHtml(
-      matchGroupsByEvent(rows, new Map([...standingByEvent].map(([eventId, s]) => [eventId, s.position])))
-    );
-    initScrollFade(matchesEl);
-    setHistoryCount("player-matches-count", rows.length);
+    historyRows = buildRows(new Map(eventEntries.map((e) => [`${e.event_id}_${e.player_id}`, e])));
+    positionByEvent = new Map([...standingByEvent].map(([eventId, s]) => [eventId, s.position]));
+    renderHistory();
   } catch (err) {
     showError(document.getElementById("player-content"), err);
   } finally {

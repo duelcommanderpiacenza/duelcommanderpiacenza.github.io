@@ -132,12 +132,12 @@ export function isHttpUrl(url) {
 // false }` gives the same text unlinked — inside a list sub-card that is a
 // link itself (js/history-list.js), where a link can't hold another.
 // A player as shown where online play is — an online event's or league's
-// page and recap, Giocatori's "Online" — by their endstep username
-// (players.endstep, migration 038; else their name), never a link (no id:
-// their page counts live events only) and without the handle (user,
-// 2026-11-16).
+// page and recap, Giocatori's "Online", a player page's online matches — by
+// their endstep username (players.endstep, migration 038; else their name),
+// without the handle (user, 2026-11-16). Still a link: their page shows
+// their online events too (its Dove bar).
 export function onlinePlayer(player) {
-  return player ? { ...player, id: null, name: player.endstep || player.name, handle: null } : player;
+  return player ? { ...player, name: player.endstep || player.name, handle: null } : player;
 }
 
 export function playerLabel(player, { link = true } = {}) {

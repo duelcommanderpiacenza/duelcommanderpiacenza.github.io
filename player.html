@@ -89,6 +89,7 @@
   <link rel="modulepreload" href="js/history-list.js">
   <link rel="modulepreload" href="js/back-to-top.js">
   <link rel="modulepreload" href="js/player-league-recap.js">
+  <link rel="modulepreload" href="js/where-filter.js">
   <!-- /preload:modules -->
 </head>
 <body data-active-nav="players" class="is-loading">
@@ -183,7 +184,7 @@
          inside it. -->
     <div class="detail-hero-wrap">
       <a class="detail-hero-back" href="players.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>Giocatori</a>
-      <section class="profile-hero detail-hero is-no-card" id="player-hero">
+      <section class="profile-hero detail-hero player-hero is-no-card" id="player-hero">
         <div class="profile-hero-art" id="player-hero-art" aria-hidden="true"></div>
         <div class="profile-hero-inner">
           <div class="profile-card-col detail-hero-card" id="player-page-card" hidden></div>
@@ -200,6 +201,17 @@
             </div>
             <div class="profile-hero-stats">
               <div class="profile-stats-tiles" id="player-winrate-overall"></div>
+              <!-- Dal vivo / Online / Tutto (js/where-filter.js — the page's
+                   own choice, Dal vivo to start with): which of the player's
+                   events the numbers, the album and the history count.
+                   Only for a player with both live and online events. Above
+                   the numbers: on a computer at the left, up to 820px
+                   centred (css/6). -->
+              <div class="where-filter" role="radiogroup" aria-label="Dove" hidden>
+                <button type="button" class="where-opt is-active" data-where="live" role="radio" aria-checked="true"><span class="where-lotus" aria-hidden="true"></span><span>Dal vivo</span></button>
+                <button type="button" class="where-opt" data-where="online" role="radio" aria-checked="false"><svg viewBox="11 9 42 46" aria-hidden="true"><path d="M32 11 L49 28 L32 45 L15 28 Z" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round"></path><path d="M32 21 L38 28 L32 35 L26 28 Z" fill="currentColor"></path><rect x="13" y="49" width="38" height="4.4" rx="2.2" fill="currentColor"></rect></svg><span>Online</span></button>
+                <button type="button" class="where-opt" data-where="all" role="radio" aria-checked="false"><span>Tutto</span></button>
+              </div>
             </div>
           </div>
         </div>

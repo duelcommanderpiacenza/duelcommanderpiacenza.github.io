@@ -319,8 +319,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     // One sub-card per player (js/history-list.js), the whole card a link to
     // the player's page: position chip, name + badges, then Punti / V-S-P /
     // Winrate / Eventi. An online league's players by their endstep
-    // username, no link, no badges (js/ui.js onlinePlayer — user,
-    // 2026-11-16). The top LEAGUE_TOP_HIGHLIGHT get a red edge and tint
+    // username, no badges (js/ui.js onlinePlayer — user, 2026-11-16). The top LEAGUE_TOP_HIGHLIGHT get a red edge and tint
     // (styles.css .history-item.is-top8).
     leaderboardEl.innerHTML =
       standings.length === 0

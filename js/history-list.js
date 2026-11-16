@@ -5,7 +5,7 @@
 // edge fading while there's more that way. Matches are grouped one sub-card
 // per event (per event + pilot on commander.html), its rounds as rows. Looks:
 // styles.css .history-*.
-import { escapeHtml, eventTitle, playerLabel, commanderPairLabel } from "./ui.js";
+import { escapeHtml, eventTitle, playerLabel, commanderPairLabel, ENDSTEP_MARK } from "./ui.js";
 
 // The list's frame; `itemsHtml` its sub-cards. `animate: false` for a list
 // redrawn on every keystroke (a search box), so its entrance doesn't replay;
@@ -109,9 +109,13 @@ export function setHistoryCount(id, count) {
 // An event's title and, on a small muted line below, its league (no date:
 // the list's order already says when; an unnamed event's title is its date
 // anyway). Plain text: the whole sub-card is the link to the event.
+// An online event (endstep — player.html's Storico partite under its Dove
+// bar's Online / Tutto): endstep's mark before its league ("Online" for a
+// standalone one).
 function historyEventHeadHtml(event) {
+  const place = event.league ? escapeHtml(event.league.name) : event.is_online ? "Online" : "";
   return `<span class="history-title">${escapeHtml(eventTitle(event))}</span>${
-    event.league ? `<span class="history-meta">${escapeHtml(event.league.name)}</span>` : ""
+    place ? `<span class="history-meta">${event.is_online ? ENDSTEP_MARK : ""}${place}</span>` : ""
   }`;
 }
 
