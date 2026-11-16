@@ -482,7 +482,7 @@ export const EventEntries = {
     selectAllRows(() =>
       sb
         .from("event_entries")
-        .select(`*, player:players(id,name,handle), ${COMMANDER_EMBED}`)
+        .select(`*, player:players(id,name,handle,endstep), ${COMMANDER_EMBED}`)
         .order("id")
     ),
   // Bacheca's "Più giocati" charts: just the commanders (with their colour
@@ -503,7 +503,7 @@ export const EventEntries = {
   listByEvent: (eventId) =>
     sb
       .from("event_entries")
-      .select(`*, player:players(id,name,handle), ${COMMANDER_EMBED}`)
+      .select(`*, player:players(id,name,handle,endstep), ${COMMANDER_EMBED}`)
       .eq("event_id", eventId)
       .then(assertOk),
   // (Online events' left out — see Leagues above — unless `withOnline`: the
@@ -523,7 +523,7 @@ export const EventEntries = {
     liveOnly(
       sb
         .from("event_entries")
-        .select(`*, player:players(id,name,handle), event:events!inner(id,name,event_date,is_open,is_online), ${COMMANDER_EMBED}`)
+        .select(`*, player:players(id,name,handle,endstep), event:events!inner(id,name,event_date,is_open,is_online), ${COMMANDER_EMBED}`)
         .or(`commander_id.eq.${commanderId},partner_commander_id.eq.${commanderId}`),
       withOnline
     ).then(assertOk),
@@ -533,7 +533,7 @@ export const EventEntries = {
   listByEvents: (eventIds) =>
     sb
       .from("event_entries")
-      .select(`*, player:players(id,name,handle), ${COMMANDER_EMBED}`)
+      .select(`*, player:players(id,name,handle,endstep), ${COMMANDER_EMBED}`)
       .in("event_id", eventIds)
       .then(assertOk),
   // Who played which event, nothing else — every entry the visitor can see
@@ -544,7 +544,7 @@ export const EventEntries = {
   // Same as listByEvents, but paged past the row cap and deterministically
   // ordered — for fetchEventsResults below, which may span a whole league.
   // `columns`: its lighter selection, when given (fetchEventsResults' slim).
-  listByEventsForStandings: (eventIds, columns = `*, player:players(id,name,handle), ${COMMANDER_EMBED}`) =>
+  listByEventsForStandings: (eventIds, columns = `*, player:players(id,name,handle,endstep), ${COMMANDER_EMBED}`) =>
     selectAllRows(() =>
       sb
         .from("event_entries")
@@ -565,6 +565,21 @@ export const EventEntries = {
 // js/events-page.js then counts the old way.
 export const EventCounts = {
   list: () => selectAllRows(() => sb.from("event_counts").select("event_id, players, matches").order("event_id")),
+};
+
+// Players who have played online events only (migration 040's
+// player_event_kinds — visitors: closed events): never a link (their player
+// page, live events only, would be empty) and not in the site search (user,
+// 2026-11-16). A Set of ids; empty on any failure (e.g. before 040).
+export const PlayerEventKinds = {
+  onlineOnly: () =>
+    sb
+      .from("player_event_kinds")
+      .select("player_id")
+      .eq("live", false)
+      .then(assertOk)
+      .then((rows) => new Set(rows.map((r) => r.player_id)))
+      .catch((err) => (console.error(err), new Set())),
 };
 
 export const LeaguePlayerCounts = {

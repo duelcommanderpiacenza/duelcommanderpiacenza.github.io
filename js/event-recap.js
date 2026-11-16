@@ -28,7 +28,7 @@ import { computeEventLeaderboard, computeLeaguePoints } from "./leaderboard.js";
 import { ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
 import { archetypeIcon } from "./archetype-icons.js";
 import { createArtPainter } from "./player-card.js";
-import { escapeHtml } from "./ui.js";
+import { escapeHtml, onlinePlayer } from "./ui.js";
 import { locale } from "./locale.js";
 
 const RECAP_STEP = 6500;
@@ -177,6 +177,9 @@ export function loadRecapData(eventId) {
       }
       const bestOf = (list) => Math.min(...list.map((e) => posOf.get(e.player_id) ?? 999));
       const [topCommander, topEntries] = mostPlayed(entries, posOf);
+      // An online event's players by their endstep username (js/ui.js
+      // onlinePlayer), once everything keyed by them is counted.
+      if (ev.is_online) for (const r of rows) r.player = onlinePlayer(r.player);
       const winner = rows[0] ?? null;
       return {
         ev,
@@ -253,6 +256,9 @@ export function loadSeasonData(leagueId) {
       const champion = standings[0] ?? null;
       const [championCommander] = champion ? mostPlayed(entries.filter((e) => e.player_id === champion.player?.id)) : ["—"];
       const [topCommander, topEntries] = mostPlayed(entries);
+      // An online league's players by their endstep username (js/ui.js
+      // onlinePlayer), once everything keyed by them is counted.
+      if (league.is_online) for (const r of standings) r.player = onlinePlayer(r.player);
       // A record and everyone sharing it (ties all named).
       const leaders = (valueOf) => {
         const n = Math.max(0, ...standings.map(valueOf));

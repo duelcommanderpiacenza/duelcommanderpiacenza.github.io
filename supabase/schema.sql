@@ -1099,3 +1099,18 @@ where e.league_id is not null or not e.is_online
 group by e.league_id;
 
 grant select on event_counts, league_player_counts to anon, authenticated;
+
+-- Per player, whether they have a live entry and an online one: a player
+-- with online events only (on endstep — "Importa da endstep") has an empty
+-- player page (live events only), so they're never a link and aren't in the
+-- site search (js/db.js PlayerEventKinds). Migration 040.
+create view player_event_kinds with (security_invoker = true) as
+select
+  x.player_id,
+  bool_or(not e.is_online) as live,
+  bool_or(e.is_online) as online
+from event_entries x
+join events e on e.id = x.event_id
+group by x.player_id;
+
+grant select on player_event_kinds to anon, authenticated;

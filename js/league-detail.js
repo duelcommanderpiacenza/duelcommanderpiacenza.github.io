@@ -10,6 +10,7 @@ import {
   leagueStatusBadge,
   localIso,
   playerLabel,
+  onlinePlayer,
   showError,
   statTileHtml,
 } from "./ui.js";
@@ -317,7 +318,9 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     if (signal.aborted) return;
     // One sub-card per player (js/history-list.js), the whole card a link to
     // the player's page: position chip, name + badges, then Punti / V-S-P /
-    // Winrate / Eventi. The top LEAGUE_TOP_HIGHLIGHT get a red edge and tint
+    // Winrate / Eventi. An online league's players by their endstep
+    // username, no link, no badges (js/ui.js onlinePlayer — user,
+    // 2026-11-16). The top LEAGUE_TOP_HIGHLIGHT get a red edge and tint
     // (styles.css .history-item.is-top8).
     leaderboardEl.innerHTML =
       standings.length === 0
@@ -325,11 +328,12 @@ export async function mount({ signal = new AbortController().signal } = {}) {
         : historyPanelHtml(
             standings
               .map((s, i) => {
+                const player = league.is_online ? onlinePlayer(s.player) : s.player;
                 const inner = `
                 <div class="history-lead">
                   ${leaguePosHtml(i + 1, before, s.player?.id)}
                   <div class="history-main">
-                    <span class="history-title"><span class="history-name">${playerLabel(s.player, { link: false })}</span>${badgesFor(s.player)}</span>
+                    <span class="history-title"><span class="history-name">${playerLabel(player, { link: false })}</span>${league.is_online ? "" : badgesFor(player)}</span>
                   </div>
                 </div>
                 ${historyStatsHtml([
@@ -339,8 +343,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
                   { label: "Eventi", value: s.eventsPlayed },
                 ])}`;
                 const cls = `history-item history-ranked${i < LEAGUE_TOP_HIGHLIGHT ? " is-top8" : ""}`;
-                return s.player?.id
-                  ? `<a class="${cls}" href="player.html?id=${s.player.id}">${inner}</a>`
+                return player?.id
+                  ? `<a class="${cls}" href="player.html?id=${player.id}">${inner}</a>`
                   : `<article class="${cls}">${inner}</article>`;
               })
               .join(""),

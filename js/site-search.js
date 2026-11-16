@@ -5,7 +5,7 @@
 // already fetches elsewhere — there's no server-side search/full-text
 // index, and for a small club's dataset a plain substring filter over all
 // four lists is cheap enough to redo on every keystroke without debouncing.
-import { Players, Commanders, Events, Leagues } from "./db.js";
+import { Players, Commanders, Events, Leagues, PlayerEventKinds } from "./db.js";
 import { escapeHtml, eventTitle } from "./ui.js";
 
 const MAX_RESULTS_PER_TYPE = 5;
@@ -45,12 +45,19 @@ function init() {
   let dataPromise = null;
   function ensureDataLoaded() {
     if (!dataPromise) {
-      dataPromise = Promise.all([Players.list(), Events.list(), Leagues.list(), Commanders.list()])
-        .then(([players, events, leagues, commanders]) => {
+      dataPromise = Promise.all([Players.list(), Events.list(), Leagues.list(), Commanders.list(), PlayerEventKinds.onlineOnly()])
+        .then(([players, events, leagues, commanders, onlineOnly]) => {
           // Published (closed) events only — an open one is at most a future
           // "save the date" preview (Bacheca's Prossimi eventi), not
-          // something to search for and land on an empty event page.
-          dataByType = { players, events: events.filter((e) => !e.is_open), leagues, commanders };
+          // something to search for and land on an empty event page. Nor a
+          // player with online events only (migration 040): their page
+          // counts live events only (user, 2026-11-16).
+          dataByType = {
+            players: players.filter((p) => !onlineOnly.has(p.id)),
+            events: events.filter((e) => !e.is_open),
+            leagues,
+            commanders,
+          };
         })
         .catch((err) => {
           console.error(err);

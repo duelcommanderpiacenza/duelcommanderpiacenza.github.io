@@ -10,6 +10,7 @@ import {
   archetypeBadge,
   showError,
   statTileHtml,
+  onlinePlayer,
 } from "./ui.js";
 import { hidePageLoading, sectionLoadingHtml, statTilesLoadingHtml } from "./page-loading.js";
 import { nestedResultsMenu } from "./results-link.js";
@@ -60,12 +61,13 @@ function matchDeckLineHtml(entry) {
 // Giocatore 2, the winner in bold, each name with its deck under it (no
 // pips; each on one line, cut with "…" when too long). Not
 // links themselves (a match has two players): the names are, each to its
-// player, and the commanders to theirs. `entryOf`: player id → entry.
-function matchCardHtml(m, entryOf) {
+// player, and the commanders to theirs. `entryOf`: player id → entry;
+// `shown`: a player as displayed (an online event's: onlinePlayer).
+function matchCardHtml(m, entryOf, shown) {
   const special = isBye(m) ? "Bye" : isDrop(m) ? "Drop" : null;
   const outcome = special ? null : matchRoundOutcome(m);
   const side = (player, wins) =>
-    `<span class="event-match-player${wins ? " is-winner" : ""}"><span class="event-match-name">${playerLabel(player)}</span>${matchDeckLineHtml(entryOf.get(player?.id))}</span>`;
+    `<span class="event-match-player${wins ? " is-winner" : ""}"><span class="event-match-name">${playerLabel(shown(player))}</span>${matchDeckLineHtml(entryOf.get(player?.id))}</span>`;
   return `
           <article class="history-item event-match">
             ${side(m.player1, special === "Bye" || outcome === "player1")}
@@ -74,7 +76,7 @@ function matchCardHtml(m, entryOf) {
           </article>`;
 }
 
-function renderMatchesByRound(matches, entryOf) {
+function renderMatchesByRound(matches, entryOf, shown) {
   if (matches.length === 0) return '<p class="page-empty">Nessuna partita registrata.</p>';
 
   const byRound = new Map();
@@ -89,7 +91,7 @@ function renderMatchesByRound(matches, entryOf) {
     .map(
       (round) => `
       <h3 style="margin:18px 0 10px;font-size:1.05rem;">Turno ${round}</h3>
-      ${historyPanelHtml(byRound.get(round).map((m) => matchCardHtml(m, entryOf)).join(""), { scroll: false, className: "event-match-grid" })}`
+      ${historyPanelHtml(byRound.get(round).map((m) => matchCardHtml(m, entryOf, shown)).join(""), { scroll: false, className: "event-match-grid" })}`
     )
     .join("");
 }
@@ -133,6 +135,9 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     if (signal.aborted) return;
 
     titleEl.textContent = eventTitle(event);
+    // An online event's players by their endstep username, never a link
+    // (js/ui.js onlinePlayer — user, 2026-11-16).
+    const shown = event.is_online ? onlinePlayer : (p) => p;
     document.title = `${eventTitle(event)} - Duel Commander Piacenza`;
     // A shared recap link (js/event-recap.js "Condividi il recap"):
     // event.html?id=…&recap=1 opens the event's recap straight away.
@@ -171,10 +176,10 @@ export async function mount({ signal = new AbortController().signal } = {}) {
               .sort((a, b) => (a.player?.name ?? "").localeCompare(b.player?.name ?? "", "it"))
               .map((e) =>
                 playerCard(
-                  e.player,
+                  shown(e.player),
                   "history-split",
                   `<div class="history-main">
-                    ${playerTitleHtml(e.player)}
+                    ${playerTitleHtml(shown(e.player))}
                     ${deckLineHtml(e, NO_LINK) || '<span class="history-deck">—</span>'}
                   </div>
                   ${archetypeBadge(e.archetype)}`
@@ -200,7 +205,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     const matches = await matchesRequest;
     if (signal.aborted) return;
     const entryOf = new Map(entries.map((e) => [e.player_id, e]));
-    matchesEl.innerHTML = renderMatchesByRound(matches, entryOf);
+    matchesEl.innerHTML = renderMatchesByRound(matches, entryOf, shown);
     const standings = computeEventLeaderboard(matches, entries);
 
     // The hero: the numbers, and the winner's (first in the standings)
@@ -232,12 +237,12 @@ export async function mount({ signal = new AbortController().signal } = {}) {
             standings
               .map((s, i) =>
                 playerCard(
-                  s.player,
+                  shown(s.player),
                   "history-ranked",
                   `<div class="history-lead">
                     ${historyPosHtml(i + 1)}
                     <div class="history-main">
-                      ${playerTitleHtml(s.player)}
+                      ${playerTitleHtml(shown(s.player))}
                       ${deckLineHtml(entryOf.get(s.player?.id), NO_LINK)}
                     </div>
                   </div>

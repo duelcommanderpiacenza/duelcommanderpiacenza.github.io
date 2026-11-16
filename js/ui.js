@@ -131,6 +131,15 @@ export function isHttpUrl(url) {
 // These name helpers link to the player's / commander's page; `{ link:
 // false }` gives the same text unlinked — inside a list sub-card that is a
 // link itself (js/history-list.js), where a link can't hold another.
+// A player as shown where online play is — an online event's or league's
+// page and recap, Giocatori's "Online" — by their endstep username
+// (players.endstep, migration 038; else their name), never a link (no id:
+// their page counts live events only) and without the handle (user,
+// 2026-11-16).
+export function onlinePlayer(player) {
+  return player ? { ...player, id: null, name: player.endstep || player.name, handle: null } : player;
+}
+
 export function playerLabel(player, { link = true } = {}) {
   if (!player) return "—";
   const name = escapeHtml(player.name);
