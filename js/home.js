@@ -11,6 +11,7 @@ import { Leagues, Events, EventEntries, fetchEventsResults } from "./db.js";
 import { computeLeaguePoints, previousLeaguePositions } from "./leaderboard.js";
 import { renderBubbleChart, initBubbleChart, colorBubbleRows, ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
 import { initChartCarousel } from "./chart-carousel.js";
+import { initWhereFilter, inWhere } from "./where-filter.js";
 import { ENDSTEP_MARK, endstepLogo, escapeHtml, formatTime, leagueRingHtml, localIso, playerLabel, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { nestedResultsMenu } from "./results-link.js";
@@ -135,8 +136,9 @@ const once = (key, load) => {
   if (!shared.has(key)) shared.set(key, load());
   return shared.get(key);
 };
-// Online events (migration 034) only on the timeline, for now: the rest of
-// the page (Classifica, the stories) reads the live ones alone.
+// Online events (migration 034) on the timeline, and in Più giocati by its
+// Dove bar: the rest of the page (Classifica, the stories) reads the live
+// ones alone.
 const timelineUpcoming = () => once("upcomingWithOnline", () => Events.listUpcoming({ withOnline: true }));
 const timelineEvents = () => once("eventsWithOnline", () => Events.list({ withOnline: true }));
 const live = (request) => request.then((events) => events.filter((ev) => !ev.is_online));
@@ -311,15 +313,17 @@ async function renderStandings(el) {
 
 // --- Più giocati ---------------------------------------------------------------------
 
-// The Più giocati charts' entries since `cutoffIso`, reused from this
-// browser for CHART_CACHE_MS (localStorage "homeCharts2": the cutoff, when,
-// the rows) — a reload or a return to the Bacheca within it skips the
-// request. Any storage problem: just fetched. ("homeCharts", the key before
-// the rows carried the colour identities, is dropped.)
-const CHART_CACHE_KEY = "homeCharts2";
+// The Più giocati charts' entries since `cutoffIso`, live and online (the
+// Dove bar picks), reused from this browser for CHART_CACHE_MS
+// (localStorage "homeCharts3": the cutoff, when, the rows) — a reload or a
+// return to the Bacheca within it skips the request. Any storage problem:
+// just fetched. ("homeCharts" / "homeCharts2", the keys before the rows
+// carried the colour identities / the online ones, are dropped.)
+const CHART_CACHE_KEY = "homeCharts3";
 const CHART_CACHE_MS = 5 * 60 * 1000;
 try {
   localStorage.removeItem("homeCharts");
+  localStorage.removeItem("homeCharts2");
 } catch {
   // No storage: nothing to drop.
 }
@@ -330,7 +334,7 @@ async function chartEntries(cutoffIso) {
   } catch {
     // Unreadable: fetched below.
   }
-  const rows = await EventEntries.listForChartsSince(cutoffIso);
+  const rows = await EventEntries.listForChartsSince(cutoffIso, { withOnline: true });
   try {
     localStorage.setItem(CHART_CACHE_KEY, JSON.stringify({ cutoff: cutoffIso, at: Date.now(), rows }));
   } catch {
@@ -339,7 +343,12 @@ async function chartEntries(cutoffIso) {
   return rows;
 }
 
-async function renderCommandersSection(el) {
+// Dal vivo / Online / Tutto above the charts (js/where-filter.js — user,
+// 2026-11-16): the page's own choice, Dal vivo to start with, shown only
+// when the window has entries of both kinds; a change redraws the charts
+// from the same rows (no request).
+async function renderCommandersSection(el, signal) {
+  const where = initWhereFilter({ signal, remember: false });
   try {
     const cutoff = new Date();
     cutoff.setMonth(cutoff.getMonth() - TOP_COMMANDERS_WINDOW_MONTHS);
@@ -347,22 +356,41 @@ async function renderCommandersSection(el) {
     // Only the window's entries, already date-filtered by the database —
     // kept in this browser for a few minutes (chartEntries), the charts'
     // slowest part, since they change only when an event is published.
-    const entries = await chartEntries(cutoffIso);
+    const allEntries = await chartEntries(cutoffIso);
+    if (signal?.aborted) return;
+    where.setEvents(allEntries.map((e) => e.event).filter(Boolean));
+    drawCharts(el, allEntries.filter((e) => inWhere(where.value, e.event ?? {})));
+    where.onChange(() => drawCharts(el, allEntries.filter((e) => inWhere(where.value, e.event ?? {}))));
+  } catch (err) {
+    showError(el, err);
+  }
+}
 
+// The three charts over `entries`, drawn into a fresh element each time (the
+// bubble charts' listeners go with the one they replace); the carousel
+// given `el` itself, so it drops its previous ‹ • ›.
+function drawCharts(el, entries) {
+  try {
     // Primary commander only, same as the Commanders page's own chart —
     // counting the partner too would let one appearance count twice and
     // push the shares past 100%. Archetypes counted over the same entries
     // (one per entry), same as the Archetipi page's own Metashare chart.
+    // (The archetypes' shares over the entries with one: an entry imported
+    // from endstep has none until the admin sets it — migration 038.)
     const counts = new Map(); // commander id -> { name, count }
     const archetypeCounts = new Map(ARCHETYPES.map((a) => [a, 0]));
     let total = 0;
+    let withArchetype = 0;
     for (const e of entries) {
       if (!e.commander) continue;
       total += 1;
       const key = e.commander.id;
       if (!counts.has(key)) counts.set(key, { id: key, name: e.commander.name, count: 0 });
       counts.get(key).count += 1;
-      if (archetypeCounts.has(e.archetype)) archetypeCounts.set(e.archetype, archetypeCounts.get(e.archetype) + 1);
+      if (archetypeCounts.has(e.archetype)) {
+        archetypeCounts.set(e.archetype, archetypeCounts.get(e.archetype) + 1);
+        withArchetype += 1;
+      }
     }
 
     if (total === 0) {
@@ -387,7 +415,7 @@ async function renderCommandersSection(el) {
     // The archetypes as flat bubbles, each a link to its page.
     const archetypeRows = ARCHETYPES.map((a) => ({
       label: a,
-      share: (archetypeCounts.get(a) / total) * 100,
+      share: withArchetype ? (archetypeCounts.get(a) / withArchetype) * 100 : 0,
       color: ARCHETYPE_COLORS[a],
       href: `archetype.html?id=${a}`,
       icon: archetypeIcon(a, "bubble-icon"),
@@ -403,7 +431,9 @@ async function renderCommandersSection(el) {
     // — its "Colori più giocati" chart.
     const periodLabel = `(ultimi ${TOP_COMMANDERS_WINDOW_MONTHS} mesi)`;
     const seeAll = (href) => `<a class="section-link" href="${href}">Vedi tutti</a>`;
-    el.innerHTML = `
+    const body = document.createElement("div");
+    el.replaceChildren(body);
+    body.innerHTML = `
       <div class="chart-grid">
         ${renderBubbleChart(chartRows, "Nessun dato per il grafico.", "Commander più giocati", {
           subtitle: periodLabel,
@@ -418,7 +448,7 @@ async function renderCommandersSection(el) {
           footer: seeAll("commanders.html"),
         })}
       </div>`;
-    initBubbleChart(el);
+    initBubbleChart(body);
     initChartCarousel(el, { navAfter: document.getElementById("dashboard-charts-card") });
   } catch (err) {
     showError(el, err);
@@ -639,7 +669,7 @@ export function mount({ signal = new AbortController().signal } = {}) {
   const skRecap = document.querySelector(".sk-page.is-home .sk-recap");
   if (skRecap) skRecap.hidden = !recapLikely();
   initTabs(document.querySelector(".home-tabs"));
-  renderCommandersSection(document.getElementById("dashboard-commanders-content"));
+  renderCommandersSection(document.getElementById("dashboard-commanders-content"), signal);
   return Promise.allSettled([
     renderTimeline(document.getElementById("home-timeline"), signal),
     renderStandings(document.getElementById("dashboard-leagues-content")),

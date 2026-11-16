@@ -1928,6 +1928,17 @@ html.nav-mobile .player-hero .where-opt {
   }
 }
 
+/* The Bacheca's Dove bar (js/home.js renderCommandersSection — user,
+   2026-11-16): above Più giocati's card — on a computer at the left, on
+   touch screens the page's width like the Meta pages' (the rule above). */
+.home-panel-meta > .where-filter:not([hidden]) {
+  margin-bottom: 14px;
+}
+
+html.nav-mobile .home-panel-meta > .where-filter:not([hidden]) {
+  margin: 0 0 14px;
+}
+
 /* Its league recap (the live league's) hidden under "Online". */
 .league-recap.is-where-hidden {
   display: none;

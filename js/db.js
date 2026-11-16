@@ -491,15 +491,16 @@ export const EventEntries = {
   // filtered by the database (inner join on the event) rather than
   // downloading every entry ever and filtering in the browser, so the
   // payload stays the same size however long the club's history grows.
-  listForChartsSince: (sinceIso) =>
-    selectAllRows(() =>
-      sb
+  // Online ones too with `withOnline` (the Bacheca's Dove bar), each
+  // row's event.is_online telling them apart.
+  listForChartsSince: (sinceIso, { withOnline = false } = {}) =>
+    selectAllRows(() => {
+      const query = sb
         .from("event_entries")
         .select(`id, archetype, ${COMMANDER_EMBED}, event:events!inner(event_date,is_online)`)
-        .gte("event.event_date", sinceIso)
-        .eq("event.is_online", false)
-        .order("id")
-    ),
+        .gte("event.event_date", sinceIso);
+      return (withOnline ? query : query.eq("event.is_online", false)).order("id");
+    }),
   listByEvent: (eventId) =>
     sb
       .from("event_entries")
