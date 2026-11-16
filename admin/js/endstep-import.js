@@ -23,7 +23,10 @@ import { renderTable, setMessage, runBusy } from "./crud-ui.js";
  * order it's mostly stored in already). Saving remembers each player's
  * username for the next import. Matches: every reported pairing with its
  * game scores (a no-show as endstep scores it, 2-0), a bye as our bye;
- * anything else (unfinished) is left out and said. The places follow
+ * anything else (unfinished) is left out and said; a player whose last
+ * match comes before the last round dropped (user: played, then no more) —
+ * our drop row in the round after it, "ritirato dopo il turno N" in the
+ * preview. The places follow
  * endstep's (manual_rank) within equal points. Archetypes are left empty —
  * set them later in Iscritti. The event must be open (like any change to
  * its entries).
@@ -119,6 +122,16 @@ export function initEndstepImport({ onImported }) {
     const byName = new Map(players.filter((p) => nameCount.get(norm(p.name)) === 1).map((p) => [norm(p.name), p]));
     const commanderByKey = new Map(commanders.map((c) => [commanderKey(c.name), c]));
 
+    // Each entrant's last round with a pairing (a bye, a no-show included):
+    // one before the last round dropped.
+    const lastRound = Math.max(0, ...data.rounds.map((r) => r.round));
+    const lastPlayed = new Map();
+    for (const r of data.rounds) {
+      for (const p of r.pairings) {
+        for (const s of p.seats) lastPlayed.set(s.entrantId, Math.max(lastPlayed.get(s.entrantId) ?? 0, r.round));
+      }
+    }
+
     // Who never played a match (0-0-0) isn't imported: counted in the summary.
     const played = (e) => e.wins + e.losses + e.draws > 0;
     const absent = data.entrants.filter((e) => !played(e)).length;
@@ -135,7 +148,9 @@ export function initEndstepImport({ onImported }) {
               ? [byName.get(key), "nome"]
               : [null, null];
         const deck = (e.commanders ?? []).slice(0, 2).map((name) => ({ name, existing: commanderByKey.get(commanderKey(name)) ?? null }));
-        return { id: i, entrant: e, player, how, deck };
+        const last = lastPlayed.get(e.entrantId) ?? 0;
+        const dropAfter = last > 0 && last < lastRound ? last : null;
+        return { id: i, entrant: e, player, how, deck, dropAfter };
       });
     plan = { data, rows, players, commanders, absent };
     renderPreview();
@@ -178,7 +193,7 @@ export function initEndstepImport({ onImported }) {
           label: "endstep",
           render: (r) =>
             `<span class="rank-chip">${r.entrant.place ?? "—"}</span> ${escapeHtml(r.entrant.username)}${
-              r.entrant.status === "dropped" ? ' <span class="admin-card-muted">(ritirato)</span>' : ""
+              r.dropAfter ? ` <span class="admin-card-muted">(ritirato dopo il turno ${r.dropAfter})</span>` : ""
             }`,
         },
         {
@@ -333,13 +348,30 @@ export function initEndstepImport({ onImported }) {
           });
         }
       }
+      // The drops: in the round after each one's last match.
+      let drops = 0;
+      for (const c of choices) {
+        if (!c.row.dropAfter) continue;
+        matches.push({
+          round: c.row.dropAfter + 1,
+          player1_id: playerOf.get(c.row.entrant.entrantId),
+          player2_id: null,
+          player1_wins: 0,
+          draws: 0,
+          player2_wins: 0,
+          is_drop: true,
+        });
+        drops += 1;
+      }
 
       await Endstep.replaceResults(currentEvent.id, data.tournament.rounds, entries, matches);
       currentEvent.rounds = Math.max(1, data.tournament.rounds);
       close();
       setMessage(
         msgEl,
-        `Importati ${entries.length} giocatori e ${matches.length} partite${skipped ? ` (${skipped} non concluse saltate)` : ""}. Ricorda gli archetipi.`,
+        `Importati ${entries.length} giocatori e ${matches.length - drops} partite${drops ? `, ${drops} drop` : ""}${
+          skipped ? ` (${skipped} non concluse saltate)` : ""
+        }. Ricorda gli archetipi.`,
         false
       );
       onImported?.();

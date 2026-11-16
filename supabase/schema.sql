@@ -348,7 +348,8 @@ create trigger leagues_online_to_events
 -- only; an archetype or a league bonus already set for a player is kept
 -- (the import has none). p_entries: [{ player_id, commander_id,
 -- partner_commander_id, manual_rank }]; p_matches: [{ round, player1_id,
--- player2_id, player1_wins, draws, player2_wins }]. Migration 038.
+-- player2_id, player1_wins, draws, player2_wins, is_drop }] (is_drop: the
+-- drops, false when not given — migration 039). Migration 038.
 create or replace function replace_event_results(
   p_event_id uuid, p_rounds integer, p_entries jsonb, p_matches jsonb
 ) returns void
@@ -375,7 +376,8 @@ begin
 
   insert into matches (event_id, round, player1_id, player2_id, player1_wins, draws, player2_wins, is_drop)
   select p_event_id, (m->>'round')::integer, (m->>'player1_id')::uuid, (m->>'player2_id')::uuid,
-    (m->>'player1_wins')::integer, (m->>'draws')::integer, (m->>'player2_wins')::integer, false
+    (m->>'player1_wins')::integer, (m->>'draws')::integer, (m->>'player2_wins')::integer,
+    coalesce((m->>'is_drop')::boolean, false)
   from jsonb_array_elements(p_matches) m;
 
   update events set rounds = greatest(coalesce(p_rounds, 1), 1) where id = p_event_id;
