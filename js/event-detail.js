@@ -137,7 +137,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     // A shared recap link (js/event-recap.js "Condividi il recap"):
     // event.html?id=…&recap=1 opens the event's recap straight away.
     if (!event.is_open && new URLSearchParams(location.search).get("recap") === "1") openEventRecap(id);
-    const resultsHtml = nestedResultsMenu(event.results_url, event.decklists_url);
+    const resultsHtml = nestedResultsMenu(event.results_url, event.decklists_url, event.endstep_url);
     resultsEl.innerHTML = resultsHtml;
     resultsEl.hidden = !resultsHtml;
     // The hero's buttons: "Recap" for a played event with entrants, "Liste"

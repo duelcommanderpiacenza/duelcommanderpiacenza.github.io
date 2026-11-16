@@ -129,6 +129,10 @@
             <input type="text" id="players-admin-handle" placeholder="es. tag Discord, soprannome">
           </div>
           <div class="field">
+            <label for="players-admin-endstep">Username endstep <span class="field-hint">(per l'importazione dei tornei online)</span></label>
+            <input type="text" id="players-admin-endstep" placeholder="es. Delvo5" maxlength="64">
+          </div>
+          <div class="field">
             <label for="players-admin-badge1">Badge 1</label>
             <select id="players-admin-badge1"></select>
           </div>
@@ -144,6 +148,15 @@
         </form>
       </div>
       <div>
+        <!-- Dal vivo: chi ha giocato eventi dal vivo (o ancora nessun
+             evento); Online: chi ha giocato eventi online (endstep). Chi ha
+             fatto entrambi è in tutti e due. -->
+        <div class="admin-seg-field">
+          <div class="admin-seg" role="radiogroup" aria-label="Giocatori da mostrare" id="players-admin-where">
+            <label><input type="radio" name="players-admin-where" value="live" checked><span>Dal vivo</span></label>
+            <label><input type="radio" name="players-admin-where" value="online"><span>Online</span></label>
+          </div>
+        </div>
         <div class="field">
           <label for="players-admin-search">Cerca</label>
           <input type="search" id="players-admin-search" placeholder="Nome o handle...">
@@ -411,6 +424,11 @@
               <label for="events-admin-decklists-url">Link Moxfield</label>
               <input type="url" id="events-admin-decklists-url" placeholder="https://moxfield.com/..." pattern="https?://.+">
             </div>
+            <!-- Solo per un evento online (lega online): il link all'evento su endstep. -->
+            <div class="field" id="events-admin-endstep-field" hidden>
+              <label for="events-admin-endstep-url">Link endstep</label>
+              <input type="url" id="events-admin-endstep-url" placeholder="https://endstep.cc/..." pattern="https?://.+">
+            </div>
             <div class="form-actions">
               <button type="submit" class="btn-primary">Salva</button>
               <button type="button" class="btn-secondary" id="events-admin-cancel">Annulla</button>
@@ -466,6 +484,11 @@
           <div class="field">
             <label for="standalone-events-admin-decklists-url">Link Moxfield</label>
             <input type="url" id="standalone-events-admin-decklists-url" placeholder="https://moxfield.com/..." pattern="https?://.+">
+          </div>
+          <!-- Solo per un evento online: il link all'evento su endstep. -->
+          <div class="field" id="standalone-events-admin-endstep-field" hidden>
+            <label for="standalone-events-admin-endstep-url">Link endstep</label>
+            <input type="url" id="standalone-events-admin-endstep-url" placeholder="https://endstep.cc/..." pattern="https?://.+">
           </div>
           <div class="form-actions">
             <button type="submit" class="btn-primary">Salva</button>
@@ -586,6 +609,17 @@
 
     <!-- Iscritti di un evento -->
     <div class="admin-subview" id="subview-event-detail" hidden>
+      <!-- Solo per un evento online: iscritti e partite letti dal torneo su
+           endstep (il Link endstep dell'evento), con un'anteprima da
+           controllare prima di salvare (js/endstep-import.js). -->
+      <div class="endstep-import" id="endstep-import" hidden>
+        <div class="endstep-import-bar">
+          <button type="button" class="btn-primary" id="endstep-import-btn">Importa da endstep</button>
+          <span class="field-hint" id="endstep-import-hint"></span>
+        </div>
+        <p class="form-message" id="endstep-import-message"></p>
+        <div id="endstep-import-preview"></div>
+      </div>
       <h4>Iscritti <span class="admin-heading-count" id="entries-admin-count" hidden></span></h4>
       <div class="admin-panel-layout">
         <div class="admin-form-card">
@@ -612,6 +646,7 @@
                 <option value="combo">Combo</option>
                 <option value="tempo">Tempo</option>
                 <option value="midrange">Midrange</option>
+                <option value="" id="entries-admin-archetype-none" hidden>&mdash; da definire &mdash;</option>
               </select>
             </div>
             <div class="form-actions">

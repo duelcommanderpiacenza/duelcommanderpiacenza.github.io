@@ -255,6 +255,49 @@ export const Decklists = {
   },
 };
 
+// The admin's "Importa da endstep" (admin/js/endstep-import.js, migration
+// 038): readTournament(url) — the endstep-import Edge Function
+// (supabase/functions/endstep-import), which reads the tournament behind an
+// online event's link (throws an Error whose message is its error code, as
+// Decklists.send); profileUsernames() — the accounts' endstep usernames
+// (profiles.endstep, admin-readable), to find their players;
+// replaceResults() — the event's entries and matches replaced in one go
+// (replace_event_results); playerKinds() — every entry's player and whether
+// its event was online, for the admin's Giocatori filter (Dal vivo /
+// Online).
+export const Endstep = {
+  readTournament: async (url) => {
+    const { data, error } = await sb.functions.invoke("endstep-import", { body: { url } });
+    if (!error) return data;
+    let code = "endstep_failed";
+    try {
+      code = (await error.context.json())?.error ?? code;
+    } catch {
+      // Not the function's answer (network, not deployed): "not_deployed".
+      code = "not_deployed";
+    }
+    throw new Error(code);
+  },
+  profileUsernames: () => sb.from("profiles").select("user_id, endstep").not("endstep", "is", null).then(assertOk),
+  replaceResults: (eventId, rounds, entries, matches) =>
+    sb
+      .rpc("replace_event_results", { p_event_id: eventId, p_rounds: rounds, p_entries: entries, p_matches: matches })
+      .then(assertOk),
+  playerKinds: () =>
+    selectAllRows(() => sb.from("event_entries").select("id, player_id, event:events!inner(is_online)").order("id")),
+  // Every commander + partner pair entered so far, in its order — an
+  // imported pair is put the way it's usually stored (a pair is one deck
+  // only in one order: "A / B" and "B / A" would count as two).
+  knownPairs: () =>
+    selectAllRows(() =>
+      sb
+        .from("event_entries")
+        .select("id, commander_id, partner_commander_id")
+        .not("partner_commander_id", "is", null)
+        .order("id")
+    ),
+};
+
 // The signed-in user's own login account (account.html's "Account" card).
 // remove(): migration 006's delete_my_account() — refused for an
 // admin (admin_account); its profile and pending request go with it, its

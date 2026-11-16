@@ -1,4 +1,4 @@
-import { Players, Badges, EventEntries } from "../../js/db.js";
+import { Players, Badges, EventEntries, Endstep } from "../../js/db.js";
 import { escapeHtml, badgeDiscHtml } from "../../js/ui.js";
 import { renderTable, setMessage, fillSelect, onBusySubmit } from "./crud-ui.js";
 import { emit, on } from "./bus.js";
@@ -10,12 +10,26 @@ export function initPlayersAdmin() {
   const idField = document.getElementById("players-admin-id");
   const nameField = document.getElementById("players-admin-name");
   const handleField = document.getElementById("players-admin-handle");
+  // Their endstep.cc username (migration 038): how "Importa da endstep"
+  // (endstep-import.js) finds them; also remembered by an import.
+  const endstepField = document.getElementById("players-admin-endstep");
+  // Dal vivo (the default) / Online: who has played live events (or none
+  // yet) / online ones — both: in both lists.
+  const whereRadios = Array.from(document.querySelectorAll('input[name="players-admin-where"]'));
+  const where = () => whereRadios.find((r) => r.checked)?.value ?? "live";
   const badge1Field = document.getElementById("players-admin-badge1");
   const badge2Field = document.getElementById("players-admin-badge2");
   const msgEl = document.getElementById("players-admin-message");
   const cancelBtn = document.getElementById("players-admin-cancel");
 
   let allPlayers = [];
+  // player id -> { live, online }: which kinds of event they've played.
+  let kindsByPlayer = new Map();
+
+  function inWhere(player) {
+    const kinds = kindsByPlayer.get(player.id);
+    return where() === "online" ? Boolean(kinds?.online) : !kinds || kinds.live;
+  }
 
   // The 2 manually assigned badge slots — a player also shows the ones
   // they earn automatically (badges.auto_rule, js/auto-badges.js, cached in
@@ -56,9 +70,12 @@ export function initPlayersAdmin() {
   // whether a player has already been entered before adding a duplicate.
   function renderList(animate = true) {
     const term = searchField.value.trim().toLowerCase();
+    const shown = allPlayers.filter(inWhere);
+    // How many there are, in the search field (like the public lists').
+    searchField.placeholder = `Cerca tra ${shown.length} giocatori (nome o handle)...`;
     const visible = term
-      ? allPlayers.filter((p) => `${p.name} ${p.handle ?? ""}`.toLowerCase().includes(term))
-      : allPlayers;
+      ? shown.filter((p) => `${p.name} ${p.handle ?? ""} ${p.endstep ?? ""}`.toLowerCase().includes(term))
+      : shown;
     if (term && visible.length === 0) {
       listEl.innerHTML = '<p class="page-empty">Nessun giocatore corrisponde alla ricerca.</p>';
       return;
@@ -69,6 +86,7 @@ export function initPlayersAdmin() {
       [
         { key: "name", label: "Nome" },
         { key: "handle", label: "Handle" },
+        { key: "endstep", label: "endstep" },
         {
           key: "badges",
           label: "Badge",
@@ -87,9 +105,17 @@ export function initPlayersAdmin() {
 
   async function refresh() {
     try {
-      allPlayers = await Players.list();
-      // How many there are, in the search field (like the public lists').
-      searchField.placeholder = `Cerca tra ${allPlayers.length} giocatori (nome o handle)...`;
+      const [players, kinds] = await Promise.all([
+        Players.list(),
+        // Not fatal: without it, everyone under Dal vivo.
+        Endstep.playerKinds().catch((err) => (console.error(err), [])),
+      ]);
+      allPlayers = players;
+      kindsByPlayer = new Map();
+      for (const k of kinds) {
+        if (!kindsByPlayer.has(k.player_id)) kindsByPlayer.set(k.player_id, { live: false, online: false });
+        kindsByPlayer.get(k.player_id)[k.event?.is_online ? "online" : "live"] = true;
+      }
       renderList();
     } catch (err) {
       setMessage(msgEl, "Errore nel caricamento.", true);
@@ -98,11 +124,13 @@ export function initPlayersAdmin() {
   }
 
   searchField.addEventListener("input", () => renderList(false));
+  whereRadios.forEach((r) => r.addEventListener("change", () => renderList()));
 
   function onEdit(row) {
     idField.value = row.id;
     nameField.value = row.name;
     handleField.value = row.handle ?? "";
+    endstepField.value = row.endstep ?? "";
     badge1Field.value = row.badge1?.id ?? "";
     badge2Field.value = row.badge2?.id ?? "";
   }
@@ -158,6 +186,11 @@ export function initPlayersAdmin() {
       badge2_id: badge2Field.value || null,
     };
     if (!payload.name) return;
+    // Sent only when set (or being cleared), so a database without
+    // migration 038 still saves the rest.
+    const endstep = endstepField.value.trim();
+    const editing = allPlayers.find((p) => p.id === idField.value);
+    if (endstep || editing?.endstep) payload.endstep = endstep || null;
     try {
       if (idField.value) await Players.update(idField.value, payload);
       else await Players.create(payload);
@@ -166,13 +199,19 @@ export function initPlayersAdmin() {
       setMessage(msgEl, "Salvato.", false);
       emit("players:changed");
     } catch (err) {
-      setMessage(msgEl, "Errore nel salvataggio.", true);
+      setMessage(
+        msgEl,
+        err?.code === "23505" ? "Questo username endstep è già di un altro giocatore." : "Errore nel salvataggio.",
+        true
+      );
     }
   });
 
   cancelBtn.addEventListener("click", resetForm);
 
   on("badges:changed", populateBadges);
+  // An import (endstep-import.js) may add players and online entries.
+  on("endstep:imported", () => refresh());
 
   Promise.all([populateBadges(), refresh()]);
 }

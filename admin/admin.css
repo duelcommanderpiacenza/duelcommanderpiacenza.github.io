@@ -1592,6 +1592,66 @@ body.is-busy::before {
   font-style: italic;
 }
 
+/* "Importa da endstep" (js/endstep-import.js), above an online event's
+   Iscritti: the button and its hint, then the preview — a summary line,
+   one card per entrant (renderTable) with its player picker / new name and
+   commander, Importa / Annulla. */
+.endstep-import {
+  margin-bottom: 24px;
+}
+
+.endstep-import[hidden] {
+  display: none;
+}
+
+.endstep-import-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.endstep-import-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 14px 0 10px;
+  color: var(--text-body);
+}
+
+.endstep-import-warn {
+  flex-basis: 100%;
+  color: var(--brand-red-deep);
+  font-weight: 700;
+}
+
+.endstep-import-control {
+  max-width: 100%;
+  font: inherit;
+  padding: 6px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--hairline);
+  background: #fff;
+  color: var(--text-body);
+}
+
+.endstep-import-control[hidden] {
+  display: none;
+}
+
+input.endstep-import-control {
+  display: block;
+  margin-top: 6px;
+}
+
+:root[data-theme="dark"] .endstep-import-control {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.endstep-import-actions {
+  margin-top: 14px;
+}
+
 /* League bonus points, edited inline in an event's leaderboard
    (matches-admin.js) — same look as a form field (.field input), sized down
    to sit in a table row. */

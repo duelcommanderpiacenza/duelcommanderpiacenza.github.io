@@ -200,9 +200,12 @@ function sectionsHtml({ points, byMonth }, width) {
     const H = narrow ? 200 : 230;
     // (2px under the top: the top band's line whole, not cut by the edge.)
     const y = (v) => H - bottom - v * (H - bottom - 2);
-    const shares = points.map((p) =>
-      Object.fromEntries(ARCHETYPES.map((a) => [a, p.entries.filter((e) => e.archetype === a).length / (p.entries.length || 1)]))
-    );
+    // Shares of the entries with an archetype (one imported from endstep
+    // has none until the admin sets it — migration 038), so they add up.
+    const shares = points.map((p) => {
+      const known = p.entries.filter((e) => e.archetype).length || 1;
+      return Object.fromEntries(ARCHETYPES.map((a) => [a, p.entries.filter((e) => e.archetype === a).length / known]));
+    });
     // Each band a light tint of its archetype with a solid line on top, like
     // the site's other charts; the first one reaching down through the
     // dates' band to the card's edge (commander.html's "Utilizzo" area).

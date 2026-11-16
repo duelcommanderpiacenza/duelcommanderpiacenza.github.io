@@ -132,11 +132,16 @@ create table players (
   -- The login account linked to this player (player_claims below): at most
   -- one each way. Written only by the admin (players_admin_update).
   user_id uuid unique references auth.users(id) on delete set null,
+  endstep text, -- the player's endstep.cc username: set in the admin's Giocatori form or remembered by an
+    -- "Importa da endstep" (admin/js/endstep-import.js), which finds the player by it. Migration 038.
   created_at timestamptz not null default now(),
   constraint players_badge1_id_fkey foreign key (badge1_id) references badges(id) on delete set null,
   constraint players_badge2_id_fkey foreign key (badge2_id) references badges(id) on delete set null,
   constraint players_badges_distinct check (badge1_id <> badge2_id)
 );
+
+-- One player per endstep username (case and outer spaces ignored). Migration 038.
+create unique index players_endstep_unique on players (lower(btrim(endstep))) where endstep is not null;
 
 create table leagues (
   id uuid primary key default gen_random_uuid(),
@@ -185,12 +190,16 @@ create table events (
     -- league's (events_online_from_league below), a standalone one's set in the admin. Shown for now only on
     -- the Bacheca's timeline, Leghe & Eventi, its league's and its own page (js/db.js leaves it out of the
     -- rest). Added by migration 034.
+  endstep_url text, -- an online event's link to its event on endstep.cc (optional, set in the admin only for an
+    -- online one), in the event's "Liste" menu with the other two links. Same rules as results_url. Added by
+    -- migration 036.
   constraint events_unique_name_per_league unique (league_id, name), -- same name OK across leagues, not within one
   constraint events_external_standalone check (not is_external or league_id is null),
   constraint events_external_open check (not is_external or is_open),
   constraint events_external_not_online check (not (is_external and is_online)),
   constraint events_results_url_http check (results_url ~* '^https?://'),
-  constraint events_decklists_url_http check (decklists_url ~* '^https?://')
+  constraint events_decklists_url_http check (decklists_url ~* '^https?://'),
+  constraint events_endstep_url_http check (endstep_url ~* '^https?://')
 );
 
 -- Postgres treats every NULL as distinct for a plain unique constraint, so
@@ -209,7 +218,8 @@ create table event_entries ( -- a player's commander(s) + archetype for one even
   player_id uuid not null references players(id) on delete restrict,
   commander_id uuid not null,
   partner_commander_id uuid, -- optional partner/background commander; entry reads as "Commander / Partner"
-  archetype deck_archetype not null,
+  archetype deck_archetype, -- empty only for an entry imported from endstep (migration 038: endstep
+    -- doesn't know it), until the admin sets it; the admin's form requires it for a live event
   bonus_points integer not null default 0, -- manual one-off league-point adjustment (e.g. a special-tournament bonus)
   manual_rank integer, -- admin override for this player's place within their tied-on-points group in the
     -- event standings (lower = better); null everywhere the computed MTG tiebreakers are left as-is
@@ -332,6 +342,48 @@ create trigger leagues_online_to_events
   after update of is_online on leagues
   for each row when (old.is_online is distinct from new.is_online)
   execute function leagues_online_to_events();
+
+-- "Importa da endstep" (admin/js/endstep-import.js): an open online event's
+-- entries and matches replaced in one transaction (all or nothing), admin
+-- only; an archetype or a league bonus already set for a player is kept
+-- (the import has none). p_entries: [{ player_id, commander_id,
+-- partner_commander_id, manual_rank }]; p_matches: [{ round, player1_id,
+-- player2_id, player1_wins, draws, player2_wins }]. Migration 038.
+create or replace function replace_event_results(
+  p_event_id uuid, p_rounds integer, p_entries jsonb, p_matches jsonb
+) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not is_admin() then
+    raise exception 'not allowed';
+  end if;
+  if not exists (select 1 from events where id = p_event_id and is_online and is_open) then
+    raise exception 'the event must be online and open';
+  end if;
+
+  create temp table replace_event_results_kept on commit drop as
+    select player_id, archetype, bonus_points from event_entries where event_id = p_event_id;
+
+  delete from matches where event_id = p_event_id;
+  delete from event_entries where event_id = p_event_id;
+
+  insert into event_entries (event_id, player_id, commander_id, partner_commander_id, archetype, bonus_points, manual_rank)
+  select p_event_id, (e->>'player_id')::uuid, (e->>'commander_id')::uuid, (e->>'partner_commander_id')::uuid,
+    k.archetype, coalesce(k.bonus_points, 0), (e->>'manual_rank')::integer
+  from jsonb_array_elements(p_entries) e
+  left join replace_event_results_kept k on k.player_id = (e->>'player_id')::uuid;
+
+  insert into matches (event_id, round, player1_id, player2_id, player1_wins, draws, player2_wins, is_drop)
+  select p_event_id, (m->>'round')::integer, (m->>'player1_id')::uuid, (m->>'player2_id')::uuid,
+    (m->>'player1_wins')::integer, (m->>'draws')::integer, (m->>'player2_wins')::integer, false
+  from jsonb_array_elements(p_matches) m;
+
+  update events set rounds = greatest(coalesce(p_rounds, 1), 1) where id = p_event_id;
+end;
+$$;
+
+revoke all on function replace_event_results(uuid, integer, jsonb, jsonb) from public, anon;
+grant execute on function replace_event_results(uuid, integer, jsonb, jsonb) to authenticated;
 
 -- Every event's first close makes a "Novità" of its own (js/header-news.js):
 -- "Risultati online: <event>", linked to it (announcements.event_id, shown

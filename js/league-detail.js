@@ -102,7 +102,7 @@ function timelineItemHtml({ ev, state, players }, number, today) {
   // name, so the name alone, centred, and the time at the card's bottom
   // right (.league-tl-time).
   const upcoming = state === "next" || state === "future";
-  const links = state === "played" ? nestedResultsMenu(ev.results_url, ev.decklists_url) : "";
+  const links = state === "played" ? nestedResultsMenu(ev.results_url, ev.decklists_url, ev.endstep_url) : "";
   const time = upcoming && ev?.start_time ? `<span class="league-tl-side league-tl-time">${formatTime(ev.start_time)}</span>` : "";
   const body = `
           <span class="league-tl-text">

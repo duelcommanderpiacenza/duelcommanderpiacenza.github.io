@@ -17,6 +17,7 @@ import { initAnnouncementsAdmin } from "./announcements-admin.js";
 import { initUsersAdmin } from "./users-admin.js";
 import { initEntriesAdmin } from "./entries-admin.js";
 import { initMatchesAdmin } from "./matches-admin.js";
+import { initEndstepImport } from "./endstep-import.js";
 import { initAdminNavDropdown } from "./admin-nav-dropdown.js";
 import { tabLabel } from "./tab-counts.js";
 import { syncAutoBadges } from "./badges-sync.js";
@@ -265,6 +266,17 @@ function showAdmin(session) {
     const entriesCtl = initEntriesAdmin();
     const matchesCtl = initMatchesAdmin();
     const viewCtls = { entries: entriesCtl, matches: matchesCtl };
+    // An online event's "Importa da endstep" (above its Iscritti): once
+    // saved, both views and the lists it may have added to catch up.
+    const importCtl = initEndstepImport({
+      onImported: () => {
+        entriesCtl.openEvent(currentEvent);
+        emit("entries:changed");
+        emit("players:changed");
+        emit("commanders:changed");
+        emit("endstep:imported");
+      },
+    });
 
     // Loads a view's data before it goes on screen, so it appears once with
     // its content in place instead of empty (or still showing the previous
@@ -288,6 +300,7 @@ function showAdmin(session) {
       eventOrigin =
         fromTab?.dataset.tab === "leagues" ? leagueDetailTitle.textContent || "Leghe" : fromTab ? tabLabel(fromTab) : "";
       eventFlowTitle.textContent = eventTitle(event);
+      importCtl.openEvent(event);
       setStatusToggle(eventFlowToggleBtn, event.is_open, "event");
       // Set while the flow is still hidden, so the switch's pill jumps
       // straight to Giocatori instead of sliding there from last time.
@@ -331,6 +344,7 @@ function showAdmin(session) {
         setStatusToggle(eventFlowToggleBtn, currentEvent.is_open, "event");
         entriesCtl.openEvent(currentEvent);
         matchesCtl.refreshOpenState();
+        importCtl.refreshOpenState();
         emit("events:changed");
         // Closed or reopened — see events-admin.js's own onToggleOpen for
         // why both count, and why this is fire-and-forget.

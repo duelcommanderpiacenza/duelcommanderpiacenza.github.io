@@ -16,6 +16,9 @@ export function initEntriesAdmin() {
   const commanderField = document.getElementById("entries-admin-commander");
   const partnerField = document.getElementById("entries-admin-partner");
   const archetypeField = document.getElementById("entries-admin-archetype");
+  // "— da definire —": an online event's only (an entry imported from
+  // endstep has no archetype until it's set here — migration 038).
+  const archetypeNone = document.getElementById("entries-admin-archetype-none");
   const msgEl = document.getElementById("entries-admin-message");
   const cancelBtn = document.getElementById("entries-admin-cancel");
   // How many players the event has so far, by the "Iscritti" heading —
@@ -93,7 +96,12 @@ export function initEntriesAdmin() {
             label: "Commander",
             render: (r) => (r.partner_commander ? `${r.commander?.name} / ${r.partner_commander.name}` : r.commander?.name ?? ""),
           },
-          { key: "archetype", label: "Archetipo", render: (r) => archetypeBadge(r.archetype, { link: false }) },
+          {
+            key: "archetype",
+            label: "Archetipo",
+            // None yet: an entry imported from endstep (migration 038).
+            render: (r) => archetypeBadge(r.archetype, { link: false }) || '<span class="admin-card-muted">da definire</span>',
+          },
         ],
         { onEdit, onDelete }
       );
@@ -109,7 +117,7 @@ export function initEntriesAdmin() {
     playerField.value = row.player_id;
     commanderField.value = row.commander_id;
     partnerField.value = row.partner_commander_id ?? "";
-    archetypeField.value = row.archetype;
+    archetypeField.value = row.archetype ?? "";
   }
 
   function resetForm() {
@@ -143,7 +151,7 @@ export function initEntriesAdmin() {
       player_id: playerField.value,
       commander_id: commanderField.value,
       partner_commander_id: partnerField.value || null,
-      archetype: archetypeField.value,
+      archetype: archetypeField.value || null,
       // No bonus_points here: set from the event leaderboard instead
       // (matches-admin.js), and left untouched by editing the entry.
     };
@@ -168,6 +176,12 @@ export function initEntriesAdmin() {
   // openEvent: app.js waits on it before revealing the view).
   function openEvent(event) {
     currentEvent = event;
+    const online = Boolean(event?.is_online);
+    archetypeNone.hidden = !online;
+    archetypeField.required = !online;
+    // Moved onto itself (still last): a change to the option list, which
+    // js/custom-select.js redraws its menu on (not on `hidden` alone).
+    archetypeField.appendChild(archetypeNone);
     resetForm();
     applyLockState();
     return refresh();
