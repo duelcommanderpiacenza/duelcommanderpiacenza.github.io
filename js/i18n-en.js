@@ -116,6 +116,13 @@
     "Partite giocate": "Matches played",
     "partite": "matches",
     "partita": "match",
+    // player.html's rivals (js/player-rivals.js).
+    "Rivali": "Rivals",
+    "Bestia nera": "Nemesis",
+    "Vittima preferita": "Favourite victim",
+    "Vecchia conoscenza": "Old acquaintance",
+    "sconfitte": "losses",
+    "vittorie": "wins",
     "Turni": "Rounds",
     "Punti": "Points",
     "punti": "points",

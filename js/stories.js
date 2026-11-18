@@ -59,14 +59,31 @@ function commanderNamed(commanders, part) {
   return commanders.find((c) => c.name.toLowerCase().startsWith(p)) ?? commanders.find((c) => c.name.toLowerCase().includes(p)) ?? null;
 }
 
+// A side's commanders: one, or a partner pair ("Yoshimaru + Kraum"), each
+// with its short name in the title and the commander it matches (or null).
+function sideCommanders(commanders, side) {
+  return (side ?? "")
+    .split(/\s*[+&]\s*/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => ({ part, commander: commanderNamed(commanders, part) }));
+}
+
 function videoSlides(video, commanders) {
   const { matchup, left, right } = parseVideoTitle(video.title);
-  // The two commanders: their arts in one row (with the VS between), their
-  // names in a row under it — so the circles line up whatever the names'
-  // length.
-  const [lc, rc] = [left, right].map((part) => commanderNamed(commanders, part));
-  const art = (c) => `<span class="story-vs-art" data-art="${escapeHtml(c?.name ?? "")}"></span>`;
-  const label = (c, part) => `<b>${escapeHtml(c?.name ?? part ?? "")}</b>`;
+  // The two sides: their arts in one row (with the VS between), their names
+  // in a row under it — so the circles line up whatever the names' length.
+  // A partner pair: one circle split in two, an art each.
+  const [ls, rs] = [left, right].map((side) => sideCommanders(commanders, side));
+  const art = (side) => {
+    const found = side.filter((s) => s.commander);
+    if (found.length < 2) return `<span class="story-vs-art" data-art="${escapeHtml(found[0]?.commander.name ?? "")}"></span>`;
+    return `<span class="story-vs-art is-pair">${found
+      .slice(0, 2)
+      .map((s) => `<span data-art="${escapeHtml(s.commander.name)}"></span>`)
+      .join("")}</span>`;
+  };
+  const label = (side) => `<b>${side.map((s) => escapeHtml(s.commander?.name ?? s.part)).join(" + ")}</b>`;
   const slides = [
     `<section class="recap-slide is-center"><div class="recap-bg story-bg-thumb" style="background-image:url('${escapeHtml(video.thumbnailUrl)}')"></div>
       <p class="recap-k" ${at(0)}>Nuovo video</p>
@@ -75,7 +92,7 @@ function videoSlides(video, commanders) {
       }</h2>
       ${
         left && right
-          ? `<div class="story-vs" ${at(2)}>${art(lc)}<span class="story-vs-word">VS</span>${art(rc)}${label(lc, left)}<span></span>${label(rc, right)}</div>`
+          ? `<div class="story-vs" ${at(2)}>${art(ls)}<span class="story-vs-word">VS</span>${art(rs)}${label(ls)}<span></span>${label(rs)}</div>`
           : ""
       }</section>`,
     `<section class="recap-slide is-center"><div class="recap-bg is-dark"></div>

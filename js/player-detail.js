@@ -19,6 +19,7 @@ import { initBackToTop } from "./back-to-top.js";
 import { renderPlayerLeagueRecap } from "./player-league-recap.js";
 import { cardHint, rememberCard, applyCardPlaceholder } from "./card-hints.js";
 import { initWhereFilter, inWhere } from "./where-filter.js";
+import { rivalsHtml } from "./player-rivals.js";
 
 // Manual (badge1/badge2) and auto badges together — the auto ones are a
 // plain read of PlayerAutoBadges, precomputed by admin/js/badges-sync.js
@@ -89,6 +90,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   }
   const where = initWhereFilter({ signal, remember: false });
   const recapEl = document.getElementById("player-league-recap");
+  const rivalsEl = document.getElementById("player-rivals");
 
   if (!id) {
     titleEl.textContent = "Giocatore non trovato";
@@ -235,6 +237,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
           round: m.round,
           // An online match's opponent by their endstep username.
           opponent: m.event?.is_online ? onlinePlayer(opponent) : opponent,
+          opponentId,
           isBye: isBye(m),
           isDrop: isDrop(m),
           outcome: outcomeFor(m, viewerIsP1),
@@ -328,12 +331,22 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     // The league recap is the live league's: not under "Online".
     const syncRecap = () => recapEl.classList.toggle("is-where-hidden", where.value === "online");
 
+    // Bestia nera / Vittima preferita / Vecchia conoscenza (js/player-rivals.js),
+    // in the Dove bar's scope; hidden when nobody qualifies.
+    function renderRivals() {
+      const html = rivalsHtml(ownRows.filter((r) => inScope(r.event)), id);
+      rivalsEl.innerHTML = html;
+      rivalsEl.hidden = !html;
+    }
+
     renderAlbum();
     renderNumbers();
+    renderRivals();
     syncRecap();
     where.onChange(() => {
       renderNumbers();
       renderAlbum();
+      renderRivals();
       renderHistory();
       syncRecap();
     });

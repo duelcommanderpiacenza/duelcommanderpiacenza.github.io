@@ -3059,3 +3059,217 @@ a.league-recap-card:hover .league-recap-chevron {
     justify-content: flex-start;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   player.html's rivals (js/player-rivals.js), under the league recap: up to
+   three cards side by side, the recap card's look — each a link to
+   Confronto: an icon disc, the funny label over the opponent's name and the
+   head-to-head record, the number big on the right. Each kind its own fixed
+   colour (--rival), never the hero's: Bestia nera red, Vittima preferita green
+   (.pos-move's), Vecchia conoscenza amber. Equal columns, as many as there
+   are cards; up to 900px one under the other. */
+.rivals {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: 14px;
+  margin: 0 0 26px;
+}
+
+/* display: grid above would beat the hidden attribute. */
+.rivals[hidden] {
+  display: none;
+}
+
+.rival-card {
+  --rival: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid rgba(120, 100, 104, 0.2);
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(40, 20, 22, 0.06);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 150ms ease, background 150ms ease;
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.rival-card:nth-child(2) {
+  animation-delay: 60ms;
+}
+
+.rival-card:nth-child(3) {
+  animation-delay: 120ms;
+}
+
+.rival-card.is-nemesis {
+  --rival: #c8161b;
+}
+
+.rival-card.is-victim {
+  --rival: #148a50;
+}
+
+.rival-card.is-regular {
+  --rival: #b7791f;
+}
+
+:root[data-theme="dark"] .rival-card.is-nemesis {
+  --rival: #ff6b6e;
+}
+
+:root[data-theme="dark"] .rival-card.is-victim {
+  --rival: #4cd38f;
+}
+
+:root[data-theme="dark"] .rival-card.is-regular {
+  --rival: #f0b54a;
+}
+
+.rival-card:hover {
+  border-color: color-mix(in srgb, var(--rival) 40%, transparent);
+  background: color-mix(in srgb, var(--rival) 4%, #fff);
+  color: inherit;
+  text-decoration: none;
+}
+
+.rival-card:focus-visible {
+  outline: 2px solid var(--rival);
+  outline-offset: 2px;
+}
+
+:root[data-theme="dark"] .rival-card {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+}
+
+:root[data-theme="dark"] .rival-card:hover {
+  border-color: color-mix(in srgb, var(--rival) 45%, transparent);
+  background: color-mix(in srgb, var(--rival) 10%, rgba(255, 255, 255, 0.05));
+}
+
+.rival-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--rival) 13%, transparent);
+  color: var(--rival);
+}
+
+.rival-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.rival-text {
+  display: grid;
+  flex: 1;
+  gap: 1px;
+  min-width: 0;
+}
+
+.rival-label {
+  color: var(--rival);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.rival-name {
+  overflow: hidden;
+  color: var(--text-title);
+  font-size: 1rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rival-record {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.rival-stat {
+  display: grid;
+  flex: none;
+  justify-items: center;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.rival-stat b {
+  color: var(--rival);
+  font-size: 1.9rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.rival-chevron {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-left: -6px;
+  color: var(--text-muted);
+  transition: transform 150ms ease, color 150ms ease;
+}
+
+.rival-card:hover .rival-chevron {
+  color: var(--rival);
+  transform: translateX(2px);
+}
+
+@media (max-width: 900px) {
+  .rivals {
+    grid-auto-flow: row;
+    gap: 10px;
+  }
+
+  .rival-card {
+    padding: 12px 14px;
+  }
+}
+
+/* player.html on phones (user, 2026-11-18): the first thing in the sheet
+   under the hero (css/6 "The hero pages on touch screens": 26px corners,
+   22px top padding, --page-pad-x at the sides) with its corners concentric
+   with the sheet's — as far from its top edge as from its sides, its radius
+   the sheet's less that gap (26 - 6 = 20px). The Dove bar when it's shown
+   (a pill: its height twice that radius), else the league recap's card,
+   else the rivals. #player-content: these outrank the sheet's and the
+   bar's own rules in css/6, loaded later. Tablets keep their spacing (their
+   20px side gap would leave a 6px radius). */
+@media (max-width: 640px) {
+  html.nav-mobile #player-content .hero-sheet {
+    --sheet-first-top: calc(var(--page-pad-x) - 22px);
+    --sheet-first-radius: calc(26px - var(--page-pad-x));
+  }
+
+  html.nav-mobile #player-content .hero-sheet > .where-filter:not([hidden]) {
+    box-sizing: border-box;
+    min-height: calc(2 * var(--sheet-first-radius));
+    margin-top: var(--sheet-first-top);
+  }
+
+  html.nav-mobile #player-content .hero-sheet > .where-filter[hidden] + .league-recap:not([hidden]),
+  html.nav-mobile #player-content .hero-sheet > .where-filter[hidden] + .league-recap[hidden] + .rivals:not([hidden]) {
+    margin-top: var(--sheet-first-top);
+  }
+
+  html.nav-mobile #player-content .hero-sheet > .where-filter[hidden] + .league-recap .league-recap-card,
+  html.nav-mobile #player-content .hero-sheet > .where-filter[hidden] + .league-recap[hidden] + .rivals > .rival-card {
+    border-radius: var(--sheet-first-radius);
+  }
+}
