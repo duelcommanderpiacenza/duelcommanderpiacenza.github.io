@@ -108,13 +108,13 @@ create table badges ( -- small icon + name a player can be tagged with (e.g. "Ca
   priority integer not null default 0,
   created_at timestamptz not null default now(),
   constraint badges_icon_present check (icon is not null or icon_url is not null),
-  -- The last four rules were added after the initial schema; on an existing DB, replace the
+  -- Several rules were added after the initial schema; on an existing DB, replace the
   -- constraint (drop + add) with this same list rather than re-running this file.
   constraint badges_auto_rule_valid check (
     auto_rule is null or auto_rule in (
       'league_winner', 'top8_streak', 'league_rank_1', 'league_rank_2', 'league_rank_3',
       'highest_winrate', 'most_matches_played', 'most_commanders_played', 'completionist',
-      'league_champion', 'most_byes', 'most_drops', 'commander_loyalty'
+      'league_champion', 'most_byes', 'most_drops', 'commander_loyalty', 'most_draws'
     )
   )
 );

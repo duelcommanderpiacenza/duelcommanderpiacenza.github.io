@@ -349,6 +349,8 @@
     "Duellante": "Duelist",
     "Più match giocati": "Most matches played",
     "Cenerentola": "Cinderella",
+    "Lumaca": "Snail",
+    "Più pareggi": "Most draws",
     "Mutaforma": "Shapeshifter",
     "Più comandanti giocati": "Most commanders played",
     "On Fire": "On Fire",
@@ -637,6 +639,7 @@
     // Automatic badges' descriptions (js/badges-page.js).
     [/^Entra in top 8 negli ultimi (\d+) eventi da almeno (\d+) iscritti a cui hai partecipato\.$/, "Make the top 8 in the last $1 events with at least $2 entrants you took part in."],
     [/^Hai fatto più drop di tutti \(minimo (\d+)\)\.$/, "You dropped more than anyone (at least $1)."],
+    [/^Hai pareggiato più partite di tutti \(minimo (\d+)\)\.$/, "You drew more matches than anyone (at least $1)."],
     [/^Hai giocato lo stesso comandante in più eventi di tutti \(minimo (\d+)\)\.$/, "You played the same commander in more events than anyone (at least $1)."],
     [/^Hai giocato più comandanti diversi di tutti \(minimo (\d+)\)\.$/, "You played more different commanders than anyone (at least $1)."],
     [/^Hai giocato più partite di tutti \(minimo (\d+)\)\.$/, "You played more matches than anyone (at least $1)."],

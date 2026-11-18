@@ -28,6 +28,7 @@ const CUSTOM_ICONS = [
   "fire",
   "snake",
   "fox",
+  "snail",
   "four-leaf-clover",
   "woman-dancing",
 ];

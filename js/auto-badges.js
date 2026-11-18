@@ -41,6 +41,8 @@ export const COMPLETIST_EVENT_COUNT = 10;
 export const MIN_BYES_FOR_MOST_BYES_BADGE = 5;
 // "Più drop": the most drops, among players with at least this many.
 export const MIN_DROPS_FOR_MOST_DROPS_BADGE = 5;
+// "Più pareggi": the most drawn matches, among players with at least this many.
+export const MIN_DRAWS_FOR_MOST_DRAWS_BADGE = 5;
 // "Più fedele a un comandante": the most events played with one same
 // (primary) commander, among players who reach at least this many.
 export const MIN_EVENTS_FOR_COMMANDER_LOYALTY_BADGE = 10;
@@ -340,6 +342,22 @@ async function mostDropsPlayerIds(closedIds) {
   return playersWithMaxValue(dropsByPlayer, (n) => n, MIN_DROPS_FOR_MOST_DROPS_BADGE, (n) => n);
 }
 
+// The player(s) with the most drawn matches (games tied — js/leaderboard.js's
+// matchRoundOutcome "draw"; a bye or a drop is never one), among those with
+// at least MIN_DRAWS_FOR_MOST_DRAWS_BADGE. Both players of a draw count it.
+// Ties all get it.
+async function mostDrawsPlayerIds(closedIds) {
+  const matches = (await Matches.listAll()).filter((m) => closedIds.has(m.event_id));
+  const drawsByPlayer = new Map();
+  for (const m of matches) {
+    if (isBye(m) || isDrop(m) || matchRoundOutcome(m) !== "draw") continue;
+    for (const playerId of [m.player1_id, m.player2_id]) {
+      drawsByPlayer.set(playerId, (drawsByPlayer.get(playerId) ?? 0) + 1);
+    }
+  }
+  return playersWithMaxValue(drawsByPlayer, (n) => n, MIN_DRAWS_FOR_MOST_DRAWS_BADGE, (n) => n);
+}
+
 // The player(s) who've played one same commander in the most events — each
 // player's best single-commander count, compared among those reaching
 // MIN_EVENTS_FOR_COMMANDER_LOYALTY_BADGE. Primary commander only: a
@@ -398,6 +416,8 @@ export async function computeAutoBadgeAssignments() {
       for (const playerId of await mostByesPlayerIds(closedIds)) grant(playerId, badge);
     } else if (badge.auto_rule === "most_drops") {
       for (const playerId of await mostDropsPlayerIds(closedIds)) grant(playerId, badge);
+    } else if (badge.auto_rule === "most_draws") {
+      for (const playerId of await mostDrawsPlayerIds(closedIds)) grant(playerId, badge);
     } else if (badge.auto_rule === "commander_loyalty") {
       for (const playerId of await commanderLoyaltyPlayerIds(closedIds)) grant(playerId, badge);
     }

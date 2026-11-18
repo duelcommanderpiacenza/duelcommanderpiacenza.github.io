@@ -23,6 +23,7 @@ const RULE_LABELS = {
   league_champion: "Ha vinto almeno una lega",
   most_byes: "Più bye",
   most_drops: "Più drop",
+  most_draws: "Più pareggi",
   commander_loyalty: "Più fedele a un comandante",
 };
 
