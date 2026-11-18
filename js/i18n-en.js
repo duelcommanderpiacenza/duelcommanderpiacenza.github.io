@@ -121,6 +121,10 @@
     "Bestia nera": "Nemesis",
     "Vittima preferita": "Favourite victim",
     "Vecchia conoscenza": "Old acquaintance",
+    // commander.html's (js/commander-rivals.js).
+    "Kryptonite": "Kryptonite",
+    "Portabandiera": "Flag bearer",
+    "Kryptonite e Portabandiera": "Kryptonite and Flag bearer",
     "sconfitte": "losses",
     "vittorie": "wins",
     "Turni": "Rounds",

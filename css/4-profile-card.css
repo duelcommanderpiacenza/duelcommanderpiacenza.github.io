@@ -3309,6 +3309,13 @@ html.app-header #commander-content .commander-tabs {
   margin-top: 16px;
 }
 
+/* Kryptonite / Portabandiera (js/commander-rivals.js — player.html's rivals'
+   cards) between the chart and the lists: on touch screens 16px from both,
+   like the tabs from the chart. */
+html.app-header #commander-content .commander-rivals {
+  margin: 16px 0 0;
+}
+
 /* ---------------------------------------------------------------------------
    player.html's Album comandanti in a box (user, 2026-11-18: it felt
    detached from the rest), the league recap's / rivals' card look, in two

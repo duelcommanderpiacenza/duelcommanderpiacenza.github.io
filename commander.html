@@ -89,6 +89,7 @@
   <link rel="modulepreload" href="js/page-title-fit.js">
   <link rel="modulepreload" href="js/tabs.js">
   <link rel="modulepreload" href="js/back-to-top.js">
+  <link rel="modulepreload" href="js/commander-rivals.js">
   <!-- /preload:modules -->
 </head>
 <body data-active-nav="meta" class="is-loading">
@@ -228,6 +229,10 @@
     <div class="hero-sheet">
 
     <div id="commander-decks-chart" class="page-loading">Caricamento...</div>
+
+    <!-- Kryptonite / Portabandiera (js/commander-rivals.js), player.html's
+         rivals' look; hidden when neither qualifies. -->
+    <section class="rivals commander-rivals" id="commander-rivals" aria-label="Kryptonite e Portabandiera" hidden></section>
 
     <!-- Desktop: Giocatori left, Storico partite right, each as tall as its
          list — the matches scrolling past 8 rounds, the players never

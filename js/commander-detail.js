@@ -24,6 +24,7 @@ import { initTitleFit, fitTitleToOneLine } from "./page-title-fit.js";
 import { createArtPainter } from "./player-card.js";
 import { initTabs } from "./tabs.js";
 import { initBackToTop } from "./back-to-top.js";
+import { commanderRivalsHtml } from "./commander-rivals.js";
 
 // A real JSON lookup rather than Scryfall's simpler image-redirect
 // shortcut (.../cards/named?...&format=image) — that one only ever gives
@@ -78,6 +79,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   const playersEl = document.getElementById("commander-players");
   const matchesEl = document.getElementById("commander-matches");
   const decksChartEl = document.getElementById("commander-decks-chart");
+  const rivalsEl = document.getElementById("commander-rivals");
 
   // Giocatori / Storico partite: tabs on phones and touch screens (the CSS
   // hides them on a computer, the two side by side), each list whole there —
@@ -377,6 +379,12 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       capScrollToItems(matchesEl, ".history-round", 8);
       capScrollToHeightOf(playersEl, matchesEl);
       setHistoryCount("commander-matches-count", matchRows.length);
+
+      // Kryptonite / Portabandiera (js/commander-rivals.js), for the pairing
+      // shown; hidden when neither qualifies.
+      const rivalsHtml = commanderRivalsHtml(rows, id);
+      rivalsEl.innerHTML = rivalsHtml;
+      rivalsEl.hidden = !rivalsHtml;
 
       // The hero's numbers: after the winrate its pilots and the times it
       // was played (entries — the pairing shown, like the rest). A bye is a

@@ -15,11 +15,13 @@
 // an approval shows here before the next visit to the Profilo too.
 import { sb } from "./supabase-client.js";
 
-// Not marked: the site search's results (a list of matches, not "you"), and
+// Not marked: the site search's results (a list of matches, not "you"),
 // buttons that happen to lead to the player page (account.html's "Pagina
-// giocatore →"). A badge holder (badges.html) is marked but gets no pill —
-// it's a pill already.
-const SKIP = ".site-search, .btn-primary, .btn-secondary";
+// giocatore →"), and the stat cards (.rival-card — commander.html's
+// "Portabandiera": the pill would land after the card, beside it in their row —
+// user). A badge holder (badges.html) is marked but gets no pill — it's a
+// pill already.
+const SKIP = ".site-search, .btn-primary, .btn-secondary, .rival-card";
 const NO_PILL = ".badge-holder";
 
 const NOT_LINKED_FOR = 60 * 60 * 1000;
