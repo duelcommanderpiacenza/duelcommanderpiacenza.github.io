@@ -19,6 +19,9 @@ import {
   MIN_BYES_FOR_MOST_BYES_BADGE,
   MIN_DROPS_FOR_MOST_DROPS_BADGE,
   MIN_DRAWS_FOR_MOST_DRAWS_BADGE,
+  MIN_UNBEATEN_FOR_WALL_BADGE,
+  GIANT_SLAYER_TOP,
+  GIANT_SLAYER_MONTHS,
   MIN_EVENTS_FOR_COMMANDER_LOYALTY_BADGE,
 } from "./auto-badges.js";
 import { escapeHtml, showError } from "./ui.js";
@@ -39,6 +42,9 @@ const RULE_TEXT = {
   most_byes: `Hai ricevuto più bye di tutti (minimo ${MIN_BYES_FOR_MOST_BYES_BADGE}).`,
   most_drops: `Hai fatto più drop di tutti (minimo ${MIN_DROPS_FOR_MOST_DROPS_BADGE}).`,
   most_draws: `Hai pareggiato più partite di tutti (minimo ${MIN_DRAWS_FOR_MOST_DRAWS_BADGE}).`,
+  unbeaten_streak: `Hai la serie in corso più lunga di partite senza sconfitte (minimo ${MIN_UNBEATEN_FOR_WALL_BADGE}): i pareggi non la interrompono.`,
+  highest_elo: "Hai l'Elo più alto tra tutti i giocatori.",
+  giant_slayer: `Hai battuto più volte di tutti i giocatori della top ${GIANT_SLAYER_TOP} Elo negli ultimi ${GIANT_SLAYER_MONTHS} mesi.`,
   commander_loyalty: `Hai giocato lo stesso comandante in più eventi di tutti (minimo ${MIN_EVENTS_FOR_COMMANDER_LOYALTY_BADGE}).`,
 };
 

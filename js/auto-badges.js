@@ -11,6 +11,7 @@
 
 import { Badges, Leagues, Events, EventEntries, Matches, fetchEventsResults } from "./db.js";
 import { computeEventLeaderboard, computeLeaguePoints, isBye, isDrop, matchRoundOutcome } from "./leaderboard.js";
+import { computeElo } from "./elo.js";
 import { localIso } from "./ui.js";
 
 export const TOP8_STREAK_COUNT = 3;
@@ -43,6 +44,15 @@ export const MIN_BYES_FOR_MOST_BYES_BADGE = 5;
 export const MIN_DROPS_FOR_MOST_DROPS_BADGE = 5;
 // "Più pareggi": the most drawn matches, among players with at least this many.
 export const MIN_DRAWS_FOR_MOST_DRAWS_BADGE = 5;
+// "Muro": the longest current run of matches without a loss, at least this long.
+export const MIN_UNBEATEN_FOR_WALL_BADGE = 6;
+// "Ammazzagiganti": the most wins against the current Elo top
+// GIANT_SLAYER_TOP players over the last GIANT_SLAYER_MONTHS months, at
+// least MIN_WINS_FOR_GIANT_SLAYER_BADGE, and no more losses than wins
+// against them.
+export const GIANT_SLAYER_TOP = 5;
+export const GIANT_SLAYER_MONTHS = 6;
+export const MIN_WINS_FOR_GIANT_SLAYER_BADGE = 3;
 // "Più fedele a un comandante": the most events played with one same
 // (primary) commander, among players who reach at least this many.
 export const MIN_EVENTS_FOR_COMMANDER_LOYALTY_BADGE = 10;
@@ -350,6 +360,88 @@ async function mostDrawsPlayerIds(closedIds) {
   return playersWithMaxValue(drawsByPlayer, (n) => n, MIN_DRAWS_FOR_MOST_DRAWS_BADGE, (n) => n);
 }
 
+// The closed events oldest first — on the same day the one created first,
+// as admin/js/badges-sync.js orders them for the Elo.
+function oldestFirst(events, closedIds) {
+  return events
+    .filter((ev) => closedIds.has(ev.id))
+    .sort((a, b) => (a.event_date ?? "").localeCompare(b.event_date ?? "") || (a.created_at ?? "").localeCompare(b.created_at ?? ""));
+}
+
+// Every player's current Elo (js/elo.js) — computed here, not read from
+// player_progress: the sync rebuilds that at the same time as the badges, so
+// it could still be the old one. Shared by "Il Re" and "Ammazzagiganti"
+// (computeAutoBadgeAssignments asks for it once).
+async function currentElo(events, closedIds) {
+  const eventsData = await fetchEventsResults(oldestFirst(events, closedIds).map((ev) => ev.id));
+  return new Map([...computeElo(eventsData)].map(([playerId, r]) => [playerId, r.elo]));
+}
+
+// "Il Re": the highest Elo, every player rated (no activity filter — user).
+// Ties all get it.
+function highestEloPlayerIds(elo) {
+  return playersWithMaxValue(elo, (n) => n, -Infinity, (n) => n);
+}
+
+// "Muro": the player(s) with the longest current run of matches without a
+// loss — counted back from each one's latest match (closed events, latest
+// event and round first); a draw doesn't break it, a bye or a drop is
+// skipped (neither a match against anyone) — at least
+// MIN_UNBEATEN_FOR_WALL_BADGE long. Ties all get it.
+async function unbeatenStreakPlayerIds(events, closedIds) {
+  const order = new Map(oldestFirst(events, closedIds).map((ev, i) => [ev.id, i]));
+  const matches = (await Matches.listAll())
+    .filter((m) => order.has(m.event_id) && !isBye(m) && !isDrop(m))
+    .sort((a, b) => order.get(b.event_id) - order.get(a.event_id) || (b.round ?? 0) - (a.round ?? 0));
+  const runs = new Map(); // player id -> current run (still counting while not in `ended`)
+  const ended = new Set();
+  for (const m of matches) {
+    const outcome = matchRoundOutcome(m);
+    for (const [playerId, lost] of [
+      [m.player1_id, outcome === "player2"],
+      [m.player2_id, outcome === "player1"],
+    ]) {
+      if (ended.has(playerId)) continue;
+      if (lost) ended.add(playerId);
+      else runs.set(playerId, (runs.get(playerId) ?? 0) + 1);
+    }
+  }
+  return playersWithMaxValue(runs, (n) => n, MIN_UNBEATEN_FOR_WALL_BADGE, (n) => n);
+}
+
+// "Ammazzagiganti": the player(s) with the most wins over the last
+// GIANT_SLAYER_MONTHS months against the current Elo top GIANT_SLAYER_TOP
+// (all those tied at the last place included), at least
+// MIN_WINS_FOR_GIANT_SLAYER_BADGE — and only with at least as many wins as
+// losses against them (user): beating the best now and then while losing to
+// them more often doesn't count. The top players themselves can't have it
+// (user): it's the underdog's badge. Ties all get it.
+async function giantSlayerPlayerIds(events, closedIds, elo) {
+  const ratings = [...elo.values()].sort((a, b) => b - a);
+  if (ratings.length === 0) return [];
+  const floor = ratings[Math.min(GIANT_SLAYER_TOP, ratings.length) - 1];
+  const giants = new Set([...elo].filter(([, r]) => r >= floor).map(([playerId]) => playerId));
+  const cutoffIso = monthsAgoIso(GIANT_SLAYER_MONTHS);
+  const recentIds = new Set(events.filter((ev) => closedIds.has(ev.id) && ev.event_date && ev.event_date >= cutoffIso).map((ev) => ev.id));
+  const records = new Map(); // player id -> { wins, losses } against the giants
+  for (const m of await Matches.listAll()) {
+    if (!recentIds.has(m.event_id) || isBye(m) || isDrop(m)) continue;
+    const outcome = matchRoundOutcome(m);
+    for (const [playerId, opponentId, won, lost] of [
+      [m.player1_id, m.player2_id, outcome === "player1", outcome === "player2"],
+      [m.player2_id, m.player1_id, outcome === "player2", outcome === "player1"],
+    ]) {
+      if (!giants.has(opponentId)) continue;
+      if (!records.has(playerId)) records.set(playerId, { wins: 0, losses: 0 });
+      const r = records.get(playerId);
+      if (won) r.wins += 1;
+      if (lost) r.losses += 1;
+    }
+  }
+  const qualified = [...records].filter(([playerId, r]) => !giants.has(playerId) && r.wins >= r.losses);
+  return playersWithMaxValue(qualified, (r) => r.wins, MIN_WINS_FOR_GIANT_SLAYER_BADGE, (r) => r.wins);
+}
+
 // The player(s) who've played one same commander in the most events — each
 // player's best single-commander count, compared among those reaching
 // MIN_EVENTS_FOR_COMMANDER_LOYALTY_BADGE. Primary commander only: a
@@ -379,6 +471,9 @@ export async function computeAutoBadgeAssignments() {
 
   const [leagues, events] = await Promise.all([Leagues.list(), Events.list()]);
   const closedIds = new Set(events.filter((ev) => !ev.is_open).map((ev) => ev.id));
+  // The Elo, only if a rule needs it, and once for all of them.
+  let eloRequest = null;
+  const elo = () => (eloRequest ??= currentElo(events, closedIds));
   const grants = new Map(); // player id -> badge rows
 
   function grant(playerId, badge) {
@@ -408,6 +503,12 @@ export async function computeAutoBadgeAssignments() {
       for (const playerId of await mostDropsPlayerIds(closedIds)) grant(playerId, badge);
     } else if (badge.auto_rule === "most_draws") {
       for (const playerId of await mostDrawsPlayerIds(closedIds)) grant(playerId, badge);
+    } else if (badge.auto_rule === "unbeaten_streak") {
+      for (const playerId of await unbeatenStreakPlayerIds(events, closedIds)) grant(playerId, badge);
+    } else if (badge.auto_rule === "highest_elo") {
+      for (const playerId of highestEloPlayerIds(await elo())) grant(playerId, badge);
+    } else if (badge.auto_rule === "giant_slayer") {
+      for (const playerId of await giantSlayerPlayerIds(events, closedIds, await elo())) grant(playerId, badge);
     } else if (badge.auto_rule === "commander_loyalty") {
       for (const playerId of await commanderLoyaltyPlayerIds(closedIds)) grant(playerId, badge);
     }

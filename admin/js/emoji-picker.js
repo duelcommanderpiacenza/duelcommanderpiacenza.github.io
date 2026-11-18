@@ -29,6 +29,8 @@ const CUSTOM_ICONS = [
   "snake",
   "fox",
   "snail",
+  "wall",
+  "arrow",
   "four-leaf-clover",
   "woman-dancing",
 ];
