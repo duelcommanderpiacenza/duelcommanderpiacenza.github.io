@@ -163,8 +163,16 @@ async function renderTimeline(el, signal) {
     const dated = external.filter((ev) => ev.event_date && ev.event_date >= today && ev.event_date <= localIso(until));
     // Soonest first, across every league / standalone; RLS lets a future
     // open event through (see events_public_read in supabase/schema.sql).
+    // On the same day ours (neither external nor online) come first, whatever
+    // the time — so the next one, highlighted, is ours if that day has one.
+    const ours = (ev) => (ev.is_external || ev.is_online ? 1 : 0);
     const next = [...upcoming, ...dated]
-      .sort((a, b) => when(a).localeCompare(when(b)))
+      .sort(
+        (a, b) =>
+          (a.event_date ?? "").localeCompare(b.event_date ?? "") ||
+          ours(a) - ours(b) ||
+          when(a).localeCompare(when(b)),
+      )
       .slice(0, UPCOMING_EVENTS_COUNT);
     // Only the closed (published) ones, the latest first.
     const played = all
