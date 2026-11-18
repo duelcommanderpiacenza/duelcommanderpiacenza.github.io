@@ -20,7 +20,6 @@ const RULE_LABELS = {
   most_matches_played: "Più match giocati",
   most_commanders_played: "Più comandanti giocati",
   completionist: "Più eventi consecutivi (min 10)",
-  league_champion: "Ha vinto almeno una lega",
   most_byes: "Più bye",
   most_drops: "Più drop",
   most_draws: "Più pareggi",

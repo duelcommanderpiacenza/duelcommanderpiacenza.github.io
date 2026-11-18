@@ -341,7 +341,6 @@
     "Come si ottiene ›": "How to get it ›",
     "Bandito nel formato Duel Commander.": "Banned in the Duel Commander format.",
     "Giocato per la prima volta nell'ultimo mese.": "Played for the first time in the last month.",
-    "Hai vinto almeno una lega. Una volta conquistato, resta tuo per sempre.": "You've won at least one league. Once earned, it's yours forever.",
     "Vinci una lega: il badge resta tuo fino alla conclusione della lega successiva.": "Win a league: the badge stays yours until the next league ends.",
 
     // The badges (written in the admin, but a fixed set: translated here —
@@ -350,8 +349,6 @@
     "Più bye presi": "Most byes received",
     "Imbattibile": "Unbeatable",
     "Winrate più alto (5+ eventi)": "Highest winrate (5+ events)",
-    "Leggendario": "Legendary",
-    "Vincitore di una lega": "League winner",
     "Instancabile": "Tireless",
     "Duellante": "Duelist",
     "Più match giocati": "Most matches played",

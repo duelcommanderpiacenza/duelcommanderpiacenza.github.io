@@ -173,7 +173,7 @@ export function commanderPairWithColors(commander, partner, options) {
 
 // A player's badges without repeats (and without empty slots): an automatic
 // badge can also be assigned by hand in a manual slot (admin, e.g. a
-// "Leggendario" earned before the site's history), so the same badge could
+// "Campione" earned before the site's history), so the same badge could
 // otherwise show twice once it's also earned. First occurrence kept.
 export function uniqueBadges(badges) {
   const seen = new Set();

@@ -36,7 +36,7 @@ export function initPlayersAdmin() {
   // player_badges_auto), never stored on the player row. Automatic badges
   // are offered here too (marked "Badge automatico"), to hand one out by
   // hand when it was earned before this site's history starts — e.g.
-  // "Leggendario" for a league won before the site existed. The recalc
+  // a "Campione" for a league won before the site existed. The recalc
   // never touches these slots, and the site shows a badge only once per
   // player if it's both assigned here and earned (js/ui.js's uniqueBadges).
   async function populateBadges() {

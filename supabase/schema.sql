@@ -114,7 +114,7 @@ create table badges ( -- small icon + name a player can be tagged with (e.g. "Ca
     auto_rule is null or auto_rule in (
       'league_winner', 'top8_streak', 'league_rank_1', 'league_rank_2', 'league_rank_3',
       'highest_winrate', 'most_matches_played', 'most_commanders_played', 'completionist',
-      'league_champion', 'most_byes', 'most_drops', 'commander_loyalty', 'most_draws'
+      'most_byes', 'most_drops', 'commander_loyalty', 'most_draws'
     )
   )
 );

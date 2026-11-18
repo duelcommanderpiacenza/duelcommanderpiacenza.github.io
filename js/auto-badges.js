@@ -310,14 +310,6 @@ export async function closedLeagueWinners(leagues) {
   );
 }
 
-// Everyone who has won at least one closed real (non-Topdeck) league — a
-// threshold, not "the latest league" like league_winner above, so it's
-// kept for good once earned.
-async function leagueChampionPlayerIds(leagues) {
-  const winners = await closedLeagueWinners(leagues);
-  return [...new Set(winners.map((w) => w.playerId).filter(Boolean))];
-}
-
 // The player(s) with the most byes received (a bye: no opponent that round,
 // scored as a win — js/leaderboard.js's isBye), among those with at least
 // MIN_BYES_FOR_MOST_BYES_BADGE. Ties all get it.
@@ -410,8 +402,6 @@ export async function computeAutoBadgeAssignments() {
       for (const playerId of await mostCommandersPlayedPlayerIds(closedIds)) grant(playerId, badge);
     } else if (badge.auto_rule === "completionist") {
       for (const playerId of await completistPlayerIds()) grant(playerId, badge);
-    } else if (badge.auto_rule === "league_champion") {
-      for (const playerId of await leagueChampionPlayerIds(leagues)) grant(playerId, badge);
     } else if (badge.auto_rule === "most_byes") {
       for (const playerId of await mostByesPlayerIds(closedIds)) grant(playerId, badge);
     } else if (badge.auto_rule === "most_drops") {

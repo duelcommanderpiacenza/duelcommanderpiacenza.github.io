@@ -187,8 +187,8 @@ export function initLeaguesAdmin({ onOpenLeague }) {
         await Leagues.closeAllOpenOfType(payload);
         await Leagues.create(payload);
         // Creating one just closed the previously open league of its kind
-        // (above) — a "league just closed" moment for league_winner /
-        // league_champion / league_rank badges, same as onToggleOpen.
+        // (above) — a "league just closed" moment for the league_winner /
+        // league_rank badges, same as onToggleOpen.
         syncAutoBadges().catch(console.error);
       }
       resetForm();
