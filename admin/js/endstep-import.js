@@ -192,7 +192,7 @@ export function initEndstepImport({ onImported }) {
           key: "who",
           label: "endstep",
           render: (r) =>
-            `<span class="rank-chip">${r.entrant.place ?? "—"}</span> ${escapeHtml(r.entrant.username)}${
+            `<span class="rank-chip">${Number.isFinite(Number(r.entrant.place)) ? Number(r.entrant.place) : "—"}</span> ${escapeHtml(r.entrant.username)}${
               r.dropAfter ? ` <span class="admin-card-muted">(ritirato dopo il turno ${r.dropAfter})</span>` : ""
             }`,
         },
@@ -217,7 +217,7 @@ export function initEndstepImport({ onImported }) {
                   .join(" / ")
               : `<select class="endstep-import-control" data-commander="${r.id}"><option value="">— scegli —</option>${commanderOptions}</select>`,
         },
-        { key: "record", label: "V-S-P", render: (r) => `${r.entrant.wins}-${r.entrant.losses}-${r.entrant.draws}` },
+        { key: "record", label: "V-S-P", render: (r) => [r.entrant.wins, r.entrant.losses, r.entrant.draws].map((n) => Number(n) || 0).join("-") },
       ],
       {}
     );

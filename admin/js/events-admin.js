@@ -1,5 +1,5 @@
 import { Events } from "../../js/db.js";
-import { formatDate, formatTime, isHttpUrl } from "../../js/ui.js";
+import { formatDate, formatTime, isHttpUrl, escapeHtml } from "../../js/ui.js";
 import { renderTable, setMessage, statusToggleButton, onBusySubmit, runBusy } from "./crud-ui.js";
 import { on } from "./bus.js";
 import { syncAutoBadges } from "./badges-sync.js";
@@ -39,7 +39,7 @@ export function initEventsAdmin({ onOpenEvent }) {
         listEl,
         events,
         [
-          { key: "name", label: "Nome", render: (r) => r.name ?? "—" },
+          { key: "name", label: "Nome", render: (r) => escapeHtml(r.name ?? "—") },
           { key: "event_date", label: "Data", render: (r) => formatDate(r.event_date) },
           { key: "start_time", label: "Orario", render: (r) => formatTime(r.start_time) ?? "—" },
           { key: "status", label: "Stato", render: (r) => statusToggleButton(r.is_open, r.id, "event") },

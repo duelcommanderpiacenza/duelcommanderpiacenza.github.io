@@ -1,5 +1,5 @@
 import { Players, Commanders, EventEntries } from "../../js/db.js";
-import { archetypeBadge } from "../../js/ui.js";
+import { archetypeBadge, escapeHtml } from "../../js/ui.js";
 import { renderTable, setMessage, setNote, fillSelect, onBusySubmit } from "./crud-ui.js";
 import { emit, on } from "./bus.js";
 
@@ -61,13 +61,13 @@ export function initEntriesAdmin() {
     const available = allPlayers.filter((p) => !enteredIds.has(p.id)).sort((a, b) => a.name.localeCompare(b.name, "it"));
     fillSelect(
       playerField,
-      available.map((p) => `<option value="${p.id}">${p.name}${p.handle ? ` (${p.handle})` : ""}</option>`).join("")
+      available.map((p) => `<option value="${p.id}">${escapeHtml(p.name)}${p.handle ? ` (${escapeHtml(p.handle)})` : ""}</option>`).join("")
     );
   }
 
   async function populateCommanders() {
     const commanders = (await Commanders.list()).sort((a, b) => a.name.localeCompare(b.name, "it"));
-    const options = commanders.map((c) => `<option value="${c.id}">${c.name}</option>`).join("");
+    const options = commanders.map((c) => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
     fillSelect(commanderField, options);
     fillSelect(partnerField, '<option value="">&mdash; nessuno &mdash;</option>' + options);
   }
@@ -90,11 +90,12 @@ export function initEntriesAdmin() {
         listEl,
         entries,
         [
-          { key: "player", label: "Giocatore", render: (r) => r.player?.name ?? "" },
+          { key: "player", label: "Giocatore", render: (r) => escapeHtml(r.player?.name ?? "") },
           {
             key: "commander",
             label: "Commander",
-            render: (r) => (r.partner_commander ? `${r.commander?.name} / ${r.partner_commander.name}` : r.commander?.name ?? ""),
+            render: (r) =>
+              escapeHtml(r.partner_commander ? `${r.commander?.name} / ${r.partner_commander.name}` : r.commander?.name ?? ""),
           },
           {
             key: "archetype",

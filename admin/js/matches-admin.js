@@ -87,7 +87,7 @@ export function initMatchesAdmin() {
     const excludeId = editingRow ? editingRow.id : null;
     const available = availableEntrants(excludeId);
     const options = available
-      .map((e) => `<option value="${e.player.id}">${e.player.name}${e.player.handle ? ` (${e.player.handle})` : ""}</option>`)
+      .map((e) => `<option value="${e.player.id}">${escapeHtml(e.player.name)}${e.player.handle ? ` (${escapeHtml(e.player.handle)})` : ""}</option>`)
       .join("");
     fillSelect(player1Field, options);
     fillSelect(player2Field, options);

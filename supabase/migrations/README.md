@@ -5,7 +5,7 @@ rollback (`NNN_name.sql` + `NNN_name_rollback.sql`), run in the Supabase SQL
 editor on **dcp-dev** first, then live — and is folded into
 `../schema.sql`, which stays the from-scratch setup.
 
-**Next number: 043.**
+**Next number: 045.**
 
 037 (`037_entry_player_name`, free-form players in online events) was run on
 both databases on 2026-11-16 and then dropped with its code (reverted): run

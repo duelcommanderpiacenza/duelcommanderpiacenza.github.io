@@ -117,7 +117,7 @@ export function initBadgesAdmin() {
   modeRadios().forEach((r) => r.addEventListener("change", updateIconModeUI));
 
   function renderPreview(src) {
-    previewEl.innerHTML = src ? `<img src="${src}" alt="">` : "";
+    previewEl.innerHTML = src ? `<img src="${escapeHtml(src)}" alt="">` : "";
   }
 
   fileInput.addEventListener("change", () => {

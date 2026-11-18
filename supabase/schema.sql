@@ -946,7 +946,9 @@ revoke execute on function give_default_card(uuid, uuid) from public, anon, auth
 -- migration 007; the card's links since
 -- 010; no archetype since 013; commander_name is the background card's
 -- name since 014 (fav_card, else the old favourite commander's), with its
--- printing (card_print) since 015, endstep since 032.
+-- printing (card_print) since 015, endstep since 032; the picture from the
+-- Google identity (set by Google, not editable by its user like the
+-- metadata), only a Google picture address, since 044.
 create or replace function public_player_card(p_player_id uuid)
 returns table (
   description text,
@@ -966,8 +968,8 @@ language sql stable security definer set search_path = public as $$
     pr.description,
     pr.fav_colors,
     pr.show_avatar,
-    (u.raw_user_meta_data ->> 'avatar_url') is not null,
-    case when pr.show_avatar then u.raw_user_meta_data ->> 'avatar_url' end,
+    g.avatar_url is not null,
+    case when pr.show_avatar then g.avatar_url end,
     coalesce(pr.fav_card, c.name),
     -- Only with the card it belongs to (not with an old favourite commander).
     case when pr.fav_card is not null then pr.fav_card_print end,
@@ -979,6 +981,15 @@ language sql stable security definer set search_path = public as $$
   join profiles pr on pr.user_id = p.user_id
   join auth.users u on u.id = p.user_id
   left join commanders c on c.id = pr.fav_commander_id
+  -- The Google picture: set by Google, and only one of its addresses.
+  left join lateral (
+    select i.identity_data ->> 'avatar_url' as avatar_url
+    from auth.identities i
+    where i.user_id = u.id
+      and i.provider = 'google'
+      and i.identity_data ->> 'avatar_url' ~ '^https://lh[0-9]+\.googleusercontent\.com/'
+    limit 1
+  ) g on true
   where p.id = p_player_id
     and pr.show_on_player_page
     and not coalesce(u.banned_until > now(), false);
@@ -1100,3 +1111,31 @@ where e.league_id is not null or not e.is_online
 group by e.league_id;
 
 grant select on event_counts, league_player_counts to anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Storage: the badge-icons bucket (custom badge pictures uploaded from the
+-- admin — js/db.js BadgeIcons; badges.icon_url holds their public URL).
+-- Public to read; written by admins only, PNG / JPEG / WebP of at most
+-- 300 KB (badges-admin.js MAX_ICON_FILE_BYTES). Made in the dashboard at
+-- first, with "signed in" as the only check — is_admin() since migration
+-- 043.
+-- ---------------------------------------------------------------------------
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('badge-icons', 'badge-icons', true, 307200, array['image/png', 'image/jpeg', 'image/webp'])
+on conflict (id) do update set public = true, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "badge-icons_public_read" on storage.objects;
+drop policy if exists "badge-icons_admin_insert" on storage.objects;
+drop policy if exists "badge-icons_admin_update" on storage.objects;
+drop policy if exists "badge-icons_admin_delete" on storage.objects;
+
+create policy "badge-icons_public_read" on storage.objects
+  for select using (bucket_id = 'badge-icons');
+create policy "badge-icons_admin_insert" on storage.objects
+  for insert with check (bucket_id = 'badge-icons' and public.is_admin());
+create policy "badge-icons_admin_update" on storage.objects
+  for update using (bucket_id = 'badge-icons' and public.is_admin())
+  with check (bucket_id = 'badge-icons' and public.is_admin());
+create policy "badge-icons_admin_delete" on storage.objects
+  for delete using (bucket_id = 'badge-icons' and public.is_admin());

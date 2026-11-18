@@ -323,7 +323,12 @@ favourite commander, favourite archetype.
   card (no `profiles` row before the first save), its owner hides it, or
   the account is blocked. `profiles` itself stays private. The Google
   picture comes from the account's sign-in data, only when shown on the
-  card.
+  card — **since migration 044 (2026-11-18) from its Google identity
+  (`auth.identities`, set by Google), no longer from the user metadata**,
+  which its own user can rewrite (`auth.updateUser`) — so anyone could have
+  shown visitors any external picture (a tracker); only a Google picture
+  address (`lh*.googleusercontent.com`) is given out, and
+  `js/player-card.js` checks it again.
 - [x] `player.html`: the card (view only, `js/player-card.js`'s
   `renderPublicPlayerCard`, the account page's own colours/art/markup
   helpers moved there too) placed and sized like `commander.html`'s card —

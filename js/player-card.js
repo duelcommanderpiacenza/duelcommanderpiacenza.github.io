@@ -403,8 +403,13 @@ export function fitCardDescription(cardEl) {
 // description → no description line (account.html's "premi ✎" invitation
 // is for the owner only).
 // Returns the card element.
+// Only a Google picture address: the database gives out nothing else
+// (public_player_card, migration 044) — checked here too, so another
+// address never reaches visitors' browsers.
+const isGooglePicture = (url) => /^https:\/\/lh\d+\.googleusercontent\.com\//.test(url ?? "");
+
 export function renderPublicPlayerCard(containerEl, card, { name, since, badges = [], progress = null }) {
-  const avatar = card.avatar_url
+  const avatar = isGooglePicture(card.avatar_url)
     ? `<div class="pc-avatar"><img src="${escapeHtml(card.avatar_url)}" alt="" referrerpolicy="no-referrer"></div>`
     : "";
   const description = card.description?.trim();
