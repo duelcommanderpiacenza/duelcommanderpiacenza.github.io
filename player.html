@@ -235,14 +235,15 @@
 
     <!-- Desktop: Album comandanti left, Storico partite (a scrolling list of
          sub-cards, exactly as tall as the album beside it) right; phones:
-         the album first, then the matches (styles.css .history-grid). -->
+         the album first, then the matches (styles.css .history-grid). Each
+         column a box, its title the band at its top (.col-band, css/4). -->
     <div class="history-grid">
       <section class="album-col">
-        <h2 class="heading-help">Album comandanti <button type="button" class="help-toggle-btn" id="album-help" aria-haspopup="dialog" aria-label="Come si ottiene una carta speciale">?</button></h2>
+        <h2 class="col-band"><svg class="col-band-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"></path><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"></path><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"></path></svg>Album comandanti <button type="button" class="help-toggle-btn" id="album-help" aria-haspopup="dialog" aria-label="Come si ottiene una carta speciale">?</button></h2>
         <div id="player-commanders" class="page-loading">Caricamento...</div>
       </section>
       <section class="history-col fills-row">
-        <h2>Storico partite <span class="history-count" id="player-matches-count"></span></h2>
+        <h2 class="col-band"><svg class="col-band-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg>Storico partite <span class="history-count" id="player-matches-count"></span></h2>
         <div id="player-matches" class="page-loading">Caricamento...</div>
       </section>
     </div>

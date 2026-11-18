@@ -1117,6 +1117,12 @@ html:not(.nav-mobile) .cmd-carousel-track.is-draggable.is-dragging .cmd-carousel
   min-width: 0;
 }
 
+/* A partner pair too long for one line (js/commander-carousel.js fitName):
+   one commander per line. */
+.cmd-carousel-name.is-split > .cmd-carousel-name-part {
+  display: block;
+}
+
 .cmd-carousel-name {
   color: var(--text-title);
   font-size: 1.15rem;

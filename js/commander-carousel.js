@@ -12,7 +12,7 @@
 // (js/drag-scroll.js's enableSnapDrag: glides to the next card in the
 // drag's direction on release, like the chart carousel) move it too.
 
-import { escapeHtml, commanderPairWithColors, formatDate, scryfallImages } from "./ui.js";
+import { escapeHtml, commanderPairLabel, commanderPairWithColors, colorIdentityPips, formatDate, scryfallImages } from "./ui.js";
 import { winRatePct } from "./winrate.js";
 import { enableSnapDrag } from "./drag-scroll.js";
 import { openInfoDialog } from "./info-dialog.js";
@@ -150,7 +150,11 @@ export function openAlbumEffectsInfo() {
   }
 }
 
-const ARROW_PREV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>';
+// The smallest the current card's name is shrunk to (fitName); still too
+// long, it wraps.
+const NAME_MIN_PX = 13;
+
+const ARROW_PREV ='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>';
 const ARROW_NEXT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>';
 
 /**
@@ -301,12 +305,81 @@ export function renderCommanderCarousel(el, items) {
     return Math.max(0, Math.min(items.length - 1, Math.round(track.scrollLeft / step)));
   }
 
+  // The name and its colours, a partner pair as two parts (the commander
+  // with its "/", then the partner with the colours) so it can be split
+  // between them rather than anywhere.
+  function nameHtml(c) {
+    if (!c.partner) return commanderPairWithColors(c.commander, null);
+    const colors = `${c.commander.color_identity ?? ""}${c.partner.color_identity ?? ""}`;
+    return `<span class="cmd-carousel-name-part">${commanderPairLabel(c.commander, null)} /</span> <span class="cmd-carousel-name-part">${commanderPairLabel(
+      c.partner,
+      null
+    )}<span class="color-identity-inline">${colorIdentityPips(colors)}</span></span>`;
+  }
+
+  // On one line (user): shrunk only as much as it needs, down to
+  // NAME_MIN_PX. Still longer — a long partner pair on a phone — the pair
+  // on two lines, one each, shrunk the same way; failing that it wraps.
+  // The colour pips don't scale with the text, so measured again after
+  // each step. Fitted anew when the column's width changes.
+  function shrinkName() {
+    nameEl.style.fontSize = "";
+    for (let step = 0; step < 4; step++) {
+      const room = nameEl.clientWidth;
+      if (!room || nameEl.scrollWidth <= room) return true;
+      const size = parseFloat(getComputedStyle(nameEl).fontSize);
+      if (size <= NAME_MIN_PX) return false;
+      nameEl.style.fontSize = `${Math.max(NAME_MIN_PX, Math.floor((size * room * 10) / nameEl.scrollWidth) / 10)}px`;
+    }
+    return nameEl.scrollWidth <= nameEl.clientWidth;
+  }
+
+  function fitName() {
+    nameEl.classList.remove("is-split");
+    nameEl.style.whiteSpace = "nowrap";
+    if (shrinkName()) return;
+    if (nameEl.querySelector(".cmd-carousel-name-part")) {
+      nameEl.classList.add("is-split");
+      if (shrinkName()) return;
+    }
+    nameEl.style.whiteSpace = "";
+  }
+  // The box never changing size from one card to the next (user): the
+  // name's room as tall as the tallest of the album's names (a pair on two
+  // lines among names on one) — each one drawn and fitted in turn, the
+  // current one drawn back last. Measured again when the width changes.
+  function holdNameHeight() {
+    nameEl.style.minHeight = "";
+    let tallest = 0;
+    for (const c of items) {
+      nameEl.innerHTML = nameHtml(c);
+      fitName();
+      tallest = Math.max(tallest, nameEl.offsetHeight);
+    }
+    nameEl.style.minHeight = `${tallest}px`;
+    if (active >= 0) {
+      nameEl.innerHTML = nameHtml(items[active]);
+      fitName();
+    }
+  }
+  let nameWidth = 0;
+  const nameResize = new ResizeObserver(([entry]) => {
+    // Gone (the album drawn again — the Dove bar): stop watching it.
+    if (!nameEl.isConnected) return nameResize.disconnect();
+    const width = Math.round(entry.contentRect.width);
+    if (width === nameWidth) return;
+    nameWidth = width;
+    holdNameHeight();
+  });
+  nameResize.observe(nameEl);
+
   function setActive(i) {
     if (i === active) return;
     active = i;
     slides.forEach((s, j) => s.classList.toggle("is-active", j === i));
     const c = items[i];
-    nameEl.innerHTML = commanderPairWithColors(c.commander, c.partner);
+    nameEl.innerHTML = nameHtml(c);
+    fitName();
     timesEl.textContent = c.timesPlayed;
     lastEl.innerHTML = formatDate(c.lastPlayed);
     firstEl.innerHTML = formatDate(c.firstPlayed);

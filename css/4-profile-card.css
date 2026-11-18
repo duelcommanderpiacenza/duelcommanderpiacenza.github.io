@@ -3273,3 +3273,250 @@ a.league-recap-card:hover .league-recap-chevron {
     border-radius: var(--sheet-first-radius);
   }
 }
+
+/* commander.html's "Utilizzo" chart (js/commander-detail.js), the first
+   thing under the hero: 20px down from it (it was an inline style). On
+   phones, the first thing in the sheet: concentric with its corners, as
+   player.html's above (user, 2026-11-18) — 6px from its top edge like its
+   sides, no .page-loading padding above it, its card's corners 20px. */
+#commander-decks-chart {
+  margin-top: 20px;
+}
+
+@media (max-width: 640px) {
+  html.nav-mobile #commander-content .hero-sheet > #commander-decks-chart {
+    margin-top: calc(var(--page-pad-x) - 22px);
+    padding-top: 0;
+  }
+
+  html.nav-mobile #commander-content .hero-sheet > #commander-decks-chart > .pie-chart-wrap {
+    border-radius: calc(26px - var(--page-pad-x));
+  }
+}
+
+/* Touch screens (where the Giocatori / Storico partite tabs are): the tabs
+   16px under the chart (user, 2026-11-18 — it was 54: the card's 20px,
+   .page-loading's 6px, the tabs' 28px). */
+html.app-header #commander-decks-chart {
+  padding-bottom: 0;
+}
+
+html.app-header #commander-decks-chart > .pie-chart-wrap {
+  margin-bottom: 0;
+}
+
+html.app-header #commander-content .commander-tabs {
+  margin-top: 16px;
+}
+
+/* ---------------------------------------------------------------------------
+   player.html's Album comandanti in a box (user, 2026-11-18: it felt
+   detached from the rest), the league recap's / rivals' card look, in two
+   parts: a showcase — the cards on a faint tint of the page's accent (the
+   hero's colour), a glow behind the current card — and the details under
+   it, the ‹ • › pill sitting across the line between the two; the name,
+   then the four numbers as one 2 × 2 table with hairlines (not four boxes in
+   the box). Only here (#player-commanders — the carousel's own rules in
+   css/2 stay as they are).
+   Storico partite beside it in a box too (option D of
+   _mockup-player-titles.html, user, 2026-11-18): each column (.album-col,
+   .history-col) is the box, its <h2> the band at its top (.col-band) —
+   small, upper case, in the accent, with its icon, both on the box's white
+   (user): the album's above the showcase, with the "?" at its right end;
+   Storico partite's with its count at the right end, the match cards inside
+   under it. */
+#player-content .history-grid > :is(.album-col, .history-col) {
+  --album-line: rgba(120, 100, 104, 0.18);
+  overflow: clip;
+  border: 1px solid rgba(120, 100, 104, 0.2);
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(40, 20, 22, 0.06);
+}
+
+:root[data-theme="dark"] #player-content .history-grid > :is(.album-col, .history-col) {
+  --album-line: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+}
+
+#player-content .col-band {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 13px 18px 12px;
+  border-bottom: 1px solid var(--album-line);
+  color: var(--brand-red-deep);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+:root[data-theme="dark"] #player-content .col-band {
+  color: var(--hero-accent-light, #ff8a8d);
+}
+
+.col-band-icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+
+/* At the band's right end: the album's "?", Storico partite's count. */
+#player-content .col-band > :is(.help-toggle-btn, .history-count) {
+  margin-left: auto;
+}
+
+#player-content .col-band > .help-toggle-btn {
+  width: 20px;
+  height: 20px;
+  font-size: 0.7rem;
+  letter-spacing: 0;
+}
+
+#player-content .col-band > .history-count {
+  height: 20px;
+  min-width: 20px;
+  font-size: 0.72rem;
+  letter-spacing: 0;
+}
+
+/* The match cards inside the box, under the band; the album's loading /
+   empty text too (no carousel yet, or none — .page-loading itself stays on
+   the element for good). */
+#player-matches {
+  padding: 10px;
+}
+
+/* The showcase right under the band's line (not .page-loading's 6px). */
+#player-commanders {
+  padding: 0;
+}
+
+#player-commanders:not(:has(> .cmd-carousel)) {
+  padding: 16px 18px;
+}
+
+#player-commanders .cmd-carousel {
+  /* The glow's centre: the current card's (desktop: at the left). */
+  --album-glow-x: 50%;
+  gap: 0;
+}
+
+#player-commanders .cmd-carousel-main {
+  width: auto;
+  max-width: none;
+  padding-top: 8px;
+  border-bottom: 1px solid var(--album-line);
+  background:
+    radial-gradient(circle at var(--album-glow-x) 42%, color-mix(in srgb, var(--brand-red) 16%, transparent) 0, transparent 62%),
+    linear-gradient(to bottom, color-mix(in srgb, var(--brand-red) 7%, transparent), color-mix(in srgb, var(--brand-red) 3%, transparent));
+}
+
+/* The current card lifted off the showcase (user): a deeper, wider shadow
+   plus a tight one at its edge. The scroller clips at its padding (css/2:
+   14px above, 26px below, 20px left on a computer): more room below for it,
+   the dots pulled up by as much. */
+#player-commanders .cmd-carousel-track {
+  padding-bottom: 36px;
+}
+
+#player-commanders .cmd-carousel-nav {
+  margin-top: -16px;
+}
+
+#player-commanders .cmd-carousel-slide.is-active {
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.22), 0 14px 26px rgba(0, 0, 0, 0.3);
+}
+
+:root[data-theme="dark"] #player-commanders .cmd-carousel-slide.is-active {
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.45), 0 14px 26px rgba(0, 0, 0, 0.55);
+}
+
+@media (min-width: 880px) {
+  #player-commanders .cmd-carousel-slide.is-active {
+    box-shadow: 2px 3px 6px rgba(0, 0, 0, 0.22), 6px 14px 24px rgba(0, 0, 0, 0.3);
+  }
+
+  :root[data-theme="dark"] #player-commanders .cmd-carousel-slide.is-active {
+    box-shadow: 2px 3px 6px rgba(0, 0, 0, 0.45), 6px 14px 24px rgba(0, 0, 0, 0.55);
+  }
+}
+
+/* Across the line under the showcase: half above it, half below — the pill
+   opaque, so the line doesn't show through (dark: the box's tint over the
+   page, a step lighter, rather than the usual see-through white). */
+#player-commanders .cmd-carousel-nav {
+  position: relative;
+  z-index: 1;
+  margin-bottom: -18px;
+}
+
+:root[data-theme="dark"]:not(.nav-mobile) #player-commanders .chart-carousel-nav {
+  background: color-mix(in srgb, #fff 11%, var(--bg-cream-1));
+}
+
+#player-commanders .cmd-carousel-stats {
+  padding: 30px 20px 6px;
+}
+
+/* Touch screens: the dots alone, no pill (css/5) — inside the showcase,
+   above the line. */
+html.nav-mobile #player-commanders .cmd-carousel-nav {
+  margin-bottom: 0;
+  padding-bottom: 12px;
+}
+
+html.nav-mobile #player-commanders .cmd-carousel-stats {
+  padding-top: 16px;
+}
+
+#player-commanders .cmd-carousel-name {
+  margin-bottom: 6px;
+}
+
+/* The numbers: one table, no boxes — a hairline between the columns and
+   between the rows. */
+#player-commanders .cmd-carousel-tiles {
+  gap: 0;
+}
+
+#player-commanders .cmd-carousel-stats .stat-tile {
+  padding: 12px 0 14px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+#player-commanders .cmd-carousel-stats .stat-tile:nth-child(even) {
+  padding-left: 16px;
+  border-left: 1px solid var(--album-line);
+}
+
+#player-commanders .cmd-carousel-stats .stat-tile:nth-child(-n + 2) {
+  border-bottom: 1px solid var(--album-line);
+}
+
+#player-commanders .cmd-carousel-stats .stat-tile-label {
+  font-size: 0.72rem;
+}
+
+#player-commanders .stat-tile-value.cmd-carousel-stat-value {
+  margin-top: 4px;
+}
+
+@media (min-width: 880px) {
+  #player-commanders .cmd-carousel {
+    --album-glow-x: calc(20px + var(--cmd-card-w) / 2);
+  }
+
+  #player-commanders .cmd-carousel-main {
+    padding-left: 20px;
+  }
+}
