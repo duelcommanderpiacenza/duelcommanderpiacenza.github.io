@@ -3252,12 +3252,12 @@ a.league-recap-card:hover .league-recap-chevron {
    bar's own rules in css/6, loaded later. Tablets keep their spacing (their
    20px side gap would leave a 6px radius). */
 @media (max-width: 640px) {
-  html.nav-mobile #player-content .hero-sheet {
+  html.nav-mobile :is(#player-content, #commander-content) .hero-sheet {
     --sheet-first-top: calc(var(--page-pad-x) - 22px);
     --sheet-first-radius: calc(26px - var(--page-pad-x));
   }
 
-  html.nav-mobile #player-content .hero-sheet > .where-filter:not([hidden]) {
+  html.nav-mobile :is(#player-content, #commander-content) .hero-sheet > .where-filter:not([hidden]) {
     box-sizing: border-box;
     min-height: calc(2 * var(--sheet-first-radius));
     margin-top: var(--sheet-first-top);
@@ -3278,18 +3278,26 @@ a.league-recap-card:hover .league-recap-chevron {
    thing under the hero: 20px down from it (it was an inline style). On
    phones, the first thing in the sheet: concentric with its corners, as
    player.html's above (user, 2026-11-18) — 6px from its top edge like its
-   sides, no .page-loading padding above it, its card's corners 20px. */
+   sides, no .page-loading padding above it, its card's corners 20px —
+   unless the Dove bar is shown (a commander played live and online — user,
+   2026-11-19): then the bar is the sheet's first element (the rules above,
+   with player.html's) and the chart 16px under it. */
 #commander-decks-chart {
   margin-top: 20px;
 }
 
+html.nav-mobile #commander-content .hero-sheet > .where-filter:not([hidden]) + #commander-decks-chart {
+  margin-top: 0;
+  padding-top: 0;
+}
+
 @media (max-width: 640px) {
-  html.nav-mobile #commander-content .hero-sheet > #commander-decks-chart {
+  html.nav-mobile #commander-content .hero-sheet > .where-filter[hidden] + #commander-decks-chart {
     margin-top: calc(var(--page-pad-x) - 22px);
     padding-top: 0;
   }
 
-  html.nav-mobile #commander-content .hero-sheet > #commander-decks-chart > .pie-chart-wrap {
+  html.nav-mobile #commander-content .hero-sheet > .where-filter[hidden] + #commander-decks-chart > .pie-chart-wrap {
     border-radius: calc(26px - var(--page-pad-x));
   }
 }

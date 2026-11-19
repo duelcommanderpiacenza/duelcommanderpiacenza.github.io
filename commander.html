@@ -90,6 +90,7 @@
   <link rel="modulepreload" href="js/tabs.js">
   <link rel="modulepreload" href="js/back-to-top.js">
   <link rel="modulepreload" href="js/commander-rivals.js">
+  <link rel="modulepreload" href="js/where-filter.js">
   <!-- /preload:modules -->
 </head>
 <body data-active-nav="meta" class="is-loading">
@@ -228,6 +229,18 @@
 
     <!-- Phones / tablets: the page's content as a sheet sliding up over the hero (styles.css .hero-sheet; on a computer it's no box at all). -->
     <div class="hero-sheet">
+
+    <!-- Dal vivo / Online / Tutto (js/where-filter.js — the page's own
+         choice, Dal vivo to start with, as on player.html): which of the
+         commander's events the page counts. Only for a commander played in
+         both live and online events. Here, at the top of the sheet, on touch
+         screens; elsewhere moved into the hero, before the numbers, by
+         js/commander-detail.js (css/6). -->
+    <div class="where-filter" role="radiogroup" aria-label="Dove" hidden>
+      <button type="button" class="where-opt is-active" data-where="live" role="radio" aria-checked="true"><span class="where-lotus" aria-hidden="true"></span><span>Dal vivo</span></button>
+      <button type="button" class="where-opt" data-where="online" role="radio" aria-checked="false"><svg viewBox="11 9 42 46" aria-hidden="true"><path d="M32 11 L49 28 L32 45 L15 28 Z" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round"></path><path d="M32 21 L38 28 L32 35 L26 28 Z" fill="currentColor"></path><rect x="13" y="49" width="38" height="4.4" rx="2.2" fill="currentColor"></rect></svg><span>Online</span></button>
+      <button type="button" class="where-opt" data-where="all" role="radio" aria-checked="false"><span>Tutto</span></button>
+    </div>
 
     <div id="commander-decks-chart" class="page-loading">Caricamento...</div>
 

@@ -622,7 +622,7 @@ export const Matches = {
     sb
       .from("matches")
       .select(
-        "*, event:events(id,name,event_date,league_id,league:leagues(id,name)), player1:players!matches_player1_id_fkey(id,name,handle,endstep), player2:players!matches_player2_id_fkey(id,name,handle,endstep)"
+        "*, event:events(id,name,event_date,league_id,is_online,league:leagues(id,name)), player1:players!matches_player1_id_fkey(id,name,handle,endstep), player2:players!matches_player2_id_fkey(id,name,handle,endstep)"
       )
       .in("event_id", eventIds)
       .then(assertOk),

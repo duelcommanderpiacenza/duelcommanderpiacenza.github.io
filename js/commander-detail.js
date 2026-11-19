@@ -8,6 +8,7 @@ import {
   commanderBadgesHtml,
   formatDate,
   showError,
+  onlinePlayer,
   isoDateYearsAgo,
   DEFAULT_DATE_FROM_YEARS,
 } from "./ui.js";
@@ -25,6 +26,7 @@ import { createArtPainter } from "./player-card.js";
 import { initTabs } from "./tabs.js";
 import { initBackToTop } from "./back-to-top.js";
 import { commanderRivalsHtml } from "./commander-rivals.js";
+import { initWhereFilter, inWhere } from "./where-filter.js";
 
 // A real JSON lookup rather than Scryfall's simpler image-redirect
 // shortcut (.../cards/named?...&format=image) — that one only ever gives
@@ -86,6 +88,18 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   // a long page, hence the back-to-top button.
   initTabs(document.querySelector(".commander-tabs"));
   initBackToTop({ signal });
+  // Dal vivo / Online / Tutto (js/where-filter.js), as on player.html (user,
+  // 2026-11-19): which of the commander's events the page counts — the
+  // page's own choice, Dal vivo to start with. Shown only for a commander
+  // played in both live and online events; one played online only has no
+  // bar and its online events counted. On touch screens at the top of the
+  // sheet under the hero, elsewhere moved into the hero before the numbers.
+  const whereBar = document.querySelector("main .where-filter");
+  if (whereBar && !document.documentElement.classList.contains("nav-mobile")) {
+    document.querySelector("#commander-hero .profile-hero-stats")?.prepend(whereBar);
+  }
+  const where = initWhereFilter({ signal, remember: false });
+  const inScope = (event) => inWhere(where.value, event ?? {});
 
   if (!id) {
     titleEl.textContent = "Commander non trovato";
@@ -116,8 +130,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     // was played. The no-op catch only marks the entries request as
     // handled, should the commander request fail first; awaiting it below
     // still throws.
-    const playedEntriesRequest = EventEntries.listByCommander(id);
-    const allEventsRequest = Events.list().catch((err) => (console.error(err), []));
+    const playedEntriesRequest = EventEntries.listByCommander(id, { withOnline: true });
+    const allEventsRequest = Events.list({ withOnline: true }).catch((err) => (console.error(err), []));
     playedEntriesRequest.catch(() => {});
     const commander = await Commanders.get(id);
     if (signal.aborted) return;
@@ -167,6 +181,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     // commander or as someone's partner.
     const playedEntries = await playedEntriesRequest;
     if (signal.aborted) return;
+    // The bar only with both kinds among the commander's (closed) events.
+    where.setEvents(playedEntries.map((e) => e.event).filter(Boolean));
 
     if (playedEntries.length === 0) {
       winrateEl.innerHTML = '<p class="page-empty">Non ci sono ancora dati sufficienti.</p>';
@@ -261,7 +277,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       }
       const chartDates = new Set(deckCountByDate.keys());
       for (const ev of allEvents) {
-        if (!ev.is_open && ev.event_date && ev.event_date >= chartFrom) chartDates.add(ev.event_date);
+        if (!ev.is_open && ev.event_date && ev.event_date >= chartFrom && inScope(ev)) chartDates.add(ev.event_date);
       }
       const deckChartPoints = [...chartDates]
         .sort()
@@ -278,8 +294,9 @@ export async function mount({ signal = new AbortController().signal } = {}) {
           rows.push({
             event: m.event,
             round: m.round,
-            self: m.player1,
-            opponent: m.player2,
+            // An online match's players by their endstep username.
+            self: m.event?.is_online ? onlinePlayer(m.player1) : m.player1,
+            opponent: m.event?.is_online ? onlinePlayer(m.player2) : m.player2,
             isBye: isBye(m),
             isDrop: isDrop(m),
             outcome: outcomeFor(m, true),
@@ -296,8 +313,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
           rows.push({
             event: m.event,
             round: m.round,
-            self: m.player2,
-            opponent: m.player1,
+            self: m.event?.is_online ? onlinePlayer(m.player2) : m.player2,
+            opponent: m.event?.is_online ? onlinePlayer(m.player1) : m.player1,
             outcome: outcomeFor(m, false),
             scoreLabel: scoreLabelFor(m, false),
             oppCommander: oppEntry?.commander ?? null,
@@ -497,10 +514,9 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     function select(key, { updateUrl = true, dir = 1 } = {}) {
       swapDir = dir;
       const option = options.find((o) => o.key === key) ?? options[0];
-      const entries =
-        option.key === "all"
-          ? playedEntries
-          : playedEntries.filter((e) => (partnerOf(e)?.id ?? "none") === option.key);
+      const entries = playedEntries.filter(
+        (e) => inScope(e.event) && (option.key === "all" || (partnerOf(e)?.id ?? "none") === option.key)
+      );
       const shownTitle = titleEl.innerText;
       titleEl.innerHTML = option.commander
         ? `${titleHtml} <span class="commander-title-partner">+ ${escapeHtml(option.commander.name)}</span>`
@@ -548,6 +564,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     }
     const requested = new URLSearchParams(window.location.search).get("partner");
     select(options.some((o) => o.key === requested) ? requested : "all", { updateUrl: false });
+    // The Dove bar: the same pairing, its events in the new scope.
+    where.onChange(() => select(current, { updateUrl: false }));
   } catch (err) {
     showError(document.getElementById("commander-content"), err);
   } finally {
