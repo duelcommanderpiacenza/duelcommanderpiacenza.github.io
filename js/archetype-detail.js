@@ -8,7 +8,7 @@ import { matchRoundOutcome, isBye, isDrop } from "./leaderboard.js";
 import { computeGroupedStats } from "./stats.js";
 import { ARCHETYPES } from "./metagame-chart.js";
 import { archetypeIcon } from "./archetype-icons.js";
-import { capitalize, commanderPairWithColors, archetypeBadge, showError, statTileHtml } from "./ui.js";
+import { capitalize, commanderPairLabel, colorIdentityPips, archetypeBadge, showError, statTileHtml } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { initTitleFit } from "./page-title-fit.js";
 import { historyPanelHtml, historyStatsHtml, setHistoryCount } from "./history-list.js";
@@ -163,7 +163,13 @@ export async function mount({ signal = new AbortController().signal } = {}) {
           commanders
             .map((c) => {
               const inner = `
-              <div class="history-main"><span class="history-title">${commanderPairWithColors(c.commander, c.partner, NO_LINK)}</span></div>
+              <div class="history-main"><span class="history-title commanders-row-title"><span class="commanders-row-name">${commanderPairLabel(
+                c.commander,
+                c.partner,
+                NO_LINK
+              )}</span><span class="color-identity-inline">${colorIdentityPips(
+                `${c.commander?.color_identity ?? ""}${c.partner?.color_identity ?? ""}`
+              )}</span></span></div>
               ${historyStatsHtml([
                 { label: "Mazzi", value: c.entries },
                 { label: "V-S-P", value: `${c.wins}-${c.losses}-${c.draws}` },

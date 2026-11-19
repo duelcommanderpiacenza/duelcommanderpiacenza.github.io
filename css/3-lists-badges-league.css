@@ -626,10 +626,11 @@ img.badge-disc-glyph {
   text-shadow: none;
 }
 
-/* Comandanti's list on touch screens (user, 2026-10-30): the colour
-   identity at the row's right end, on the name's first line whatever its
-   length — the name (and its banned / new badges) on the left, wrapping
-   under itself. A computer keeps the pips right after the name. */
+/* Comandanti's list on touch screens (user, 2026-10-30) — and archetype.html's
+   commanders, the same markup (user, 2026-11-19): the colour identity at the
+   row's right end, on the name's first line whatever its length — the name
+   (and its banned / new badges) on the left, wrapping under itself. A
+   computer keeps the pips right after the name. */
 html.nav-mobile .commanders-row-title {
   display: flex;
   align-items: flex-start;
