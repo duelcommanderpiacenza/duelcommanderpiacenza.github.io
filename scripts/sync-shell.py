@@ -60,6 +60,11 @@ def main():
     # The partials first, so the pages get their filled-in content.
     changed = [p for p in marked(glob.glob("partials/*.html")) if sync(p, check)]
     pages = marked(glob.glob("*.html") + glob.glob("admin/*.html"))
+    # The check (the pre-commit hook's) leaves the mockups out: git-ignored,
+    # never committed, so an outdated one mustn't stop a commit (2026-11-19 —
+    # another session's mockups did). A plain run still updates them.
+    if check:
+        pages = [p for p in pages if not os.path.basename(p).startswith("_mockup")]
     changed += [p for p in pages if sync(p, check)]
     if check:
         print("out of sync: " + ", ".join(changed) if changed else f"all {len(pages)} pages in sync")
