@@ -192,6 +192,19 @@ html.app-header body.is-loading .page-loading-region > .detail-hero-wrap > .deta
   pointer-events: none;
 }
 
+/* Touch screens, the hero pages: while the placeholder fades out, the real
+   sheet (.hero-sheet, css/6 — z-index 1, under the overlay's 5) above it.
+   Its first element is concentric with its corners on phones (css/4), so
+   its top lies under the placeholder's opaque hero and sheet strip; under
+   the fading overlay it showed in two parts — the bottom at once, the top
+   only as the overlay faded (user, 2026-11-19: event.html's tabs, there
+   from the first frame). The two sheets look alike, so the real one just
+   takes over; the hero still crossfades. Only during the fade: the overlay
+   is removed when it ends, and the sheet goes back to its own z-index. */
+html.app-header .page-loading-overlay.is-hidden ~ .hero-sheet {
+  z-index: 6;
+}
+
 /* Loading too long, or failed (js/page-loading.js watchPageLoading): the
    placeholders give way to the message, with a "Ricarica la pagina" button
    under it. */
@@ -982,6 +995,184 @@ html.app-header .sk-page.is-home > .sk-chart {
   .sk-chart {
     height: 420px;
   }
+}
+
+/* ---- The detail pages' content under the hero, at the loaded page's
+   sizes (measured 2026-11-19, after player.html's rivals and boxes,
+   commander.html's Kryptonite / Portabandiera and the sheets' first element
+   made concentric on phones): player.html's league recap, rivals and two
+   boxes; commander.html's chart, two stat cards and lists; archetype.html's
+   charts and one list; event.html's tabs and one list. Gaps as the real
+   ones less the page's own 14px (.sk-page's gap). */
+
+/* Phones: the sheet's first element concentric with its corners, as on the
+   loaded pages (css/4): 6px from the sheet's top edge — 20px over the
+   hero's end, the placeholder's content starting 10px under it otherwise —
+   its corners 20px; above the hero's sheet strip (.sk-hero::after), which
+   would otherwise cover its top. */
+@media (max-width: 640px) {
+  html.app-header .sk-page.is-hero:is(.is-player, .is-commander, .is-archetype, .is-event) > .sk-hero + * {
+    position: relative;
+    z-index: 1;
+    margin-top: -30px;
+    border-radius: 20px;
+  }
+}
+
+/* Player: the league recap (108px; 150px on phones, its narrow layout), the
+   rivals (three side by side, 80px; one under the other up to 900px, 76px);
+   on a computer the two columns 28px under them (22px apart), each under its
+   title: the album's box (631px) 28px under it, Storico partite's event
+   cards (boxless, 225px / 295px) 30px under it; on touch screens the tabs
+   (69px, 18px corners) 16px under the rivals, the album's box (642px) 24px
+   under them, no titles (the tabs name them). */
+.sk-page.is-player .sk-recap {
+  height: 108px;
+  border-radius: 22px;
+}
+
+.sk-page:is(.is-player, .is-commander) .sk-rivals {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.sk-page:is(.is-player, .is-commander) .sk-rivals .sk {
+  height: 80px;
+  border-radius: 22px;
+}
+
+.sk-page.is-player .sk-cols {
+  gap: 14px 22px;
+  margin-top: 14px;
+}
+
+.sk-page.is-player .sk-box {
+  height: 631px;
+  margin-top: 16px;
+  border-radius: 22px;
+}
+
+.sk-page.is-player .sk-group {
+  height: 225px;
+  border-radius: 14px;
+}
+
+.sk-page.is-player .sk-title + .sk-group {
+  margin-top: 18px;
+}
+
+.sk-page.is-player .sk-group + .sk-group {
+  height: 295px;
+  margin-top: -4px;
+}
+
+html.app-header .sk-page.is-player .sk-tabs {
+  height: 69px;
+  margin-top: 2px;
+  border-radius: 18px;
+}
+
+html.app-header .sk-page.is-player .sk-cols {
+  margin-top: 10px;
+}
+
+html.app-header .sk-page.is-player .sk-title {
+  display: none;
+}
+
+html.app-header .sk-page.is-player .sk-box {
+  height: 642px;
+  margin-top: 0;
+}
+
+@media (max-width: 900px) {
+  .sk-page:is(.is-player, .is-commander) .sk-rivals {
+    grid-auto-flow: row;
+    gap: 10px;
+  }
+
+  .sk-page:is(.is-player, .is-commander) .sk-rivals .sk {
+    height: 76px;
+  }
+}
+
+@media (max-width: 640px) {
+  .sk-page.is-player .sk-recap {
+    height: 150px;
+  }
+}
+
+/* Commander: the chart's card (248px; 242px on phones), the two stat cards
+   26px under it (16px on touch screens), the lists 28px under them; on
+   touch screens the tabs (69px, 18px corners) 16px under the cards and the
+   lists 18px under the tabs, without their titles (the tabs name them). */
+.sk-page.is-commander .sk-chart {
+  height: 248px;
+}
+
+.sk-page.is-commander .sk-cols {
+  margin-top: 14px;
+}
+
+html.app-header .sk-page.is-commander .sk-rivals {
+  margin-top: 2px;
+}
+
+html.app-header .sk-page.is-commander .sk-tabs {
+  height: 69px;
+  margin-top: 2px;
+  border-radius: 18px;
+}
+
+html.app-header .sk-page.is-commander .sk-cols {
+  margin-top: 4px;
+}
+
+html.app-header .sk-page.is-commander .sk-title {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .sk-page.is-commander .sk-chart {
+    height: 242px;
+  }
+}
+
+/* Archetype: the charts' card (248px; 254px on phones), the list's title
+   50px under it, the rows the whole width. */
+.sk-page.is-archetype .sk-chart {
+  height: 248px;
+}
+
+.sk-page.is-archetype .sk-chart + .sk-title {
+  margin-top: 36px;
+}
+
+@media (max-width: 640px) {
+  .sk-page.is-archetype .sk-chart {
+    height: 254px;
+  }
+}
+
+/* Event: the tabs on every screen — on a computer the 504px pill bar (51px),
+   on touch screens the segmented control (69px) — the list's rows 18px
+   under them, the whole width, no title. */
+.sk-page.is-event > .sk-tabs {
+  width: min(504px, 100%);
+  height: 51px;
+}
+
+.sk-page.is-event > .sk-tabs + .sk-row {
+  margin-top: 4px;
+}
+
+html.app-header .sk-page.is-event > .sk-tabs {
+  width: auto;
+  height: 69px;
+  border-radius: 18px;
 }
 
 /* A part of a page still loading after the page is shown (js/page-loading.js

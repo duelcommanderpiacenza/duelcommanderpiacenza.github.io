@@ -371,6 +371,19 @@ img.badge-disc-glyph {
   height: 28px;
 }
 
+/* From 820px down the hero's text is centred: the icon and the name centred
+   together, the icon right beside the name (user, 2026-11-19 — the name
+   stretched over the row, centred in it, left the icon at its left edge). */
+@media (max-width: 820px) {
+  .archetype-hero .profile-hero-heading {
+    justify-content: center;
+  }
+
+  .archetype-hero .profile-hero-name {
+    flex: 0 1 auto;
+  }
+}
+
 @media (max-width: 640px) {
   .archetype-hero-icon {
     width: 42px;
@@ -812,15 +825,17 @@ a.btn-secondary:hover {
   }
 }
 
-/* commander.html's Giocatori / Storico partite (side by side on a computer)
-   and league.html's Eventi / Classifica (one under the other): on phones
+/* commander.html's Giocatori / Storico partite and player.html's Album
+   comandanti / Storico partite (side by side on a computer — player.html's
+   since 2026-11-19, user) and league.html's Eventi / Classifica (one under
+   the other): on phones
    and touch screens (html.app-header) one at a time behind tabs
    (account.html's .profile-tabs, js/tabs.js — hidden on a computer) — no
    titles (the tab names it), each list whole rather than capped and
    scrolling inside (the caps are inline styles from js/history-list.js,
    hence !important). A Topdeck series has no Classifica: no tabs at all
    ([hidden], over .profile-tabs' own display on touch screens). */
-html:not(.app-header) .commander-tabs {
+html:not(.app-header) :is(.commander-tabs, .player-tabs) {
   display: none;
 }
 
@@ -828,14 +843,37 @@ html.app-header .commander-tabs {
   margin-top: 28px;
 }
 
-html.app-header .commander-lists {
+html.app-header :is(.commander-lists, .player-lists) {
   grid-template-columns: minmax(0, 1fr);
   margin-top: 0;
 }
 
 html.app-header .commander-lists > .history-col:not(.is-current),
-html.app-header .commander-lists > .history-col > h2 {
+html.app-header .commander-lists > .history-col > h2,
+html.app-header .player-lists > :is(.album-col, .history-col):not(.is-current),
+html.app-header .player-lists > .history-col > h2 {
   display: none;
+}
+
+/* player.html on touch screens: the tabs 16px under what's above them (the
+   rivals', the recap's 26px bottom margin), like commander.html's; the
+   album's title gone like the others' — but its "?" (how the special cards
+   are earned) kept, in its box's top right corner. */
+html.app-header .player-tabs {
+  margin-top: -10px;
+}
+
+html.app-header .player-lists > .album-col {
+  position: relative;
+}
+
+html.app-header .player-lists > .album-col > h2 {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  margin: 0;
+  font-size: 0;
 }
 
 /* league.html: Eventi / Classifica / Meta one at a time behind tabs on

@@ -17,6 +17,9 @@
 // tip-fitting handlers (keeping the tip inside its card) run as for a hover.
 // The strips' `touch-action: pan-y` (styles.css) keeps the page scrolling
 // up and down from a chart while a sideways move stays with the chart.
+// Not inside [data-no-scrub]: a chart in a carousel swiped sideways
+// (archetype.html's "Utilizzo" — user, 2026-11-19), where a sideways move
+// must swipe the carousel instead; a tap there still shows a point (:hover).
 
 let plot = null; // the plot being scrubbed (the strips' parent)
 let marked = null; // its marked strip
@@ -53,7 +56,7 @@ document.addEventListener(
   (e) => {
     if (e.pointerType === "mouse") return;
     const hit = e.target.closest?.(".line-chart-hit");
-    if (!hit) {
+    if (!hit || hit.closest("[data-no-scrub]")) {
       clear();
       return;
     }

@@ -7,11 +7,14 @@
 #
 # First, the pages checked against their shared parts (scripts/sync-shell.py)
 # and their modulepreload lists (scripts/sync-preload.py): a page out of sync
-# stops the commit — run the script without --check, then commit again.
+# stops the commit — run the script without --check, then commit again. Then
+# the icons (scripts/check-icons.py): a title with two different icons stops
+# it too — one icon per title, everywhere.
 
 if command -v python >/dev/null 2>&1; then
   python scripts/sync-shell.py --check || exit 1
   python scripts/sync-preload.py --check || exit 1
+  python scripts/check-icons.py || exit 1
 fi
 
 f=js/version.js

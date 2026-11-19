@@ -91,6 +91,7 @@
   <link rel="modulepreload" href="js/player-league-recap.js">
   <link rel="modulepreload" href="js/where-filter.js">
   <link rel="modulepreload" href="js/player-rivals.js">
+  <link rel="modulepreload" href="js/tabs.js">
   <!-- /preload:modules -->
 </head>
 <body data-active-nav="players" class="is-loading">
@@ -149,25 +150,14 @@
 <main class="page-main" id="player-content" data-accent-from-hero data-page="player">
   <div class="page-loading-region">
     <div id="page-loading-overlay" class="page-loading-overlay">
-      <div class="sk-page is-hero" aria-hidden="true">
+      <div class="sk-page is-hero is-player" aria-hidden="true">
         <div class="sk sk-hero"><i class="sk-hero-card"></i><div class="sk-hero-text"><i class="sk-hero-title"></i><div class="sk-hero-chips"><i></i><i></i><i></i></div></div></div>
+        <i class="sk sk-recap"></i>
+        <div class="sk-rivals"><i class="sk"></i><i class="sk"></i><i class="sk"></i></div>
+        <i class="sk sk-tabs sk-touch-only"></i>
         <div class="sk-cols">
-          <div class="sk-col">
-            <i class="sk sk-title"></i>
-            <i class="sk sk-row"></i>
-            <i class="sk sk-row"></i>
-            <i class="sk sk-row"></i>
-            <i class="sk sk-row"></i>
-            <i class="sk sk-row"></i>
-          </div>
-          <div class="sk-col">
-            <i class="sk sk-title"></i>
-            <i class="sk sk-row"></i>
-            <i class="sk sk-row"></i>
-            <i class="sk sk-row"></i>
-            <i class="sk sk-row"></i>
-            <i class="sk sk-row"></i>
-          </div>
+          <div class="sk-col"><i class="sk sk-title"></i><i class="sk sk-box"></i></div>
+          <div class="sk-col"><i class="sk sk-title"></i><i class="sk sk-group"></i><i class="sk sk-group"></i></div>
         </div>
       </div>
       <p>Caricamento...</p>
@@ -234,16 +224,22 @@
     <section class="rivals" id="player-rivals" aria-label="Rivali" hidden></section>
 
     <!-- Desktop: Album comandanti left, Storico partite (a scrolling list of
-         sub-cards, exactly as tall as the album beside it) right; phones:
-         the album first, then the matches (styles.css .history-grid). Each
-         column a box, its title the band at its top (.col-band, css/4). -->
-    <div class="history-grid">
-      <section class="album-col">
-        <h2 class="col-band"><svg class="col-band-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"></path><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"></path><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"></path></svg>Album comandanti <button type="button" class="help-toggle-btn" id="album-help" aria-haspopup="dialog" aria-label="Come si ottiene una carta speciale">?</button></h2>
+         sub-cards, exactly as tall as the album beside it) right, each
+         under its title; phones and touch screens (html.app-header): one
+         at a time behind tabs, like commander.html's (js/tabs.js — no titles
+         there, the tabs name them; the album's "?" in its box's corner)
+         (styles.css .history-grid, .player-lists). -->
+    <nav class="profile-tabs player-tabs" role="tablist" aria-label="Sezioni del giocatore">
+      <button type="button" class="profile-tab" role="tab" id="player-tab-album" data-tab="player-col-album" aria-controls="player-col-album"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"></path><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"></path><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"></path></svg><span>Album comandanti</span></button>
+      <button type="button" class="profile-tab" role="tab" id="player-tab-matches" data-tab="player-col-matches" aria-controls="player-col-matches"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 17.5 3 6V3h3l11.5 11.5"></path><path d="m13 19 6-6M16 16l4 4M19 21l2-2"></path><path d="M14.5 6.5 18 3h3v3l-3.5 3.5"></path><path d="m5 14 4 4M7 17l-3 3M3 19l2 2"></path></svg><span>Storico partite</span></button>
+    </nav>
+    <div class="history-grid player-lists">
+      <section class="album-col" id="player-col-album" role="tabpanel" aria-labelledby="player-tab-album">
+        <h2 class="heading-help">Album comandanti <button type="button" class="help-toggle-btn" id="album-help" aria-haspopup="dialog" aria-label="Come si ottiene una carta speciale">?</button></h2>
         <div id="player-commanders" class="page-loading">Caricamento...</div>
       </section>
-      <section class="history-col fills-row">
-        <h2 class="col-band"><svg class="col-band-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg>Storico partite <span class="history-count" id="player-matches-count"></span></h2>
+      <section class="history-col fills-row" id="player-col-matches" role="tabpanel" aria-labelledby="player-tab-matches">
+        <h2>Storico partite <span class="history-count" id="player-matches-count"></span></h2>
         <div id="player-matches" class="page-loading">Caricamento...</div>
       </section>
     </div>

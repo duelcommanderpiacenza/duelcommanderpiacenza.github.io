@@ -829,6 +829,57 @@ main:is([data-page="commanders"], [data-page="players"]) .sk-search {
   height: 43px;
 }
 
+/* Giocatori's placeholder (players.html .is-players — measured against the
+   loaded page, 2026-11-19): on touch screens the Dove bar (a 39px pill) 12px
+   under the tabs; the search beside the sort menu (41px, 12px corners —
+   the menu 220px wide, 140px on phones) 16px under it; the player rows 16px
+   under that, 8px apart, 2px in from the sides, 14px corners — 59px tall,
+   about 101px on phones (their numbers on a second line). */
+.sk-page.is-players {
+  gap: 8px;
+}
+
+.sk-page.is-players .sk-where {
+  height: 39px;
+  margin: -6px 0 8px;
+  border-radius: var(--radius-pill);
+}
+
+.sk-page.is-players .sk-search-line {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.sk-page.is-players .sk-search-line .sk {
+  height: 41px;
+  border-radius: 12px;
+}
+
+.sk-page.is-players .sk-search-line .sk-search {
+  flex: 1;
+}
+
+.sk-page.is-players .sk-sort {
+  flex: 0 0 220px;
+}
+
+.sk-page.is-players .sk-row {
+  height: 59px;
+  margin-inline: 2px;
+  border-radius: 14px;
+}
+
+@media (max-width: 640px) {
+  .sk-page.is-players .sk-sort {
+    flex-basis: 140px;
+  }
+
+  .sk-page.is-players .sk-row {
+    height: 101px;
+  }
+}
+
 /* Pinned to the row's right edge via the row's only auto margin — same
    trick as the nav's own Social tab (.nav-link[data-nav="social"]) —
    everything else stays left-packed regardless of how many (or how few —
@@ -2922,6 +2973,12 @@ html.nav-mobile :is(#commanders-chart, #archetypes-chart) .chart-carousel-nav {
 .line-chart-hit,
 .evo-plot {
   touch-action: pan-y pinch-zoom;
+}
+
+/* …except in a chart carousel swiped sideways ([data-no-scrub] —
+   archetype.html's charts): there a sideways move swipes the carousel. */
+[data-no-scrub] .line-chart-hit {
+  touch-action: pan-x pan-y pinch-zoom;
 }
 
 .line-chart-hit.is-scrub > * {

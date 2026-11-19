@@ -3294,6 +3294,40 @@ a.league-recap-card:hover .league-recap-chevron {
   }
 }
 
+/* archetype.html's charts (js/archetype-detail.js — "Utilizzo" and "Contro
+   gli altri archetipi" in a chart carousel), the first thing under the
+   hero: 20px down from it (an inline style until 2026-11-18). On phones
+   concentric with the sheet's corners like commander.html's above (user,
+   2026-11-19): 6px from its top edge, no .page-loading padding (the
+   carousel's own 8px of shadow room is given back by its -8px margin), the
+   cards' 20px corners as they are. */
+#archetype-charts {
+  margin-top: 20px;
+}
+
+@media (max-width: 640px) {
+  html.nav-mobile #archetype-content .hero-sheet > #archetype-charts {
+    margin-top: calc(var(--page-pad-x) - 22px);
+    padding-top: 0;
+  }
+}
+
+/* event.html's tabs (Classifica / Giocatori / Partite / Meta), the first
+   thing in its sheet: on phones concentric with the sheet's corners, like
+   the pages above (user, 2026-11-19) — 6px from its top edge, its corners
+   the sheet's 26px less that (20px), the current tab's inside them less the
+   bar's 1px border and 6px padding (13px). Still sticky (top: 8px) once scrolled. */
+@media (max-width: 640px) {
+  html.nav-mobile #event-content .hero-sheet > .event-tabs {
+    margin-top: calc(var(--page-pad-x) - 22px);
+    border-radius: calc(26px - var(--page-pad-x));
+  }
+
+  html.nav-mobile #event-content .hero-sheet > .event-tabs .profile-tab {
+    border-radius: calc(26px - 2 * var(--page-pad-x) - 1px);
+  }
+}
+
 /* Touch screens (where the Giocatori / Storico partite tabs are): the tabs
    16px under the chart (user, 2026-11-18 — it was 54: the card's 20px,
    .page-loading's 6px, the tabs' 28px). */
@@ -3325,15 +3359,17 @@ html.app-header #commander-content .commander-rivals {
    then the four numbers as one 2 × 2 table with hairlines (not four boxes in
    the box). Only here (#player-commanders — the carousel's own rules in
    css/2 stay as they are).
-   Storico partite beside it in a box too (option D of
-   _mockup-player-titles.html, user, 2026-11-18): each column (.album-col,
-   .history-col) is the box, its <h2> the band at its top (.col-band) —
-   small, upper case, in the accent, with its icon, both on the box's white
-   (user): the album's above the showcase, with the "?" at its right end;
-   Storico partite's with its count at the right end, the match cards inside
-   under it. */
-#player-content .history-grid > :is(.album-col, .history-col) {
+   Storico partite beside it, boxless (its sub-cards, like commander.html's),
+   each under its plain title on a computer; on touch screens one at a time
+   behind tabs (css/3 .player-lists — user, 2026-11-19, after a while as
+   two boxes with their titles as bands, option D of
+   _mockup-player-titles.html). The box is the album itself (.cmd-carousel),
+   not its column: no title in it. */
+#player-commanders .cmd-carousel {
   --album-line: rgba(120, 100, 104, 0.18);
+  /* The glow's centre: the current card's (desktop: at the left). */
+  --album-glow-x: 50%;
+  gap: 0;
   overflow: clip;
   border: 1px solid rgba(120, 100, 104, 0.2);
   border-radius: 22px;
@@ -3341,77 +3377,11 @@ html.app-header #commander-content .commander-rivals {
   box-shadow: 0 2px 12px rgba(40, 20, 22, 0.06);
 }
 
-:root[data-theme="dark"] #player-content .history-grid > :is(.album-col, .history-col) {
+:root[data-theme="dark"] #player-commanders .cmd-carousel {
   --album-line: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.05);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
-}
-
-#player-content .col-band {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  padding: 13px 18px 12px;
-  border-bottom: 1px solid var(--album-line);
-  color: var(--brand-red-deep);
-  font-size: 0.82rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  line-height: 1.2;
-  text-transform: uppercase;
-}
-
-:root[data-theme="dark"] #player-content .col-band {
-  color: var(--hero-accent-light, #ff8a8d);
-}
-
-.col-band-icon {
-  flex: none;
-  width: 16px;
-  height: 16px;
-}
-
-/* At the band's right end: the album's "?", Storico partite's count. */
-#player-content .col-band > :is(.help-toggle-btn, .history-count) {
-  margin-left: auto;
-}
-
-#player-content .col-band > .help-toggle-btn {
-  width: 20px;
-  height: 20px;
-  font-size: 0.7rem;
-  letter-spacing: 0;
-}
-
-#player-content .col-band > .history-count {
-  height: 20px;
-  min-width: 20px;
-  font-size: 0.72rem;
-  letter-spacing: 0;
-}
-
-/* The match cards inside the box, under the band; the album's loading /
-   empty text too (no carousel yet, or none — .page-loading itself stays on
-   the element for good). */
-#player-matches {
-  padding: 10px;
-}
-
-/* The showcase right under the band's line (not .page-loading's 6px). */
-#player-commanders {
-  padding: 0;
-}
-
-#player-commanders:not(:has(> .cmd-carousel)) {
-  padding: 16px 18px;
-}
-
-#player-commanders .cmd-carousel {
-  /* The glow's centre: the current card's (desktop: at the left). */
-  --album-glow-x: 50%;
-  gap: 0;
 }
 
 #player-commanders .cmd-carousel-main {

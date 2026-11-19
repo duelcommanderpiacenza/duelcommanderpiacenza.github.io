@@ -20,6 +20,7 @@ import { renderPlayerLeagueRecap } from "./player-league-recap.js";
 import { cardHint, rememberCard, applyCardPlaceholder } from "./card-hints.js";
 import { initWhereFilter, inWhere } from "./where-filter.js";
 import { rivalsHtml } from "./player-rivals.js";
+import { initTabs } from "./tabs.js";
 
 // Manual (badge1/badge2) and auto badges together — the auto ones are a
 // plain read of PlayerAutoBadges, precomputed by admin/js/badges-sync.js
@@ -72,7 +73,11 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   // background art, else the player's most played commander's.
   const paintHeroArt = createArtPainter(document.getElementById("player-hero-art"));
 
-  // Storico partite is the whole list on phones (no scrolling inside).
+  // Album comandanti / Storico partite: tabs on phones and touch screens
+  // (the CSS hides them on a computer, the two side by side), like
+  // commander.html's; Storico partite the whole list there (no scrolling
+  // inside), hence the back-to-top button.
+  initTabs(document.querySelector(".player-tabs"));
   initBackToTop({ signal });
   // Dal vivo / Online / Tutto (js/where-filter.js — the page's own choice,
   // Dal vivo to start with, user 2026-11-16): which of the player's events
