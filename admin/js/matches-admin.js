@@ -1,7 +1,7 @@
 import { EventEntries, Matches, Events } from "../../js/db.js";
 import { isBye, isDrop, computeEventLeaderboard, top8Stage, roundLabel, top8SplitPlayers, TOP8_STAGES } from "../../js/leaderboard.js";
 import { escapeHtml } from "../../js/ui.js";
-import { renderTable, setMessage, fillSelect, onBusySubmit, runBusy } from "./crud-ui.js";
+import { renderTable, setMessage, setNote, fillSelect, onBusySubmit, runBusy } from "./crud-ui.js";
 import { on } from "./bus.js";
 
 /**
@@ -16,20 +16,30 @@ import { on } from "./bus.js";
  * event and this round isn't scored at all) — picked via the two mutually
  * exclusive checkboxes below Giocatore 1.
  *
+ * Rounds depend on each other (user, 2026-11-22): only the latest tab can be
+ * changed — every round before it is locked (no "×", no Modifica / Elimina,
+ * the form disabled with a note) until the latest is deleted, which unlocks
+ * the one before. The same for a top 8's stages.
+ *
  * A top 8 (migration 045, js/leaderboard.js top8Stage): "+ Top 8" ends the
  * Swiss rounds (`events.top8_after` = how many there were) and adds the
  * quarterfinals' tab, then "+ Semifinali", "+ Finale" — no more Swiss rounds
  * after it. In a top 8 tab only the players still in can be paired (the
  * Swiss top 8, then each stage's winners), the bracket's next pairing
- * offered first, and every match needs a winner. "Dividi vittoria"
- * (`events.top8_split`): the players still in split the win — no more
- * rounds, the standings stay as they stood.
+ * offered first, and every match needs a winner; once it has started, the
+ * standings' ↑↓ are off (the Swiss order picks it). No split to enter: a
+ * closed event whose top 8 has no final won was split at its last stage
+ * (js/leaderboard.js top8SplitPlayers) — then a "Vittoria divisa" chip
+ * after the tabs.
  */
 
 // The bracket: Swiss seeds in the order they meet — 1-8 and 4-5 in one
 // half, 2-7 and 3-6 in the other — so a stage's pairing is the two players
 // still in within the same block of 2^stage slots.
 const BRACKET = [1, 8, 4, 5, 2, 7, 3, 6];
+
+// A stage's name in a sentence (the lock note).
+const TOP8_STAGE_NAMES = { Quarti: "i quarti", Semifinali: "le semifinali", Finale: "la finale" };
 export function initMatchesAdmin() {
   const roundTabsEl = document.getElementById("matches-round-tabs");
   const listEl = document.getElementById("matches-admin-list");
@@ -144,6 +154,25 @@ export function initMatchesAdmin() {
     fillSelect(player1Field, options);
     fillSelect(player2Field, options);
     updateMatchTypeUI();
+    applyRoundLock();
+  }
+
+  // Any round before the latest tab: locked (see the top).
+  function roundLocked(r) {
+    return r < Math.max(1, currentEvent?.rounds ?? 1);
+  }
+
+  // The form of a locked round: disabled, with a note saying what unlocks it.
+  function applyRoundLock() {
+    const locked = roundLocked(currentRound);
+    form.querySelectorAll("input, select, button").forEach((el) => {
+      if (locked) el.disabled = true;
+      else if (el !== player2Field) el.disabled = false;
+    });
+    if (!locked) updateMatchTypeUI();
+    const label = roundLabel(currentEvent, currentEvent?.rounds ?? 1);
+    const latest = TOP8_STAGE_NAMES[label] ?? `il ${label.toLowerCase()}`;
+    setNote(msgEl, locked ? `Turno bloccato: elimina prima ${latest} per modificarlo.` : "");
   }
 
   function updateMatchTypeUI() {
@@ -162,15 +191,12 @@ export function initMatchesAdmin() {
     return after ? Math.max(0, (currentEvent.rounds ?? 1) - after) : 0;
   }
 
-  // A round's tab can be deleted (its "×", inside the pill): any Swiss round
-  // while there are two or more — but never the last Swiss one before a top
-  // 8 — and only the latest of the top 8's stages (deleting the
-  // quarterfinals' while it's the only one removes the top 8).
+  // A round's tab can be deleted (its "×", inside the pill): only the latest,
+  // when there are two or more (the rest are locked; deleting the
+  // quarterfinals while they're the top 8's only stage removes the top 8).
   function canDeleteRound(r, rounds) {
     if (rounds <= 1) return false;
-    const after = currentEvent?.top8_after;
-    if (!after) return true;
-    return top8Stage(currentEvent, r) ? r === rounds : after > 1;
+    return r === rounds;
   }
 
   function renderRoundTabs() {
@@ -187,25 +213,20 @@ export function initMatchesAdmin() {
       </span>`;
     }
     const stages = top8Stages();
-    const split = Boolean(currentEvent?.top8_after && currentEvent.top8_split);
-    // The split, once made: a chip, its "×" takes it back (while open).
-    if (split) {
-      html += `<span class="round-tab-wrap">
-        <span class="round-tab is-split${currentEvent.is_open ? " has-delete" : ""}">Vittoria divisa</span>
-        ${currentEvent.is_open ? deleteBtn('id="unsplit-btn"', "Annulla la vittoria divisa") : ""}
-      </span>`;
+    // A closed event's top 8 without a final won: split (a chip, nothing to
+    // click).
+    if (top8SplitPlayers(currentEvent, computeEventLeaderboard(allMatches, currentEntrants, currentEvent)).length) {
+      html += '<span class="round-tab-wrap"><span class="round-tab is-split">Vittoria divisa</span></span>';
     }
     // A closed event is already published — its round/turn structure is
-    // frozen from here on, only individual match scores can still be fixed.
-    if (currentEvent?.is_open && !split) {
+    // frozen from here on, only the latest round's match scores can still be
+    // fixed.
+    if (currentEvent?.is_open) {
       if (!currentEvent.top8_after) {
         html += '<button type="button" class="round-tab-add" id="add-round-btn">+ Turno</button>';
         html += '<button type="button" class="round-tab-add" id="add-top8-btn">+ Top 8</button>';
-      } else {
-        if (stages < TOP8_STAGES.length) {
-          html += `<button type="button" class="round-tab-add" id="add-round-btn">+ ${TOP8_STAGES[stages]}</button>`;
-        }
-        html += '<button type="button" class="round-tab-add" id="split-btn">Dividi vittoria</button>';
+      } else if (stages < TOP8_STAGES.length) {
+        html += `<button type="button" class="round-tab-add" id="add-round-btn">+ ${TOP8_STAGES[stages]}</button>`;
       }
     }
     roundTabsEl.innerHTML = html;
@@ -228,10 +249,6 @@ export function initMatchesAdmin() {
     addRoundBtn?.addEventListener("click", () => runBusy(addRoundBtn, () => addRound()));
     const addTop8Btn = document.getElementById("add-top8-btn");
     addTop8Btn?.addEventListener("click", () => runBusy(addTop8Btn, () => addRound({ top8: true })));
-    const splitBtn = document.getElementById("split-btn");
-    splitBtn?.addEventListener("click", () => runBusy(splitBtn, () => setSplit(true)));
-    const unsplitBtn = document.getElementById("unsplit-btn");
-    unsplitBtn?.addEventListener("click", () => runBusy(unsplitBtn, () => setSplit(false)));
   }
 
   // Saves a change to the event's rounds / top 8, and keeps the shared
@@ -248,7 +265,7 @@ export function initMatchesAdmin() {
     const rounds = (currentEvent.rounds ?? 1) + 1;
     if (top8 && !confirm(`Iniziare la top 8 dopo ${rounds - 1} turni? I primi 8 della classifica giocano i quarti.`)) return;
     try {
-      await updateEvent(top8 ? { rounds, top8_after: rounds - 1, top8_split: false } : { rounds });
+      await updateEvent(top8 ? { rounds, top8_after: rounds - 1 } : { rounds });
       currentRound = rounds;
       renderRoundTabs();
       renderMatchList();
@@ -256,24 +273,6 @@ export function initMatchesAdmin() {
     } catch (err) {
       console.error(err);
       setMessage(msgEl, top8 ? "Errore nella creazione della top 8." : "Errore nell'aggiunta del turno.", true);
-    }
-  }
-
-  // The players still in split the win (or, `false`, take it back).
-  async function setSplit(split) {
-    if (!currentEvent?.top8_after) return;
-    if (split) {
-      const standings = computeEventLeaderboard(allMatches, currentEntrants, currentEvent);
-      const names = top8SplitPlayers({ ...currentEvent, top8_split: true }, standings).map((row) => row.player?.name ?? "?");
-      if (!confirm(`Dividere la vittoria tra ${names.join(", ")}? Non si giocano altri turni e la classifica resta com'è.`)) return;
-    }
-    try {
-      await updateEvent({ top8_split: split });
-      renderRoundTabs();
-      renderEventLeaderboard();
-    } catch (err) {
-      console.error(err);
-      setMessage(msgEl, "Errore nel salvataggio della vittoria divisa.", true);
     }
   }
 
@@ -300,11 +299,7 @@ export function initMatchesAdmin() {
       await Promise.all(toRenumber.map((m) => Matches.update(m.id, { round: (m.round ?? 1) - 1 })));
 
       const rounds = totalRounds - 1;
-      const patch = { rounds };
-      // A Swiss round before the top 8: one fewer before it.
-      if (currentEvent.top8_after && !top8Stage(currentEvent, round)) patch.top8_after = currentEvent.top8_after - 1;
-      if (removesTop8) Object.assign(patch, { top8_after: null, top8_split: false });
-      await updateEvent(patch);
+      await updateEvent(removesTop8 ? { rounds, top8_after: null } : { rounds });
       if (currentRound > round) currentRound -= 1;
       currentRound = Math.min(currentRound, rounds);
 
@@ -378,11 +373,13 @@ export function initMatchesAdmin() {
           label: "",
           render: (s) => {
             const i = s.index;
-            const tiedWithPrev = i > 0 && tied(standings[i - 1], s);
-            const tiedWithNext = i < standings.length - 1 && tied(standings[i + 1], s);
+            // Off once the top 8 has started: the Swiss order is locked.
+            const movable = currentEvent?.is_open && !currentEvent.top8_after;
+            const tiedWithPrev = movable && i > 0 && tied(standings[i - 1], s);
+            const tiedWithNext = movable && i < standings.length - 1 && tied(standings[i + 1], s);
             return `
-              <button type="button" class="btn-secondary" data-move="up" data-index="${i}" aria-label="Sposta su" ${tiedWithPrev && currentEvent?.is_open ? "" : "disabled"}>&uarr;</button>
-              <button type="button" class="btn-secondary" data-move="down" data-index="${i}" aria-label="Sposta giù" ${tiedWithNext && currentEvent?.is_open ? "" : "disabled"}>&darr;</button>`;
+              <button type="button" class="btn-secondary" data-move="up" data-index="${i}" aria-label="Sposta su" ${tiedWithPrev ? "" : "disabled"}>&uarr;</button>
+              <button type="button" class="btn-secondary" data-move="down" data-index="${i}" aria-label="Sposta giù" ${tiedWithNext ? "" : "disabled"}>&darr;</button>`;
           },
         },
       ],
@@ -485,7 +482,7 @@ export function initMatchesAdmin() {
         },
         { key: "score", label: "Punteggio", render: (m) => (isDrop(m) ? "—" : scoreLabel(m)) },
       ],
-      { onEdit, onDelete }
+      roundLocked(currentRound) ? {} : { onEdit, onDelete }
     );
   }
 
@@ -494,6 +491,7 @@ export function initMatchesAdmin() {
     try {
       allMatches = await Matches.listByEvent(currentEvent.id);
       renderMatchList();
+      renderRoundTabs();
     } catch (err) {
       setMessage(msgEl, "Errore nel caricamento.", true);
     }
@@ -535,6 +533,7 @@ export function initMatchesAdmin() {
     p2WinsField.value = "0";
     limitScore();
     setMessage(msgEl, "", false);
+    applyRoundLock();
   }
 
   async function onDelete(row) {
@@ -560,7 +559,7 @@ export function initMatchesAdmin() {
 
   onBusySubmit(form, async (e) => {
     e.preventDefault();
-    if (!currentEvent) return;
+    if (!currentEvent || roundLocked(currentRound)) return;
 
     let payload;
     if (dropField.checked) {

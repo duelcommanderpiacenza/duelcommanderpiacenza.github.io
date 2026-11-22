@@ -466,15 +466,15 @@ export const Events = {
       .is("league_id", null)
       .order("event_date", { ascending: false, nullsFirst: false })
       .then(assertOk),
-  // Just the top 8 of these events (migration 045: `top8_after`,
-  // `top8_split` — js/leaderboard.js) — for a page holding only an embed
-  // without them. [] on a database without the columns yet (42703).
+  // Just the top 8 of these events (migration 045: `top8_after` —
+  // js/leaderboard.js) — for a page holding only an embed without it. [] on
+  // a database without the column yet (42703).
   listTop8: (ids) =>
     ids.length === 0
       ? Promise.resolve([])
       : sb
           .from("events")
-          .select("id, top8_after, top8_split")
+          .select("id, top8_after")
           .in("id", ids)
           .then((result) => (result.error?.code === "42703" ? [] : assertOk(result))),
   create: (row) => sb.from("events").insert(row).select().single().then(assertOk),

@@ -368,7 +368,6 @@ export function initEndstepImport({ onImported }) {
       currentEvent.rounds = Math.max(1, data.tournament.rounds);
       // The rounds replaced, the top 8 goes too (migration 045's import).
       currentEvent.top8_after = null;
-      currentEvent.top8_split = false;
       close();
       setMessage(
         msgEl,

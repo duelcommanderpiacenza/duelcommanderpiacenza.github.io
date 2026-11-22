@@ -63,9 +63,9 @@ const TOP_FINISH_CUTOFF = 8;
 // An event's top 8 (migration 045): `events.top8_after` is how many Swiss
 // rounds come before it (null = no top 8), the rounds after them its
 // stages — quarterfinals, semifinals, final — between the top 8 of the Swiss
-// standings, single elimination. `events.top8_split`: the players still in
-// split the win, so no more rounds are played and the standings stay as they
-// stand (see computeEventLeaderboard).
+// standings, single elimination. A closed event whose top 8 has no final
+// won was split by the players still in (top8SplitPlayers): the standings
+// stay as they stood (see computeEventLeaderboard).
 export const TOP8_STAGES = ["Quarti", "Semifinali", "Finale"];
 
 /**
@@ -87,14 +87,17 @@ export function roundLabel(event, round) {
 }
 
 /**
- * Who split an event's win (`top8_split`): the players still in the top 8
- * — the winners of its latest stage played, or all of its 8 when it was
- * split before the quarterfinals. Empty when the event has no split.
- * `standings`: computeEventLeaderboard's, for the same event.
+ * Who split an event's win: no split is entered — a **closed** event whose
+ * top 8 has no final won (user, 2026-11-22) was split at its last stage
+ * created by the players still in: the winners of its latest stage played,
+ * or all of its 8 when the quarterfinals weren't played. Empty when there's
+ * no split (no top 8, still open, or a final won). `event`: with
+ * `top8_after` and `is_open`; `standings`: computeEventLeaderboard's.
  */
 export function top8SplitPlayers(event, standings) {
-  if (!event?.top8_after || !event.top8_split) return [];
+  if (!event?.top8_after || event.is_open) return [];
   const best = Math.max(0, ...standings.map((row) => row.bracketReach));
+  if (best === TOP8_STAGES.length * 2 + 1) return [];
   if (best === 0) return standings.filter((row) => row.seed <= TOP_FINISH_CUTOFF);
   return standings.filter((row) => row.bracketReach === best);
 }
@@ -211,7 +214,7 @@ function buildTiebreakers(matches) {
  * +1 if won — the final's winner 7, its loser 6, a semifinal's loser 4, a
  * quarterfinal's 2), the higher, the Swiss order between players who went
  * as far; everyone else after them, in Swiss order. So a stage not played
- * yet — or never, after a split (`top8_split`) — leaves the players still in
+ * yet — or never, after a split (top8SplitPlayers) — leaves the players still in
  * in their Swiss order: the standings frozen as they stood.
  * `undefeated` (the league's +2) looks at the Swiss rounds only.
  * @param {Array} matches - rows from `matches` for one event.

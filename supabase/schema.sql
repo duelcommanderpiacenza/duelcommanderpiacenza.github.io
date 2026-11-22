@@ -196,9 +196,8 @@ create table events (
     -- migration 036.
   top8_after integer, -- the top 8 (quarterfinals, semifinals, final between the Swiss top 8): how many Swiss
     -- rounds come before it, the rounds after them its stages (js/leaderboard.js top8Stage); null = no top 8.
-    -- Set by the admin's "+ Top 8" tab. Added by migration 045.
-  top8_split boolean not null default false, -- the players still in the top 8 split the win: no more rounds,
-    -- the standings stay as they stood (the admin's "Dividi vittoria"). Added by migration 045.
+    -- Set by the admin's "+ Top 8" tab. Added by migration 045. No split column: a closed event whose top 8
+    -- has no final won counts as split at its last stage (top8SplitPlayers; migration 046 dropped top8_split).
   constraint events_unique_name_per_league unique (league_id, name), -- same name OK across leagues, not within one
   constraint events_external_standalone check (not is_external or league_id is null),
   constraint events_external_open check (not is_external or is_open),
@@ -206,8 +205,7 @@ create table events (
   constraint events_results_url_http check (results_url ~* '^https?://'),
   constraint events_decklists_url_http check (decklists_url ~* '^https?://'),
   constraint events_endstep_url_http check (endstep_url ~* '^https?://'),
-  constraint events_top8_after_valid check (top8_after is null or (top8_after >= 1 and top8_after < rounds)),
-  constraint events_top8_split_needs_top8 check (not top8_split or top8_after is not null)
+  constraint events_top8_after_valid check (top8_after is null or (top8_after >= 1 and top8_after < rounds))
 );
 
 -- Postgres treats every NULL as distinct for a plain unique constraint, so
@@ -389,8 +387,7 @@ begin
   from jsonb_array_elements(p_matches) m;
 
   -- The rounds replaced: no top 8 any more (migration 045).
-  update events set rounds = greatest(coalesce(p_rounds, 1), 1), top8_after = null, top8_split = false
-  where id = p_event_id;
+  update events set rounds = greatest(coalesce(p_rounds, 1), 1), top8_after = null where id = p_event_id;
 end;
 $$;
 

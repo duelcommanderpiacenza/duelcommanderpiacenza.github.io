@@ -47,11 +47,11 @@ rounds, between the Swiss top 8 — set in admin): the points and tiebreakers
 above come from the Swiss rounds only. Then the bracket decides the order:
 the final's winner 1st, its loser 2nd, the semifinals' losers 3rd–4th, the
 quarterfinals' losers 5th–8th — between players who went out at the same
-stage, their Swiss order — then everyone else in Swiss order. If the players
-still in **split the win**, nothing more is played and the standings stay as
-they stood: those players keep their Swiss order (e.g. two finalists who
-split: the better Swiss one 1st, the other 2nd). The top 8's matches still
-count in V-S-P and winrate.
+stage, their Swiss order — then everyone else in Swiss order. An event
+closed **without a final won** counts as a **split win** among the players
+still in at its last stage: the standings stay as they stood, those players
+in their Swiss order (e.g. two finalists who split: the better Swiss one
+1st, the other 2nd). The top 8's matches still count in V-S-P and winrate.
 
 ## 2. Event score
 
