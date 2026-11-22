@@ -1,5 +1,14 @@
 import { Events, EventEntries, Matches } from "./db.js";
-import { computeEventLeaderboard, matchRoundOutcome, isBye, isDrop, roundLabel, top8SplitPlayers } from "./leaderboard.js";
+import {
+  computeEventLeaderboard,
+  matchRoundOutcome,
+  isBye,
+  isDrop,
+  roundLabel,
+  top8Stage,
+  top8SplitPlayers,
+  top8Result,
+} from "./leaderboard.js";
 import {
   escapeHtml,
   formatDate,
@@ -28,10 +37,15 @@ function matchResultScore(m) {
 
 const NO_LINK = { link: false };
 
+// The Classifica tab's trophy: the split note, the top 8's winner.
+const TROPHY_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4"></path><path d="M7 4h10v5a5 5 0 0 1-10 0Z"></path><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"></path></svg>';
+
 // A player sub-card's title: the name, unlinked (the whole card links to the
 // player's page); .history-name is where js/me-highlight.js puts "Tu".
-function playerTitleHtml(player) {
-  return `<span class="history-title"><span class="history-name">${playerLabel(player, NO_LINK)}</span></span>`;
+// `extra`: after the name (the Swiss standings' "TOP 8").
+function playerTitleHtml(player, extra = "") {
+  return `<span class="history-title"><span class="history-name">${playerLabel(player, NO_LINK)}</span>${extra}</span>`;
 }
 
 // A sub-card linking to the player's page (a plain one without a player).
@@ -209,10 +223,11 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     // A top 8 whose players still in split the win (migration 045): said
     // at the end of Partite, where the rounds stop (user, 2026-11-22); the
     // standings stay as they stood (js/leaderboard.js).
-    const splitNames = top8SplitPlayers(event, standings).map((s) => escapeHtml(shown(s.player)?.name ?? ""));
+    const splitRows = top8SplitPlayers(event, standings);
+    const splitNames = splitRows.map((s) => escapeHtml(shown(s.player)?.name ?? ""));
     const splitHtml =
       splitNames.length && matches.length
-        ? `<p class="event-split-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4"></path><path d="M7 4h10v5a5 5 0 0 1-10 0Z"></path><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"></path></svg><span>Vittoria condivisa tra <span data-no-i18n>${splitNames.join(", ")}</span></span></p>`
+        ? `<p class="event-split-note">${TROPHY_ICON}<span>Vittoria condivisa tra <span data-no-i18n>${splitNames.join(", ")}</span></span></p>`
         : "";
     matchesEl.innerHTML = renderMatchesByRound(matches, entryOf, shown, event) + splitHtml;
 
@@ -238,32 +253,76 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     // Classifica: one sub-card per player, linking to them — position chip
     // and name (the deck under it, as in Giocatori), then Punti / V-S-P /
     // Winrate.
-    leaderboardEl.innerHTML =
-      standings.length === 0
-        ? '<p class="page-empty">Nessun dato per la classifica.</p>'
-        : historyPanelHtml(
-            standings
-              .map((s, i) =>
-                playerCard(
-                  shown(s.player),
-                  "history-ranked",
-                  `<div class="history-lead">
-                    ${historyPosHtml(i + 1)}
-                    <div class="history-main">
-                      ${playerTitleHtml(shown(s.player))}
-                      ${deckLineHtml(entryOf.get(s.player?.id), NO_LINK)}
-                    </div>
-                  </div>
-                  ${historyStatsHtml([
-                    { label: "Punti", value: s.points, main: true },
-                    { label: "V-S-P", value: `${s.wins}-${s.losses}-${s.draws}` },
-                    { label: "Winrate", value: s.winRate === null ? "—" : `${s.winRate.toFixed(1)}%` },
-                  ])}`
-                )
-              )
-              .join(""),
-            { scroll: false }
-          );
+    const rankedCard = (s, position, stats, extra = "") =>
+      playerCard(
+        shown(s.player),
+        "history-ranked",
+        `<div class="history-lead">
+          ${historyPosHtml(position)}
+          <div class="history-main">
+            ${playerTitleHtml(shown(s.player), extra)}
+            ${deckLineHtml(entryOf.get(s.player?.id), NO_LINK)}
+          </div>
+        </div>
+        ${historyStatsHtml(stats)}`
+      );
+    const swissStats = (s) => [
+      { label: "Punti", value: s.points, main: true },
+      { label: "V-S-P", value: `${s.wins}-${s.losses}-${s.draws}` },
+      { label: "Winrate", value: s.winRate === null ? "—" : `${s.winRate.toFixed(1)}%` },
+    ];
+    if (standings.length === 0) {
+      leaderboardEl.innerHTML = '<p class="page-empty">Nessun dato per la classifica.</p>';
+    } else if (!event.top8_after) {
+      leaderboardEl.innerHTML = historyPanelHtml(standings.map((s, i) => rankedCard(s, i + 1, swissStats(s))).join(""), {
+        scroll: false,
+      });
+    } else {
+      // An event with a top 8 (option A of _mockup-event-top8.html, user
+      // 2026-11-22 — one list showed final positions beside Swiss points that
+      // didn't match them): two blocks. "Top 8": the final positions (the
+      // league's), each with how far it went instead of points, its own top 8
+      // record and its Swiss place. "Classifica svizzera": everyone in Swiss
+      // order with the Swiss rounds' points / V-S-P / winrate only — so points
+      // and order always agree —, "TOP 8" after those who made it. From 9th
+      // down the two orders are the same.
+      const top8 = standings.filter((s) => s.seed <= 8);
+      const top8Ids = new Set(top8.map((s) => s.player?.id));
+      const swiss = computeEventLeaderboard(
+        matches.filter((m) => !top8Stage(event, m.round)),
+        entries,
+        event
+      );
+      const resultHtml = (s) => {
+        const result = escapeHtml(top8Result(s, splitRows));
+        return s.bracketReach === 7
+          ? `<span class="event-top8-result is-winner">${TROPHY_ICON}${result}</span>`
+          : `<span class="event-top8-result">${result}</span>`;
+      };
+      leaderboardEl.innerHTML = `
+        <div class="event-block-head"><h3>Top 8</h3><span>Posizione finale</span></div>
+        ${historyPanelHtml(
+          top8
+            .map((s, i) =>
+              rankedCard(s, i + 1, [
+                { label: "Top 8", value: resultHtml(s), main: true },
+                { label: "V-S", value: `${s.top8Wins}-${s.top8Losses}` },
+                { label: "Svizzera", value: `${s.seed}°` },
+              ])
+            )
+            .join(""),
+          { scroll: false }
+        )}
+        <div class="event-block-head"><h3>Classifica svizzera</h3><span>Dopo ${event.top8_after} turni</span></div>
+        ${historyPanelHtml(
+          swiss
+            .map((s, i) =>
+              rankedCard(s, i + 1, swissStats(s), top8Ids.has(s.player?.id) ? '<span class="event-top8-tag">TOP 8</span>' : "")
+            )
+            .join(""),
+          { scroll: false }
+        )}`;
+    }
   } catch (err) {
     showError(document.getElementById("event-content"), err);
   } finally {

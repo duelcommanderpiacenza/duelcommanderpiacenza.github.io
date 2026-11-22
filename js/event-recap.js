@@ -24,7 +24,7 @@
 // hero ("Recap") and league.html?id=…&recap=1. Styles: css/6 "Event recap".
 
 import { Events, Leagues, fetchEventsResults } from "./db.js";
-import { computeEventLeaderboard, computeLeaguePoints, top8SplitPlayers } from "./leaderboard.js";
+import { computeEventLeaderboard, computeLeaguePoints, top8SplitPlayers, top8Result } from "./leaderboard.js";
 import { ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
 import { archetypeIcon } from "./archetype-icons.js";
 import { createArtPainter } from "./player-card.js";
@@ -365,7 +365,9 @@ function endSlide(title, next, page) {
 
 // A list of the best (an event's top 8, a Topdeck event's best, a league's
 // top 8 — `rows` already cut): position, name, a line under it, the points.
-function topEightSlide(kicker, rows, lineOf) {
+// `valueOf`: the right column — the points, or (an event with a top 8) how
+// far the player went (js/leaderboard.js top8Result).
+function topEightSlide(kicker, rows, lineOf, valueOf = (r) => `${r.points} pt`) {
   return `<section class="recap-slide"><div class="recap-bg is-dark"></div>
       <p class="recap-k" ${at(0)}>${kicker}</p>
       <ol class="recap-list">${rows
@@ -373,7 +375,7 @@ function topEightSlide(kicker, rows, lineOf) {
           (r, i) =>
             `<li ${at(i + 1)}><span class="recap-pos">${i + 1}</span><span class="recap-who"><b>${escapeHtml(r.player?.name)}</b><small>${escapeHtml(
               lineOf(r)
-            )}</small></span><span class="recap-pts">${r.points} pt</span></li>`
+            )}</small></span><span class="recap-pts">${escapeHtml(valueOf(r))}</span></li>`
         )
         .join("")}</ol></section>`;
 }
@@ -409,7 +411,10 @@ function eventSlidesHtml(data, page) {
     // A league's (or standalone) event: its top 8; a Topdeck series': its
     // best, TOPDECK_MIN_POINTS or more (none: no screen).
     const lineOf = (r) => commanderOf(entryOf.get(r.player?.id));
-    if (!ev.league?.no_points) slides.push(topEightSlide("La top 8", rows.slice(0, 8), lineOf));
+    // With a top 8 played: its result instead of the (Swiss) points, which
+    // wouldn't follow the order (as event.html's Top 8 block).
+    const top8Value = ev.top8_after ? (r) => top8Result(r, data.split) : undefined;
+    if (!ev.league?.no_points) slides.push(topEightSlide("La top 8", rows.slice(0, 8), lineOf, top8Value));
     else {
       const best = rows.filter((r) => r.points >= TOPDECK_MIN_POINTS);
       if (best.length) slides.push(topEightSlide(`I migliori · ${TOPDECK_MIN_POINTS} punti o più`, best, lineOf));

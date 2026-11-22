@@ -1935,6 +1935,70 @@ body.has-hero-accent .ptr {
   min-width: 0;
 }
 
+/* Classifica with a top 8 (js/event-detail.js): two blocks, each with a
+   small heading — "Top 8" (final positions) and "Classifica svizzera" — the
+   title and a muted note after it, like Partite's round headings. */
+.event-block-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin: 22px 0 10px;
+}
+
+.event-block-head:first-child {
+  margin-top: 4px;
+}
+
+.event-block-head h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.event-block-head span {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+/* The Top 8 block's result in the Punti column's place ("Vincitore" with
+   the trophy, "Semifinale", …; "Vittoria condivisa" wraps): the other
+   numbers' size, not Punti's bigger one, so the word sits on their line. */
+#event-leaderboard .history-stats .history-stat.is-main .history-stat-value:has(.event-top8-result) {
+  font-size: 1.05rem;
+  line-height: 1.2;
+}
+
+.history-stats .history-stat-value .event-top8-result {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.1;
+}
+
+.event-top8-result svg {
+  flex: none;
+  width: 15px;
+  height: 15px;
+}
+
+/* The Swiss standings: "TOP 8" after the names of those who made it. */
+.event-top8-tag {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--brand-red) 14%, transparent);
+  color: var(--brand-red-deep);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+}
+
 /* Partite: a top 8 whose players still in split the win (migration 045,
    js/event-detail.js) — a light brand-red note after the last round. */
 .event-split-note {

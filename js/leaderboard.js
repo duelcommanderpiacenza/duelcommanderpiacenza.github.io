@@ -102,6 +102,21 @@ export function top8SplitPlayers(event, standings) {
   return standings.filter((row) => row.bracketReach === best);
 }
 
+// A top 8 player's result in words, by `bracketReach` (a stage won but the
+// next not played yet: that next one).
+const TOP8_RESULTS = ["Top 8", "Quarti", "Quarti", "Semifinale", "Semifinale", "Finalista", "Finalista", "Vincitore"];
+
+/**
+ * A top 8 player's result: "Vincitore", "Finalista", "Semifinale", "Quarti",
+ * or "Vittoria condivisa" for one of `splitPlayers` (top8SplitPlayers') —
+ * shown instead of points where the top 8 is listed (event.html's Top 8
+ * block, the recap's top 8 screen).
+ */
+export function top8Result(row, splitPlayers = []) {
+  if (splitPlayers.includes(row)) return "Vittoria condivisa";
+  return TOP8_RESULTS[row.bracketReach] ?? "Top 8";
+}
+
 /**
  * The standard Magic tournament tiebreaker stats (DCI/WPN formulas: Match
  * Win %, Game Win %, Opponents' Match/Game Win %), computed over whatever set
@@ -222,7 +237,8 @@ function buildTiebreakers(matches) {
  * @param {{top8_after?: number|null}|null} [event] - the event (its top 8); none = Swiss only.
  * @returns {Array} standings sorted by points desc, then tiebreakers, then name — then the top 8's
  *   bracket; each row also carries `isTop8` (its final position is within the top TOP_FINISH_CUTOFF),
- *   `seed` (its Swiss position), `bracketReach` (0 without a top 8 match) and `undefeated`.
+ *   `seed` (its Swiss position), `bracketReach` (0 without a top 8 match), `top8Wins` / `top8Losses`
+ *   and `undefeated`.
  */
 export function computeEventLeaderboard(matches, entries, event = null) {
   const byPlayer = new Map();
@@ -246,6 +262,8 @@ export function computeEventLeaderboard(matches, entries, event = null) {
       swissWins: 0,
       swissNotWon: 0,
       bracketReach: 0,
+      top8Wins: 0,
+      top8Losses: 0,
     });
   }
 
@@ -266,16 +284,22 @@ export function computeEventLeaderboard(matches, entries, event = null) {
         swissWins: 0,
         swissNotWon: 0,
         bracketReach: 0,
+        top8Wins: 0,
+        top8Losses: 0,
       });
     }
     return byPlayer.get(playerId);
   };
 
   // A Swiss round's result (for `undefeated`), or how far a top 8 match
-  // took the player (`bracketReach`).
+  // took the player (`bracketReach`) and its own record (`top8Wins` /
+  // `top8Losses` — a top 8 match can't be drawn).
   const tally = (row, stage, won) => {
-    if (stage) row.bracketReach = Math.max(row.bracketReach, stage * 2 + (won ? 1 : 0));
-    else if (won) row.swissWins += 1;
+    if (stage) {
+      row.bracketReach = Math.max(row.bracketReach, stage * 2 + (won ? 1 : 0));
+      if (won) row.top8Wins += 1;
+      else row.top8Losses += 1;
+    } else if (won) row.swissWins += 1;
     else row.swissNotWon += 1;
   };
   const swissMatches = [];
