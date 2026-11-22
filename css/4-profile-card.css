@@ -3344,6 +3344,42 @@ html.nav-mobile #commander-content .hero-sheet > .where-filter:not([hidden]) + #
   }
 }
 
+/* …and its band when stuck (the open tab's ::before, css/6: solid from the
+   screen's top down to the bar) only once the sheet's rounded corners have
+   left the screen (user, 2026-11-22). The bar sticks with the sheet's top
+   edge still 2px down the screen, so the band, there at once, painted over
+   the corners — the hero showing in them — squaring them off. Nothing
+   scrolls out above the bar for its height and gap (~87px) after it
+   sticks, so the band isn't needed yet: it fades in over the scroll that
+   takes the corners' last 10px away (the sheet's top 16 → 26px above the
+   screen's — a view timeline on the sheet: exit-crossing 0 is its top
+   edge at the screen's). */
+@supports (animation-timeline: view()) {
+  @media (max-width: 640px) {
+    html.app-header .hero-sheet {
+      view-timeline: --hero-sheet block;
+    }
+
+    @container scroll-state(stuck: top) {
+      html.nav-mobile :is(#event-content .hero-sheet > .event-tabs, #league-content .hero-sheet > .league-tabs, main[data-page="account"] .hero-sheet > .profile-tabs) .profile-tab.is-active::before {
+        animation: sheet-corners-gone linear both;
+        animation-timeline: --hero-sheet;
+        animation-range: exit-crossing 16px exit-crossing 26px;
+      }
+    }
+  }
+}
+
+@keyframes sheet-corners-gone {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
 /* Touch screens (where the Giocatori / Storico partite tabs are): the tabs
    16px under the chart (user, 2026-11-18 — it was 54: the card's 20px,
    .page-loading's 6px, the tabs' 28px). */
