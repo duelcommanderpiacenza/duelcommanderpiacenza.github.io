@@ -281,8 +281,9 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       // An event with a top 8 (option A of _mockup-event-top8.html, user
       // 2026-11-22 — one list showed final positions beside Swiss points that
       // didn't match them): two blocks. "Top 8": the final positions (the
-      // league's), each with how far it went instead of points, its own top 8
-      // record and its Swiss place. "Classifica svizzera": everyone in Swiss
+      // league's), each with how far it went instead of points and its own
+      // top 8 record (no Swiss place: not needed there — user, 2026-11-22;
+      // it stays in the Swiss block). "Classifica svizzera": everyone in Swiss
       // order with the Swiss rounds' points / V-S-P / winrate only — so points
       // and order always agree —, "TOP 8" after those who made it. From 9th
       // down the two orders are the same.
@@ -307,7 +308,6 @@ export async function mount({ signal = new AbortController().signal } = {}) {
               rankedCard(s, i + 1, [
                 { label: "Top 8", value: resultHtml(s), main: true },
                 { label: "V-S", value: `${s.top8Wins}-${s.top8Losses}` },
-                { label: "Svizzera", value: `${s.seed}°` },
               ])
             )
             .join(""),
