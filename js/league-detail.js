@@ -243,7 +243,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     statusEl.hidden = dateRange.withStatus || league.is_online;
 
     const today = localIso();
-    const resultsRequest = fetchEventsResults(events.map((ev) => ev.id));
+    const resultsRequest = fetchEventsResults(events);
     resultsRequest.catch(() => {});
     const count = await countRequest;
     if (signal.aborted) return;

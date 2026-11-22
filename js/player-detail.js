@@ -1,4 +1,4 @@
-import { Players, EventEntries, Matches, PlayerAutoBadges, EventStandings, PlayerCards, PlayerProgress } from "./db.js";
+import { Players, Events, EventEntries, Matches, PlayerAutoBadges, EventStandings, PlayerCards, PlayerProgress } from "./db.js";
 import { isBye, isDrop, computeEventLeaderboard } from "./leaderboard.js";
 import { tallyOutcome, renderWinrateTiles, outcomeFor, scoreLabelFor } from "./winrate.js";
 import {
@@ -365,17 +365,18 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       matchesEl.innerHTML = sectionLoadingHtml(5);
       hidePageLoading(signal);
     }
-    const [eventEntries, [historyEntries, historyMatches]] = await Promise.all([
+    const [eventEntries, [historyEntries, historyMatches, historyTop8]] = await Promise.all([
       eventIds.length ? EventEntries.listByEvents(eventIds) : [],
       uncachedIds.length
-        ? Promise.all([EventEntries.listByEvents(uncachedIds), Matches.listByEvents(uncachedIds)])
-        : [[], []],
+        ? Promise.all([EventEntries.listByEvents(uncachedIds), Matches.listByEvents(uncachedIds), Events.listTop8(uncachedIds)])
+        : [[], [], []],
     ]);
     if (signal.aborted) return;
     for (const eventId of uncachedIds) {
       const standings = computeEventLeaderboard(
         historyMatches.filter((m) => m.event_id === eventId),
-        historyEntries.filter((e) => e.event_id === eventId)
+        historyEntries.filter((e) => e.event_id === eventId),
+        historyTop8.find((ev) => ev.id === eventId)
       );
       const index = standings.findIndex((s) => s.player?.id === id);
       if (index === -1) continue;

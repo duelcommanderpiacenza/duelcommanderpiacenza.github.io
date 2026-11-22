@@ -47,7 +47,7 @@ async function syncBadgeAssignments() {
 async function loadClosedResults() {
   const closed = (await Events.list()).filter((ev) => !ev.is_open);
   const closedIds = closed.map((ev) => ev.id);
-  return { closed, closedIds, closedDates: closed.map((ev) => ev.event_date), eventsData: await fetchEventsResults(closedIds) };
+  return { closed, closedIds, closedDates: closed.map((ev) => ev.event_date), eventsData: await fetchEventsResults(closed) };
 }
 
 // The commanders' "Nuovo" badge: those whose first appearance in a closed
@@ -102,8 +102,8 @@ async function syncNewCommanders({ closedDates, eventsData }) {
 // does, from the saved matches.
 async function syncEventStandings({ closedIds, eventsData }) {
   const rows = [];
-  eventsData.forEach(({ entries, matches }, i) => {
-    computeEventLeaderboard(matches, entries).forEach((s, index) => {
+  eventsData.forEach(({ entries, matches, event }, i) => {
+    computeEventLeaderboard(matches, entries, event).forEach((s, index) => {
       if (!s.player?.id) return;
       rows.push({
         event_id: closedIds[i],

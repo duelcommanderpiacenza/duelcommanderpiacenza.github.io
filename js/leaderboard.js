@@ -60,6 +60,45 @@ function comparePctDesc(a, b) {
 // How many of an event's final standings count as a "top 8" finish.
 const TOP_FINISH_CUTOFF = 8;
 
+// An event's top 8 (migration 045): `events.top8_after` is how many Swiss
+// rounds come before it (null = no top 8), the rounds after them its
+// stages — quarterfinals, semifinals, final — between the top 8 of the Swiss
+// standings, single elimination. `events.top8_split`: the players still in
+// split the win, so no more rounds are played and the standings stay as they
+// stand (see computeEventLeaderboard).
+export const TOP8_STAGES = ["Quarti", "Semifinali", "Finale"];
+
+/**
+ * A round's top 8 stage: 1 quarterfinals, 2 semifinals, 3 final; 0 for a
+ * Swiss round (or an event without a top 8). `event`: any row with
+ * `top8_after` (null / missing = no top 8).
+ */
+export function top8Stage(event, round) {
+  const after = event?.top8_after;
+  if (!after) return 0;
+  const stage = (round ?? 1) - after;
+  return stage >= 1 ? stage : 0;
+}
+
+/** A round's name: "Turno N" for a Swiss round, the stage's for a top 8 one. */
+export function roundLabel(event, round) {
+  const stage = top8Stage(event, round);
+  return stage ? TOP8_STAGES[stage - 1] ?? `Top 8 (${stage})` : `Turno ${round ?? 1}`;
+}
+
+/**
+ * Who split an event's win (`top8_split`): the players still in the top 8
+ * — the winners of its latest stage played, or all of its 8 when it was
+ * split before the quarterfinals. Empty when the event has no split.
+ * `standings`: computeEventLeaderboard's, for the same event.
+ */
+export function top8SplitPlayers(event, standings) {
+  if (!event?.top8_after || !event.top8_split) return [];
+  const best = Math.max(0, ...standings.map((row) => row.bracketReach));
+  if (best === 0) return standings.filter((row) => row.seed <= TOP_FINISH_CUTOFF);
+  return standings.filter((row) => row.bracketReach === best);
+}
+
 /**
  * The standard Magic tournament tiebreaker stats (DCI/WPN formulas: Match
  * Win %, Game Win %, Opponents' Match/Game Win %), computed over whatever set
@@ -163,12 +202,26 @@ function buildTiebreakers(matches) {
  * A dropped player's round (isDrop) is skipped entirely — no points, no
  * played count, nothing — leaving whatever they'd already earned in earlier
  * rounds untouched.
+ *
+ * An event with a top 8 (`event.top8_after`, see top8Stage): the points and
+ * the tiebreakers come from the Swiss rounds only, its top 8 being their
+ * first 8 (`seed`); the top 8's matches still count in V-S-P and winrate
+ * (real matches — user, 2026-11-22). Then the bracket decides the order:
+ * the further a player went (`bracketReach`: 2 × the latest stage played,
+ * +1 if won — the final's winner 7, its loser 6, a semifinal's loser 4, a
+ * quarterfinal's 2), the higher, the Swiss order between players who went
+ * as far; everyone else after them, in Swiss order. So a stage not played
+ * yet — or never, after a split (`top8_split`) — leaves the players still in
+ * in their Swiss order: the standings frozen as they stood.
+ * `undefeated` (the league's +2) looks at the Swiss rounds only.
  * @param {Array} matches - rows from `matches` for one event.
  * @param {Array} entries - rows from `event_entries` for the same event (with player/commander joined).
- * @returns {Array} standings sorted by points desc, then tiebreakers, then name; each row also carries
- *   `isTop8` (its final position is within the top TOP_FINISH_CUTOFF).
+ * @param {{top8_after?: number|null}|null} [event] - the event (its top 8); none = Swiss only.
+ * @returns {Array} standings sorted by points desc, then tiebreakers, then name — then the top 8's
+ *   bracket; each row also carries `isTop8` (its final position is within the top TOP_FINISH_CUTOFF),
+ *   `seed` (its Swiss position), `bracketReach` (0 without a top 8 match) and `undefeated`.
  */
-export function computeEventLeaderboard(matches, entries) {
+export function computeEventLeaderboard(matches, entries, event = null) {
   const byPlayer = new Map();
 
   for (const entry of entries) {
@@ -187,6 +240,9 @@ export function computeEventLeaderboard(matches, entries) {
       draws: 0,
       losses: 0,
       played: 0,
+      swissWins: 0,
+      swissNotWon: 0,
+      bracketReach: 0,
     });
   }
 
@@ -204,21 +260,37 @@ export function computeEventLeaderboard(matches, entries) {
         draws: 0,
         losses: 0,
         played: 0,
+        swissWins: 0,
+        swissNotWon: 0,
+        bracketReach: 0,
       });
     }
     return byPlayer.get(playerId);
   };
 
+  // A Swiss round's result (for `undefeated`), or how far a top 8 match
+  // took the player (`bracketReach`).
+  const tally = (row, stage, won) => {
+    if (stage) row.bracketReach = Math.max(row.bracketReach, stage * 2 + (won ? 1 : 0));
+    else if (won) row.swissWins += 1;
+    else row.swissNotWon += 1;
+  };
+  const swissMatches = [];
   for (const m of matches) {
     if (isDrop(m)) continue;
+    const stage = top8Stage(event, m.round);
+    if (!stage) swissMatches.push(m);
+    // Points from the Swiss rounds only.
+    const points = stage ? { win: 0, draw: 0 } : POINTS;
 
     const p1 = ensure(m.player1_id, m.player1);
     p1.played += 1;
 
     if (isBye(m)) {
       // A bye has no opponent to credit/debit — it's a plain win for player1.
-      p1.points += POINTS.win;
+      p1.points += points.win;
       p1.wins += 1;
+      tally(p1, stage, true);
       continue;
     }
 
@@ -227,24 +299,27 @@ export function computeEventLeaderboard(matches, entries) {
 
     const outcome = matchRoundOutcome(m);
     if (outcome === "player1") {
-      p1.points += POINTS.win;
+      p1.points += points.win;
       p1.wins += 1;
       p2.losses += 1;
     } else if (outcome === "player2") {
-      p2.points += POINTS.win;
+      p2.points += points.win;
       p2.wins += 1;
       p1.losses += 1;
     } else {
-      p1.points += POINTS.draw;
-      p2.points += POINTS.draw;
+      p1.points += points.draw;
+      p2.points += points.draw;
       p1.draws += 1;
       p2.draws += 1;
     }
+    tally(p1, stage, outcome === "player1");
+    tally(p2, stage, outcome === "player2");
   }
 
-  const tiebreakers = buildTiebreakers(matches);
+  const tiebreakers = buildTiebreakers(swissMatches);
   for (const row of byPlayer.values()) {
     const id = row.player?.id;
+    row.undefeated = row.swissWins > 0 && row.swissNotWon === 0;
     row.winRate = row.played > 0 ? (row.wins / row.played) * 100 : null;
     row.gameWinPct = id ? tiebreakers.gameWinPct(id) : MIN_WIN_PCT;
     row.opponentsMatchWinPct = id ? tiebreakers.opponentsMatchWinPct(id) : 0;
@@ -268,6 +343,12 @@ export function computeEventLeaderboard(matches, entries) {
       (a.player?.name ?? "").localeCompare(b.player?.name ?? "")
     );
   });
+  standings.forEach((row, i) => {
+    row.seed = i + 1;
+  });
+  // The top 8's bracket ahead of the Swiss order (a stable sort: the Swiss
+  // order stays between players who went as far, and for everyone else).
+  standings.sort((a, b) => b.bracketReach - a.bracketReach);
 
   // Read by js/auto-badges.js's top-8 streak badge — exposed here so it
   // doesn't have to re-derive who placed top 8 from points/tiebreaks
@@ -323,7 +404,8 @@ function pointsForPosition(position) {
  *
  * Ties on points are broken by compareLeagueStandings, then by name.
  *
- * @param {Array<{matches: Array, entries: Array}>} eventsData - one entry per closed event in the league.
+ * @param {Array<{matches: Array, entries: Array, event?: Object}>} eventsData - one entry per closed event
+ *   in the league (`event`: its row, for a top 8 — js/db.js fetchEventsResults given the events).
  * @param {{leagueClosed?: boolean, scheduledEvents?: number}} [options] - leagueClosed: award the
  *   full-attendance bonus. scheduledEvents: the league's total event count, open/future events
  *   included (X above) — defaults to eventsData.length.
@@ -333,14 +415,14 @@ export function computeLeaguePoints(eventsData, { leagueClosed = false, schedule
   const countedResults = Math.max(Math.max(scheduledEvents, totalEvents) - DISCARDED_RESULTS, 1);
   const byPlayer = new Map();
 
-  eventsData.forEach(({ matches, entries }, eventIndex) => {
-    const standings = computeEventLeaderboard(matches, entries);
+  eventsData.forEach(({ matches, entries, event }, eventIndex) => {
+    const standings = computeEventLeaderboard(matches, entries, event);
     standings.forEach((row, index) => {
       const id = row.player?.id;
       if (!id) return;
 
       let score = pointsForPosition(index + 1);
-      if (row.wins > 0 && row.losses === 0 && row.draws === 0) score += UNDEFEATED_BONUS;
+      if (row.undefeated) score += UNDEFEATED_BONUS;
       score += row.bonusPoints;
 
       if (!byPlayer.has(id)) {
@@ -356,8 +438,11 @@ export function computeLeaguePoints(eventsData, { leagueClosed = false, schedule
     });
   });
 
-  // Tiebreakers over every match of this league's events only.
-  const tiebreakers = buildTiebreakers(eventsData.flatMap(({ matches }) => matches));
+  // Tiebreakers over every match of this league's events only — their Swiss
+  // rounds (a top 8's matches aren't scored, see computeEventLeaderboard).
+  const tiebreakers = buildTiebreakers(
+    eventsData.flatMap(({ matches, event }) => matches.filter((m) => !top8Stage(event, m.round)))
+  );
 
   const results = Array.from(byPlayer.values()).map(({ player, eventScores, results: eventResults, placements, wins, draws, losses }) => {
     const bestScores = [...eventScores].sort((a, b) => b - a).slice(0, countedResults);

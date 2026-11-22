@@ -1935,6 +1935,27 @@ body.has-hero-accent .ptr {
   min-width: 0;
 }
 
+/* Partite: a top 8 whose players still in split the win (migration 045,
+   js/event-detail.js) — a light brand-red note after the last round. */
+.event-split-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--brand-red) 12%, transparent);
+  color: var(--brand-red-deep);
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
+.event-split-note svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+
 /* Partite: each round's matches as a grid of small cards (two side by side
    on desktop) — Giocatore 1 · score · Giocatore 2, the winner in bold. */
 .event-match-grid .history-scroll {

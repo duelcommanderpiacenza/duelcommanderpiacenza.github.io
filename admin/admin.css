@@ -1913,21 +1913,43 @@ input.endstep-import-control {
   animation: none;
 }
 
+/* A round's "×" sits inside its pill, on the right (the pill makes room for
+   it, .has-delete); the pill and the "×" lift together on hover. */
 .round-tab-wrap {
   display: inline-flex;
   align-items: center;
   position: relative;
+  transition: transform 180ms ease;
+}
+
+.round-tab-wrap:hover {
+  transform: translateY(-1px);
+}
+
+.round-tab-wrap .round-tab:hover {
+  transform: none;
+}
+
+.round-tab.has-delete {
+  padding-right: 38px;
 }
 
 .round-tab-delete {
+  position: absolute;
+  top: 50%;
+  right: 7px;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
   border: none;
   background: transparent;
   color: var(--text-muted);
   font-size: 1.1rem;
   line-height: 1;
-  width: 26px;
-  height: 26px;
-  margin-left: 2px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   cursor: pointer;
   transition: color 150ms ease, background 150ms ease;
@@ -1936,6 +1958,23 @@ input.endstep-import-control {
 .round-tab-delete:hover {
   color: #fff;
   background: var(--brand-red-darker);
+}
+
+/* On the open tab's filled pill: light, a light disc on hover. */
+.round-tab-wrap.is-active .round-tab-delete {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.round-tab-wrap.is-active .round-tab-delete:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* "Vittoria divisa": a chip, not a tab (its "×" takes the split back). */
+.round-tab.is-split {
+  cursor: default;
+  border-color: var(--hairline-hover);
+  color: var(--text-muted);
 }
 
 .round-tab-add {

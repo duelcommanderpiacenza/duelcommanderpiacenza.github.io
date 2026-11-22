@@ -31,7 +31,7 @@ export function computeCardProgress(eventsData, leagueWinners) {
     return byPlayer.get(playerId);
   };
 
-  for (const { entries, matches } of eventsData) {
+  for (const { entries, matches, event } of eventsData) {
     for (const e of entries) {
       const p = progress(e.player_id);
       p.events.add(e.event_id);
@@ -48,7 +48,7 @@ export function computeCardProgress(eventsData, leagueWinners) {
       else if (outcome === "player2") progress(m.player2_id).matchesWon += 1;
     }
     if (entries.length >= BIG_EVENT_MIN_PLAYERS) {
-      for (const row of computeEventLeaderboard(matches, entries)) {
+      for (const row of computeEventLeaderboard(matches, entries, event)) {
         if (row.isTop8 && row.player?.id) progress(row.player.id).bigTop8s += 1;
       }
     }

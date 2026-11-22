@@ -72,7 +72,7 @@ export const MIN_EVENTS_FOR_COMMANDER_LOYALTY_BADGE = 10;
 async function fetchLeagueEventsData(leagueId) {
   const allEvents = await Events.listByLeague(leagueId);
   const [eventsData, scheduledEvents] = await Promise.all([
-    fetchEventsResults(allEvents.filter((ev) => !ev.is_open).map((ev) => ev.id)),
+    fetchEventsResults(allEvents.filter((ev) => !ev.is_open)),
     Leagues.eventCount(leagueId, allEvents.length),
   ]);
   return { eventsData, scheduledEvents };
@@ -145,7 +145,10 @@ async function top8StreakPlayerIds(closedIds) {
   const standingsCache = new Map(); // event id -> computeEventLeaderboard result
   function standingsFor(eventId) {
     if (!standingsCache.has(eventId)) {
-      standingsCache.set(eventId, computeEventLeaderboard(matchesByEvent.get(eventId) ?? [], entriesByEvent.get(eventId) ?? []));
+      standingsCache.set(
+        eventId,
+        computeEventLeaderboard(matchesByEvent.get(eventId) ?? [], entriesByEvent.get(eventId) ?? [], eventById.get(eventId))
+      );
     }
     return standingsCache.get(eventId);
   }

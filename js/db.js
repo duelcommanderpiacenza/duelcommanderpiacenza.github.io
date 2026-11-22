@@ -466,6 +466,17 @@ export const Events = {
       .is("league_id", null)
       .order("event_date", { ascending: false, nullsFirst: false })
       .then(assertOk),
+  // Just the top 8 of these events (migration 045: `top8_after`,
+  // `top8_split` — js/leaderboard.js) — for a page holding only an embed
+  // without them. [] on a database without the columns yet (42703).
+  listTop8: (ids) =>
+    ids.length === 0
+      ? Promise.resolve([])
+      : sb
+          .from("events")
+          .select("id, top8_after, top8_split")
+          .in("id", ids)
+          .then((result) => (result.error?.code === "42703" ? [] : assertOk(result))),
   create: (row) => sb.from("events").insert(row).select().single().then(assertOk),
   update: (id, patch) => sb.from("events").update(patch).eq("id", id).select().single().then(assertOk),
   remove: (id) => sb.from("events").delete().eq("id", id).then(assertOk),
@@ -675,13 +686,17 @@ const SLIM_MATCH_COLUMNS = "id, event_id, round, player1_id, player2_id, player1
  * `eventIds`' own order — the
  * `[{ entries, matches }, ...]` shape computeLeaguePoints/computeLeagueSummary
  * take. An event with no rows still gets its (empty) slot, so the array's
- * length always equals the number of events.
- * @param {string[]} eventIds
+ * length always equals the number of events. Given the events' rows rather
+ * than their ids, each slot carries its row too (`event`) — what
+ * js/leaderboard.js reads an event's top 8 from (migration 045): pass the
+ * rows wherever standings are computed.
+ * @param {Array<string|Object>} events - the events' ids, or their rows.
  * @param {{slim?: boolean, commanders?: boolean}} [options] - slim: the lighter rows
  *   (see SLIM_ENTRY_COLUMNS); commanders: with them, the entries' commanders too.
  */
-export async function fetchEventsResults(eventIds, { slim = false, commanders = false } = {}) {
-  if (eventIds.length === 0) return [];
+export async function fetchEventsResults(events, { slim = false, commanders = false } = {}) {
+  if (events.length === 0) return [];
+  const eventIds = events.map((ev) => (typeof ev === "string" ? ev : ev.id));
   // The ids travel in the request URL (`event_id=in.(…)`, ~37 chars each):
   // a whole-history scope (Giocatori/Comandanti/Archetipi's "Tutte le
   // leghe") grows every week, so it's split into chunks well under common
@@ -695,7 +710,11 @@ export async function fetchEventsResults(eventIds, { slim = false, commanders = 
   ]);
   const entriesByEvent = groupByEvent(entryChunks.flat());
   const matchesByEvent = groupByEvent(matchChunks.flat());
-  return eventIds.map((id) => ({ entries: entriesByEvent.get(id) ?? [], matches: matchesByEvent.get(id) ?? [] }));
+  return eventIds.map((id, i) => ({
+    entries: entriesByEvent.get(id) ?? [],
+    matches: matchesByEvent.get(id) ?? [],
+    ...(typeof events[i] === "string" ? {} : { event: events[i] }),
+  }));
 }
 
 function groupByEvent(rows) {

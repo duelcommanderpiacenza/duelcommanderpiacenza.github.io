@@ -39,7 +39,7 @@ export async function renderPlayerLeagueRecap(el, playerId, { signal }) {
     // Played = closed, oldest first (a stage's number is its place here).
     const events = leagueEvents.filter((ev) => !ev.is_open).sort(byDate);
     const scheduled = Math.max(count ?? leagueEvents.length, events.length);
-    const eventsData = await fetchEventsResults(events.map((ev) => ev.id));
+    const eventsData = await fetchEventsResults(events);
     if (signal.aborted) return;
 
     const open = league.is_open;

@@ -274,7 +274,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     const withPlayer = (id) => (id ? { id } : null);
     const board = computeEventLeaderboard(
       matches.map((m) => ({ ...m, player1: withPlayer(m.player1_id), player2: withPlayer(m.player2_id) })),
-      entries.map((en) => ({ ...en, player: withPlayer(en.player_id) }))
+      entries.map((en) => ({ ...en, player: withPlayer(en.player_id) })),
+      ev
     );
     return new Map(board.filter((r) => r.player?.id).map((r, i) => [r.player.id, i + 1]));
   }

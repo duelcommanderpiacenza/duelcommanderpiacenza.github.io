@@ -216,7 +216,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     for (const eventId of eventIds) {
       computeEventLeaderboard(
         matches.filter((m) => m.event_id === eventId),
-        allEntries.filter((e) => e.event_id === eventId)
+        allEntries.filter((e) => e.event_id === eventId),
+        allEvents.find((ev) => ev.id === eventId)
       ).forEach((s, i) => {
         if (s.player) positionByEventPlayer.set(`${eventId}_${s.player.id}`, i + 1);
       });

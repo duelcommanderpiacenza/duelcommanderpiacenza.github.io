@@ -233,7 +233,7 @@ async function loadLeagueStandings(league) {
   const countRequest = Leagues.eventCount(league.id, null);
   const leagueEvents = (await allEvents()).filter((ev) => ev.league_id === league.id);
   const closed = leagueEvents.filter((ev) => !ev.is_open);
-  const [eventsData, count] = await Promise.all([fetchEventsResults(closed.map((ev) => ev.id)), countRequest]);
+  const [eventsData, count] = await Promise.all([fetchEventsResults(closed), countRequest]);
   const scheduledEvents = count ?? leagueEvents.length;
   return {
     league,

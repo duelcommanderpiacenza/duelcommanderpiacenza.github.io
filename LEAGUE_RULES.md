@@ -42,6 +42,17 @@ Only **closed** events count. Within an event, players are ranked by:
 The percentages use the official Magic tournament formulas (a draw counts as a
 third of a win, every percentage floored at 33%, a bye counts as a 2-0).
 
+**An event with a top 8** (quarterfinals, semifinals, final after the Swiss
+rounds, between the Swiss top 8 — set in admin): the points and tiebreakers
+above come from the Swiss rounds only. Then the bracket decides the order:
+the final's winner 1st, its loser 2nd, the semifinals' losers 3rd–4th, the
+quarterfinals' losers 5th–8th — between players who went out at the same
+stage, their Swiss order — then everyone else in Swiss order. If the players
+still in **split the win**, nothing more is played and the standings stay as
+they stood: those players keep their Swiss order (e.g. two finalists who
+split: the better Swiss one 1st, the other 2nd). The top 8's matches still
+count in V-S-P and winrate.
+
 ## 2. Event score
 
 | Position | Points |
@@ -54,7 +65,8 @@ third of a win, every percentage floored at 33%, a bye counts as a 2-0).
 
 Plus:
 
-- **+2 undefeated**: at least one win and no losses or draws in that event.
+- **+2 undefeated**: at least one win and no losses or draws in that event
+  (with a top 8: in its Swiss rounds — a loss in the top 8 keeps it).
 - **League bonus points** (for one-off adjustments), if set: entered per
   player in the "Bonus lega" column of that event's leaderboard in admin
   (matches view), while the event is open.

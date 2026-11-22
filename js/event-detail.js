@@ -1,5 +1,5 @@
 import { Events, EventEntries, Matches } from "./db.js";
-import { computeEventLeaderboard, matchRoundOutcome, isBye, isDrop } from "./leaderboard.js";
+import { computeEventLeaderboard, matchRoundOutcome, isBye, isDrop, roundLabel, top8SplitPlayers } from "./leaderboard.js";
 import {
   escapeHtml,
   formatDate,
@@ -76,7 +76,7 @@ function matchCardHtml(m, entryOf, shown) {
           </article>`;
 }
 
-function renderMatchesByRound(matches, entryOf, shown) {
+function renderMatchesByRound(matches, entryOf, shown, event) {
   if (matches.length === 0) return '<p class="page-empty">Nessuna partita registrata.</p>';
 
   const byRound = new Map();
@@ -90,7 +90,7 @@ function renderMatchesByRound(matches, entryOf, shown) {
     .sort((a, b) => a - b)
     .map(
       (round) => `
-      <h3 style="margin:18px 0 10px;font-size:1.05rem;">Turno ${round}</h3>
+      <h3 style="margin:18px 0 10px;font-size:1.05rem;">${roundLabel(event, round)}</h3>
       ${historyPanelHtml(byRound.get(round).map((m) => matchCardHtml(m, entryOf, shown)).join(""), { scroll: false, className: "event-match-grid" })}`
     )
     .join("");
@@ -205,8 +205,16 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     const matches = await matchesRequest;
     if (signal.aborted) return;
     const entryOf = new Map(entries.map((e) => [e.player_id, e]));
-    matchesEl.innerHTML = renderMatchesByRound(matches, entryOf, shown);
-    const standings = computeEventLeaderboard(matches, entries);
+    const standings = computeEventLeaderboard(matches, entries, event);
+    // A top 8 whose players still in split the win (migration 045): said
+    // at the end of Partite, where the rounds stop (user, 2026-11-22); the
+    // standings stay as they stood (js/leaderboard.js).
+    const splitNames = top8SplitPlayers(event, standings).map((s) => escapeHtml(shown(s.player)?.name ?? ""));
+    const splitHtml =
+      splitNames.length && matches.length
+        ? `<p class="event-split-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4"></path><path d="M7 4h10v5a5 5 0 0 1-10 0Z"></path><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"></path></svg><span>Vittoria condivisa tra <span data-no-i18n>${splitNames.join(", ")}</span></span></p>`
+        : "";
+    matchesEl.innerHTML = renderMatchesByRound(matches, entryOf, shown, event) + splitHtml;
 
     // The hero: the numbers, and the winner's (first in the standings)
     // commander as the backdrop — else the most played one (none: the

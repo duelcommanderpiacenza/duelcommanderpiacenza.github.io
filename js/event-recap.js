@@ -24,7 +24,7 @@
 // hero ("Recap") and league.html?id=…&recap=1. Styles: css/6 "Event recap".
 
 import { Events, Leagues, fetchEventsResults } from "./db.js";
-import { computeEventLeaderboard, computeLeaguePoints } from "./leaderboard.js";
+import { computeEventLeaderboard, computeLeaguePoints, top8SplitPlayers } from "./leaderboard.js";
 import { ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
 import { archetypeIcon } from "./archetype-icons.js";
 import { createArtPainter } from "./player-card.js";
@@ -165,7 +165,7 @@ export function loadRecapData(eventId) {
         Events.listUpcoming({ withOnline: true }).catch(() => []),
       ]);
       const { entries, matches } = results;
-      const rows = computeEventLeaderboard(matches, entries);
+      const rows = computeEventLeaderboard(matches, entries, ev);
       const posOf = new Map(rows.map((r, i) => [r.player?.id, i + 1]));
       const entryOf = new Map(entries.map((e) => [e.player_id, e]));
       const realMatches = matches.filter((m) => m.player2_id && !m.is_drop);
@@ -190,6 +190,9 @@ export function loadRecapData(eventId) {
         matchCount: realMatches.length,
         winner,
         winnerCommander: winner ? commanderOf(entryOf.get(winner.player?.id)) : "—",
+        // A top 8 whose players still in split the win (migration 045): all
+        // of them on the winner's screen (empty: no split).
+        split: top8SplitPlayers(ev, rows),
         unbeaten: rows.filter((r) => r.losses === 0 && (realWins.get(r.player?.id) ?? 0) > 0 && r.wins > r.draws),
         topCommander,
         topCount: topEntries.length,
@@ -248,7 +251,7 @@ export function loadSeasonData(leagueId) {
       ]);
       const played = leagueEvents.filter((e) => !e.is_open).sort((a, b) => (a.event_date ?? "").localeCompare(b.event_date ?? ""));
       const [eventsData, scheduled] = await Promise.all([
-        fetchEventsResults(played.map((e) => e.id)),
+        fetchEventsResults(played),
         Leagues.eventCount(leagueId, played.length),
       ]);
       const standings = computeLeaguePoints(eventsData, { leagueClosed: !league.is_open, scheduledEvents: scheduled ?? played.length });
@@ -386,7 +389,14 @@ function eventSlidesHtml(data, page) {
       <div class="recap-tiles" ${at(3)}><div><b>${rows.length}</b><span>giocatori</span></div><div><b>${data.rounds}</b><span>turni</span></div><div><b>${data.matchCount}</b><span>partite</span></div></div>
       <p class="recap-tap" ${at(5)}>Tocca per continuare ›</p></section>`,
   ];
-  if (winner) {
+  if (winner && data.split.length) {
+    slides.push(`<section class="recap-slide is-center"><div class="recap-bg is-red"></div><div class="recap-confetti">${CONFETTI}</div>
+      <p class="recap-k" ${at(0)}>Vittoria condivisa</p>
+      <div class="recap-trophy" ${at(1)}>🏆</div>
+      <h2 class="recap-big" ${at(1)} data-no-i18n>${data.split.map((r) => escapeHtml(r.player?.name)).join(", ")}</h2>
+      <p class="recap-mid" ${at(2)} data-no-i18n>${data.split.map((r) => escapeHtml(commanderOf(entryOf.get(r.player?.id)))).join(" · ")}</p>
+      <div class="recap-card-art" ${at(3)} data-art="${escapeHtml(data.winnerCommander)}"></div></section>`);
+  } else if (winner) {
     slides.push(`<section class="recap-slide is-center"><div class="recap-bg is-red"></div><div class="recap-confetti">${CONFETTI}</div>
       <p class="recap-k" ${at(0)}>Il vincitore</p>
       <div class="recap-trophy" ${at(1)}>🏆</div>
@@ -394,6 +404,8 @@ function eventSlidesHtml(data, page) {
       <p class="recap-mid" ${at(2)}>con ${escapeHtml(data.winnerCommander)}</p>
       <div class="recap-card-art" ${at(3)} data-art="${escapeHtml(data.winnerCommander)}"></div>
       <div class="recap-pills" ${at(4)}><span>${winner.wins}-${winner.losses}-${winner.draws} V-S-P</span><span>${winner.points} punti</span></div></section>`);
+  }
+  if (winner) {
     // A league's (or standalone) event: its top 8; a Topdeck series': its
     // best, TOPDECK_MIN_POINTS or more (none: no screen).
     const lineOf = (r) => commanderOf(entryOf.get(r.player?.id));
