@@ -8,7 +8,7 @@
 // re-renders the matrix from what's already loaded, instantly.
 
 import { Events, Leagues } from "./db.js";
-import { isBye, isDrop, matchRoundOutcome } from "./leaderboard.js";
+import { isBye, isDrop, matchRoundOutcome, matchupWinRate } from "./leaderboard.js";
 import { escapeHtml, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { attachHoverTooltips, fullTextIfTruncated } from "./floating-tooltip.js";
@@ -336,7 +336,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
                 if (!cell || cell.total === 0) {
                   return `<td class="matchups-cell matchups-cell-empty" ${at}>&mdash;</td>`;
                 }
-                const pct = (cell.wins / cell.total) * 100;
+                const pct = matchupWinRate(cell.wins, cell.draws, cell.losses);
                 const { side, heat } = heatAttrs(pct);
                 // Match-basis V-S-P, same order/format as the rest of the
                 // site's own V-S-P columns.

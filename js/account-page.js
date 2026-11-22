@@ -863,8 +863,7 @@ export function mount({ signal = new AbortController().signal } = {}) {
     // least one closed event played), Eventi — the player page's tiles' look
     // (styles.css .profile-hero .stat-tile), not its whole set (no wins /
     // draws / losses here). No match played yet: just a line.
-    const played = bucket.wins + bucket.draws + bucket.losses;
-    const rate = winRatePct(bucket.wins, played);
+    const rate = winRatePct(bucket.wins, bucket.draws, bucket.losses);
     const leagueIds = new Set(
       entries.filter((e) => e.event && !e.event.is_open && e.event.league).map((e) => e.event.league.id)
     );

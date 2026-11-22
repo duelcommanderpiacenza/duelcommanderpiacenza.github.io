@@ -35,7 +35,7 @@
 // computed here (event_standings caches the live ones only).
 
 import { Players, Events, Leagues, EventStandings, fetchClosedResultsSince } from "./db.js";
-import { matchRoundOutcome, isBye, isDrop, computeEventLeaderboard } from "./leaderboard.js";
+import { matchRoundOutcome, isBye, isDrop, computeEventLeaderboard, matchWinRate } from "./leaderboard.js";
 import { ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
 import { archetypeIcon } from "./archetype-icons.js";
 import { escapeHtml, eventTitle, formatDate, scryfallImages, showError, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS } from "./ui.js";
@@ -65,7 +65,7 @@ const TIP_H = 66;
 const pct = (v) => (v == null ? "—" : `${v.toFixed(1)}%`);
 const fold = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 const firstName = (name) => (name ?? "").split(" ")[0];
-const winrate = (r) => (r.w + r.d + r.l ? (r.w / (r.w + r.d + r.l)) * 100 : null);
+const winrate = (r) => matchWinRate(r.w, r.d, r.l);
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 const shortDate = (iso) => new Date(iso).toLocaleDateString(locale(), { day: "numeric", month: "short" }).replace(".", "");
 // A deck = commander + partner (the site's convention).

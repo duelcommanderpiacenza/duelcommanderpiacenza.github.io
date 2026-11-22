@@ -1,5 +1,6 @@
 import { Events, Leagues } from "./db.js";
 import { computeGroupedStats } from "./stats.js";
+import { matchWinRate } from "./leaderboard.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { renderPieChart, renderBarChart, ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
 import { initChartCarousel } from "./chart-carousel.js";
@@ -99,9 +100,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
         const i = latestOf.get(a);
         if (!s || i === undefined) return null;
         const ev = statsPerEvent[i].get(a) ?? { wins: 0, draws: 0, losses: 0 };
-        const wins = s.wins - ev.wins;
-        const played = wins + (s.draws - ev.draws) + (s.losses - ev.losses);
-        return played > 0 ? (wins / played) * 100 : null;
+        return matchWinRate(s.wins - ev.wins, s.draws - ev.draws, s.losses - ev.losses);
       };
       const shareBefore = (a, entries) => {
         if (decksBeforeLatest <= 0) return null;

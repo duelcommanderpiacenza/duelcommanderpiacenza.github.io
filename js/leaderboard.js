@@ -38,6 +38,33 @@ export function matchRoundOutcome(m) {
   return "draw";
 }
 
+/**
+ * The site's winrate (user, 2026-11-22): the official Match-Win Percentage
+ * without its 33% floor — match points (win 3, draw 1, loss 0) over the most
+ * a player could have had (3 per match), as a percentage. So a draw counts a
+ * third of a win (1-1-2 is 41.7%, not 25%), and the event standings'
+ * Winrate always follows their Punti. The floor belongs to the tiebreakers
+ * only (buildTiebreakers' matchWinPct): on a shown number it would make every
+ * record below 33% look the same. Null with no match played. A bye, where a
+ * caller counts it, is a win (3 points), as in the official rules.
+ */
+export function matchWinRate(wins, draws, losses) {
+  const played = wins + draws + losses;
+  return played > 0 ? ((wins * POINTS.win + draws * POINTS.draw) / (played * POINTS.win)) * 100 : null;
+}
+
+/**
+ * A matchup's winrate (one deck / archetype against another — Matchups'
+ * cells, the archetype page's "Contro gli altri archetipi"): a draw is a draw
+ * and doesn't move it (user, 2026-11-22) — wins over wins + losses, so the
+ * two sides of a matchup always add up to 100%; only draws: 50%. Null with
+ * no match.
+ */
+export function matchupWinRate(wins, draws, losses) {
+  if (wins + losses > 0) return (wins / (wins + losses)) * 100;
+  return draws > 0 ? 50 : null;
+}
+
 // Standard Magic tournament tiebreaker floor: a player's (or their
 // opponents') win percentage is never treated as less than this, so a
 // single bad round (or a weak opponent) doesn't disproportionately tank it.
@@ -209,9 +236,9 @@ function buildTiebreakers(matches) {
  * manual_rank that overrides those computed tiebreakers when the admin has
  * explicitly reordered a tie group (see admin/js/matches-admin.js).
  *
- * Each row's `winRate` is on a *match* basis (matches won / matches played),
- * same level as the `wins`/`draws`/`losses` V-S-P counts it's derived from —
- * a 2-0 and a 2-1 match win both just count as one win. The MTG tournament
+ * Each row's `winRate` is on a *match* basis (matchWinRate: match points
+ * over 3 per match), from the same `wins`/`draws`/`losses` V-S-P counts — a
+ * 2-0 and a 2-1 match win both just count as one win. The MTG tournament
  * tiebreakers below (`gameWinPct`/`opponentsGameWinPct`) are a deliberately
  * different, game-basis calculation — that's the official DCI/WPN tiebreak
  * formula itself (Opponents' Match Win %, then Game Win %, then Opponents'
@@ -347,7 +374,7 @@ export function computeEventLeaderboard(matches, entries, event = null) {
   for (const row of byPlayer.values()) {
     const id = row.player?.id;
     row.undefeated = row.swissWins > 0 && row.swissNotWon === 0;
-    row.winRate = row.played > 0 ? (row.wins / row.played) * 100 : null;
+    row.winRate = matchWinRate(row.wins, row.draws, row.losses);
     row.gameWinPct = id ? tiebreakers.gameWinPct(id) : MIN_WIN_PCT;
     row.opponentsMatchWinPct = id ? tiebreakers.opponentsMatchWinPct(id) : 0;
     row.opponentsGameWinPct = id ? tiebreakers.opponentsGameWinPct(id) : 0;
@@ -479,8 +506,7 @@ export function computeLeaguePoints(eventsData, { leagueClosed = false, schedule
     // Match-based, summed across every event in the league — not an average
     // of each event's own winRate%, which would misweight events with
     // fewer matches played.
-    const played = wins + draws + losses;
-    const winRate = played > 0 ? (wins / played) * 100 : null;
+    const winRate = matchWinRate(wins, draws, losses);
     return {
       player,
       points,

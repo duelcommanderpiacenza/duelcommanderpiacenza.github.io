@@ -2,17 +2,19 @@
 // and commander detail pages (each shows the same overall winrate cards,
 // updated live as the viewer narrows the scope with a filter).
 //
-// The "Winrate" figure is on a *match* basis (matches won / matches played),
+// The "Winrate" figure is on a *match* basis (js/leaderboard.js
+// matchWinRate: match points over 3 per match — a draw a third of a win),
 // not a game basis: a 2-0 and a 2-1 match win both just count as one win,
-// same as the V-S-P record beside it — that and the
-// Winrate figure are now two views of the exact same match-level tally,
-// not two different statistics.
+// same as the V-S-P record beside it — two views of the exact same
+// match-level tally, not two different statistics.
 
-import { matchRoundOutcome } from "./leaderboard.js";
+import { matchRoundOutcome, matchWinRate } from "./leaderboard.js";
 import { statTileHtml } from "./ui.js";
 
-export function winRatePct(wins, played) {
-  return played > 0 ? ((wins / played) * 100).toFixed(1) : null;
+// The winrate with one decimal, as shown ("62.5"); null with no match.
+export function winRatePct(wins, draws, losses) {
+  const rate = matchWinRate(wins, draws, losses);
+  return rate === null ? null : rate.toFixed(1);
 }
 
 // A match's outcome ("win" | "draw" | "loss") from one side's point of view:
@@ -40,8 +42,7 @@ export function tallyOutcome(bucket, outcome) {
 // Piloti and Giocato), then the record as one "V-S-P" tile
 // (wins-losses-draws, the site's order) so they fit one row on phones too.
 export function renderWinrateTiles(el, bucket, { extra = [] } = {}) {
-  const played = (bucket.wins ?? 0) + (bucket.draws ?? 0) + (bucket.losses ?? 0);
-  const rate = winRatePct(bucket.wins ?? 0, played);
+  const rate = winRatePct(bucket.wins ?? 0, bucket.draws ?? 0, bucket.losses ?? 0);
   el.innerHTML =
     rate === null
       ? '<p class="page-empty">Non ci sono ancora dati sufficienti.</p>'

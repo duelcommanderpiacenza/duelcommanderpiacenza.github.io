@@ -1,5 +1,6 @@
 import { Commanders, Events, Leagues } from "./db.js";
 import { computeGroupedStats, computeColorShares } from "./stats.js";
+import { matchWinRate } from "./leaderboard.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { renderPieChart, renderBarChart, MTG_COLOR_CHART } from "./metagame-chart.js";
 import { initChartCarousel } from "./chart-carousel.js";
@@ -266,9 +267,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
         const i = latestOf.get(s.key);
         if (i !== undefined) {
           const ev = statsPerEvent[i].get(s.key) ?? { wins: 0, draws: 0, losses: 0 };
-          const wins = s.wins - ev.wins;
-          const played = wins + (s.draws - ev.draws) + (s.losses - ev.losses);
-          winRateBefore.set(s.key, played > 0 ? (wins / played) * 100 : null);
+          winRateBefore.set(s.key, matchWinRate(s.wins - ev.wins, s.draws - ev.draws, s.losses - ev.losses));
         }
         if (decksBeforeLatest > 0) {
           const inLatestEvent = statsPerEvent[latestInScope].get(s.key)?.entries ?? 0;

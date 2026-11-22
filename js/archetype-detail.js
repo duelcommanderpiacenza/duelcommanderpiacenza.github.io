@@ -4,7 +4,7 @@
 // its usage over time, the commanders played as it, and how it fares
 // against the other archetypes (a diverging bar chart around 50%).
 import { Events, fetchClosedResultsSince } from "./db.js";
-import { matchRoundOutcome, isBye, isDrop } from "./leaderboard.js";
+import { matchRoundOutcome, isBye, isDrop, matchupWinRate } from "./leaderboard.js";
 import { computeGroupedStats } from "./stats.js";
 import { ARCHETYPES } from "./metagame-chart.js";
 import { archetypeIcon } from "./archetype-icons.js";
@@ -208,7 +208,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     const matchups = [...vs]
       .map(([opp, b]) => {
         const played = b.wins + b.draws + b.losses;
-        return { opp, ...b, played, winRate: played ? (b.wins / played) * 100 : null };
+        return { opp, ...b, played, winRate: matchupWinRate(b.wins, b.draws, b.losses) };
       })
       .sort((a, b) => (b.winRate ?? -1) - (a.winRate ?? -1));
     // The two charts on one row: Utilizzo 2/3, the matchups 1/3 (styles.css

@@ -10,7 +10,7 @@
 // has selected.
 
 import { Badges, Leagues, Events, EventEntries, Matches, fetchEventsResults } from "./db.js";
-import { computeEventLeaderboard, computeLeaguePoints, isBye, isDrop, matchRoundOutcome } from "./leaderboard.js";
+import { computeEventLeaderboard, computeLeaguePoints, isBye, isDrop, matchRoundOutcome, matchWinRate } from "./leaderboard.js";
 import { computeElo } from "./elo.js";
 import { localIso } from "./ui.js";
 
@@ -174,12 +174,12 @@ async function top8StreakPlayerIds(closedIds) {
 // self-contained.
 async function playerMatchStats(closedIds) {
   const allMatches = (await Matches.listAll()).filter((m) => closedIds.has(m.event_id));
-  // played / wins: the winrate's (a bye a won match); faced: matches
+  // played / wins / draws: the winrate's (a bye a won match); faced: matches
   // against an opponent only — no bye, no drop ("Più match giocati").
-  const stats = new Map(); // player id -> { played, wins, faced, events: Set of event ids }
+  const stats = new Map(); // player id -> { played, wins, draws, faced, events: Set of event ids }
 
   function ensure(playerId) {
-    if (!stats.has(playerId)) stats.set(playerId, { played: 0, wins: 0, faced: 0, events: new Set() });
+    if (!stats.has(playerId)) stats.set(playerId, { played: 0, wins: 0, draws: 0, faced: 0, events: new Set() });
     return stats.get(playerId);
   }
 
@@ -206,6 +206,10 @@ async function playerMatchStats(closedIds) {
     const outcome = matchRoundOutcome(m);
     if (outcome === "player1") p1.wins += 1;
     else if (outcome === "player2") p2.wins += 1;
+    else {
+      p1.draws += 1;
+      p2.draws += 1;
+    }
   }
   return stats;
 }
@@ -242,7 +246,7 @@ async function highestWinratePlayerIds(closedIds, events) {
   const active = [...stats].filter(([, s]) => [...s.events].some((id) => recentIds.has(id)));
   return playersWithMaxValue(
     active,
-    (s) => (s.played > 0 ? s.wins / s.played : -1),
+    (s) => matchWinRate(s.wins, s.draws, s.played - s.wins - s.draws) ?? -1,
     MIN_EVENTS_FOR_WINRATE_BADGE,
     (s) => s.events.size
   );

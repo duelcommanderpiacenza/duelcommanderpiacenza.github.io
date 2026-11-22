@@ -4,7 +4,7 @@
 // Commanders and Archetypes pages, both of which let the viewer narrow the
 // scope to a league and/or a single event first.
 
-import { matchRoundOutcome, isBye, isDrop } from "./leaderboard.js";
+import { matchRoundOutcome, isBye, isDrop, matchWinRate } from "./leaderboard.js";
 
 const MTG_COLORS = ["W", "U", "B", "R", "G"];
 
@@ -40,8 +40,9 @@ export function computeColorShares(eventsData) {
 /**
  * `wins`/`draws`/`losses` are match-level counts (one per match, used for
  * the V-S-P display column), and `winRate` is computed from those same
- * counts (`wins / played`, `played` = `wins+draws+losses`) — a 2-0 and a
- * 2-1 match win both just count as one win.
+ * counts (leaderboard.js matchWinRate: match points over 3 per match,
+ * `played` = `wins+draws+losses`) — a 2-0 and a 2-1 match win both just
+ * count as one win.
  * @param {Array<{entries: Array, matches: Array}>} eventsData
  * @param {(entry) => string} keyFn - grouping key for one entry, e.g. entry.commander_id
  * @param {(entry) => object} buildMeta - extra display fields captured the first time a key is seen
@@ -96,7 +97,7 @@ export function computeGroupedStats(eventsData, keyFn, buildMeta) {
   return Array.from(groups.values())
     .map((g) => {
       const played = g.wins + g.draws + g.losses;
-      return { ...g, played, winRate: played > 0 ? (g.wins / played) * 100 : null };
+      return { ...g, played, winRate: matchWinRate(g.wins, g.draws, g.losses) };
     })
     .sort((a, b) => b.entries - a.entries);
 }
@@ -128,12 +129,14 @@ export function computeLeagueWrapped(eventsData, playerStandings) {
   const maxPlayed = Math.max(0, ...withPlayed.map((s) => s.played));
   const eligible = withPlayed.filter((s) => s.played >= maxPlayed * WRAPPED_MIN_PLAYED_RATIO);
 
-  // Compared as exact fractions (a.wins/a.played vs b.wins/b.played, cross-
-  // multiplied) rather than as floats, so two genuinely equal winrates
-  // (e.g. 6/8 and 3/4) always tie instead of one edging out on rounding.
+  // Compared as exact fractions (match points over played, a.points/a.played
+  // vs b.points/b.played, cross-multiplied — the winrate's, matchWinRate)
+  // rather than as floats, so two genuinely equal winrates (e.g. 6/8 and
+  // 3/4) always tie instead of one edging out on rounding.
+  const points = (s) => s.wins * 3 + s.draws;
   let best = [];
   for (const s of eligible) {
-    const cmp = best.length === 0 ? 1 : s.wins * best[0].played - best[0].wins * s.played;
+    const cmp = best.length === 0 ? 1 : points(s) * best[0].played - points(best[0]) * s.played;
     if (cmp > 0) best = [s];
     else if (cmp === 0) best.push(s);
   }

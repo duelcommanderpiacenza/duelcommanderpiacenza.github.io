@@ -1,5 +1,5 @@
 import { Players, Events, Leagues, PlayerProgress, fetchEventsResults } from "./db.js";
-import { matchRoundOutcome, isBye, isDrop } from "./leaderboard.js";
+import { matchRoundOutcome, isBye, isDrop, matchWinRate } from "./leaderboard.js";
 import { initScopeFilter } from "./scope-filter.js";
 import { fetchTopAutoBadgesByPlayer, playerBadgesHtml } from "./player-badges.js";
 import { escapeHtml, showError, softFail, isoDateYearsAgo, DEFAULT_DATE_FROM_YEARS, onlinePlayer } from "./ui.js";
@@ -205,10 +205,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       // scope — the whole record minus that event's.
       const latestOf = latestPresence(eventIds, eventsData, eventDateById, (d) => d.entries.map((e) => e.player_id));
       const recordsPerEvent = eventsData.map((d) => playerRecords([d]));
-      const rateOf = (record) => {
-        const played = record ? record.wins + record.draws + record.losses : 0;
-        return played > 0 ? (record.wins / played) * 100 : null;
-      };
+      const rateOf = (record) => (record ? matchWinRate(record.wins, record.draws, record.losses) : null);
       const rateBefore = (id) => {
         const i = latestOf.get(id);
         const all = recordByPlayer.get(id);
@@ -226,7 +223,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
         const eventsPlayed = new Set(playerEntries.map((e) => e.event_id)).size;
         const record = recordByPlayer.get(p.id) ?? { wins: 0, draws: 0, losses: 0 };
         const played = record.wins + record.draws + record.losses;
-        const winRate = played > 0 ? (record.wins / played) * 100 : null;
+        const winRate = matchWinRate(record.wins, record.draws, record.losses);
         return {
           id: p.id,
           searchText: `${shownAs.name} ${shownAs.handle ?? ""}`.toLowerCase(),

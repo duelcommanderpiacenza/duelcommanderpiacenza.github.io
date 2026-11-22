@@ -398,7 +398,7 @@ export function renderCommanderCarousel(el, items) {
       return;
     }
     const r = records.get(items[active].key);
-    const rate = r ? winRatePct(r.wins, r.wins + r.draws + r.losses) : null;
+    const rate = r ? winRatePct(r.wins, r.draws, r.losses) : null;
     winrateEl.innerHTML =
       rate === null
         ? "—"
