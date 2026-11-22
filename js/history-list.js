@@ -6,6 +6,7 @@
 // per event (per event + pilot on commander.html), its rounds as rows. Looks:
 // styles.css .history-*.
 import { escapeHtml, eventTitle, playerLabel, commanderPairLabel, ENDSTEP_MARK } from "./ui.js";
+import { top8Stage, TOP8_STAGES } from "./leaderboard.js";
 
 // The list's frame; `itemsHtml` its sub-cards. `animate: false` for a list
 // redrawn on every keystroke (a search box), so its entrance doesn't replay;
@@ -184,6 +185,17 @@ const NO_LINK = { link: false };
 // sub-card. `deckFirst` (commander.html): the opponent's deck on top, big,
 // their name under it, small — the other way round (the default, player.html)
 // the name first; an opponent with no deck recorded: the name alone.
+// A round's chip: "T3" for a Swiss round; a top 8's stage short — QF, SF,
+// F — in the accent, its name on hover (the row's event carries its
+// `top8_after`, js/db.js's match embeds).
+const TOP8_SHORT = ["QF", "SF", "F"];
+function roundChipHtml(r) {
+  const stage = top8Stage(r.event, r.round);
+  if (!stage) return `<span class="history-round-no">T${r.round ?? "?"}</span>`;
+  const name = TOP8_STAGES[stage - 1] ?? "Top 8";
+  return `<span class="history-round-no is-top8" title="${name}" aria-label="${name}">${TOP8_SHORT[stage - 1] ?? "T8"}</span>`;
+}
+
 function matchRoundHtml(r, { deckFirst = false } = {}) {
   const [cls, score, label] = r.isBye
     ? ["is-win", "Bye", "Bye"]
@@ -201,7 +213,7 @@ function matchRoundHtml(r, { deckFirst = false } = {}) {
           }`;
   return `
         <li class="history-round">
-          <span class="history-round-no">T${r.round ?? "?"}</span>
+          ${roundChipHtml(r)}
           <div class="history-main">${opponent}</div>
           <span class="history-score ${cls}" title="${label}">${score}</span>
         </li>`;

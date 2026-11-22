@@ -2277,6 +2277,11 @@ a.history-item.is-me-row:hover {
   font-weight: 800;
 }
 
+/* A top 8 round (QF / SF / F, js/history-list.js roundChipHtml). */
+.history-round-no.is-top8 {
+  color: var(--brand-red-deep);
+}
+
 .history-opp-name {
   font-weight: 700;
   overflow-wrap: anywhere;

@@ -633,7 +633,7 @@ export const Matches = {
     sb
       .from("matches")
       .select(
-        "*, event:events(id,name,event_date,league_id,is_online,league:leagues(id,name)), player1:players!matches_player1_id_fkey(id,name,handle,endstep), player2:players!matches_player2_id_fkey(id,name,handle,endstep)"
+        "*, event:events(id,name,event_date,league_id,is_online,top8_after,league:leagues(id,name)), player1:players!matches_player1_id_fkey(id,name,handle,endstep), player2:players!matches_player2_id_fkey(id,name,handle,endstep)"
       )
       .in("event_id", eventIds)
       .then(assertOk),
@@ -646,7 +646,7 @@ export const Matches = {
         sb
           .from("matches")
           .select(
-            "*, event:events!inner(id,name,event_date,league_id,is_online,league:leagues(id,name)), player2:players!matches_player2_id_fkey(id,name,handle,endstep)"
+            "*, event:events!inner(id,name,event_date,league_id,is_online,top8_after,league:leagues(id,name)), player2:players!matches_player2_id_fkey(id,name,handle,endstep)"
           )
           .eq("player1_id", playerId)
       ).then(assertOk),
@@ -654,7 +654,7 @@ export const Matches = {
         sb
           .from("matches")
           .select(
-            "*, event:events!inner(id,name,event_date,league_id,is_online,league:leagues(id,name)), player1:players!matches_player1_id_fkey(id,name,handle,endstep)"
+            "*, event:events!inner(id,name,event_date,league_id,is_online,top8_after,league:leagues(id,name)), player1:players!matches_player1_id_fkey(id,name,handle,endstep)"
           )
           .eq("player2_id", playerId)
       ).then(assertOk),
