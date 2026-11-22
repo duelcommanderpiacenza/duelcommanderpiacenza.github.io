@@ -200,8 +200,11 @@ html.app-header body.is-loading .page-loading-region > .detail-hero-wrap > .deta
    only as the overlay faded (user, 2026-11-19: event.html's tabs, there
    from the first frame). The two sheets look alike, so the real one just
    takes over; the hero still crossfades. Only during the fade: the overlay
-   is removed when it ends, and the sheet goes back to its own z-index. */
-html.app-header .page-loading-overlay.is-hidden ~ .hero-sheet {
+   is removed when it ends, and the sheet goes back to its own z-index.
+   account.html's sheet is inside its signed-in section (.profile, no
+   stacking context of its own) — the same there (user, 2026-11-22). */
+html.app-header .page-loading-overlay.is-hidden ~ .hero-sheet,
+html.app-header .page-loading-overlay.is-hidden ~ .profile > .hero-sheet {
   z-index: 6;
 }
 
@@ -1007,11 +1010,12 @@ html.app-header .sk-page.is-home > .sk-chart {
 
 /* Phones: the sheet's first element concentric with its corners, as on the
    loaded pages (css/4): 6px from the sheet's top edge — 20px over the
-   hero's end, the placeholder's content starting 10px under it otherwise —
+   hero's end, the placeholder's content starting 10px under it otherwise
+   (account's tabs 4px over it, their -14px margin: -30px all the same) —
    its corners 20px; above the hero's sheet strip (.sk-hero::after), which
    would otherwise cover its top. */
 @media (max-width: 640px) {
-  html.app-header .sk-page.is-hero:is(.is-player, .is-commander, .is-archetype, .is-event) > .sk-hero + * {
+  html.app-header .sk-page.is-hero:is(.is-player, .is-commander, .is-archetype, .is-event, .is-league, .is-account) > .sk-hero + * {
     position: relative;
     z-index: 1;
     margin-top: -30px;
@@ -1169,7 +1173,8 @@ html.app-header .sk-page.is-commander .sk-title {
   margin-top: 4px;
 }
 
-html.app-header .sk-page.is-event > .sk-tabs {
+/* League: on touch screens the same segmented control (69px). */
+html.app-header .sk-page:is(.is-event, .is-league) > .sk-tabs {
   width: auto;
   height: 69px;
   border-radius: 18px;

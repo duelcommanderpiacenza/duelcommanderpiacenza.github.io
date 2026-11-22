@@ -3320,19 +3320,27 @@ html.nav-mobile #commander-content .hero-sheet > .where-filter:not([hidden]) + #
   }
 }
 
-/* event.html's tabs (Classifica / Giocatori / Partite / Meta), the first
-   thing in its sheet: on phones concentric with the sheet's corners, like
-   the pages above (user, 2026-11-19) — 6px from its top edge, its corners
-   the sheet's 26px less that (20px), the current tab's inside them less the
-   bar's 1px border and 6px padding (13px). Still sticky (top: 8px) once scrolled. */
+/* event.html's tabs (Classifica / Giocatori / Partite / Meta), and since
+   2026-11-22 (user) league.html's (Eventi / Classifica / Meta) and
+   account.html's (Decklist / Account), the first thing in their sheet: on
+   phones concentric with the sheet's corners, like the pages above (user,
+   2026-11-19) — 6px from its top edge, its corners the sheet's 26px less
+   that (20px), the current tab's inside them less the bar's 1px border and
+   6px padding (13px). Still sticky (top: 8px) once scrolled — its shadow
+   when stuck (the open tab's ::after, css/6, 18px otherwise) at the bar's
+   20px. */
 @media (max-width: 640px) {
-  html.nav-mobile #event-content .hero-sheet > .event-tabs {
+  html.nav-mobile :is(#event-content .hero-sheet > .event-tabs, #league-content .hero-sheet > .league-tabs, main[data-page="account"] .hero-sheet > .profile-tabs) {
     margin-top: calc(var(--page-pad-x) - 22px);
     border-radius: calc(26px - var(--page-pad-x));
   }
 
-  html.nav-mobile #event-content .hero-sheet > .event-tabs .profile-tab {
+  html.nav-mobile :is(#event-content .hero-sheet > .event-tabs, #league-content .hero-sheet > .league-tabs, main[data-page="account"] .hero-sheet > .profile-tabs) .profile-tab {
     border-radius: calc(26px - 2 * var(--page-pad-x) - 1px);
+  }
+
+  html.nav-mobile :is(#event-content .hero-sheet > .event-tabs, #league-content .hero-sheet > .league-tabs, main[data-page="account"] .hero-sheet > .profile-tabs) .profile-tab.is-active::after {
+    border-radius: calc(26px - var(--page-pad-x));
   }
 }
 
