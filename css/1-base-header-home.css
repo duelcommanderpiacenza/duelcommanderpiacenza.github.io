@@ -895,29 +895,29 @@ html.app-header .sk-cols > .sk-col + .sk-col {
   border-radius: var(--radius-pill);
 }
 
-/* Like the loaded timeline: the date's 56px circle, the card 14px on,
-   12px apart, "Oggi" (.sk-tl-today, empty) 42px between the played and
-   the upcoming ones. */
+/* Like the loaded timeline ("The Bacheca's events"): the 54 × 60px
+   calendar sheet, the card 14px on, 60px tall — the next one's (the 3rd
+   row, .is-next) 70px —, 12px apart; no "Oggi" row. */
 .sk-tl {
   display: grid;
-  grid-template-columns: 56px minmax(0, 1fr);
+  grid-template-columns: 54px minmax(0, 1fr);
   align-items: center;
   gap: 12px 14px;
 }
 
 .sk-tl .sk-dot {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-}
-
-.sk-tl .sk-tl-today {
-  grid-column: 1 / -1;
-  height: 18px;
+  width: 54px;
+  height: 60px;
+  border-radius: 13px;
 }
 
 .sk-tl .sk-row {
-  height: 56px;
+  height: 60px;
+  border-radius: 16px;
+}
+
+.sk-tl .sk-row.is-next {
+  height: 70px;
 }
 
 .sk-standings {
@@ -2701,9 +2701,10 @@ a.dashboard-standing:hover .dashboard-standings-name-text {
    windows each its own (the tabs above it stay their own control —
    "C2, detached"), on a computer the two one card (below, "A computer").
    Inside, the rows without their own box: a soft fill, no edge, no shadow
-   (the timeline's played events and the standings; the upcoming ones keep
-   their outline, the next one its red). The timeline's circles filled
-   with the card's colour, not the page's (--tl-node-bg). */
+   (the standings, and the timeline's played events in their kind's tint —
+   "The Bacheca's events" below; the upcoming ones keep their outline). The
+   timeline's calendar sheets filled with the card's colour, not the
+   page's (--tl-node-bg). */
 .home-board > #home-panel-events,
 .home-board > #home-panel-standings {
   --tl-node-bg: #fff;
@@ -2725,39 +2726,16 @@ html.app-header .home-board > :is(#home-panel-events, #home-panel-standings) {
   padding: 12px 12px 16px;
 }
 
-.home-board .home-timeline :is(.is-played, .is-pending) > .league-tl-card,
+/* (The standings rows' dark look: css/6, with the others' dark rules.) */
 .home-board .dashboard-standing {
   border-color: transparent;
   background: #fbf6f3;
   box-shadow: none;
 }
 
-.home-board .home-timeline :is(.is-played, .is-pending) > a.league-tl-card:hover,
 .home-board a.dashboard-standing:hover {
   border-color: transparent;
   background: #f6ece8;
-}
-
-/* The timeline's past events a step darker than the Classifica's rows, so
-   they stand out from the panel (user's choice 2026-11-03; the endstep /
-   external ones: their tints below, 14%). */
-.home-board .home-timeline :is(.is-played, .is-pending) > .league-tl-card {
-  background: #f5ebe6;
-}
-
-.home-board .home-timeline :is(.is-played, .is-pending) > a.league-tl-card:hover {
-  background: #efe0da;
-}
-
-:root[data-theme="dark"] .home-board .home-timeline :is(.is-played, .is-pending) > .league-tl-card {
-  border-color: transparent;
-  background: rgba(255, 255, 255, 0.06);
-  box-shadow: none;
-}
-
-/* (The standings rows' dark look: css/6, with the others' dark rules.) */
-:root[data-theme="dark"] .home-board .home-timeline :is(.is-played, .is-pending) > a.league-tl-card:hover {
-  background: rgba(255, 110, 110, 0.12);
 }
 
 @media (max-width: 860px) {
@@ -2919,15 +2897,10 @@ html.app-header .home-head-icon {
   font-size: 0.95rem;
 }
 
-/* Eventi: the timeline (its own size container, like league.html's list —
-   the full date on the left of the line from 620px). In time order like
-   league.html's — the played ones, "Oggi", the upcoming ones — so the base
-   timeline's colours apply: red up to the next event, grey after it. The
-   kicker (the league) on one line. */
-#home-timeline {
-  container-type: inline-size;
-}
-
+/* league.html's events (.home-timeline: the layer over css/3's base
+   timeline — the Bacheca's look until 2026-11-23, when the Bacheca got its
+   own, "The Bacheca's events" below). The kicker (the league) on one
+   line. */
 .home-timeline .league-tl-k {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3072,11 +3045,9 @@ html.app-header .home-head-icon {
 
 /* Every event the same: one row as tall as its date's circle — the circle
    and the card side by side, level top and bottom; the name over the league
-   on the left (each shrunk to fit its line — js/home.js fitTimelineNames,
-   down to 12px — and only then cut with "…"), the extra on the right,
-   centred (the played ones' Moxfield / Top 8 links) — the upcoming ones'
-   time alone, down on the league's line. The upcoming cards bare (no
-   surface), their names as readable as the played ones'. */
+   on the left, the extra on the right, centred (the played ones' "Liste") —
+   the upcoming ones' time alone, at the bottom right. The upcoming cards
+   bare (no surface), their names as readable as the played ones'. */
 .league-timeline.home-timeline {
   --tl-node: 56px;
 }
@@ -3178,212 +3149,478 @@ html.app-header .home-head-icon {
 }
 
 /* The upcoming circles: the date as dark as the played ones' (their ring
-   grey on league.html, its kind's colour on the Bacheca — below). */
+   grey). */
 .home-timeline .is-future > .league-tl-node span {
   color: var(--text-muted);
 }
 
-/* The Bacheca's three kinds of event (option E2 of a mockup, 2026-11-03 —
-   js/home.js): each its own colour and its own big faint logo on the
-   card's right (.league-tl-wm, behind the text: the card isolated) — ours
-   (.is-local) red with the lotus (dc_pc_lotus.svg, by a mask), online
-   endstep's gold and black with its logo (below, .is-online), external
-   (played somewhere else, migration 026 — only ever upcoming: deleted the
-   night after its day, migration 030) slate blue with the pin: its circle
-   and outline, the pin before its Località, the next one slate blue
-   instead of red. All the same shape (the externals were a ticket until
-   then). Only the Bacheca adds these classes — league.html's timeline
-   (.home-timeline too) stays as it was. */
+/* The Bacheca's events (js/home.js timelineItemHtml — option F1 of a
+   mockup, 2026-11-23; its own markup and classes, league.html keeps the
+   circles above). In time order — the latest played ones, then the
+   upcoming ones — with no "Oggi" row between them (user's choice): the
+   line, red up to the next event and grey after it, and the cards tell
+   them apart. Each row: on the line a calendar sheet (.home-ev-cal — the
+   month on a strip in the kind's colour, the day under it) as tall as its
+   card, 60px; the next one's card 70px, its sheet staying 60px, centred
+   (user). The card: the name over the place (text only — the kind is told
+   by the colours and by its emblem, big and faint behind the text on the
+   right, .home-ev-wm: the card isolated), "Liste" or the full weekday over
+   the time on the right. Played: the sheet faded with a ✓ on its corner,
+   the card a soft fill of the kind's colour. Upcoming: the sheet white
+   under its solid strip, the card outlined in the kind's colour. The
+   next one: the sheet solid with its halo pulsing, the card white with a
+   stronger outline and a shadow, the weekday and a big time in the kind's
+   colour.
+   Three kinds (--ev-k their colour, --ev-k-deep it dark enough to read on
+   white, --ev-k-on text on it, --ev-k-tint a played card's fill): ours
+   (.is-local) red, the lotus (dc_pc_lotus.svg, by a mask); online
+   (.is-online, played on endstep — migration 034) endstep's gold, its strip
+   and next sheet black and gold, its logo; external (.is-external — played
+   somewhere else, migration 026; only ever upcoming: deleted the night
+   after its day, migration 030) slate blue, the pin. */
 :root {
   --external-blue: oklch(0.52 0.08 245);
 }
 
-/* Each kind's colour (--tl-kind) — all three kinds alike (user,
-   2026-11-03: ours had been pale upcoming, solid played): the upcoming
-   ones' circle in it, solid, their card's outline pale; the played ones' circle ring
-   pale, their card's fill tinted with it (ours keep their warm fill on the
-   light theme, above — the others' had been ours too; on the dark one all
-   three tinted). The next one's circle filled (css/3
-   and below). */
-.home-timeline .is-local {
-  --tl-kind: var(--brand-red);
+.home-ev-list {
+  --ev-sheet: 54px;
+  --ev-line: var(--hairline-hover);
+  --ev-soft: #f5ebe6;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.home-timeline .is-online {
-  --tl-kind: var(--endstep-gold);
+:root[data-theme="dark"] .home-ev-list {
+  --ev-line: rgba(255, 255, 255, 0.14);
+  --ev-soft: #2b2627;
 }
 
-.home-timeline .is-external {
-  --tl-kind: var(--external-blue);
+.home-ev {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--ev-sheet) minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 12px;
 }
 
-/* Their "Liste" button in the type's colour too (ours keeps the red of
-   .results-menu-btn): darkened to read on its white, lightened on the dark
-   theme like the red; its hover tint in it. */
-.home-timeline :is(.is-online, .is-external) .results-menu-btn {
-  color: color-mix(in oklch, var(--tl-kind) 70%, #000);
+.home-ev:last-child {
+  padding-bottom: 0;
 }
 
-.home-timeline :is(.is-online, .is-external) .results-menu-btn:is(:hover, [aria-expanded="true"]) {
-  background: color-mix(in oklch, var(--tl-kind) 8%, #fff);
+/* The line: through every sheet, from the first one's centre to the last
+   one's; red up to the next event (half red, half grey there). */
+.home-ev::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--ev-sheet) / 2 - 1px);
+  width: 2px;
+  background: var(--ev-line);
 }
 
-:root[data-theme="dark"] .home-timeline :is(.is-online, .is-external) .results-menu-btn {
-  color: color-mix(in srgb, var(--tl-kind) 55%, #fff);
+.home-ev:first-child::before {
+  top: calc((100% - 12px) / 2);
 }
 
-:root[data-theme="dark"] .home-timeline :is(.is-online, .is-external) .results-menu-btn:is(:hover, [aria-expanded="true"]) {
-  background: rgba(255, 255, 255, 0.1);
+.home-ev:last-child::before {
+  bottom: auto;
+  height: 50%;
 }
 
-.home-timeline :is(.is-local, .is-online, .is-external).is-future > .league-tl-node {
-  border-color: var(--tl-kind);
+.home-ev:only-child::before {
+  display: none;
 }
 
-.home-timeline :is(.is-local, .is-online, .is-external).is-future > .league-tl-card {
-  border-color: color-mix(in oklch, var(--tl-kind) 45%, transparent);
+.home-ev.is-played::before {
+  background: var(--brand-red);
 }
 
-/* endstep's gold is much lighter than the red and the blue: at 45% its
-   outline all but vanished on the white — stronger on the light theme
-   (user, 2026-11-04); the dark one keeps the 45%. */
-:root:not([data-theme="dark"]) .home-timeline .is-online.is-future > .league-tl-card {
-  border-color: color-mix(in oklch, var(--tl-kind) 85%, transparent);
+.home-ev.is-next::before {
+  background: linear-gradient(var(--brand-red) calc(50% - 6px), var(--ev-line) 0);
 }
 
-.home-timeline :is(.is-local, .is-online, .is-external).is-played > .league-tl-node {
-  border-color: color-mix(in oklch, var(--tl-kind) 40%, transparent);
+.home-ev.is-local {
+  --ev-k: var(--brand-red);
+  --ev-k-deep: var(--brand-red-deep);
+  --ev-k-on: #fff;
+  --ev-k-tint: #f5ebe6;
+  --ev-k-tint-hover: #efe0da;
 }
 
-.home-board .home-timeline :is(.is-online, .is-external).is-played > .league-tl-card {
-  background: color-mix(in oklch, var(--tl-kind) 14%, #fff);
+.home-ev.is-external {
+  --ev-k: var(--external-blue);
+  --ev-k-deep: oklch(0.42 0.08 245);
+  --ev-k-on: #fff;
+  --ev-k-tint: color-mix(in oklch, var(--external-blue) 14%, #fff);
+  --ev-k-tint-hover: color-mix(in oklch, var(--external-blue) 20%, #fff);
 }
 
-.home-board .home-timeline :is(.is-online, .is-external).is-played > a.league-tl-card:hover {
-  background: color-mix(in oklch, var(--tl-kind) 20%, #fff);
+.home-ev.is-online {
+  --ev-k: var(--endstep-gold);
+  --ev-k-deep: var(--endstep-gold-deep);
+  --ev-k-on: var(--endstep-ink);
+  --ev-k-tint: color-mix(in oklch, var(--endstep-gold) 16%, #fff);
+  --ev-k-tint-hover: color-mix(in oklch, var(--endstep-gold) 24%, #fff);
 }
 
-:root[data-theme="dark"] .home-board .home-timeline :is(.is-local, .is-online, .is-external).is-played > .league-tl-card {
-  background: color-mix(in oklch, var(--tl-kind) 8%, rgba(255, 255, 255, 0.05));
+:root[data-theme="dark"] .home-ev.is-local {
+  --ev-k-deep: #ff8f92;
+  --ev-k-tint: color-mix(in oklch, var(--brand-red) 12%, #1d1819);
+  --ev-k-tint-hover: color-mix(in oklch, var(--brand-red) 18%, #1d1819);
 }
 
-:root[data-theme="dark"] .home-board .home-timeline :is(.is-local, .is-online, .is-external).is-played > a.league-tl-card:hover {
-  background: color-mix(in oklch, var(--tl-kind) 14%, rgba(255, 255, 255, 0.05));
+:root[data-theme="dark"] .home-ev.is-external {
+  --ev-k-deep: oklch(0.76 0.07 245);
+  --ev-k-tint: color-mix(in oklch, var(--external-blue) 18%, #1d1819);
+  --ev-k-tint-hover: color-mix(in oklch, var(--external-blue) 26%, #1d1819);
 }
 
-.home-timeline :is(.is-local, .is-external) > .league-tl-card {
+:root[data-theme="dark"] .home-ev.is-online {
+  --ev-k-tint: color-mix(in oklch, var(--endstep-gold) 12%, #1d1819);
+  --ev-k-tint-hover: color-mix(in oklch, var(--endstep-gold) 18%, #1d1819);
+}
+
+/* The calendar sheet, on the line (above it), as tall as its card. */
+.home-ev-cal {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  width: var(--ev-sheet);
+  min-height: 60px;
+  box-sizing: border-box;
+  border: 1.5px solid color-mix(in oklch, var(--ev-k) 40%, transparent);
+  border-radius: 13px;
+  background: var(--tl-node-bg, #fff);
+  line-height: 1;
+  text-align: center;
+}
+
+.home-ev-cal small {
+  display: block;
+  min-height: 0.7rem;
+  padding: 5px 0 4px;
+  border-radius: 11px 11px 0 0;
+  background: var(--ev-k);
+  color: var(--ev-k-on);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.home-ev-cal b {
+  display: grid;
+  flex: 1;
+  place-items: center;
+  color: var(--text-title);
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.home-ev.is-online .home-ev-cal small {
+  background: var(--endstep-ink);
+  color: var(--endstep-gold);
+}
+
+.home-ev.is-played .home-ev-cal {
+  border-color: transparent;
+  background: var(--ev-soft);
+}
+
+.home-ev.is-played .home-ev-cal small {
+  background: color-mix(in oklch, var(--ev-k) 22%, transparent);
+  color: var(--ev-k-deep);
+}
+
+.home-ev.is-played .home-ev-cal b {
+  color: var(--text-muted);
+}
+
+/* The next one's: solid, the same 60px as the others (centred on its
+   taller card). */
+.home-ev.is-next .home-ev-cal {
+  align-self: center;
+  height: 60px;
+  border: 2px solid var(--ev-k);
+  background: var(--ev-k);
+}
+
+.home-ev.is-next .home-ev-cal small {
+  background: rgba(0, 0, 0, 0.16);
+  color: var(--ev-k-on);
+}
+
+.home-ev.is-next .home-ev-cal b {
+  color: var(--ev-k-on);
+}
+
+.home-ev.is-online.is-next .home-ev-cal {
+  border-color: var(--endstep-gold);
+  background: var(--endstep-ink);
+}
+
+.home-ev.is-online.is-next .home-ev-cal small {
+  background: var(--endstep-gold);
+  color: var(--endstep-ink);
+}
+
+.home-ev.is-online.is-next .home-ev-cal b {
+  color: var(--endstep-gold);
+}
+
+/* Its halo pulsing outwards (like league.html's circle: transform +
+   opacity, done by the GPU; still where motion is reduced) — endstep's
+   black sheet kept above it (::before), or the gold halo browns it. */
+.home-ev.is-next .home-ev-cal::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  border-radius: inherit;
+  background: color-mix(in oklch, var(--ev-k) 55%, transparent);
+  animation: home-tl-node-pulse 1.6s ease-out infinite;
+}
+
+.home-ev.is-online.is-next .home-ev-cal::after {
+  z-index: -2;
+}
+
+.home-ev.is-online.is-next .home-ev-cal::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--endstep-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-ev.is-next .home-ev-cal::after {
+    animation: none;
+    opacity: 0.35;
+    transform: scale(1.21);
+  }
+}
+
+/* A played one's ✓, on its sheet's corner. */
+.home-ev-tick {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  display: grid;
+  place-items: center;
+  width: 19px;
+  height: 19px;
+  box-sizing: border-box;
+  border: 2px solid var(--tl-node-bg, #fff);
+  border-radius: 50%;
+  background: var(--ev-k);
+  color: var(--ev-k-on);
+}
+
+.home-ev-tick svg {
+  width: 10px;
+  height: 10px;
+}
+
+.home-ev-card {
   position: relative;
   isolation: isolate;
-  overflow: hidden;
-}
-
-.league-tl-wm.is-lotus {
-  right: 52px;
-  width: 92px;
-  height: 92px;
-  background: var(--brand-red);
-  opacity: 0.1;
-  transform: translateY(-50%) rotate(-8deg);
-  -webkit-mask: url(../dc_pc_lotus.svg) center / contain no-repeat;
-  mask: url(../dc_pc_lotus.svg) center / contain no-repeat;
-}
-
-.league-tl-wm.is-pin {
-  right: 64px;
-  width: 76px;
-  height: 76px;
-  color: var(--external-blue);
-  opacity: 0.13;
-  transform: translateY(-50%) rotate(-10deg);
-}
-
-/* On a played one's red-tinted fill (dark theme): a lighter red, a little
-   stronger, or it sinks into the tint. */
-:root[data-theme="dark"] .home-board .is-local.is-played .league-tl-wm.is-lotus {
-  background: #ff7a7d;
-  opacity: 0.16;
-}
-
-/* On the next one's colour: white. */
-.is-next .league-tl-wm.is-lotus {
-  background: #fff;
-  opacity: 0.2;
-}
-
-.is-next .league-tl-wm.is-pin {
-  color: #fff;
-  opacity: 0.2;
-}
-
-/* The next one of ours: its red with a lighter glow in the corner, like
-   the others' next. */
-:root .home-timeline .is-local.is-next > .league-tl-card {
-  background: radial-gradient(140% 160% at 100% 0%, #f0484b, var(--brand-red) 65%);
-}
-
-.home-timeline .is-external .league-tl-place > svg {
-  color: var(--external-blue);
-}
-
-:root .home-timeline .is-external.is-next > .league-tl-card {
-  border-color: transparent;
-  background: radial-gradient(140% 160% at 100% 0%, oklch(0.6 0.09 245), var(--external-blue) 65%);
-}
-
-:root .home-timeline .is-external.is-next > .league-tl-node {
-  border-color: var(--external-blue);
-  background: var(--external-blue);
-}
-
-.home-timeline .is-external.is-next > .league-tl-node::after {
-  background: color-mix(in oklch, var(--external-blue) 55%, transparent);
-}
-
-:root .home-timeline .is-external.is-next .league-tl-place > svg {
-  color: #fff;
-}
-
-.league-tl-place {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 3px;
-  max-width: 100%;
+  gap: 12px;
+  min-height: 60px;
+  box-sizing: border-box;
+  overflow: hidden;
+  padding: 0 14px 0 16px;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  color: inherit;
+  text-decoration: none;
+  transition: background 150ms ease;
 }
 
-/* Località - Sito on one line, cut with "…" when longer; the Sito (where
-   in the town) in the site's red — white on the red "next" card, the
-   Località there a little faded instead. */
-.league-tl-place-text {
+.home-ev.is-played .home-ev-card {
+  background: var(--ev-k-tint);
+}
+
+.home-ev.is-played a.home-ev-card:hover {
+  background: var(--ev-k-tint-hover);
+  color: inherit;
+  text-decoration: none;
+}
+
+.home-ev.is-future .home-ev-card {
+  border-color: color-mix(in oklch, var(--ev-k) 35%, transparent);
+}
+
+.home-ev.is-next .home-ev-card {
+  min-height: 70px;
+  border: 1.5px solid color-mix(in oklch, var(--ev-k) 60%, transparent);
+  background: #fff;
+  box-shadow: 0 10px 24px color-mix(in oklch, var(--ev-k) 18%, transparent);
+}
+
+:root[data-theme="dark"] .home-ev.is-next .home-ev-card {
+  background: color-mix(in oklch, var(--ev-k) 10%, #1d1819);
+}
+
+/* The name over the place, each on one line (the name shrunk to fit it —
+   js/home.js fitTimelineNames, down to 12px — and only then cut with
+   "…"; the place cut). */
+.home-ev-text {
+  display: grid;
+  flex: 1 1 auto;
+  gap: 3px;
   min-width: 0;
+}
+
+.home-ev-name {
   overflow: hidden;
+  color: var(--text-title);
+  font-size: 1.02rem;
+  font-style: italic;
+  font-weight: 800;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.league-tl-venue {
-  color: var(--brand-red-deep);
+.home-ev.is-next .home-ev-name {
+  font-size: 1.12rem;
 }
 
-:root[data-theme="dark"] .league-tl-venue {
-  color: #ff9a9d;
+.home-ev-place {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
-.is-next .league-tl-venue,
-:root[data-theme="dark"] .is-next .league-tl-venue {
-  color: #fff;
+/* An external event's Sito (where in the town) in its colour. */
+.home-ev-venue {
+  color: var(--ev-k-deep);
 }
 
-.is-next .league-tl-place-text {
-  color: rgba(255, 255, 255, 0.78);
+/* The weekday in full over the time; the next one's in its colour, the
+   time big. */
+.home-ev-when {
+  display: grid;
+  flex: none;
+  justify-items: end;
+  gap: 2px;
+  line-height: 1;
 }
 
-.league-tl-place svg {
-  flex-shrink: 0;
-  width: 1.15em;
-  height: 1.15em;
-  /* The pin is drawn from x 5 of its 24-wide box: pulled left by that blank
-     (about 5/24 of its width), its ink lines up with the name above. */
-  margin-left: -0.2em;
+.home-ev-when small {
+  color: var(--text-muted);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.home-ev-when b {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.home-ev.is-next .home-ev-when small {
+  color: var(--ev-k-deep);
+}
+
+.home-ev.is-next .home-ev-when b {
+  color: var(--ev-k-deep);
+  font-size: 1.45rem;
+}
+
+/* "Liste" in the kind's colour (ours keeps .results-menu-btn's red):
+   darkened to read on its white, lightened on the dark theme. */
+.home-ev .results-menu-btn {
+  flex: none;
+}
+
+.home-ev:is(.is-online, .is-external) .results-menu-btn {
+  color: color-mix(in oklch, var(--ev-k) 70%, #000);
+}
+
+.home-ev:is(.is-online, .is-external) .results-menu-btn:is(:hover, [aria-expanded="true"]) {
+  background: color-mix(in oklch, var(--ev-k) 8%, #fff);
+}
+
+:root[data-theme="dark"] .home-ev:is(.is-online, .is-external) .results-menu-btn {
+  color: color-mix(in srgb, var(--ev-k) 55%, #fff);
+}
+
+:root[data-theme="dark"] .home-ev:is(.is-online, .is-external) .results-menu-btn:is(:hover, [aria-expanded="true"]) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* The kind's emblem, big and faint behind the text, on the card's right. */
+.home-ev-wm {
+  position: absolute;
+  top: 50%;
+  right: 66px;
+  z-index: -1;
+  width: 88px;
+  height: 88px;
+  color: var(--ev-k);
+  opacity: 0.12;
+  transform: translateY(-50%) rotate(-10deg);
+  pointer-events: none;
+}
+
+.home-ev-wm > svg,
+.home-ev-wm > .home-ev-lotus {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.home-ev-lotus {
+  background: currentColor;
+  -webkit-mask: url(../dc_pc_lotus.svg) center / contain no-repeat;
+  mask: url(../dc_pc_lotus.svg) center / contain no-repeat;
+}
+
+.home-ev.is-external .home-ev-wm {
+  opacity: 0.14;
+}
+
+.home-ev.is-online .home-ev-wm {
+  color: var(--endstep-gold-deep);
+  opacity: 0.2;
+}
+
+.home-ev.is-next .home-ev-wm {
+  opacity: 0.17;
+}
+
+.home-ev.is-online.is-next .home-ev-wm {
+  opacity: 0.26;
+}
+
+:root[data-theme="dark"] .home-ev.is-local .home-ev-wm {
+  color: #ff7a7d;
+  opacity: 0.15;
+}
+
+:root[data-theme="dark"] .home-ev.is-external .home-ev-wm {
+  color: oklch(0.72 0.08 245);
+  opacity: 0.16;
+}
+
+:root[data-theme="dark"] .home-ev.is-online .home-ev-wm {
+  color: var(--endstep-gold);
+  opacity: 0.18;
 }
 
 /* endstep's own colours (online leagues and events, migration 034 —
@@ -3419,163 +3656,6 @@ html.app-header .home-head-icon {
 .endstep-mark svg {
   width: 1.05em;
   height: 1.15em;
-}
-
-/* Its line (.league-tl-k, clipped for its "…") lets it out — the place's
-   text cuts itself (.league-tl-place-text). */
-.league-tl-place .endstep-mark {
-  margin-right: 2px;
-}
-
-.league-tl-place .endstep-mark svg {
-  width: 1.05em;
-  height: 1.15em;
-  margin: 0;
-}
-
-.home-timeline .league-tl-k:has(> .league-tl-place > .endstep-mark) {
-  overflow: visible;
-}
-
-/* An online event on the Bacheca's timeline (option B5 of a mockup, with
-   no gold edge — js/home.js; the model for the other kinds' look, above):
-   its circle ringed in gold; endstep's logo big and faint in its card, on
-   the right (.league-tl-wm, behind the text: the card isolated). The next one endstep's instead of red: the card dark
-   (a warm glow in its corner), the league and time gold, the circle black
-   with a glowing gold ring, its halo pulsing gold. (The :root on the next one's rules outranks
-   css/3's red "next" card, dark theme included.) */
-.home-timeline .is-online > .league-tl-card {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-}
-
-.league-tl-wm {
-  position: absolute;
-  top: 50%;
-  right: 58px;
-  z-index: -1;
-  width: 84px;
-  height: 84px;
-  color: var(--endstep-gold);
-  opacity: 0.18;
-  transform: translateY(-50%) rotate(-12deg);
-  pointer-events: none;
-}
-
-.league-tl-wm svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-:root .home-timeline .is-online.is-next > .league-tl-card {
-  border-color: transparent;
-  background: radial-gradient(140% 160% at 100% 0%, var(--endstep-ink-2), var(--endstep-ink) 65%);
-}
-
-:root .home-timeline .is-online.is-next > .league-tl-card :is(.league-tl-k, .league-tl-place-text, .league-tl-side, .endstep-mark) {
-  color: var(--endstep-gold);
-}
-
-:root .home-timeline .is-online.is-next > .league-tl-card .league-tl-t {
-  color: var(--endstep-text);
-}
-
-/* Its circle endstep's black with a gold ring and the others' pulsing
-   halo in gold (user, 2026-11-03 — it had been solid gold), the date gold. */
-:root .home-timeline .is-online.is-next > .league-tl-node {
-  border-color: var(--endstep-gold);
-  background: var(--endstep-ink);
-}
-
-:root .home-timeline .is-online.is-next > .league-tl-node :is(b, span) {
-  color: var(--endstep-gold);
-}
-
-/* The halo (::after) paints over the circle's inside — a red disc on the
-   red circle never showed, on the black one it turned it brown: the black
-   again on a layer above it (::before, inside the ring), under the date. */
-.home-timeline .is-online.is-next > .league-tl-node::after {
-  z-index: -2;
-  background: color-mix(in oklch, var(--endstep-gold) 55%, transparent);
-}
-
-.home-timeline .is-online.is-next > .league-tl-node::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: 50%;
-  background: var(--endstep-ink);
-}
-
-/* "Oggi": a small red dot on the line, the word, a rule to the right. */
-.league-tl-today {
-  position: relative;
-  display: grid;
-  grid-template-columns: var(--tl-node) minmax(0, 1fr);
-  align-items: center;
-  gap: var(--tl-gap);
-  padding-bottom: 12px;
-}
-
-.league-tl-today::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: calc(var(--tl-node) / 2 - 1px);
-  width: 2px;
-  background: var(--brand-red);
-}
-
-.league-tl-today:first-child::before {
-  top: 50%;
-}
-
-.league-tl-today:last-child::before {
-  bottom: 50%;
-}
-
-.league-tl-today-dot {
-  position: relative;
-  z-index: 1;
-  justify-self: center;
-  width: 12px;
-  height: 12px;
-  border: 3px solid var(--tl-node-bg);
-  border-radius: 50%;
-  background: var(--brand-red);
-  box-shadow: 0 0 0 1px var(--brand-red);
-}
-
-.league-tl-today-label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--brand-red);
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
-.league-tl-today-label::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background: color-mix(in srgb, var(--brand-red) 35%, transparent);
-}
-
-@container (min-width: 620px) {
-  .league-tl-today {
-    padding-left: calc(110px + var(--tl-gap));
-  }
-
-  .league-tl-today::before {
-    left: calc(110px + var(--tl-gap) + var(--tl-node) / 2 - 1px);
-  }
 }
 
 /* "Eventi"'s heading: a computer only (on touch screens the tab names it).

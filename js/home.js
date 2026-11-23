@@ -1,5 +1,5 @@
-// Home dashboard (the Bacheca): three sections — Eventi (league.html's
-// timeline: the next few events above "Oggi", the latest played below),
+// Home dashboard (the Bacheca): three sections — Eventi (a timeline: the
+// latest played events, then the next few, each on a calendar sheet),
 // Classifica (the league in progress — or, between leagues, the latest one's
 // final standings) and Più giocati (the bubble charts). Side by side on a
 // computer; on touch screens one at a time behind the site's segmented
@@ -12,7 +12,7 @@ import { computeLeaguePoints, previousLeaguePositions } from "./leaderboard.js";
 import { renderBubbleChart, initBubbleChart, colorBubbleRows, ARCHETYPES, ARCHETYPE_COLORS } from "./metagame-chart.js";
 import { initChartCarousel } from "./chart-carousel.js";
 import { initWhereFilter, inWhere } from "./where-filter.js";
-import { ENDSTEP_MARK, endstepLogo, escapeHtml, formatTime, leagueRingHtml, localIso, playerLabel, showError } from "./ui.js";
+import { endstepLogo, escapeHtml, formatTime, leagueRingHtml, localIso, playerLabel, showError } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { nestedResultsMenu } from "./results-link.js";
 import { fetchPlayerBadgesRenderer } from "./player-badges.js";
@@ -25,9 +25,9 @@ import { createArtPainter } from "./player-card.js";
 import { dueStories } from "./stories.js";
 import { locale } from "./locale.js";
 
-// The timeline: how many played events above "Oggi", upcoming ones below
-// (2 and 5 since 2026-11-03 — was 3 and 3, then 2 and 4; 7 rows, like the
-// loading skeleton's).
+// The timeline: how many played events, then upcoming ones (2 and 5 since
+// 2026-11-03 — was 3 and 3, then 2 and 4; 7 rows, like the loading
+// skeleton's).
 const UPCOMING_EVENTS_COUNT = 5;
 const LATEST_EVENTS_COUNT = 2;
 // External events (played somewhere else) only from this many days before
@@ -55,77 +55,72 @@ function parseIsoDate(iso) {
 }
 
 
-// A map pin: an external event's Località - Sito (styles.css .league-tl-place).
+// A map pin: an external event's emblem (styles.css .home-ev-wm).
 const PIN_ICON = ICON('<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z"></path><circle cx="12" cy="9.5" r="2.5"></circle>');
+// A played event's tick, on its calendar sheet's corner.
+const TICK_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>';
 
 // --- Eventi: the timeline ------------------------------------------------------------
 
-// One event on league.html's timeline (styles.css .league-timeline, the same
-// markup as js/league-detail.js's): its node (day, month), its card — its
-// name over the league (or "Evento"; the next one's circle pulsing), and on the right: played → "Liste", a menu of its results links (the card a link to
-// the event); upcoming → its time alone, when set ("15:00"), down on the
-// league's line.
-// Three kinds, each its colour and its big faint logo on the card's right
-// (option E2 of a mockup, styles.css "The Bacheca's three kinds of event"):
-// ours (.is-local) red, the lotus; online (.is-online) endstep's, below;
-// external (.is-external — played somewhere else, migration 026) slate
-// blue, the pin: its Località with a pin in place of the league; never a
-// link (it has no page). Only upcoming: a past one is deleted (migration
-// 030).
+// One event on the Bacheca's timeline (styles.css "The Bacheca's events" —
+// option F1 of a mockup, 2026-11-23; its own markup, league.html keeps its
+// circles): on the line its calendar sheet (the month on a strip, the day
+// under it; a played one faded with a ✓); its card — the name over its
+// place (text only), on the right "Liste" (played: its results links in a
+// menu, the card a link to the event) or the full weekday ("oggi" on the
+// day) over the time; behind the text, big and faint, its kind's emblem.
+// Three kinds, each its colour: ours (.is-local) red, the lotus; online
+// (.is-online, played on endstep — migration 034) endstep's gold and black,
+// its logo, its league's name or "Online · endstep" for a place; external
+// (.is-external — played somewhere else, migration 026) slate blue, the
+// pin, its Località - Sito for a place, never a link (it has no page). Only
+// upcoming: a past one is deleted (migration 030).
 // An external event's place: its Località, then its Sito in its own colour
 // ("Milano - Il Labirinto"); either alone; "Evento esterno" with neither.
 function placeHtml(ev) {
-  const venue = ev.venue ? `<span class="league-tl-venue">${escapeHtml(ev.venue)}</span>` : "";
-  const text = ev.location ? `${escapeHtml(ev.location)}${venue ? ` - ${venue}` : ""}` : venue || "Evento esterno";
-  return `<span class="league-tl-place-text">${text}</span>`;
+  const venue = ev.venue ? `<span class="home-ev-venue">${escapeHtml(ev.venue)}</span>` : "";
+  return ev.location ? `${escapeHtml(ev.location)}${venue ? ` - ${venue}` : ""}` : venue || "Evento esterno";
 }
 
-function timelineItemHtml(ev, state) {
+function timelineItemHtml(ev, state, today) {
   const date = ev.event_date ? parseIsoDate(ev.event_date) : null;
-  const node = date
-    ? `<b>${String(date.getDate()).padStart(2, "0")}</b><span>${date.toLocaleDateString(locale(), { month: "short" }).replace(".", "")}</span>`
-    : "<b>?</b>";
-  const fullDate = date
-    ? `${date.toLocaleDateString(locale(), { day: "numeric", month: "long" })}<small>${date.toLocaleDateString(locale(), { weekday: "long" })}</small>`
-    : "—";
-  // An online event (played on endstep, migration 034 — option B5 of a
-  // mockup, styles.css .home-timeline .is-online): endstep's mark before its
-  // league's name ("Online · endstep" for a standalone one), its logo big
-  // and faint in the card (.league-tl-wm), the next one endstep-dark.
-  const online = ev.is_online
-    ? `<span class="league-tl-place">${ENDSTEP_MARK}<span class="league-tl-place-text">${ev.league ? escapeHtml(ev.league.name) : "Online · endstep"}</span></span>`
-    : "";
-  const league = ev.is_external
-    ? `<span class="league-tl-place">${PIN_ICON}${placeHtml(ev)}</span>`
-    : online || (ev.league ? escapeHtml(ev.league.name) : "Evento");
+  const month = date ? date.toLocaleDateString(locale(), { month: "short" }).replace(".", "") : "";
+  const day = date ? String(date.getDate()).padStart(2, "0") : "?";
+  const tick = state === "played" ? `<span class="home-ev-tick">${TICK_ICON}</span>` : "";
+  const place = ev.is_external
+    ? placeHtml(ev)
+    : ev.league
+      ? escapeHtml(ev.league.name)
+      : ev.is_online
+        ? "Online · endstep"
+        : "Evento";
   const title = escapeHtml(ev.name || ev.league?.name || "Evento");
-  // Played: "Liste" (its Moxfield / mtgtop8 links in a menu) beside the
-  // text, centred; upcoming: the time on the league's line under the name
-  // (its baseline), at the card's bottom right.
-  const links = state === "played" ? nestedResultsMenu(ev.results_url, ev.decklists_url, ev.endstep_url) : "";
-  const time = state !== "played" && ev.start_time ? formatTime(ev.start_time) : "";
-  const lineTime = time ? `<span class="league-tl-side">${time}</span>` : "";
-  const stub = links ? `<span class="league-tl-side">${links}</span>` : "";
+  // Played: "Liste" (its Moxfield / mtgtop8 / endstep links in a menu);
+  // upcoming: the weekday in full ("oggi" on the day) over the time.
+  let side = "";
+  if (state === "played") {
+    side = nestedResultsMenu(ev.results_url, ev.decklists_url, ev.endstep_url);
+  } else {
+    const weekday = ev.event_date === today ? "oggi" : date ? date.toLocaleDateString(locale(), { weekday: "long" }) : "";
+    const time = ev.start_time ? `<b>${formatTime(ev.start_time)}</b>` : "";
+    if (weekday || time) side = `<span class="home-ev-when">${weekday ? `<small>${weekday}</small>` : ""}${time}</span>`;
+  }
   const kind = ev.is_external ? "is-external" : ev.is_online ? "is-online" : "is-local";
-  const watermark = ev.is_online
-    ? `<span class="league-tl-wm">${endstepLogo()}</span>`
-    : ev.is_external
-      ? `<span class="league-tl-wm is-pin">${PIN_ICON}</span>`
-      : '<span class="league-tl-wm is-lotus"></span>';
+  const emblem = ev.is_online ? endstepLogo() : ev.is_external ? PIN_ICON : '<span class="home-ev-lotus"></span>';
   const body = `
-          <span class="league-tl-text">
-            <span class="league-tl-t">${title}</span>
-            <span class="league-tl-k-row"><span class="league-tl-k">${league}</span>${lineTime}</span>
+          <span class="home-ev-text">
+            <span class="home-ev-name">${title}</span>
+            <span class="home-ev-place">${place}</span>
           </span>
-          ${stub}${watermark}`;
+          ${side}<span class="home-ev-wm">${emblem}</span>`;
   const card =
     state === "played" && !ev.is_external
-      ? `<a class="league-tl-card" href="event.html?id=${ev.id}">${body}</a>`
-      : `<div class="league-tl-card">${body}</div>`;
+      ? `<a class="home-ev-card" href="event.html?id=${ev.id}">${body}</a>`
+      : `<div class="home-ev-card">${body}</div>`;
   return `
-      <li class="league-tl-item is-${state} ${kind}">
-        <span class="league-tl-date">${fullDate}</span>
-        <span class="league-tl-node">${node}</span>
+      <li class="home-ev is-${state} ${kind}">
+        <span class="home-ev-cal"><small>${month}</small><b>${day}</b>${tick}</span>
         ${card}
       </li>`;
 }
@@ -149,7 +144,7 @@ const externalEvents = () => once("external", () => Events.listExternal().catch(
 const openLeague = () => once("openLeague", () => Leagues.getOpen());
 const leagueStandings = (league) => once(`standings:${league.id}`, () => loadLeagueStandings(league));
 
-// The latest played events, "Oggi", the upcoming ones — in time order.
+// The latest played events, then the upcoming ones — in time order.
 async function renderTimeline(el, signal) {
   try {
     const [upcoming, all, external] = await Promise.all([timelineUpcoming(), timelineEvents(), externalEvents()]);
@@ -184,14 +179,14 @@ async function renderTimeline(el, signal) {
       return;
     }
     // In time order, top to bottom (like league.html's): the latest played
-    // ones (the oldest of them first), "Oggi", then the upcoming ones (the
-    // next one first).
+    // ones (the oldest of them first), then the upcoming ones (the next one
+    // first). No "Oggi" row between them since 2026-11-23 (user's choice):
+    // the line, red up to the next event, and the cards tell them apart.
     const items = [
-      ...played.map((ev) => timelineItemHtml(ev, "played")).reverse(),
-      '<li class="league-tl-today"><span class="league-tl-today-dot" aria-hidden="true"></span><span class="league-tl-today-label">Oggi</span></li>',
-      ...next.map((ev, i) => timelineItemHtml(ev, i === 0 ? "next" : "future")),
+      ...played.map((ev) => timelineItemHtml(ev, "played", today)).reverse(),
+      ...next.map((ev, i) => timelineItemHtml(ev, i === 0 ? "next" : "future", today)),
     ];
-    el.innerHTML = `<ol class="league-timeline home-timeline">${items.join("")}</ol>`;
+    el.innerHTML = `<ol class="home-ev-list">${items.join("")}</ol>`;
     fitTimelineNames(el, signal);
   } catch (err) {
     showError(el, err);
@@ -207,10 +202,10 @@ const TL_NAME_MIN_PX = 12;
 // hidden tab there's nothing to measure). `signal`: stops with the page.
 function fitTimelineNames(el, signal) {
   const fit = () => {
-    for (const name of el.querySelectorAll(".league-tl-t")) {
+    for (const name of el.querySelectorAll(".home-ev-name")) {
       name.style.fontSize = "";
       const room = name.clientWidth;
-      // .league-tl-t is one line (nowrap): scrollWidth is its whole text.
+      // .home-ev-name is one line (nowrap): scrollWidth is its whole text.
       if (!room || name.scrollWidth <= room) continue;
       const base = parseFloat(getComputedStyle(name).fontSize);
       name.style.fontSize = `${Math.max(TL_NAME_MIN_PX, Math.floor((base * room * 10) / name.scrollWidth) / 10)}px`;
