@@ -3272,26 +3272,28 @@ html:not(.app-header) .social-filters .social-chips {
   white-space: nowrap;
 }
 
-/* The filters (js/moxfield.js): a small segmented control — a tinted
-   track, the chosen one a raised white pill with red text (like account's
-   Tema) — a quieter step under the Video | Mazzi control. Each as wide as
-   its label; on touch screens the track the whole width. */
+/* The filters (js/moxfield.js): the Dove bar's shape (css/6 .where-filter
+   — user, 2026-11-24; it was a tinted track with a raised white pill): a
+   white pill bar with a hairline edge, the chosen one tinted red. Each as
+   wide as its label; on touch screens the bar the whole width, its options
+   taller (like the Dove bar's there). */
 .social-chips {
   display: flex;
-  gap: 4px;
+  gap: 2px;
   width: 100%;
   box-sizing: border-box;
   margin-bottom: 16px;
-  padding: 4px;
-  border-radius: 14px;
-  background: rgba(154, 28, 32, 0.07);
+  padding: 3px;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  background: #fff;
 }
 
 .social-chip {
   flex: 1 1 auto;
-  padding: 7px 14px;
+  padding: 6px 12px;
   border: 0;
-  border-radius: 10px;
+  border-radius: 999px;
   background: none;
   color: var(--text-muted);
   font: inherit;
@@ -3300,17 +3302,16 @@ html:not(.app-header) .social-filters .social-chips {
   white-space: nowrap;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+  transition: background 150ms ease, color 150ms ease;
 }
 
-.social-chip:hover {
-  color: var(--brand-red-deep);
+.social-chip:not(.is-active):hover {
+  color: var(--text-title);
 }
 
 .social-chip.is-active {
-  background: #fff;
+  background: color-mix(in srgb, var(--brand-red) 10%, transparent);
   color: var(--brand-red-deep);
-  box-shadow: 0 1px 2px rgba(40, 6, 9, 0.1), 0 3px 10px rgba(40, 6, 9, 0.1);
 }
 
 .social-chip:focus-visible {
@@ -3318,17 +3319,21 @@ html:not(.app-header) .social-filters .social-chips {
   outline-offset: 2px;
 }
 
+html.nav-mobile .social-chip {
+  padding: 8px 6px;
+}
+
 :root[data-theme="dark"] .social-chips {
-  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  background: #1e1517;
+}
+
+:root[data-theme="dark"] .social-chip:not(.is-active):hover {
+  color: #f3e9ea;
 }
 
 :root[data-theme="dark"] .social-chip.is-active {
-  background: rgba(255, 255, 255, 0.12);
-  color: #ff9a9d;
-  box-shadow: none;
-}
-
-:root[data-theme="dark"] .social-chip:hover {
+  background: rgba(255, 110, 110, 0.14);
   color: #ff9a9d;
 }
 

@@ -50,7 +50,7 @@ function leagueDateRange(league, events) {
 
 // "Eventi della lega" as a timeline (styles.css .league-timeline, with the
 // .home-timeline card layout — the Bacheca's look until 2026-11-23, when
-// the Bacheca got calendar sheets of its own):
+// the Bacheca got its own cards; its circles are like these again):
 // oldest first, one node on a vertical line per event — its day and month
 // in the circle (wide: its weekday left of the line) — and its card
 // beside it, the name over a line of its own:

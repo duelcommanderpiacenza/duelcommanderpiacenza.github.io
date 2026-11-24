@@ -1,5 +1,5 @@
 // Home dashboard (the Bacheca): three sections — Eventi (a timeline: the
-// latest played events, then the next few, each on a calendar sheet),
+// latest played events, then the next few, each on its date's circle),
 // Classifica (the league in progress — or, between leagues, the latest one's
 // final standings) and Più giocati (the bubble charts). Side by side on a
 // computer; on touch screens one at a time behind the site's segmented
@@ -57,16 +57,13 @@ function parseIsoDate(iso) {
 
 // A map pin: an external event's emblem (styles.css .home-ev-wm).
 const PIN_ICON = ICON('<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z"></path><circle cx="12" cy="9.5" r="2.5"></circle>');
-// A played event's tick, on its calendar sheet's corner.
-const TICK_ICON =
-  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>';
 
 // --- Eventi: the timeline ------------------------------------------------------------
 
 // One event on the Bacheca's timeline (styles.css "The Bacheca's events" —
-// option F1 of a mockup, 2026-11-23; its own markup, league.html keeps its
-// circles): on the line its calendar sheet (the month on a strip, the day
-// under it; a played one faded with a ✓); its card — the name over its
+// option F1 of a mockup, 2026-11-23; its own markup): on the line its
+// date's circle like league.html's (the day over the month — since
+// 2026-11-24, user: it was a calendar sheet); its card — the name over its
 // place (text only), on the right "Liste" (played: its results links in a
 // menu, the card a link to the event) or the full weekday ("oggi" on the
 // day) over the time; behind the text, big and faint, its kind's emblem.
@@ -87,7 +84,6 @@ function timelineItemHtml(ev, state, today) {
   const date = ev.event_date ? parseIsoDate(ev.event_date) : null;
   const month = date ? date.toLocaleDateString(locale(), { month: "short" }).replace(".", "") : "";
   const day = date ? String(date.getDate()).padStart(2, "0") : "?";
-  const tick = state === "played" ? `<span class="home-ev-tick">${TICK_ICON}</span>` : "";
   const place = ev.is_external
     ? placeHtml(ev)
     : ev.league
@@ -120,7 +116,7 @@ function timelineItemHtml(ev, state, today) {
       : `<div class="home-ev-card">${body}</div>`;
   return `
       <li class="home-ev is-${state} ${kind}">
-        <span class="home-ev-cal"><small>${month}</small><b>${day}</b>${tick}</span>
+        <span class="home-ev-node"><b>${day}</b><span>${month}</span></span>
         ${card}
       </li>`;
 }

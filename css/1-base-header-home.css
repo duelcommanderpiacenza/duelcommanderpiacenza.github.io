@@ -859,25 +859,55 @@ html.app-header .sk-cols > .sk-col + .sk-col {
   display: none;
 }
 
-/* Bacheca: the timeline (a dot and a card per event) beside Classifica,
-   the charts' card under both. On a computer laid out like the loaded
-   board (measured 2026-11-03): the panel's padding, the 48px headings,
-   the lists 60px under their top, the link pills under them, the charts'
-   card below. */
+/* Bacheca (index.html's .sk-page.is-home): drawn like the loaded board
+   (measured 2026-11-24) — the stories' bar, then the board's card (on a
+   computer one card for both lists, a hairline between them; touch screens
+   and narrow windows: Eventi's own, Classifica below the fold left out),
+   each list under its heading — an icon and the title, the Classifica's
+   ring at the right —: the timeline's circles and cards, the Classifica's
+   8 rows (a soft row, its position's disc, the name, the points), the
+   pills under them; the charts' card under the board. Paddings are the
+   real ones less the card's 1px edge. */
+.sk-page.is-home .sk-cols {
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+  background: #fff;
+  box-shadow: var(--shadow-card);
+}
+
+:root[data-theme="dark"] .sk-page.is-home .sk-cols {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: #1d1819;
+}
+
 @media (min-width: 861px) {
   html:not(.app-header) .sk-page.is-home .sk-cols {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 30px 64px;
-    padding: 22px 26px 24px;
+    padding: 21px 25px 23px;
   }
 
-  html:not(.app-header) .sk-page.is-home .sk-title {
-    margin-block: 11px;
+  /* The hairline between the lists (#home-panel-standings::before). */
+  html:not(.app-header) .sk-page.is-home .sk-col + .sk-col {
+    position: relative;
   }
 
-  html:not(.app-header) .sk-page.is-home .sk-standings {
-    height: 494px;
-    margin-top: 60px;
+  html:not(.app-header) .sk-page.is-home .sk-col + .sk-col::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -32px;
+    width: 1px;
+    background: rgba(154, 28, 32, 0.12);
+  }
+
+  :root[data-theme="dark"]:not(.app-header) .sk-page.is-home .sk-col + .sk-col::before {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  html:not(.app-header) .sk-page.is-home .sk-head {
+    height: 48px;
   }
 
   /* The charts' card as tall as it is with its own loading block. */
@@ -886,29 +916,93 @@ html.app-header .sk-cols > .sk-col + .sk-col {
   }
 }
 
-/* "Tutti gli eventi" / "Classifica completa": a pill under each list. */
+/* A heading: the icon, the title (the Classifica's the league's name, longer),
+   the Classifica's ring of stages at the right. */
+.sk-page.is-home .sk-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 42px;
+}
+
+.sk-page.is-home .sk-icon {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+}
+
+.sk-page.is-home .sk-head .sk-title {
+  width: 92px;
+  height: 22px;
+  border-radius: 8px;
+}
+
+.sk-page.is-home .sk-head .sk-title.is-league {
+  width: 170px;
+}
+
+.sk-page.is-home .sk-ring {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  margin-left: auto;
+  border-radius: 50%;
+}
+
+/* "Tutti gli eventi" / "Classifica completa" + "Regolamento": the pills
+   under each list, centred (.sk-more-row: the Classifica's two). */
 .sk-page.is-home .sk-more {
   align-self: center;
-  width: 170px;
+  width: 168px;
   height: 44px;
   margin-top: 4px;
   border-radius: var(--radius-pill);
 }
 
-/* Like the loaded timeline ("The Bacheca's events"): the 54 × 60px
-   calendar sheet, the card 14px on, 60px tall — the next one's (the 3rd
-   row, .is-next) 70px —, 12px apart; no "Oggi" row. */
+.sk-page.is-home .sk-more-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.sk-page.is-home .sk-more-row > .sk-more {
+  width: 201px;
+  margin-top: 0;
+}
+
+.sk-page.is-home .sk-more-row > .sk-more.is-rules {
+  width: 155px;
+}
+
+/* A computer's narrow window (one column, up to 860px): Eventi's card —
+   16px padding (18px under), the 42px heading —, its pill 14px under the
+   list. */
+@media (max-width: 860px) {
+  html:not(.app-header) .sk-page.is-home .sk-cols {
+    padding: 16px 16px 18px;
+  }
+
+  html:not(.app-header) .sk-page.is-home .sk-more {
+    margin-top: 2px;
+  }
+}
+
+/* Like the loaded timeline ("The Bacheca's events"): the 56px date
+   circle, the card 14px on, 60px tall — the next one's (the 3rd row,
+   .is-next) 70px —, 12px apart; no "Oggi" row. */
 .sk-tl {
   display: grid;
-  grid-template-columns: 54px minmax(0, 1fr);
+  grid-template-columns: 56px minmax(0, 1fr);
   align-items: center;
   gap: 12px 14px;
 }
 
 .sk-tl .sk-dot {
-  width: 54px;
-  height: 60px;
-  border-radius: 13px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
 }
 
 .sk-tl .sk-row {
@@ -920,9 +1014,51 @@ html.app-header .sk-cols > .sk-col + .sk-col {
   height: 70px;
 }
 
-.sk-standings {
-  height: 420px;
-  margin-top: 38px;
+/* The Classifica: 8 rows spread over the timeline's height (502px, like
+   the loaded list — .dashboard-standings, space-between), each 56px: the
+   row's soft fill (not shimmering, like the real one's), the position's
+   38px disc, the name, the points at the right. */
+.sk-page.is-home .sk-standings {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 502px;
+}
+
+.sk-page.is-home .sk-st-row {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  height: 56px;
+  padding: 0 16px 0 11px;
+  box-sizing: border-box;
+  border-radius: 16px;
+  background: #fbf6f3;
+}
+
+:root[data-theme="dark"] .sk-page.is-home .sk-st-row {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sk-page.is-home .sk-pos {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+}
+
+.sk-page.is-home .sk-name {
+  width: 38%;
+  height: 16px;
+  border-radius: 8px;
+}
+
+.sk-page.is-home .sk-pts {
+  flex: none;
+  width: 34px;
+  height: 30px;
+  margin-left: auto;
+  border-radius: 8px;
 }
 
 .sk-page.is-home .sk-chart {
@@ -936,7 +1072,8 @@ html.app-header .sk-cols > .sk-col + .sk-col {
   display: block;
   width: 100%;
   height: 90px;
-  margin-bottom: 10px;
+  /* .home-recap's -6px 0 10px, less the placeholder's 14px gap. */
+  margin: -6px 0 -4px;
   border-radius: 16px;
 }
 
@@ -947,7 +1084,7 @@ html.app-header .sk-cols > .sk-col + .sk-col {
 /* A computer: the stories' bar (css/6 "The Bacheca's recaps"). */
 html:not(.app-header) .sk-page.is-home .sk-recap {
   height: 76px;
-  margin-bottom: 22px;
+  margin: 0 0 8px;
   border-radius: var(--radius-card);
 }
 
@@ -959,17 +1096,17 @@ html.app-header .sk-page.is-home .sk-tabs {
   border-radius: 18px;
 }
 
-/* …and the board's 13px padding round the timeline, its link pill a
-   little closer under it (measured against the loaded page, 2026-11-03). */
+/* …and its card's 12px padding (16px under), its link pill a little
+   closer under the timeline. */
 html.app-header .sk-page.is-home .sk-cols {
-  padding: 13px;
+  padding: 12px 12px 16px;
 }
 
 html.app-header .sk-page.is-home .sk-more {
   margin-top: 2px;
 }
 
-html.app-header .sk-page.is-home .sk-title,
+html.app-header .sk-page.is-home .sk-head,
 html.app-header .sk-page.is-home > .sk-chart {
   display: none;
 }
@@ -2703,7 +2840,7 @@ a.dashboard-standing:hover .dashboard-standings-name-text {
    Inside, the rows without their own box: a soft fill, no edge, no shadow
    (the standings, and the timeline's played events in their kind's tint —
    "The Bacheca's events" below; the upcoming ones keep their outline). The
-   timeline's calendar sheets filled with the card's colour, not the
+   timeline's date circles filled with the card's colour, not the
    page's (--tl-node-bg). */
 .home-board > #home-panel-events,
 .home-board > #home-panel-standings {
@@ -3155,27 +3292,26 @@ html.app-header .home-head-icon {
 }
 
 /* The Bacheca's events (js/home.js timelineItemHtml — option F1 of a
-   mockup, 2026-11-23; its own markup and classes, league.html keeps the
-   circles above). In time order — the latest played ones, then the
-   upcoming ones — with no "Oggi" row between them (user's choice): the
-   line, red up to the next event and grey after it, and the cards tell
-   them apart. Each row: on the line a calendar sheet (.home-ev-cal — the
-   month on a strip in the kind's colour, the day under it) as tall as its
-   card, 60px; the next one's card 70px, its sheet staying 60px, centred
-   (user). The card: the name over the place (text only — the kind is told
+   mockup, 2026-11-23; its own markup and classes). In time order — the
+   latest played ones, then the upcoming ones — with no "Oggi" row between
+   them (user's choice): the line, red up to the next event and grey after
+   it, and the cards tell them apart. Each row: on the line the date's
+   circle (.home-ev-node, 56px — like league.html's, since 2026-11-24, user:
+   it was a calendar sheet), centred on its card (60px; the next one's
+   70px). The card: the name over the place (text only — the kind is told
    by the colours and by its emblem, big and faint behind the text on the
    right, .home-ev-wm: the card isolated), "Liste" or the full weekday over
-   the time on the right. Played: the sheet faded with a ✓ on its corner,
-   the card a soft fill of the kind's colour. Upcoming: the sheet white
-   under its solid strip, the card outlined in the kind's colour. The
-   next one: the sheet solid with its halo pulsing, the card white with a
+   the time on the right. Played: the circle ringed in the kind's colour,
+   the card a soft fill of it. Upcoming: the circle grey, the card outlined
+   in the kind's colour. The next one: the circle solid with its halo
+   pulsing, the card white with a
    stronger outline and a shadow, the weekday and a big time in the kind's
    colour.
    Three kinds (--ev-k their colour, --ev-k-deep it dark enough to read on
    white, --ev-k-on text on it, --ev-k-tint a played card's fill): ours
    (.is-local) red, the lotus (dc_pc_lotus.svg, by a mask); online
-   (.is-online, played on endstep — migration 034) endstep's gold, its strip
-   and next sheet black and gold, its logo; external (.is-external — played
+   (.is-online, played on endstep — migration 034) endstep's gold, its next
+   circle black and gold, its logo; external (.is-external — played
    somewhere else, migration 026; only ever upcoming: deleted the night
    after its day, migration 030) slate blue, the pin. */
 :root {
@@ -3183,9 +3319,8 @@ html.app-header .home-head-icon {
 }
 
 .home-ev-list {
-  --ev-sheet: 54px;
+  --ev-node: 56px;
   --ev-line: var(--hairline-hover);
-  --ev-soft: #f5ebe6;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -3193,13 +3328,12 @@ html.app-header .home-head-icon {
 
 :root[data-theme="dark"] .home-ev-list {
   --ev-line: rgba(255, 255, 255, 0.14);
-  --ev-soft: #2b2627;
 }
 
 .home-ev {
   position: relative;
   display: grid;
-  grid-template-columns: var(--ev-sheet) minmax(0, 1fr);
+  grid-template-columns: var(--ev-node) minmax(0, 1fr);
   align-items: center;
   gap: 14px;
   padding-bottom: 12px;
@@ -3209,14 +3343,14 @@ html.app-header .home-head-icon {
   padding-bottom: 0;
 }
 
-/* The line: through every sheet, from the first one's centre to the last
+/* The line: through every circle, from the first one's centre to the last
    one's; red up to the next event (half red, half grey there). */
 .home-ev::before {
   content: "";
   position: absolute;
   top: 0;
   bottom: 0;
-  left: calc(var(--ev-sheet) / 2 - 1px);
+  left: calc(var(--ev-node) / 2 - 1px);
   width: 2px;
   background: var(--ev-line);
 }
@@ -3283,149 +3417,94 @@ html.app-header .home-head-icon {
   --ev-k-tint-hover: color-mix(in oklch, var(--endstep-gold) 18%, #1d1819);
 }
 
-/* The calendar sheet, on the line (above it), as tall as its card. */
-.home-ev-cal {
+/* The date's circle, on the line (above it), centred on its card — like
+   league.html's (.league-tl-node): the day over the month. Played: its ring
+   in the kind's colour; upcoming: grey, hollow; the next one solid in the
+   kind's colour, its halo pulsing (endstep's: black, the gold ring and
+   date). */
+.home-ev-node {
   position: relative;
   z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-self: stretch;
-  width: var(--ev-sheet);
-  min-height: 60px;
+  display: grid;
+  place-content: center;
+  align-self: center;
+  width: var(--ev-node);
+  height: var(--ev-node);
   box-sizing: border-box;
-  border: 1.5px solid color-mix(in oklch, var(--ev-k) 40%, transparent);
-  border-radius: 13px;
+  border: 2px solid var(--ev-line);
+  border-radius: 50%;
   background: var(--tl-node-bg, #fff);
   line-height: 1;
   text-align: center;
 }
 
-.home-ev-cal small {
-  display: block;
-  min-height: 0.7rem;
-  padding: 5px 0 4px;
-  border-radius: 11px 11px 0 0;
-  background: var(--ev-k);
-  color: var(--ev-k-on);
-  font-size: 0.7rem;
+.home-ev-node b {
+  color: var(--text-title);
+  font-size: 1.05rem;
+}
+
+.home-ev-node span {
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 0.6rem;
   font-weight: 800;
-  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
-.home-ev-cal b {
-  display: grid;
-  flex: 1;
-  place-items: center;
-  color: var(--text-title);
-  font-size: 1.35rem;
-  font-weight: 800;
+.home-ev.is-played .home-ev-node {
+  border-color: var(--ev-k);
 }
 
-.home-ev.is-online .home-ev-cal small {
-  background: var(--endstep-ink);
-  color: var(--endstep-gold);
-}
-
-.home-ev.is-played .home-ev-cal {
-  border-color: transparent;
-  background: var(--ev-soft);
-}
-
-.home-ev.is-played .home-ev-cal small {
-  background: color-mix(in oklch, var(--ev-k) 22%, transparent);
-  color: var(--ev-k-deep);
-}
-
-.home-ev.is-played .home-ev-cal b {
-  color: var(--text-muted);
-}
-
-/* The next one's: solid, the same 60px as the others (centred on its
-   taller card). */
-.home-ev.is-next .home-ev-cal {
-  align-self: center;
-  height: 60px;
-  border: 2px solid var(--ev-k);
+.home-ev.is-next .home-ev-node {
+  border-color: var(--ev-k);
   background: var(--ev-k);
 }
 
-.home-ev.is-next .home-ev-cal small {
-  background: rgba(0, 0, 0, 0.16);
+.home-ev.is-next .home-ev-node :is(b, span) {
   color: var(--ev-k-on);
 }
 
-.home-ev.is-next .home-ev-cal b {
-  color: var(--ev-k-on);
-}
-
-.home-ev.is-online.is-next .home-ev-cal {
+.home-ev.is-online.is-next .home-ev-node {
   border-color: var(--endstep-gold);
   background: var(--endstep-ink);
 }
 
-.home-ev.is-online.is-next .home-ev-cal small {
-  background: var(--endstep-gold);
-  color: var(--endstep-ink);
-}
-
-.home-ev.is-online.is-next .home-ev-cal b {
+.home-ev.is-online.is-next .home-ev-node :is(b, span) {
   color: var(--endstep-gold);
 }
 
-/* Its halo pulsing outwards (like league.html's circle: transform +
-   opacity, done by the GPU; still where motion is reduced) — endstep's
-   black sheet kept above it (::before), or the gold halo browns it. */
-.home-ev.is-next .home-ev-cal::after {
+/* Its halo pulsing outwards (like league.html's: transform + opacity, done
+   by the GPU; still where motion is reduced) — endstep's black circle kept
+   above it (::before), or the gold halo browns it. */
+.home-ev.is-next .home-ev-node::after {
   content: "";
   position: absolute;
   inset: -2px;
   z-index: -1;
-  border-radius: inherit;
+  border-radius: 50%;
   background: color-mix(in oklch, var(--ev-k) 55%, transparent);
   animation: home-tl-node-pulse 1.6s ease-out infinite;
 }
 
-.home-ev.is-online.is-next .home-ev-cal::after {
+.home-ev.is-online.is-next .home-ev-node::after {
   z-index: -2;
 }
 
-.home-ev.is-online.is-next .home-ev-cal::before {
+.home-ev.is-online.is-next .home-ev-node::before {
   content: "";
   position: absolute;
   inset: 0;
   z-index: -1;
-  border-radius: inherit;
+  border-radius: 50%;
   background: var(--endstep-ink);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .home-ev.is-next .home-ev-cal::after {
+  .home-ev.is-next .home-ev-node::after {
     animation: none;
     opacity: 0.35;
     transform: scale(1.21);
   }
-}
-
-/* A played one's ✓, on its sheet's corner. */
-.home-ev-tick {
-  position: absolute;
-  right: -4px;
-  bottom: -4px;
-  display: grid;
-  place-items: center;
-  width: 19px;
-  height: 19px;
-  box-sizing: border-box;
-  border: 2px solid var(--tl-node-bg, #fff);
-  border-radius: 50%;
-  background: var(--ev-k);
-  color: var(--ev-k-on);
-}
-
-.home-ev-tick svg {
-  width: 10px;
-  height: 10px;
 }
 
 .home-ev-card {

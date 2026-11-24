@@ -166,9 +166,13 @@
              here before the first paint): its placeholder shown. -->
         <script>try{var h=JSON.parse(localStorage.getItem("homeRecapHint")||"null"),d=new Date(),t=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"),w=new Date(d.getTime()-7*864e5),c=w.getFullYear()+"-"+String(w.getMonth()+1).padStart(2,"0")+"-"+String(w.getDate()).padStart(2,"0");if(h&&((h.until&&t<=h.until)||(h.next&&h.next<=t&&h.next>=c)))document.currentScript.previousElementSibling.hidden=false}catch(e){}</script>
         <i class="sk sk-tabs sk-touch-only"></i>
+        <!-- Like the loaded board: one card (touch screens and narrow
+             windows: Eventi's own) — each list under its heading (an icon,
+             the title; the Classifica's ring at the right), the timeline's
+             circles and cards, the Classifica's 8 rows, the pills. -->
         <div class="sk-cols">
           <div class="sk-col">
-            <i class="sk sk-title"></i>
+            <div class="sk-head"><i class="sk sk-icon"></i><i class="sk sk-title"></i></div>
             <div class="sk-tl">
               <i class="sk sk-dot"></i><i class="sk sk-row"></i>
               <i class="sk sk-dot"></i><i class="sk sk-row"></i>
@@ -180,7 +184,20 @@
             </div>
             <i class="sk sk-more"></i>
           </div>
-          <div class="sk-col"><i class="sk sk-standings"></i><i class="sk sk-more"></i></div>
+          <div class="sk-col">
+            <div class="sk-head"><i class="sk sk-icon"></i><i class="sk sk-title is-league"></i><i class="sk sk-ring"></i></div>
+            <div class="sk-standings">
+              <i class="sk-st-row"><i class="sk sk-pos"></i><i class="sk sk-name"></i><i class="sk sk-pts"></i></i>
+              <i class="sk-st-row"><i class="sk sk-pos"></i><i class="sk sk-name"></i><i class="sk sk-pts"></i></i>
+              <i class="sk-st-row"><i class="sk sk-pos"></i><i class="sk sk-name"></i><i class="sk sk-pts"></i></i>
+              <i class="sk-st-row"><i class="sk sk-pos"></i><i class="sk sk-name"></i><i class="sk sk-pts"></i></i>
+              <i class="sk-st-row"><i class="sk sk-pos"></i><i class="sk sk-name"></i><i class="sk sk-pts"></i></i>
+              <i class="sk-st-row"><i class="sk sk-pos"></i><i class="sk sk-name"></i><i class="sk sk-pts"></i></i>
+              <i class="sk-st-row"><i class="sk sk-pos"></i><i class="sk sk-name"></i><i class="sk sk-pts"></i></i>
+              <i class="sk-st-row"><i class="sk sk-pos"></i><i class="sk sk-name"></i><i class="sk sk-pts"></i></i>
+            </div>
+            <div class="sk-more-row"><i class="sk sk-more"></i><i class="sk sk-more is-rules"></i></div>
+          </div>
         </div>
         <i class="sk sk-chart"></i>
       </div>
