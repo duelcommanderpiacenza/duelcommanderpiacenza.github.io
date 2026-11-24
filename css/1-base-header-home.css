@@ -2812,8 +2812,8 @@ a.dashboard-standing:hover .dashboard-standings-name-text {
 /* ---------------------------------------------------------------------------
    The Bacheca (index.html, js/home.js): no hero (that's for the profile-like
    pages) — the title, then three sections in the site's boxless lists:
-   Eventi (league.html's timeline, .league-timeline: the next few events
-   above "Oggi", the latest played below), Classifica (the league in
+   Eventi (a timeline, "The Bacheca's events" below: the latest played
+   events, then the next few), Classifica (the league in
    progress, or the latest finished one's final standings, "Conclusa") and
    Più giocati (the bubble charts). A computer: Eventi and Classifica side by
    side, Più giocati under them (one column below 860px); touch screens: one
@@ -3034,22 +3034,6 @@ html.app-header .home-head-icon {
   font-size: 0.95rem;
 }
 
-/* league.html's events (.home-timeline: the layer over css/3's base
-   timeline — the Bacheca's look until 2026-11-23, when the Bacheca got its
-   own, "The Bacheca's events" below). The kicker (the league) on one
-   line. */
-.home-timeline .league-tl-k {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* No room under the last card (it's for the next one): the list ends with
-   it — on a computer Classifica beside it ends level. */
-.home-timeline > :last-child {
-  padding-bottom: 0;
-}
-
 /* A played event's links behind one "Liste" button (js/results-link.js
    nestedResultsMenu) — the same on every row — opening a small menu of
    them (.results-menu, on <body>). */
@@ -3180,133 +3164,24 @@ html.app-header .home-head-icon {
   height: 22px;
 }
 
-/* Every event the same: one row as tall as its date's circle — the circle
-   and the card side by side, level top and bottom; the name over the league
-   on the left, the extra on the right, centred (the played ones' "Liste") —
-   the upcoming ones' time alone, at the bottom right. The upcoming cards
-   bare (no surface), their names as readable as the played ones'. */
-.league-timeline.home-timeline {
-  --tl-node: 56px;
-}
-
-.home-timeline .league-tl-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  height: var(--tl-node);
-  padding: 0 16px;
-}
-
-.home-timeline .league-tl-text {
-  flex: 1 1 auto;
-}
-
-.home-timeline .league-tl-side {
-  flex-shrink: 0;
-  margin-left: auto;
-  white-space: nowrap;
-}
-
-/* league.html's list (the same look): a played event's players in its
-   line — the 👥 icon at the text's size. */
-.league-tl-players {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-}
-
-.league-tl-players svg {
-  width: 1.15em;
-  height: 1.15em;
-}
-
-/* The name first, the league under it — an upcoming event's time on the
-   league's line, sharing its baseline: at the card's bottom right. */
-.league-tl-k-row {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  min-width: 0;
-}
-
-.league-tl-k-row .league-tl-k {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-/* league.html's upcoming cards: just the name, centred in the card, the
-   time on its own at the bottom right — where the line under the name
-   would put it. */
-.home-timeline .league-tl-time {
-  align-self: flex-end;
-  margin-bottom: 9px;
-}
-
-.home-timeline .is-future .league-tl-t {
-  color: var(--text-title);
-}
-
-/* The next event's circle: its halo pulsing outwards — 6px at most, the
-   phones' page margin (--page-pad-x), so it never reaches the screen's
-   edge. A ring behind the circle growing and fading (transform + opacity:
-   done by the GPU, nothing repainted per frame — an animated box-shadow
-   was, 60 times a second); still where motion is reduced. */
-.home-timeline .is-next > .league-tl-node {
-  box-shadow: none;
-}
-
-.home-timeline .is-next > .league-tl-node::after {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  z-index: -1;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--brand-red) 55%, transparent);
-  animation: home-tl-node-pulse 1.6s ease-out infinite;
-}
-
-@keyframes home-tl-node-pulse {
-  to {
-    opacity: 0;
-    transform: scale(1.21);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .home-timeline .is-next > .league-tl-node::after {
-    animation: none;
-    opacity: 0.35;
-    transform: scale(1.21);
-  }
-}
-
-/* The upcoming cards outlined like their circles (the same grey). */
-.home-timeline .is-future > .league-tl-card {
-  border-color: var(--tl-line);
-}
-
-/* The upcoming circles: the date as dark as the played ones' (their ring
-   grey). */
-.home-timeline .is-future > .league-tl-node span {
-  color: var(--text-muted);
-}
-
-/* The Bacheca's events (js/home.js timelineItemHtml — option F1 of a
-   mockup, 2026-11-23; its own markup and classes). In time order — the
-   latest played ones, then the upcoming ones — with no "Oggi" row between
-   them (user's choice): the line, red up to the next event and grey after
-   it, and the cards tell them apart. Each row: on the line the date's
-   circle (.home-ev-node, 56px — like league.html's, since 2026-11-24, user:
-   it was a calendar sheet), centred on its card (60px; the next one's
-   70px). The card: the name over the place (text only — the kind is told
-   by the colours and by its emblem, big and faint behind the text on the
-   right, .home-ev-wm: the card isolated), "Liste" or the full weekday over
-   the time on the right. Played: the circle ringed in the kind's colour,
-   the card a soft fill of it. Upcoming: the circle grey, the card outlined
-   in the kind's colour. The next one: the circle solid with its halo
-   pulsing, the card white with a
-   stronger outline and a shadow, the weekday and a big time in the kind's
-   colour.
+/* The Bacheca's events — and league.html's (js/event-timeline.js, the
+   same rows on both since 2026-11-24; option F1 of a mockup, 2026-11-23,
+   then A2.4 / P3 of another, 2026-11-24 — user). In time order — the
+   played ones, then the upcoming ones — with no "Oggi" row between them
+   (user's choice): the line, red up to the next event and grey after it,
+   and the rows tell them apart. Each row: on the line the date's circle
+   (.home-ev-node, 56px, the day over the month), centred on its card (60px;
+   the next one's 70px). The card: the name over its place (text only —
+   the kind is told by the colours and by its emblem, big and faint behind
+   the text on the right, .home-ev-wm: the card isolated), "Liste" or the
+   full weekday over the time on the right.
+   Played: the circle filled with a tint of the kind's colour (like the
+   Classifica's positions), the card filled in the kind's colour with its
+   emblem. Upcoming: white, raised — the circle and the card a hairline of
+   the kind's colour and a light shadow. The next one: the circle solid
+   with its halo pulsing, the card white with a stronger outline and a
+   shadow, the weekday and a big time in the kind's colour. league.html's
+   awaiting results (.is-pending): dashed, the line red up to them.
    Three kinds (--ev-k their colour, --ev-k-deep it dark enough to read on
    white, --ev-k-on text on it, --ev-k-tint a played card's fill): ours
    (.is-local) red, the lotus (dc_pc_lotus.svg, by a mask); online
@@ -3368,7 +3243,7 @@ html.app-header .home-head-icon {
   display: none;
 }
 
-.home-ev.is-played::before {
+.home-ev:is(.is-played, .is-pending)::before {
   background: var(--brand-red);
 }
 
@@ -3417,12 +3292,15 @@ html.app-header .home-head-icon {
   --ev-k-tint-hover: color-mix(in oklch, var(--endstep-gold) 18%, #1d1819);
 }
 
-/* The date's circle, on the line (above it), centred on its card — like
-   league.html's (.league-tl-node): the day over the month. Played: its ring
-   in the kind's colour; upcoming: grey, hollow; the next one solid in the
-   kind's colour, its halo pulsing (endstep's: black, the gold ring and
+/* The date's circle, on the line (above it), centred on its card: the day
+   over the month, in the kind's deep colour. Played: filled with a tint of
+   the kind's colour (over the card's colour, so the line doesn't show
+   through); upcoming: white, raised — a hairline of the colour, a light
+   shadow (the month grey); awaiting results: the same, dashed; the next one
+   solid in the kind's colour, its halo pulsing (endstep's: black, the gold
    date). */
 .home-ev-node {
+  --ev-k-disc: color-mix(in oklch, var(--ev-k) 14%, transparent);
   position: relative;
   z-index: 1;
   display: grid;
@@ -3431,41 +3309,57 @@ html.app-header .home-head-icon {
   width: var(--ev-node);
   height: var(--ev-node);
   box-sizing: border-box;
-  border: 2px solid var(--ev-line);
   border-radius: 50%;
-  background: var(--tl-node-bg, #fff);
+  background: linear-gradient(var(--ev-k-disc), var(--ev-k-disc)) var(--tl-node-bg, #fff);
   line-height: 1;
   text-align: center;
 }
 
 .home-ev-node b {
-  color: var(--text-title);
+  color: var(--ev-k-deep);
   font-size: 1.05rem;
 }
 
 .home-ev-node span {
   margin-top: 2px;
-  color: var(--text-muted);
+  color: var(--ev-k-deep);
   font-size: 0.6rem;
   font-weight: 800;
+  opacity: 0.75;
   text-transform: uppercase;
 }
 
-.home-ev.is-played .home-ev-node {
-  border-color: var(--ev-k);
+.home-ev:is(.is-future, .is-pending) .home-ev-node {
+  border: 1px solid color-mix(in oklch, var(--ev-k) 35%, transparent);
+  background: var(--tl-node-bg, #fff);
+  box-shadow: 0 4px 12px rgba(80, 10, 14, 0.09);
+}
+
+.home-ev.is-pending .home-ev-node {
+  border: 1.5px dashed color-mix(in oklch, var(--ev-k) 55%, transparent);
+  box-shadow: none;
+}
+
+.home-ev:is(.is-future, .is-pending) .home-ev-node span {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+:root[data-theme="dark"] .home-ev:is(.is-future, .is-pending) .home-ev-node {
+  background: color-mix(in oklch, var(--ev-k) 6%, var(--tl-node-bg, #1d1819));
+  box-shadow: none;
 }
 
 .home-ev.is-next .home-ev-node {
-  border-color: var(--ev-k);
   background: var(--ev-k);
 }
 
 .home-ev.is-next .home-ev-node :is(b, span) {
   color: var(--ev-k-on);
+  opacity: 1;
 }
 
 .home-ev.is-online.is-next .home-ev-node {
-  border-color: var(--endstep-gold);
   background: var(--endstep-ink);
 }
 
@@ -3473,9 +3367,10 @@ html.app-header .home-head-icon {
   color: var(--endstep-gold);
 }
 
-/* Its halo pulsing outwards (like league.html's: transform + opacity, done
-   by the GPU; still where motion is reduced) — endstep's black circle kept
-   above it (::before), or the gold halo browns it. */
+/* Its halo pulsing outwards (transform + opacity, done by the GPU — an
+   animated box-shadow was repainted 60 times a second; still where motion
+   is reduced), 6px at most (the phones' page margin) — endstep's black
+   circle kept above it (::before), or the gold halo browns it. */
 .home-ev.is-next .home-ev-node::after {
   content: "";
   position: absolute;
@@ -3484,6 +3379,13 @@ html.app-header .home-head-icon {
   border-radius: 50%;
   background: color-mix(in oklch, var(--ev-k) 55%, transparent);
   animation: home-tl-node-pulse 1.6s ease-out infinite;
+}
+
+@keyframes home-tl-node-pulse {
+  to {
+    opacity: 0;
+    transform: scale(1.21);
+  }
 }
 
 .home-ev.is-online.is-next .home-ev-node::after {
@@ -3534,8 +3436,22 @@ html.app-header .home-head-icon {
   text-decoration: none;
 }
 
-.home-ev.is-future .home-ev-card {
+/* Upcoming (and awaiting results): white, raised, a hairline of the kind's
+   colour — dashed for the awaiting ones, no shadow. */
+.home-ev:is(.is-future, .is-pending) .home-ev-card {
   border-color: color-mix(in oklch, var(--ev-k) 35%, transparent);
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(80, 10, 14, 0.06);
+}
+
+.home-ev.is-pending .home-ev-card {
+  border-style: dashed;
+  box-shadow: none;
+}
+
+:root[data-theme="dark"] .home-ev:is(.is-future, .is-pending) .home-ev-card {
+  background: color-mix(in oklch, var(--ev-k) 6%, #1d1819);
+  box-shadow: none;
 }
 
 .home-ev.is-next .home-ev-card {
@@ -3547,6 +3463,29 @@ html.app-header .home-head-icon {
 
 :root[data-theme="dark"] .home-ev.is-next .home-ev-card {
   background: color-mix(in oklch, var(--ev-k) 10%, #1d1819);
+}
+
+/* league.html's list is on the page, not in a card: the circles filled
+   with the page's colour (the Bacheca's panels set their card's). */
+#league-events {
+  --tl-node-bg: #fffdf8;
+}
+
+:root[data-theme="dark"] #league-events {
+  --tl-node-bg: #120d0e;
+}
+
+/* league.html's played events: their players under the name, the 👥 icon
+   at the text's size. */
+.home-ev-players {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.home-ev-players svg {
+  width: 1.15em;
+  height: 1.15em;
 }
 
 /* The name over the place, each on one line (the name shrunk to fit it —

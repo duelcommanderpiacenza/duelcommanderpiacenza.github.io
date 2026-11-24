@@ -6,7 +6,6 @@ import {
   capitalize,
   escapeHtml,
   formatDate,
-  formatTime,
   leagueStatusBadge,
   localIso,
   playerLabel,
@@ -24,6 +23,7 @@ import { openLeagueRules } from "./league-rules.js";
 import { openSeasonRecap } from "./event-recap.js";
 import { initShareButton } from "./share.js";
 import { nestedResultsMenu } from "./results-link.js";
+import { eventDate, timelineRowHtml, whenHtml } from "./event-timeline.js";
 import { renderMetaCharts } from "./meta-charts.js";
 import { locale } from "./locale.js";
 
@@ -48,26 +48,25 @@ function leagueDateRange(league, events) {
   return { html: start === end ? start : `${start} – ${end}`, withStatus: false };
 }
 
-// "Eventi della lega" as a timeline (styles.css .league-timeline, with the
-// .home-timeline card layout — the Bacheca's look until 2026-11-23, when
-// the Bacheca got its own cards; its circles are like these again):
-// oldest first, one node on a vertical line per event — its day and month
-// in the circle (wide: its weekday left of the line) — and its card
-// beside it, the name over a line of its own:
+// "Eventi della lega" as a timeline — the Bacheca's rows (js/event-timeline.js,
+// styles.css "The Bacheca's events"; until 2026-11-24 a look of its own,
+// .league-timeline): oldest first, one row per event — its date's circle
+// on the line, its card beside it, the name over a line of its own:
 //  - played (closed): "👥 players" under its name, "Liste" (its
-//    Moxfield / mtgtop8 links) on the right; the card a link to it; the
-//    line up to it red;
-//  - the next one (the soonest still open, today or later): solid red, its
-//    circle pulsing, its time at the bottom right; not a link (its page
-//    fills in once it's played);
-//  - later open ones: hollow, their time;
+//    Moxfield / mtgtop8 links) on the right; the card a link to it, in
+//    the kind's tint with its emblem; the line up to it red;
+//  - the next one (the soonest still open, today or later): its circle
+//    solid, pulsing, the weekday and its time big on the right; not a link
+//    (its page fills in once it's played);
+//  - later open ones: white, raised, the weekday over the time;
 //  - an open one whose day has passed (played, results not in yet):
-//    "Risultati in arrivo", right after the played ones. Visitors can't
-//    see those at all (events_public_read: closed, or dated today or
+//    "Risultati in arrivo", dashed, right after the played ones. Visitors
+//    can't see those at all (events_public_read: closed, or dated today or
 //    later), so they're counted instead — all the league's events
 //    (league_event_count) minus those shown — and drawn without their date
 //    ("?"). (An open event with no date is hidden the same way and would
 //    show here too.)
+// Ours red, an online league's (endstep) gold.
 // The name: an unnamed event by its weekday.
 const cardName = (ev) => {
   if (ev.name) return escapeHtml(ev.name);
@@ -77,58 +76,40 @@ const cardName = (ev) => {
   return capitalize(day);
 };
 
-const TL_ICON = (body) =>
-  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
-const TL_USERS = TL_ICON(
-  '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>'
-);
+const TL_USERS =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>';
 
 const byDate = (a, b) => (a.event_date ?? "9999").localeCompare(b.event_date ?? "9999");
 
-function timelineItemHtml({ ev, state, players }, number, today) {
-  const date = ev?.event_date ? new Date(`${ev.event_date}T00:00:00`) : null;
-  const node = date
-    ? `<b>${String(date.getDate()).padStart(2, "0")}</b><span>${date.toLocaleDateString(locale(), { month: "short" }).replace(".", "")}</span>`
-    : "<b>?</b>";
-  // Wide: just the weekday left of the line (the day and month are in the
-  // circle already).
-  const weekday = date ? date.toLocaleDateString(locale(), { weekday: "long" }) : "";
-  const fullDate = weekday ? capitalize(weekday) : "—";
-  const kicker =
+function timelineItemHtml({ ev, state, players }, number, today, kind) {
+  const place =
     state === "pending"
       ? "Risultati in arrivo"
       : state === "played"
-        ? `<span class="league-tl-players">${TL_USERS}${players}</span>`
+        ? `<span class="home-ev-players">${TL_USERS}${players}</span>`
         : "";
-  // Played: "Liste" beside the text, centred; upcoming: nothing under the
-  // name, so the name alone, centred, and the time at the card's bottom
-  // right (.league-tl-time).
-  const upcoming = state === "next" || state === "future";
-  const links = state === "played" ? nestedResultsMenu(ev.results_url, ev.decklists_url, ev.endstep_url) : "";
-  const time = upcoming && ev?.start_time ? `<span class="league-tl-side league-tl-time">${formatTime(ev.start_time)}</span>` : "";
-  const body = `
-          <span class="league-tl-text">
-            <span class="league-tl-t">${ev ? cardName(ev) : `Evento ${number}`}</span>
-            ${upcoming ? "" : `<span class="league-tl-k">${kicker}</span>`}
-          </span>
-          ${links ? `<span class="league-tl-side">${links}</span>` : time}`;
-  const card =
+  const side =
     state === "played"
-      ? `<a class="league-tl-card" href="event.html?id=${ev.id}">${body}</a>`
-      : `<div class="league-tl-card">${body}</div>`;
-  return `
-      <li class="league-tl-item is-${state}">
-        <span class="league-tl-date">${fullDate}</span>
-        <span class="league-tl-node">${node}</span>
-        ${card}
-      </li>`;
+      ? nestedResultsMenu(ev.results_url, ev.decklists_url, ev.endstep_url)
+      : state === "next" || state === "future"
+        ? whenHtml(ev, today)
+        : "";
+  return timelineRowHtml({
+    state,
+    kind,
+    date: eventDate(ev),
+    title: ev ? cardName(ev) : `Evento ${number}`,
+    place,
+    side,
+    href: state === "played" ? `event.html?id=${ev.id}` : "",
+  });
 }
 
 // The closed events, then those awaiting results (hidden — counted), then
 // the open ones the visitor can see, by date; "" with none at all.
 // `playersById`: each closed event's number of players. (An admin sees the
 // awaiting ones themselves: by date among the open ones.)
-function timelineHtml(allEvents, playersById, scheduled, today) {
+function timelineHtml(league, allEvents, playersById, scheduled, today) {
   const closed = allEvents.filter((ev) => !ev.is_open).sort(byDate);
   const open = allEvents.filter((ev) => ev.is_open).sort(byDate);
   const nextId = open.find((ev) => ev.event_date && ev.event_date >= today)?.id;
@@ -138,7 +119,9 @@ function timelineHtml(allEvents, playersById, scheduled, today) {
     items.push({ ev, state: ev.id === nextId ? "next" : ev.event_date && ev.event_date < today ? "pending" : "future" });
   }
   if (!items.length) return "";
-  return `<ol class="league-timeline home-timeline">${items.map((item, i) => timelineItemHtml(item, i + 1, today)).join("")}</ol>`;
+  // A league's events take its kind: ours, or an online league's (endstep).
+  const kind = league.is_online ? "online" : "local";
+  return `<ol class="home-ev-list">${items.map((item, i) => timelineItemHtml(item, i + 1, today, kind)).join("")}</ol>`;
 }
 
 // In-app page (js/router.js): mounted by the router on this page's <main>
@@ -250,8 +233,9 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     if (signal.aborted) return;
     const scheduledEvents = count ?? allEvents.length;
     const renderTimeline = (playersById) => {
+      eventsEl.classList.remove("page-loading");
       eventsEl.innerHTML =
-        timelineHtml(allEvents, playersById, scheduledEvents, today) ||
+        timelineHtml(league, allEvents, playersById, scheduledEvents, today) ||
         '<p class="page-empty">Nessun evento associato a questa lega.</p>';
     };
 
