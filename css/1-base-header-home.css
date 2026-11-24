@@ -1111,6 +1111,51 @@ html.app-header .sk-page.is-home > .sk-chart {
   display: none;
 }
 
+/* Social (social.html's .sk-page.is-social; the links card above is
+   outside the loading region): the Video and Mazzi cards — one under the
+   other, side by side from 861px — at the loaded cards' heights (measured
+   2026-11-24: a computer's video row has its arrows' pill under it, a touch
+   screen's only the dots; Mazzi 8 decks, 5 side by side; up to 1099px the
+   video filters drop under the title in the narrower cards). */
+.sk-page.is-social {
+  display: grid;
+  gap: 18px;
+}
+
+.sk-page.is-social .sk-social-panel {
+  height: 437px;
+  border-radius: var(--radius-card);
+}
+
+.sk-page.is-social .sk-social-panel.is-decks {
+  height: 656px;
+}
+
+html.app-header .sk-page.is-social .sk-social-panel {
+  height: 397px;
+}
+
+html.app-header .sk-page.is-social .sk-social-panel.is-decks {
+  height: 684px;
+}
+
+@media (min-width: 861px) {
+  .sk-page.is-social {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+  }
+
+  html:not(.app-header) .sk-page.is-social .sk-social-panel {
+    height: 490px;
+  }
+}
+
+@media (min-width: 861px) and (max-width: 1099px) {
+  html:not(.app-header) .sk-page.is-social .sk-social-panel {
+    height: 567px;
+  }
+}
+
 /* A chart (Comandanti, Archetipi, a commander's or archetype's decks). */
 .sk-chart {
   height: 300px;

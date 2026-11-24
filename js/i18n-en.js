@@ -235,6 +235,8 @@
     "Grafico a torta del metagame": "Metagame pie chart",
     "Grafico precedente": "Previous chart",
     "Grafico successivo": "Next chart",
+    "Video precedente": "Previous video",
+    "Video successivo": "Next video",
 
     // Leghe & Eventi.
     "Archivio": "Archive",
@@ -271,7 +273,6 @@
     "Sezioni dell'evento": "Event sections",
     "Sezioni del comandante": "Commander sections",
     "Sezioni del profilo": "Profile sections",
-    "Sezioni social": "Social sections",
     "Evento non trovato": "Event not found",
     "Nessun iscritto registrato.": "No entrants recorded.",
     "Nessuna partita registrata.": "No matches recorded.",
@@ -391,7 +392,6 @@
     "Più eventi con lo stesso comandante": "Most events with the same commander",
 
     // Social.
-    "La community di Duel Commander Piacenza": "The Duel Commander Piacenza community",
     "Entra nel gruppo Telegram": "Join the Telegram group",
     "Tutti i mazzi su Moxfield": "All the decks on Moxfield",
     "Tutti i video su YouTube": "All the videos on YouTube",

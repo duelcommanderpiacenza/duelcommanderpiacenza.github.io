@@ -37,8 +37,13 @@ function positionCount(grid) {
  * @param {HTMLElement} [options.navAfter] - put the ‹ • › controls right after
  *   this element instead of directly under the row (the Bacheca: below its
  *   whole card, outside the white box).
+ * @param {string} [options.prevLabel] / [options.nextLabel] - the arrows'
+ *   names for screen readers (social.html's row is videos, not charts).
  */
-export function initChartCarousel(containerEl, { navAfter = null } = {}) {
+export function initChartCarousel(
+  containerEl,
+  { navAfter = null, prevLabel = "Grafico precedente", nextLabel = "Grafico successivo" } = {},
+) {
   const grid = containerEl.querySelector(".chart-grid");
   if (!grid) return;
   // Controls placed outside containerEl survive a re-render of its content,
@@ -53,11 +58,11 @@ export function initChartCarousel(containerEl, { navAfter = null } = {}) {
   const nav = document.createElement("div");
   nav.className = "chart-carousel-nav";
   nav.innerHTML = `
-    <button type="button" class="chart-carousel-arrow" data-dir="-1" aria-label="Grafico precedente">
+    <button type="button" class="chart-carousel-arrow" data-dir="-1" aria-label="${prevLabel}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
     </button>
     <div class="chart-carousel-dots" aria-hidden="true"></div>
-    <button type="button" class="chart-carousel-arrow" data-dir="1" aria-label="Grafico successivo">
+    <button type="button" class="chart-carousel-arrow" data-dir="1" aria-label="${nextLabel}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
     </button>`;
   (navAfter ?? grid).after(nav);
