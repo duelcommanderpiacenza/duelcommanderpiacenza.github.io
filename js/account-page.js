@@ -51,7 +51,9 @@ import {
   EventEntries,
   Matches,
   PlayerProgress,
+  Achievements,
 } from "./db.js";
+import { achievementState, achievementsListHtml, enableAchievementDetails } from "./achievements.js";
 import { isDrop } from "./leaderboard.js";
 import { tallyOutcome, winRatePct, outcomeFor } from "./winrate.js";
 import { applyCardCosmetics, openCardEffectsInfo } from "./card-cosmetics.js";
@@ -456,7 +458,7 @@ export function mount({ signal = new AbortController().signal } = {}) {
 
   // --- The sections, one at a time behind tabs -------------------------------------
 
-  // Decklist, Impostazioni: a tab each, only for a section that's shown
+  // Decklist, Obiettivi, Impostazioni: a tab each, only for a section that's shown
   // (styles.css hides the others' tabs) — a pill bar on desktop, a
   // full-width segmented control on phones. Until the user picks one, the
   // first section shown is the open one (the decklist once linked);
@@ -928,6 +930,7 @@ export function mount({ signal = new AbortController().signal } = {}) {
   // all again; this only offers the events that qualify and shows the ones
   // already sent; a send goes straight away (no confirmation, by choice).
   const decklistCard = document.getElementById("profile-decklist");
+  const achievementsCard = document.getElementById("profile-achievements");
   const decklistNoneEl = document.getElementById("decklist-none");
   const decklistForm = document.getElementById("decklist-form");
   const decklistEventSelect = document.getElementById("decklist-event");
@@ -1180,6 +1183,7 @@ export function mount({ signal = new AbortController().signal } = {}) {
     setEditing(false, { animate: false });
     accountDangerEl.hidden = true;
     decklistCard.hidden = true;
+    achievementsCard.hidden = true;
     setMessage(accountMessageEl, "");
     // Two rounds: everything that needs only the account, at once — the
     // profile, the linked player (or the claim), admin or not,
@@ -1188,7 +1192,8 @@ export function mount({ signal = new AbortController().signal } = {}) {
     // catches only mark the early ones handled until they're awaited.
     const linkedRequest = PlayerClaims.linkedPlayer(user.id);
     const upcomingRequest = Events.listUpcoming();
-    for (const request of [linkedRequest, upcomingRequest]) request.catch(() => {});
+    const achievementsRequest = Achievements.mine();
+    for (const request of [linkedRequest, upcomingRequest, achievementsRequest]) request.catch(() => {});
     try {
       let isAdmin;
       [profile, , isAdmin] = await Promise.all([Profiles.mine(user.id), loadClaim(linkedRequest), MyAccount.isAdmin()]);
@@ -1202,6 +1207,32 @@ export function mount({ signal = new AbortController().signal } = {}) {
     renderCard(savedValues());
     renderPublicSwitch();
     show("signed-in");
+    await loadAchievements(achievementsRequest);
+    // From the "Obiettivo sbloccato" bar (js/achievement-toast.js): its tab.
+    if (window.location.hash === "#obiettivi" && !achievementsCard.hidden) {
+      tabChosen = true;
+      selectTab("profile-achievements");
+    }
+  }
+
+  // --- Obiettivi ----------------------------------------------------------------------
+
+  // The account's achievements (my_achievements(): its linked player's, its
+  // site ones, the ones already shown — the last not needed here). Never
+  // fatal: the tab just stays hidden.
+  async function loadAchievements(request) {
+    try {
+      const rows = await request;
+      if (signal.aborted) return;
+      const of = (kind) => rows.filter((r) => r.kind === kind);
+      const listEl = document.getElementById("profile-achievements-list");
+      const state = achievementState(of("player"), of("site"));
+      listEl.innerHTML = achievementsListHtml(state);
+      enableAchievementDetails(listEl, state);
+      achievementsCard.hidden = false;
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   // --- Auth ---------------------------------------------------------------------------

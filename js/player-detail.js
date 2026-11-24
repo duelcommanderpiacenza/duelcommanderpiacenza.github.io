@@ -1,4 +1,15 @@
-import { Players, Events, EventEntries, Matches, PlayerAutoBadges, EventStandings, PlayerCards, PlayerProgress } from "./db.js";
+import {
+  Players,
+  Events,
+  EventEntries,
+  Matches,
+  PlayerAutoBadges,
+  EventStandings,
+  PlayerCards,
+  PlayerProgress,
+  PlayerAchievements,
+  Achievements,
+} from "./db.js";
 import { isBye, isDrop, computeEventLeaderboard } from "./leaderboard.js";
 import { tallyOutcome, renderWinrateTiles, outcomeFor, scoreLabelFor } from "./winrate.js";
 import {
@@ -21,6 +32,7 @@ import { cardHint, rememberCard, applyCardPlaceholder } from "./card-hints.js";
 import { initWhereFilter, inWhere } from "./where-filter.js";
 import { rivalsHtml } from "./player-rivals.js";
 import { initTabs } from "./tabs.js";
+import { achievementState, achievementsListHtml, enableAchievementDetails } from "./achievements.js";
 
 // Manual (badge1/badge2) and auto badges together — the auto ones are a
 // plain read of PlayerAutoBadges, precomputed by admin/js/badges-sync.js
@@ -59,6 +71,24 @@ function matchGroupsByEvent(rows, positionByEvent) {
   return [...groups.values()];
 }
 
+// The Obiettivi tab's list (the whole of it, every group — a player with
+// no account sees "Sul sito" locked). No data (e.g. migration 047 not run
+// on this database): no tab, no section at all.
+function renderAchievements(rows, tabs) {
+  const listEl = document.getElementById("player-achievements");
+  if (!rows) {
+    const tab = document.getElementById("player-tab-ach");
+    if (tab.classList.contains("is-active")) tabs.select("player-col-album");
+    tab.hidden = true;
+    document.getElementById("player-col-ach").hidden = true;
+    return;
+  }
+  const state = achievementState(...rows);
+  listEl.classList.remove("page-loading");
+  listEl.innerHTML = achievementsListHtml(state);
+  enableAchievementDetails(listEl, state);
+}
+
 // In-app page (js/router.js): mounted by the router on this page's <main>
 // (data-page), on first load and after each in-app navigation; `signal`
 // aborts when the page is left.
@@ -73,11 +103,12 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   // background art, else the player's most played commander's.
   const paintHeroArt = createArtPainter(document.getElementById("player-hero-art"));
 
-  // Album comandanti / Storico partite: tabs on phones and touch screens
-  // (the CSS hides them on a computer, the two side by side), like
-  // commander.html's; Storico partite the whole list there (no scrolling
-  // inside), hence the back-to-top button.
-  initTabs(document.querySelector(".player-tabs"));
+  // Album comandanti / Obiettivi / Storico partite: tabs on phones and
+  // touch screens (the CSS hides them on a computer: the album and the
+  // matches side by side, Obiettivi under both), like commander.html's;
+  // Storico partite the whole list there (no scrolling inside), hence the
+  // back-to-top button.
+  const tabs = initTabs(document.querySelector(".player-tabs"));
   initBackToTop({ signal });
   // Dal vivo / Online / Tutto (js/where-filter.js — the page's own choice,
   // Dal vivo to start with, user 2026-11-16): which of the player's events
@@ -130,6 +161,13 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     autoBadgesRequest.catch(() => {});
     entriesRequest.catch(() => {});
     matchesRequest.catch(() => {});
+    // Obiettivi (js/achievements.js): the ones earned by playing and, for a
+    // linked account, its site ones — their own tab, filled whenever they
+    // arrive, never holding the page up (live events only, whatever the
+    // Dove bar says: they're computed that way).
+    softFail(Promise.all([PlayerAchievements.listByPlayer(id), Achievements.siteOf(id)]), null).then((rows) => {
+      if (!signal.aborted) renderAchievements(rows, tabs);
+    });
 
     // The loading placeholder's hero (styles.css .sk-hero) makes room for
     // the card when there'll be one, so the page arrives at the size it's

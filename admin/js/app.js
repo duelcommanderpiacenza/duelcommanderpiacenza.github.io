@@ -20,7 +20,7 @@ import { initMatchesAdmin } from "./matches-admin.js";
 import { initEndstepImport } from "./endstep-import.js";
 import { initAdminNavDropdown } from "./admin-nav-dropdown.js";
 import { tabLabel } from "./tab-counts.js";
-import { syncAutoBadges } from "./badges-sync.js";
+import { syncAutoBadges, syncIfAchievementsMissing } from "./badges-sync.js";
 import { VERSION } from "../../js/version.js";
 
 const loginView = document.getElementById("login-view");
@@ -384,6 +384,9 @@ function showAdmin(session) {
     showLeaguesListSubview();
 
     modulesInitialized = true;
+    // Achievements never computed yet (just after migration 047): now, from
+    // every past result.
+    syncIfAchievementsMissing();
   }
 }
 

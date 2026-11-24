@@ -69,6 +69,7 @@
   <link rel="modulepreload" href="js/system-bars.js">
   <link rel="modulepreload" href="js/pull-refresh.js">
   <link rel="modulepreload" href="js/data-updates.js">
+  <link rel="modulepreload" href="js/achievement-toast.js">
   <link rel="modulepreload" href="js/supabase-client.js">
   <link rel="modulepreload" href="js/db.js">
   <link rel="modulepreload" href="js/locale.js">
@@ -76,6 +77,7 @@
   <link rel="modulepreload" href="js/drag-scroll.js">
   <link rel="modulepreload" href="js/info-dialog.js">
   <link rel="modulepreload" href="js/player-card.js">
+  <link rel="modulepreload" href="js/achievements.js">
   <link rel="modulepreload" href="js/card-hints.js">
   <link rel="modulepreload" href="js/archetype-icons.js">
   <link rel="modulepreload" href="js/mana-icons.js">
@@ -382,6 +384,7 @@
       <!-- One section at a time; a tab only for a section that's shown. -->
       <nav class="profile-tabs" role="tablist" aria-label="Sezioni del profilo">
         <button type="button" class="profile-tab" role="tab" data-tab="profile-decklist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="3" width="13" height="17" rx="2"></rect><path d="M4 7v12a2 2 0 0 0 2 2h9"></path><path d="M11 8h5M11 12h5M11 16h3"></path></svg><span>Decklist</span></button>
+        <button type="button" class="profile-tab" role="tab" data-tab="profile-achievements"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.03 17.43A7.0 7.0 0 0 1 7.32 5.3"></path><path d="M12.97 17.43A7.0 7.0 0 0 0 16.68 5.3"></path><path d="M7.5 15.86Q5.67 13.85 3.19 14.97Q5.02 16.98 7.5 15.86Z"></path><path d="M5.31 12.55Q4.87 9.86 2.18 9.45Q2.62 12.14 5.31 12.55Z"></path><path d="M5.27 8.57Q6.37 6.08 4.33 4.27Q3.24 6.76 5.27 8.57Z"></path><path d="M16.5 15.86Q18.33 13.85 20.81 14.97Q18.98 16.98 16.5 15.86Z"></path><path d="M18.69 12.55Q19.13 9.86 21.82 9.45Q21.38 12.14 18.69 12.55Z"></path><path d="M18.73 8.57Q17.63 6.08 19.67 4.27Q20.76 6.76 18.73 8.57Z"></path></svg><span>Obiettivi</span></button>
         <button type="button" class="profile-tab" role="tab" data-tab="profile-account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.2 2h-.4a2 2 0 0 0-2 2v.2a2 2 0 0 1-1 1.7l-.4.3a2 2 0 0 1-2 0l-.2-.1a2 2 0 0 0-2.7.7l-.2.4a2 2 0 0 0 .7 2.7l.2.1a2 2 0 0 1 1 1.7v.6a2 2 0 0 1-1 1.7l-.2.1a2 2 0 0 0-.7 2.7l.2.4a2 2 0 0 0 2.7.7l.2-.1a2 2 0 0 1 2 0l.4.3a2 2 0 0 1 1 1.7v.2a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.2a2 2 0 0 1 1-1.7l.4-.3a2 2 0 0 1 2 0l.2.1a2 2 0 0 0 2.7-.7l.2-.4a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.7v-.6a2 2 0 0 1 1-1.7l.2-.1a2 2 0 0 0 .7-2.7l-.2-.4a2 2 0 0 0-2.7-.7l-.2.1a2 2 0 0 1-2 0l-.4-.3a2 2 0 0 1-1-1.7V4a2 2 0 0 0-2-2Z"></path><circle cx="12" cy="12" r="3"></circle></svg><span>Impostazioni</span></button>
       </nav>
 
@@ -436,6 +439,16 @@
              the account (not offered to admin accounts; its old collapsible
              header is hidden in the tab, always open there) — then, on
              touch screens (no footer there), the footer's small print. -->
+        <!-- Obiettivi: the achievements (js/achievements.js — the summary,
+             each group as a card of medals, Seriamente 1.0 last; locked ones
+             only their name and a hint), the page's shapes rather than a
+             card around them, and no title (user: the tab names it). Any
+             signed-in account (the ones earned by playing need the linked
+             player). js/account-page.js. -->
+        <section class="profile-achievements profile-panel" id="profile-achievements" aria-label="Obiettivi" hidden>
+          <div id="profile-achievements-list"></div>
+        </section>
+
         <section class="card profile-card profile-account profile-panel" id="profile-account">
           <h3 class="profile-panel-title">Impostazioni</h3>
           <div class="settings-controls" id="profile-settings"></div>

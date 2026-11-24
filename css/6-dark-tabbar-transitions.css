@@ -4282,3 +4282,296 @@ html:not(.app-header) .recap-bubble-sub {
     animation: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   "Obiettivo sbloccato" (js/achievement-toast.js): Xbox-style — the medal
+   pops in at the centre with a pulse, the bar opens out of it (a clip-path
+   from a pill just round the medal — --ach-half, its half width, measured
+   by the script, so a stack's back discs and count are never cut — to the
+   whole bar; the medal slides to its place, --ach-mx), stays, closes back
+   into the medal, which shrinks away. Fixed at the top, above the page
+   (z-index over .data-note's, under the install banner's); no view-
+   transition name (removed on an in-app navigation instead).
+   Its colours follow the theme (user, 2026-11-24, from
+   _mockup-achievement-toast.html): light — a white bar ("Chiaro"), the
+   light theme's deeper level colours; dark — the dark wine one ("Vino")
+   with a gold edge. The medal is the list's (styles.css "Obiettivi"): a
+   tinted disc, the icon in its level's colour — opaque on the bar
+   (--ach-base), so a stack's discs don't show through each other. Several
+   at once: the real ones stacked — the front one (the highest level) whole,
+   two behind it peeking out to the right — and a small count badge; a
+   little longer on screen.
+   --------------------------------------------------------------------------- */
+.ach-toast {
+  --ach-d: 5.6s;
+  --ach-bar: linear-gradient(135deg, #ffffff, #fbf4ef);
+  --ach-ring: rgba(120, 100, 104, 0.22);
+  --ach-text: #201214;
+  --ach-label: #a8730c;
+  --ach-tier: #b8860b;
+  --ach-pulse: #e0a63a;
+  --ach-base: #ffffff;
+  --ach-tint: 14%;
+  --ach-count-bg: #c8901a;
+  --ach-count-fg: #fff;
+  position: fixed;
+  top: 76px;
+  left: 50%;
+  z-index: 75;
+  width: min(440px, calc(100vw - 20px));
+  translate: -50% 0;
+  filter: drop-shadow(0 10px 22px rgba(60, 20, 24, 0.22));
+  pointer-events: none;
+}
+
+:root[data-theme="dark"] .ach-toast {
+  --ach-bar: linear-gradient(135deg, #2a1215, #120a0b);
+  --ach-ring: rgba(232, 178, 58, 0.45);
+  --ach-text: #fff;
+  --ach-label: #e8b23a;
+  --ach-tier: #ffd25a;
+  --ach-pulse: #f4d27a;
+  --ach-base: #1a0d0f;
+  --ach-tint: 20%;
+  --ach-count-bg: #e8b23a;
+  --ach-count-fg: #1a0d0f;
+  filter: drop-shadow(0 12px 22px rgba(0, 0, 0, 0.35));
+}
+
+html.app-header .ach-toast {
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+}
+
+.ach-toast.is-group {
+  --ach-d: 6.4s;
+}
+
+.ach-toast.is-on {
+  animation: ach-life var(--ach-d) linear both;
+}
+
+@keyframes ach-life {
+  to {
+    opacity: 1;
+  }
+}
+
+.ach-toast-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  height: 64px;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 10px 20px 10px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ach-bar);
+  box-shadow: inset 0 0 0 1px var(--ach-ring);
+  color: var(--ach-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  pointer-events: auto;
+  opacity: 0;
+}
+
+/* The medal (js/achievements.js medalHtml): the level's colour (--ach-t) —
+   the light theme's deeper ones on the white bar, the dark theme's lighter
+   ones on the wine; a single one red, Seriamente 1.0 gold. */
+.ach-medal {
+  --ach-t: #6f7b8c;
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--ach-t) var(--ach-tint), var(--ach-base));
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--ach-t) 70%, transparent);
+  color: var(--ach-t);
+}
+
+.ach-medal svg {
+  width: 22px;
+  height: 22px;
+}
+
+.ach-medal.is-lv1 { --ach-t: #a8632e; }
+.ach-medal.is-lv2 { --ach-t: #6f7b8c; }
+.ach-medal.is-lv3,
+.ach-medal.is-final { --ach-t: #b8860b; }
+.ach-medal.is-lv4 { --ach-t: #d9480f; }
+.ach-medal.is-single { --ach-t: #c8161b; }
+
+:root[data-theme="dark"] .ach-medal.is-lv1 { --ach-t: #e0a273; }
+:root[data-theme="dark"] .ach-medal.is-lv2 { --ach-t: #c3ccd8; }
+:root[data-theme="dark"] .ach-medal:is(.is-lv3, .is-final) { --ach-t: #f2c14e; }
+:root[data-theme="dark"] .ach-medal.is-lv4 { --ach-t: #ff8a4c; }
+:root[data-theme="dark"] .ach-medal.is-single { --ach-t: #ff6b6e; }
+
+/* Several at once: the front one whole, two behind it a step right and
+   smaller each (their icons faded), an edge in the bar's colour between
+   them; the count on a small badge. */
+.ach-medal-stack {
+  position: relative;
+  isolation: isolate;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  margin-right: 24px;
+}
+
+.ach-medal-stack > .ach-medal {
+  position: absolute;
+  inset: 0;
+  outline: 2px solid var(--ach-base);
+}
+
+.ach-medal-stack > .ach-medal.is-front {
+  z-index: 1;
+}
+
+.ach-medal-stack > .ach-medal.is-back1 {
+  z-index: -1;
+  translate: 12px 0;
+  scale: 0.9;
+}
+
+.ach-medal-stack > .ach-medal.is-back2 {
+  z-index: -2;
+  translate: 23px 0;
+  scale: 0.8;
+}
+
+.ach-medal-stack > :is(.is-back1, .is-back2) svg {
+  opacity: 0.55;
+}
+
+.ach-stack-count {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  box-sizing: border-box;
+  border-radius: 999px;
+  background: var(--ach-count-bg);
+  box-shadow: 0 0 0 2px var(--ach-base);
+  color: var(--ach-count-fg);
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.ach-toast-text {
+  display: grid;
+  min-width: 0;
+}
+
+.ach-toast-text small {
+  color: var(--ach-label);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.ach-toast-text b {
+  overflow: hidden;
+  font-size: 1rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ach-toast.is-group .ach-toast-text b {
+  font-size: 0.92rem;
+}
+
+.ach-toast-tier {
+  color: var(--ach-tier);
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 700;
+}
+
+/* The pulse: a ring round the medal (as wide as the starting pill). */
+.ach-toast-pulse {
+  position: absolute;
+  top: 32px;
+  left: 50%;
+  width: calc(var(--ach-half, 32px) * 2 - 12px);
+  height: 52px;
+  margin: -26px 0 0 calc(6px - var(--ach-half, 32px));
+  border: 2px solid var(--ach-pulse);
+  border-radius: 999px;
+  opacity: 0;
+}
+
+.ach-toast.is-on .ach-toast-bar {
+  animation: ach-pill var(--ach-d) both;
+}
+
+.ach-toast.is-on .ach-toast-bar > :first-child {
+  animation: ach-medal var(--ach-d) both;
+}
+
+.ach-toast.is-on .ach-toast-text {
+  animation: ach-text var(--ach-d) both;
+}
+
+.ach-toast.is-on .ach-toast-pulse {
+  animation: ach-pulse var(--ach-d) both;
+}
+
+@keyframes ach-pill {
+  0% { scale: 0.2; opacity: 0; clip-path: inset(0 calc(50% - var(--ach-half, 32px)) round 999px); animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1.5); }
+  6% { scale: 1; opacity: 1; clip-path: inset(0 calc(50% - var(--ach-half, 32px)) round 999px); }
+  10% { clip-path: inset(0 calc(50% - var(--ach-half, 32px)) round 999px); animation-timing-function: cubic-bezier(0.3, 0, 0.2, 1); }
+  18% { clip-path: inset(0 0 round 999px); }
+  84% { clip-path: inset(0 0 round 999px); scale: 1; opacity: 1; animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
+  91% { clip-path: inset(0 calc(50% - var(--ach-half, 32px)) round 999px); scale: 1; opacity: 1; animation-timing-function: ease-in; }
+  97%, 100% { clip-path: inset(0 calc(50% - var(--ach-half, 32px)) round 999px); scale: 0.2; opacity: 0; }
+}
+
+@keyframes ach-medal {
+  0%, 10% { transform: translateX(var(--ach-mx, 0)); animation-timing-function: cubic-bezier(0.3, 0, 0.2, 1); }
+  18%, 84% { transform: none; animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
+  91%, 100% { transform: translateX(var(--ach-mx, 0)); }
+}
+
+@keyframes ach-text {
+  0%, 13% { opacity: 0; transform: translateX(-12px); }
+  20%, 81% { opacity: 1; transform: none; }
+  85%, 100% { opacity: 0; transform: translateX(-12px); }
+}
+
+@keyframes ach-pulse {
+  0%, 5% { opacity: 0; scale: 0.8; }
+  6% { opacity: 0.95; scale: 1; }
+  16%, 100% { opacity: 0; scale: 1.8; }
+}
+
+/* Reduced motion: no pop, no opening — the whole bar fades in and out. */
+@media (prefers-reduced-motion: reduce) {
+  .ach-toast.is-on .ach-toast-bar {
+    animation: ach-fade var(--ach-d) both;
+  }
+
+  .ach-toast.is-on .ach-toast-bar > :first-child,
+  .ach-toast.is-on .ach-toast-text,
+  .ach-toast.is-on .ach-toast-pulse {
+    animation: none;
+  }
+}
+
+@keyframes ach-fade {
+  0% { opacity: 0; }
+  6%, 92% { opacity: 1; }
+  100% { opacity: 0; }
+}

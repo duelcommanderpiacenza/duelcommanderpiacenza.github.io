@@ -24,6 +24,11 @@
 //
 // And a fourth: the commanders' "Nuovo" badge (commanders.is_new, migration
 // 027), from the same results and the events' dates.
+//
+// And a fifth: the achievements earned by playing (player_achievements,
+// migration 047 — js/achievement-progress.js), from the same results, the
+// events' dates and leagues. If the table doesn't exist yet on this DB, only
+// this step fails.
 
 import { computeAutoBadgeAssignments, closedLeagueWinners } from "../../js/auto-badges.js";
 import { showToast } from "./toast.js";
@@ -31,7 +36,8 @@ import { localIso } from "../../js/ui.js";
 import { computeEventLeaderboard } from "../../js/leaderboard.js";
 import { computeCardProgress } from "../../js/card-progress.js";
 import { computeElo } from "../../js/elo.js";
-import { PlayerAutoBadges, EventStandings, PlayerProgress, Commanders, Events, Leagues, fetchEventsResults } from "../../js/db.js";
+import { computeAchievements } from "../../js/achievement-progress.js";
+import { PlayerAutoBadges, EventStandings, PlayerProgress, PlayerAchievements, Commanders, Events, Leagues, fetchEventsResults } from "../../js/db.js";
 
 async function syncBadgeAssignments() {
   const assignments = await computeAutoBadgeAssignments();
@@ -150,6 +156,18 @@ async function syncPlayerProgress({ closed, eventsData }) {
   }
 }
 
+// Every player's achievements earned by playing — dated by the event that
+// reached each level. Each real league's total event count first (its
+// best-results cap, as on league.html).
+async function syncPlayerAchievements({ closed, eventsData }) {
+  const leagueIds = [...new Set(closed.filter((ev) => ev.league_id && ev.league && !ev.league.no_points).map((ev) => ev.league_id))];
+  const counts = await Promise.all(
+    leagueIds.map((id) => Leagues.eventCount(id, closed.filter((ev) => ev.league_id === id).length))
+  );
+  const scheduledByLeague = new Map(leagueIds.map((id, i) => [id, counts[i]]));
+  await PlayerAchievements.replaceAll(computeAchievements(closed, eventsData, scheduledByLeague));
+}
+
 async function runSync() {
   const closedResults = loadClosedResults();
   const results = await Promise.allSettled([
@@ -157,6 +175,7 @@ async function runSync() {
     closedResults.then(syncEventStandings),
     closedResults.then(syncPlayerProgress),
     closedResults.then(syncNewCommanders),
+    closedResults.then(syncPlayerAchievements),
   ]);
   const failed = results.find((r) => r.status === "rejected");
   if (failed) throw failed.reason;
@@ -203,6 +222,21 @@ window.addEventListener("beforeunload", (e) => {
   e.preventDefault();
   e.returnValue = "";
 });
+
+// On the admin's opening: the sync run once by itself if the achievements
+// have never been computed (player_achievements empty — just after
+// migration 047, before any event was closed or reopened), so they cover
+// every past result at once rather than waiting for the next change. Never
+// in the way: a failure (e.g. the table not there yet) is only logged.
+export async function syncIfAchievementsMissing() {
+  try {
+    if ((await PlayerAchievements.count()) > 0) return;
+    if (!(await Events.list()).some((ev) => !ev.is_open)) return;
+    await syncAutoBadges();
+  } catch (err) {
+    console.error(err);
+  }
+}
 
 export function syncAutoBadges() {
   if (current) {

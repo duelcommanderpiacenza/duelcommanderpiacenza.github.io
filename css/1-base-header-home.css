@@ -1498,7 +1498,8 @@ body.is-loading * {
 body.is-loading input[type="search"]:not(#site-search-input),
 body.is-loading .detail-hero .player-card,
 body.is-loading .evo-plot > svg,
-body.is-loading .evo-colour svg {
+body.is-loading .evo-colour svg,
+body.is-loading #player-commanders .cmd-carousel {
   animation-play-state: paused;
 }
 
@@ -2711,7 +2712,11 @@ main {
   .ev-tile,
   .matchups-matrix-wrap,
   .evo-plot > svg,
-  .evo-colour svg {
+  .evo-colour svg,
+  #player-commanders .cmd-carousel,
+  .ach-list,
+  .dashboard-standings,
+  .home-ev-list {
     /* !important: most of these declare their own animation later in this
        file, which would otherwise win on source order (equal specificity)
        and keep animating despite the visitor's reduced-motion setting. */
@@ -2786,6 +2791,10 @@ main {
   margin: 12px 0 0;
   padding: 0;
   list-style: none;
+  /* Fades up as one, like the other tabs' content (.history-panel…) — and
+     again when its tab (the Bacheca's Classifica) is picked on touch
+     screens. The title above it stays still. */
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 /* Two classes: .history-item's own padding comes later in this file. */
@@ -3244,6 +3253,9 @@ html.app-header .home-head-icon {
   margin: 0;
   padding: 0;
   list-style: none;
+  /* Fades up as one, like the other tabs' content — again when its tab
+     (the Bacheca's / league.html's Eventi) is picked on touch screens. */
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 :root[data-theme="dark"] .home-ev-list {

@@ -3431,6 +3431,12 @@ html.app-header #commander-content .commander-rivals {
   /* The glow's centre: the current card's (desktop: at the left). */
   --album-glow-x: 50%;
   gap: 0;
+  /* Like Storico partite's panel (.history-panel): it fades up when drawn —
+     and again each time its tab is picked on touch screens (display: none
+     → shown replays it), as Obiettivi's list does (.ach-list). Paused while
+     the page loads by its own rule (css/1: an id outranks
+     `body.is-loading *`). */
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
   overflow: clip;
   border: 1px solid rgba(120, 100, 104, 0.2);
   border-radius: 22px;
@@ -3556,5 +3562,449 @@ html.nav-mobile #player-commanders .cmd-carousel-stats {
 
   #player-commanders .cmd-carousel-main {
     padding-left: 20px;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Obiettivi (js/achievements.js — player.html's tab, the profile's): drawn
+   with the player page's own shapes (user, 2026-11-24, option D of a
+   mockup) — the summary like the league recap's card (the big number in
+   the page's accent, the others after a hairline), each group a card like
+   the rivals' (its title, its count in a tinted pill), the medals as
+   tinted discs like the rivals' icons, in the level's colour (I bronze, II
+   silver, III gold, IV mythic; a single one the page's accent —
+   --brand-red / --brand-red-deep follow the hero —, Seriamente 1.0 gold),
+   a locked one faint with a small padlock. A tap opens the medal's detail
+   inside its card, under its row. Wide (700px+): the groups in two
+   columns, each a stack of its own (a detail opening in one never moves
+   the other's cards).
+   --------------------------------------------------------------------------- */
+#player-achievements,
+#profile-achievements-list {
+  container-type: inline-size;
+}
+
+.ach-list,
+.ach-groups {
+  display: grid;
+  align-items: start;
+  gap: 12px;
+}
+
+/* The whole list fades up as one, like Storico partite's panel and the
+   album's box — on its tab being picked on touch screens too. */
+.ach-list {
+  animation: entrance-fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* The groups' two stacks (js/achievements.js): narrow, dissolved — the
+   groups in their own order (each card's inline `order`); wide, two
+   columns side by side, each its own flex column. */
+.ach-stack {
+  display: contents;
+}
+
+@container (min-width: 700px) {
+  .ach-groups {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ach-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+.ach-card {
+  padding: 16px 18px 18px;
+  border: 1px solid rgba(120, 100, 104, 0.2);
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(40, 20, 22, 0.06);
+}
+
+:root[data-theme="dark"] .ach-card {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+}
+
+.ach-title {
+  margin: 0;
+  color: var(--text-title);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.ach-group-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ach-count {
+  margin-left: auto;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--brand-red) 13%, transparent);
+  color: var(--brand-red-deep);
+  font-size: 0.78rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The summary: the big number, then the percentage after a hairline (the
+   league recap's points), and a bar under. */
+.ach-sum-main {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 10px;
+}
+
+.ach-sum-big {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  color: var(--brand-red-deep);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.ach-sum-big b {
+  font-size: 2.6rem;
+}
+
+.ach-sum-big span {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+}
+
+.ach-sum-side {
+  display: grid;
+  gap: 3px;
+  padding-left: 18px;
+  border-left: 1px solid rgba(120, 100, 104, 0.22);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+:root[data-theme="dark"] .ach-sum-side {
+  border-left-color: rgba(255, 255, 255, 0.14);
+}
+
+.ach-sum-side b {
+  color: var(--text-title);
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.ach-bar {
+  display: block;
+  height: 6px;
+  margin-top: 14px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: rgba(120, 100, 104, 0.14);
+}
+
+:root[data-theme="dark"] .ach-bar {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.ach-bar b {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--brand-red);
+}
+
+/* The colours (--ach-t): the level's, a single one the page's accent,
+   Seriamente gold, locked muted. On the medal, its detail, Seriamente's card. */
+.ach-badge,
+.ach-detail,
+.ach-final {
+  --ach-t: var(--text-muted);
+}
+
+:is(.ach-badge, .ach-detail, .ach-final).is-lv1 { --ach-t: #a8632e; }
+:is(.ach-badge, .ach-detail, .ach-final).is-lv2 { --ach-t: #6f7b8c; }
+:is(.ach-badge, .ach-detail, .ach-final).is-lv3 { --ach-t: #b8860b; }
+:is(.ach-badge, .ach-detail, .ach-final).is-lv4 { --ach-t: #d9480f; }
+:is(.ach-badge, .ach-detail, .ach-final).is-single { --ach-t: var(--brand-red-deep); }
+:is(.ach-badge, .ach-detail, .ach-final).is-final { --ach-t: #b8860b; }
+
+:root[data-theme="dark"] :is(.ach-badge, .ach-detail, .ach-final).is-lv1 { --ach-t: #e0a273; }
+:root[data-theme="dark"] :is(.ach-badge, .ach-detail, .ach-final).is-lv2 { --ach-t: #c3ccd8; }
+:root[data-theme="dark"] :is(.ach-badge, .ach-detail, .ach-final).is-lv3 { --ach-t: #f2c14e; }
+:root[data-theme="dark"] :is(.ach-badge, .ach-detail, .ach-final).is-lv4 { --ach-t: #ff8a4c; }
+:root[data-theme="dark"] :is(.ach-badge, .ach-detail, .ach-final).is-final { --ach-t: #f2c14e; }
+
+/* A group's medals: a grid, four or so a row on a phone. The rows spaced
+   by the medals' own bottom margin, not the grid's gap: a detail growing
+   between two rows brings no gap of its own (it would appear at once), its
+   space below it inside what grows (.ach-detail-inner's margin). */
+.ach-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+  column-gap: 6px;
+  margin: 14px 0 -14px;
+}
+
+.ach-badge {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 5px;
+  min-width: 0;
+  margin-bottom: 14px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ach-badge:focus-visible {
+  outline: 2px solid var(--brand-red);
+  outline-offset: 4px;
+  border-radius: 12px;
+}
+
+.ach-disc {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--ach-t) 15%, transparent);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--ach-t) 55%, transparent);
+  color: var(--ach-t);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.ach-disc > svg:first-child {
+  width: 24px;
+  height: 24px;
+}
+
+.ach-badge[aria-expanded="true"] .ach-disc {
+  box-shadow: inset 0 0 0 2.5px var(--ach-t);
+  transform: scale(1.06);
+}
+
+.is-locked > .ach-disc {
+  background: rgba(120, 100, 104, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(120, 100, 104, 0.18);
+}
+
+:root[data-theme="dark"] .is-locked > .ach-disc {
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.is-locked > .ach-disc > svg:first-child {
+  opacity: 0.45;
+}
+
+.ach-badge.is-locked[aria-expanded="true"] .ach-disc {
+  box-shadow: inset 0 0 0 2px var(--text-muted);
+}
+
+.ach-lock {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 18px;
+  height: 18px;
+  padding: 3px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--text-muted);
+}
+
+:root[data-theme="dark"] .ach-lock {
+  background: #2a2c31;
+}
+
+.ach-name {
+  max-width: 100%;
+  color: var(--text-title);
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.ach-badge.is-locked .ach-name {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.ach-num {
+  color: var(--ach-t);
+  font-weight: 800;
+}
+
+.ach-pips {
+  display: flex;
+  gap: 3px;
+}
+
+.ach-pips i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(120, 100, 104, 0.25);
+}
+
+:root[data-theme="dark"] .ach-pips i {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.ach-pips i.on,
+:root[data-theme="dark"] .ach-pips i.on {
+  background: var(--ach-t);
+}
+
+/* A medal's detail: the whole row's width under the medal's row, a tinted
+   box in its colour — it grows open (grid-template-rows 0fr → 1fr) and
+   shrinks away (js/achievements.js). */
+.ach-detail {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ach-detail.is-open {
+  grid-template-rows: 1fr;
+}
+
+.ach-detail-clip {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ach-detail-inner {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--ach-t) 9%, transparent);
+}
+
+.ach-detail.is-locked .ach-detail-inner {
+  background: rgba(120, 100, 104, 0.07);
+}
+
+:root[data-theme="dark"] .ach-detail.is-locked .ach-detail-inner {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.ach-detail-name {
+  color: var(--text-title);
+  font-size: 0.95rem;
+}
+
+.ach-detail-text {
+  color: var(--text-title);
+  font-size: 0.86rem;
+}
+
+.ach-detail.is-locked .ach-detail-text {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.ach-detail-when {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.ach-detail-next {
+  display: grid;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.ach-detail-next i {
+  display: block;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: rgba(120, 100, 104, 0.14);
+}
+
+:root[data-theme="dark"] .ach-detail-next i {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.ach-detail-next b {
+  display: block;
+  height: 100%;
+  background: var(--ach-t);
+}
+
+.ach-detail-next small {
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+/* Seriamente 1.0: a card of its own, laid out like a rival's. */
+.ach-final {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ach-final > .ach-disc {
+  width: 56px;
+  height: 56px;
+}
+
+.ach-final-text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.ach-label {
+  color: var(--ach-t);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ach-final-text b {
+  color: var(--text-title);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.ach-final-text span:not(.ach-label),
+.ach-final-text small {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ach-detail,
+  .ach-disc {
+    transition: none;
   }
 }

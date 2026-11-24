@@ -851,9 +851,18 @@ html.app-header :is(.commander-lists, .player-lists) {
 
 html.app-header .commander-lists > .history-col:not(.is-current),
 html.app-header .commander-lists > .history-col > h2,
-html.app-header .player-lists > :is(.album-col, .history-col):not(.is-current),
-html.app-header .player-lists > .history-col > h2 {
+html.app-header .player-lists > section:not(.is-current),
+html.app-header .player-lists > :is(.ach-col, .history-col) > h2 {
   display: none;
+}
+
+/* player.html's Obiettivi (since 2026-11-24): on touch screens the second
+   tab (Album comandanti · Obiettivi · Storico partite); on a computer
+   under the two columns, the whole width, under its title (user — tabs
+   there were tried and dropped). */
+html:not(.app-header) .player-lists > .ach-col {
+  grid-column: 1 / -1;
+  order: 1;
 }
 
 /* player.html on touch screens: the tabs 16px under what's above them (the

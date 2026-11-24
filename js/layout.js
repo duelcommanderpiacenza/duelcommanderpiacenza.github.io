@@ -35,6 +35,9 @@ import { VERSION } from "./version.js";
 import "./system-bars.js";
 import "./pull-refresh.js";
 import "./data-updates.js";
+// "Obiettivo sbloccato" (js/achievement-toast.js): a signed-in account's
+// new achievements, once per account.
+import "./achievement-toast.js";
 
 // Never stuck on "Caricamento...": a reload offered when loading takes too
 // long or fails (js/page-loading.js).
