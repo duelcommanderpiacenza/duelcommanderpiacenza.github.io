@@ -572,7 +572,7 @@
 
     // Obiettivi (js/achievements.js — player.html's tab, the profile's, the
     // unlock bar, js/achievement-toast.js). "Leghe", "Vittorie", "Imbattuto",
-    // "Campione", "Ammazzagiganti", "Presenza completa", "Incolore" are above.
+    // "Campione", "Presenza completa", "Incolore" are above.
     "Obiettivi": "Achievements",
     "Obiettivi sbloccati": "Achievements unlocked",
     "completato": "complete",
@@ -606,6 +606,7 @@
     "Carta creata": "Card made",
     "Prima decklist": "First decklist",
     "Seriamente 1.0": "Seriamente 1.0",
+    "Regicida": "Kingslayer",
     // (descriptions, shown once unlocked)
     "La tua prima partita vinta.": "Your first match won.",
     "Un evento chiuso senza sconfitte.": "An event finished without a loss.",
@@ -622,7 +623,6 @@
     "Un evento giocato con una coppia di comandanti.": "An event played with a pair of commanders.",
     "Il primo a portare un comandante agli eventi.": "The first to bring a commander to the events.",
     "Il tuo primo evento.": "Your first event.",
-    "100 partite giocate.": "100 matches played.",
     "Account collegato al giocatore.": "Account linked to the player.",
     "Carta giocatore salvata.": "Player card saved.",
     "Una decklist inviata dal sito.": "A decklist sent from the site.",
@@ -788,6 +788,7 @@
     [/^(\d+) comandanti diversi giocati\.$/, "$1 different commanders played."],
     [/^Lo stesso comandante in (\d+) eventi\.$/, "The same commander in $1 events."],
     [/^(\d+) eventi giocati\.$/, "$1 events played."],
+    [/^(\d+) partite giocate\.$/, "$1 matches played."],
     [/^Eventi giocati in (\d+) mesi di fila\.$/, "Events played in $1 months in a row."],
     [/^Sbloccato il (.+?)( · livello massimo)?$/, function (_, d, max) { return "Unlocked on " + d + (max ? " · top level" : ""); }],
     [/^Verso ([IV]+) · (\d+)\/(\d+)$/, "Toward $1 · $2/$3"],

@@ -3877,22 +3877,11 @@ html.nav-mobile #player-commanders .cmd-carousel-stats {
 }
 
 /* A medal's detail: the whole row's width under the medal's row, a tinted
-   box in its colour — it grows open (grid-template-rows 0fr → 1fr) and
-   shrinks away (js/achievements.js). */
+   box in its colour. Opened and closed by js/achievements.js with
+   transforms, opacity and a clip-path only — never an animated height
+   (laggy on phones: everything under it laid out again on every frame). */
 .ach-detail {
   grid-column: 1 / -1;
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 300ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.ach-detail.is-open {
-  grid-template-rows: 1fr;
-}
-
-.ach-detail-clip {
-  min-height: 0;
-  overflow: hidden;
 }
 
 .ach-detail-inner {
@@ -4003,7 +3992,6 @@ html.nav-mobile #player-commanders .cmd-carousel-stats {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ach-detail,
   .ach-disc {
     transition: none;
   }

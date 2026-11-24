@@ -84,7 +84,9 @@ export const ACHIEVEMENTS = [
   // (A single one since 2026-11-24, user: three leagues won was too hard a level II.)
   { key: "campione", name: "Campione", group: "leghe", icon: "crown", desc: "Una lega vinta.", hint: "Porta a casa una lega intera." },
   { key: "in_cima_lega", name: "In cima alla lega", group: "leghe", icon: "medal", desc: "Una lega chiusa tra i primi 8 della classifica.", hint: "Una lega da protagonista." },
-  { key: "ammazzagiganti", name: "Ammazzagiganti", group: "leghe", icon: "target", desc: "Hai battuto chi guidava la classifica della lega.", hint: "Anche chi guida la lega può cadere." },
+  // (Named "Regicida" since 2026-11-24, user: "Ammazzagiganti" is a badge's
+  // name — the key stays.)
+  { key: "ammazzagiganti", name: "Regicida", group: "leghe", icon: "target", desc: "Hai battuto chi guidava la classifica della lega.", hint: "Anche chi guida la lega può cadere." },
   { key: "presenza_completa", name: "Presenza completa", group: "leghe", icon: "circleCheck", desc: "Tutti gli eventi di una lega giocati.", hint: "Non perdere neanche una tappa." },
   { key: "veterano", name: "Veterano", group: "leghe", icon: "chevrons", tiers: [3, 6, 10], desc: (n) => `${n} leghe diverse giocate.`, hint: "Una lega dopo l'altra." },
   // Stile di gioco
@@ -100,7 +102,8 @@ export const ACHIEVEMENTS = [
   { key: "debutto", name: "Debutto", group: "presenza", icon: "sparkles", desc: "Il tuo primo evento.", hint: "Ogni storia comincia da un evento." },
   { key: "presenze", name: "Presenze", group: "presenza", icon: "calendar", tiers: [10, 25, 50, 100], desc: (n) => `${n} eventi giocati.`, hint: "Partecipa agli eventi." },
   { key: "fedelissimo", name: "Fedelissimo", group: "presenza", icon: "flame", tiers: [3, 6, 12], desc: (n) => `Eventi giocati in ${n} mesi di fila.`, hint: "Fatti vedere con costanza." },
-  { key: "maratoneta", name: "Maratoneta", group: "presenza", icon: "activity", desc: "100 partite giocate.", hint: "Tante, tante partite." },
+  // (Tiered since 2026-11-24, user: 100 the first level.)
+  { key: "maratoneta", name: "Maratoneta", group: "presenza", icon: "activity", tiers: [100, 200, 300], desc: (n) => `${n} partite giocate.`, hint: "Tante, tante partite." },
   // Sul sito
   { key: "collegato", name: "Collegato", group: "sito", source: "site", icon: "userCheck", desc: "Account collegato al giocatore.", hint: "Il tuo account e il tuo giocatore, insieme." },
   { key: "carta_creata", name: "Carta creata", group: "sito", source: "site", icon: "idCard", desc: "Carta giocatore salvata.", hint: "La tua carta ti aspetta." },
@@ -261,45 +264,126 @@ export function achievementsListHtml(state) {
 
 // The medals' details, on a list drawn by achievementsListHtml inside
 // `container`: a tap on a medal opens its detail right under the row it's
-// in (closing any other), a second tap closes it — both animated (it grows
-// open and shrinks away; at once under reduced motion). One listener per
-// container, whatever list it holds later (`state` kept on it).
+// in, a second tap closes it; another medal's tap closes the open one, then
+// opens its own. One listener per container, whatever list it holds later
+// (`state` kept on it).
+//
+// Animated without animating any size (user, 2026-11-24: a growing height
+// re-laid out and repainted everything under it on every frame — laggy on
+// phones, worst with medals and cards below): the page jumps to its new
+// layout at once (one layout), and only transforms, opacity and a clip-path
+// make it look gradual ("FLIP") — what moved (the medals under the detail
+// in its card, the cards under it) slides from where it was, the card is
+// clipped to its old height and unclipped, the detail fades in. Closing:
+// the same backwards, and the detail goes in the last frame. At once under
+// reduced motion.
 export function enableAchievementDetails(container, state) {
   container.achievementState = state;
   if (container.dataset.achDetails) return;
   container.dataset.achDetails = "1";
-  container.addEventListener("click", (e) => {
+  container.addEventListener("click", async (e) => {
     const badge = e.target.closest(".ach-badge");
     if (!badge || !container.contains(badge)) return;
-    const grid = badge.parentElement;
+    // A tap during an animation: that one ends at once first.
+    container.achFinish?.();
     const wasOpen = badge.getAttribute("aria-expanded") === "true";
-    container.querySelectorAll(".ach-detail:not([data-closing])").forEach(closeDetail);
+    const open = container.querySelector(".ach-detail");
     container.querySelectorAll('.ach-badge[aria-expanded="true"]').forEach((b) => b.setAttribute("aria-expanded", "false"));
+    if (open) await closeDetail(container, open);
     if (wasOpen) return;
     badge.setAttribute("aria-expanded", "true");
-    const rowEnd = [...grid.querySelectorAll(".ach-badge")].filter((b) => b.offsetTop === badge.offsetTop).pop();
-    const a = BY_KEY.get(badge.dataset.key);
-    rowEnd.insertAdjacentHTML("afterend", detailHtml(a, container.achievementState.get(a.key)));
-    const detail = rowEnd.nextElementSibling;
-    void detail.offsetHeight;
-    requestAnimationFrame(() => detail.classList.add("is-open"));
+    openDetail(container, badge);
   });
 }
 
 const reduceMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const OPEN = { duration: 280, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)" };
+const CLOSE = { duration: 220, easing: "cubic-bezier(0.4, 0, 0.2, 1)" };
+const RADIUS = "22px"; // .ach-card's corners
 
-function closeDetail(detail) {
-  detail.dataset.closing = "1";
-  detail.classList.remove("is-open");
-  if (reduceMotion()) return detail.remove();
-  let gone = false;
-  const done = () => {
-    if (gone) return;
-    gone = true;
-    detail.remove();
+// Where things are: every card (on the page) and the medals of `card`
+// (from its top), and its height.
+function snapshot(container, card) {
+  const cardTop = card.getBoundingClientRect().top;
+  return {
+    cards: [...container.querySelectorAll(".ach-card")].map((c) => [c, c.getBoundingClientRect().top]),
+    badges: [...card.querySelectorAll(".ach-badge")].map((b) => [b, b.getBoundingClientRect().top - cardTop]),
+    height: card.getBoundingClientRect().height,
   };
-  detail.addEventListener("transitionend", (e) => {
-    if (e.target === detail && e.propertyName === "grid-template-rows") done();
+}
+
+// The moves from `from` to `to` (each element's vertical offset), as
+// [element, dy] — only what moved.
+function moves(from, to) {
+  const out = [];
+  for (const key of ["cards", "badges"]) {
+    from[key].forEach(([el, y], i) => {
+      const dy = to[key][i][1] - y;
+      if (Math.abs(dy) > 0.5) out.push([el, dy]);
+    });
+  }
+  return out;
+}
+
+// Runs `anims` (Web Animations), then `done`; container.achFinish ends them
+// at once (a new tap meanwhile). Resolves when they're over.
+function play(container, anims, done) {
+  return new Promise((resolve) => {
+    let over = false;
+    const finish = () => {
+      if (over) return;
+      over = true;
+      if (container.achFinish === finish) container.achFinish = null;
+      done?.();
+      for (const a of anims) a.cancel();
+      resolve();
+    };
+    container.achFinish = finish;
+    Promise.all(anims.map((a) => a.finished)).then(finish, finish);
   });
-  setTimeout(done, 450);
+}
+
+function openDetail(container, badge) {
+  const grid = badge.parentElement;
+  const card = badge.closest(".ach-card");
+  const rowEnd = [...grid.querySelectorAll(".ach-badge")].filter((b) => b.offsetTop === badge.offsetTop).pop();
+  const a = BY_KEY.get(badge.dataset.key);
+  const before = reduceMotion() ? null : snapshot(container, card);
+  rowEnd.insertAdjacentHTML("afterend", detailHtml(a, container.achievementState.get(a.key)));
+  if (!before) return;
+  const detail = rowEnd.nextElementSibling;
+  const after = snapshot(container, card);
+  const grown = after.height - before.height;
+  const anims = moves(after, before).map(([el, dy]) =>
+    el.animate([{ transform: `translateY(${dy}px)` }, { transform: "none" }], OPEN)
+  );
+  anims.push(
+    card.animate([{ clipPath: `inset(0 0 ${grown}px 0 round ${RADIUS})` }, { clipPath: `inset(0 0 0 0 round ${RADIUS})` }], OPEN),
+    detail.animate([{ opacity: 0, transform: "translateY(-8px)" }, { opacity: 1, transform: "none" }], OPEN)
+  );
+  return play(container, anims);
+}
+
+function closeDetail(container, detail) {
+  const card = detail.closest(".ach-card");
+  if (reduceMotion()) {
+    detail.remove();
+    return Promise.resolve();
+  }
+  // The layout without it, measured, then put back for the animation; it
+  // goes in the last frame, when everything has reached that layout.
+  const before = snapshot(container, card);
+  detail.style.display = "none";
+  const after = snapshot(container, card);
+  detail.style.display = "";
+  const shrunk = before.height - after.height;
+  const opts = { ...CLOSE, fill: "forwards" };
+  const anims = moves(before, after).map(([el, dy]) =>
+    el.animate([{ transform: "none" }, { transform: `translateY(${dy}px)` }], opts)
+  );
+  anims.push(
+    card.animate([{ clipPath: `inset(0 0 0 0 round ${RADIUS})` }, { clipPath: `inset(0 0 ${shrunk}px 0 round ${RADIUS})` }], opts),
+    detail.animate([{ opacity: 1 }, { opacity: 0 }], { ...opts, duration: CLOSE.duration * 0.6 })
+  );
+  return play(container, anims, () => detail.remove());
 }

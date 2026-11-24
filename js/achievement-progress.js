@@ -21,7 +21,6 @@ import { ACHIEVEMENTS } from "./achievements.js";
 
 const TIERS = new Map(ACHIEVEMENTS.filter((a) => a.tiers).map((a) => [a.key, a.tiers]));
 const ARCHETYPE_COUNT = 5;
-const MARATHON_MATCHES = 100;
 const LEAGUE_TOP = 8;
 // Pioniere: the first recorded events don't count — there "first seen" only
 // means "first recorded" (the same warm-up as the commanders' "Nuovo" badge).
@@ -174,7 +173,7 @@ export function computeAchievements(events, eventsData, scheduledByLeague = new 
       const p2 = player(m.player2_id);
       for (const p of [p1, p2]) {
         p.realMatches += 1;
-        if (p.realMatches >= MARATHON_MATCHES) reach(p, "maratoneta", date);
+        tier(p, "maratoneta", p.realMatches, date);
       }
       const outcome = matchRoundOutcome(m);
       if (outcome === "draw") continue;
