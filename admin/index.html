@@ -148,18 +148,20 @@
         </form>
       </div>
       <div>
-        <!-- Dal vivo: chi ha giocato eventi dal vivo (o ancora nessun
-             evento); Online: chi ha giocato eventi online (endstep). Chi ha
-             fatto entrambi è in tutti e due. -->
-        <div class="admin-seg-field">
-          <div class="admin-seg" role="radiogroup" aria-label="Giocatori da mostrare" id="players-admin-where">
-            <label><input type="radio" name="players-admin-where" value="live" checked><span>Dal vivo</span></label>
-            <label><input type="radio" name="players-admin-where" value="online"><span>Online</span></label>
+        <!-- The search and, at its right on a computer (above it on
+             phones), Dal vivo / Online — the public site's Dove bar
+             (.where-filter, css/6): Dal vivo, chi ha giocato eventi dal vivo
+             (o ancora nessun evento); Online, chi ha giocato eventi online
+             (endstep). Chi ha fatto entrambi è in tutti e due. -->
+        <div class="admin-list-tools">
+          <div class="field">
+            <label class="visually-hidden" for="players-admin-search">Cerca</label>
+            <input type="search" id="players-admin-search" placeholder="Nome o handle...">
           </div>
-        </div>
-        <div class="field">
-          <label for="players-admin-search">Cerca</label>
-          <input type="search" id="players-admin-search" placeholder="Nome o handle...">
+          <div class="where-filter admin-where" role="radiogroup" aria-label="Giocatori da mostrare" id="players-admin-where">
+            <label class="where-opt"><input type="radio" name="players-admin-where" value="live" checked><span class="where-lotus" aria-hidden="true"></span><span>Dal vivo</span></label>
+            <label class="where-opt" data-where="online"><input type="radio" name="players-admin-where" value="online"><svg viewBox="11 9 42 46" aria-hidden="true"><path d="M32 11 L49 28 L32 45 L15 28 Z" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round"></path><path d="M32 21 L38 28 L32 35 L26 28 Z" fill="currentColor"></path><rect x="13" y="49" width="38" height="4.4" rx="2.2" fill="currentColor"></rect></svg><span>Online</span></label>
+          </div>
         </div>
         <div id="players-admin-list"><div class="admin-sk" role="status" aria-label="Caricamento..."><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i></div></div>
       </div>
@@ -221,7 +223,7 @@
       </div>
       <div>
         <div class="field">
-          <label for="commanders-admin-search">Cerca</label>
+          <label class="visually-hidden" for="commanders-admin-search">Cerca</label>
           <input type="search" id="commanders-admin-search" placeholder="Nome comandante...">
         </div>
         <div id="commanders-admin-list"><div class="admin-sk" role="status" aria-label="Caricamento..."><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i></div></div>
@@ -291,7 +293,7 @@
       <div>
         <div class="filter-toggle-line">
           <div class="field filter-toggle-search">
-            <label for="badges-admin-search">Cerca</label>
+            <label class="visually-hidden" for="badges-admin-search">Cerca</label>
             <input type="search" id="badges-admin-search" placeholder="Nome badge...">
           </div>
           <div class="field filter-toggle-sort badges-admin-sort">
@@ -390,7 +392,7 @@
         </div>
         <div>
           <div class="field">
-            <label for="leagues-admin-search">Cerca</label>
+            <label class="visually-hidden" for="leagues-admin-search">Cerca</label>
             <input type="search" id="leagues-admin-search" placeholder="Nome lega...">
           </div>
           <div id="leagues-admin-list"><div class="admin-sk" role="status" aria-label="Caricamento..."><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i></div></div>
@@ -508,7 +510,7 @@
       </div>
       <div>
         <div class="field">
-          <label for="standalone-events-admin-search">Cerca</label>
+          <label class="visually-hidden" for="standalone-events-admin-search">Cerca</label>
           <input type="search" id="standalone-events-admin-search" placeholder="Nome evento...">
         </div>
         <div id="standalone-events-admin-list"><div class="admin-sk" role="status" aria-label="Caricamento..."><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i></div></div>
@@ -544,7 +546,7 @@
       </div>
       <div>
         <div class="field">
-          <label for="announcements-admin-search">Cerca</label>
+          <label class="visually-hidden" for="announcements-admin-search">Cerca</label>
           <input type="search" id="announcements-admin-search" placeholder="Titolo annuncio...">
         </div>
         <div id="announcements-admin-list"><div class="admin-sk" role="status" aria-label="Caricamento..."><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i></div></div>
@@ -582,7 +584,7 @@
       </div>
       <div>
         <div class="field">
-          <label for="users-admin-search">Cerca</label>
+          <label class="visually-hidden" for="users-admin-search">Cerca</label>
           <input type="search" id="users-admin-search" placeholder="Email o giocatore...">
         </div>
         <div id="users-admin-list"><div class="admin-sk" role="status" aria-label="Caricamento..."><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i></div></div>

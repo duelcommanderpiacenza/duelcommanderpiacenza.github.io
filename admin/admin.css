@@ -2134,6 +2134,86 @@ html[data-theme="dark"].nav-mobile .admin-tab-icon-wrap .admin-tab-count {
   box-shadow: 0 0 0 2px #1e1e21;
 }
 
+/* Giocatori's list tools: the search and, at its right, Dal vivo / Online —
+   the public site's Dove bar (.where-filter / .where-opt, css/6: a white
+   pill with a hairline edge, Dal vivo's lotus and endstep's logo; Online,
+   picked, in endstep's black and gold) as wide as its two options, level
+   with the search box. Its options are radios (admin/js/players-admin.js
+   reads them): the picked one looks like the site's .is-active. Phones
+   (800px down, the form above the list): the bar the whole width, above
+   the search. */
+.admin-list-tools {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.admin-list-tools > .field {
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+/* (Over the site's touch-screen margins for the Dove bar, css/6.) */
+html .admin-list-tools > .admin-where.where-filter:not([hidden]) {
+  flex: none;
+  margin: 0;
+}
+
+.admin-where .where-opt {
+  position: relative;
+  min-height: 34px;
+  box-sizing: border-box;
+}
+
+.admin-where .where-opt input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.admin-where .where-opt:has(input:checked) {
+  background: color-mix(in srgb, var(--brand-red) 9%, transparent);
+  color: var(--brand-red-deep);
+}
+
+.admin-where .where-opt[data-where="online"]:has(input:checked) {
+  background: var(--endstep-ink);
+  color: var(--endstep-gold);
+}
+
+.admin-where .where-opt:has(input:checked) svg {
+  color: var(--endstep-gold);
+}
+
+.admin-where .where-opt:has(input:focus-visible) {
+  outline: 2px solid var(--brand-red);
+  outline-offset: 1px;
+}
+
+:root[data-theme="dark"] .admin-where .where-opt:has(input:checked):not([data-where="online"]) {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+@media (max-width: 800px) {
+  .admin-list-tools {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  html .admin-list-tools > .admin-where.where-filter:not([hidden]) {
+    order: -1;
+    display: flex;
+  }
+
+  .admin-where .where-opt {
+    flex: 1;
+    padding: 8px 6px;
+  }
+}
+
 /* A three-way switch in a form (the standalone event's Locale / Esterno /
    Online — admin/js/standalone-events-admin.js): radios as a pill bar, the
    picked one filled with the accent. A disabled option faded. */
