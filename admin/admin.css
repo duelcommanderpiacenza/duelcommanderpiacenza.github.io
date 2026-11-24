@@ -451,13 +451,14 @@ html.is-admin-transition .admin-tabs {
   text-align: left;
 }
 
+/* The section's title: for screen readers only (.visually-hidden, since
+   2026-11-24, user — the tabs name it), so the bar takes no room. */
 .admin-topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 10px;
-  margin-bottom: 20px;
 }
 
 .admin-topbar h1 {
@@ -2048,10 +2049,6 @@ input.endstep-import-control {
 @media (max-width: 640px) {
   .admin-shell {
     padding: 18px 14px 36px;
-  }
-
-  .admin-topbar h1 {
-    font-size: 1.35rem;
   }
 
   .login-card {

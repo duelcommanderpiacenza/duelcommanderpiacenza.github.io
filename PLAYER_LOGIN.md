@@ -209,7 +209,8 @@ an account can never sign in. No email form is offered on the site.
     account's saved sessions: no new sign-in, signed out at the latest when
     the current access token expires (up to about an hour).
 - [x] `js/db.js`'s `AdminUsers` + admin tab **"Utenti"**
-  (`admin/js/users-admin.js`): pending requests on top (Approva / Rifiuta);
+  (`admin/js/users-admin.js`): pending requests on top (Approva / Rifiuta;
+  the block hidden when there are none — 2026-11-24, user);
   below, the accounts (email, dates, linked player or
   pending request, Attivo/Bloccato toggle — "Admin" for admin accounts,
   ✕ to delete) with a search, and a "Collega a un giocatore" form (✎ on a

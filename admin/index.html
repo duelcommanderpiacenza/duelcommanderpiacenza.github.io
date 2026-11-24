@@ -108,8 +108,10 @@
 </div>
 
 <div id="admin-view" class="admin-shell" hidden>
+  <!-- The open tab's name (admin/js/app.js) — for screen readers only
+       (user, 2026-11-24, like the public pages): the tabs name the section. -->
   <div class="admin-topbar">
-    <h1 id="admin-page-title">Gestione dati</h1>
+    <h1 id="admin-page-title" class="visually-hidden">Gestione dati</h1>
   </div>
 
   <div id="admin-tabs-view">
@@ -557,7 +559,8 @@
   <!-- Utenti: account dei giocatori (accesso con Google da account.html), le
        richieste di collegamento a un giocatore, blocco ed eliminazione -->
   <section class="admin-panel" id="panel-users">
-    <div class="users-admin-requests-block">
+    <!-- Only while there are any (admin/js/users-admin.js renderRequests). -->
+    <div class="users-admin-requests-block" id="users-admin-requests-block" hidden>
       <h3>Richieste in attesa <span id="users-admin-requests-count"></span></h3>
       <div id="users-admin-requests"><div class="admin-sk" role="status" aria-label="Caricamento..."><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i></div></div>
     </div>

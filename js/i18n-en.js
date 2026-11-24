@@ -124,7 +124,8 @@
     // commander.html's (js/commander-rivals.js).
     "Kryptonite": "Kryptonite",
     "Portabandiera": "Flag bearer",
-    "Kryptonite e Portabandiera": "Kryptonite and Flag bearer",
+    "Maestro": "Master",
+    "Kryptonite, Portabandiera e Maestro": "Kryptonite, Flag bearer and Master",
     "sconfitte": "losses",
     "vittorie": "wins",
     "Turni": "Rounds",

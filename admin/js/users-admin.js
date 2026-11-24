@@ -33,6 +33,7 @@ function playerLabel(name, handle) {
 }
 
 export function initUsersAdmin() {
+  const requestsBlock = document.getElementById("users-admin-requests-block");
   const requestsEl = document.getElementById("users-admin-requests");
   const requestsCountEl = document.getElementById("users-admin-requests-count");
   const listEl = document.getElementById("users-admin-list");
@@ -54,8 +55,11 @@ export function initUsersAdmin() {
     requestsCountEl.textContent = pending.length ? `(${pending.length})` : "";
     // The same number on the "Utenti" tab (and, on touch screens, the nav pill).
     setTabCount("users", pending.length);
+    // The whole block only while there are any (user, 2026-11-24 — it said
+    // "Nessuna richiesta in attesa." otherwise).
+    requestsBlock.hidden = pending.length === 0;
     if (pending.length === 0) {
-      requestsEl.innerHTML = '<p class="page-empty">Nessuna richiesta in attesa.</p>';
+      requestsEl.innerHTML = "";
       return;
     }
     // One card per request (crud-ui.js): the account, the player asked for

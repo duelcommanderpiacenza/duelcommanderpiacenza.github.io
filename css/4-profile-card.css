@@ -3118,6 +3118,11 @@ a.league-recap-card:hover .league-recap-chevron {
   --rival: #b7791f;
 }
 
+/* commander.html's Maestro (the best winrate): violet. */
+.rival-card.is-master {
+  --rival: #7c3aed;
+}
+
 :root[data-theme="dark"] .rival-card.is-nemesis {
   --rival: #ff6b6e;
 }
@@ -3128,6 +3133,10 @@ a.league-recap-card:hover .league-recap-chevron {
 
 :root[data-theme="dark"] .rival-card.is-regular {
   --rival: #f0b54a;
+}
+
+:root[data-theme="dark"] .rival-card.is-master {
+  --rival: #b38cff;
 }
 
 .rival-card:hover {
@@ -3395,7 +3404,7 @@ html.app-header #commander-content .commander-tabs {
   margin-top: 16px;
 }
 
-/* Kryptonite / Portabandiera (js/commander-rivals.js — player.html's rivals'
+/* Kryptonite / Portabandiera / Maestro (js/commander-rivals.js — player.html's rivals'
    cards) between the chart and the lists: on touch screens 16px from both,
    like the tabs from the chart. */
 html.app-header #commander-content .commander-rivals {
