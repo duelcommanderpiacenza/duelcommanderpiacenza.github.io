@@ -518,7 +518,7 @@
     "Incolla la decklist o un link.": "Paste the decklist or a link.",
     "Invio non riuscito. Puoi mandare la lista via email a": "Sending failed. You can email the list to",
     "La decklist è troppo lunga.": "The decklist is too long.",
-    "Nessun evento disponibile: puoi inviare la decklist per i prossimi due eventi o per gli ultimi due che hai giocato.": "No event available: you can send the decklist for the next two events or for the last two you played.",
+    "Nessun evento disponibile: puoi inviare la decklist per i prossimi due eventi o per gli ultimi due.": "No event available: you can send the decklist for the next two events or for the last two.",
     "Per questo evento non puoi inviare la decklist.": "You can't send a decklist for this event.",
     "Qualcun altro ha già chiesto questo giocatore. Se sei tu, contatta un amministratore.": "Someone else has already asked for this player. If it's you, contact an admin.",
     "Questo giocatore è già collegato a un altro account.": "This player is already linked to another account.",
@@ -795,6 +795,10 @@
     [/^(\d+) obiettivi sbloccati$/, "$1 achievements unlocked"],
     [/^e altri (\d+)$/, "and $1 more"],
     [/^e$/, "and"],
+    // Profilo's decklist events: "Oggi · 25/11/2026 · <league> · 1 invio rimasto".
+    [/^(Oggi|In arrivo|Passato)( · .*?)( · 1 invio rimasto)?$/, function (_, when, rest, left) {
+      return { Oggi: "Today", "In arrivo": "Upcoming", Passato: "Past" }[when] + rest + (left ? " · 1 send left" : "");
+    }],
   ];
 
   // ---------------------------------------------------------------------------

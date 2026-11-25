@@ -228,13 +228,23 @@ export const PlayerCards = {
       .then((rows) => rows?.[0] ?? null),
 };
 
-// Decklists sent by email (account.html): sentEvents() — the events a player
+// Decklists sent by email (account.html): events() — the ones a decklist
+// can be sent for, the 2 next (today's included) and the 2 last, open or
+// closed (decklist_events(), migration 048), each `upcoming` or not and with
+// its league's name as `league.name`; sentEvents() — the events a player
 // already sent one for (migration 008's decklist_submissions, the
 // list itself is never stored); send() — the send-decklist Edge Function
 // (supabase/functions/send-decklist), which checks and emails it. send()
 // throws an Error whose message is the function's error code
 // (already_sent, event_not_allowed, …).
 export const Decklists = {
+  events: () =>
+    sb
+      .rpc("decklist_events")
+      .then(assertOk)
+      .then((rows) =>
+        (rows ?? []).map(({ league_name, ...ev }) => ({ ...ev, league: league_name ? { name: league_name } : null }))
+      ),
   sentEvents: (playerId) =>
     sb
       .from("decklist_submissions")

@@ -1058,6 +1058,42 @@ create policy "decklist_submissions_read_own" on decklist_submissions for select
 create policy "decklist_submissions_admin_delete" on decklist_submissions for delete
   using (is_admin());
 
+-- The events a decklist can be sent for: the 2 next (today's included) and
+-- the 2 last, by Piacenza's date, open or closed — never an external or
+-- online one. account.html offers these (js/db.js's Decklists.events) and
+-- the send-decklist function accepts only these. Security definer: an open
+-- event whose date has passed (results not entered yet) is hidden by
+-- events' RLS. Added by migration 048.
+create or replace function decklist_events()
+returns table (
+  id uuid,
+  name text,
+  event_date date,
+  league_name text,
+  upcoming boolean
+)
+language sql stable security definer set search_path = public as $$
+  with today as (select (now() at time zone 'Europe/Rome')::date as d),
+  pool as (
+    select e.* from events e
+    where not e.is_external and not e.is_online
+  ),
+  picked as (
+    (select p.*, true as upcoming from pool p, today t
+      where p.event_date >= t.d order by p.event_date, p.created_at, p.id limit 2)
+    union all
+    (select p.*, false as upcoming from pool p, today t
+      where p.event_date < t.d order by p.event_date desc, p.created_at desc, p.id limit 2)
+  )
+  select p.id, p.name, p.event_date, l.name, p.upcoming
+  from picked p
+  left join leagues l on l.id = p.league_id
+  order by p.upcoming desc, case when p.upcoming then p.event_date end, p.event_date desc;
+$$;
+
+revoke execute on function decklist_events() from public, anon;
+grant execute on function decklist_events() to authenticated, service_role;
+
 -- ---------------------------------------------------------------------------
 -- Settings remembered per account — the site's theme ('light', 'dark' or
 -- 'system'), picked from the footer's theme button (js/theme.js), and the

@@ -524,9 +524,11 @@ from account.html; it's emailed to the organisers, **never stored** — only
   first, two since migration 009 — the second replacing the first). Subject:
 `<Event name> - <dd/mm/yyyy> - <Player name>`.
 
-- Events offered: the next 2 upcoming (open, today or later) and the last 2
-  closed ones the player is in (the page only; the function accepts any
-  upcoming or played event). One text box: the pasted list or any link. Sending twice for the
+- Events offered: the 2 next (today's included) and the 2 last, by
+  Piacenza's date, open or closed, played or not — `decklist_events()`
+  (migration 048, since 2026-11-25, user), which the function checks too.
+  Before: the next 2 open ones and the last 2 closed ones the player was
+  in, so an event still open after midnight was neither. One text box: the pasted list or any link. Sending twice for the
   same event isn't allowed; an in-card warning comes before the send. To
   allow another send, the admin deletes one of the player's rows for that
   event in `decklist_submissions`.
@@ -562,6 +564,10 @@ from account.html; it's emailed to the organisers, **never stored** — only
   the dashboard's editor).
 - [ ] Push, then test on live with the admin's own account (and delete
   that test's row in `decklist_submissions` afterwards).
+- [ ] The time of day no longer matters (2026-11-25): migration
+  `048_decklist_events.sql` (+ rollback, folded into `schema.sql`) — run on
+  dcp-dev ✓, then live —, then redeploy `send-decklist` on both projects
+  (it calls `decklist_events()`; the old one keeps working meanwhile).
 
 ## After go-live: "Tu", links on the card, following
 

@@ -46,7 +46,6 @@ import {
   PlayerClaims,
   Profiles,
   MyAccount,
-  Events,
   Decklists,
   EventEntries,
   Matches,
@@ -57,7 +56,7 @@ import { achievementState, achievementsListHtml, enableAchievementDetails } from
 import { isDrop } from "./leaderboard.js";
 import { tallyOutcome, winRatePct, outcomeFor } from "./winrate.js";
 import { applyCardCosmetics, openCardEffectsInfo } from "./card-cosmetics.js";
-import { escapeHtml, eventTitle, formatDate, softFail, statTileHtml } from "./ui.js";
+import { escapeHtml, eventTitle, formatDate, localIso, softFail, statTileHtml } from "./ui.js";
 import { hidePageLoading } from "./page-loading.js";
 import { mountSettings } from "./settings-panel.js";
 import { translate } from "./locale.js";
@@ -842,15 +841,15 @@ export function mount({ signal = new AbortController().signal } = {}) {
 
   // Everything the linked player's parts need, in one round: the stats, the
   // card's badges and cosmetics, "Invia la tua decklist"'s events and sends.
-  // `upcomingRequest`: Events.listUpcoming(), when already started
+  // `decklistEventsRequest`: Decklists.events(), when already started
   // (loadSignedIn).
-  async function loadStats(player, { upcomingRequest = null } = {}) {
+  async function loadStats(player, { decklistEventsRequest = null } = {}) {
     statsLink.href = `player.html?id=${player.id}`;
     // The card's cosmetics: never fatal (a card without them).
     const progressRequest = softFail(PlayerProgress.get(player.id), null);
     // Handled by loadDecklistCard (a failure: no card); the no-op catch only
     // marks it handled meanwhile.
-    const decklistRequest = Promise.all([upcomingRequest ?? Events.listUpcoming(), Decklists.sentEvents(player.id)]);
+    const decklistRequest = Promise.all([decklistEventsRequest ?? Decklists.events(), Decklists.sentEvents(player.id)]);
     decklistRequest.catch(() => {});
     const [entries, { asP1, asP2 }] = await Promise.all([
       EventEntries.listByPlayer(player.id),
@@ -883,7 +882,7 @@ export function mount({ signal = new AbortController().signal } = {}) {
 
     cardProgress = await progressRequest;
 
-    // "Invia la tua decklist" needs the same entries (the closed events played).
+    // "Invia la tua decklist": the entries name the older events sent for.
     await loadDecklistCard(player, entries, decklistRequest);
   }
 
@@ -979,14 +978,15 @@ export function mount({ signal = new AbortController().signal } = {}) {
   }
 
   // The events that can still get a list (id → event: upcoming first, soonest
-  // first, then the ones played, newest first) and the ones already sent
+  // first, then the past ones, newest first) and the ones already sent
   // ({ event, sentAt, isNew }, most recently sent first — "Ultime inviate"
   // shows the first DECKLIST_SENT_SHOWN; all of them stay out of the list).
   const DECKLIST_SENT_SHOWN = 3;
-  // Only recent events are offered: the next DECKLIST_EVENTS_EACH upcoming and
-  // the last DECKLIST_EVENTS_EACH played (by date — one out of sends just
+  // Only recent events are offered: the 2 next (today's included) and the 2
+  // last, open or closed — decklist_events() picks them, by Piacenza's date,
+  // so an event still open after midnight stays (one out of sends just
   // isn't listed, no older one takes its place).
-  const DECKLIST_EVENTS_EACH = 2;
+
   // Sends allowed per event (the send-decklist function's MAX_SENDS, migration
   // 009); how many each event has had so far (event id → 1 or 2).
   const DECKLIST_MAX_SENDS = 2;
@@ -1003,24 +1003,22 @@ export function mount({ signal = new AbortController().signal } = {}) {
     sentDecklists.unshift({ event: ev, sentAt: new Date().toISOString(), isNew: true });
   }
 
-  // `request`: [upcoming events, the player's sends] (loadStats starts it).
+  // `request`: [the events offered (Decklists.events), the player's sends]
+  // (loadStats starts it).
   async function loadDecklistCard(player, entries, request) {
     decklistCard.hidden = false;
     setMessage(decklistMessageEl, "");
-    let upcoming;
+    let offered;
     let sent;
     try {
-      [upcoming, sent] = await request;
+      [offered, sent] = await request;
     } catch (err) {
       // E.g. migration 008 not run yet: no card rather than a broken one.
       console.error(err);
       decklistCard.hidden = true;
       return;
     }
-    const played = entries
-      .map((e) => e.event)
-      .filter((ev) => ev && !ev.is_open)
-      .sort((a, b) => (b.event_date ?? "").localeCompare(a.event_date ?? ""));
+    const played = entries.map((e) => e.event).filter(Boolean);
     // One row per send: per event, how many and the latest.
     decklistSendCount = new Map();
     const lastSentAt = new Map();
@@ -1030,14 +1028,9 @@ export function mount({ signal = new AbortController().signal } = {}) {
     }
     // Every event the player has, for the "Ultime inviate" chips — the list
     // itself offers only the recent ones.
-    const known = new Map([...upcoming, ...played].map((ev) => [ev.id, ev]));
+    const known = new Map([...played, ...offered].map((ev) => [ev.id, ev]));
     decklistEvents = new Map(
-      [
-        ...upcoming.slice(0, DECKLIST_EVENTS_EACH).map((ev) => ({ ...ev, upcoming: true })),
-        ...played.slice(0, DECKLIST_EVENTS_EACH),
-      ]
-        .filter((ev) => (decklistSendCount.get(ev.id) ?? 0) < DECKLIST_MAX_SENDS)
-        .map((ev) => [ev.id, ev])
+      offered.filter((ev) => (decklistSendCount.get(ev.id) ?? 0) < DECKLIST_MAX_SENDS).map((ev) => [ev.id, ev])
     );
     sentDecklists = [...lastSentAt.keys()]
       .map((id) => known.get(id))
@@ -1049,7 +1042,8 @@ export function mount({ signal = new AbortController().signal } = {}) {
 
   function decklistEventSublabel(ev) {
     const sentOnce = (decklistSendCount.get(ev.id) ?? 0) > 0;
-    return [ev.upcoming ? "In arrivo" : "Giocato", formatDate(ev.event_date), ev.league?.name, sentOnce && "1 invio rimasto"]
+    const when = ev.event_date === localIso() ? "Oggi" : ev.upcoming ? "In arrivo" : "Passato";
+    return [when, formatDate(ev.event_date), ev.league?.name, sentOnce && "1 invio rimasto"]
       .filter(Boolean)
       .join(" · ");
   }
@@ -1060,7 +1054,7 @@ export function mount({ signal = new AbortController().signal } = {}) {
     decklistNoneEl.hidden = events.length > 0;
     decklistNoneEl.textContent = sentDecklists.length
       ? "Hai già inviato la decklist per tutti gli eventi disponibili."
-      : "Nessun evento disponibile: puoi inviare la decklist per i prossimi due eventi o per gli ultimi due che hai giocato.";
+      : "Nessun evento disponibile: puoi inviare la decklist per i prossimi due eventi o per gli ultimi due.";
     // data-label / data-sublabel: js/custom-select.js shows the name with a
     // smaller line below (in arrivo / giocato · date · league).
     decklistEventSelect.innerHTML =
@@ -1187,19 +1181,19 @@ export function mount({ signal = new AbortController().signal } = {}) {
     setMessage(accountMessageEl, "");
     // Two rounds: everything that needs only the account, at once — the
     // profile, the linked player (or the claim), admin or not,
-    // the upcoming events (the decklist card's) — then, once the linked
+    // the decklist card's events — then, once the linked
     // player is known, all of its parts together (loadStats). The no-op
     // catches only mark the early ones handled until they're awaited.
     const linkedRequest = PlayerClaims.linkedPlayer(user.id);
-    const upcomingRequest = Events.listUpcoming();
+    const decklistEventsRequest = Decklists.events();
     const achievementsRequest = Achievements.mine();
-    for (const request of [linkedRequest, upcomingRequest, achievementsRequest]) request.catch(() => {});
+    for (const request of [linkedRequest, decklistEventsRequest, achievementsRequest]) request.catch(() => {});
     try {
       let isAdmin;
       [profile, , isAdmin] = await Promise.all([Profiles.mine(user.id), loadClaim(linkedRequest), MyAccount.isAdmin()]);
       // Admins can't delete their own account from here (nor in the database).
       accountDangerEl.hidden = isAdmin;
-      if (claim.linked) await loadStats(claim.linked, { upcomingRequest });
+      if (claim.linked) await loadStats(claim.linked, { decklistEventsRequest });
     } catch (err) {
       console.error(err);
       setMessage(pageMessageEl(), "Impossibile caricare il profilo, ricarica la pagina.");

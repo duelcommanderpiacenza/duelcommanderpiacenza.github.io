@@ -9,8 +9,9 @@
 // SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are provided by Supabase.
 //
 // Checks everything itself, never the browser's word: a signed-in account,
-// not blocked, linked to a player; an event that is upcoming (open, today
-// or later) or closed with that player in it; fewer than MAX_SENDS lists
+// not blocked, linked to a player; an event among the 2 next (today's
+// included) and the 2 last, open or closed (decklist_events(), migration
+// 048 — the same list account.html offers); fewer than MAX_SENDS lists
 // sent by this player for it (migrations 008-009's
 // decklist_submissions — the only thing kept: *that* it was sent, never the
 // list). The subject is built here from the database: "<Event name> -
@@ -37,11 +38,6 @@ function reply(status: number, body: Record<string, unknown>): Response {
     status,
     headers: { ...CORS, "Content-Type": "application/json" },
   });
-}
-
-// Today in Piacenza, as YYYY-MM-DD (event dates are local calendar dates).
-function todayInItaly(): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Rome" }).format(new Date());
 }
 
 function italianDate(iso: string): string {
@@ -95,19 +91,17 @@ Deno.serve(async (req) => {
     .maybeSingle();
   if (!event) return reply(404, { error: "event_not_found" });
 
-  // Upcoming (open, today or later), or closed with this player in it —
-  // never an external event (played somewhere else, migration 026).
-  if (event.is_external) return reply(403, { error: "event_not_allowed" });
-  let allowed = event.is_open && event.event_date >= todayInItaly();
-  if (!event.is_open) {
-    const { count } = await admin
-      .from("event_entries")
-      .select("id", { count: "exact", head: true })
-      .eq("event_id", eventId)
-      .eq("player_id", player.id);
-    allowed = (count ?? 0) > 0;
+  // One of the 2 next events (today's included) or the 2 last, open or
+  // closed, by Piacenza's date — never an external or online one
+  // (decklist_events(), migration 048).
+  const { data: allowedEvents, error: allowedError } = await admin.rpc("decklist_events");
+  if (allowedError) {
+    console.error("decklist_events", allowedError);
+    return reply(500, { error: "send_failed" });
   }
-  if (!allowed) return reply(403, { error: "event_not_allowed" });
+  if (!(allowedEvents ?? []).some((ev: { id: string }) => ev.id === eventId)) {
+    return reply(403, { error: "event_not_allowed" });
+  }
 
   // A free send for this player and event is claimed first — attempt 1,
   // else 2: the primary key settles two sends at the same instant — then the
