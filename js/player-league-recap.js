@@ -16,15 +16,18 @@ import { Leagues, Events, fetchEventsResults } from "./db.js";
 import { computeLeaguePoints, previousLeaguePositions } from "./leaderboard.js";
 import { positionMoveHtml } from "./history-list.js";
 import { escapeHtml } from "./ui.js";
-import { sectionLoadingHtml } from "./page-loading.js";
 
 const byDate = (a, b) => `${a.event_date ?? ""}T${a.start_time ?? ""}`.localeCompare(`${b.event_date ?? ""}T${b.start_time ?? ""}`);
 const CHEVRON =
   '<svg class="league-recap-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>';
 
 export async function renderPlayerLeagueRecap(el, playerId, { signal }) {
+  // Until it's known: the page placeholder's own block (.sk-recap — the
+  // same shimmer, size and corners), so the placeholder hands over to the
+  // card with nothing different in between (a white card with two list
+  // rows was shown here until 2026-11-25).
   el.hidden = false;
-  el.innerHTML = `<div class="league-recap-card is-loading">${sectionLoadingHtml(2)}</div>`;
+  el.innerHTML = '<i class="sk league-recap-sk" role="status" aria-label="Caricamento..."></i>';
   try {
     const [openLeague, leagues] = await Promise.all([Leagues.getOpen(), Leagues.list()]);
     const league = openLeague ?? leagues.find((l) => !l.is_open && !l.no_points) ?? null;

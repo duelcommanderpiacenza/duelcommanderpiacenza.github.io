@@ -2871,8 +2871,19 @@ a.league-recap-card:focus-visible {
   background: color-mix(in srgb, var(--brand-red) 10%, rgba(255, 255, 255, 0.05));
 }
 
-.league-recap-card.is-loading {
-  animation: none;
+/* While it loads (js/player-league-recap.js): the page placeholder's
+   .sk-recap block again (css/1, .sk-page.is-player .sk-recap) — the same
+   height and corners, so nothing changes between the two. */
+.league-recap-sk {
+  display: block;
+  height: 108px;
+  border-radius: 22px;
+}
+
+@media (max-width: 640px) {
+  .league-recap-sk {
+    height: 150px;
+  }
 }
 
 .league-recap-top {
@@ -3347,7 +3358,7 @@ a.league-recap-card:hover .league-recap-chevron {
     margin-top: var(--sheet-first-top);
   }
 
-  html.nav-mobile #player-content .hero-sheet > .where-filter[hidden] + .league-recap .league-recap-card,
+  html.nav-mobile #player-content .hero-sheet > .where-filter[hidden] + .league-recap :is(.league-recap-card, .league-recap-sk),
   html.nav-mobile #player-content .hero-sheet > .where-filter[hidden] + .league-recap[hidden] + .rivals > .rival-card {
     border-radius: var(--sheet-first-radius);
   }
