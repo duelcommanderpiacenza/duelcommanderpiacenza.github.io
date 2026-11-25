@@ -25,6 +25,7 @@ import { initShareButton } from "./share.js";
 import { nestedResultsMenu } from "./results-link.js";
 import { eventDate, timelineRowHtml, whenHtml } from "./event-timeline.js";
 import { renderMetaCharts } from "./meta-charts.js";
+import { renderLeagueStats } from "./league-stats.js";
 import { locale } from "./locale.js";
 
 // How many leaderboard rows get the "top 8" highlight (styles.css .is-top8).
@@ -138,7 +139,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   const leaderboardEl = document.getElementById("league-leaderboard");
   const tabsEl = document.querySelector(".league-tabs");
 
-  // Eventi / Classifica / Meta: one at a time behind the tabs on every screen
+  // Eventi / Classifica / Meta / Statistiche: one at a time behind the tabs on every screen
   // (a pill bar on a computer, the segmented control on touch screens), each
   // list whole — a long page, hence the back-to-top button.
   const tabs = initTabs(tabsEl);
@@ -250,6 +251,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
       if (events.length) statsEl.innerHTML = statTilesLoadingHtml(["Eventi", "Giocatori", "Presenza media", "Partite giocate"]);
       if (!league.no_points) leaderboardEl.innerHTML = sectionLoadingHtml(6);
       document.getElementById("league-meta-charts").innerHTML = sectionLoadingHtml(4);
+      if (events.length) document.getElementById("league-stats-panel").innerHTML = sectionLoadingHtml(6);
       hidePageLoading(signal);
     }
 
@@ -267,6 +269,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
 
     if (events.length === 0) {
       leaderboardEl.innerHTML = '<p class="page-empty">Nessun dato per la classifica.</p>';
+      renderLeagueStats(document.getElementById("league-stats-panel"), { league, eventsData, standings: [], scheduledEvents, signal });
       return;
     }
 
@@ -293,6 +296,9 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     // The hero's backdrop (styles.css .profile-hero-art): the league's most
     // played commander's art (the hero's own reds alone without one).
     createArtPainter(document.getElementById("league-hero-art"))(wrapped.topCommanders[0]?.commander?.name ?? null);
+
+    // Statistiche (js/league-stats.js): from the same results and standings.
+    renderLeagueStats(document.getElementById("league-stats-panel"), { league, eventsData, standings, scheduledEvents, signal });
 
     if (league.no_points) return;
 

@@ -23,7 +23,7 @@ const svg = (body) =>
 // tab -> [short name, icon]
 const TABS = {
   players: ["Giocatori", svg('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>')],
-  commanders: ["Comandanti", svg('<path d="M3 8l4 4 5-7 5 7 4-4-2 11H5L3 8z"></path>')],
+  commanders: ["Comandanti", svg('<rect x="9" y="3" width="11" height="15" rx="2"></rect><path d="M6 6.5V19a2 2 0 0 0 2 2h8"></path>')],
   badges: ["Badge", svg('<circle cx="12" cy="9" r="6"></circle><path d="M8.5 14 7 21l5-2.5 5 2.5-1.5-7"></path>')],
   leagues: ["Leghe", svg('<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"></path><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"></path>')],
   "standalone-events": ["Eventi", svg('<rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M3 10h18"></path>')],

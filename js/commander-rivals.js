@@ -21,9 +21,11 @@ const MIN_PILOT_EVENTS = 2;
 const MIN_MASTER_MATCHES = 8;
 const MIN_MASTER_WINRATE = 60;
 
-// Lucide line icons (ISC), like js/player-rivals.js: a gem, a flag, a crown.
+// Lucide line icons (ISC), like js/player-rivals.js: a skull (player.html's
+// Bestia nera — the same meaning), a flag, a crown (docs/icons.md).
 const ICONS = {
-  nemesis: '<path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M11 3 8 9l4 13 4-13-3-6"/><path d="M2 9h20"/>',
+  nemesis:
+    '<circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><path d="M8 20v2h8v-2"/><path d="m12.5 17-.5-1-.5 1h1z"/><path d="M16 20a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20"/>',
   regular:
     '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/>',
   master:

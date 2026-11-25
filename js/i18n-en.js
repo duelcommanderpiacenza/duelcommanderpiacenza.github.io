@@ -658,6 +658,22 @@
     "La tua carta ti aspetta.": "Your card is waiting.",
     "Condividi la tua lista.": "Share your list.",
     "Tutto, ma proprio tutto.": "Everything, really everything.",
+    // league.html's Statistiche (js/league-stats.js).
+    "Miglior winrate": "Best winrate",
+    "Il più costante": "Most consistent",
+    "La scalata": "The climb",
+    "La corsa al titolo": "The title race",
+    "Albo d'oro": "Roll of honour",
+    "I mazzi della lega": "The league's decks",
+    "Il più giocato": "Most played",
+    "Il più vincente": "Most winning",
+    "posto medio": "average place",
+    "posizione": "place",
+    "posizioni": "places",
+    "vittoria": "win",
+    "Miglior": "Best",
+    "Nessun evento giocato.": "No event played.",
+    "Posizioni dopo ogni evento": "Places after each event",
   };
 
   // ---------------------------------------------------------------------------
@@ -799,6 +815,16 @@
     [/^(Oggi|In arrivo|Passato)( · .*?)( · 1 invio rimasto)?$/, function (_, when, rest, left) {
       return { Oggi: "Today", "In arrivo": "Upcoming", Passato: "Past" }[when] + rest + (left ? " · 1 send left" : "");
     }],
+    // league.html's Statistiche (js/league-stats.js).
+    [/^su (\d+) eventi giocati$/, "over $1 events played"],
+    [/^dal (\d+)° al (\d+)°$/, function (_, a, b) { return "from " + ord(a) + " to " + ord(b); }],
+    [/^(\d+) pilot[ai]( · 🏆 \d+)?$/, function (_, n, w) { return n + plural(n, " pilot", " pilots") + (w || ""); }],
+    [/^(\d+) pilot[ai] · (\d+)%$/, function (_, n, p) { return n + plural(n, " pilot", " pilots") + " · " + p + "%"; }],
+    [/^(\d+-\d+-\d+) · min\. (\d+) partite$/, "$1 · min. $2 matches"],
+    [/^(\d+) volte su (\d+)$/, "$1 times out of $2"],
+    [/^Più spesso in top (\d+)$/, "Most often in the top $1"],
+    [/^in top (\d+)$/, "in top $1"],
+    [/^Mostra tutti i (\d+) mazzi$/, "Show all $1 decks"],
   ];
 
   // ---------------------------------------------------------------------------

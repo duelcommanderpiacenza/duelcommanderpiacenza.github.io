@@ -97,6 +97,7 @@
   <link rel="modulepreload" href="js/results-link.js">
   <link rel="modulepreload" href="js/event-timeline.js">
   <link rel="modulepreload" href="js/meta-charts.js">
+  <link rel="modulepreload" href="js/league-stats.js">
   <link rel="modulepreload" href="js/auto-badges.js">
   <link rel="modulepreload" href="js/metagame-chart.js">
   <link rel="modulepreload" href="js/chart-carousel.js">
@@ -212,7 +213,7 @@
     <!-- Phones / tablets: the page's content as a sheet sliding up over the hero (styles.css .hero-sheet; on a computer it's no box at all). -->
     <div class="hero-sheet">
 
-    <!-- Eventi della lega (a timeline), Classifica and Meta: one at a time
+    <!-- Eventi della lega (a timeline), Classifica, Meta and Statistiche: one at a time
          behind tabs on every screen, like event.html's (a pill bar on a
          computer, the sticky segmented control on touch screens; no
          titles — the tab names the panel). A Topdeck series has no
@@ -221,6 +222,7 @@
       <button type="button" class="profile-tab" role="tab" id="league-tab-events" data-tab="league-events-section" aria-controls="league-events-section"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M3 10h18"></path></svg><span>Eventi</span></button>
       <button type="button" class="profile-tab" role="tab" id="league-tab-leaderboard" data-tab="league-leaderboard-section" aria-controls="league-leaderboard-section"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4"></path><path d="M7 4h10v5a5 5 0 0 1-10 0Z"></path><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"></path></svg><span>Classifica</span></button>
       <button type="button" class="profile-tab" role="tab" id="league-tab-meta" data-tab="league-meta-section" aria-controls="league-meta-section"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12A9 9 0 1 1 12 3v9Z"></path><path d="M15 3.5A9 9 0 0 1 20.5 9H15Z"></path></svg><span>Meta</span></button>
+      <button type="button" class="profile-tab" role="tab" id="league-tab-stats" data-tab="league-stats-section" aria-controls="league-stats-section"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg><span>Statistiche</span></button>
     </nav>
     <div class="league-lists">
       <section id="league-events-section" role="tabpanel" aria-labelledby="league-tab-events">
@@ -237,6 +239,12 @@
         <div class="card dashboard-card dashboard-card-commanders event-meta-card" id="league-meta-card">
           <div id="league-meta-charts" class="page-loading">Caricamento...</div>
         </div>
+      </section>
+
+      <!-- Statistiche: the league's records — players and commanders, the
+           race for the title, the winners, every deck (js/league-stats.js). -->
+      <section id="league-stats-section" role="tabpanel" aria-labelledby="league-tab-stats">
+        <div id="league-stats-panel" class="page-loading">Caricamento...</div>
       </section>
     </div>
     </div>

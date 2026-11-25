@@ -44,7 +44,7 @@ const ICONS = {
   rainbow: '<path d="M22 17a10 10 0 0 0-20 0"/><path d="M6 17a6 6 0 0 1 12 0"/><path d="M10 17a2 2 0 0 1 4 0"/>',
   heart: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
   link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
-  flag: '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-7"/>',
+  compass: '<path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"/><circle cx="12" cy="12" r="10"/>',
   sparkles: '<path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.14-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.14a.5.5 0 0 1 .96 0l1.58 6.14a2 2 0 0 0 1.44 1.44l6.14 1.58a.5.5 0 0 1 0 .96l-6.14 1.58a2 2 0 0 0-1.44 1.44l-1.58 6.14a.5.5 0 0 1-.96 0z"/><path d="M20 3v4M22 5h-4"/>',
   circleCheck: '<path d="M21.8 10A10 10 0 1 1 17 3.34"/><path d="m9 11 3 3L22 4"/>',
   flame: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
@@ -97,7 +97,7 @@ export const ACHIEVEMENTS = [
   { key: "arcobaleno", name: "Arcobaleno", group: "stile", icon: "rainbow", desc: "Tutti e cinque i colori giocati.", hint: "Esplora tutti i colori." },
   { key: "fedele", name: "Fedele", group: "stile", icon: "heart", tiers: [5, 10, 20], desc: (n) => `Lo stesso comandante in ${n} eventi.`, hint: "Trova il tuo comandante e restagli fedele." },
   { key: "coppia", name: "Coppia affiatata", group: "stile", icon: "link", desc: "Un evento giocato con una coppia di comandanti.", hint: "In due è meglio." },
-  { key: "pioniere", name: "Pioniere", group: "stile", icon: "flag", desc: "Il primo a portare un comandante agli eventi.", hint: "Porta qualcosa di nuovo al tavolo." },
+  { key: "pioniere", name: "Pioniere", group: "stile", icon: "compass", desc: "Il primo a portare un comandante agli eventi.", hint: "Porta qualcosa di nuovo al tavolo." },
   // Presenza
   { key: "debutto", name: "Debutto", group: "presenza", icon: "sparkles", desc: "Il tuo primo evento.", hint: "Ogni storia comincia da un evento." },
   { key: "presenze", name: "Presenze", group: "presenza", icon: "calendar", tiers: [10, 25, 50, 100], desc: (n) => `${n} eventi giocati.`, hint: "Partecipa agli eventi." },

@@ -897,6 +897,186 @@ html.app-header .commander-lists .history-scroll,
   max-height: none !important;
 }
 
+/* league.html's Statistiche (js/league-stats.js, user 2026-11-25): a title
+   per group (Giocatori, Comandanti — no icon, user) over player.html's rival cards, then
+   white cards (.card) holding La corsa al titolo, the Albo d'oro and I mazzi
+   della lega — their lists' sub-cards straight in the card, no box between
+   (user), the card's sides narrow so the rows fill it. */
+.league-stats-heading {
+  margin: 6px 0 12px;
+  color: var(--text-title);
+  font-size: 1.15rem;
+}
+
+.league-stats-cards {
+  margin-bottom: 18px;
+}
+
+.league-stats-card {
+  padding: 16px 8px 8px;
+  margin: 0 0 26px;
+}
+
+.league-stats-card > h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 0 10px;
+  color: var(--text-title);
+  font-size: 1rem;
+}
+
+.league-stats-card > h3 > svg {
+  width: 18px;
+  height: 18px;
+  color: var(--brand-red);
+}
+
+#league-stats-panel .history-panel,
+:root[data-theme="dark"] #league-stats-panel .history-panel {
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+#league-stats-panel .history-item {
+  align-items: center;
+  border-radius: 16px;
+}
+
+#league-stats-panel .history-meta .color-identity-inline {
+  margin-left: 6px;
+}
+
+/* The Albo d'oro's date: the day over its month, in the page's colour. */
+.league-stats-date {
+  display: grid;
+  flex: none;
+  place-items: center;
+  align-content: center;
+  width: 44px;
+  height: 44px;
+  margin-right: 12px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--brand-red) 12%, transparent);
+  color: var(--brand-red);
+  font-size: 0.66rem;
+  font-weight: 800;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.league-stats-date b {
+  font-size: 1.05rem;
+}
+
+/* I mazzi della lega: the first 10, then "Mostra tutti". */
+.league-stats-decks:not(.is-all) .history-item.is-more {
+  display: none;
+}
+
+.league-stats-all {
+  display: block;
+  margin: 12px auto 4px;
+  padding: 8px 18px;
+  border: 1px solid var(--hairline-hover);
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--brand-red);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.league-stats-all:hover {
+  background: color-mix(in srgb, var(--brand-red) 8%, transparent);
+}
+
+/* La corsa al titolo: an SVG at the card's width (its viewBox), the hover
+   strips (.line-chart-hit, js/chart-scrub.js) over it; the names at the
+   lines' ends, or (narrow) in a legend under it. */
+.league-race-chart {
+  position: relative;
+}
+
+.league-race {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.league-race-grid {
+  stroke: var(--table-row-line);
+  stroke-width: 1;
+}
+
+.league-race-axis {
+  fill: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.league-race-line path {
+  fill: none;
+  stroke: var(--c);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.9;
+}
+
+.league-race-line circle {
+  fill: var(--c);
+  stroke: #fff;
+  stroke-width: 2;
+}
+
+:root[data-theme="dark"] .league-race-line circle {
+  stroke: #1b1416;
+}
+
+.league-race-label {
+  fill: var(--c);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.league-race-chart .line-chart-hit:hover,
+.league-race-chart .line-chart-hit.is-scrub {
+  z-index: 4;
+}
+
+.league-race-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 8px 0 0;
+  padding: 0 10px;
+  list-style: none;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.league-race-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--c);
+}
+
+.league-race-legend li::before {
+  content: "";
+  width: 14px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--c);
+}
+
 /* player.html's Storico partite, the same on phones and touch screens while
    it's under the album (below 880px): the whole list, no scrolling inside.
    From 880px it's beside the album and scrolls in its height (.fills-row). */
