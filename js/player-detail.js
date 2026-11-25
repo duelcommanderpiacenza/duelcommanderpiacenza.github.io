@@ -125,8 +125,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   const paintHeroArt = createArtPainter(document.getElementById("player-hero-art"));
 
   // Album / Obiettivi / Statistiche / Storico partite: tabs on phones and
-  // touch screens (the CSS hides them on a computer: two columns — the
-  // Album then Obiettivi, Statistiche then Storico partite), like
+  // touch screens (the CSS hides them on a computer: two by two — the
+  // Album | Statistiche, Obiettivi | Storico partite), like
   // commander.html's;
   // Storico partite the whole list there (no scrolling inside), hence the
   // back-to-top button.

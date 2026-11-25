@@ -859,13 +859,18 @@ html.app-header .player-lists :is(.ach-col, .stats-col, .history-col) > h2 {
 /* player.html's Obiettivi (since 2026-11-24) and Statistiche (since
    2026-11-25): on touch screens the second and third tabs (Album ·
    Obiettivi · Statistiche · Storico partite); on a computer each under its
-   title (user — tabs there were tried and dropped). From 880px two
-   columns, each its own stack (user, 2026-11-25): the Album then Obiettivi
-   right under it, Statistiche then Storico partite — which stretches down
-   to the left stack's bottom (.fills-row, scrolling inside; at least
-   320px). The stacks are .player-stack wrappers, dissolved (display:
-   contents) on touch screens and narrower, where the four are the grid's
-   own items: one column there, Statistiche and Obiettivi last. */
+   title (user — tabs there were tried and dropped). From 880px two by two
+   (user, 2026-11-25 — after a day as two independent stacks): the Album |
+   Statistiche, then Obiettivi | Storico partite — each row as tall as its
+   taller section, so the four line up; Storico partite as tall as
+   Obiettivi (.fills-row, scrolling inside; at least 320px). Statistiche's
+   records a little tighter there (css/4) so its column comes out as tall
+   as the album's (~691px with the chart and six records) — the chart keeps
+   its height (its scale is in px). No Statistiche (no live event): the
+   Album | Storico partite, Obiettivi the whole width under them. The
+   .player-stack wrappers (the stacks' markup) are dissolved everywhere
+   (display: contents): the four sections are the grid's own items —
+   narrower, one column, Statistiche and Obiettivi last. */
 .player-stack {
   display: contents;
 }
@@ -881,26 +886,45 @@ html.app-header .player-lists :is(.ach-col, .stats-col, .history-col) > h2 {
 }
 
 @media (min-width: 880px) {
-  html:not(.app-header) .player-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 28px;
-    min-width: 0;
+  html:not(.app-header) .player-lists .album-col {
+    grid-area: 1 / 1;
   }
 
-  html:not(.app-header) .player-stack > .history-col.fills-row {
-    flex: 1;
+  html:not(.app-header) .player-lists .stats-col {
+    grid-area: 1 / 2;
   }
 
-  /* Titles in the stacks start flush, like .history-col's and .album-col's. */
+  html:not(.app-header) .player-lists .ach-col {
+    grid-area: 2 / 1;
+  }
+
+  html:not(.app-header) .player-lists .history-col {
+    grid-area: 2 / 2;
+  }
+
+  html:not(.app-header) .player-lists:has(.stats-col[hidden]) .history-col {
+    grid-area: 1 / 2;
+  }
+
+  html:not(.app-header) .player-lists:has(.stats-col[hidden]) .ach-col {
+    grid-area: 2 / 1 / auto / span 2;
+  }
+
+  /* Titles start flush, like .history-col's and .album-col's. */
   html:not(.app-header) .player-lists :is(.stats-col, .ach-col) > h2 {
     margin-top: 0;
   }
 
-  /* The chart's top level with the album's box beside it (#player-commanders
-     has 6px of padding above its box). */
+  /* The chart's top and the records' bottom level with the album's box
+     beside it (#player-commanders has 6px of padding above and below it). */
   html:not(.app-header) #player-stats {
-    padding-top: 6px;
+    padding-block: 6px;
+  }
+
+  /* Obiettivi's first card level with Storico partite's beside it (its
+     list starts 8px down: 6px of padding, the scroller's 2px). */
+  html:not(.app-header) #player-achievements {
+    padding-top: 8px;
   }
 }
 

@@ -241,9 +241,9 @@
       <button type="button" class="profile-tab" role="tab" id="player-tab-matches" data-tab="player-col-matches" aria-controls="player-col-matches"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 17.5 3 6V3h3l11.5 11.5"></path><path d="m13 19 6-6M16 16l4 4M19 21l2-2"></path><path d="M14.5 6.5 18 3h3v3l-3.5 3.5"></path><path d="m5 14 4 4M7 17l-3 3M3 19l2 2"></path></svg><span>Storico partite</span></button>
     </nav>
     <div class="history-grid player-lists">
-      <!-- On a computer (880px+) two stacks: the Album then Obiettivi,
-           Statistiche then Storico partite (css/3 .player-stack;
-           dissolved on touch screens and narrower). -->
+      <!-- On a computer (880px+) two by two: the Album | Statistiche, then
+           Obiettivi | Storico partite (css/3). The .player-stack wrappers
+           are dissolved (display: contents) everywhere. -->
       <div class="player-stack">
         <section class="album-col" id="player-col-album" role="tabpanel" aria-labelledby="player-tab-album">
           <h2 class="heading-help">Album <button type="button" class="help-toggle-btn" id="album-help" aria-haspopup="dialog" aria-label="Come si ottiene una carta speciale">?</button></h2>

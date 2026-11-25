@@ -3310,9 +3310,17 @@ a.league-recap-card:hover .league-recap-chevron {
   }
 }
 
+/* A computer's half column (css/3, the 2×2 grid): the records 56px tall,
+   7px apart, 11px under the chart — the last one's bottom edge level with
+   the album's box beside it (both columns 692px, 6px under each box). */
 @media (min-width: 880px) {
+  html:not(.app-header) .player-lists .stats-col .rivals.player-records {
+    gap: 7px;
+    margin-top: 11px;
+  }
+
   html:not(.app-header) .player-lists .stats-col .rival-card.is-record {
-    padding: 10px 16px;
+    padding: 8px 16px;
   }
 
   html:not(.app-header) .player-lists .stats-col .rival-card.is-record .rival-icon {
