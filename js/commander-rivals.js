@@ -6,9 +6,9 @@
 // winrate, which read oddly on a weak commander — user), a link to the
 // player — and "Maestro" — the pilot with the best winrate on it (user,
 // 2026-11-24: beside Portabandiera, not instead of it), only a good one
-// (MIN_MASTER_WINRATE) over enough matches (MIN_MASTER_MATCHES), and not when
-// that's the Portabandiera already (their card shows the record). From the
-// page's match rows
+// (MIN_MASTER_WINRATE) over enough matches (MIN_MASTER_MATCHES); when that's
+// the Portabandiera too, only the Maestro card (user, 2026-11-25 — before,
+// only the Portabandiera's). From the page's match rows
 // (js/commander-detail.js renderSections: the pairing shown), so they follow
 // the pairing picker. Byes and drops left out, as in the hero's numbers; a
 // mirror (the opposing deck has this commander too) isn't a kryptonite. A
@@ -86,7 +86,7 @@ export function commanderRivalsHtml(rows, commanderId) {
       .sort((a, b) => b.losses - a.losses || a.wins - b.wins || deckName(a).localeCompare(deckName(b)))[0] ?? null;
 
   // The most events; then the most matches, then by name.
-  const pilot =
+  const mostPlayed =
     [...pilots.values()]
       .filter((p) => p.events.size >= MIN_PILOT_EVENTS)
       .sort((a, b) => b.events.size - a.events.size || b.played - a.played || a.player.name.localeCompare(b.player.name))[0] ?? null;
@@ -98,7 +98,9 @@ export function commanderRivalsHtml(rows, commanderId) {
     [...pilots.values()]
       .filter((p) => p.played >= MIN_MASTER_MATCHES && winRate(p) >= MIN_MASTER_WINRATE)
       .sort((a, b) => winRate(b) - winRate(a) || b.played - a.played || a.player.name.localeCompare(b.player.name))[0] ?? null;
-  const master = best && best.player.id !== pilot?.player.id ? best : null;
+  // The same player: the Maestro card only.
+  const master = best;
+  const pilot = mostPlayed && mostPlayed.player.id !== best?.player.id ? mostPlayed : null;
 
   return [
     kryptonite &&
