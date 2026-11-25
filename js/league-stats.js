@@ -52,13 +52,9 @@ const ICONS = {
   mountain: '<path d="m8 3 4 8 5-5 5 15H2L8 3z"/>',
   swords:
     '<path d="M14.5 17.5 3 6V3h3l11.5 11.5"/><path d="m13 19 6-6M16 16l4 4M19 21l2-2"/><path d="M14.5 6.5 18 3h3v3l-3.5 3.5"/><path d="m5 14 4 4M7 17l-3 3M3 19l2 2"/>',
-  chart: '<path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/>',
-  scroll:
-    '<path d="M15 12h-5"/><path d="M15 8h-5"/><path d="M19 17V5a2 2 0 0 0-2-2H4"/><path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"/>',
   pie: '<path d="M21 12A9 9 0 1 1 12 3v9Z"></path><path d="M15 3.5A9 9 0 0 1 20.5 9H15Z"></path>',
   award:
     '<path d="m15.48 12.89 1.51 8.53a.5.5 0 0 1-.81.47l-3.58-2.69a1 1 0 0 0-1.2 0l-3.59 2.69a.5.5 0 0 1-.81-.47l1.51-8.53"/><circle cx="12" cy="8" r="6"/>',
-  list: '<path d="M10 12h11"/><path d="M10 18h11"/><path d="M10 6h11"/><path d="M4 10h2"/><path d="M4 6h1v4"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/>',
 };
 const svg = (path) =>
   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
@@ -323,7 +319,7 @@ export function renderLeagueStats(el, { league, eventsData, standings, scheduled
   const race =
     positions && events.length >= 2
       ? `<section class="card league-stats-card league-race-card" id="league-race">
-          <h3>${svg(ICONS.chart)}La corsa al titolo</h3>
+          <h3>La corsa al titolo</h3>
           <div class="league-race-plot"></div>
         </section>`
       : "";
@@ -333,13 +329,13 @@ export function renderLeagueStats(el, { league, eventsData, standings, scheduled
     ${playerCards.length ? `<div class="rivals league-stats-cards">${playerCards.join("")}</div>` : ""}
     ${race}
     <section class="card league-stats-card">
-      <h3>${svg(ICONS.scroll)}Albo d'oro</h3>
+      <h3>Albo d'oro</h3>
       ${historyPanelHtml(honours, { scroll: false })}
     </section>
     <h2 class="league-stats-heading">Comandanti</h2>
     ${commanderCards.length ? `<div class="rivals league-stats-cards">${commanderCards.join("")}</div>` : ""}
     <section class="card league-stats-card league-stats-decks">
-      <h3>${svg(ICONS.list)}I mazzi della lega <span class="history-count">${decks.length}</span></h3>
+      <h3>I mazzi della lega <span class="history-count">${decks.length}</span></h3>
       ${historyPanelHtml(deckRows, { scroll: false })}
       ${decks.length > DECKS_SHOWN ? `<button type="button" class="league-stats-all">Mostra tutti i ${decks.length} mazzi</button>` : ""}
     </section>`;

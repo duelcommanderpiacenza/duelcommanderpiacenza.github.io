@@ -927,12 +927,6 @@ html.app-header .commander-lists .history-scroll,
   font-size: 1rem;
 }
 
-.league-stats-card > h3 > svg {
-  width: 18px;
-  height: 18px;
-  color: var(--brand-red);
-}
-
 #league-stats-panel .history-panel,
 :root[data-theme="dark"] #league-stats-panel .history-panel {
   padding: 0;

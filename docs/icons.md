@@ -105,9 +105,6 @@ Most icons are Lucide's (ISC licence), 24×24, `currentColor`, stroke 2.
 | Compass | `41478c3b` | Pioniere (the first to play a commander) | achievement |
 | Anchor | `131b930e` | Il più costante (best average place) | Statistiche |
 | Mountain | `64cbf871` | La scalata (places climbed) | Statistiche |
-| Line chart | `3ce7dc6c` | La corsa al titolo (places over time) | Statistiche |
-| Scroll | `6d341819` | Albo d'oro (each event's winner) | Statistiche |
-| Numbered list | `f7116377` | I mazzi della lega (every deck, ranked) | Statistiche |
 | Arrow up-right | `205caa8a` | Up in the standings | position change badges |
 | Arrow down-right | `8fc2f4ce` | Down in the standings | position change badges |
 | Arrow right | `6a57e0dd` | Same place | position change badges |
