@@ -462,6 +462,10 @@ create table event_standings (
   wins integer not null,
   draws integer not null,
   losses integer not null,
+  elo_before integer,        -- the player's Elo at the event's start (migration 049; null: no rated match in it)
+  elo_after integer,         -- ... and at its end
+  best_win_elo integer,      -- the highest Elo (at the time) among the opponents beaten in it (null: no win)
+  best_win_opponent uuid references players(id) on delete set null, -- ... that opponent
   primary key (event_id, player_id)
 );
 

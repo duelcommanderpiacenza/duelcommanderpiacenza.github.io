@@ -450,6 +450,16 @@ export const Events = {
           .order("event_date", { ascending: true }),
       withOnline
     ).then(assertOk),
+  // Every closed live event, oldest first (on the same day the one created
+  // first — the Elo's order, js/elo.js), just its id, date and creation time:
+  // player.html's "Presenze di fila" (the events attended in a row).
+  listPlayed: () =>
+    notExternal((scope) =>
+      scope(sb.from("events").select("id, event_date, created_at"))
+        .eq("is_open", false)
+        .order("event_date", { ascending: true })
+        .order("created_at", { ascending: true })
+    ).then(assertOk),
   // Every external event (the Bacheca's timeline picks the upcoming ones and
   // the past ones with a link), newest first. None without migration 026.
   listExternal: () =>
@@ -827,11 +837,14 @@ export const PlayerProgress = {
 // each event comes from their own few rows, not every attended event's full
 // entries + matches.
 export const EventStandings = {
+  // Every column (event_id, position, points, wins / draws / losses, and
+  // elo_before / elo_after / best_win_elo / best_win_opponent — migration
+  // 049: player.html's Statistiche), so a database without 049 still answers.
   listByPlayer: (playerId) =>
     selectAllRows(() =>
       sb
         .from("event_standings")
-        .select("event_id, position, points, wins, draws, losses")
+        .select("*")
         .eq("player_id", playerId)
         .order("event_id")
     ),

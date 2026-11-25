@@ -59,7 +59,7 @@ Most icons are Lucide's (ISC licence), 24×24, `currentColor`, stroke 2.
 | Archive box | `bdb42f37` | Archivio (past leagues and events) | Leghe & Eventi's tab |
 | Trophy | `504b6544`, `ee384e4c` | ⚠️ Classifica (standings) **and** Leghe (the nav tab) | Classifica tabs (event, league, Bacheca), the Bacheca's league heading; phone tab bar's and admin's "Leghe"; event.html's split note and top 8 winner |
 | Pie | `ea72c9c3` | Meta / Più giocati (what's played most) | Meta tabs, phone tab bar's Meta, Bacheca's Più giocati, Statistiche's "Il più giocato" |
-| Bar chart | `d420fd81` | Statistiche | league.html's tab |
+| Bar chart | `d420fd81` | Statistiche | league.html's and player.html's tab |
 | Two people | `1cdb5099` | Giocatori (players) | Giocatori tabs and nav, players per event on the timelines, admin Giocatori |
 | Two people (admin's) | `4a6c1133` | Giocatori (an event's entries) | admin, an event's Giocatori / Partite switch |
 | Two cards | `48ed3dda`, `ec663a64` | Comandanti (commanders) | Meta's Comandanti tab, admin Comandanti; the Collezione achievement (different commanders played) |
@@ -68,7 +68,7 @@ Most icons are Lucide's (ISC licence), 24×24, `currentColor`, stroke 2.
 | Crossed swords | `5bad4934`, `f30e6434` | Partite (matches) | Partite / Storico partite / Matchups tabs, the Vittorie achievement, Statistiche's "Più partite vinte", admin Partite |
 | Two crossing circles | `0d6c10ff` | Confronto | Giocatori's Confronto tab |
 | Laurel | `6348b877` | Obiettivi (achievements) | account.html and player.html tabs |
-| Layers | `b7ba1ec8` | Album comandanti | player.html's tab |
+| Layers | `b7ba1ec8` | Album (a player's commander cards; "Album comandanti" until 2026-11-25) | player.html's tab |
 | Stacked lists | `374bf891` | Mazzi / Liste (decklists) | Social's Mazzi, the events' "Liste" menu |
 | Sheet with a corner | `dc077f69` | Decklist (send yours) | account.html's tab |
 | Paper plane | `b24ad0dc` | Invia (send) | account.html's decklist send button |
@@ -109,6 +109,12 @@ Most icons are Lucide's (ISC licence), 24×24, `currentColor`, stroke 2.
 | Arrow down-right | `8fc2f4ce` | Down in the standings | position change badges |
 | Arrow right | `6a57e0dd` | Same place | position change badges |
 | Plus | `8ed2da54` | New in the standings | position change badges |
+| Footprints | `de73a730` | Serie di vittorie (matches won in a row) | player.html's Statistiche record |
+| Hash sign | `4044c19a` | Miglior piazzamento (best finish) | player.html's Statistiche record |
+| Axe | `1622d0b5` | Lo scalpo più pesante (the highest-rated opponent beaten) | player.html's Statistiche record |
+| Rocket | `121f465c` | Il balzo più grande (most Elo gained in one event) | player.html's Statistiche record |
+| Two arrows going round | `72181d21` | Presenze di fila (events attended in a row) | player.html's Statistiche record |
+| Network of boxes | `a8bb3e72` | Avversari diversi (different opponents faced) | player.html's Statistiche record |
 
 ## Achievements (the rest)
 

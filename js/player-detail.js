@@ -33,6 +33,7 @@ import { initWhereFilter, inWhere } from "./where-filter.js";
 import { rivalsHtml } from "./player-rivals.js";
 import { initTabs } from "./tabs.js";
 import { achievementState, achievementsListHtml, enableAchievementDetails } from "./achievements.js";
+import { playerStatsHtml } from "./player-stats.js";
 
 // Manual (badge1/badge2) and auto badges together — the auto ones are a
 // plain read of PlayerAutoBadges, precomputed by admin/js/badges-sync.js
@@ -89,6 +90,22 @@ function renderAchievements(rows, tabs) {
   enableAchievementDetails(listEl, state);
 }
 
+// The Statistiche tab (js/player-stats.js: Andamento Elo, the records) —
+// nothing to show (no live event): no tab, no section, like Obiettivi.
+function renderStats(data, tabs) {
+  const html = playerStatsHtml(data);
+  if (!html) {
+    const tab = document.getElementById("player-tab-stats");
+    if (tab.classList.contains("is-active")) tabs.select("player-col-album");
+    tab.hidden = true;
+    document.getElementById("player-col-stats").hidden = true;
+    return;
+  }
+  const el = document.getElementById("player-stats");
+  el.classList.remove("page-loading");
+  el.innerHTML = html;
+}
+
 // In-app page (js/router.js): mounted by the router on this page's <main>
 // (data-page), on first load and after each in-app navigation; `signal`
 // aborts when the page is left.
@@ -103,16 +120,17 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   // background art, else the player's most played commander's.
   const paintHeroArt = createArtPainter(document.getElementById("player-hero-art"));
 
-  // Album comandanti / Obiettivi / Storico partite: tabs on phones and
-  // touch screens (the CSS hides them on a computer: the album and the
-  // matches side by side, Obiettivi under both), like commander.html's;
+  // Album / Obiettivi / Statistiche / Storico partite: tabs on phones and
+  // touch screens (the CSS hides them on a computer: two columns — the
+  // Album then Obiettivi, Statistiche then Storico partite), like
+  // commander.html's;
   // Storico partite the whole list there (no scrolling inside), hence the
   // back-to-top button.
   const tabs = initTabs(document.querySelector(".player-tabs"));
   initBackToTop({ signal });
   // Dal vivo / Online / Tutto (js/where-filter.js — the page's own choice,
   // Dal vivo to start with, user 2026-11-16): which of the player's events
-  // the numbers, Album comandanti and Storico partite count. Shown only for
+  // the numbers, the Album and Storico partite count. Shown only for
   // a player with both live and online events; one with online events only
   // has no bar and their online events counted. The badges, the card and
   // the Elo stay live only; the league recap (the live league) is hidden
@@ -168,6 +186,11 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     softFail(Promise.all([PlayerAchievements.listByPlayer(id), Achievements.siteOf(id)]), null).then((rows) => {
       if (!signal.aborted) renderAchievements(rows, tabs);
     });
+    // Statistiche (js/player-stats.js): every played event in order (the
+    // attendance run) and every player's Elo (the ranking) — never fatal:
+    // without them, those parts are left out.
+    const playedRequest = softFail(Events.listPlayed(), []);
+    const ratingsRequest = softFail(PlayerProgress.listElo(), []);
 
     // The loading placeholder's hero (styles.css .sk-hero) makes room for
     // the card when there'll be one, so the page arrives at the size it's
@@ -299,7 +322,7 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     if (signal.aborted) return;
     const elo = progress?.elo ?? null;
 
-    // Album comandanti: one card per commander + partner pair, most played
+    // The Album: one card per commander + partner pair, most played
     // first (js/commander-carousel.js albumItems), in the Dove bar's scope;
     // its Winrate tile each pair's match record, counted like the hero's
     // tiles — a drop is skipped, a bye counts as a win.
@@ -424,6 +447,12 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     historyRows = buildRows(new Map(eventEntries.map((e) => [`${e.event_id}_${e.player_id}`, e])));
     positionByEvent = new Map([...standingByEvent].map(([eventId, s]) => [eventId, s.position]));
     renderHistory();
+
+    const entryCounts = new Map();
+    for (const e of eventEntries) entryCounts.set(e.event_id, (entryCounts.get(e.event_id) ?? 0) + 1);
+    const [played, ratings] = await Promise.all([playedRequest, ratingsRequest]);
+    if (signal.aborted) return;
+    renderStats({ rows: ownRows, entries, standings: standingByEvent, played, entryCounts, ratings }, tabs);
   } catch (err) {
     showError(document.getElementById("player-content"), err);
   } finally {

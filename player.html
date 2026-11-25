@@ -94,6 +94,8 @@
   <link rel="modulepreload" href="js/where-filter.js">
   <link rel="modulepreload" href="js/player-rivals.js">
   <link rel="modulepreload" href="js/tabs.js">
+  <link rel="modulepreload" href="js/player-stats.js">
+  <link rel="modulepreload" href="js/line-chart.js">
   <!-- /preload:modules -->
 </head>
 <body data-active-nav="players" class="is-loading">
@@ -225,34 +227,48 @@
          qualifies. -->
     <section class="rivals" id="player-rivals" aria-label="Rivali" hidden></section>
 
-    <!-- Desktop: Album comandanti left, Storico partite (a scrolling list of
-         sub-cards, exactly as tall as the album beside it) right, each
-         under its title, Obiettivi under both, the whole width; phones and
-         touch screens (html.app-header): one at a time behind tabs, like
-         commander.html's (js/tabs.js — no titles there, the tabs name them;
-         the album's "?" in its box's corner), Obiettivi the second
-         (styles.css .history-grid, .player-lists). -->
+    <!-- Desktop (880px+): two columns, each under its title — the Album
+         then Obiettivi; Statistiche then Storico partite (a scrolling list
+         of sub-cards, down to the left column's bottom); phones and touch screens (html.app-header): one at a time
+         behind tabs, like commander.html's (js/tabs.js — no titles there,
+         the tabs name them; the album's "?" in its box's corner): Album ·
+         Obiettivi · Statistiche · Storico partite (styles.css
+         .history-grid, .player-lists). -->
     <nav class="profile-tabs player-tabs" role="tablist" aria-label="Sezioni del giocatore">
-      <button type="button" class="profile-tab" role="tab" id="player-tab-album" data-tab="player-col-album" aria-controls="player-col-album"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"></path><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"></path><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"></path></svg><span>Album comandanti</span></button>
+      <button type="button" class="profile-tab" role="tab" id="player-tab-album" data-tab="player-col-album" aria-controls="player-col-album"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"></path><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"></path><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"></path></svg><span>Album</span></button>
       <button type="button" class="profile-tab" role="tab" id="player-tab-ach" data-tab="player-col-ach" aria-controls="player-col-ach"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.03 17.43A7.0 7.0 0 0 1 7.32 5.3"></path><path d="M12.97 17.43A7.0 7.0 0 0 0 16.68 5.3"></path><path d="M7.5 15.86Q5.67 13.85 3.19 14.97Q5.02 16.98 7.5 15.86Z"></path><path d="M5.31 12.55Q4.87 9.86 2.18 9.45Q2.62 12.14 5.31 12.55Z"></path><path d="M5.27 8.57Q6.37 6.08 4.33 4.27Q3.24 6.76 5.27 8.57Z"></path><path d="M16.5 15.86Q18.33 13.85 20.81 14.97Q18.98 16.98 16.5 15.86Z"></path><path d="M18.69 12.55Q19.13 9.86 21.82 9.45Q21.38 12.14 18.69 12.55Z"></path><path d="M18.73 8.57Q17.63 6.08 19.67 4.27Q20.76 6.76 18.73 8.57Z"></path></svg><span>Obiettivi</span></button>
+      <button type="button" class="profile-tab" role="tab" id="player-tab-stats" data-tab="player-col-stats" aria-controls="player-col-stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg><span>Statistiche</span></button>
       <button type="button" class="profile-tab" role="tab" id="player-tab-matches" data-tab="player-col-matches" aria-controls="player-col-matches"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 17.5 3 6V3h3l11.5 11.5"></path><path d="m13 19 6-6M16 16l4 4M19 21l2-2"></path><path d="M14.5 6.5 18 3h3v3l-3.5 3.5"></path><path d="m5 14 4 4M7 17l-3 3M3 19l2 2"></path></svg><span>Storico partite</span></button>
     </nav>
     <div class="history-grid player-lists">
-      <section class="album-col" id="player-col-album" role="tabpanel" aria-labelledby="player-tab-album">
-        <h2 class="heading-help">Album comandanti <button type="button" class="help-toggle-btn" id="album-help" aria-haspopup="dialog" aria-label="Come si ottiene una carta speciale">?</button></h2>
-        <div id="player-commanders" class="page-loading">Caricamento...</div>
-      </section>
-      <!-- The achievements (js/achievements.js — the summary, each group as
-           a card of medals, Seriamente 1.0 last): every player's, the site
-           ones too for a linked account. js/player-detail.js. -->
-      <section class="ach-col" id="player-col-ach" role="tabpanel" aria-labelledby="player-tab-ach">
-        <h2>Obiettivi</h2>
-        <div id="player-achievements" class="page-loading">Caricamento...</div>
-      </section>
-      <section class="history-col fills-row" id="player-col-matches" role="tabpanel" aria-labelledby="player-tab-matches">
-        <h2>Storico partite <span class="history-count" id="player-matches-count"></span></h2>
-        <div id="player-matches" class="page-loading">Caricamento...</div>
-      </section>
+      <!-- On a computer (880px+) two stacks: the Album then Obiettivi,
+           Statistiche then Storico partite (css/3 .player-stack;
+           dissolved on touch screens and narrower). -->
+      <div class="player-stack">
+        <section class="album-col" id="player-col-album" role="tabpanel" aria-labelledby="player-tab-album">
+          <h2 class="heading-help">Album <button type="button" class="help-toggle-btn" id="album-help" aria-haspopup="dialog" aria-label="Come si ottiene una carta speciale">?</button></h2>
+          <div id="player-commanders" class="page-loading">Caricamento...</div>
+        </section>
+        <!-- The achievements (js/achievements.js — the summary, each group as
+             a card of medals, Seriamente 1.0 last): every player's, the site
+             ones too for a linked account. js/player-detail.js. -->
+        <section class="ach-col" id="player-col-ach" role="tabpanel" aria-labelledby="player-tab-ach">
+          <h2>Obiettivi</h2>
+          <div id="player-achievements" class="page-loading">Caricamento...</div>
+        </section>
+      </div>
+      <div class="player-stack">
+        <!-- Andamento Elo and the records (js/player-stats.js — live events
+             only, like the Elo). js/player-detail.js. -->
+        <section class="stats-col" id="player-col-stats" role="tabpanel" aria-labelledby="player-tab-stats">
+          <h2>Statistiche</h2>
+          <div id="player-stats" class="page-loading">Caricamento...</div>
+        </section>
+        <section class="history-col fills-row" id="player-col-matches" role="tabpanel" aria-labelledby="player-tab-matches">
+          <h2>Storico partite <span class="history-count" id="player-matches-count"></span></h2>
+          <div id="player-matches" class="page-loading">Caricamento...</div>
+        </section>
+      </div>
     </div>
     </div>
   </div>

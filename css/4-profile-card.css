@@ -3240,6 +3240,76 @@ a.league-recap-card:hover .league-recap-chevron {
   transform: translateX(2px);
 }
 
+/* player.html's Statistiche (js/player-stats.js, since 2026-11-25 — user,
+   from a mockup): under Andamento Elo, no heading (user), the records as
+   rival cards — not links, no hover — in the page's accent — by the tab's
+   own width: three a
+   row from 700px, else one (two in a computer's half column were too
+   cramped — user's 2×2 layout, 2026-11-25), a little tighter there;
+   the label over the record's detail (an event, a span of months, an
+   opponent), the number big on the right. */
+#player-stats {
+  container-type: inline-size;
+}
+
+
+.rivals.player-records {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-flow: row;
+  margin: 14px 0 0;
+}
+
+.rival-card.is-record {
+  --rival: var(--brand-red);
+}
+
+:root[data-theme="dark"] .rival-card.is-record {
+  --rival: var(--hero-accent-light, #ff6b6e);
+}
+
+/* Not a link: no hover. */
+.rival-card.is-record:hover {
+  border-color: rgba(120, 100, 104, 0.2);
+  background: #fff;
+  transform: none;
+}
+
+:root[data-theme="dark"] .rival-card.is-record:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.rival-detail {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rival-card.is-record .rival-stat b {
+  font-size: 1.6rem;
+}
+
+@container (max-width: 699px) {
+  .rivals.player-records {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+}
+
+@media (min-width: 880px) {
+  html:not(.app-header) .player-lists .stats-col .rival-card.is-record {
+    padding: 10px 16px;
+  }
+
+  html:not(.app-header) .player-lists .stats-col .rival-card.is-record .rival-icon {
+    width: 38px;
+    height: 38px;
+  }
+}
+
 @media (max-width: 900px) {
   .rivals {
     grid-auto-flow: row;

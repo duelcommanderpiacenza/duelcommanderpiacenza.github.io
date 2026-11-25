@@ -851,36 +851,80 @@ html.app-header :is(.commander-lists, .player-lists) {
 
 html.app-header .commander-lists > .history-col:not(.is-current),
 html.app-header .commander-lists > .history-col > h2,
-html.app-header .player-lists > section:not(.is-current),
-html.app-header .player-lists > :is(.ach-col, .history-col) > h2 {
+html.app-header .player-lists :is(.album-col, .ach-col, .stats-col, .history-col):not(.is-current),
+html.app-header .player-lists :is(.ach-col, .stats-col, .history-col) > h2 {
   display: none;
 }
 
-/* player.html's Obiettivi (since 2026-11-24): on touch screens the second
-   tab (Album comandanti · Obiettivi · Storico partite); on a computer
-   under the two columns, the whole width, under its title (user — tabs
-   there were tried and dropped). */
-html:not(.app-header) .player-lists > .ach-col {
-  grid-column: 1 / -1;
-  order: 1;
+/* player.html's Obiettivi (since 2026-11-24) and Statistiche (since
+   2026-11-25): on touch screens the second and third tabs (Album ·
+   Obiettivi · Statistiche · Storico partite); on a computer each under its
+   title (user — tabs there were tried and dropped). From 880px two
+   columns, each its own stack (user, 2026-11-25): the Album then Obiettivi
+   right under it, Statistiche then Storico partite — which stretches down
+   to the left stack's bottom (.fills-row, scrolling inside; at least
+   320px). The stacks are .player-stack wrappers, dissolved (display:
+   contents) on touch screens and narrower, where the four are the grid's
+   own items: one column there, Statistiche and Obiettivi last. */
+.player-stack {
+  display: contents;
+}
+
+@media (max-width: 879px) {
+  html:not(.app-header) .player-lists .stats-col {
+    order: 1;
+  }
+
+  html:not(.app-header) .player-lists .ach-col {
+    order: 2;
+  }
+}
+
+@media (min-width: 880px) {
+  html:not(.app-header) .player-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    min-width: 0;
+  }
+
+  html:not(.app-header) .player-stack > .history-col.fills-row {
+    flex: 1;
+  }
+
+  /* Titles in the stacks start flush, like .history-col's and .album-col's. */
+  html:not(.app-header) .player-lists :is(.stats-col, .ach-col) > h2 {
+    margin-top: 0;
+  }
+
+  /* The chart's top level with the album's box beside it (#player-commanders
+     has 6px of padding above its box). */
+  html:not(.app-header) #player-stats {
+    padding-top: 6px;
+  }
 }
 
 /* player.html on touch screens: the tabs 16px under what's above them (the
    rivals', the recap's 26px bottom margin), like commander.html's; the
    album's title gone like the others' — but its "?" (how the special cards
-   are earned) kept, in its box's top right corner. */
+   are earned) kept, in its box's top left corner (user, 2026-11-25; the
+   right one until then). */
 html.app-header .player-tabs {
   margin-top: -10px;
 }
 
-html.app-header .player-lists > .album-col {
+html.app-header .player-lists .album-col {
   position: relative;
 }
 
-html.app-header .player-lists > .album-col > h2 {
+/* Concentric with the box's corner (22px radius, the button 28px): its
+   centre on the corner's, 8px in from both edges — the box starting 6px
+   down (#player-commanders' padding), the hidden title text's gap gone. */
+html.app-header .player-lists .album-col > h2 {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 14px;
+  left: 8px;
+  gap: 0;
   z-index: 2;
   margin: 0;
   font-size: 0;

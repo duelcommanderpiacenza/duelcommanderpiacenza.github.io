@@ -1,5 +1,5 @@
-// A single smooth time-series line (currently just commander-detail's
-// "decks played over time"), reusing the same card-wrapper/title
+// Smooth time-series lines — commander-detail's "decks played over time"
+// (renderLineChart) and player.html's Elo (renderRatingChart) —, reusing the same card-wrapper/title
 // conventions as js/metagame-chart.js's pie/bar charts but with its own
 // drawing: neither of those techniques (conic-gradient, width-percentage
 // bars) extends to a curved line through unevenly-spaced points.
@@ -290,6 +290,116 @@ export function renderLineChart(rawPoints, emptyMessage, title, { percent = fals
         </svg>
         ${yLabels}
         ${xLabels}
+        ${hits}
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * A rating over time (player.html's "Andamento Elo", js/player-stats.js):
+ * renderLineChart's edge-to-edge look, but its own scale — the values'
+ * range, not from zero (an Elo moves around 1500) — and one point per
+ * event, evenly spaced (months without events aren't a change in the
+ * rating), the years along the bottom at each one's first point. A solid
+ * line at `baseline` (where everyone starts), the peak marked with its
+ * number.
+ * @param {Array<{value: number, date: string, tip: string}>} points - oldest
+ *   first; `tip`: the point's hover text, HTML (escaped by the caller).
+ * @param {{title: string, baseline: number, stats: Array<[string, string|number, string?]>}} options -
+ *   `stats`: the numbers beside the title, [label, value, hover text].
+ */
+export function renderRatingChart(points, { title, baseline, stats }) {
+  const values = points.map((p) => p.value);
+  const lo = Math.min(...values, baseline);
+  const hi = Math.max(...values, baseline);
+  // Gridlines every 50 (100 over a wide range), a little room past the
+  // extremes.
+  const step = hi - lo > 240 ? 100 : 50;
+  const yMin = Math.floor((lo - 10) / step) * step;
+  const yMax = Math.ceil((hi + 10) / step) * step;
+  const yZero = EDGE_HEIGHT - EDGE_BOTTOM;
+  const yAt = (value) => yZero - ((value - yMin) / (yMax - yMin)) * (yZero - EDGE_TOP);
+  const xAt = (i) => (points.length === 1 ? EDGE_WIDTH / 2 : (i / (points.length - 1)) * EDGE_WIDTH);
+  const pct = (x) => `${((x / EDGE_WIDTH) * 100).toFixed(3)}%`;
+  const coords = points.map((p, i) => [xAt(i), yAt(p.value)]);
+
+  const linePath = smoothPath(coords);
+  const areaPath = `${linePath} L${coords[coords.length - 1][0].toFixed(2)},${EDGE_HEIGHT} L${coords[0][0].toFixed(2)},${EDGE_HEIGHT} Z`;
+
+  const grid = [];
+  for (let v = yMin; v <= yMax; v += step) grid.push(v);
+  const gridLines = grid
+    .map(
+      (v) =>
+        `<line class="line-chart-grid${v === baseline ? " is-baseline" : ""}" x1="0" y1="${yAt(v)}" x2="${EDGE_WIDTH}" y2="${yAt(v)}" vector-effect="non-scaling-stroke"></line>`
+    )
+    .join("");
+  // The lowest line's value left out: it would sit in the years' band.
+  const yLabels = grid
+    .slice(1)
+    .map((v) => `<span class="line-chart-y" style="top:${yAt(v)}px">${v}</span>`)
+    .join("");
+
+  let lastYear = null;
+  const xLabels = points
+    .map((p, i) => {
+      const year = p.date?.slice(0, 4);
+      if (!year || year === lastYear) return "";
+      lastYear = year;
+      const x = xAt(i);
+      const edge = x < 60 ? " is-start" : x > EDGE_WIDTH - 60 ? " is-end" : "";
+      return `<span class="line-chart-x${edge}" style="left:${pct(x)}">${year}</span>`;
+    })
+    .join("");
+
+  // The peak (the first time it's reached), unless it's the starting point:
+  // a ring on the curve, "Picco N" over it — kept inside the card near
+  // either edge.
+  const peakIndex = values.indexOf(Math.max(...values));
+  let peak = "";
+  if (peakIndex > 0) {
+    const [x, y] = coords[peakIndex];
+    const edge = x > EDGE_WIDTH * 0.9 ? " is-end" : x < EDGE_WIDTH * 0.1 ? " is-start" : "";
+    peak = `<span class="line-chart-peak${edge}" style="left:${pct(x)};top:${y}px"><b><span>Picco</span> ${values[peakIndex]}</b></span>`;
+  }
+
+  const hits = coords
+    .map(([x, y], i) => {
+      const left = i === 0 ? 0 : (coords[i - 1][0] + x) / 2;
+      const right = i === coords.length - 1 ? EDGE_WIDTH : (x + coords[i + 1][0]) / 2;
+      const width = right - left || EDGE_WIDTH;
+      const inner = `${(((x - left) / width) * 100).toFixed(3)}%`;
+      return `<span class="line-chart-hit" style="left:${pct(left)};width:${pct(width)}">
+        <span class="line-chart-guide" style="left:${inner}"></span>
+        <span class="line-chart-dot-html" style="left:${inner};top:${y}px"></span>
+        <span class="line-chart-tip is-rating" style="left:${inner};top:${y}px">${points[i].tip}</span>
+      </span>`;
+    })
+    .join("");
+
+  const statsHtml = stats
+    .map(
+      ([label, value, hover]) =>
+        `<div class="line-chart-stat"${hover ? ` title="${escapeHtml(hover)}"` : ""}><span class="line-chart-stat-value">${value}</span><span class="line-chart-stat-label">${label}</span></div>`
+    )
+    .join("");
+
+  return `
+    <div class="pie-chart-wrap line-chart-wrap is-edge is-rating">
+      <div class="line-chart-head">
+        <h2 class="pie-chart-title">${escapeHtml(title)}</h2>
+        <div class="line-chart-stats">${statsHtml}</div>
+      </div>
+      <div class="line-chart-plot">
+        <svg class="line-chart" viewBox="0 0 ${EDGE_WIDTH} ${EDGE_HEIGHT}" preserveAspectRatio="none" role="img" aria-label="${escapeHtml(title)}">
+          ${gridLines}
+          <path class="line-chart-area" d="${areaPath}"></path>
+          <path class="line-chart-line" d="${linePath}" vector-effect="non-scaling-stroke"></path>
+        </svg>
+        ${yLabels}
+        ${xLabels}
+        ${peak}
         ${hits}
       </div>
     </div>

@@ -3396,6 +3396,88 @@ html.nav-mobile :is(#commanders-chart, #archetypes-chart) .chart-carousel-nav {
      through `translate`.) */
 }
 
+/* player.html's Andamento Elo (js/line-chart.js renderRatingChart, since
+   2026-11-25): the line at 1500 (where everyone starts) solid, a little
+   stronger than the dashed others; the tip on two lines (date · event, then
+   the rating, its change — green up, red down, the dark tip's shades — and
+   the event's record); the peak a ring on the curve with "Picco N" over it,
+   in the page's accent (kept inside the card near either edge). */
+.line-chart-plot .line-chart-grid.is-baseline {
+  stroke: color-mix(in srgb, var(--text-muted) 55%, transparent);
+  stroke-dasharray: none;
+}
+
+.line-chart-tip.is-rating {
+  border-radius: 12px;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.elo-delta {
+  font-weight: 800;
+}
+
+.elo-delta.is-up {
+  color: #4cd38f;
+}
+
+.elo-delta.is-down {
+  color: #ff6b6e;
+}
+
+.line-chart-peak {
+  position: absolute;
+  z-index: 1;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  box-sizing: border-box;
+  border: 3px solid var(--brand-red);
+  border-radius: 50%;
+  background: #fff;
+  pointer-events: none;
+}
+
+.line-chart-peak b {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-red);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  white-space: nowrap;
+  translate: -50% 0;
+}
+
+.line-chart-peak b > span {
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.line-chart-peak.is-end b {
+  right: -6px;
+  left: auto;
+  translate: none;
+}
+
+.line-chart-peak.is-start b {
+  left: -6px;
+  translate: none;
+}
+
+:root[data-theme="dark"] .line-chart-peak {
+  border-color: var(--hero-accent-light, #ff6b6e);
+  background: #1b1416;
+}
+
+:root[data-theme="dark"] .line-chart-peak b {
+  background: var(--hero-accent-light, #ff6b6e);
+  color: #1b1416;
+}
+
 .line-chart-hit:hover > * {
   opacity: 1;
 }

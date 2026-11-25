@@ -1,4 +1,4 @@
-// player.html's "Album comandanti": a card carousel instead of a table —
+// player.html's "Album" (Album comandanti until 2026-11-25): a card carousel instead of a table —
 // one commander's card (Scryfall image) at a time — on desktop lined up
 // with the page's left margin, the next ones peeking in on the right turned
 // away as if on a drum and a card leaving on the left fading out; on phones
@@ -112,7 +112,7 @@ function applyAlbumFoil(cardEl, wins) {
   );
 }
 
-// The "?" beside the "Album comandanti" heading (player.html, wired by the
+// The "?" beside the "Album" heading (player.html, wired by the
 // page) opens this (js/info-dialog.js's shared pop-up): per
 // family its line and one small live preview per tier (a blank album card
 // dressed by the same code) with what it takes.
@@ -176,7 +176,7 @@ export function renderCommanderCarousel(el, items) {
 
   el.innerHTML = `<div class="cmd-carousel">
     <div class="cmd-carousel-main">
-      <div class="cmd-carousel-track" tabindex="0" role="region" aria-label="Album comandanti">
+      <div class="cmd-carousel-track" tabindex="0" role="region" aria-label="Album">
         ${items
           .map(
             (c, i) => `<div class="cmd-carousel-slide album-card is-loading" data-index="${i}">

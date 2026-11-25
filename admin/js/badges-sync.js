@@ -49,11 +49,26 @@ async function syncBadgeAssignments() {
 }
 
 // Every *closed* event's entries + matches (this runs logged in, where open
-// events are visible too — those aren't published, so never cached).
+// events are visible too — those aren't published, so never cached) — and
+// the Elo (js/elo.js) over them, once for both caches that store it:
+// player_progress (each player's rating now) and event_standings (before
+// and after each event, migration 049).
 async function loadClosedResults() {
   const closed = (await Events.list()).filter((ev) => !ev.is_open);
   const closedIds = closed.map((ev) => ev.id);
-  return { closed, closedIds, closedDates: closed.map((ev) => ev.event_date), eventsData: await fetchEventsResults(closed) };
+  const eventsData = await fetchEventsResults(closed);
+  // The Elo needs the events oldest first (Events.list gives them newest
+  // first); on the same day, the one created first.
+  const order = closed
+    .map((_, i) => i)
+    .sort(
+      (a, b) =>
+        (closed[a].event_date ?? "").localeCompare(closed[b].event_date ?? "") ||
+        closed[a].created_at.localeCompare(closed[b].created_at)
+    );
+  const eloByEvent = new Map();
+  const elo = computeElo(order.map((i) => eventsData[i]), { perEvent: eloByEvent });
+  return { closed, closedIds, closedDates: closed.map((ev) => ev.event_date), eventsData, elo, eloByEvent };
 }
 
 // The commanders' "Nuovo" badge: those whose first appearance in a closed
@@ -105,12 +120,16 @@ async function syncNewCommanders({ closedDates, eventsData }) {
 }
 
 // Final standings of every closed event, computed exactly as event.html
-// does, from the saved matches.
-async function syncEventStandings({ closedIds, eventsData }) {
+// does, from the saved matches — with each player's Elo before and after it
+// and their best win in it (the opponent beaten with the highest Elo at the
+// time, and that Elo) — migration 049; null with no rated match / no win.
+async function syncEventStandings({ closedIds, eventsData, eloByEvent }) {
   const rows = [];
   eventsData.forEach(({ entries, matches, event }, i) => {
+    const ratings = eloByEvent.get(closedIds[i]);
     computeEventLeaderboard(matches, entries, event).forEach((s, index) => {
       if (!s.player?.id) return;
+      const elo = ratings?.get(s.player.id);
       rows.push({
         event_id: closedIds[i],
         player_id: s.player.id,
@@ -119,27 +138,29 @@ async function syncEventStandings({ closedIds, eventsData }) {
         wins: s.wins,
         draws: s.draws,
         losses: s.losses,
+        elo_before: elo?.before ?? null,
+        elo_after: elo?.after ?? null,
+        best_win_elo: elo?.bestWinElo ?? null,
+        best_win_opponent: elo?.bestWinOpponent ?? null,
       });
     });
   });
-  await EventStandings.replaceAll(rows);
+  try {
+    await EventStandings.replaceAll(rows);
+  } catch (err) {
+    // Migration 049 not run on this database yet (no elo columns: PostgREST's
+    // PGRST204, Postgres' 42703) — the standings still saved, without them.
+    if (err?.code !== "PGRST204" && err?.code !== "42703") throw err;
+    console.warn("event_standings.elo_before missing: run migration 049", err);
+    await EventStandings.replaceAll(rows.map(({ elo_before, elo_after, best_win_elo, best_win_opponent, ...row }) => row));
+  }
 }
 
 // Each player's progress (events, wins, big top 8s, commanders, leagues won)
 // and Elo rating.
-async function syncPlayerProgress({ closed, eventsData }) {
+async function syncPlayerProgress({ eventsData, elo }) {
   const leagueWinners = await closedLeagueWinners(await Leagues.list());
   const rows = computeCardProgress(eventsData, leagueWinners);
-  // The Elo needs the events oldest first (Events.list gives them newest
-  // first); on the same day, the one created first.
-  const order = closed
-    .map((_, i) => i)
-    .sort(
-      (a, b) =>
-        (closed[a].event_date ?? "").localeCompare(closed[b].event_date ?? "") ||
-        closed[a].created_at.localeCompare(closed[b].created_at)
-    );
-  const elo = computeElo(order.map((i) => eventsData[i]));
   const withElo = rows.map((row) => ({
     ...row,
     elo: elo.get(row.player_id)?.elo ?? null,
