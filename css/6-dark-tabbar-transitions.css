@@ -1721,15 +1721,15 @@ html.nav-mobile .meta-row > .meta-tabs:only-child {
   border-radius: 18px;
 }
 
-/* Comandanti and Giocatori on touch screens (since 2026-11-25 — option G3
-   of a mockup, user): the filters' button is in the search line, the Dove
-   bar inside its sheet (js/filter-sheet.js, css/5 "The search line on
-   touch screens") — so no segment here (the switcher the whole card, as
-   above) and no Dove bar under it, from the first frame (the script moves
-   the bar into the sheet later). The other Meta pages and Confronto keep
-   both. */
-html.nav-mobile main:is([data-page="commanders"], [data-page="players"]) .meta-row > .filter-toggle-btn,
-html.nav-mobile main:is([data-page="commanders"], [data-page="players"]) .meta-head > .where-filter {
+/* Comandanti and Giocatori (since 2026-11-25 — option G3 of a mockup,
+   user; touch screens first, then computers the same): the filters' button
+   is in the search line, the Dove bar inside its sheet / pop-up
+   (js/filter-sheet.js, css/5 "The search line") — so no funnel here (on
+   touch screens no segment: the switcher the whole card, as above) and no
+   Dove bar, from the first frame (the script moves the bar into the sheet
+   later). The other Meta pages and Confronto keep both. */
+main:is([data-page="commanders"], [data-page="players"]) .meta-row > .filter-toggle-btn,
+main:is([data-page="commanders"], [data-page="players"]) .meta-head > .where-filter {
   display: none;
 }
 

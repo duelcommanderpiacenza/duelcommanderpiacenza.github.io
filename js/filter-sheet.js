@@ -1,14 +1,14 @@
-// Comandanti and Giocatori on touch screens (since 2026-11-25 — option G3
-// of a mockup, user; Matchups / Archetipi / Evoluzione / Confronto and
-// every computer keep the switcher's funnel and the Dove bar): the search
-// line holds the sort, then a 🔍 and the filters' button (static markup in
-// the page, hidden on a computer — css/5 "The search line on touch
-// screens").
+// Comandanti and Giocatori, every screen (since 2026-11-25 — option G3 of
+// a mockup, user: touch screens first, then computers the same; Matchups /
+// Archetipi / Evoluzione / Confronto keep the switcher's funnel and the
+// Dove bar): the search line holds the sort, then a 🔍 and the filters'
+// button (static markup in the page — css/5 "The search line").
 // - The 🔍 opens the search field in the sort's and its own place
 //   (.is-searching — the filters' button stays), a ✕ inside its right end
 //   clearing and closing it; an empty field closes again once left. A field with text stays open, so a filtered list is never
 //   unexplained.
-// - The filters' button opens a bottom sheet holding the page's **own**
+// - The filters' button opens a bottom sheet (a computer: a pop-up under
+//   the button, closing on scroll or a click outside) holding the page's **own**
 //   Dove bar (js/where-filter.js) and filter panel (js/filter-toggle.js,
 //   js/scope-filter.js) — moved into it here, after the page has wired
 //   them, so they keep working as before (saved choice, shared filters,
@@ -19,7 +19,7 @@
 // <main>'s stacking) and is removed when the page is left (`signal`).
 
 export function initFilterSheet({ page, signal }) {
-  if (!document.documentElement.classList.contains("nav-mobile")) return;
+  const touch = document.documentElement.classList.contains("nav-mobile");
   const main = document.querySelector(`main[data-page="${page}"]`);
   const line = main?.querySelector(".filter-toggle-line");
   const input = document.getElementById(`${page}-search`);
@@ -76,6 +76,12 @@ export function initFilterSheet({ page, signal }) {
   // Focus into the sheet on opening; back to the button only when closed
   // from the keyboard (a tap would leave its focus ring showing).
   const setOpen = (on, { fromKey = false } = {}) => {
+    // A computer: under the button, right edges lined up.
+    if (on && !touch) {
+      const r = filtersBtn.getBoundingClientRect();
+      card.style.setProperty("--pop-top", `${Math.round(r.bottom + 8)}px`);
+      card.style.setProperty("--pop-right", `${Math.round(document.documentElement.clientWidth - r.right)}px`);
+    }
     sheet.hidden = !on;
     document.documentElement.classList.toggle("filter-sheet-open", on);
     filtersBtn.setAttribute("aria-expanded", String(on));
@@ -89,6 +95,13 @@ export function initFilterSheet({ page, signal }) {
   sheet.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !e.defaultPrevented) setOpen(false, { fromKey: true });
   });
+  // A computer: the pop-up would drift off its button — scrolling or
+  // resizing closes it.
+  if (!touch) {
+    const closeIfOpen = () => !sheet.hidden && setOpen(false);
+    window.addEventListener("scroll", closeIfOpen, { passive: true, signal });
+    window.addEventListener("resize", closeIfOpen, { signal });
+  }
 
   // --- The button's state -----------------------------------------------------
   function paint() {

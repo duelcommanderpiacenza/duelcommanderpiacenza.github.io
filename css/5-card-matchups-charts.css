@@ -1769,30 +1769,30 @@ html.nav-mobile .help-toggle-btn {
   }
 }
 
-/* The search line on touch screens — Comandanti and Giocatori (since
-   2026-11-25 — option G3 of a mockup, user; js/filter-sheet.js): the sort
+/* The search line — Comandanti and Giocatori, every screen (since
+   2026-11-25 — option G3 of a mockup, user — touch screens first, then
+   computers the same, user; js/filter-sheet.js): the sort
    first, then at the right a 🔍 and the filters' button, 41px squares like
    the fields. The 🔍 opens the search in the sort's and its own place
    (.is-searching: the field up to the filters' button, which stays; a ✕
    inside the field's right end, borderless — user). The
    filters' button: the funnel, red with a filter set (as the switcher's
-   segment was) — no mark of Dove's choice on it (user). A computer: none of this —
-   the search, the sort, and the funnel / Dove bar in the tabs' row. */
+   segment was) — no mark of Dove's choice on it (user). */
 .filter-line-btn,
 .filter-search-close {
   display: none;
 }
 
-html.nav-mobile .filter-toggle-line:has(.filter-line-btn) {
+.filter-toggle-line:has(.filter-line-btn) {
   position: relative;
   align-items: stretch;
 }
 
-html.nav-mobile .filter-toggle-line:has(.filter-line-btn) > .filter-toggle-search {
+.filter-toggle-line:has(.filter-line-btn) > .filter-toggle-search {
   display: none;
 }
 
-html.nav-mobile .filter-line-btn {
+.filter-line-btn {
   position: relative;
   display: grid;
   flex: none;
@@ -1808,7 +1808,7 @@ html.nav-mobile .filter-line-btn {
   cursor: pointer;
 }
 
-html.nav-mobile .filter-line-search {
+.filter-line-search {
   margin-left: auto;
 }
 
@@ -1817,30 +1817,30 @@ html.nav-mobile .filter-line-search {
   height: 18px;
 }
 
-html.nav-mobile .filter-line-filters.is-set {
+.filter-line-filters.is-set {
   color: var(--brand-red);
 }
 
 /* Searching: the field in the sort's and the 🔍's place, up to the
    filters' button; the ✕ inside its right end — a round, borderless icon,
    the text kept clear of it. */
-html.nav-mobile .filter-toggle-line.is-searching > .filter-toggle-search {
+.filter-toggle-line.is-searching > .filter-toggle-search {
   position: relative;
   display: block;
   flex: 1;
   min-width: 0;
 }
 
-html.nav-mobile .filter-toggle-line.is-searching > :is(.filter-toggle-sort, .filter-line-search) {
+.filter-toggle-line.is-searching > :is(.filter-toggle-sort, .filter-line-search) {
   display: none;
 }
 
-html.nav-mobile .filter-toggle-line.is-searching > .filter-toggle-search > input {
+.filter-toggle-line.is-searching > .filter-toggle-search > input {
   width: 100%;
   padding-right: 44px;
 }
 
-html.nav-mobile .filter-toggle-line.is-searching .filter-search-close {
+.filter-toggle-line.is-searching .filter-search-close {
   position: absolute;
   top: 50%;
   right: 4px;
@@ -1857,28 +1857,29 @@ html.nav-mobile .filter-toggle-line.is-searching .filter-search-close {
   translate: 0 -50%;
 }
 
-html.nav-mobile .filter-toggle-line.is-searching .filter-search-close:active {
+.filter-toggle-line.is-searching .filter-search-close:active {
   background: color-mix(in srgb, var(--brand-red) 10%, transparent);
   color: var(--brand-red);
 }
 
 /* Our ✕ only (not the browser's own clear button too). */
-html.nav-mobile .filter-toggle-line:has(.filter-line-btn) input[type="search"]::-webkit-search-cancel-button {
+.filter-toggle-line:has(.filter-line-btn) input[type="search"]::-webkit-search-cancel-button {
   display: none;
 }
 
-:root[data-theme="dark"].nav-mobile .filter-line-btn {
+:root[data-theme="dark"] .filter-line-btn {
   border-color: rgba(255, 255, 255, 0.1);
   background: #1e1517;
 }
 
-:root[data-theme="dark"].nav-mobile .filter-line-filters.is-set {
+:root[data-theme="dark"] .filter-line-filters.is-set {
   color: #ff8a8d;
 }
 
-/* The filters' sheet (js/filter-sheet.js, in <body>): from the bottom,
-   over everything (the tab bar too), the page dimmed behind it and not
-   scrolling. Inside: "Filtri", Dove (the page's own Dove bar — the whole
+/* The filters' sheet (js/filter-sheet.js, in <body>): on touch screens
+   from the bottom, over everything (the tab bar too), the page dimmed
+   behind it and not scrolling; on a computer a pop-up under the filters'
+   button (see below). Inside: "Filtri", Dove (the page's own Dove bar — the whole
    part gone while the bar is hidden: one kind of events only), the page's
    own filter panel (always open here, its card's frame dropped, one field
    a row), "Fatto". */
@@ -1959,8 +1960,15 @@ html.nav-mobile .filter-toggle-line:has(.filter-line-btn) input[type="search"]::
   text-transform: uppercase;
 }
 
-html.nav-mobile .filter-sheet .where-filter:not([hidden]) {
+/* The Dove bar the sheet's / pop-up's width, its three equal (as on touch
+   screens everywhere). */
+.filter-sheet .where-filter:not([hidden]) {
+  display: flex;
   margin: 0;
+}
+
+.filter-sheet .where-opt {
+  flex: 1;
 }
 
 .filter-sheet .filter-panel {
@@ -2002,6 +2010,13 @@ html.nav-mobile .filter-sheet .where-filter:not([hidden]) {
   cursor: pointer;
 }
 
+/* (Over the panel body's own dark frame, css/6.) */
+:root[data-theme="dark"] .filter-sheet .filter-panel-body {
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+
 :root[data-theme="dark"] .filter-sheet-card {
   background: #1e1517;
   box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.5);
@@ -2011,10 +2026,52 @@ html.nav-mobile .filter-sheet .where-filter:not([hidden]) {
   background: rgba(255, 255, 255, 0.2);
 }
 
-/* The page behind it doesn't scroll meanwhile. */
-html.filter-sheet-open,
-html.filter-sheet-open body {
+/* The page behind it doesn't scroll meanwhile (touch screens). */
+html.nav-mobile.filter-sheet-open,
+html.nav-mobile.filter-sheet-open body {
   overflow: hidden;
+}
+
+/* A computer: a pop-up under the filters' button, its right edge on the
+   button's (--pop-top / --pop-right, set by js/filter-sheet.js on opening;
+   it closes on scroll), the page not dimmed — a click outside closes it.
+   No grip, no "Fatto". */
+html:not(.nav-mobile) .filter-sheet-backdrop {
+  background: none;
+  animation: none;
+}
+
+html:not(.nav-mobile) .filter-sheet-card {
+  top: var(--pop-top, 120px);
+  right: var(--pop-right, 24px);
+  bottom: auto;
+  left: auto;
+  width: 380px;
+  max-height: none;
+  padding: 16px 18px 18px;
+  border: 1px solid var(--hairline);
+  border-radius: 20px;
+  box-shadow: 0 14px 40px rgba(40, 20, 22, 0.18);
+  animation: filter-pop-in 160ms ease both;
+}
+
+html:not(.nav-mobile) :is(.filter-sheet-grip, .filter-sheet-done) {
+  display: none;
+}
+
+html:not(.nav-mobile) .filter-sheet-title {
+  font-size: 1rem;
+}
+
+:root[data-theme="dark"]:not(.nav-mobile) .filter-sheet-card {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+@keyframes filter-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

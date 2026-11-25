@@ -25,7 +25,7 @@ Most icons are Lucide's (ISC licence), 24×24, `currentColor`, stroke 2.
 
 | Picture | Keys | Means | Used in |
 |---|---|---|---|
-| Magnifier | `3ebc4f7f` | Search | header search (every page), Confronto's player picker, Comandanti / Giocatori's search line on touch screens |
+| Magnifier | `3ebc4f7f` | Search | header search (every page), Confronto's player picker, Comandanti / Giocatori's search line |
 | Bell | `e376ff87` | Novità (announcements) | header (js/header-news.js) |
 | X (two lines) | `277515ba`, `39d47f0d` | Close / cancel | closing the search (the header's; Comandanti / Giocatori's search line), Confronto's picker; account.html's card edit "Annulla" |
 | Person | `56209419` | Account (sign in, the signed-in user) | header account button, admin account menu, admin "Utenti" tab |
@@ -35,7 +35,7 @@ Most icons are Lucide's (ISC licence), 24×24, `currentColor`, stroke 2.
 | Chevron right | `e9542290`, `47f51158`, `86cd5dd7` | Go / open / next | rival and recap cards, Regolamento button, Novità "Vai all'evento", carousels' next, next partner, Leghe's league cards |
 | Chevron up | `b76512e3` | Back to top | js/back-to-top.js |
 | Circular arrow | `7affa622` | Pull to refresh | js/pull-refresh.js |
-| Funnel | `4aae4a9f` | Filtri | Meta / Giocatori pages' filter button (on touch screens Comandanti / Giocatori's in the search line) |
+| Funnel | `4aae4a9f` | Filtri | Meta / Giocatori pages' filter button (Comandanti / Giocatori's in the search line) |
 | Share (three nodes) | `bed0bd4c` | Condividi | event / league heroes |
 | Share (box with arrow) | `08312551` | Share — Safari's own button, shown in the install instructions | js/pwa-install.js |
 | Sun | `0f72c682` | Light theme | theme menu |
