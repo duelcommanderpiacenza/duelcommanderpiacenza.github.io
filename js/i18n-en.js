@@ -757,7 +757,7 @@
     // Automatic badges' descriptions (js/badges-page.js).
     [/^Entra in top 8 negli ultimi (\d+) eventi da almeno (\d+) iscritti a cui hai partecipato\.$/, "Make the top 8 in the last $1 events with at least $2 entrants you took part in."],
     [/^Hai fatto più drop di tutti \(minimo (\d+)\)\.$/, "You dropped more than anyone (at least $1)."],
-    [/^Hai pareggiato più partite di tutti \(minimo (\d+)\)\.$/, "You drew more matches than anyone (at least $1)."],
+    [/^Hai la percentuale di partite pareggiate più alta di tutti \(minimo (\d+) partite giocate\)\.$/, "You have the highest share of drawn matches of anyone (at least $1 matches played)."],
     [/^Hai la serie in corso più lunga di partite senza sconfitte \(minimo (\d+)\): i pareggi non la interrompono\.$/, "You have the longest current run of matches without a loss (at least $1): draws don't break it."],
     [/^Hai battuto più volte di tutti i giocatori della top (\d+) Elo negli ultimi (\d+) mesi\.$/, "You beat the Elo top $1 players more often than anyone in the last $2 months."],
     [/^Hai giocato lo stesso comandante in più eventi di tutti \(minimo (\d+)\)\.$/, "You played the same commander in more events than anyone (at least $1)."],

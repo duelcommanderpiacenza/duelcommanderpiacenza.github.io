@@ -22,7 +22,7 @@ const RULE_LABELS = {
   completionist: "Più eventi consecutivi (min 10)",
   most_byes: "Più bye",
   most_drops: "Più drop",
-  most_draws: "Più pareggi",
+  most_draws: "Più pareggi (in % delle partite)",
   unbeaten_streak: "Più match di fila senza sconfitte",
   highest_elo: "Elo più alto",
   giant_slayer: "Più vittorie contro la top 5 Elo",
