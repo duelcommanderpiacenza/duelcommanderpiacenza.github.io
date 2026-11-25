@@ -776,6 +776,38 @@ export async function fetchClosedResultsSince(fromIso, { commanders = false, wit
   return { entriesByEvent: groupByEvent(entries), matchesByEvent: groupByEvent(matches) };
 }
 
+/**
+ * One league's closed events' entries + matches, by the league's id alone —
+ * an inner join on the event (its league, closed), so it starts as soon as
+ * the league is known, alongside its events, rather than after them
+ * (player.html's league recap, js/player-league-recap.js: two rounds of
+ * requests instead of three). The same rows and order as fetchEventsResults'
+ * (full, not slim: the players embedded), paged.
+ * @returns {Promise<{entriesByEvent: Map, matchesByEvent: Map}>} rows by event id.
+ */
+export async function fetchLeagueResults(leagueId) {
+  const join = "event:events!inner(league_id,is_open)";
+  const scoped = (query) => query.eq("event.league_id", leagueId).eq("event.is_open", false);
+  const [entries, matches] = await Promise.all([
+    selectAllRows(() =>
+      scoped(sb.from("event_entries").select(`*, player:players(id,name,handle,endstep), ${COMMANDER_EMBED}, ${join}`)).order("id")
+    ),
+    selectAllRows(() =>
+      scoped(
+        sb
+          .from("matches")
+          .select(
+            `*, player1:players!matches_player1_id_fkey(id,name,handle,endstep), player2:players!matches_player2_id_fkey(id,name,handle,endstep), ${join}`
+          )
+      )
+        .order("round")
+        .order("created_at")
+        .order("id")
+    ),
+  ]);
+  return { entriesByEvent: groupByEvent(entries), matchesByEvent: groupByEvent(matches) };
+}
+
 // Precomputed auto-badge assignments (badges.auto_rule) — recomputed and
 // fully replaced by admin/js/badges-sync.js whenever an event or league is
 // closed (the only moments the underlying match/standings data actually

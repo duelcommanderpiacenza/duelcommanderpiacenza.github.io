@@ -106,6 +106,10 @@ function renderStats(data, tabs) {
   el.innerHTML = html;
 }
 
+// How long the page, ready, still waits for the league recap (its own
+// requests, one round more than the page's) before showing without it.
+const RECAP_WAIT_MS = 600;
+
 // In-app page (js/router.js): mounted by the router on this page's <main>
 // (data-page), on first load and after each in-app navigation; `signal`
 // aborts when the page is left.
@@ -152,9 +156,11 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     return;
   }
 
-  // The league recap under the hero: its own requests, alongside the rest,
-  // never holding the page up (not awaited; never throws).
-  renderPlayerLeagueRecap(recapEl, id, { signal });
+  // The league recap under the hero: its own requests, alongside the rest
+  // (never throws). The page waits for it when it shows — at most
+  // RECAP_WAIT_MS more —, so it appears with the rest (user, 2026-11-25:
+  // it arrived after it).
+  const recapDone = renderPlayerLeagueRecap(recapEl, id, { signal });
 
   try {
     // Seven independent requests (each needs only the id), all started at
@@ -424,6 +430,8 @@ export async function mount({ signal = new AbortController().signal } = {}) {
     const eventIds = [...new Set(rawMatches.map(({ m }) => m.event_id))];
     if (eventIds.length || uncachedIds.length) {
       matchesEl.innerHTML = sectionLoadingHtml(5);
+      await Promise.race([recapDone, new Promise((resolve) => setTimeout(resolve, RECAP_WAIT_MS))]);
+      if (signal.aborted) return;
       hidePageLoading(signal);
     }
     const [eventEntries, [historyEntries, historyMatches, historyTop8]] = await Promise.all([

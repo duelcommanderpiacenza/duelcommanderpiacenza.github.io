@@ -9,6 +9,7 @@ import { commanderPairLabel, colorIdentityPips, commanderBadgesHtml, showError, 
 import { hidePageLoading } from "./page-loading.js";
 import { initFilterToggle } from "./filter-toggle.js";
 import { initWhereFilter } from "./where-filter.js";
+import { initFilterSheet } from "./filter-sheet.js";
 import { savedMetaFilters, rememberMetaFilters, prefetchMetaResults, metaResults } from "./meta-filters.js";
 import { historyPanelHtml, historyStatsHtml, winrateTrendHtml, latestPresence } from "./history-list.js";
 import { initBackToTop } from "./back-to-top.js";
@@ -81,6 +82,10 @@ export async function mount({ signal = new AbortController().signal } = {}) {
   // Dal vivo / Online / Tutto (js/where-filter.js): the scope filter offers
   // and reports only the events played that way.
   const where = initWhereFilter({ signal });
+  // Touch screens: the search behind a 🔍 and the filters (Dove + the
+  // panel) in a bottom sheet (js/filter-sheet.js) — after the Dove bar is
+  // wired, which it moves.
+  initFilterSheet({ page: "commanders", signal });
   const searchInput = document.getElementById("commanders-search");
   const sortSelect = document.getElementById("commanders-sort");
   const colorCheckboxes = Array.from(document.querySelectorAll('input[name="commanders-color-filter"]'));

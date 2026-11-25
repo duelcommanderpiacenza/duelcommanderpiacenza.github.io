@@ -12,7 +12,7 @@
 // hover). The best result is the stages' own job, not a number of its own.
 // Not in the league, or no league at all: nothing (the section stays
 // hidden). No event dates, no gap to 1st, no attendance counter (by choice).
-import { Leagues, Events, fetchEventsResults } from "./db.js";
+import { Leagues, Events, fetchLeagueResults } from "./db.js";
 import { computeLeaguePoints, previousLeaguePositions } from "./leaderboard.js";
 import { positionMoveHtml } from "./history-list.js";
 import { escapeHtml } from "./ui.js";
@@ -21,6 +21,12 @@ const byDate = (a, b) => `${a.event_date ?? ""}T${a.start_time ?? ""}`.localeCom
 const CHEVRON =
   '<svg class="league-recap-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>';
 
+// Two rounds of requests (since 2026-11-25 — three before, the results
+// waiting for the events; user: it arrived after the rest of the page): the
+// leagues, then — all at once, each needing only the league's id — its
+// events, its total event count and its closed events' results
+// (js/db.js fetchLeagueResults). Resolves once drawn (or hidden):
+// player-detail.js shows the page with it when it's quick enough.
 export async function renderPlayerLeagueRecap(el, playerId, { signal }) {
   // Until it's known: the page placeholder's own block (.sk-recap — the
   // same shimmer, size and corners), so the placeholder hands over to the
@@ -37,13 +43,22 @@ export async function renderPlayerLeagueRecap(el, playerId, { signal }) {
       el.innerHTML = "";
       return;
     }
-    const [leagueEvents, count] = await Promise.all([Events.listByLeague(league.id), Leagues.eventCount(league.id, null)]);
+    const [leagueEvents, count, results] = await Promise.all([
+      Events.listByLeague(league.id),
+      Leagues.eventCount(league.id, null),
+      fetchLeagueResults(league.id),
+    ]);
     if (signal.aborted) return;
     // Played = closed, oldest first (a stage's number is its place here).
     const events = leagueEvents.filter((ev) => !ev.is_open).sort(byDate);
     const scheduled = Math.max(count ?? leagueEvents.length, events.length);
-    const eventsData = await fetchEventsResults(events);
-    if (signal.aborted) return;
+    // fetchEventsResults' shape: one slot per event, in this order, its row
+    // in it (a top 8's standings read it).
+    const eventsData = events.map((event) => ({
+      entries: results.entriesByEvent.get(event.id) ?? [],
+      matches: results.matchesByEvent.get(event.id) ?? [],
+      event,
+    }));
 
     const open = league.is_open;
     const standings = computeLeaguePoints(eventsData, { leagueClosed: !open, scheduledEvents: scheduled });

@@ -1264,19 +1264,14 @@ main:is([data-page="commanders"], [data-page="players"]) .sk-search {
 }
 
 /* Giocatori's placeholder (players.html .is-players — measured against the
-   loaded page, 2026-11-19): on touch screens the Dove bar (a 39px pill) 12px
-   under the tabs; the search beside the sort menu (41px, 12px corners —
+   loaded page, 2026-11-19): no Dove bar on touch screens since 2026-11-25
+   (it's in the filters' sheet, js/filter-sheet.js); the search beside the
+   sort menu (41px, 12px corners —
    the menu 220px wide, 140px on phones) 16px under it; the player rows 16px
    under that, 8px apart, 2px in from the sides, 14px corners — 59px tall,
    about 101px on phones (their numbers on a second line). */
 .sk-page.is-players {
   gap: 8px;
-}
-
-.sk-page.is-players .sk-where {
-  height: 39px;
-  margin: -6px 0 8px;
-  border-radius: var(--radius-pill);
 }
 
 .sk-page.is-players .sk-search-line {
@@ -1771,6 +1766,261 @@ html.nav-mobile .help-toggle-btn {
   .filter-toggle-sort .cs-trigger {
     gap: 6px;
     padding-inline: 10px;
+  }
+}
+
+/* The search line on touch screens — Comandanti and Giocatori (since
+   2026-11-25 — option G3 of a mockup, user; js/filter-sheet.js): the sort
+   first, then at the right a 🔍 and the filters' button, 41px squares like
+   the fields. The 🔍 opens the search in the sort's and its own place
+   (.is-searching: the field up to the filters' button, which stays; a ✕
+   inside the field's right end, borderless — user). The
+   filters' button: the funnel, red with a filter set (as the switcher's
+   segment was) — no mark of Dove's choice on it (user). A computer: none of this —
+   the search, the sort, and the funnel / Dove bar in the tabs' row. */
+.filter-line-btn,
+.filter-search-close {
+  display: none;
+}
+
+html.nav-mobile .filter-toggle-line:has(.filter-line-btn) {
+  position: relative;
+  align-items: stretch;
+}
+
+html.nav-mobile .filter-toggle-line:has(.filter-line-btn) > .filter-toggle-search {
+  display: none;
+}
+
+html.nav-mobile .filter-line-btn {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  box-sizing: border-box;
+  width: 42px;
+  height: 41px;
+  padding: 0;
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--text-value);
+  cursor: pointer;
+}
+
+html.nav-mobile .filter-line-search {
+  margin-left: auto;
+}
+
+:is(.filter-line-btn, .filter-search-close) svg {
+  width: 18px;
+  height: 18px;
+}
+
+html.nav-mobile .filter-line-filters.is-set {
+  color: var(--brand-red);
+}
+
+/* Searching: the field in the sort's and the 🔍's place, up to the
+   filters' button; the ✕ inside its right end — a round, borderless icon,
+   the text kept clear of it. */
+html.nav-mobile .filter-toggle-line.is-searching > .filter-toggle-search {
+  position: relative;
+  display: block;
+  flex: 1;
+  min-width: 0;
+}
+
+html.nav-mobile .filter-toggle-line.is-searching > :is(.filter-toggle-sort, .filter-line-search) {
+  display: none;
+}
+
+html.nav-mobile .filter-toggle-line.is-searching > .filter-toggle-search > input {
+  width: 100%;
+  padding-right: 44px;
+}
+
+html.nav-mobile .filter-toggle-line.is-searching .filter-search-close {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  translate: 0 -50%;
+}
+
+html.nav-mobile .filter-toggle-line.is-searching .filter-search-close:active {
+  background: color-mix(in srgb, var(--brand-red) 10%, transparent);
+  color: var(--brand-red);
+}
+
+/* Our ✕ only (not the browser's own clear button too). */
+html.nav-mobile .filter-toggle-line:has(.filter-line-btn) input[type="search"]::-webkit-search-cancel-button {
+  display: none;
+}
+
+:root[data-theme="dark"].nav-mobile .filter-line-btn {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: #1e1517;
+}
+
+:root[data-theme="dark"].nav-mobile .filter-line-filters.is-set {
+  color: #ff8a8d;
+}
+
+/* The filters' sheet (js/filter-sheet.js, in <body>): from the bottom,
+   over everything (the tab bar too), the page dimmed behind it and not
+   scrolling. Inside: "Filtri", Dove (the page's own Dove bar — the whole
+   part gone while the bar is hidden: one kind of events only), the page's
+   own filter panel (always open here, its card's frame dropped, one field
+   a row), "Fatto". */
+.filter-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+.filter-sheet[hidden] {
+  display: none;
+}
+
+.filter-sheet-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 10, 12, 0.38);
+  animation: filter-sheet-fade 200ms ease both;
+}
+
+.filter-sheet-card {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: grid;
+  gap: 12px;
+  max-height: calc(100dvh - 24px);
+  box-sizing: border-box;
+  padding: 10px 18px calc(18px + env(safe-area-inset-bottom));
+  border-radius: 26px 26px 0 0;
+  background: #fffdf8;
+  box-shadow: 0 -8px 30px rgba(40, 20, 22, 0.18);
+  outline: none;
+  animation: filter-sheet-up 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes filter-sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes filter-sheet-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+.filter-sheet-grip {
+  justify-self: center;
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(120, 100, 104, 0.3);
+}
+
+.filter-sheet-title {
+  margin: 0;
+  color: var(--text-title);
+  font-size: 1.1rem;
+}
+
+.filter-sheet-where {
+  display: grid;
+  gap: 6px;
+}
+
+.filter-sheet-where:not(:has(.where-filter:not([hidden]))) {
+  display: none;
+}
+
+.filter-sheet-label {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+html.nav-mobile .filter-sheet .where-filter:not([hidden]) {
+  margin: 0;
+}
+
+.filter-sheet .filter-panel {
+  grid-template-rows: 1fr;
+  transition: none;
+}
+
+.filter-sheet .filter-panel-clip {
+  overflow: visible;
+}
+
+.filter-sheet .filter-panel-body {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.filter-sheet .filter-bar {
+  display: grid;
+  gap: 12px;
+}
+
+.filter-sheet .filter-bar .field {
+  width: auto;
+  min-width: 0;
+}
+
+.filter-sheet-done {
+  min-height: 46px;
+  margin-top: 4px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--brand-red);
+  color: #fff;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+:root[data-theme="dark"] .filter-sheet-card {
+  background: #1e1517;
+  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.5);
+}
+
+:root[data-theme="dark"] .filter-sheet-grip {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* The page behind it doesn't scroll meanwhile. */
+html.filter-sheet-open,
+html.filter-sheet-open body {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .filter-sheet-backdrop,
+  .filter-sheet-card {
+    animation: none;
   }
 }
 

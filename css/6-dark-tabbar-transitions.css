@@ -1721,6 +1721,23 @@ html.nav-mobile .meta-row > .meta-tabs:only-child {
   border-radius: 18px;
 }
 
+/* Comandanti and Giocatori on touch screens (since 2026-11-25 — option G3
+   of a mockup, user): the filters' button is in the search line, the Dove
+   bar inside its sheet (js/filter-sheet.js, css/5 "The search line on
+   touch screens") — so no segment here (the switcher the whole card, as
+   above) and no Dove bar under it, from the first frame (the script moves
+   the bar into the sheet later). The other Meta pages and Confronto keep
+   both. */
+html.nav-mobile main:is([data-page="commanders"], [data-page="players"]) .meta-row > .filter-toggle-btn,
+html.nav-mobile main:is([data-page="commanders"], [data-page="players"]) .meta-head > .where-filter {
+  display: none;
+}
+
+html.nav-mobile main:is([data-page="commanders"], [data-page="players"]) .meta-row > .meta-tabs {
+  border-right: 1px solid var(--hairline);
+  border-radius: 18px;
+}
+
 /* The page's own <h1>: for screen readers only; Matchups' "?" in the
    matrix panel's top-left corner instead of beside it. */
 .meta-head .page-heading h1 {

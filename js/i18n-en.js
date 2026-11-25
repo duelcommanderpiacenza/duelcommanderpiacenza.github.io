@@ -245,6 +245,7 @@
     "Lega online": "Online league",
     "Serie online": "Online series",
     "Dove": "Where",
+    "Fatto": "Done",
     "Dal vivo": "Live",
     "Tutto": "All",
     "Online su endstep": "Online on endstep",

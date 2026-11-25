@@ -91,6 +91,7 @@
   <link rel="modulepreload" href="js/chart-carousel.js">
   <link rel="modulepreload" href="js/filter-toggle.js">
   <link rel="modulepreload" href="js/where-filter.js">
+  <link rel="modulepreload" href="js/filter-sheet.js">
   <link rel="modulepreload" href="js/meta-filters.js">
   <link rel="modulepreload" href="js/history-list.js">
   <link rel="modulepreload" href="js/back-to-top.js">
@@ -259,6 +260,7 @@
     <div class="field filter-toggle-search">
       <label for="commanders-search" class="visually-hidden">Cerca</label>
       <input type="search" id="commanders-search" placeholder="Cerca comandante...">
+      <button type="button" class="filter-search-close" id="commanders-search-close" aria-label="Chiudi ricerca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="6" y1="18" x2="18" y2="6"></line></svg></button>
     </div>
     <div class="field filter-toggle-sort">
       <label for="commanders-sort" class="visually-hidden">Ordina per</label>
@@ -268,6 +270,12 @@
         <option value="winrate">Winrate</option>
       </select>
     </div>
+    <!-- Touch screens (js/filter-sheet.js — option G3 of a mockup, user
+         2026-11-25): the sort first, then the search as a 🔍 opening the
+         field over the line, and the filters — Dal vivo / Online / Tutto
+         and the panel's own — in a bottom sheet. Hidden on a computer. -->
+    <button type="button" class="filter-line-btn filter-line-search" id="commanders-search-open" aria-label="Cerca" aria-controls="commanders-search" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
+    <button type="button" class="filter-line-btn filter-line-filters" id="commanders-filters-open" aria-label="Filtri" aria-haspopup="dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg></button>
   </div>
 
   <div id="commanders-table"></div>
