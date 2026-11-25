@@ -1003,6 +1003,14 @@ html.app-header .commander-lists .history-scroll,
   position: relative;
 }
 
+/* The tips of the first and last events, hidden until touched, still reach
+   past the card's sides — and so past a phone's screen, which then scrolled
+   sideways (user). Clipped to the card (clip, not hidden: no scroll box of
+   its own); a shown tip is moved back inside it (js/league-stats.js). */
+.league-race-card {
+  overflow: clip;
+}
+
 .league-race {
   display: block;
   width: 100%;
