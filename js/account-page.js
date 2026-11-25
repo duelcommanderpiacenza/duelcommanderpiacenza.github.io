@@ -56,7 +56,8 @@ import { achievementState, achievementsListHtml, enableAchievementDetails } from
 import { isDrop } from "./leaderboard.js";
 import { tallyOutcome, winRatePct, outcomeFor } from "./winrate.js";
 import { applyCardCosmetics, openCardEffectsInfo } from "./card-cosmetics.js";
-import { escapeHtml, eventTitle, formatDate, localIso, softFail, statTileHtml } from "./ui.js";
+import { escapeHtml, softFail, statTileHtml } from "./ui.js";
+import { initDecklistForm } from "./decklist-form.js";
 import { hidePageLoading } from "./page-loading.js";
 import { mountSettings } from "./settings-panel.js";
 import { translate } from "./locale.js";
@@ -882,8 +883,7 @@ export function mount({ signal = new AbortController().signal } = {}) {
 
     cardProgress = await progressRequest;
 
-    // "Invia la tua decklist": the entries name the older events sent for.
-    await loadDecklistCard(player, entries, decklistRequest);
+    await loadDecklistCard(decklistRequest);
   }
 
   // "?" on the card's corner: how the card's effects are earned.
@@ -926,20 +926,13 @@ export function mount({ signal = new AbortController().signal } = {}) {
   // is in, emailed to the organisers by the send-decklist Edge Function
   // (js/db.js's Decklists) — never stored, only *that* it was sent: two per
   // player and event (migrations 008-009). The function checks it
-  // all again; this only offers the events that qualify and shows the ones
-  // already sent; a send goes straight away (no confirmation, by choice).
+  // all again; this only offers the events that qualify (decklist_events():
+  // the 2 next and the 2 last) and says which are out of sends. The form
+  // itself — the event tiles, the paste, the count, the send — is
+  // js/decklist-form.js.
   const decklistCard = document.getElementById("profile-decklist");
   const achievementsCard = document.getElementById("profile-achievements");
-  const decklistNoneEl = document.getElementById("decklist-none");
-  const decklistForm = document.getElementById("decklist-form");
-  const decklistEventSelect = document.getElementById("decklist-event");
-  const decklistText = document.getElementById("decklist-text");
-  const decklistMeter = document.getElementById("decklist-meter");
-  const decklistSubmit = document.getElementById("decklist-submit");
-  const decklistSubmitLabel = decklistSubmit.querySelector(".decklist-submit-label");
   const decklistMessageEl = document.getElementById("decklist-message");
-  const decklistSentBox = document.getElementById("decklist-sent");
-  const decklistSentList = document.getElementById("decklist-sent-list");
 
   // The send-decklist function's error codes.
   const DECKLIST_ERROR_TEXT = {
@@ -977,35 +970,20 @@ export function mount({ signal = new AbortController().signal } = {}) {
     }.`;
   }
 
-  // The events that can still get a list (id → event: upcoming first, soonest
-  // first, then the past ones, newest first) and the ones already sent
-  // ({ event, sentAt, isNew }, most recently sent first — "Ultime inviate"
-  // shows the first DECKLIST_SENT_SHOWN; all of them stay out of the list).
-  const DECKLIST_SENT_SHOWN = 3;
-  // Only recent events are offered: the 2 next (today's included) and the 2
-  // last, open or closed — decklist_events() picks them, by Piacenza's date,
-  // so an event still open after midnight stays (one out of sends just
-  // isn't listed, no older one takes its place).
-
-  // Sends allowed per event (the send-decklist function's MAX_SENDS, migration
-  // 009); how many each event has had so far (event id → 1 or 2).
-  const DECKLIST_MAX_SENDS = 2;
-  let decklistEvents = new Map();
-  let sentDecklists = [];
-  let decklistSendCount = new Map();
-
-  // One more send recorded for an event: it moves to the front of "Ultime
-  // inviate" (one chip per event) and leaves the list once out of sends.
-  function recordDecklistSend(ev, count) {
-    decklistSendCount.set(ev.id, count);
-    if (count >= DECKLIST_MAX_SENDS) decklistEvents.delete(ev.id);
-    sentDecklists = sentDecklists.filter((item) => item.event.id !== ev.id);
-    sentDecklists.unshift({ event: ev, sentAt: new Date().toISOString(), isNew: true });
-  }
+  const decklistForm = initDecklistForm(decklistCard, {
+    send: (ev, text) => Decklists.send(ev.id, text),
+    // A refusal the function names: its text; else the send itself failed:
+    // by hand, to the same address.
+    describeError: (err, ev, text) => {
+      console.error(err);
+      const known = DECKLIST_ERROR_TEXT[err?.message];
+      return known ? escapeHtml(known) : decklistFallbackHtml(ev, text);
+    },
+  });
 
   // `request`: [the events offered (Decklists.events), the player's sends]
   // (loadStats starts it).
-  async function loadDecklistCard(player, entries, request) {
+  async function loadDecklistCard(request) {
     decklistCard.hidden = false;
     setMessage(decklistMessageEl, "");
     let offered;
@@ -1018,152 +996,11 @@ export function mount({ signal = new AbortController().signal } = {}) {
       decklistCard.hidden = true;
       return;
     }
-    const played = entries.map((e) => e.event).filter(Boolean);
-    // One row per send: per event, how many and the latest.
-    decklistSendCount = new Map();
-    const lastSentAt = new Map();
-    for (const row of sent) {
-      decklistSendCount.set(row.event_id, (decklistSendCount.get(row.event_id) ?? 0) + 1);
-      if ((row.sent_at ?? "") > (lastSentAt.get(row.event_id) ?? "")) lastSentAt.set(row.event_id, row.sent_at);
-    }
-    // Every event the player has, for the "Ultime inviate" chips — the list
-    // itself offers only the recent ones.
-    const known = new Map([...played, ...offered].map((ev) => [ev.id, ev]));
-    decklistEvents = new Map(
-      offered.filter((ev) => (decklistSendCount.get(ev.id) ?? 0) < DECKLIST_MAX_SENDS).map((ev) => [ev.id, ev])
-    );
-    sentDecklists = [...lastSentAt.keys()]
-      .map((id) => known.get(id))
-      .filter(Boolean)
-      .map((event) => ({ event, sentAt: lastSentAt.get(event.id) ?? "", isNew: false }))
-      .sort((a, b) => b.sentAt.localeCompare(a.sentAt));
-    renderDecklistCard();
+    // One row per send: how many per event.
+    const sendCount = new Map();
+    for (const row of sent) sendCount.set(row.event_id, (sendCount.get(row.event_id) ?? 0) + 1);
+    decklistForm.setEvents(offered, sendCount);
   }
-
-  function decklistEventSublabel(ev) {
-    const sentOnce = (decklistSendCount.get(ev.id) ?? 0) > 0;
-    const when = ev.event_date === localIso() ? "Oggi" : ev.upcoming ? "In arrivo" : "Passato";
-    return [when, formatDate(ev.event_date), ev.league?.name, sentOnce && "1 invio rimasto"]
-      .filter(Boolean)
-      .join(" · ");
-  }
-
-  function renderDecklistCard() {
-    const events = [...decklistEvents.values()];
-    decklistForm.hidden = events.length === 0;
-    decklistNoneEl.hidden = events.length > 0;
-    decklistNoneEl.textContent = sentDecklists.length
-      ? "Hai già inviato la decklist per tutti gli eventi disponibili."
-      : "Nessun evento disponibile: puoi inviare la decklist per i prossimi due eventi o per gli ultimi due.";
-    // data-label / data-sublabel: js/custom-select.js shows the name with a
-    // smaller line below (in arrivo / giocato · date · league).
-    decklistEventSelect.innerHTML =
-      '<option value="">Scegli un evento&hellip;</option>' +
-      events
-        .map((ev) => {
-          const name = eventTitle(ev);
-          const sub = decklistEventSublabel(ev);
-          return `<option value="${ev.id}" data-label="${escapeHtml(name)}" data-sublabel="${escapeHtml(sub)}">${escapeHtml(
-            name
-          )} — ${escapeHtml(sub)}</option>`;
-        })
-        .join("");
-    decklistSentBox.hidden = sentDecklists.length === 0;
-    decklistSentList.innerHTML = sentDecklists
-      .slice(0, DECKLIST_SENT_SHOWN)
-      .map(
-        ({ event, isNew }) => `<li class="decklist-sent-chip${isNew ? " is-new" : ""}">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
-          <span class="decklist-sent-name">${escapeHtml(eventTitle(event))}</span>
-        </li>`
-      )
-      .join("");
-    // Animated once, as it's added — not again on the next redraw.
-    for (const item of sentDecklists) item.isNew = false;
-  }
-
-  // What's in the box, said under it as you type: a link, or the cards counted
-  // from the list (a leading number is the quantity, "1 Sol Ring" / "1x Sol
-  // Ring"; section names like "Commander" or "Sideboard:" aren't cards). A
-  // Duel Commander deck is 100 cards: that count turns green.
-  const DECKLIST_SECTION = /^(commander|commanders|deck|mainboard|main|sideboard|companion|maybeboard)\s*:?$/i;
-
-  function updateDecklistMeter() {
-    const text = decklistText.value.trim();
-    decklistMeter.className = "decklist-meter";
-    if (!text) {
-      decklistMeter.textContent = "";
-      return;
-    }
-    if (/^https?:\/\/\S+$/i.test(text)) {
-      decklistMeter.textContent = "Link alla decklist";
-      decklistMeter.classList.add("is-link");
-      return;
-    }
-    let cards = 0;
-    for (const raw of text.split(/\r?\n/)) {
-      const line = raw.trim();
-      if (!line || /^(\/\/|#)/.test(line) || DECKLIST_SECTION.test(line)) continue;
-      const quantity = line.match(/^(\d+)\s*x?\s+\S/i);
-      cards += quantity ? Number(quantity[1]) : 1;
-    }
-    decklistMeter.textContent = `${cards} ${cards === 1 ? "carta" : "carte"}`;
-    decklistMeter.classList.toggle("is-full", cards === 100);
-  }
-
-  // Sending: the button says so and pulses, and can't be pressed twice.
-  function setDecklistSending(sending) {
-    decklistSubmit.disabled = sending;
-    decklistSubmit.classList.toggle("is-sending", sending);
-    decklistSubmitLabel.textContent = sending ? "Invio in corso…" : "Invia decklist";
-  }
-
-  decklistText.addEventListener("input", updateDecklistMeter);
-
-  // Sent straight away — no confirmation step (since 2026-10-28).
-  decklistForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    if (decklistSubmit.disabled) return;
-    setMessage(decklistMessageEl, "");
-    // Checked here, not with `required`: the native <select> is hidden behind
-    // js/custom-select.js's skin, where the browser can't show its warning.
-    const ev = decklistEvents.get(decklistEventSelect.value);
-    if (!ev) {
-      setMessage(decklistMessageEl, "Scegli l'evento.");
-      return;
-    }
-    if (!decklistText.value.trim()) {
-      setMessage(decklistMessageEl, "Incolla la decklist o un link.");
-      return;
-    }
-    setDecklistSending(true);
-    try {
-      await Decklists.send(ev.id, decklistText.value);
-    } catch (err) {
-      console.error(err);
-      setDecklistSending(false);
-      const known = DECKLIST_ERROR_TEXT[err?.message];
-      if (known) {
-        setMessage(decklistMessageEl, known);
-      } else {
-        // The send itself failed: by hand, to the same address.
-        decklistMessageEl.className = "form-message is-error";
-        decklistMessageEl.innerHTML = decklistFallbackHtml(ev, decklistText.value);
-      }
-      // Out of sends (another tab, another device): it leaves the list.
-      if (err?.message === "already_sent") {
-        recordDecklistSend(ev, DECKLIST_MAX_SENDS);
-        renderDecklistCard();
-      }
-      return;
-    }
-    setDecklistSending(false);
-    recordDecklistSend(ev, (decklistSendCount.get(ev.id) ?? 0) + 1);
-    decklistText.value = "";
-    updateDecklistMeter();
-    renderDecklistCard();
-    setMessage(decklistMessageEl, `Decklist inviata per ${eventTitle(ev)}.`, "ok");
-  });
 
   // --- Loading the signed-in view -----------------------------------------------------
 

@@ -496,7 +496,6 @@
     "Scegli un evento…": "Pick an event…",
     "Link alla decklist": "Link to the decklist",
     "Incolla la lista oppure un link (Moxfield, Archidekt, …)": "Paste the list or a link (Moxfield, Archidekt, …)",
-    "La lista arriva agli organizzatori via email e non viene salvata sul sito. Puoi inviarne al massimo due per evento: la seconda sostituisce la prima.": "The list reaches the organisers by email and isn't saved on the site. You can send at most two per event: the second replaces the first.",
     "Elimina account": "Delete account",
     "Cancella il tuo account e la tua carta. Il tuo giocatore e i suoi risultati restano; potrai sempre accedere di nuovo con Google.": "Delete your account and your card. Your player and their results stay; you can always sign in again with Google.",
     "Accesso con Google non riuscito o annullato: riprova.": "Google sign-in failed or was cancelled: try again.",
@@ -518,7 +517,7 @@
     "Incolla la decklist o un link.": "Paste the decklist or a link.",
     "Invio non riuscito. Puoi mandare la lista via email a": "Sending failed. You can email the list to",
     "La decklist è troppo lunga.": "The decklist is too long.",
-    "Nessun evento disponibile: puoi inviare la decklist per i prossimi due eventi o per gli ultimi due.": "No event available: you can send the decklist for the next two events or for the last two.",
+    "Nessun evento disponibile: puoi inviare la decklist per il prossimo evento o per l'ultimo.": "No event available: you can send the decklist for the next event or for the last one.",
     "Per questo evento non puoi inviare la decklist.": "You can't send a decklist for this event.",
     "Qualcun altro ha già chiesto questo giocatore. Se sei tu, contatta un amministratore.": "Someone else has already asked for this player. If it's you, contact an admin.",
     "Questo giocatore è già collegato a un altro account.": "This player is already linked to another account.",
@@ -674,6 +673,35 @@
     "Miglior": "Best",
     "Nessun evento giocato.": "No event played.",
     "Posizioni dopo ogni evento": "Places after each event",
+    // Invia la tua decklist (js/decklist-form.js).
+    "Per quale evento?": "For which event?",
+    "La tua lista": "Your list",
+    "Incolla la lista": "Paste the list",
+    "dagli appunti: il testo o un link Moxfield, Archidekt…": "from the clipboard: the text or a Moxfield, Archidekt… link",
+    "oppure": "or",
+    "scrivila a mano": "type it in",
+    "Svuota": "Clear",
+    "Tieni premuto qui e scegli «Incolla»": "Press and hold here, then choose «Paste»",
+    "Inviata ✓": "Sent ✓",
+    "Per questo evento hai già inviato una lista: questa la sostituisce, ed è l'ultimo invio possibile.": "You already sent a list for this event: this one replaces it, and it's the last send you have.",
+    "Link Moxfield": "Moxfield link",
+    "Link Archidekt": "Archidekt link",
+    "Link alla lista": "Link to the list",
+    "100 carte ✓": "100 cards ✓",
+    "Decklist inviata!": "Decklist sent!",
+    "Puoi ancora inviarne una che la sostituisca.": "You can still send one to replace it.",
+    "Invia un'altra lista": "Send another list",
+    "Come funziona l'invio della decklist": "How sending the decklist works",
+    "Come funziona": "How it works",
+    "Scegli l'evento e incolla la lista": "Pick the event and paste the list",
+    "Il prossimo evento o l'ultimo: il testo della lista oppure un link (Moxfield, Archidekt…).": "The next event or the last one: the list's text or a link (Moxfield, Archidekt…).",
+    "Arriva agli organizzatori": "It reaches the organisers",
+    "Per email, con l'evento e il tuo nome nell'oggetto. Se ti rispondono, scrivono al tuo indirizzo.": "By email, with the event and your name in the subject. If they reply, they write to your address.",
+    "Non resta sul sito": "It isn't kept on the site",
+    "La lista non viene salvata: il sito ricorda solo che l'hai inviata.": "The list isn't saved: the site only remembers that you sent it.",
+    "Due invii per evento": "Two sends per event",
+    "Hai sbagliato qualcosa? Inviane un'altra: sostituisce la prima. Dopo il secondo invio l'evento risulta «Inviata ✓».": "Got something wrong? Send another: it replaces the first. After the second send the event shows «Sent ✓».",
+    "Se l'invio non riesce, ti diciamo come mandarla a mano via email.": "If sending fails, we tell you how to email it by hand.",
   };
 
   // ---------------------------------------------------------------------------
@@ -825,6 +853,8 @@
     [/^Più spesso in top (\d+)$/, "Most often in the top $1"],
     [/^in top (\d+)$/, "in top $1"],
     [/^Mostra tutti i (\d+) mazzi$/, "Show all $1 decks"],
+    // Invia la tua decklist (js/decklist-form.js).
+    [/^Per (.+): gli organizzatori la ricevono via email\.$/, function (_, ev) { return "For " + tr(ev) + ": the organisers get it by email."; }],
   ];
 
   // ---------------------------------------------------------------------------

@@ -138,12 +138,14 @@ html.nav-mobile .pc-cancel-btn svg {
   height: 18px;
 }
 
-/* ---- account.html "Invia la tua decklist" (js/account-page.js) ----
+/* ---- account.html "Invia la tua decklist" (js/decklist-form.js) ----
    The profile's Decklist tab (and the Impostazioni tab's Account part, the
-   same .decklist-body): the list in a monospaced box with a live count in
-   its corner (green at a full 100-card deck); the send button (sent
-   straight away, pulsing while it goes); the events already sent as green
-   chips, a new one popping in. */
+   same .decklist-body), made for phones first (user, 2026-11-25): two
+   numbered steps — the event as big tiles to tap (the date in the page's
+   colour, the name, the league; out of sends: greyed out, "Inviata ✓"), the
+   list pasted with one tap (a dashed button, then the monospaced box) with a
+   bar filling towards 100 cards — then the send button, the whole width at
+   the form's end; sent: a big green tick popping in, its check drawn. */
 
 /* minmax(0, 1fr): the one column never wider than the card — by default a
    grid column grows to its widest unbreakable content (Account's email, kept
@@ -154,95 +156,506 @@ html.nav-mobile .pc-cancel-btn svg {
   grid-template-columns: minmax(0, 1fr);
 }
 
-.decklist-hint {
-  margin: 0 0 16px;
+/* Nothing in the box moves the page (user): without this, the note
+   appearing under the tiles, or the paste button turning into the box, made
+   the browser's scroll anchoring shift the page on phones. */
+.profile-decklist {
+  overflow-anchor: none;
 }
 
-/* An open dropdown inside lifts the whole card above the Account card
-   below it (the card's entrance animation makes it a stacking context —
-   same fix as the claim card's). */
-.card.profile-decklist:has(.cs-wrap.is-open) {
+/* The title's row: the "?" at its right end (the box's top-right corner),
+   a finger's size. */
+.decklist-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.decklist-head .profile-panel-title {
+  margin-bottom: 0;
+}
+
+.decklist-help-btn {
+  width: 28px;
+  height: 28px;
+  font-size: 0.92rem;
+}
+
+.decklist-head + .decklist-body {
+  margin-top: 14px;
+}
+
+/* Its pop-up ("Come funziona"): three steps, each a disc in the page's
+   colour on a line joining them; the two sends as "1 → 2" in a tinted card;
+   the fallback small under it. */
+.decklist-help-steps {
+  display: grid;
+  gap: 16px;
+  margin: 0 0 18px;
+  padding: 0;
+  list-style: none;
+}
+
+.decklist-help-steps li {
   position: relative;
-  z-index: 30;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
 }
 
-.decklist-form .field {
-  margin-bottom: 14px;
+.decklist-help-steps li:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  top: 44px;
+  bottom: -16px;
+  left: 21px;
+  border-left: 2px dashed color-mix(in srgb, var(--brand-red) 30%, transparent);
 }
 
-.decklist-text-wrap {
-  position: relative;
+.decklist-help-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--brand-red) 12%, transparent);
+  color: var(--brand-red);
 }
 
+.decklist-help-icon svg {
+  width: 21px;
+  height: 21px;
+}
+
+.decklist-help-steps b,
+.decklist-help-sends b {
+  display: block;
+  color: var(--text-title);
+  font-size: 0.95rem;
+}
+
+.decklist-help-steps li > span:last-child {
+  padding-top: 2px;
+  color: var(--text-muted);
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
+.decklist-help-sends {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--brand-red) 6%, transparent);
+}
+
+.decklist-help-slots {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+}
+
+.decklist-help-slot {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 42px;
+  border: 2px solid color-mix(in srgb, var(--brand-red) 35%, transparent);
+  border-radius: 8px;
+  color: var(--brand-red);
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.decklist-help-slot.is-second {
+  border-color: var(--brand-red);
+  background: var(--brand-red);
+  color: #fff;
+}
+
+.decklist-help-arrow {
+  color: var(--text-muted);
+  font-weight: 800;
+}
+
+.decklist-help-sends p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
+.decklist-help-fallback {
+  margin: 14px 0 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.decklist-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  color: var(--text-title);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.decklist-step i {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--brand-red);
+  color: #fff;
+  font-size: 0.78rem;
+  font-style: normal;
+  transition: background 200ms ease;
+}
+
+.decklist-step.is-done i {
+  background: var(--accent-green-2);
+}
+
+/* 1. The event: tiles, a radio's circle on the right. */
+.decklist-events {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 22px;
+}
+
+.decklist-ev {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 10px 14px 10px 10px;
+  border: 1.5px solid rgba(154, 28, 32, 0.16);
+  border-radius: 16px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.decklist-ev[aria-checked="true"] {
+  border-color: var(--brand-red);
+  background: color-mix(in srgb, var(--brand-red) 6%, #fff);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-red) 14%, transparent);
+}
+
+.decklist-ev:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.decklist-ev:focus-visible {
+  outline: 2px solid var(--brand-red);
+  outline-offset: 2px;
+}
+
+.decklist-date {
+  display: grid;
+  flex: none;
+  place-items: center;
+  align-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--brand-red) 11%, transparent);
+  color: var(--brand-red);
+  font-size: 0.66rem;
+  font-weight: 800;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.decklist-date b {
+  font-size: 1.1rem;
+}
+
+.decklist-ev-text {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.decklist-ev-name,
+.decklist-ev-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.decklist-ev-name {
+  color: var(--text-title);
+  font-weight: 800;
+}
+
+.decklist-ev-sub {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* Out of sends: the only badge (user). */
+.decklist-ev-done {
+  justify-self: start;
+  margin-top: 3px;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  background: rgba(30, 140, 80, 0.13);
+  color: var(--accent-green-2);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.decklist-radio {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  box-sizing: border-box;
+  border: 2px solid rgba(154, 28, 32, 0.3);
+  border-radius: 50%;
+  transition: border-width 150ms ease, border-color 150ms ease;
+}
+
+.decklist-ev[aria-checked="true"] .decklist-radio {
+  border: 6px solid var(--brand-red);
+}
+
+.decklist-ev:disabled .decklist-radio {
+  visibility: hidden;
+}
+
+/* Said only for an event already sent once. */
+.decklist-note {
+  margin: -12px 0 22px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(183, 121, 31, 0.1);
+  color: var(--text-body);
+  font-size: 0.84rem;
+}
+
+.decklist-note[hidden] {
+  display: none;
+}
+
+/* 2. The list: the paste button, then the box — the button and its
+   "oppure" line as tall as the box (190px), so the swap doesn't move what's
+   below (user: the page shouldn't move). */
+.decklist-paste {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  height: 152px;
+  padding: 18px;
+  border: 2px dashed color-mix(in srgb, var(--brand-red) 30%, transparent);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--brand-red) 3%, transparent);
+  color: var(--brand-red);
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.decklist-paste:active {
+  background: color-mix(in srgb, var(--brand-red) 8%, transparent);
+}
+
+.decklist-paste svg {
+  width: 30px;
+  height: 30px;
+}
+
+.decklist-paste b {
+  font-size: 1.05rem;
+}
+
+.decklist-paste span {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.decklist-paste[hidden],
+.decklist-form textarea[hidden],
+.decklist-or[hidden],
+.decklist-meter[hidden] {
+  display: none;
+}
+
+.decklist-or {
+  height: 28px;
+  margin: 10px 0 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 28px;
+  text-align: center;
+}
+
+.decklist-or button {
+  padding: 4px 2px;
+  border: 0;
+  background: none;
+  color: var(--brand-red);
+  font: inherit;
+  font-weight: 800;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* 16px: iOS doesn't zoom into a field with text that size. */
 .decklist-form textarea {
   box-sizing: border-box;
   display: block;
   width: 100%;
-  min-height: 210px;
-  padding: 12px 14px 34px;
-  border: 1px solid var(--hairline);
-  border-radius: 14px;
+  height: 190px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--hairline);
+  border-radius: 16px;
   background: #fff;
   color: var(--text-body);
-  font: 0.92rem/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font: 16px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   resize: vertical;
   transition: border-color 150ms ease, box-shadow 150ms ease;
-}
-
-/* Phones: half as tall (4 lines instead of 9) — still draggable taller. */
-@media (max-width: 640px) {
-  .decklist-form textarea {
-    height: calc(6em + 48px);
-    min-height: calc(6em + 48px);
-  }
 }
 
 .decklist-form textarea:focus {
   outline: none;
   border-color: var(--brand-red);
-  box-shadow: 0 0 0 3px rgba(220, 24, 28, 0.15);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-red) 15%, transparent);
 }
 
-/* The live count, in the box's bottom-right corner. */
+/* The count: a bar towards 100 cards (green at 100, amber past it); a link
+   said as such, no bar. */
 .decklist-meter {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
-  padding: 3px 10px;
-  border-radius: var(--radius-pill);
-  background: rgba(220, 24, 28, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.decklist-bar {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--brand-red) 12%, transparent);
+  overflow: hidden;
+}
+
+.decklist-bar i {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--brand-red);
+  transition: width 250ms ease, background 200ms ease;
+}
+
+.decklist-count {
+  flex: none;
   color: var(--brand-red);
-  font-size: 0.78rem;
+  font-size: 0.86rem;
   font-weight: 800;
-  pointer-events: none;
-  transition: background 200ms ease, color 200ms ease;
+  font-variant-numeric: tabular-nums;
 }
 
-.decklist-meter:empty {
-  display: none;
+.decklist-meter.is-full .decklist-bar i {
+  background: var(--accent-green-2);
 }
 
-.decklist-meter.is-full {
-  background: rgba(30, 140, 80, 0.12);
+.decklist-meter.is-full .decklist-count,
+.decklist-meter.is-link .decklist-count {
   color: var(--accent-green-2);
 }
 
-.decklist-meter.is-full::after {
-  content: " ✓";
+.decklist-meter.is-over .decklist-bar i {
+  background: #b7791f;
+}
+
+.decklist-meter.is-over .decklist-count {
+  color: #a06612;
+}
+
+.decklist-meter.is-link .decklist-bar {
+  visibility: hidden;
+}
+
+.decklist-meter.is-link .decklist-count::before {
+  content: "✓ ";
+}
+
+.decklist-clear {
+  flex: none;
+  padding: 6px 12px;
+  border: 1px solid var(--hairline-hover);
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* The send button: at the form's end, the whole width (not sticky — user). */
+.decklist-sendbar {
+  margin-top: 22px;
 }
 
 .decklist-submit {
-  gap: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 54px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--brand-red);
+  color: #fff;
+  font: inherit;
+  font-size: 1.02rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: opacity 150ms ease, transform 100ms ease;
+}
+
+.decklist-submit-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.decklist-submit:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.decklist-submit:disabled:not(.is-sending) {
+  opacity: 0.4;
+  cursor: default;
 }
 
 .decklist-submit svg {
-  width: 18px;
-  height: 18px;
-  transition: transform 200ms ease;
-}
-
-.decklist-submit:hover svg {
-  transform: translate(2px, -2px);
+  flex: none;
+  width: 20px;
+  height: 20px;
 }
 
 /* Sending: the button pulses while the email goes out. */
@@ -275,87 +688,108 @@ html.nav-mobile .pc-cancel-btn svg {
   overflow-wrap: anywhere;
 }
 
-/* Events already sent: green chips, the newest first; one just sent pops in. */
-.decklist-sent {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid var(--hairline);
+/* Sent: the tick pops in, its check drawn. */
+.decklist-done {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 20px 10px 6px;
+  text-align: center;
 }
 
-.decklist-sent[hidden] {
+.decklist-done[hidden],
+.decklist-done p[hidden] {
   display: none;
 }
 
-.decklist-sent-title {
-  margin: 0 0 10px;
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.decklist-done-check {
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: var(--accent-green-2);
+  color: #fff;
+  animation: decklist-done-pop 520ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
 }
 
-.decklist-sent-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.decklist-done-check svg {
+  width: 40px;
+  height: 40px;
+  stroke-dasharray: 30;
+  stroke-dashoffset: 30;
+  animation: decklist-done-tick 380ms 220ms ease-out forwards;
 }
 
-.decklist-sent-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 6px 12px;
-  border-radius: var(--radius-pill);
-  background: rgba(30, 140, 80, 0.1);
-  color: var(--text-title);
-  font-size: 0.88rem;
-  font-weight: 700;
-}
-
-.decklist-sent-chip svg {
-  flex-shrink: 0;
-  width: 15px;
-  height: 15px;
-  color: var(--accent-green-2);
-}
-
-.decklist-sent-chip.is-new {
-  animation: decklist-chip-in 520ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
-}
-
-@keyframes decklist-chip-in {
+@keyframes decklist-done-pop {
   from {
     opacity: 0;
-    transform: scale(0.6);
-  }
-  to {
-    opacity: 1;
-    transform: none;
+    transform: scale(0.4);
   }
 }
 
+@keyframes decklist-done-tick {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.decklist-done h4 {
+  margin: 6px 0 0;
+  color: var(--text-title);
+  font-size: 1.2rem;
+}
+
+.decklist-done p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.decklist-again {
+  margin-top: 10px;
+  padding: 10px 18px;
+  border: 1px solid var(--hairline-hover);
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--brand-red);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.decklist-again[hidden] {
+  display: none;
+}
+
+:root[data-theme="dark"] .decklist-ev,
 :root[data-theme="dark"] .decklist-form textarea {
+  border-color: rgba(255, 255, 255, 0.14);
   background: rgba(255, 255, 255, 0.05);
 }
 
-:root[data-theme="dark"] .decklist-sent-chip {
-  background: rgba(60, 190, 110, 0.14);
+:root[data-theme="dark"] .decklist-ev[aria-checked="true"] {
+  border-color: var(--brand-red);
+  background: color-mix(in srgb, var(--brand-red) 16%, transparent);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .decklist-form textarea,
-  .decklist-meter,
-  .decklist-submit svg {
+  .decklist-ev,
+  .decklist-radio,
+  .decklist-step i,
+  .decklist-bar i,
+  .decklist-form textarea {
     transition: none;
   }
 
   .decklist-submit.is-sending,
-  .decklist-sent-chip.is-new {
+  .decklist-done-check {
     animation: none;
+  }
+
+  .decklist-done-check svg {
+    animation: none;
+    stroke-dashoffset: 0;
   }
 }
 

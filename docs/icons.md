@@ -44,7 +44,7 @@ Most icons are Lucide's (ISC licence), 24×24, `currentColor`, stroke 2.
 | Phone | `843b21e6` | Vibration | settings, the vibration switch |
 | Slash | `00209e8d` | Off (over the phone: vibration off) | js/haptics-toggle.js |
 | Gear | `c36c0ced` | Impostazioni | account.html tab |
-| Check | `fed4f34d`, `0b4f3ff2` | Done / selected / saved | card edit ✓, decklist sent chips, the theme menu's current choice, admin success toast |
+| Check | `fed4f34d`, `0b4f3ff2` | Done / selected / saved | card edit ✓, the decklist's "Decklist inviata!" tick, the theme menu's current choice, admin success toast |
 | Exclamation | `2fd67a60` | Error | admin error toast |
 | Pencil | `4b8d4b11`, `0789752a` | Modifica (edit) | account.html's card, admin lists' edit buttons |
 | Lock | `a897dd4d` | Locked (not unlocked yet) | achievements still locked |
@@ -71,7 +71,10 @@ Most icons are Lucide's (ISC licence), 24×24, `currentColor`, stroke 2.
 | Layers | `b7ba1ec8` | Album comandanti | player.html's tab |
 | Stacked lists | `374bf891` | Mazzi / Liste (decklists) | Social's Mazzi, the events' "Liste" menu |
 | Sheet with a corner | `dc077f69` | Decklist (send yours) | account.html's tab |
-| Paper plane | `b24ad0dc` | Invia (send) | account.html's "Invia decklist" |
+| Paper plane | `b24ad0dc` | Invia (send) | account.html's decklist send button |
+| Clipboard | `77a675e0` | Incolla (paste from the clipboard) | account.html's "Incolla la lista" |
+| Envelope | `1e92a78d` | Email (a list reaching the organisers) | the decklist's "?" pop-up |
+| Eye crossed out | `d9c4fb35` | Not kept / not shown (a list isn't saved on the site) | the decklist's "?" pop-up |
 | Open book | `008e8308` | Regolamento | league / Bacheca "Regolamento" button and pop-up |
 | Bulleted list | `51f0b6a4` | Classifica completa (the whole standings) | the Bacheca's link to the league |
 | Play triangle | `5a5fbefb` | Recap (stories) | Recap buttons, the stories' bubbles |

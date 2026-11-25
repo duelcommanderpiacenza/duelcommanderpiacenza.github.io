@@ -526,7 +526,9 @@ from account.html; it's emailed to the organisers, **never stored** — only
 
 - Events offered: the 2 next (today's included) and the 2 last, by
   Piacenza's date, open or closed, played or not — `decklist_events()`
-  (migration 048, since 2026-11-25, user), which the function checks too.
+  (migration 048, since 2026-11-25, user), which the function checks too;
+  the page shows only the next one and the previous one (user, the same day:
+  simpler — js/decklist-form.js, docs/pages.md).
   Before: the next 2 open ones and the last 2 closed ones the player was
   in, so an event still open after midnight was neither. One text box: the pasted list or any link. Sending twice for the
   same event isn't allowed; an in-card warning comes before the send. To

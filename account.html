@@ -86,6 +86,7 @@
   <link rel="modulepreload" href="js/leaderboard.js">
   <link rel="modulepreload" href="js/account-page.js">
   <link rel="modulepreload" href="js/winrate.js">
+  <link rel="modulepreload" href="js/decklist-form.js">
   <link rel="modulepreload" href="js/settings-panel.js">
   <!-- /preload:modules -->
 </head>
@@ -395,39 +396,52 @@
              Function, never stored (only *that* it was sent: one per
              event). js/account-page.js. -->
         <section class="card profile-card profile-decklist profile-panel" id="profile-decklist" hidden>
-          <h3 class="profile-panel-title">Invia la tua decklist</h3>
+          <div class="decklist-head">
+            <h3 class="profile-panel-title">Invia la tua decklist</h3>
+            <button type="button" class="help-toggle-btn decklist-help-btn" id="decklist-help" aria-haspopup="dialog" aria-label="Come funziona l'invio della decklist">?</button>
+          </div>
           <div class="decklist-body" id="decklist-body">
             <div class="decklist-body-clip" id="decklist-body-clip">
               <div class="decklist-body-inner">
-                <p class="account-hint decklist-hint">La lista arriva agli organizzatori via email e non viene salvata sul sito. Puoi inviarne al massimo due per evento: la seconda sostituisce la prima.</p>
                 <p class="page-empty decklist-none" id="decklist-none" hidden></p>
 
+                <!-- js/decklist-form.js: 1. the event (tiles), 2. the list
+                     (one tap pastes it), then the send button; sent: the tick
+                     (#decklist-done). -->
                 <form class="decklist-form" id="decklist-form" novalidate hidden>
-                  <div class="field">
-                    <label for="decklist-event">Evento</label>
-                    <select id="decklist-event" data-searchable></select>
-                  </div>
-                  <div class="field">
-                    <label for="decklist-text">Decklist</label>
-                    <div class="decklist-text-wrap">
-                      <textarea id="decklist-text" rows="9" maxlength="10000" spellcheck="false" autocomplete="off" placeholder="Incolla la lista oppure un link (Moxfield, Archidekt, …)"></textarea>
-                      <span class="decklist-meter" id="decklist-meter" aria-live="polite"></span>
-                    </div>
+                  <p class="decklist-step" id="decklist-step-event"><i>1</i>Per quale evento?</p>
+                  <div class="decklist-events" id="decklist-events" role="radiogroup" aria-label="Evento"></div>
+                  <p class="decklist-note" id="decklist-note" hidden>Per questo evento hai già inviato una lista: questa la sostituisce, ed è l'ultimo invio possibile.</p>
+
+                  <p class="decklist-step" id="decklist-step-list"><i>2</i>La tua lista</p>
+                  <button type="button" class="decklist-paste" id="decklist-paste">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path></svg>
+                    <b>Incolla la lista</b>
+                    <span>dagli appunti: il testo o un link Moxfield, Archidekt…</span>
+                  </button>
+                  <textarea id="decklist-text" maxlength="10000" spellcheck="false" autocomplete="off" aria-label="Decklist" placeholder="1 Sol Ring&#10;1 Swords to Plowshares&#10;…" hidden></textarea>
+                  <p class="decklist-or" id="decklist-or">oppure <button type="button" id="decklist-type">scrivila a mano</button></p>
+                  <div class="decklist-meter" id="decklist-meter" aria-live="polite" hidden>
+                    <span class="decklist-bar"><i></i></span>
+                    <span class="decklist-count"></span>
+                    <button type="button" class="decklist-clear" id="decklist-clear">Svuota</button>
                   </div>
 
-                  <div class="form-actions decklist-actions" id="decklist-actions">
-                    <button type="submit" class="btn-primary decklist-submit" id="decklist-submit">
+                  <div class="decklist-sendbar">
+                    <button type="submit" class="decklist-submit" id="decklist-submit" disabled>
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"></path><path d="M22 2 15 22l-4-9-9-4Z"></path></svg>
-                      <span class="decklist-submit-label">Invia decklist</span>
+                      <span class="decklist-submit-label">Invia</span>
                     </button>
                   </div>
                 </form>
                 <p class="form-message" id="decklist-message"></p>
 
-                <!-- The last 3 events this player sent a list for. -->
-                <div class="decklist-sent" id="decklist-sent" hidden>
-                  <p class="decklist-sent-title">Ultime inviate</p>
-                  <ul class="decklist-sent-list" id="decklist-sent-list"></ul>
+                <div class="decklist-done" id="decklist-done" hidden>
+                  <span class="decklist-done-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span>
+                  <h4>Decklist inviata!</h4>
+                  <p id="decklist-done-text"></p>
+                  <p id="decklist-done-more" hidden>Puoi ancora inviarne una che la sostituisca.</p>
+                  <button type="button" class="decklist-again" id="decklist-again">Invia un'altra lista</button>
                 </div>
               </div>
             </div>
